@@ -29,6 +29,7 @@ Submodules
    aeat.application.aggregation._renta_income_ledger
    aeat.application.aggregation._renta_ledger
    aeat.application.aggregation._retencion_observations_repository
+   aeat.application.aggregation._retencion_rate_advisory
    aeat.application.aggregation._retenciones
    aeat.application.aggregation._service
    aeat.application.aggregation._shared_issue_reasons

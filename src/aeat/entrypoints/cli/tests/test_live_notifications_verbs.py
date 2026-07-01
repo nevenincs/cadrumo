@@ -15,7 +15,8 @@ from ....core.config import override_settings
 from ....tests.cli_runner import invoke_cached_cli
 from ....tests.secure_sql import isolated_profile_storage_root
 
-# INTENTIONAL: integration because it exercises the notifications CLI surface against isolated local storage without contacting AEAT.
+# INTENTIONAL: integration because it exercises the notifications CLI surface against
+# isolated local storage without contacting AEAT.
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
 

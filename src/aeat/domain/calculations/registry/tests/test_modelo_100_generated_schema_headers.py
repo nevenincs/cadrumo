@@ -32,9 +32,7 @@ def test_generated_casilla_schema_headers_match_revision_directory() -> None:
             if "casillas" not in relative.parts:
                 offenders.append(f"{_display(path)} declares generated casilla schema outside casillas/")
             if header_year != revision_year:
-                offenders.append(
-                    f"{_display(path)} declares generated revision {header_year} under {revision_year}"
-                )
+                offenders.append(f"{_display(path)} declares generated revision {header_year} under {revision_year}")
 
             header_window = text[match.end() : match.end() + 500]
             source_match = _SOURCE_RE.search(header_window)

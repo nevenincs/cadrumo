@@ -302,21 +302,24 @@ def test_modelo_200_liquidacion_014_014b_formulas_and_exports_use_segment_identi
         _m200_casilla("DP200014:00577"),
         _m200_casilla("DP200014:00581"),
     } <= ajustada_refs
-    assert not {
-        "00567",
-        "00568",
-        "00563",
-        "00566",
-        "00576",
-        "00569",
-        "00570",
-        "00572",
-        "00571",
-        "00575",
-        "00577",
-        "00581",
-        "00582",
-    } & ajustada_refs
+    assert (
+        not {
+            "00567",
+            "00568",
+            "00563",
+            "00566",
+            "00576",
+            "00569",
+            "00570",
+            "00572",
+            "00571",
+            "00575",
+            "00577",
+            "00581",
+            "00582",
+        }
+        & ajustada_refs
+    )
 
     liquida_refs = set(expression_casilla_refs(formulas_by_target[_M200_CUOTA_LIQUIDA_CASILLA].expression))
     assert {
@@ -331,18 +334,21 @@ def test_modelo_200_liquidacion_014_014b_formulas_and_exports_use_segment_identi
         _m200_casilla("DP200014B:00399"),
         _m200_casilla("DP200014B:00082"),
     } <= liquida_refs
-    assert not {
-        "00582",
-        "00619",
-        "00583",
-        "00585",
-        "00584",
-        "00588",
-        "00565",
-        "00590",
-        "00399",
-        "00082",
-    } & liquida_refs
+    assert (
+        not {
+            "00582",
+            "00619",
+            "00583",
+            "00585",
+            "00584",
+            "00588",
+            "00565",
+            "00590",
+            "00399",
+            "00082",
+        }
+        & liquida_refs
+    )
 
     layout = resolve_export_layout(snapshot, "modelo-200-fichero-boe")
     expected_exports: dict[str, CasillaId] = {

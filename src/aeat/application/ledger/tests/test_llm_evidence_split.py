@@ -122,6 +122,3 @@ def test_suggest_no_linked_evidence_does_not_require_cloud_acknowledgement(
     )
 
     assert suggestion.evidence_id is None
-
-
-

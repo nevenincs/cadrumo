@@ -188,9 +188,7 @@ def test_modelo_714_revision_2021_cuota_integra_computed_via_grounded_escala() -
     casillas = {casilla.id: casilla for casilla in revision.casillas}
     # The escala output casilla is computed via that formula.
     assert casillas[_PATRIMONIO_CUOTA_INTEGRA_CASILLA].input_kind is InputKind.COMPUTED
-    assert (
-        casillas[_PATRIMONIO_CUOTA_INTEGRA_CASILLA].formula == "patrimonio-cuota-integra-escala-estatal"
-    )
+    assert casillas[_PATRIMONIO_CUOTA_INTEGRA_CASILLA].formula == "patrimonio-cuota-integra-escala-estatal"
     # The manual foundation (inputs + not-yet-modelled downstream) is unchanged.
     for casilla_id in (
         _PATRIMONIO_BASE_IMPONIBLE_CASILLA,
@@ -294,9 +292,7 @@ def test_modelo_714_carries_cuota_integra_under_declaration_advisory() -> None:
     assert "ley-19-1991:art-30" in {str(ref) for ref in guard.legal_refs}
 
 
-def _load_714_snapshot_and_casillas() -> tuple[
-    frozenset[str], dict[CasillaId, object]
-]:
+def _load_714_snapshot_and_casillas() -> tuple[frozenset[str], dict[CasillaId, object]]:
     modelo, catalogues = _load_modelo_714()
     snapshot = build_snapshot(
         modelo,

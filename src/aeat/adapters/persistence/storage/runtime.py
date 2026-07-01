@@ -300,9 +300,7 @@ def inspect_storage_runtime(
 
     if route.kind is not StorageRouteKind.ACTIVE_BUCKET_DATABASE:
         recovery_hint = (
-            EXPLICIT_DATABASE_URL_PROFILE_RECOVERY
-            if route.kind is StorageRouteKind.EXPLICIT_DATABASE_URL
-            else ""
+            EXPLICIT_DATABASE_URL_PROFILE_RECOVERY if route.kind is StorageRouteKind.EXPLICIT_DATABASE_URL else ""
         )
         message = "the primary database route is not attached to an active profile bucket."
         if recovery_hint:

@@ -1,0 +1,12 @@
+[revisions."2019-y-siguientes".completeness_manifest]
+source_ref = "enrolled-modelo-140-layout"
+legal_refs = ["orden-hac-177-2020:art-5", "orden-hac-177-2020:art-1"]
+source_refs = ["enrolled-modelo-140-layout"]
+
+[[revisions."2019-y-siguientes".completeness_manifest.casillas]]
+casilla_id = "02"
+number = "02"
+
+[[revisions."2019-y-siguientes".completeness_manifest.casillas]]
+casilla_id = "01"
+number = "01"

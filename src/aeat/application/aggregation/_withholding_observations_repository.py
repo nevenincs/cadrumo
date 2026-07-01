@@ -115,10 +115,7 @@ def withholding_observation_key(
     safe_repository_id(clave, context="clave")
     subclave_token = subclave or "-"
     safe_repository_id(subclave_token, context="subclave")
-    return (
-        f"{modelo}:{filing_year}:{period_token}:"
-        f"{_hashed_perceptor_token(perceptor_tax_id)}:{clave}:{subclave_token}"
-    )
+    return f"{modelo}:{filing_year}:{period_token}:{_hashed_perceptor_token(perceptor_tax_id)}:{clave}:{subclave_token}"
 
 
 class WithholdingObservationRepository(SecureBoundRepository[_WithholdingObservationEnvelopePayload]):

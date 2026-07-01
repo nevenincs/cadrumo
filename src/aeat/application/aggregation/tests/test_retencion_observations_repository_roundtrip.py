@@ -176,7 +176,11 @@ def test_replace_observations_drops_removed_perceptor_no_stale_row(tmp_path: Pat
             _observation(nif="33333333P", scheme=RetencionScheme.ECONOMIC_ACTIVITY, retencion=Decimal("300")),
         )
         repo.replace_observations(
-            modelo="180", filing_year=2024, period=period, observations=full, source_kind="aggregate_pull",
+            modelo="180",
+            filing_year=2024,
+            period=period,
+            observations=full,
+            source_kind="aggregate_pull",
         )
         assert len({o.perceptor_nif for o in repo.load_observations("180", period)}) == 3
         # Re-pull dropped 33333333P.

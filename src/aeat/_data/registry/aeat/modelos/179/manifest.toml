@@ -1,0 +1,10 @@
+[modelo]
+id = "179"
+title = "Declaracion informativa anual de la cesion de uso de viviendas con fines turisticos"
+official_name = "Modelo 179. Declaracion informativa anual de la cesion de uso de viviendas con fines turisticos."
+tax_domain = "cross_tax"
+cadence = "annual"
+jurisdiction = "ES-AEAT"
+output_sensitivity = "financial"
+legal_refs = ["orden-hac-612-2021:art-4", "orden-hac-612-2021:art-1"]
+source_refs = ["enrolled-modelo-179-procedure", "enrolled-modelo-179-layout"]

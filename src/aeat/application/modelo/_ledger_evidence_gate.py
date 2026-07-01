@@ -106,11 +106,7 @@ def deductible_vat_evidence_gap_transaction_ids(revision: CalculationRevision) -
     if evidence is None:
         return ()
     return tuple(
-        sorted(
-            row.transaction_id
-            for row in evidence.rows
-            if ledger_evidence_row_missing_deductible_vat_evidence(row)
-        ),
+        sorted(row.transaction_id for row in evidence.rows if ledger_evidence_row_missing_deductible_vat_evidence(row)),
     )
 
 

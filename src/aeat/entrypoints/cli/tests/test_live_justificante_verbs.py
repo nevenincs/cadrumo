@@ -24,7 +24,8 @@ from ....core.config import override_settings
 from ....tests.cli_runner import invoke_cached_cli
 from ....tests.secure_sql import isolated_profile_storage_root
 
-# INTENTIONAL: integration because it exercises the local justificante read verbs and registration wiring without contacting AEAT.
+# INTENTIONAL: integration because it exercises the local justificante read verbs and
+# registration wiring without contacting AEAT.
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
 _ACTIVE_TEST_BUCKET_ID = "00000000-0000-4000-8000-000000000000"

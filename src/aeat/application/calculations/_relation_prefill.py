@@ -65,6 +65,8 @@ from ...core.logging import get_logger
 from ...core.parsing import parse_iso8601_date
 from ...core.time import now
 from ...domain.calculations.registry import (
+    BindingId,
+    ModeloRevision,
     RegistryFoldRequirement,
     RegistryModeloObservation,
     RegistrySnapshot,
@@ -392,11 +394,7 @@ def _scoped_relation_source_requirements(
         if len(kept) == len(requirement.periods):
             scoped.append(requirement)
         elif kept:
-            kept_filing = tuple(
-                period
-                for period in requirement.filing_periods
-                if period.registry_token in kept
-            )
+            kept_filing = tuple(period for period in requirement.filing_periods if period.registry_token in kept)
             scoped.append(requirement.model_copy(update={"periods": kept, "filing_periods": kept_filing}))
         # else: EVERY source period is strictly pre-activity → no obligation at
         # all; drop the requirement (its ``periods`` field is min_length=1 and
@@ -497,9 +495,7 @@ def resolve_relations_from_local_store(
 
         active_bucket_id = resolve_active_bucket_id()
         m111_no_retenciones_periods = (
-            m111_no_retenciones_periods_for_bucket(active_bucket_id)
-            if active_bucket_id is not None
-            else frozenset()
+            m111_no_retenciones_periods_for_bucket(active_bucket_id) if active_bucket_id is not None else frozenset()
         )
     if not_applicable_source_modelos is None:
         from ...core import resolve_active_bucket_id
@@ -805,6 +801,14 @@ class RelationPrefillSourceResolver:
             resolved_relation_values,
             period=context.period.registry_token,
         )
+        binding_values = {
+            **_modelo_202_first_period_previous_payment_defaults(
+                snapshot.revision,
+                modelo=str(context.modelo),
+                period=context.period.registry_token,
+            ),
+            **binding_values,
+        }
         return CalculationSourceResolution(
             resolver_id=self.resolver_id,
             owned_sources=self.owned_sources,
@@ -836,6 +840,32 @@ class RelationPrefillSourceResolver:
                 for item in resolved
             ),
         )
+
+
+def _modelo_202_first_period_previous_payment_defaults(
+    revision: ModeloRevision,
+    *,
+    modelo: str,
+    period: str,
+) -> dict[BindingId, Decimal]:
+    """Resolve M202 same-model previous-payment carries to zero before their first target period."""
+    if modelo != Modelo.M202.value:
+        return {}
+    relations_by_target: dict[BindingId, list] = {}
+    for relation in revision.relations:
+        relations_by_target.setdefault(relation.target_binding, []).append(relation)
+    values: dict[BindingId, Decimal] = {}
+    for binding in revision.bindings:
+        if binding.source is not BindingSourceKind.RELATION_PREFILL:
+            continue
+        relations = tuple(relations_by_target.get(binding.id, ()))
+        if not relations:
+            continue
+        if any(not relation.target_periods or period in relation.target_periods for relation in relations):
+            continue
+        if all(relation.kind == "previous_period" and str(relation.source_modelo) == modelo for relation in relations):
+            values[binding.id] = Decimal("0")
+    return values
 
 
 __all__ = ["RelationPrefillSourceResolver", "resolve_relations_from_local_store"]

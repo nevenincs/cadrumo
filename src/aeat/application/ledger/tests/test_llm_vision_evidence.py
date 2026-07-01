@@ -121,5 +121,3 @@ def test_llm_vision_off_refuses_both_on_host_read_modes(
         )
     assert "vision" in str(raised.value).lower()
     assert "llm_vision on" in (raised.value.suggestion or "")
-
-

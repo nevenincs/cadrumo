@@ -182,8 +182,7 @@ class TestSubmittedFileObservation:
         input_values = {
             casilla.id: observed_values[casilla.id]
             for casilla in snapshot.revision.casillas
-            if casilla.input_kind != InputKind.COMPUTED
-            and casilla.id != _M130_RESULTADOS_NEGATIVOS_ANTERIORES_CASILLA
+            if casilla.input_kind != InputKind.COMPUTED and casilla.id != _M130_RESULTADOS_NEGATIVOS_ANTERIORES_CASILLA
         }
         binding = next(
             item for item in snapshot.revision.bindings if item.id == "irpf.previous_year_economic_activity_net_income"

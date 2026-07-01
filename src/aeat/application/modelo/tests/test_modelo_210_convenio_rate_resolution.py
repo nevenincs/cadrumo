@@ -105,8 +105,7 @@ def _snapshot_with_mutated_convenio_row(
     tipo_enum = TipoRentaIrnr(tipo_renta)
     treaty = base.convenio.treaties[country_code]
     new_overrides = tuple(
-        row.model_copy(update={"rate": new_rate}) if row.tipo_renta is tipo_enum else row
-        for row in treaty.overrides
+        row.model_copy(update={"rate": new_rate}) if row.tipo_renta is tipo_enum else row for row in treaty.overrides
     )
     new_treaty = treaty.model_copy(update={"overrides": new_overrides})
     new_convenio = ConvenioAuthority(treaties={**base.convenio.treaties, country_code: new_treaty})

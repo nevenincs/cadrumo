@@ -23,7 +23,7 @@ The tests cover three cases:
 Stream rebinding goes through the production helper's explicit
 ``stdout=`` / ``stderr=`` kwargs (no ``sys.stdout`` patching). Help-
 surface argv and ``COLUMNS`` scope use the centralized backend helpers
-in :mod:`aeat.tests.env_scope`.
+in :mod:`aeat-tests.env_scope`.
 """
 
 from __future__ import annotations

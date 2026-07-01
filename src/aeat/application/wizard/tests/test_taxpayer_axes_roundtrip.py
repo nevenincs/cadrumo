@@ -39,6 +39,8 @@ def _fully_populated_answers() -> SetupAnswers:
         irpf_income_categories="trabajo,capital_inmobiliario,pension",
         irpf_estimation_regime=IrpfEstimationRegime.DIRECTA_SIMPLIFICADA,
         iva_regime=IVARegime.REAGP,
+        iva_group_member_enrolled=True,
+        iva_group_dominant_entity_enrolled=True,
         iva_sii_enrolled=True,
         iva_redeme_enrolled=True,
         art109_activity_income_withholding_ge_70pct=True,
@@ -86,6 +88,8 @@ class TestWizardPersistenceRoundTrip:
         assert rebuilt.irpf_income_categories == original.irpf_income_categories
         assert rebuilt.irpf_estimation_regime == original.irpf_estimation_regime
         assert rebuilt.iva_regime == original.iva_regime
+        assert rebuilt.iva_group_member_enrolled == original.iva_group_member_enrolled
+        assert rebuilt.iva_group_dominant_entity_enrolled == original.iva_group_dominant_entity_enrolled
         assert rebuilt.iva_sii_enrolled == original.iva_sii_enrolled
         assert rebuilt.iva_redeme_enrolled == original.iva_redeme_enrolled
         assert rebuilt.art109_activity_income_withholding_ge_70pct is True
@@ -96,6 +100,8 @@ class TestWizardPersistenceRoundTrip:
         assert canonical["taxpayer_type.irpf_income_categories"] == ("trabajo,capital_inmobiliario,pension")
         assert canonical["irpf.estimation_regime"] == "directa_simplificada"
         assert canonical["irpf.art109_activity_income_withholding_ge_70pct"] == "true"
+        assert canonical["iva.group_member_enrolled"] == "true"
+        assert canonical["iva.group_dominant_entity_enrolled"] == "true"
         assert canonical["iva.sii_enrolled"] == "true"
         assert canonical["iva.redeme_enrolled"] == "true"
 
@@ -129,6 +135,8 @@ class TestTaxpayerProfileProjection:
                 "irpf.estimation_regime": "objetiva",
                 "irpf.art109_activity_income_withholding_ge_70pct": "true",
                 "iva.regime": "REAGP",
+                "iva.group_member_enrolled": "true",
+                "iva.group_dominant_entity_enrolled": "true",
                 "iva.sii_enrolled": "true",
                 "iva.redeme_enrolled": "true",
             },
@@ -141,6 +149,8 @@ class TestTaxpayerProfileProjection:
         assert profile.irpf_estimation_regime is IrpfEstimationRegime.OBJETIVA
         assert profile.art109_activity_income_withholding_ge_70pct is True
         assert profile.iva_regime is IVARegime.REAGP
+        assert profile.iva.group_member_enrolled is True
+        assert profile.iva.group_dominant_entity_enrolled is True
         assert profile.iva.sii_enrolled is True
         assert profile.iva.redeme_enrolled is True
 

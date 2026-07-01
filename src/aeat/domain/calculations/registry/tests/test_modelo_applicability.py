@@ -501,16 +501,14 @@ def test_impatriado_year_seven_restores_m100_m720_and_suppresses_m151() -> None:
     year_seven = date(2029, 1, 1)
 
     assert (
-        derive_modelo_applicability(expired_profile, "100", today=year_seven).verdict
-        is ApplicabilityVerdict.APPLICABLE
+        derive_modelo_applicability(expired_profile, "100", today=year_seven).verdict is ApplicabilityVerdict.APPLICABLE
     )
     assert (
         derive_modelo_applicability(expired_profile, "151", today=year_seven).verdict
         is ApplicabilityVerdict.NOT_APPLICABLE
     )
     assert (
-        derive_modelo_applicability(expired_profile, "720", today=year_seven).verdict
-        is ApplicabilityVerdict.APPLICABLE
+        derive_modelo_applicability(expired_profile, "720", today=year_seven).verdict is ApplicabilityVerdict.APPLICABLE
     )
 
 

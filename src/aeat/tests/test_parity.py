@@ -204,12 +204,7 @@ def test_remove_locale_value_deletes_yaml_null_leaf(tmp_path: Path):
     locales_dir.mkdir()
     locale_path = locales_dir / "en.yml"
     locale_path.write_text(
-        "wizard:\n"
-        "  setup:\n"
-        "    flags:\n"
-        "      old-option:\n"
-        "      current-option:\n"
-        "        help: Current option\n",
+        "wizard:\n  setup:\n    flags:\n      old-option:\n      current-option:\n        help: Current option\n",
         encoding="utf-8",
     )
 

@@ -726,6 +726,8 @@ _IVA_SECTION = WizardSection(
         ),
         _confirm("iva-roi-enrolled", "iva.roi_enrolled", suffix="iva"),
         _confirm("iva-oss-enrolled", "iva.oss_enrolled", suffix="iva"),
+        _confirm("iva-group-member-enrolled", "iva.group_member_enrolled", suffix="iva"),
+        _confirm("iva-group-dominant-entity-enrolled", "iva.group_dominant_entity_enrolled", suffix="iva"),
         _confirm("iva-sii-enrolled", "iva.sii_enrolled", suffix="iva"),
         _confirm("iva-redeme-enrolled", "iva.redeme_enrolled", suffix="iva"),
         _confirm(

@@ -122,6 +122,7 @@ def _infer_binding_source(payload: object) -> object:
         raise SourceMeshError("aggregation.source_mesh.errors.binding_source_mismatch")
     return data
 
+
 # Source kinds that are explicitly deferred — no mesh resolver is built yet, but
 # they are known to the system and must produce a standing advisory on
 # source_diagnostics rather than a silent blank.  Listed here so the S26

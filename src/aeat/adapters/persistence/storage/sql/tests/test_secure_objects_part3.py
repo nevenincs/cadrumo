@@ -201,7 +201,7 @@ def test_peek_metadata_matches_the_saved_row(tmp_path: Path) -> None:
     saved, and the byte_length must be the non-empty ciphertext size."""
 
     with _ephemeral_secure_repo(tmp_path, "peek.db") as (_, _, repo):
-        namespace = "aeat.test.peek"
+        namespace = "aeat-test.peek"
         written_at = datetime(2026, 5, 21, 9, 15, 0)
         repo.save(
             namespace=namespace,
@@ -229,7 +229,7 @@ def test_peek_metadata_reflects_on_disk_schema_version_drift(tmp_path: Path) -> 
     a cached or hard-coded version, on-disk drift would be invisible."""
 
     with _ephemeral_secure_repo(tmp_path, "peek-drift.db") as (db_path, _, repo):
-        namespace = "aeat.test.peek.drift"
+        namespace = "aeat-test.peek.drift"
         repo.save(
             namespace=namespace,
             object_key="drift-key",
@@ -263,7 +263,7 @@ def test_two_repositories_writing_one_key_converge_to_a_single_row(tmp_path: Pat
     two divergent ciphertexts under the same logical key."""
 
     with _ephemeral_secure_repo(tmp_path, "converge.db") as (db_path, engine, _):
-        namespace = "aeat.test.converge"
+        namespace = "aeat-test.converge"
         natural_key = "shared-object-key"
         SecureObjectRepository(engine=engine).save(
             namespace=namespace,
@@ -308,7 +308,7 @@ def test_registry_bound_repository_rejects_unregistered_namespace_on_write(tmp_p
 
         with pytest.raises(StorageValidationError) as raised:
             repo.save(
-                namespace="aeat.test.unregistered.runtime",
+                namespace="aeat-test.unregistered.runtime",
                 object_key="policy-key",
                 classification=SensitivityClass.FINANCIAL,
                 schema_version=1,

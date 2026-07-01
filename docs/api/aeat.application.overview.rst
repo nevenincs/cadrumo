@@ -18,5 +18,6 @@ Submodules
    aeat.application.overview._calendar
    aeat.application.overview._calendar_models
    aeat.application.overview._calendar_warnings
+   aeat.application.overview._coverage
    aeat.application.overview._errors
    aeat.application.overview._explain

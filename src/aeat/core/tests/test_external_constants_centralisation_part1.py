@@ -31,9 +31,7 @@ _STRING_CONSTANT_CASES = (
     ("XLSX_MIME_TYPE", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"),
 )
 _STRING_CONSTANT_IDS = tuple(name.lower() for name, _ in _STRING_CONSTANT_CASES)
-_STRING_TYPE_CONSTANT_NAMES = tuple(
-    name for name, _ in _STRING_CONSTANT_CASES if name != "BINARY_MIME_TYPE"
-)
+_STRING_TYPE_CONSTANT_NAMES = tuple(name for name, _ in _STRING_CONSTANT_CASES if name != "BINARY_MIME_TYPE")
 _STRING_TYPE_CONSTANT_IDS = tuple(name.lower() for name in _STRING_TYPE_CONSTANT_NAMES)
 
 

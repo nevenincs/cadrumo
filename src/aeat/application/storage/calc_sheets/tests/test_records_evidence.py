@@ -27,7 +27,6 @@ from .._records import (
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 
-
 def _casilla_id(value: object) -> CasillaId:
     try:
         return validated_casilla_id(value, surface="test casilla id")

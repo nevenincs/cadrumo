@@ -540,9 +540,8 @@ def _raise_if_m303_invoice_domestic_iva_would_be_silent(
     missing_binding_values = {
         binding_id: invoice_value - transaction_value
         for binding_id in _M303_STANDARD_DOMESTIC_IVA_CUOTA_BINDINGS
-        if (invoice_value := invoice_binding_values.get(binding_id, Decimal("0"))) > (
-            transaction_value := transaction_binding_values.get(binding_id, Decimal("0"))
-        )
+        if (invoice_value := invoice_binding_values.get(binding_id, Decimal("0")))
+        > (transaction_value := transaction_binding_values.get(binding_id, Decimal("0")))
     }
     if not missing_binding_values:
         return

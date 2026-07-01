@@ -316,9 +316,7 @@ def _assert_registry_snapshot_axis(
 
 
 def _borrador_capable_bindings(registry_snapshot: RegistrySnapshot) -> dict[BindingId, DataBindingDefinition]:
-    return {
-        binding.id: binding for binding in registry_snapshot.revision.bindings if binding.aeat_prefilled is True
-    }
+    return {binding.id: binding for binding in registry_snapshot.revision.bindings if binding.aeat_prefilled is True}
 
 
 def _decimal_value(binding_id: BindingId, value: Decimal | str) -> Decimal:

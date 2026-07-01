@@ -103,20 +103,15 @@ def _assert_decimal_casilla(
     *,
     label: str,
 ) -> None:
-    assert casilla_id in extracted, (
-        f"PARSER-GAP [{label}]: {casilla_id!r} not extracted.\n  got: {sorted(extracted)}"
-    )
+    assert casilla_id in extracted, f"PARSER-GAP [{label}]: {casilla_id!r} not extracted.\n  got: {sorted(extracted)}"
     value = extracted[casilla_id]
-    assert isinstance(value, Decimal), (
-        f"PARSER-GAP [{label}]: {casilla_id!r} not Decimal: {type(value).__name__!r}"
-    )
+    assert isinstance(value, Decimal), f"PARSER-GAP [{label}]: {casilla_id!r} not Decimal: {type(value).__name__!r}"
 
 
 def _assert_all_extracted_values_decimal(extracted: Mapping[CasillaId, object], *, label: str) -> None:
     for casilla_id, value in extracted.items():
         assert isinstance(value, Decimal), (
-            f"PARSER-GAP [{label}]: casilla {casilla_id!r} not Decimal: "
-            f"{type(value).__name__!r} = {value!r}"
+            f"PARSER-GAP [{label}]: casilla {casilla_id!r} not Decimal: {type(value).__name__!r} = {value!r}"
         )
 
 
@@ -130,16 +125,12 @@ def _assert_engine_closure_matches_extracted_decimal(
 ) -> None:
     extracted_value = extracted.get(casilla_id)
     assert isinstance(extracted_value, Decimal), (
-        f"PARSER-GAP [{label}]: casilla {casilla_id!r} is not Decimal: "
-        f"{type(extracted_value).__name__!r}"
+        f"PARSER-GAP [{label}]: casilla {casilla_id!r} is not Decimal: {type(extracted_value).__name__!r}"
     )
     engine_value = engine_values.get(casilla_id)
-    assert engine_value is not None, (
-        f"FORMULA-MISMATCH [{label}]: casilla {casilla_id!r} absent from engine result."
-    )
+    assert engine_value is not None, f"FORMULA-MISMATCH [{label}]: casilla {casilla_id!r} absent from engine result."
     assert isinstance(engine_value, Decimal), (
-        f"FORMULA-MISMATCH [{label}]: casilla {casilla_id!r} is not Decimal: "
-        f"{type(engine_value).__name__!r}"
+        f"FORMULA-MISMATCH [{label}]: casilla {casilla_id!r} is not Decimal: {type(engine_value).__name__!r}"
     )
     input_detail = f"\n  inputs: {inputs}" if inputs is not None else ""
     assert engine_value == extracted_value, (
@@ -314,8 +305,7 @@ def _assert_annual_relation_closure_chain(
             f"formula evaluation order issue or casilla missing from revision."
         )
         assert isinstance(engine_value, Decimal), (
-            f"FORMULA-MISMATCH [{case_label}]: casilla {casilla_id!r} is not Decimal: "
-            f"{type(engine_value).__name__!r}"
+            f"FORMULA-MISMATCH [{case_label}]: casilla {casilla_id!r} is not Decimal: {type(engine_value).__name__!r}"
         )
         assert engine_value == extracted_value, (
             f"FORMULA-MISMATCH [{case_label}]: engine recomputed {casilla_id!r} as "

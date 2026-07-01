@@ -152,16 +152,16 @@ def test_load_convenio_authority_compiles_the_bundled_treaty_tree() -> None:
 
 def test_load_convenio_authority_rejects_duplicate_country(tmp_path: Path) -> None:
     body = (
-        '[treaty]\n'
+        "[treaty]\n"
         'country_code = "MA"\n'
         'document_id = "BOE-A-1985-9280"\n'
-        '[[treaty.overrides]]\n'
+        "[[treaty.overrides]]\n"
         'tipo_renta = "interest"\n'
         'kind = "ceiling"\n'
         'rate = "0.10"\n'
         'legal_ref_anchor = "convenio-es-ma-1978:art-11"\n'
         'legal_refs = ["convenio-es-ma-1978:art-11"]\n'
-        'valid_from = 2025-01-01\n'
+        "valid_from = 2025-01-01\n"
     )
     (tmp_path / "es-ma.toml").write_text(body, encoding="utf-8")
     (tmp_path / "ma-dup.toml").write_text(body, encoding="utf-8")

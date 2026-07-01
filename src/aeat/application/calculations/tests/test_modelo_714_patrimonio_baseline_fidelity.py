@@ -232,8 +232,7 @@ def test_anti_tautology_proof_missing_cuota_surfaces_as_inequality(tmp_path: Pat
 
         assert loaded is not None
         assert loaded.observation != obs_n_no_cuota, (
-            "loaded observation equals the cuota-omitted observation; "
-            "the roundtrip dropped patrimonio.cuota-integra"
+            "loaded observation equals the cuota-omitted observation; the roundtrip dropped patrimonio.cuota-integra"
         )
         assert loaded.observation == obs_n
 

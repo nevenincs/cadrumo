@@ -346,9 +346,7 @@ def _seed_retencion_perceptors(
         modelo=modelo,
         filing_year=_YEAR,
         period=Period.from_year_and_code(_YEAR, _ANNUAL_PERIOD),
-        observations=[
-            _retencion_observation(nif, scheme=scheme, source_prefix=f"retencion-{modelo}") for nif in nifs
-        ],
+        observations=[_retencion_observation(nif, scheme=scheme, source_prefix=f"retencion-{modelo}") for nif in nifs],
         source_kind="aggregate_pull",
     )
     return Decimal(len(set(nifs)))
@@ -404,9 +402,7 @@ def test_m180_folds_in_four_m115_quarters_on_live_calculate(secure_objects: Secu
     # relation_prefill is a claimed source: no diagnostic names it.
     assert not any(diag.source_kind == _RELATION_PREFILL_SOURCE for diag in result.source_diagnostics)
     # M180 has no withholding detalle bindings, so the whole resolution is clean.
-    assert result.source_diagnostics == (), (
-        f"M180 source_diagnostics must be clean; got {result.source_diagnostics}"
-    )
+    assert result.source_diagnostics == (), f"M180 source_diagnostics must be clean; got {result.source_diagnostics}"
 
 
 # ---------------------------------------------------------------------------

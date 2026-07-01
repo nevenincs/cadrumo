@@ -61,7 +61,8 @@ from .._app_live import (
 )
 from .._app_live_auth_preflight import _live_auth_preflight_lines
 
-# INTENTIONAL: integration because it exercises the live-read CLI subgroup wiring and error surfaces locally without contacting AEAT.
+# INTENTIONAL: integration because it exercises the live-read CLI subgroup wiring and
+# error surfaces locally without contacting AEAT.
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
 _ACTIVE_TEST_BUCKET_ID = "00000000-0000-4000-8000-000000000000"
@@ -320,11 +321,7 @@ class TestReadOnlyStructuralInvariants:
     )
     def test_no_forbidden_mutation_verb_exists_on_live_subgroup_commands(self, subgroup_app) -> None:
         registered = {_registered_cli_name(info.name) for info in subgroup_app.registered_commands}
-        offenders = {
-            name: _forbidden_mutation_verbs(name)
-            for name in registered
-            if _forbidden_mutation_verbs(name)
-        }
+        offenders = {name: _forbidden_mutation_verbs(name) for name in registered if _forbidden_mutation_verbs(name)}
         assert offenders == {}, f"forbidden write verb on {subgroup_app.info.name}: {offenders}"
 
 

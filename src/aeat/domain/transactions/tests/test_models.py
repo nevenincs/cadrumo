@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import json
 from datetime import UTC, date, datetime
 from decimal import Decimal
 from pathlib import Path
@@ -13,6 +14,7 @@ from ...iva._schema import IvaCategory, IvaExemptionArticle
 from .. import (
     BusinessClassification,
     ClassificationHistoryEntry,
+    DecisionProvenance,
     RawProvenance,
     RawTransaction,
     SourceFormat,
@@ -459,6 +461,49 @@ def test_classification_history_entry_round_trips_through_json() -> None:
     assert restored == entry
     assert restored.confidence is None
     assert restored.provenance is None
+
+
+def test_classification_history_entry_round_trips_typed_decision_provenance() -> None:
+    """A populated typed `DecisionProvenance` must survive the JSON boundary intact."""
+    entry = ClassificationHistoryEntry(
+        business_classification=BusinessClassification.BUSINESS,
+        classified_at=datetime(2026, 4, 18, 9, 0, tzinfo=UTC),
+        classified_by="manual",
+        reason="operator override of the rule engine",
+        confidence=Decimal("0.85"),
+        provenance=DecisionProvenance(
+            decided_by="rule:utilities-v2",
+            decided_at=datetime(2026, 4, 18, 8, 30, tzinfo=UTC),
+            reason="matched recurring utilities pattern",
+            confidence=Decimal("0.62"),
+            manual_override=True,
+        ),
+    )
+    restored = ClassificationHistoryEntry.model_validate_json(entry.model_dump_json())
+    assert restored == entry
+    assert isinstance(restored.provenance, DecisionProvenance)
+    assert restored.provenance.decided_by == "rule:utilities-v2"
+    assert restored.provenance.confidence == Decimal("0.62")
+    assert restored.provenance.manual_override is True
+
+
+def test_decision_provenance_rejects_bare_dict_payload() -> None:
+    """Anti-tautology: a malformed provenance payload must be refused, not silently coerced."""
+    payload = json.loads(
+        ClassificationHistoryEntry(
+            business_classification=BusinessClassification.BUSINESS,
+            classified_at=datetime(2026, 4, 18, 9, 0, tzinfo=UTC),
+            classified_by="manual",
+            provenance=DecisionProvenance(
+                decided_by="manual",
+                decided_at=datetime(2026, 4, 18, 8, 30, tzinfo=UTC),
+            ),
+        ).model_dump_json()
+    )
+    # Corrupt the on-wire provenance: drop the mandatory decided_at.
+    del payload["provenance"]["decided_at"]
+    with pytest.raises(ValidationError):
+        ClassificationHistoryEntry.model_validate(payload)
 
 
 # ---------------------------------------------------------------------------

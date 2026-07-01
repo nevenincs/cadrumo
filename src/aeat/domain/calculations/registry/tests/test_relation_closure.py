@@ -312,11 +312,7 @@ def test_registry_validator_rejects_relation_source_casilla_display_token() -> N
     source_modelo = _modelo(modelos, "303")
     revision = target_modelo.revisions["2010-y-siguientes"]
     source_revision = source_modelo.revisions["2009-y-siguientes"]
-    relation = next(
-        item
-        for item in revision.relations
-        if item.id == "modelo-390-rel-303-cuota-devengada-total"
-    )
+    relation = next(item for item in revision.relations if item.id == "modelo-390-rel-303-cuota-devengada-total")
     source_casilla = next(item for item in source_revision.casillas if item.number != item.id)
     assert source_casilla.number != source_casilla.id
 

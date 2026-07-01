@@ -119,9 +119,7 @@ _CUSTODIO_NOMBRE_CASILLA: CasillaId = _casilla_id("custodio.nombre-razon-social"
 _CUSTODIO_CODIGO_PAIS_CASILLA: CasillaId = _casilla_id("custodio.codigo-pais")
 _MONEDA_CLAVE_TOKEN_CASILLA: CasillaId = _casilla_id("moneda.clave-token")
 _MONEDA_SALDO_CASILLA: CasillaId = _casilla_id("moneda.saldo-31-diciembre")
-_SALDO_31_DICIEMBRE_CASILLAS: tuple[CasillaId, ...] = (
-    _MONEDA_SALDO_CASILLA,
-)
+_SALDO_31_DICIEMBRE_CASILLAS: tuple[CasillaId, ...] = (_MONEDA_SALDO_CASILLA,)
 
 
 def _values_for(observation: RegistryModeloObservation, casilla_id: CasillaId) -> tuple[Decimal, ...]:

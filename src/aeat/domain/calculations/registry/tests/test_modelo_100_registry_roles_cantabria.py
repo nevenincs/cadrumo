@@ -12,18 +12,14 @@ from ._modelo_100_registry_support import (
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 _CANTABRIA_DEDUCTION_SECTION = ("resultados", "deduccion_autonomica_res", "cantabria_res")
-_CANTABRIA_DESPLAZAMIENTO_NUEVOS_RESIDENTES_ROLE = (
-    "irpf_deduccion_cantabria_desplazamiento_nuevos_residentes"
-)
+_CANTABRIA_DESPLAZAMIENTO_NUEVOS_RESIDENTES_ROLE = "irpf_deduccion_cantabria_desplazamiento_nuevos_residentes"
 _CANTABRIA_DESPLAZAMIENTO_NUEVOS_RESIDENTES_GENERADO_ROLE = (
     "irpf_deduccion_cantabria_desplazamiento_nuevos_residentes_generado"
 )
 _CANTABRIA_DESPLAZAMIENTO_NUEVOS_RESIDENTES_PENDIENTE_ROLE = (
     "irpf_deduccion_cantabria_desplazamiento_nuevos_residentes_pendiente"
 )
-_CANTABRIA_NUEVOS_CONTRIBUYENTES_EXTRANJERO_ROLE = (
-    "irpf_deduccion_cantabria_nuevos_contribuyentes_extranjero"
-)
+_CANTABRIA_NUEVOS_CONTRIBUYENTES_EXTRANJERO_ROLE = "irpf_deduccion_cantabria_nuevos_contribuyentes_extranjero"
 _CANTABRIA_NUEVOS_CONTRIBUYENTES_EXTRANJERO_GENERADO_ROLE = (
     "irpf_deduccion_cantabria_nuevos_contribuyentes_extranjero_generado"
 )

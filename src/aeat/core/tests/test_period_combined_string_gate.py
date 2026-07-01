@@ -243,9 +243,7 @@ ALLOWLIST: tuple[AllowlistRule, ...] = (
         reason="filing export support tests preserve external export path labels",
     ),
     AllowlistRule(
-        path=_path(
-            r"^src/aeat/application/live/tests/_(?:filed_capture_history|justificante_reconcile)_support\.py$"
-        ),
+        path=_path(r"^src/aeat/application/live/tests/_(?:filed_capture_history|justificante_reconcile)_support\.py$"),
         reason="live capture support tests preserve external justificante fixture and work-unit labels",
     ),
     AllowlistRule(
@@ -285,9 +283,7 @@ ALLOWLIST: tuple[AllowlistRule, ...] = (
         reason="CLI journey tests preserve existing filter-output and external work/evidence labels",
     ),
     AllowlistRule(
-        path=_path(
-            r"^src/aeat/entrypoints/cli/tests/test_(?:modelo_projection|overview_calendar_local_evidence)\.py$"
-        ),
+        path=_path(r"^src/aeat/entrypoints/cli/tests/test_(?:modelo_projection|overview_calendar_local_evidence)\.py$"),
         reason="CLI tests preserve external projection, justificante, and evidence labels",
     ),
     AllowlistRule(

@@ -1252,20 +1252,25 @@ cli:
   app:
     ledger:
       bienes_inversion:
-        acquisition_year_help: 'Year the good was acquired.'
-        art108_help: 'Whether the good qualifies as a bien de inversión under LIVA art. 108.'
-        asset_ref_help: 'Optional cross-reference to an AssetRecord identifier.'
-        cuota_soportada_help: 'Total input IVA borne on acquisition (positive).'
-        declare_help: 'Declare one capital good tracked for IVA regularización.'
-        description_help: 'Human description of the good.'
-        disposal_regime_help: 'Disposal regime (sujeta_no_exenta or exenta_o_no_sujeta); required with --disposal-year.'
-        disposal_requires_both: '--disposal-year and --disposal-regime must be supplied together.'
-        disposal_year_help: 'Optional art-110 disposal year.'
-        group_help: 'Capital-goods IVA deduction regularización register (LIVA arts. 107-110).'
-        identifier_help: 'Stable register identifier.'
+        acquisition_year_help: Year the good was acquired.
+        art108_help: Whether the good qualifies as a bien de inversión under LIVA
+          art. 108.
+        asset_ref_help: Optional cross-reference to an AssetRecord identifier.
+        cuota_soportada_help: Total input IVA borne on acquisition (positive).
+        declare_help: Declare one capital good tracked for IVA regularización.
+        description_help: Human description of the good.
+        disposal_regime_help: Disposal regime (sujeta_no_exenta or exenta_o_no_sujeta);
+          required with --disposal-year.
+        disposal_requires_both: --disposal-year and --disposal-regime must be supplied
+          together.
+        disposal_year_help: Optional art-110 disposal year.
+        group_help: Capital-goods IVA deduction regularización register (LIVA arts.
+          107-110).
+        identifier_help: Stable register identifier.
         kind_help: 'Regularisation window: mueble (4yr) or inmueble (9yr).'
-        list_help: 'List every tracked capital good on the active profile register.'
-        prorrata_inicial_help: 'Definitive deduction percentage of the acquisition year (0-100).'
+        list_help: List every tracked capital good on the active profile register.
+        prorrata_inicial_help: Definitive deduction percentage of the acquisition
+          year (0-100).
         unknown_disposal_regime: 'Unknown disposal regime {regime!r}; accepted: {accepted}'
       evidence:
         add_help: Register purchase invoice evidence from a PDF or image
@@ -1640,8 +1645,8 @@ cli:
       iva_wallet:
         as_of_year_help: Reference year for carry-forward age and expiry calculations.
         balance_help: Show aggregated IVA compensation carry-forward balance computed
-          from local Modelo 303 history. Reports total_balance, active_balance,
-          expired_balance, lot_count, and next_expiry_year.
+          from local Modelo 303 history. Reports total_balance, active_balance, expired_balance,
+          lot_count, and next_expiry_year.
         correct_amount_help: Corrected carry-forward balance amount in EUR (decimal,
           e.g. 1200.50).
         correct_confirm_help: Required confirmation flag. Acknowledge that this overwrites
@@ -2013,6 +2018,10 @@ cli:
           exclusive 40.3 casilla 34 and 40.2 casilla 03 relation channels, setting
           the unused modality to 0 when entering manual values.
         rename_help: Update the display name of a work unit
+        rescate_contingencia_year_help: 'Year the pension-plan contingency (retirement,
+          disability, death) occurred. Determines the LIRPF DT 12a apartado-4 time
+          window (Ley 26/2014): if the window is closed for the rescate year, the
+          40% reduction is withheld.'
         rescate_plan_pensiones_aportaciones_pre_2007_help: Contributions made to the
           pension plan up to 31 Dec 2006 (LIRPF transitional provision 12 proration
           base). Required with --rescate-plan-pensiones-capital and --rescate-plan-pensiones-aportaciones-totales.
@@ -2025,6 +2034,14 @@ cli:
           the 40% reduction and injects it into casilla 0011.
         rescate_plan_pensiones_not_decimal: --rescate-plan-pensiones-* values must
           be decimal amounts.
+        rescate_type_help: 'Pension-plan capital rescate type (LIRPF DT 12a): total
+          (whole capital at once) or parcial (staged withdrawals). A classification
+          and provenance signal, not an amount change: the 40% reduction applies to
+          the pre-2007 share of whatever is received. For parcial, each withdrawal
+          shares the same apartado-4 window.'
+        rescate_year_help: Year the rescate benefit is received (defaults to the filing
+          year). Compared against the LIRPF DT 12a apartado-4 window measured from
+          --contingencia-year.
         result_summary_header: result summary  Modelo %{modelo} %{year} %{period}
         resume_help: Validate whether you can retry an interrupted workflow run without
           contacting AEAT. Use --modelo --year --period for the normal path; exact
@@ -2095,9 +2112,6 @@ cli:
         year_help: Tax year of the work unit (e.g. 2026)
         year_out_of_range: Filing year %{year} is out of range; supply a year between
           %{minimum} and %{maximum}.
-        rescate_type_help: 'Pension-plan capital rescate type (LIRPF DT 12a): total (whole capital at once) or parcial (staged withdrawals). A classification and provenance signal, not an amount change: the 40% reduction applies to the pre-2007 share of whatever is received. For parcial, each withdrawal shares the same apartado-4 window.'
-        rescate_contingencia_year_help: 'Year the pension-plan contingency (retirement, disability, death) occurred. Determines the LIRPF DT 12a apartado-4 time window (Ley 26/2014): if the window is closed for the rescate year, the 40% reduction is withheld.'
-        rescate_year_help: 'Year the rescate benefit is received (defaults to the filing year). Compared against the LIRPF DT 12a apartado-4 window measured from --contingencia-year.'
   common:
     errors:
       draft_id_not_found: Draft ID %{draft_id} not found
@@ -2455,6 +2469,13 @@ cli:
       rename_help: Rename a profile in place; the active-profile pointer follows automatically
       rename_source_help: Existing profile name
       rename_target_help: New profile name
+      sar_catalogue_info: 'This archive holds every personal-data category kept for
+        the profile: identity and profile facts, modelo work units, ledger transactions,
+        calculation revisions, and filing records. Attachment evidence bytes and AEAT
+        captures stay in encrypted storage; use the encrypted recovery archive to
+        include them.'
+      sar_help: Export all personal data held for a profile as a GDPR right-of-access
+        archive (the portable profile bundle).
       show_help: Show the live values of a profile (defaults to the active profile)
       show_name_help: Profile id to show (defaults to the active profile)
       unknown_profile: 'Unknown profile: %{name}. Run ''aeat config profile list''
@@ -3024,6 +3045,15 @@ cli:
         created_at, modified_at, ...).
       sort_order_help: 'Sort order: asc (ascending) or desc (descending).'
       ungrouped_label: (ungrouped)
+    llm_diagnostics:
+      bad_date: '%{option} must be an ISO date (YYYY-MM-DD); got %{value}.'
+      help: Report existing LLM usage, cost, and classification-confidence metrics.
+      no_data_message: No LLM usage or classification-confidence metrics recorded
+        yet. Run an LLM-assisted classification to populate them.
+      since_help: Inclusive lower ISO date (YYYY-MM-DD) bound on usage records.
+      threshold_help: Confidence floor below which a classification counts as low-confidence.
+      threshold_range: --low-confidence-below must be within the inclusive 0..1 range.
+      until_help: Inclusive upper ISO date (YYYY-MM-DD) bound on usage records.
     merge:
       actor_help: Operator name recorded on the LEDGER_TRANSACTION_MERGED event
       child_id_help: One child id (or unambiguous prefix) to merge. Repeat for every
@@ -3341,9 +3371,13 @@ cli:
       modelo_help: AEAT modelo identifier (e.g. 303, 130, 100).
       year_help: Fiscal year for the applicability evaluation; defaults to the current
         year.
+    local_work_units_unavailable: Overview local Modelo work-unit state is unavailable;
+      refusing to render without persisted work state.
     period: Period
     period_help: 'Filing period as an AEAT token: 1T-4T (quarters), 0A (annual), 01-12
       (months). Combine with --year to choose the year.'
+    post_filing:
+      pending: '%{count} AEAT post-filing event(s) require attention: %{kinds}. Review them with ''aeat app live notifications list''.'
     status:
       drafts_empty: No saved declaration drafts were found.
       drafts_empty_with_work_units: No declaration drafts are saved - this is normal
@@ -3834,6 +3868,20 @@ errors:
     lookup_dispatch_arg_count: Formula op {op} expects {expected} arguments.
     lookup_dispatch_arg_kind: Formula op {op} requires {position} to be a {expected_kind}
       leaf.
+    m100_art85_boolean_invalid: Modelo 100 Art. 85 boolean box must be 0 or 1.
+    m100_art85_catastral_value_negative: Modelo 100 Art. 85 cadastral value must be
+      non-negative.
+    m100_art85_disposal_percentage_invalid: Modelo 100 Art. 85 mixed-use percentage
+      must be greater than 0 and at most 100.
+    m100_art85_imputation_days_invalid: Modelo 100 Art. 85 imputation days must be
+      an integer between 1 and 365.
+    m100_art85_input_negative: Modelo 100 Art. 85 numeric inputs must be non-negative.
+    m100_art85_mixed_use_inputs_without_flag: Modelo 100 Art. 85 mixed-use days or
+      percentage require the mixed-use box to be checked.
+    m100_art85_no_catastral_base_missing: Modelo 100 Art. 85 imputation without a
+      cadastral value requires substitute-base boxes that are not present.
+    m100_art85_revision_flag_invalid: Modelo 100 Art. 85 revised cadastral value flag
+      must be the official X checkbox value.
     m210_gastos_deducibles_negative: M210 gastos_deducibles %{casilla_id} must be
       non-negative; got %{value}.
     m210_gastos_deducibles_not_allowed: M210 gastos_deducibles %{casilla_id} is only
@@ -4028,6 +4076,7 @@ errors:
     error_resources_load: A bundled application resource could not be loaded.
     error_resources_not_found: The requested bundled resource was not found.
     error_resources_validation: A bundled application file failed strict validation.
+    error_retention: Could not evaluate the tax-record retention policy.
     error_review: A review error occurred.
     error_sanitization: An error occurred while sanitizing the document.
     error_sede: An error occurred in the AEAT electronic Sede.
@@ -4557,6 +4606,10 @@ errors:
     refused_profile_schema_validation: The profile data violates the schema contract.
       Correct the values shown.
     refused_renta_maritime_exemption_inactive: errors.refused.refused_renta_maritime_exemption_inactive
+    refused_retention_floor: 'Erase refused: %{retained_record_count} filed tax record(s)
+      are still within the legal retention period (Ley 58/2003, LGT art. 66 and 70).
+      The earliest safe erase date is %{earliest_safe_erase_date}. Wait until then,
+      or re-run with --i-acknowledge-legal-retention-obligations and --reason to override.'
     refused_review_edit_parse: '`--set KEY=VALUE` could not be parsed. Check the syntax
       of the value provided.'
     refused_review_filter_parse: '`--filter KEY=VALUE` could not be parsed. Check
@@ -4981,6 +5034,10 @@ wizard:
           when set, obligations for periods before this date are not shown.
       address-postcode:
         help: Tax address postcode
+      art109-activity-income-withholding-ge-70pct:
+        help: Art. 109 coverage - at least 70% of covered professional, agricultural,
+          livestock, or forestry activity income subject to withholding or payment
+          on account
       bienes-extranjero-above-threshold:
         help: Foreign-held assets above legal threshold
       cloud-evidence-upload:
@@ -5030,6 +5087,10 @@ wizard:
         help: Intra-community operations exceed 50,000 EUR
       iva-oss-enrolled:
         help: Enrolled in OSS
+      iva-group-member-enrolled:
+        help: Enrolled as a member entity of an IVA group
+      iva-group-dominant-entity-enrolled:
+        help: Enrolled as the dominant entity of an IVA group
       iva-redeme-enrolled:
         help: Whether the taxpayer is registered in REDEME
       iva-regime:
@@ -5079,10 +5140,6 @@ wizard:
         help: Pays local rent with retención
       professional-income-withholding-ge-70pct:
         help: At least 70% of professional income with prior retención
-      art109-activity-income-withholding-ge-70pct:
-        help: Art. 109 coverage - at least 70% of covered professional, agricultural,
-          livestock, or forestry activity income subject to withholding or payment
-          on account
       representante-fiscal-nif:
         help: NIF/NIE of the fiscal representative in Spain. Required for non-EU/EEA
           non-residents (Art. 47 LGT + Art. 10 TRLIRNR RDLeg 5/2004).
@@ -5166,6 +5223,10 @@ wizard:
         prompt: Intra-community operations exceed 50,000 EUR
       iva-oss-enrolled:
         prompt: Enrolled in OSS
+      iva-group-member-enrolled:
+        prompt: Enrolled as an IVA group member entity
+      iva-group-dominant-entity-enrolled:
+        prompt: Enrolled as an IVA group dominant entity
       iva-redeme-enrolled:
         prompt: Registered in REDEME (monthly IVA refund register)
       iva-regime:
@@ -5180,6 +5241,8 @@ wizard:
         prompt: Notes for your own records (optional)
       title: Notes for your own records
     obligations:
+      art109-activity-income-withholding-ge-70pct:
+        prompt: Art. 109 70% activity-income coverage exception applies
       bienes-extranjero-above-threshold:
         prompt: Foreign-held assets above legal threshold
       does-intracomunitario:
@@ -5224,8 +5287,6 @@ wizard:
         prompt: Pays local rent with retención
       professional-income-withholding-ge-70pct:
         prompt: At least 70% of professional income with prior retención
-      art109-activity-income-withholding-ge-70pct:
-        prompt: Art. 109 70% activity-income coverage exception applies
       third-party-transactions-above-347-threshold:
         prompt: Third-party transactions exceed Modelo 347 threshold
       title: Modelo obligations

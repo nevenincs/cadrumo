@@ -65,6 +65,8 @@ def test_archive_manual_transaction_records_lifecycle_lineage_and_event(secure_o
     assert events[-1].payload["previous_lifecycle_state"] == "ACTIVE"
     assert events[-1].payload["lifecycle_state"] == "ARCHIVED"
     assert events[-1].payload["reason"] == "wrong account import"
+
+
 def test_stash_manual_transaction_records_lifecycle_lineage_and_event(secure_objects: SecureObjectRepository) -> None:
     transaction_repository, event_repository = _repositories(secure_objects)
     created = create_manual_transaction(
@@ -102,5 +104,3 @@ def test_stash_manual_transaction_records_lifecycle_lineage_and_event(secure_obj
         BucketEventType.LEDGER_TRANSACTION_STASHED,
     ]
     assert events[-1].payload["lifecycle_state"] == "STASHED"
-
-

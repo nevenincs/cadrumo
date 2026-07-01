@@ -678,16 +678,19 @@ def _validate_intracom_export_counterparty(
                     "not a valid intra-community counterparty"
                 ),
             )
-    if category in {
-        IvaCategory.EXPORT_THIRD_COUNTRY_ZERO_RATED,
-        IvaCategory.EXPORT_ASSIMILATED_ZERO_RATED,
-    } and eu_member_state is not None:
+    if (
+        category
+        in {
+            IvaCategory.EXPORT_THIRD_COUNTRY_ZERO_RATED,
+            IvaCategory.EXPORT_ASSIMILATED_ZERO_RATED,
+        }
+        and eu_member_state is not None
+    ):
         return IvaLedgerAggregationIssue(
             transaction_id=transaction_id,
             reason=IvaLedgerAggregationIssueReason.EU_MEMBER_STATE_ON_EXPORT_TRANSACTION,
             detail=(
-                "export/export-assimilated operation must not carry an EU member "
-                f"state; got {eu_member_state.value!r}"
+                f"export/export-assimilated operation must not carry an EU member state; got {eu_member_state.value!r}"
             ),
         )
     return None

@@ -12,9 +12,7 @@ from ._modelo_100_registry_support import (
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 _CASTILLA_Y_LEON_DEDUCTION_SECTION = ("resultados", "deduccion_autonomica_res", "castilla_y_leon_res")
-_CASTILLA_Y_LEON_PENDING_APPLICATION_ROLE = (
-    "irpf_deduccion_castilla_y_leon_importe_pendiente_aplicacion"
-)
+_CASTILLA_Y_LEON_PENDING_APPLICATION_ROLE = "irpf_deduccion_castilla_y_leon_importe_pendiente_aplicacion"
 _LEGACY_CASTILLA_Y_LEON_YEAR_PENDING_ROLE = "irpf_deduccion_castilla_y_leon_generado_2022_pendiente"
 _EXPECTED_CL11EA14_LABELS = {
     2020: "Importe generado en 2019 pendiente de aplicación",
@@ -44,9 +42,7 @@ def test_modelo_100_castilla_y_leon_pending_application_role_covers_official_cl1
     casillas_by_id = {casilla.id: casilla for casilla in revision.casillas if casilla.id in expected_ids}
 
     assert set(casillas_by_id) == expected_ids
-    assert {casilla.semantic_role for casilla in casillas_by_id.values()} == {
-        _CASTILLA_Y_LEON_PENDING_APPLICATION_ROLE
-    }
+    assert {casilla.semantic_role for casilla in casillas_by_id.values()} == {_CASTILLA_Y_LEON_PENDING_APPLICATION_ROLE}
     assert [casillas_by_id[casilla_id].label for casilla_id in sorted(expected_ids)] == [
         "Importe generado en 2020 pendiente de aplicación",
         "Importe generado en 2021 pendiente de aplicación",

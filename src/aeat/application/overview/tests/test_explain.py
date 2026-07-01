@@ -109,6 +109,8 @@ def test_explain_profile_facts_surface_taxpayer_model_axes() -> None:
     # Nested IVA sub-model facts must also be flattened.
     assert "iva.roi_enrolled" in result.profile_facts
     assert "iva.oss_enrolled" in result.profile_facts
+    assert "iva.group_member_enrolled" in result.profile_facts
+    assert "iva.group_dominant_entity_enrolled" in result.profile_facts
 
 
 def test_explain_undeclared_profile_yields_incomplete_verdict() -> None:

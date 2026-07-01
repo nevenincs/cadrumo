@@ -13,16 +13,10 @@ from ._modelo_100_registry_support import (
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
-_GALICIA_INMUEBLE_VACIO_ADECUACION_GENERADO_ROLE = (
-    "irpf_deduccion_galicia_inmueble_vacio_adecuacion_generado"
-)
-_GALICIA_INMUEBLE_VACIO_ADECUACION_PENDIENTE_ROLE = (
-    "irpf_deduccion_galicia_inmueble_vacio_adecuacion_pendiente"
-)
+_GALICIA_INMUEBLE_VACIO_ADECUACION_GENERADO_ROLE = "irpf_deduccion_galicia_inmueble_vacio_adecuacion_generado"
+_GALICIA_INMUEBLE_VACIO_ADECUACION_PENDIENTE_ROLE = "irpf_deduccion_galicia_inmueble_vacio_adecuacion_pendiente"
 _GALICIA_ARRENDAMIENTO_VIVIENDAS_VACIAS_ROLE = "irpf_deduccion_galicia_arrendamiento_viviendas_vacias"
-_GALICIA_ARRENDAMIENTO_VIVIENDAS_VACIAS_GENERADO_ROLE = (
-    "irpf_deduccion_galicia_arrendamiento_viviendas_vacias_generado"
-)
+_GALICIA_ARRENDAMIENTO_VIVIENDAS_VACIAS_GENERADO_ROLE = "irpf_deduccion_galicia_arrendamiento_viviendas_vacias_generado"
 _GALICIA_ARRENDAMIENTO_VIVIENDAS_VACIAS_PENDIENTE_ROLE = (
     "irpf_deduccion_galicia_arrendamiento_viviendas_vacias_pendiente"
 )

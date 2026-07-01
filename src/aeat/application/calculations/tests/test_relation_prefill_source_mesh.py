@@ -48,6 +48,7 @@ _M115_PERCEPTORES_CASILLA: CasillaId = _casilla_id("01")
 _M115_BASE_CASILLA: CasillaId = _casilla_id("02")
 _M115_RETENCIONES_CASILLA: CasillaId = _casilla_id("03")
 _M130_RESULTADO_FINAL_CASILLA: CasillaId = _casilla_id("19")
+_M202_2023_2024_PRIOR_PAYMENTS_BINDING = "modelo-202-2023-2024-pagos-fraccionados-anteriores"
 
 
 def _modelo_115_observations() -> tuple[RegistryModeloObservation, ...]:
@@ -239,6 +240,52 @@ def test_unresolved_non_formula_relation_with_materialised_slot_is_not_flagged(t
         "a cold-start non-formula relation whose target_binding materialises an observable slot "
         "must NOT fire the cold-start advisory — that would regress the cross-modelo carry contract"
     )
+
+
+def test_m202_1p_previous_payments_materialises_zero_without_prior_relation(tmp_path: Path) -> None:
+    """Modelo 202 1P has no previous same-year installment to fold into casilla 30."""
+    with isolated_runtime_profile(tmp_path=tmp_path):
+        repository = CalculationObservationRepository()
+        snapshot = resources().modelos.authority.snapshot("202", filing_year=2024, period="1P")
+
+        source_resolution = RelationPrefillSourceResolver(
+            repository=repository,
+            registry_snapshot=snapshot,
+        ).resolve(
+            CalculationSourceContext(
+                bucket_id="operator",
+                modelo="202",
+                filing_year=2024,
+                period=Period.from_year_and_code(2024, "1P"),
+                revision=snapshot.revision,
+            ),
+        )
+
+    assert source_resolution.binding_values[_M202_2023_2024_PRIOR_PAYMENTS_BINDING] == Decimal("0")
+    assert source_resolution.relation_values == {}
+
+
+def test_m202_2p_previous_payments_stays_unresolved_without_prior_filing(tmp_path: Path) -> None:
+    """Modelo 202 2P still requires the actual 1P installment relation."""
+    with isolated_runtime_profile(tmp_path=tmp_path):
+        repository = CalculationObservationRepository()
+        snapshot = resources().modelos.authority.snapshot("202", filing_year=2024, period="2P")
+
+        source_resolution = RelationPrefillSourceResolver(
+            repository=repository,
+            registry_snapshot=snapshot,
+        ).resolve(
+            CalculationSourceContext(
+                bucket_id="operator",
+                modelo="202",
+                filing_year=2024,
+                period=Period.from_year_and_code(2024, "2P"),
+                revision=snapshot.revision,
+            ),
+        )
+
+    assert _M202_2023_2024_PRIOR_PAYMENTS_BINDING not in source_resolution.binding_values
+    assert source_resolution.relation_values == {}
 
 
 def test_orphaned_non_formula_relation_surfaces_advisory_diagnostic(tmp_path: Path) -> None:

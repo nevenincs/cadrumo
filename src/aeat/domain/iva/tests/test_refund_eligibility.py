@@ -35,15 +35,13 @@ class TestRedemeCompanyMonthlyRefund:
     def test_redeme_refund_available_in_every_monthly_period(self, code: str) -> None:
         assert refund_disposition_available(redeme_enrolled=True, period=_p(code)) is True
         assert (
-            refund_eligibility_reason(redeme_enrolled=True, period=_p(code))
-            is RefundEligibilityReason.REDEME_INSCRIBED
+            refund_eligibility_reason(redeme_enrolled=True, period=_p(code)) is RefundEligibilityReason.REDEME_INSCRIBED
         )
 
     def test_redeme_refund_available_even_in_an_early_quarter(self) -> None:
         assert refund_disposition_available(redeme_enrolled=True, period=_p("1T")) is True
         assert (
-            refund_eligibility_reason(redeme_enrolled=True, period=_p("1T"))
-            is RefundEligibilityReason.REDEME_INSCRIBED
+            refund_eligibility_reason(redeme_enrolled=True, period=_p("1T")) is RefundEligibilityReason.REDEME_INSCRIBED
         )
 
 
@@ -70,9 +68,7 @@ class TestOrdinaryMidPeriodRefused:
     @pytest.mark.parametrize("code", ["1T", "2T", "3T", "01", "05", "11"])
     def test_refund_unavailable(self, code: str) -> None:
         assert refund_disposition_available(redeme_enrolled=False, period=_p(code)) is False
-        assert (
-            refund_eligibility_reason(redeme_enrolled=False, period=_p(code)) is RefundEligibilityReason.NOT_ELIGIBLE
-        )
+        assert refund_eligibility_reason(redeme_enrolled=False, period=_p(code)) is RefundEligibilityReason.NOT_ELIGIBLE
 
 
 class TestCrossEntityAndInvariants:

@@ -91,6 +91,7 @@ def _casilla_id(value: object) -> CasillaId:
     except ValueError as exc:
         raise RuntimeError(f"filed-revision observation casilla constant {value!r} is not a CasillaId") from exc
 
+
 #: Canonical id for the Modelo 303 end-of-period available compensation carry-forward casilla. A
 #: refunded (devolución) period must carry ZERO generated credit forward, so when
 #: the filed revision is refunded this casilla is re-stamped to its posterior-only

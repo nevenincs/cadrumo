@@ -293,9 +293,7 @@ def test_emilio_catalogue_service_invoice_feeds_m349() -> None:
         assert "operation_type\tS" in created_invoice.output
 
         repository = InvoiceCatalogueRepository()
-        stored = next(
-            invoice for invoice in repository.load().values() if invoice.invoice_number == "OUT-2024-Q1-DE-S"
-        )
+        stored = next(invoice for invoice in repository.load().values() if invoice.invoice_number == "OUT-2024-Q1-DE-S")
         assert stored.bucket_id is not None
         resolution = InvoiceCatalogueSourceResolver(invoice_repository=repository).resolve(
             CalculationSourceContext(

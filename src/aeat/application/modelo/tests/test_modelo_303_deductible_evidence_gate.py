@@ -332,9 +332,7 @@ def test_modelo_303_verify_warns_deductible_vat_missing_evidence_and_output_gap(
     assert blocking == []
     expected_source_refs = tuple(dict.fromkeys(ref for obs in revision.observations for ref in obs.source_refs))
     evidence_findings = [
-        finding
-        for finding in report.findings
-        if "VAT" in finding.message and ("no linked evidence" in finding.message)
+        finding for finding in report.findings if "VAT" in finding.message and ("no linked evidence" in finding.message)
     ]
     assert evidence_findings
     assert all(finding.source_refs == expected_source_refs for finding in evidence_findings)

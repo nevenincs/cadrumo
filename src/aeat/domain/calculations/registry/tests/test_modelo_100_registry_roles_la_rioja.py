@@ -13,12 +13,8 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 _LA_RIOJA_DEDUCTION_SECTION = ("resultados", "deduccion_autonomica_res", "la_rioja_res")
 _LA_RIOJA_FIJACION_POBLACION_RURAL_ROLE = "irpf_deduccion_la_rioja_fijacion_poblacion_rural"
-_LA_RIOJA_FIJACION_POBLACION_RURAL_GENERADO_ROLE = (
-    "irpf_deduccion_la_rioja_fijacion_poblacion_rural_generado"
-)
-_LA_RIOJA_FIJACION_POBLACION_RURAL_PENDIENTE_ROLE = (
-    "irpf_deduccion_la_rioja_fijacion_poblacion_rural_pendiente"
-)
+_LA_RIOJA_FIJACION_POBLACION_RURAL_GENERADO_ROLE = "irpf_deduccion_la_rioja_fijacion_poblacion_rural_generado"
+_LA_RIOJA_FIJACION_POBLACION_RURAL_PENDIENTE_ROLE = "irpf_deduccion_la_rioja_fijacion_poblacion_rural_pendiente"
 _LEGACY_LA_RIOJA_GENERADO_2025_ROLES = frozenset(
     {
         "irpf_deduccion_la_rioja_generado_2025",

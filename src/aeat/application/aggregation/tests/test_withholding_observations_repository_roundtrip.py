@@ -197,7 +197,11 @@ def test_replace_observations_drops_removed_percepcion_no_stale_row(tmp_path: Pa
             _observation(nif="22222222J", clave="A"),
         )
         repo.replace_observations(
-            modelo="190", filing_year=2024, period=period, observations=full, source_kind="aggregate_pull",
+            modelo="190",
+            filing_year=2024,
+            period=period,
+            observations=full,
+            source_kind="aggregate_pull",
         )
         assert len(repo.load_observations("190", period)) == 3
         # Re-pull dropped the 11111111H/clave-G percepción.

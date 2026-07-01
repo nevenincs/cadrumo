@@ -210,6 +210,36 @@ class TestGateProjectionAgreement:
         assert computing.details.get("overdue") == "true"
         assert computing.details.get("extemporanea") == "true"
 
+    def test_real_engine_still_refuses_late_local_file_when_target_never_had_obligation(self) -> None:
+        """Late local FILE is not a bypass for a target the profile never owed."""
+        from ....domain.deadlines import DeadlineEngine, IVARegime
+
+        target_period = _period(2025, "1T")
+        profile = _profile().model_copy(update={"iva_regime": IVARegime.EXENTO})
+        draft = _ConcreteDraft(
+            period=target_period,
+            profile_tax_id=profile.tax_id,
+            schema_version=_registry_schema_version(period=target_period),
+        )
+        fx = _fixtures()
+        engine = WorkflowEngine(
+            deadline_engine=DeadlineEngine(),
+            filing_draft_builder=_ConcreteDraftBuilder(draft=draft),
+            submission_engine=fx.submission_engine,
+            session=fx.session,
+            certificate_bundle=fx.certificate_bundle,
+            inputs_provider=fx.inputs_provider,
+            settings=fx.settings,
+            expedientes_source=fx.expedientes_source,
+            notifications_source=fx.notifications_source,
+        )
+
+        result = _run_for_period(engine, profile, "303", target_period, today=date(2026, 6, 29))
+
+        assert result.aborted_reason is WorkflowAbortReason.NO_PENDING_OBLIGATION
+        computing = next(step for step in result.steps if step.stage is WorkflowStage.COMPUTING_DEADLINES)
+        assert computing.success is False
+
     def test_gate_aborts_when_projection_lacks_the_target(self) -> None:
         """A target absent from the shared schedule aborts the gate with
         ``NO_PENDING_OBLIGATION``, and the projection's

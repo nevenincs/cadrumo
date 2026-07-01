@@ -71,6 +71,8 @@ def _scripted_answers_for_individual_declaration() -> deque[str]:
             "GENERAL",  # iva-regime
             "false",  # iva-roi-enrolled
             "false",  # iva-oss-enrolled
+            "false",  # iva-group-member-enrolled
+            "false",  # iva-group-dominant-entity-enrolled
             "false",  # iva-sii-enrolled
             "false",  # iva-redeme-enrolled
             "false",  # iva-intracommunity-operations-exceed-50000-eur
@@ -218,6 +220,8 @@ def test_run_flow_walks_joint_taxation_spouse_questions() -> None:
             "GENERAL",  # iva-regime
             "false",  # iva-roi-enrolled
             "false",  # iva-oss-enrolled
+            "false",  # iva-group-member-enrolled
+            "false",  # iva-group-dominant-entity-enrolled
             "false",  # iva-sii-enrolled
             "false",  # iva-redeme-enrolled
             "false",  # iva-intracommunity-operations-exceed-50000-eur

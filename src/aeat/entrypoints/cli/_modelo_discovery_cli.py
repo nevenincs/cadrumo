@@ -359,9 +359,7 @@ def _register_casillas_command(app: typer.Typer, deps: _DiscoveryDeps) -> None:
             report = report.model_copy(
                 update={
                     "rows": tuple(
-                        row
-                        for row in report.rows
-                        if row.number == number_filter or row.casilla_id == number_filter
+                        row for row in report.rows if row.number == number_filter or row.casilla_id == number_filter
                     ),
                 },
             )
@@ -627,7 +625,13 @@ def _binding_list_rows_for_report(report, *, missing: bool) -> tuple[list[Bindin
     rows = report.rows
     if missing:
         profile_resolved = _profile_resolved_binding_ids(report)
-        rows = tuple(row for row in rows if row.source != "constant_value" and row.binding_id not in profile_resolved)
+        rows = tuple(
+            row
+            for row in rows
+            if row.source != "constant_value"
+            and row.binding_id not in profile_resolved
+            and getattr(row, "operator_input_required", True)
+        )
 
     merged_rows: list[BindingListRowPayload] = []
     text_rows: list[str] = []

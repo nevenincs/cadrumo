@@ -540,7 +540,7 @@ TEST_SNAPSHOT_BASE_PROBE_NAMESPACE = SecureObjectNamespaceDefinition(
 )
 TEST_SESSION_LIFECYCLE_NAMESPACE = SecureObjectNamespaceDefinition(
     key="test_session_lifecycle",
-    namespace="aeat.test.session.lifecycle",
+    namespace="aeat-test.session.lifecycle",
     owner="aeat.entrypoints.cli.test_session_lifecycle_roundtrip",
     sensitivity=SensitivityClass.OPERATIONAL,
     schema_version=SECURE_OBJECT_SCHEMA_VERSION_V1,
@@ -553,7 +553,7 @@ TEST_SESSION_LIFECYCLE_NAMESPACE = SecureObjectNamespaceDefinition(
 )
 TEST_SECURE_BOUND_CONTRACT_NAMESPACE = SecureObjectNamespaceDefinition(
     key="test_secure_bound_contract",
-    namespace="aeat.test.envelope.secure_bound_contract",
+    namespace="aeat-test.envelope.secure_bound_contract",
     owner="aeat.adapters.persistence.storage.envelope.test_secure_bound_repository_contract",
     sensitivity=SensitivityClass.AUDIT,
     schema_version=SECURE_OBJECT_SCHEMA_VERSION_V1,
@@ -566,8 +566,8 @@ TEST_SECURE_BOUND_CONTRACT_NAMESPACE = SecureObjectNamespaceDefinition(
 )
 TEST_RUNTIME_PROFILE_NAMESPACE = SecureObjectNamespaceDefinition(
     key="test_runtime_profile",
-    namespace="aeat.tests.runtime.profile",
-    owner="aeat.tests.test_secure_sql",
+    namespace="aeat-tests.runtime.profile",
+    owner="aeat-tests.test_secure_sql",
     sensitivity=SensitivityClass.FINANCIAL,
     schema_version=SECURE_OBJECT_SCHEMA_VERSION_V1,
     object_key_grammar="runtime-row",

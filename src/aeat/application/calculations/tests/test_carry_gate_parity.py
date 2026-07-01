@@ -180,9 +180,12 @@ def test_public_carry_reads_match_shared_gate_for_resolvable_source(tmp_path: Pa
 
 def test_shared_gate_refuses_unresolvable_source() -> None:
     """A source context the registry cannot resolve is refused, not carried."""
-    assert revision_carry_outcome(
-        _DIVERGENT_REVISION_ID,
-        source_modelo=_NONEXISTENT_MODELO,
-        source_filing_year=_YEAR,
-        source_period=_SOURCE_PERIOD,
-    ) is True
+    assert (
+        revision_carry_outcome(
+            _DIVERGENT_REVISION_ID,
+            source_modelo=_NONEXISTENT_MODELO,
+            source_filing_year=_YEAR,
+            source_period=_SOURCE_PERIOD,
+        )
+        is True
+    )

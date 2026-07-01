@@ -419,9 +419,7 @@ def filing_record_observe_local(
         f"captured_by\t{local_observation.captured_by}",
         "casilla_id\tvalue",
     ]
-    lines.extend(
-        f"{casilla_id}\t{value}" for casilla_id, value in sorted(local_observation.casilla_values.items())
-    )
+    lines.extend(f"{casilla_id}\t{value}" for casilla_id, value in sorted(local_observation.casilla_values.items()))
     lines.append(f"WARNING\t{notice_message}")
     _emit_envelope(
         ctx,

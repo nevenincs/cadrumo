@@ -433,7 +433,7 @@ def test_namespace_definition_rejects_pathlike_namespaces() -> None:
         SecureObjectNamespaceDefinition(
             key="bad_namespace",
             namespace="aeat/bad",
-            owner="aeat.test",
+            owner="aeat-test",
             sensitivity=SensitivityClass.AUDIT,
             schema_version=1,
             object_key_grammar="{id}",
@@ -462,8 +462,8 @@ def test_namespace_registry_error_round_trips_through_build_error_envelope() -> 
 def _make_namespace_definition(**overrides: object) -> SecureObjectNamespaceDefinition:
     defaults: dict[str, object] = {
         "key": "test_key",
-        "namespace": "aeat.test",
-        "owner": "aeat.test",
+        "namespace": "aeat-test",
+        "owner": "aeat-test",
         "sensitivity": SensitivityClass.AUDIT,
         "schema_version": 1,
         "object_key_grammar": "{id}",
@@ -544,7 +544,7 @@ def _make_path_definition(**overrides: object) -> StoragePathDefinition:
         "key": "test_path",
         "kind": StoragePathKind.DIRECTORY,
         "grammar": "<root>/test/",
-        "owner": "aeat.test",
+        "owner": "aeat-test",
     }
     defaults.update(overrides)
     return StoragePathDefinition.model_validate(defaults)
@@ -596,7 +596,7 @@ def test_duplicate_path_keys_raise_namespace_registry_error() -> None:
         key="dup_path",
         kind=StoragePathKind.DIRECTORY,
         grammar="<root>/dup/",
-        owner="aeat.test",
+        owner="aeat-test",
     )
     with pytest.raises(ValidationError) as exc_info:
         StorageHierarchyRegistry(namespaces=(), paths=(path, path))

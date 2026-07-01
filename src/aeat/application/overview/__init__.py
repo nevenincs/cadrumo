@@ -85,6 +85,12 @@ from ._calendar import (
     derive_modelo_applicability,
     user_state_for,
 )
+from ._coverage import (
+    AdvisedObligation,
+    CoverageAdviceReason,
+    ObligationCoverageReport,
+    build_obligation_coverage,
+)
 from ._errors import (
     OverviewAgendaError,
     OverviewBacklogError,
@@ -265,8 +271,11 @@ def build_overview_status_report(
 
 
 __all__ = [
+    "AdvisedObligation",
     "CalendarCompleteness",
     "CalendarWarning",
+    "CoverageAdviceReason",
+    "ObligationCoverageReport",
     "OverviewAeatSubmissionState",
     "OverviewAgendaError",
     "OverviewBacklogError",
@@ -286,6 +295,7 @@ __all__ = [
     "SuppressedCalendarEntry",
     "actionable_post_filing_events",
     "build_filing_obligation_advisories",
+    "build_obligation_coverage",
     "build_overview_agenda",
     "build_overview_backlog",
     "build_overview_calendar",

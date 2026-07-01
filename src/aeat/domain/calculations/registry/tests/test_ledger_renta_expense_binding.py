@@ -105,15 +105,9 @@ def test_modelo_100_2025_renta_ledger_expense_bindings_resolve_to_bound_casillas
     casillas_by_id = {casilla.id: casilla for casilla in revision.casillas}
 
     assert casillas_by_id[_M100_GASTO_SS_CASILLA].binding == "renta-2025-ledger-expense-0186-deductible"
-    assert casillas_by_id[_M100_GASTO_ARRENDAMIENTOS_CASILLA].binding == (
-        "renta-2025-ledger-expense-0192-deductible"
-    )
-    assert casillas_by_id[_M100_GASTO_OTROS_CONCEPTOS_CASILLA].binding == (
-        "renta-2025-ledger-expense-0199-deductible"
-    )
-    assert casillas_by_id[_M100_GASTO_AMORTIZACIONES_CASILLA].binding == (
-        "renta-2025-ledger-expense-0203-deductible"
-    )
+    assert casillas_by_id[_M100_GASTO_ARRENDAMIENTOS_CASILLA].binding == ("renta-2025-ledger-expense-0192-deductible")
+    assert casillas_by_id[_M100_GASTO_OTROS_CONCEPTOS_CASILLA].binding == ("renta-2025-ledger-expense-0199-deductible")
+    assert casillas_by_id[_M100_GASTO_AMORTIZACIONES_CASILLA].binding == ("renta-2025-ledger-expense-0203-deductible")
 
     observations = (
         _expense_observation(
@@ -219,9 +213,10 @@ def test_modelo_100_2025_renta_ledger_expense_bindings_resolve_to_bound_casillas
     # binding values into casilla.values rather than computing fresh
     # aggregates.
     assert calculation.values[_M100_GASTO_SS_CASILLA] == binding_values["renta-2025-ledger-expense-0186-deductible"]
-    assert calculation.values[_M100_GASTO_OTROS_CONCEPTOS_CASILLA] == binding_values[
-        "renta-2025-ledger-expense-0199-deductible"
-    ]
+    assert (
+        calculation.values[_M100_GASTO_OTROS_CONCEPTOS_CASILLA]
+        == binding_values["renta-2025-ledger-expense-0199-deductible"]
+    )
 
 
 @pytest.mark.parametrize(

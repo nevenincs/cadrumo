@@ -77,7 +77,4 @@ def test_profile_create_help_advertises_situacion_familiar_runtime_choices(
 
     assert "FUNCTION" not in help_result.output
     missing = sorted(token for token in runtime_choices if token not in compact_help)
-    assert not missing, (
-        "--situacion-familiar runtime choices are not all visible in profile-create help: "
-        f"{missing}"
-    )
+    assert not missing, f"--situacion-familiar runtime choices are not all visible in profile-create help: {missing}"

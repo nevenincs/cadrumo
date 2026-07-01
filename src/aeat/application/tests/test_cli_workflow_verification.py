@@ -40,9 +40,7 @@ def test_root_contract_service_accepts_canonical_roots() -> None:
 
 def test_auth_bucket_events_survive_workflow_repository_reload() -> None:
     repository = workflow_state_repository()
-    repository.update(
-        lambda state: register_minimal_profile(state, profile_id=_BUCKET_ID, display_name=_PROFILE_LABEL)
-    )
+    repository.update(lambda state: register_minimal_profile(state, profile_id=_BUCKET_ID, display_name=_PROFILE_LABEL))
 
     configured = configure_operator_auth("certificate")
     cleared = clear_operator_auth(provider="certificate")

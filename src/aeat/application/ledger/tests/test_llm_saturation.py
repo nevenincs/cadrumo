@@ -118,4 +118,3 @@ def test_suggest_non_derivable_category_surfaces_reason_not_a_guess(
     assert suggestion.taxable_base is None
     assert suggestion.iva_amount is None
     assert suggestion.derivation_note  # operator-facing explanation present
-

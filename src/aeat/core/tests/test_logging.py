@@ -38,7 +38,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 def _capture_logger_output() -> tuple[logging.Logger, logging.Logger, logging.Handler, io.StringIO]:
     """Attach a temporary stream handler to the root logger."""
 
-    logger = get_logger("aeat.test_logging")
+    logger = get_logger("aeat-test_logging")
     root_logger = logging.getLogger()
     stream = io.StringIO()
     handler = logging.StreamHandler(stream)
@@ -56,7 +56,7 @@ def test_default_logging_routes_warnings_to_file_not_stderr(capsys: pytest.Captu
     """Warnings should be persisted for diagnostics without polluting CLI stderr."""
 
     marker = "warning-route-marker-7f6a3c"
-    logger = get_logger("aeat.test_logging.default_route")
+    logger = get_logger("aeat-test_logging.default_route")
 
     logger.warning(marker)
 
@@ -360,7 +360,7 @@ def test_secret_scrubbing_preserves_exc_info_for_downstream_handlers() -> None:
         raise RuntimeError("oauth_refresh_token=refresh-123")
     except RuntimeError:
         record = logging.LogRecord(
-            name="aeat.test_logging",
+            name="aeat-test_logging",
             level=logging.ERROR,
             pathname=__file__,
             lineno=0,
@@ -381,7 +381,7 @@ def test_secret_scrubbing_uses_context_hints_for_list_args_too() -> None:
 
     filter_ = SecretScrubbingFilter()
     record = logging.LogRecord(
-        name="aeat.test_logging",
+        name="aeat-test_logging",
         level=logging.INFO,
         pathname=__file__,
         lineno=0,

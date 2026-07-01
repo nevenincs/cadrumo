@@ -121,6 +121,7 @@ def test_decode_invoice_payload_rejects_header_only_csv() -> None:
     assert exc_info.value.translated_message == "application.invoices.importing.errors.invalid_json_shape"
     assert exc_info.value.context == {"payload_type": "csv"}
 
+
 # ---------------------------------------------------------------------------
 # _reject_top_level_iva_rate — line-level import contract
 # ---------------------------------------------------------------------------

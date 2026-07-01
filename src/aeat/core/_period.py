@@ -81,6 +81,7 @@ _EXT_PERIOD_RE = re.compile(r"^EXT-[1-4]T$")
 _EVENT_PERIOD_RE = re.compile(r"^EVENT-\d+$")
 _DISPLAY_PERIOD_RE = re.compile(r"^(?P<year>\d{4})\s+(?P<code>[A-Z0-9]+(?:-[A-Z0-9]+)*)$", re.I)
 
+
 def _validate_period_against_registry(value: str) -> str:
     """Validate and normalize a period code against the union of accepted forms.
 

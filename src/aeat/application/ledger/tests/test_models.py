@@ -182,5 +182,3 @@ def test_manual_ledger_transaction_command_rejects_tax_payload_on_internal_trans
             description="move between own accounts",
             taxable_base=Decimal("100.00"),
         )
-
-

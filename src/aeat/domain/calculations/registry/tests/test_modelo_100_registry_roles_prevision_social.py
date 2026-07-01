@@ -66,9 +66,12 @@ def test_modelo_100_2022_onward_prevision_social_0426_is_worker_contribution_slo
 
     assert casilla_0427.semantic_role == _GENERAL_EMPLOYER_ROLE
     assert casilla_0427.semantic_role != casilla_0426.semantic_role
-    assert casilla_id_for_unique_revision_semantic_role(
-        revision,
-        _WORKER_WITH_EMPLOYER_CONTRIBUTION_ROLE,
-    ) == "0426"
+    assert (
+        casilla_id_for_unique_revision_semantic_role(
+            revision,
+            _WORKER_WITH_EMPLOYER_CONTRIBUTION_ROLE,
+        )
+        == "0426"
+    )
     assert casilla_id_for_unique_revision_semantic_role(revision, _GENERAL_EMPLOYER_ROLE) == "0427"
     assert casilla_id_for_unique_revision_semantic_role(revision, _EMPLOYER_ANEXO_C3_ROLE) is None

@@ -70,9 +70,7 @@ def test_required_setup_event_has_emission_site(event_type: BucketEventType, mod
 # directory and the inaugural profile record in one atomic create
 # span, so a single event captures the pair. Documented here so a
 # future change does not add a duplicate PROFILE_CREATED slot.
-_RESERVED_EVENTS_WITHOUT_OPERATOR_PATHS: tuple[BucketEventType, ...] = (
-    BucketEventType.CONFIG_ENV_UPDATED,
-)
+_RESERVED_EVENTS_WITHOUT_OPERATOR_PATHS: tuple[BucketEventType, ...] = (BucketEventType.CONFIG_ENV_UPDATED,)
 
 
 def test_reserved_events_remain_in_the_closed_catalogue() -> None:

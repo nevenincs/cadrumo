@@ -351,8 +351,7 @@ def test_replay_payload_roundtrip_via_renta_web_open_driver() -> None:
     }
     assert payload.observed == {"Resultado de la declaracion": "legacy-label-value"}
     assert {
-        _casilla_id_from_payload(casilla_id): value
-        for casilla_id, value in payload.observed_by_casilla_id.items()
+        _casilla_id_from_payload(casilla_id): value for casilla_id, value in payload.observed_by_casilla_id.items()
     } == expected_by_casilla
     assert payload.raw_evidence_locator == "corpus/aeat_official/renta_web_open/sample.json"
 
@@ -361,8 +360,7 @@ def test_replay_payload_roundtrip_via_renta_web_open_driver() -> None:
     observation = driver.collect_observation(raw, expected={})
 
     assert {
-        _casilla_id_from_payload(casilla_id): value
-        for casilla_id, value in observation.values.items()
+        _casilla_id_from_payload(casilla_id): value for casilla_id, value in observation.values.items()
     } == expected_by_casilla
     assert observation.raw_evidence_locator == payload.raw_evidence_locator
 

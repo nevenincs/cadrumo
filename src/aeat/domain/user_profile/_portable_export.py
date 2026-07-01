@@ -201,4 +201,5 @@ class UserProfilePortableExport(BaseModel):
     carried_objects: tuple[CarriedSecureObject, ...] = ()
     coverage_manifest: CoverageManifest = Field(default_factory=CoverageManifest)
 
+
 __all__ = ["UserProfilePortableExport"]

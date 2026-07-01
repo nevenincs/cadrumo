@@ -75,9 +75,7 @@ class _RetencionesAggregationSelector(BaseModel):
 
     target_casilla_id: CasillaId
     schemes: tuple[RetencionScheme, ...] = ()
-    fact: Literal["perceptor_count_distinct", "taxable_base_sum", "retencion_amount_sum"] = (
-        "perceptor_count_distinct"
-    )
+    fact: Literal["perceptor_count_distinct", "taxable_base_sum", "retencion_amount_sum"] = "perceptor_count_distinct"
 
 
 def validate_retenciones_aggregation_binding(binding: DataBindingDefinition) -> list[str]:

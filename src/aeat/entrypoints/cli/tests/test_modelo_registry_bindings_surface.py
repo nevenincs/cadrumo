@@ -95,6 +95,75 @@ def test_bindings_list_missing_m200_surfaces_m202_relation_inputs() -> None:
     ) in result.output
 
 
+def test_bindings_list_missing_m202_scopes_self_relation_guidance_by_target_period() -> None:
+    """M202 previous-installment guidance names only relation ids active for the target period."""
+
+    one_p = invoke_cached_cli(
+        [
+            "--language",
+            "en",
+            "app",
+            "modelo",
+            "bindings",
+            "list",
+            "--modelo",
+            "202",
+            "--year",
+            "2024",
+            "--period",
+            "1P",
+            "--missing",
+        ],
+    )
+    assert one_p.exit_code == 0, one_p.output
+    assert "binding_count\t0" in one_p.output
+    assert "modelo-202-2023-2024-pagos-fraccionados-anteriores" not in one_p.output
+    assert "modelo-202-2023-2024-rel-self-pagos-2p" not in one_p.output
+    assert "modelo-202-2023-2024-rel-self-pagos-3p" not in one_p.output
+
+    two_p = invoke_cached_cli(
+        [
+            "--language",
+            "en",
+            "app",
+            "modelo",
+            "bindings",
+            "list",
+            "--modelo",
+            "202",
+            "--year",
+            "2024",
+            "--period",
+            "2P",
+            "--missing",
+        ],
+    )
+    assert two_p.exit_code == 0, two_p.output
+    assert "modelo-202-2023-2024-rel-self-pagos-2p" in two_p.output
+    assert "modelo-202-2023-2024-rel-self-pagos-3p" not in two_p.output
+
+    three_p = invoke_cached_cli(
+        [
+            "--language",
+            "en",
+            "app",
+            "modelo",
+            "bindings",
+            "list",
+            "--modelo",
+            "202",
+            "--year",
+            "2024",
+            "--period",
+            "3P",
+            "--missing",
+        ],
+    )
+    assert three_p.exit_code == 0, three_p.output
+    assert "modelo-202-2023-2024-rel-self-pagos-2p" not in three_p.output
+    assert "modelo-202-2023-2024-rel-self-pagos-3p" in three_p.output
+
+
 def test_bindings_list_without_missing_does_not_append_m200_relation_guidance() -> None:
     """The extra M200/M202 relation instructions belong to the missing-input view."""
 

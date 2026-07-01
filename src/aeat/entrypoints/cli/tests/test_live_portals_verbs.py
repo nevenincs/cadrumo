@@ -13,7 +13,8 @@ from ....core.i18n import tr
 from ....domain.portals import PORTAL_REGISTRY, UnknownPortalError
 from ....tests.cli_runner import invoke_cached_cli
 
-# INTENTIONAL: integration because it exercises the portals CLI surface over the static portal registry without contacting AEAT.
+# INTENTIONAL: integration because it exercises the portals CLI surface over the static
+# portal registry without contacting AEAT.
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
 

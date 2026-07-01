@@ -231,6 +231,7 @@ def test_zero_amount_add_is_refused_not_silently_deduped(secure_objects: SecureO
         _add(repo, events, amount=Decimal("0"), description="zero correction", idempotency_key="z-1")
     assert len(repo.load().transactions) == 0
 
+
 def test_keyed_retry_is_clock_free_across_boundary_timestamps(secure_objects: SecureObjectRepository) -> None:
     """The keyed id is clock-free: a retry at a boundary timestamp still resolves to the no-op."""
     repo, events, first = _create_manual_row(
@@ -246,7 +247,7 @@ def test_keyed_retry_is_clock_free_across_boundary_timestamps(secure_objects: Se
 
 
 def test_manual_row_carries_content_fingerprint_surviving_reload(secure_objects: SecureObjectRepository) -> None:
-    """A created manual row's content fingerprint roundtrips the encrypted boundary with strict equality (P02.S05, P05.S16).
+    """Roundtrip a created manual row's content fingerprint across the encrypted boundary (P02.S05, P05.S16).
 
     Strengthened beyond a presence check: the full row is compared for strict
     equality across a FRESH repository over the same store (so the non-default

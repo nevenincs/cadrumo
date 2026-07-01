@@ -94,6 +94,7 @@ def _casilla_id(value: object) -> CasillaId:
     except ValueError as exc:
         raise AssertionError(f"M390 fold-in fixture casilla key {value!r} is not a CasillaId") from exc
 
+
 # Seeded M303 casilla ids consumed by the three M390←M303 relations and the
 # annual compensation partition source.
 _DEVENGADA: CasillaId = _casilla_id("iva.cuota-devengada-total")
@@ -310,8 +311,7 @@ def test_m390_folds_m303_relations_and_compensation_partition_on_live_calculate(
         f"{_EXPECTED_COMPENSACION_ULTIMO!r}; got {casilla_values[_M390_COMPENSACION_ULTIMO_PERIODO_CASILLA]!r}"
     )
     assert (
-        Decimal(casilla_values[_M390_COMPENSACION_GENERADA_EJERCICIO_NO_97_CASILLA])
-        == _EXPECTED_COMPENSACION_NO97
+        Decimal(casilla_values[_M390_COMPENSACION_GENERADA_EJERCICIO_NO_97_CASILLA]) == _EXPECTED_COMPENSACION_NO97
     ), (
         f"M390 compensacion-generada-ejercicio-no-97 (AEAT casilla 662) must carry the FIFO remainder partition "
         f"{_EXPECTED_COMPENSACION_NO97!r}; "

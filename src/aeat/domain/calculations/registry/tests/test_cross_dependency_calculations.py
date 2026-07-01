@@ -57,9 +57,7 @@ _M100_PAGOS_FRACCIONADOS_INGRESADOS_CASILLA: CasillaId = validated_casilla_id(
     "0604",
     surface="_M100_PAGOS_FRACCIONADOS_INGRESADOS_CASILLA",
 )
-_M100_MADRID_NACIMIENTO_ADOPCION_ELIGIBLE_COUNT_BINDING = (
-    "renta-2025-profile-madrid-nacimiento-adopcion-eligible-count"
-)
+_M100_MADRID_NACIMIENTO_ADOPCION_ELIGIBLE_COUNT_BINDING = "renta-2025-profile-madrid-nacimiento-adopcion-eligible-count"
 _M100_UNIDAD_FAMILIAR_OTROS_MIEMBROS_BASE_BINDING = "renta-2025-profile-unidad-familiar-otros-miembros-base"
 _M131_PAGOS_FRACCIONADOS_CASILLA: CasillaId = validated_casilla_id(
     "15",

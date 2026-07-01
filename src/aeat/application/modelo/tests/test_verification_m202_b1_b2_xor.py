@@ -25,9 +25,7 @@ def _m202_xor_predicate(revision_id: str) -> VerificationPredicateDefinition:
     modelo = load_modelo_path(bundled_path("registry", "aeat", "modelos", "202"))
     revision = modelo.revisions[revision_id]
     predicate = next(
-        p
-        for p in revision.verification_predicates
-        if p.predicate_id == _M202_B1_B2_RESULTADO_PREVIO_XOR_PREDICATE_ID
+        p for p in revision.verification_predicates if p.predicate_id == _M202_B1_B2_RESULTADO_PREVIO_XOR_PREDICATE_ID
     )
     assert predicate.expression == 'at_most_one_positive(["18", "26"])'
     assert predicate.finding_kind == "BLOCKING_RULE"

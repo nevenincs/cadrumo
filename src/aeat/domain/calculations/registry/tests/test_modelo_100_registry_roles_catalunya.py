@@ -13,12 +13,8 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 _CATALUNYA_DEDUCTION_SECTION = ("resultados", "deduccion_autonomica_res", "catalunya_res")
 _CATALUNYA_COOPERATIVAS_AGRARIAS_ROLE = "irpf_deduccion_catalunya_cooperativas_agrarias"
-_CATALUNYA_COOPERATIVAS_AGRARIAS_GENERADO_ROLE = (
-    "irpf_deduccion_catalunya_cooperativas_agrarias_generado"
-)
-_CATALUNYA_COOPERATIVAS_AGRARIAS_PENDIENTE_ROLE = (
-    "irpf_deduccion_catalunya_cooperativas_agrarias_pendiente"
-)
+_CATALUNYA_COOPERATIVAS_AGRARIAS_GENERADO_ROLE = "irpf_deduccion_catalunya_cooperativas_agrarias_generado"
+_CATALUNYA_COOPERATIVAS_AGRARIAS_PENDIENTE_ROLE = "irpf_deduccion_catalunya_cooperativas_agrarias_pendiente"
 _LEGACY_CATALUNYA_COOPERATIVAS_CHILD_ROLES = frozenset(
     {
         "irpf_deduccion_catalunya_generado_2025",

@@ -199,5 +199,3 @@ def _keyed_bracket(key: str, value: str = "0.24") -> KeyedBracketEntry:
         valid_from=date(2025, 1, 1),
         valid_to=date(2025, 12, 31),
     )
-
-

@@ -1345,21 +1345,27 @@ cli:
   app:
     ledger:
       bienes_inversion:
-        acquisition_year_help: 'Año de adquisición del bien.'
-        art108_help: 'Si el bien tiene la consideración de bien de inversión según LIVA art. 108.'
-        asset_ref_help: 'Referencia cruzada opcional a un identificador de AssetRecord.'
-        cuota_soportada_help: 'IVA soportado total en la adquisición (positivo).'
-        declare_help: 'Declara un bien de inversión para su regularización de IVA.'
-        description_help: 'Descripción del bien.'
-        disposal_regime_help: 'Régimen de transmisión (sujeta_no_exenta o exenta_o_no_sujeta); obligatorio con --disposal-year.'
-        disposal_requires_both: '--disposal-year y --disposal-regime deben indicarse conjuntamente.'
-        disposal_year_help: 'Año de transmisión opcional (art. 110).'
-        group_help: 'Registro de regularización de IVA por bienes de inversión (LIVA arts. 107-110).'
-        identifier_help: 'Identificador estable del registro.'
+        acquisition_year_help: Año de adquisición del bien.
+        art108_help: Si el bien tiene la consideración de bien de inversión según
+          LIVA art. 108.
+        asset_ref_help: Referencia cruzada opcional a un identificador de AssetRecord.
+        cuota_soportada_help: IVA soportado total en la adquisición (positivo).
+        declare_help: Declara un bien de inversión para su regularización de IVA.
+        description_help: Descripción del bien.
+        disposal_regime_help: Régimen de transmisión (sujeta_no_exenta o exenta_o_no_sujeta);
+          obligatorio con --disposal-year.
+        disposal_requires_both: --disposal-year y --disposal-regime deben indicarse
+          conjuntamente.
+        disposal_year_help: Año de transmisión opcional (art. 110).
+        group_help: Registro de regularización de IVA por bienes de inversión (LIVA
+          arts. 107-110).
+        identifier_help: Identificador estable del registro.
         kind_help: 'Periodo de regularización: mueble (4 años) o inmueble (9 años).'
-        list_help: 'Lista todos los bienes de inversión registrados en el perfil activo.'
-        prorrata_inicial_help: 'Porcentaje de deducción definitivo del año de adquisición (0-100).'
-        unknown_disposal_regime: 'Régimen de transmisión desconocido {regime!r}; aceptados: {accepted}'
+        list_help: Lista todos los bienes de inversión registrados en el perfil activo.
+        prorrata_inicial_help: Porcentaje de deducción definitivo del año de adquisición
+          (0-100).
+        unknown_disposal_regime: 'Régimen de transmisión desconocido {regime!r}; aceptados:
+          {accepted}'
       evidence:
         add_help: Registra un justificante de factura de compra desde PDF o imagen
         evidence_id_help: Identificador del justificante (coincidencia exacta)
@@ -2160,6 +2166,10 @@ cli:
           exclusivos 40.3 casilla 34 y 40.2 casilla 03, poniendo 0 en la modalidad
           no usada cuando introduzcas valores manuales.
         rename_help: Actualizar el nombre de visualización de una unidad de trabajo
+        rescate_contingencia_year_help: 'Ano en que acaecio la contingencia (jubilacion,
+          incapacidad, fallecimiento) del plan de pensiones. Determina la ventana
+          temporal del apartado 4 DT 12a LIRPF (Ley 26/2014): si la ventana esta cerrada
+          para el ano de rescate, la reduccion del 40% se retiene.'
         rescate_plan_pensiones_aportaciones_pre_2007_help: Aportaciones realizadas
           al plan de pensiones hasta el 31-dic-2006 (base de prorrateo DT 12ª LIRPF).
           Necesario junto con --rescate-plan-pensiones-capital y --rescate-plan-pensiones-aportaciones-totales.
@@ -2172,6 +2182,14 @@ cli:
           automáticamente la reducción del 40% y la inyecte en casilla 0011.
         rescate_plan_pensiones_not_decimal: Los valores --rescate-plan-pensiones-*
           deben ser importes decimales.
+        rescate_type_help: 'Tipo de rescate del plan de pensiones (DT 12a LIRPF):
+          total (todo el capital de una vez) o parcial (cobros escalonados). Es una
+          senal de clasificacion y provenance, no cambia el importe: la reduccion
+          del 40% se aplica a la parte pre-2007 de lo percibido. En parcial, cada
+          cobro comparte la misma ventana del apartado 4.'
+        rescate_year_help: Ano en que se percibe la prestacion del rescate (por defecto
+          el ano de la declaracion). Se compara con la ventana del apartado 4 DT 12a
+          LIRPF medida desde --contingencia-year.
         result_summary_header: resumen del resultado  Modelo %{modelo} %{year} %{period}
         resume_help: Valida si puedes reintentar una ejecución de flujo interrumpida
           sin contactar con AEAT. Usa --modelo --year --period como ruta normal; los
@@ -2247,9 +2265,6 @@ cli:
         year_help: Ejercicio fiscal de la unidad de trabajo (p. ej. 2026)
         year_out_of_range: El ejercicio fiscal %{year} está fuera de rango; indique
           un año entre %{minimum} y %{maximum}.
-        rescate_type_help: 'Tipo de rescate del plan de pensiones (DT 12a LIRPF): total (todo el capital de una vez) o parcial (cobros escalonados). Es una senal de clasificacion y provenance, no cambia el importe: la reduccion del 40% se aplica a la parte pre-2007 de lo percibido. En parcial, cada cobro comparte la misma ventana del apartado 4.'
-        rescate_contingencia_year_help: 'Ano en que acaecio la contingencia (jubilacion, incapacidad, fallecimiento) del plan de pensiones. Determina la ventana temporal del apartado 4 DT 12a LIRPF (Ley 26/2014): si la ventana esta cerrada para el ano de rescate, la reduccion del 40% se retiene.'
-        rescate_year_help: 'Ano en que se percibe la prestacion del rescate (por defecto el ano de la declaracion). Se compara con la ventana del apartado 4 DT 12a LIRPF medida desde --contingencia-year.'
   common:
     errors:
       draft_id_not_found: ID de borrador %{draft_id} no encontrado
@@ -2633,6 +2648,13 @@ cli:
       rename_help: Renombra un perfil y mueve el puntero activo automáticamente
       rename_source_help: Nombre actual del perfil
       rename_target_help: Nuevo nombre del perfil
+      sar_catalogue_info: 'Este archivo contiene todas las categorías de datos personales
+        del perfil: identidad y datos del perfil, unidades de trabajo de modelos,
+        movimientos del libro, revisiones de cálculo y registros de presentación.
+        Los bytes de las pruebas adjuntas y las capturas de AEAT permanecen en almacenamiento
+        cifrado; utilice el archivo de recuperación cifrado para incluirlos.'
+      sar_help: 'Exporta todos los datos personales de un perfil como archivo de acceso
+        del interesado (RGPD): el paquete portátil del perfil.'
       show_help: Muestra los datos de un perfil
       show_name_help: Id del perfil a mostrar (por defecto el perfil activo)
       unknown_profile: 'Perfil desconocido: %{name}. Ejecuta ''aeat config profile
@@ -3232,6 +3254,19 @@ cli:
         created_at, modified_at, ...).
       sort_order_help: 'Orden: asc (ascendente) o desc (descendente).'
       ungrouped_label: (sin grupo)
+    llm_diagnostics:
+      bad_date: '%{option} debe ser una fecha ISO (AAAA-MM-DD); se recibió %{value}.'
+      help: Muestra las métricas existentes de uso, coste y confianza de clasificación
+        del LLM.
+      no_data_message: Aún no hay métricas de uso o confianza de clasificación del
+        LLM. Ejecuta una clasificación asistida por LLM para generarlas.
+      since_help: Fecha ISO (AAAA-MM-DD) inferior inclusiva para los registros de
+        uso.
+      threshold_help: Umbral de confianza por debajo del cual una clasificación se
+        considera de baja confianza.
+      threshold_range: --low-confidence-below debe estar en el rango inclusivo 0..1.
+      until_help: Fecha ISO (AAAA-MM-DD) superior inclusiva para los registros de
+        uso.
     merge:
       actor_help: Nombre del operador registrado en el evento del bucket
       child_id_help: Id de transacción hija que quieres fusionar; se puede repetir
@@ -3564,9 +3599,14 @@ cli:
       modelo_help: Identificador del modelo AEAT (p. ej. 303, 130, 100).
       year_help: Ejercicio fiscal para evaluar la aplicabilidad; por defecto, el año
         actual.
+    local_work_units_unavailable: El estado local de las unidades de trabajo de Modelo
+      del resumen no está disponible; no se puede mostrar sin un estado de trabajo
+      persistido.
     period: Periodo
     period_help: 'Periodo de declaración como token AEAT: 1T-4T (trimestres), 0A (anual),
       01-12 (meses). Combínelo con --year para elegir el año.'
+    post_filing:
+      pending: '%{count} evento(s) posteriores a la presentación de AEAT requieren atención: %{kinds}. Revísalos con ''aeat app live notifications list''.'
     status:
       drafts_empty: No se encontraron borradores de declaraciones guardados.
       drafts_empty_with_work_units: No hay borradores de declaraciones guardados;
@@ -4074,6 +4114,22 @@ errors:
     lookup_dispatch_arg_count: El operador {op} de la fórmula espera {expected} argumentos.
     lookup_dispatch_arg_kind: El operador {op} de la fórmula requiere que {position}
       sea una hoja de tipo {expected_kind}.
+    m100_art85_boolean_invalid: La casilla booleana del artículo 85 del Modelo 100
+      debe ser 0 o 1.
+    m100_art85_catastral_value_negative: El valor catastral del artículo 85 del Modelo
+      100 no puede ser negativo.
+    m100_art85_disposal_percentage_invalid: El porcentaje de uso mixto del artículo
+      85 del Modelo 100 debe ser mayor que 0 y como máximo 100.
+    m100_art85_imputation_days_invalid: Los días de imputación del artículo 85 del
+      Modelo 100 deben ser un número entero entre 1 y 365.
+    m100_art85_input_negative: Las entradas numéricas del artículo 85 del Modelo 100
+      no pueden ser negativas.
+    m100_art85_mixed_use_inputs_without_flag: Los días o el porcentaje de uso mixto
+      del artículo 85 del Modelo 100 requieren que la casilla de uso mixto esté marcada.
+    m100_art85_no_catastral_base_missing: La imputación del artículo 85 del Modelo
+      100 sin valor catastral requiere casillas de base sustitutiva que no están presentes.
+    m100_art85_revision_flag_invalid: El indicador de valor catastral revisado del
+      artículo 85 del Modelo 100 debe ser el valor oficial X de la casilla.
     m210_gastos_deducibles_negative: Los gastos_deducibles M210 %{casilla_id} no pueden
       ser negativos; valor recibido %{value}.
     m210_gastos_deducibles_not_allowed: Los gastos_deducibles M210 %{casilla_id} solo
@@ -4292,6 +4348,8 @@ errors:
     error_resources_not_found: No se encontró el recurso incluido solicitado.
     error_resources_validation: Un archivo incluido en la aplicación no superó la
       validación estricta.
+    error_retention: No se ha podido evaluar la política de conservación de registros
+      tributarios.
     error_review: Se produjo un error en la revisión.
     error_sanitization: Se produjo un error al sanear el documento.
     error_sede: Se produjo un error en la Sede electrónica de la AEAT.
@@ -4867,6 +4925,11 @@ errors:
       UE para 2024/2025. La AEAT confirma su no aplicabilidad. Active esta exención
       solo tras la concesión de la autorización europea (Ley 35/2006 DA 41 BOE-A-2006-20764,
       añadida por Ley 26/2014 BOE-A-2014-12327).'
+    refused_retention_floor: 'Borrado rechazado: %{retained_record_count} registro(s)
+      tributario(s) presentado(s) siguen dentro del plazo legal de conservación (Ley
+      58/2003, LGT art. 66 y 70). La fecha más temprana de borrado seguro es %{earliest_safe_erase_date}.
+      Espere hasta esa fecha o vuelva a ejecutar con --i-acknowledge-legal-retention-obligations
+      y --reason para forzarlo.'
     refused_review_edit_parse: No se pudo interpretar `--set CLAVE=VALOR`. Comprueba
       la sintaxis del valor indicado.
     refused_review_filter_parse: No se pudo interpretar `--filter CLAVE=VALOR`. Comprueba
@@ -5301,6 +5364,9 @@ wizard:
           a esa fecha.
       address-postcode:
         help: Código postal del domicilio fiscal
+      art109-activity-income-withholding-ge-70pct:
+        help: Cobertura Art. 109 - al menos 70% de ingresos de actividades profesionales,
+          agricolas, ganaderas o forestales sujetos a retención o ingreso a cuenta
       bienes-extranjero-above-threshold:
         help: Bienes en el extranjero superan el umbral legal
       cloud-evidence-upload:
@@ -5352,6 +5418,10 @@ wizard:
         help: Operaciones intracomunitarias superan 50.000 EUR
       iva-oss-enrolled:
         help: Alta en OSS
+      iva-group-member-enrolled:
+        help: Alta como entidad miembro de un grupo de IVA
+      iva-group-dominant-entity-enrolled:
+        help: Alta como entidad dominante de un grupo de IVA
       iva-redeme-enrolled:
         help: Si el contribuyente está inscrito en REDEME
       iva-regime:
@@ -5402,9 +5472,6 @@ wizard:
         help: Paga alquiler de local con retención
       professional-income-withholding-ge-70pct:
         help: Al menos 70% de los ingresos profesionales con retención previa
-      art109-activity-income-withholding-ge-70pct:
-        help: Cobertura Art. 109 - al menos 70% de ingresos de actividades profesionales,
-          agricolas, ganaderas o forestales sujetos a retención o ingreso a cuenta
       representante-fiscal-nif:
         help: NIF/NIE del representante fiscal en España. Obligatorio para no residentes
           fuera de la UE/EEE (art. 47 LGT + art. 10 TRLIRNR RDLeg 5/2004).
@@ -5496,6 +5563,10 @@ wizard:
         prompt: Operaciones intracomunitarias superan 50.000 EUR
       iva-oss-enrolled:
         prompt: Alta en OSS
+      iva-group-member-enrolled:
+        prompt: Alta como entidad miembro de un grupo de IVA
+      iva-group-dominant-entity-enrolled:
+        prompt: Alta como entidad dominante de un grupo de IVA
       iva-redeme-enrolled:
         prompt: Inscrito en REDEME (Registro de Devolución Mensual del IVA)
       iva-regime:
@@ -5510,6 +5581,9 @@ wizard:
         prompt: Notas para tu propio recuerdo (opcional)
       title: Notas para tu propio recuerdo
     obligations:
+      art109-activity-income-withholding-ge-70pct:
+        prompt: Aplica la excepción Art. 109 por cobertura del 70% de ingresos de
+          actividad
       bienes-extranjero-above-threshold:
         prompt: Bienes en el extranjero superan el umbral legal
       does-intracomunitario:
@@ -5554,8 +5628,6 @@ wizard:
         prompt: Paga alquiler de local con retención
       professional-income-withholding-ge-70pct:
         prompt: Al menos 70% de los ingresos profesionales con retención previa
-      art109-activity-income-withholding-ge-70pct:
-        prompt: Aplica la excepción Art. 109 por cobertura del 70% de ingresos de actividad
       third-party-transactions-above-347-threshold:
         prompt: Operaciones con terceros superan el umbral del Modelo 347
       title: Obligaciones

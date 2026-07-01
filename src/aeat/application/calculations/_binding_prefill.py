@@ -108,8 +108,8 @@ def _casilla_id(value: object) -> CasillaId:
         raise RuntimeError(f"binding-prefill casilla constant {value!r} is not a CasillaId") from exc
 
 
-_M303_COMPENSACION_PENDIENTE_ANTERIORES_CASILLA: Final[CasillaId] = (
-    _casilla_id("iva.compensacion-pendiente-periodos-anteriores")
+_M303_COMPENSACION_PENDIENTE_ANTERIORES_CASILLA: Final[CasillaId] = _casilla_id(
+    "iva.compensacion-pendiente-periodos-anteriores"
 )
 _M303_COMPENSACION_APLICADA_CASILLA: Final[CasillaId] = _casilla_id("iva.compensacion-aplicada-periodo")
 _M303_POSTERIOR_CASILLA: Final[CasillaId] = _casilla_id("iva.compensacion-pendiente-periodos-posteriores")
@@ -238,6 +238,7 @@ class BindingPrefillReport(BaseModel):
 
     prefilled: tuple[PrefilledBinding, ...]
     binding_values: Mapping[BindingId, Decimal]
+
 
 class LocalIvaCompensationRecurrence(BaseModel):
     """Local Modelo 303 recurrence evidence extracted for wallet reconciliation only.

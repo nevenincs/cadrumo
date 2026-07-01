@@ -1032,10 +1032,7 @@ def test_every_carried_store_round_trips_through_recovery(
         classification=SensitivityClass.FINANCIAL,
         schema_version=1,
         written_at=_NOW,
-        payload=(
-            b'{"schema_version":1,"written_at":"2026-06-30T00:00:00Z",'
-            b'"classification":"financial","payload":{}}'
-        ),
+        payload=(b'{"schema_version":1,"written_at":"2026-06-30T00:00:00Z","classification":"financial","payload":{}}'),
     )
 
     archive = tmp_path / "exports" / "matrix.aeat-bucket.tar.gz"

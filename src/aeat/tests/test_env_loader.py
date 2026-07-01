@@ -1,4 +1,4 @@
-"""Unit tests for :mod:`aeat.tests._env_loader`."""
+"""Unit tests for :mod:`aeat-tests._env_loader`."""
 
 from __future__ import annotations
 

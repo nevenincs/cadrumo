@@ -495,8 +495,7 @@ def _register_iva_wallet_override_command(iva_wallet_app: typer.Typer, *, active
                 help=tr(
                     "cli.app.modelo.iva_wallet.override_evidence_locator_help",
                     default=(
-                        "Required locator of the evidence supporting the override "
-                        "(e.g. prior justificante reference)."
+                        "Required locator of the evidence supporting the override (e.g. prior justificante reference)."
                     ),
                 ),
             ),

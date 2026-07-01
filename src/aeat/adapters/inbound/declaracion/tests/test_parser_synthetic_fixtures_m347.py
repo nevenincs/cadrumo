@@ -77,6 +77,5 @@ def test_parser_extracts_modelo_347_synthetic_fixture_targets() -> None:
     # parse_spanish_decimal("2024") = Decimal("2024").
     # Ground truth: AEAT DR positions 5-8 field name "EJERCICIO" (Orden HAC/1431/2025 p.1).
     assert values[_DECL_EJERCICIO_CASILLA] == Decimal("2024"), (
-        f"decl.ejercicio: expected Decimal('2024') from AEAT-grounded fixture, got "
-        f"{values[_DECL_EJERCICIO_CASILLA]!r}"
+        f"decl.ejercicio: expected Decimal('2024') from AEAT-grounded fixture, got {values[_DECL_EJERCICIO_CASILLA]!r}"
     )

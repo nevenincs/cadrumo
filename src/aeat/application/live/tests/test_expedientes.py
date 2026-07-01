@@ -35,9 +35,7 @@ def test_single_capture_uses_expedientes_auth_operation_label() -> None:
     calls = [
         node
         for node in ast.walk(tree)
-        if isinstance(node, ast.Call)
-        and isinstance(node.func, ast.Name)
-        and node.func.id == "_active_verified_session"
+        if isinstance(node, ast.Call) and isinstance(node.func, ast.Name) and node.func.id == "_active_verified_session"
     ]
 
     assert len(calls) == 1

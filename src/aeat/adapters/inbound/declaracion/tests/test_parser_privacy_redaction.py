@@ -57,5 +57,3 @@ def test_word_extraction_debug_log_does_not_expose_source_filename(
     assert pdf_path.name not in rendered_logs
     assert str(pdf_path) not in rendered_logs
     assert "<input-pdf>" in rendered_logs
-
-

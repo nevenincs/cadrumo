@@ -120,9 +120,7 @@ def test_capture_baseline_employee_replay_payload() -> None:
         if label in _LABEL_TO_CASILLA
     }
     observed_by_label = {
-        label: observed[casilla_id]
-        for casilla_id, label in _CASILLA_TO_LABEL.items()
-        if casilla_id in observed
+        label: observed[casilla_id] for casilla_id, label in _CASILLA_TO_LABEL.items() if casilla_id in observed
     }
     document = {
         "expected": expected_by_label,
@@ -222,9 +220,7 @@ def test_capture_profile_variant_replay_payload(
         for casilla_id, label in _CASILLA_TO_LABEL.items()
         if casilla_id in observed
     }
-    expected_by_casilla_id = {
-        casilla_id: _parse_spanish_decimal(value) for casilla_id, value in observed.items()
-    }
+    expected_by_casilla_id = {casilla_id: _parse_spanish_decimal(value) for casilla_id, value in observed.items()}
     observed_by_label = {
         label: observed[casilla_id] for casilla_id, label in _CASILLA_TO_LABEL.items() if casilla_id in observed
     }

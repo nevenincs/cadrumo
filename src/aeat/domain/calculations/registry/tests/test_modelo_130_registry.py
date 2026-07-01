@@ -657,9 +657,7 @@ def test_modelo_130_casilla_17_uses_standard_subtraction_for_low_retention_amoun
     )
     # Standard formula must yield a positive payment when income > costs and
     # retenciones are small.
-    assert casilla_17.value != Decimal("0"), (
-        "casilla 17 must not be zero when income=50000 and retenciones=1000"
-    )
+    assert casilla_17.value != Decimal("0"), "casilla 17 must not be zero when income=50000 and retenciones=1000"
 
 
 # ---------------------------------------------------------------------------

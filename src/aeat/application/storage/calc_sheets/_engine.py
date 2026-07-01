@@ -1128,8 +1128,8 @@ def _collect_cell_constraints(
             constraints.append(
                 SheetCellConstraint(
                     address=address,
-                sign=casilla.constraints.sign,
-                min_value=casilla.constraints.min_value,
+                    sign=casilla.constraints.sign,
+                    min_value=casilla.constraints.min_value,
                     max_value=casilla.constraints.max_value,
                     legal_refs=tuple(casilla.constraints.legal_refs),
                     casilla_id=casilla.id,
