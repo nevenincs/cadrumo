@@ -91,7 +91,10 @@ def test_modelo_037_is_historical_catalogue_metadata_not_active_registry_model()
     assert "037" not in modelos
     assert "boe-modelo-037-historical-suppression" in catalogues.sources
     assert "orden-hac-1526-2024:art-1" in catalogues.legal
-    verify_source_file(PROJECT_ROOT, catalogues.sources["boe-modelo-037-historical-suppression"])
+    source = catalogues.sources["boe-modelo-037-historical-suppression"]
+    assert source.kind == "suppression_notice"
+    assert source.evidence_tier == "official_source_guidance"
+    verify_source_file(PROJECT_ROOT, source)
 
 
 def test_modelo_036_rejects_unknown_censo_event_period() -> None:

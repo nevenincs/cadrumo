@@ -188,7 +188,7 @@ review_status = "reviewed"
 [sources."boe-modelo-037-historical-suppression"]
 evidence_tier = "official_source_guidance"
 authority = "boe"
-kind = "form_spec"
+kind = "suppression_notice"
 corpus_path = "corpus/normatives/html/orden-hac-1526-2024-df-unica.html"
 sha256 = "25725f330f7c675ee1b07a8514428d615d9d8f795b013080f1d62bcab683522f"
 bytes = 365
