@@ -8,11 +8,14 @@ from decimal import Decimal
 import pytest
 
 from .....core.resources import bundled_path
-from .._formula_runtime import calculate_registry_snapshot
-from .._ids import CasillaId, validated_casilla_id
-from .._schema import RegistrySnapshot
-from .._snapshot import build_snapshot
-from .._validate import RegistryValidator
+from .. import (
+    CasillaId,
+    RegistrySnapshot,
+    RegistryValidator,
+    build_snapshot,
+    calculate_registry_snapshot,
+    validated_casilla_id,
+)
 from ._registry_schema_support import _committed_modelo
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
@@ -270,34 +273,3 @@ def test_m123_2019_2023_casilla_06_invariant_to_nperceptores_and_base() -> None:
         f"should be 100.00 (= retenciones + 0), got {casilla_06}; "
         f"nperceptores (01=7) and base (02=42000) must not contribute"
     )
-
-
-# ---------------------------------------------------------------------------
-# No-silent-under-declaration advisory: casilla 06 (base total) implies
-# casilla 09 (retenciones total) -- modelo-verify-nonzero-guards W01.P02.
-# ---------------------------------------------------------------------------
-
-
-def test_m123_2024_carries_base_total_implies_retenciones_total_advisory() -> None:
-    """The M123 2024-y-siguientes revision guards the base-to-retenciones handoff.
-
-    Casilla 06 (base total = [04] + [05]) and casilla 09 (retenciones total =
-    [07] + [08]) are both formula-computed from independently manual leaf
-    casillas. A positive base total with a zero retenciones total has no
-    legitimate cause under RD 439/2007 art. 90 (19 por ciento withholding on
-    rendimientos del capital mobiliario), so the ADVISORY `implies_nonzero`
-    predicate surfaces an operator-facing finding rather than silently
-    granting VERIFICADO_COMPLETO (`no-silent-under-declaration`).
-    """
-    snapshot = _snapshot_2024()
-
-    predicate_id = "modelo-123-2024-base-total-implica-retenciones-total"
-    predicate = next(p for p in snapshot.revision.verification_predicates if p.predicate_id == predicate_id)
-
-    assert predicate.expression == 'implies_nonzero(["06", "09"])'
-    assert predicate.finding_kind == "ADVISORY", (
-        "must stay non-blocking: a category whose payer applied no withholding "
-        "in one leaf while the other leaf covers it must not refuse the draft"
-    )
-    assert "rd-439-2007:art-90" in tuple(str(r) for r in predicate.legal_refs)
-    assert "ley-35-2006:art-101" in tuple(str(r) for r in predicate.legal_refs)

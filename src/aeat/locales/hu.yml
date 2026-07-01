@@ -1151,6 +1151,8 @@ application:
         Adja hozzá ezeket a kapcsolókat, és futtassa újra a parancsot: %{missing_flags}'
     next_hint:
       modelo_work_create: aeat app modelo work create
+    notices:
+      ccaa_defaulted: 'Nem választott autonóm közösséget, ezért a profilhoz %{ccaa} lett feltételezve. Az autonóm levonások és az adótábla autonóm része %{ccaa} alapján kerül kiszámításra. A --tax-residence-ccaa kapcsolóval választhat másik közösséget.'
     output_labels:
       active_profile: active_profile
       next: Kovetkezo

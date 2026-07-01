@@ -1141,6 +1141,8 @@ application:
         from an interactive terminal to use the guided setup.'
     next_hint:
       modelo_work_create: aeat app modelo work create
+    notices:
+      ccaa_defaulted: 'No comunidad autónoma was chosen, so %{ccaa} was assumed for this profile. Autonomic deductions and the autonomic part of the tax scale are calculated for %{ccaa}. Set --tax-residence-ccaa to use a different comunidad.'
     output_labels:
       active_profile: Active profile
       next: Next
