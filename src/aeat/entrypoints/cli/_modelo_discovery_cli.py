@@ -49,6 +49,7 @@ from ._modelo_payloads import (
     ModeloListResult,
     ModeloRowPayload,
 )
+from ._modelo_rendering import binding_encoded_option_lines, binding_encoded_option_payloads
 
 
 @dataclass(frozen=True, slots=True)
@@ -512,6 +513,7 @@ def _binding_list_rows_for_report(report, *, missing: bool) -> tuple[list[Bindin
     text_rows: list[str] = []
     for row in rows:
         readiness = _readiness_for_source(row.source)
+        encoded_options = binding_encoded_option_payloads(row.encoded_options)
         merged_rows.append(
             BindingListRowPayload(
                 modelo=report.code,
@@ -527,6 +529,7 @@ def _binding_list_rows_for_report(report, *, missing: bool) -> tuple[list[Bindin
                 legal_refs=row.legal_refs,
                 source_refs=row.source_refs,
                 relation_inputs=row.relation_inputs,
+                encoded_options=encoded_options,
             ),
         )
         text_rows.append(
@@ -534,6 +537,7 @@ def _binding_list_rows_for_report(report, *, missing: bool) -> tuple[list[Bindin
             f"{row.binding_id}\t{row.source}\t{readiness}\t{row.typed_enum or '-'}\t"
             f"{row.input_channel}\t{row.borrador_capable}",
         )
+        text_rows.extend(binding_encoded_option_lines(row.binding_id, encoded_options))
     if missing:
         text_rows.extend(_relation_input_guidance_lines(rows))
     return merged_rows, text_rows
@@ -686,6 +690,7 @@ def _register_bindings_resolve_command(bindings_app: typer.Typer, deps: _Discove
                     legal_refs=row.legal_refs,
                     source_refs=row.source_refs,
                     relation_inputs=row.relation_inputs,
+                    encoded_options=binding_encoded_option_payloads(row.encoded_options),
                 )
                 for row in report.rows
             ],
@@ -700,17 +705,23 @@ def _register_bindings_resolve_command(bindings_app: typer.Typer, deps: _Discove
             f"binding_count\t{len(report.rows)}",
             "binding_id\tsource\treadiness\toverride",
         ]
-        lines.extend(
-            "\t".join(
-                (
-                    row.binding_id,
-                    row.source,
-                    _readiness_for_source(row.source),
-                    overrides.get(row.binding_id) or "-",
+        for row in report.rows:
+            lines.append(
+                "\t".join(
+                    (
+                        row.binding_id,
+                        row.source,
+                        _readiness_for_source(row.source),
+                        overrides.get(row.binding_id) or "-",
+                    ),
                 ),
             )
-            for row in report.rows
-        )
+            lines.extend(
+                binding_encoded_option_lines(
+                    row.binding_id,
+                    binding_encoded_option_payloads(row.encoded_options),
+                ),
+            )
         _emit_envelope(ctx, command="modelo.bindings.resolve", result=result, lines=lines)
 
 

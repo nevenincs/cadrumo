@@ -19,6 +19,7 @@ from pydantic import BaseModel, ConfigDict, Field
 
 from ....core import Period, TaxDomain
 from ._authority import ValidatedRegistryAuthority
+from ._binding_selector_utils import BooleanBindingEncodedValue, boolean_binding_encoded_values
 from ._errors import AmbiguousRevisionSelectionError, RegistryValidationError
 from ._ids import BindingId, CasillaId, FormulaId, LegalRefId, ParameterId, RelationId, SourceRefId
 from ._period_selector_match import registry_period_for_request, selector_token_for_request
@@ -338,6 +339,18 @@ class ModeloBindingQueryRow(BaseModel):
     source_refs: tuple[str, ...]
     borrador_capable: bool = False
     relation_inputs: tuple[RelationId, ...] = ()
+    encoded_options: tuple[BooleanBindingEncodedValue, ...] = ()
+    """Accepted decimal encodings for a boolean-typed ``input_channel=decimal`` binding.
+
+    Non-empty only for a ``manual_input`` binding whose selector declares
+    ``data_type = "boolean"`` (the Modelo 100 estimación-directa modality flag),
+    which the registry formulas consume as a numeric ``1`` / ``0`` operand. Each
+    :class:`~aeat.domain.calculations.registry.BooleanBindingEncodedValue` pairs
+    the decimal the operator must type on ``--binding`` with the boolean sense
+    and the underlying casilla token it maps to, so the listing surface can teach
+    the decimal-to-meaning mapping before a calculation is attempted, derived
+    from the binding definition rather than a per-form hardcoded table.
+    """
 
 
 class ModeloBindingsReport(BaseModel):
@@ -1013,6 +1026,7 @@ def _binding_rows(revision: ModeloRevision) -> tuple[ModeloBindingQueryRow, ...]
             source_refs=tuple(binding.source_refs),
             borrador_capable=binding.aeat_prefilled is True,
             relation_inputs=relation_inputs_by_target.get(binding.id, ()),
+            encoded_options=boolean_binding_encoded_values(binding),
         )
         for binding in revision.bindings
     )

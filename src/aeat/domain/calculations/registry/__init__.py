@@ -161,7 +161,12 @@ from ._bindings import (
     validate_retenciones_aggregation_binding,
     withholding_binding_requirements,
 )
-from ._binding_selector_utils import BindingRowSetSelector, binding_row_set_selector
+from ._binding_selector_utils import (
+    BindingRowSetSelector,
+    BooleanBindingEncodedValue,
+    binding_row_set_selector,
+    boolean_binding_encoded_values,
+)
 from ._casilla_membership import (
     casilla_noncanonical_reference_targets,
     casilla_noncanonical_reference_tokens,
@@ -466,6 +471,7 @@ __all__ = [
     "BindingRowSetSelector",
     "BindingSelectorQueryEntry",
     "BindingSelectorQueryProjection",
+    "BooleanBindingEncodedValue",
     "BracketEntry",
     "CalculationCompletenessCasilla",
     "CalculationCompletenessManifest",
@@ -649,6 +655,7 @@ __all__ = [
     "binding_aggregation_op",
     "binding_row_set_selector",
     "binding_source_casilla_ids",
+    "boolean_binding_encoded_values",
     "bound_casilla_binding_ids",
     "build_censo_modelo_foundation_contract",
     "build_diseno_coverage_report",

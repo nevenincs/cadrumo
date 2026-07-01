@@ -839,6 +839,7 @@ application:
         létre újra a munkaegységet.
       workflow_input_mismatch: A munkafolyamat bemeneti kérelme nem egyezik a számítási
         revízióval.
+      calculate_boolean_binding_encoding_invalid: 'A(z) %{key} kötés értéke decimálisként kódolt logikai jelző, és a következők egyike kell legyen: %{accepted}. Beérkezett: %{value}. Elfogadott kódolás: %{mapping}. Futtassa az ''aeat app modelo bindings list <MODELO>'' parancsot az egyes kötések decimális kódolásának megtekintéséhez.'
     findings:
       art20_reduccion_next_action: Ellenorizze, hogy a nem munkabol szarmazo egyeb
         jovedelme a mentes jovedelem nelkul az adoevben nem haladja-e meg a 6500 EUR-t;
