@@ -1,8 +1,18 @@
 """Runtime graph helpers for validated registry formulas.
 
-Walks formula expressions declared on a :class:`ModeloRevision` to extract
-casilla, binding, parameter, relation, and date-binding references, and
+Walks :class:`~aeat.domain.calculations.registry.FormulaExpression` trees
+declared on a :class:`~aeat.domain.calculations.registry.ModeloRevision` to
+extract casilla, binding, parameter, relation, and date-binding references, and
 produces topologically sorted evaluation orders for the formula engine.
+
+See Also:
+    :mod:`aeat.domain.calculations.registry._validate_formulas`
+        Validation layer that rejects dangling expression refs and formula
+        dependency cycles before runtime graph builders are used.
+    :mod:`aeat.domain.calculations.registry._formula_runtime`
+        Formula evaluator that consumes these graph projections.
+    :mod:`aeat.domain.calculations.registry._queries`
+        Registry query surface that exposes formula dependencies to operators.
 """
 
 from __future__ import annotations
@@ -24,28 +34,40 @@ from ._schema import FormulaExpression, ModeloRevision
 
 
 def expression_casilla_refs(expression: FormulaExpression) -> tuple[CasillaId, ...]:
-    """Return all casilla ids referenced by a formula expression."""
+    """Return all :class:`~aeat.domain.calculations.registry.CasillaId` refs.
+
+    The input is a validated
+    :class:`~aeat.domain.calculations.registry.FormulaExpression` tree.
+    """
     refs: list[CasillaId] = []
     _collect_casilla_refs(expression, refs)
     return tuple(refs)
 
 
 def expression_relation_refs(expression: FormulaExpression) -> tuple[RelationId, ...]:
-    """Return all relation ids referenced by a formula expression."""
+    """Return all :class:`~aeat.domain.calculations.registry.RelationId` refs.
+
+    The input is a validated
+    :class:`~aeat.domain.calculations.registry.FormulaExpression` tree.
+    """
     refs: list[RelationId] = []
     _collect_relation_refs(expression, refs)
     return tuple(refs)
 
 
 def expression_binding_refs(expression: FormulaExpression) -> tuple[BindingId, ...]:
-    """Return all binding ids referenced by a formula expression."""
+    """Return all :class:`~aeat.domain.calculations.registry.BindingId` refs.
+
+    The input is a validated
+    :class:`~aeat.domain.calculations.registry.FormulaExpression` tree.
+    """
     refs: list[BindingId] = []
     _collect_binding_refs(expression, refs)
     return tuple(refs)
 
 
 def expression_date_binding_refs(expression: FormulaExpression) -> tuple[BindingId, ...]:
-    """Return all date_binding ids referenced by a formula expression.
+    """Return all date-binding :class:`~aeat.domain.calculations.registry.BindingId` refs.
 
     ``date_binding`` leaves carry date-valued profile facts (e.g.
     birth_date) consumed by the ``age_at_year_end`` op.  They are
@@ -59,7 +81,7 @@ def expression_date_binding_refs(expression: FormulaExpression) -> tuple[Binding
 
 
 def expression_parameter_refs(expression: FormulaExpression) -> tuple[ParameterId, ...]:
-    """Return all parameter ids referenced by a formula expression.
+    """Return all :class:`~aeat.domain.calculations.registry.ParameterId` refs.
 
     Walks both the direct ``parameter = "..."`` leaf and the
     ``dispatch_table = { key = "param_id" }`` leaf introduced by the
@@ -161,8 +183,9 @@ def enum_consumed_binding_ids(revision: ModeloRevision) -> frozenset[BindingId]:
     authoritative discriminator that prevents that mismatch.
 
     Args:
-        revision: The :class:`ModeloRevision` whose formula graph is
-            inspected for enum dispatch binding references.
+        revision: The
+            :class:`~aeat.domain.calculations.registry.ModeloRevision` whose
+            formula graph is inspected for enum dispatch binding references.
     """
     refs: list[BindingId] = []
     for formula in revision.formulas:
@@ -182,8 +205,9 @@ def revision_date_binding_ids(revision: ModeloRevision) -> frozenset[BindingId]:
     decimal/enum override.
 
     Args:
-        revision: The :class:`ModeloRevision` whose formula graph is inspected
-            for ``date_binding`` leaf references.
+        revision: The
+            :class:`~aeat.domain.calculations.registry.ModeloRevision` whose
+            formula graph is inspected for ``date_binding`` leaf references.
     """
     refs: list[BindingId] = []
     for formula in revision.formulas:
@@ -213,7 +237,11 @@ def _collect_parameter_refs(expression: FormulaExpression, refs: list[ParameterI
 
 
 def input_casilla_id_map(revision: ModeloRevision) -> dict[CasillaId, CasillaId]:
-    """Return the canonical casilla id map for a :class:`ModeloRevision` input."""
+    """Return the canonical casilla id map for a revision input.
+
+    The :class:`~aeat.domain.calculations.registry.ModeloRevision` supplies the
+    declared :class:`~aeat.domain.calculations.registry.CasillaId` values.
+    """
     return {casilla.id: casilla.id for casilla in revision.casillas}
 
 
@@ -225,7 +253,9 @@ def formula_evaluation_order(revision: ModeloRevision) -> tuple[CasillaId, ...]:
     ``number`` fallback references before runtime reaches this graph builder.
 
     Args:
-        revision: The :class:`ModeloRevision` whose formulas to topologically sort.
+        revision: The
+            :class:`~aeat.domain.calculations.registry.ModeloRevision` whose
+            formulas to topologically sort.
     """
     computed_targets = {formula.target_casilla_id for formula in revision.formulas}
     sorter: TopologicalSorter[CasillaId] = TopologicalSorter()
