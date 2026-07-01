@@ -3,14 +3,12 @@ tags:
   - '#adr'
   - '#modelo-721-cripto-data-fidelity'
 date: '2026-06-02'
-modified: '2026-06-02'
+modified: '2026-06-30'
 related:
   - "[[2026-06-02-modelo-721-cripto-data-fidelity-research]]"
   - "[[2026-06-02-modelo-multiyear-renta-adr]]"
   - "[[2026-06-02-modelo-720-prior-year-baseline-adr]]"
 ---
-
-
 
 # `modelo-721-cripto-data-fidelity` adr: `modelo 721 cripto-exterior data-fidelity twin of 720 and legal-registry correction` | (**status:** `accepted`)
 
@@ -213,5 +211,3 @@ depends on, and nothing more.
   fixtures (`fixture-provenance-declared-in-sidecar`) to the legal-source layer. Promote
   it if a second reviewed-but-wrong legal entry is found; otherwise it stands as
   documented rationale here and in the superseding research.
-
-

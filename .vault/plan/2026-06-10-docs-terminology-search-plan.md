@@ -3,7 +3,7 @@ tags:
   - '#plan'
   - '#docs-terminology-search'
 date: '2026-06-10'
-modified: '2026-06-10'
+modified: '2026-06-13'
 tier: L4
 related:
   - '[[2026-06-10-docs-terminology-search-adr]]'

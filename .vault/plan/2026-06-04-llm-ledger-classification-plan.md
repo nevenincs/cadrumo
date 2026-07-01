@@ -3,13 +3,12 @@ tags:
   - '#plan'
   - '#llm-ledger-classification'
 date: '2026-06-04'
-modified: '2026-06-04'
+modified: '2026-06-30'
 tier: L2
 related:
   - '[[2026-06-04-llm-ledger-classification-adr]]'
   - '[[2026-06-03-llm-ledger-classification-research]]'
 ---
-
 
 # `llm-ledger-classification` `Saturate transactions with grounded rich tax metadata (stage 2): primitives, schema, saturate path, review` plan
 
@@ -44,16 +43,8 @@ Lock the contract with real-behavior tests, peer-review, persona-test, and verif
 
 ## Description
 
-
 ## Steps
 
-
-
-
-
-
-
 ## Parallelization
-
 
 ## Verification

@@ -3,14 +3,11 @@ tags:
   - '#exec'
   - '#ledger-input-localization'
 date: '2026-06-12'
-modified: '2026-06-12'
+modified: '2026-06-30'
 step_id: 'S12'
 related:
   - "[[2026-06-10-ledger-input-localization-plan]]"
 ---
-
-
-
 
 # Run python -m aeat.locales scaffold --check and python -m aeat.locales audit to confirm zero drift and all four locales remain in key parity with no honesty-ratchet violations
 

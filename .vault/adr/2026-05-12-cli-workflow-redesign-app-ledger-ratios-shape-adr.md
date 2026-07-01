@@ -3,7 +3,7 @@ tags:
   - '#adr'
   - '#cli-workflow-redesign'
 date: '2026-05-12'
-modified: '2026-05-12'
+modified: '2026-06-30'
 related:
   - "[[2026-05-12-cli-workflow-redesign-adr]]"
   - "[[2026-05-12-cli-workflow-redesign-app-ledger-ratios-shape-research]]"
@@ -11,8 +11,6 @@ related:
   - "[[2026-05-12-cli-workflow-redesign-bucket-adr]]"
   - "[[2026-05-12-cli-workflow-redesign-bucket-event-history-adr]]"
 ---
-
-
 
 # `cli-workflow-redesign` adr: `app ledger ratios shape` | (**status:** `accepted`)
 

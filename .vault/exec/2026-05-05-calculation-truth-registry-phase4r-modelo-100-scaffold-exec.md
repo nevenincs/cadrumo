@@ -3,7 +3,7 @@ tags:
   - '#exec'
   - '#calculation-truth-registry'
 date: '2026-05-05'
-modified: '2026-05-05'
+modified: '2026-06-30'
 related:
   - '[[2026-05-03-calculation-truth-registry-rebuild-plan]]'
   - '[[2026-05-03-calculation-truth-registry-pending-adr]]'
@@ -11,8 +11,6 @@ related:
   - '[[2026-05-05-modelo-100-renta-aggregation-audit]]'
   - '[[2026-05-05-calculation-truth-registry-phase4r-renta-direct-estimation-review-audit]]'
 ---
-
-
 
 # `calculation-truth-registry` `Phase 4R` `modelo-100-scaffold`
 

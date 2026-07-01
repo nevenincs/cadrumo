@@ -6,7 +6,7 @@ tags:
   - "#adr"
   - "#r1-vat-enumeration"
 date: 2026-04-13
-modified: '2026-04-13'
+modified: '2026-06-30'
 related:
   - "[[2026-04-13-r1-vat-enumeration-research]]"
   - "[[2026-04-13-r1-vat-enumeration-plan]]"
@@ -17,7 +17,6 @@ related:
 > **PARTIALLY-SUPERSEDED 2026-05-19**: The Value-Added Tax direction in this ADR is reversed: Spanish stems are authoritative for tax-domain identifiers, IvaInvoiceClassification is canonical, and domain/vat migrates into domain/iva. The 27-state rate table, 16-member category enumeration, citation-backed catalogue shape, and Pydantic-strict substrate decisions remain in force; only the VAT-prefixed identifiers and the domain/financial/vat package path are reversed.
 > See `2026-05-19-spanish-stem-terminology-authority-adr` for the canonical
 > rename ledger and Spanish-stem terminology authority.
-
 
 ## status
 

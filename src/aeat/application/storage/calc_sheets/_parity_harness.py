@@ -339,9 +339,7 @@ def _read_sheets_computed(
             continue
         row_to_value[row_number] = coerced
     return {
-        cell.casilla_id: row_to_value[cell.address.row]
-        for cell in sorted_cells
-        if cell.address.row in row_to_value
+        cell.casilla_id: row_to_value[cell.address.row] for cell in sorted_cells if cell.address.row in row_to_value
     }
 
 

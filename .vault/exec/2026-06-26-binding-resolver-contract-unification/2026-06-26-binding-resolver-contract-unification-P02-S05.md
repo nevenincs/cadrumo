@@ -3,14 +3,11 @@ tags:
   - '#exec'
   - '#binding-resolver-contract-unification'
 date: '2026-06-26'
-modified: '2026-06-26'
+modified: '2026-06-30'
 step_id: 'S05'
 related:
   - "[[2026-06-26-binding-resolver-contract-unification-plan]]"
 ---
-
-
-
 
 # Promote the profile mesh resolver result onto CalculationSourceResolution and drop the ProfileSourcedBindingResult wrap, keeping the date-binding and provenance channels intact
 

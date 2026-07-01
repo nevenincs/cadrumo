@@ -3,14 +3,11 @@ tags:
   - '#exec'
   - '#m303-form-vs-semantic-casilla-dual-keying'
 date: '2026-06-13'
-modified: '2026-06-13'
+modified: '2026-06-30'
 step_id: 'S01'
 related:
   - "[[2026-06-13-m303-form-vs-semantic-casilla-dual-keying-plan]]"
 ---
-
-
-
 
 # Author the authoritative box-to-semantic projection map as a reference document, pairing each in-scope cuota box with its single semantic casilla id, cross-checked box-label against semantic-label, and copying each box's existing legal_refs
 

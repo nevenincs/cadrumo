@@ -3,14 +3,11 @@ tags:
   - '#exec'
   - '#bindings-interface-hardening'
 date: '2026-06-15'
-modified: '2026-06-15'
+modified: '2026-06-30'
 step_id: 'S31'
 related:
   - "[[2026-06-15-bindings-interface-hardening-plan]]"
 ---
-
-
-
 
 # promote the never-promoted registry-resolver-family-extraction and registry-formula-runtime-facade candidates to rules with vaultspec-core vault rule promote from their 2026-06-02 boundary audits
 
@@ -21,8 +18,6 @@ related:
 
 ## Description
 
-
 ## Outcome
 
 ## Notes
-

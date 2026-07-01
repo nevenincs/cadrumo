@@ -3,11 +3,9 @@ tags:
   - '#research'
   - '#modelo-iva-routing-carry'
 date: '2026-06-09'
-modified: '2026-06-09'
+modified: '2026-06-30'
 related: []
 ---
-
-
 
 # `modelo-iva-routing-carry` research: `M303 special-IVA routing grounding and cross-period local-carry wiring design`
 

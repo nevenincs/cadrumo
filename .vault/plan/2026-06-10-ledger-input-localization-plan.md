@@ -3,13 +3,12 @@ tags:
   - '#plan'
   - '#ledger-input-localization'
 date: '2026-06-10'
-modified: '2026-06-10'
+modified: '2026-06-30'
 tier: L2
 related:
   - '[[2026-06-10-ledger-input-localization-adr]]'
   - '[[2026-06-10-ledger-input-localization-research]]'
 ---
-
 
 # `ledger-input-localization` `Ledger CLI canonical input parsing and localised rejection` plan
 

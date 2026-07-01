@@ -9,9 +9,6 @@ related:
   - "[[2026-06-30-ledger-add-idempotency-plan]]"
 ---
 
-
-
-
 # Add an existence check in create_manual_transaction so a same-key add whose content matches the stored row returns the existing-row quintet as a no-op, emitting no second LEDGER_TRANSACTION_CREATED event, leaving created_at and modified_at unchanged, and skipping evidence re-verification, modelled on create_work_unit
 
 ## Scope

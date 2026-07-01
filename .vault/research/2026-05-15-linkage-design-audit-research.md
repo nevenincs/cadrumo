@@ -3,7 +3,7 @@ tags:
   - '#research'
   - '#linkage-design-audit'
 date: '2026-05-15'
-modified: '2026-06-29'
+modified: '2026-06-30'
 related: []
 ---
 
@@ -567,8 +567,6 @@ Grouped by package:
 - **core**: ~20 (errors, identity, observability)
 
 All use frozen=True by default; many have ConfigDict(extra="forbid").
-
-
 
 ### Wave 1 — Agent 1 — Pattern sweep: linkage mechanisms (Haiku)
 

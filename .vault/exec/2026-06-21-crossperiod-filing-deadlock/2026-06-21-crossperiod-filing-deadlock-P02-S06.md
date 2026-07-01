@@ -3,14 +3,11 @@ tags:
   - '#exec'
   - '#crossperiod-filing-deadlock'
 date: '2026-06-21'
-modified: '2026-06-21'
+modified: '2026-06-30'
 step_id: 'S06'
 related:
   - "[[2026-06-21-crossperiod-filing-deadlock-plan]]"
 ---
-
-
-
 
 # Add the non_official_local_chain_advisory facet on CrossPeriodDependencyEvidence and the has_non_official_local_chain_advisory verdict property
 
@@ -28,4 +25,3 @@ related:
 Landed in commit `84add274d`. The typed marker yields a clean (advisory-only) evidence row idiomatically, following the `NoPriorObligationProvenance` facet shape.
 
 ## Notes
-

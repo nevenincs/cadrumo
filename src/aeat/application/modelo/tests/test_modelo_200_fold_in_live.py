@@ -378,8 +378,7 @@ def test_m200_self_carries_resolve_zero_with_no_prior_filing_on_live_calculate(
 
     values = result.revision.casilla_values
     assert Decimal(values[_BIN_PENDIENTE_INICIO]) == Decimal("0"), (
-        f"M200 {_FILING_YEAR} casilla 00670 with no prior 00671 must resolve zero; "
-        f"got {values[_BIN_PENDIENTE_INICIO]}"
+        f"M200 {_FILING_YEAR} casilla 00670 with no prior 00671 must resolve zero; got {values[_BIN_PENDIENTE_INICIO]}"
     )
     assert Decimal(values[_SALDO_INICIAL_NO_CUMPLIDO]) == Decimal("0"), (
         f"M200 {_FILING_YEAR} casilla 01494 with no prior 01498 must resolve zero; "

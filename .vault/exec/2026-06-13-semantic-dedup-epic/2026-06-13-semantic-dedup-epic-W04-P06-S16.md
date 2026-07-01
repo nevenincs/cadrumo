@@ -3,14 +3,11 @@ tags:
   - '#exec'
   - '#semantic-dedup-epic'
 date: '2026-06-13'
-modified: '2026-06-15'
+modified: '2026-06-30'
 step_id: 'S16'
 related:
   - "[[2026-06-13-semantic-dedup-epic-plan]]"
 ---
-
-
-
 
 # Consolidate the live-CLI _metric_line and auth-preflight guard onto shared helpers in _app_live_auth_preflight and redirect rendering, expedientes, justificante, notifications
 

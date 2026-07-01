@@ -3,11 +3,9 @@ tags:
   - '#research'
   - '#schema-hardening'
 date: '2026-05-18'
-modified: '2026-05-18'
+modified: '2026-06-30'
 related: []
 ---
-
-
 
 # `schema-hardening` research: Semantic-atom drift across modelo registry schemas
 

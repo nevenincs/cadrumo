@@ -9,9 +9,6 @@ related:
   - "[[2026-06-30-ledger-add-idempotency-plan]]"
 ---
 
-
-
-
 # Update the VerificationReport model validator to re-check the new outcome-pinned id derivation and retain run_at as a non-identity last-seen body field
 
 ## Scope

@@ -3,11 +3,9 @@ tags:
   - '#research'
   - '#ledger-interface-contract'
 date: '2026-06-10'
-modified: '2026-06-10'
+modified: '2026-06-30'
 related: []
 ---
-
-
 
 # `ledger-interface-contract` research: `Ledger CRUD envelope, ID, and sort contract`
 

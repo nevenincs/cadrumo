@@ -3,12 +3,10 @@ tags:
   - '#research'
   - '#modelo-130-100-continuity'
 date: '2026-06-10'
-modified: '2026-06-10'
+modified: '2026-06-30'
 related:
   - "[[2026-06-10-modelo-130-100-continuity-plan]]"
 ---
-
-
 
 # `modelo-130-100-continuity` research: `M100 annual fold-in of M130 pagos fraccionados: grounding`
 
@@ -111,4 +109,3 @@ advisory) per `no-silent-under-declaration`.
   (grounded) + `rd-439-2007:art-109` (re-confirm catalogue presence) to 0604's `legal_refs`;
   and decide whether scope includes modelling the unmodelled 2020 cuota chain (0595→0610) or
   stops at populating 0604.
-

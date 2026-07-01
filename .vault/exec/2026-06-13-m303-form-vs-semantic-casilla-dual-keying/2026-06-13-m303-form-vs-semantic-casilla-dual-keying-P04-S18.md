@@ -3,14 +3,11 @@ tags:
   - '#exec'
   - '#m303-form-vs-semantic-casilla-dual-keying'
 date: '2026-06-13'
-modified: '2026-06-13'
+modified: '2026-06-30'
 step_id: 'S18'
 related:
   - "[[2026-06-13-m303-form-vs-semantic-casilla-dual-keying-plan]]"
 ---
-
-
-
 
 # Narrow the deducible implies_any_nonzero advisory predicate to drop populated constituents (29/33 and 37 if wired) and keep it firing only for any box left manual (e.g. 37 if deferred)
 

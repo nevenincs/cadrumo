@@ -264,9 +264,7 @@ def test_inspect_operator_auth_configured_is_true_with_certificate_path(
     configured`` and the canonical ``configured`` is ``True``.
     """
 
-    workflow_state_repository().update(
-        _register_operator_profile()
-    )
+    workflow_state_repository().update(_register_operator_profile())
     cert_path = tmp_path / "operator.p12"
     cert_path.write_bytes(b"placeholder cert")
 
@@ -300,9 +298,7 @@ def test_inspect_operator_auth_configured_true_when_path_persisted_to_workflow_s
     so the two surfaces cannot disagree.
     """
 
-    workflow_state_repository().update(
-        _register_operator_profile()
-    )
+    workflow_state_repository().update(_register_operator_profile())
     cert_path = tmp_path / "operator.p12"
     cert_path.write_bytes(b"placeholder cert")
 
@@ -337,9 +333,7 @@ def test_inspect_operator_auth_distinguishes_no_path_set_from_file_missing(
     health classifier (round-5 M5).
     """
 
-    workflow_state_repository().update(
-        _register_operator_profile()
-    )
+    workflow_state_repository().update(_register_operator_profile())
 
     # 1) no path set
     configure_operator_auth("certificate")  # no --file
@@ -373,9 +367,7 @@ def test_configure_operator_auth_certificate_without_file_is_incomplete() -> Non
     configured when it is not usable.
     """
 
-    workflow_state_repository().update(
-        _register_operator_profile()
-    )
+    workflow_state_repository().update(_register_operator_profile())
 
     result = configure_operator_auth("certificate")  # no certificate_path
 
@@ -394,9 +386,7 @@ def test_configure_operator_auth_certificate_with_file_is_complete(tmp_path: Pat
     """``configure_operator_auth`` for the certificate provider with a
     resolvable ``--file`` reports a complete configuration."""
 
-    workflow_state_repository().update(
-        _register_operator_profile()
-    )
+    workflow_state_repository().update(_register_operator_profile())
     cert_path = tmp_path / "operator.p12"
     cert_path.write_bytes(b"placeholder cert")
 
@@ -412,9 +402,7 @@ def test_configure_operator_auth_certificate_with_unresolved_file_is_incomplete(
     ``--file`` that does not resolve to an existing file must report an
     incomplete configuration, not plain success."""
 
-    workflow_state_repository().update(
-        _register_operator_profile()
-    )
+    workflow_state_repository().update(_register_operator_profile())
     ghost = tmp_path / "missing.p12"
 
     result = configure_operator_auth("certificate", certificate_path=ghost)
@@ -438,9 +426,7 @@ def test_auth_status_and_test_agree_when_no_provider_configured() -> None:
     same "no provider configured" state ``auth status`` reports.
     """
 
-    workflow_state_repository().update(
-        _register_operator_profile()
-    )
+    workflow_state_repository().update(_register_operator_profile())
 
     status = inspect_operator_auth()
     probe = run_operator_auth_test()
@@ -461,9 +447,7 @@ def test_auth_test_probes_the_provider_when_one_is_configured() -> None:
     provider when workflow state has one — it only declines to invent a
     default when nothing is configured and nothing is requested."""
 
-    workflow_state_repository().update(
-        _register_operator_profile()
-    )
+    workflow_state_repository().update(_register_operator_profile())
     configure_operator_auth("certificate")
 
     probe = run_operator_auth_test()
@@ -475,9 +459,7 @@ def test_auth_test_probes_explicitly_requested_provider() -> None:
     """``auth test --provider clave_movil`` actively probes the requested
     provider even when nothing is configured in workflow state."""
 
-    workflow_state_repository().update(
-        _register_operator_profile()
-    )
+    workflow_state_repository().update(_register_operator_profile())
 
     probe = run_operator_auth_test("clave_movil")
 
@@ -555,9 +537,7 @@ def test_live_auth_preflight_reports_expired_persisted_session_state() -> None:
 
 
 def test_live_auth_preflight_uses_explicit_certificate_settings(tmp_path: Path) -> None:
-    workflow_state_repository().update(
-        _register_operator_profile()
-    )
+    workflow_state_repository().update(_register_operator_profile())
     configure_operator_auth("certificate")
     cert_path = tmp_path / "operator.p12"
     cert_path.write_bytes(b"not a pkcs12 bundle")
@@ -591,9 +571,7 @@ def test_auth_test_carries_a_local_session_probe_status_does_not() -> None:
     operator-facing summary.
     """
 
-    workflow_state_repository().update(
-        _register_operator_profile()
-    )
+    workflow_state_repository().update(_register_operator_profile())
     configure_operator_auth("certificate")
 
     status = inspect_operator_auth()
@@ -745,9 +723,7 @@ def test_configure_operator_auth_repeated_calls_append_distinct_events() -> None
         because ``derive_bucket_event_id`` mixes the timestamp into the
         digest."""
 
-    workflow_state_repository().update(
-        _register_operator_profile()
-    )
+    workflow_state_repository().update(_register_operator_profile())
 
     configure_operator_auth("certificate")
     configure_operator_auth("certificate")

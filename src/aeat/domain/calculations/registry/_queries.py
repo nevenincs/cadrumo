@@ -17,7 +17,9 @@ from typing import Literal, cast
 
 from pydantic import BaseModel, ConfigDict, Field
 
-from ....core import Period, TaxDomain
+from ....core import BindingSourceKind, Modelo
+from ....core._period import Period
+from ....core._tax_domain import TaxDomain
 from ._authority import ValidatedRegistryAuthority
 from ._binding_selector_utils import BooleanBindingEncodedValue, boolean_binding_encoded_values
 from ._errors import AmbiguousRevisionSelectionError, RegistryValidationError
@@ -30,7 +32,8 @@ from ._runtime_graph import (
     expression_parameter_refs,
     expression_relation_refs,
 )
-from ._schema import InputKind, ModeloDefinition, ModeloRevision, filing_period_from_scope
+from ._schema import ModeloDefinition, ModeloRevision, filing_period_from_scope
+from ._schema_input_kind import InputKind
 
 #: Bare registry period tokens (``0A``, ``1T``-``4T``, ``01``-``12``,
 #: ``1P``-``4P``, ``EXT-1T``-``EXT-4T``, ``AD-HOC``, ``EVENT-N``) carry
@@ -406,6 +409,8 @@ class ModeloBindingQueryRow(BaseModel):
     the decimal-to-meaning mapping before a calculation is attempted, derived
     from the binding definition rather than a per-form hardcoded table.
     """
+    operator_input_required: bool = True
+    """Whether a missing-input view should ask the operator to supply this binding."""
 
 
 class ModeloBindingsReport(BaseModel):
@@ -545,8 +550,7 @@ class RegistryQueryService:
                 revision_count=len(modelo.revisions),
             )
             for modelo in self._authority.modelos
-            if (year is None or _modelo_covers_year(modelo, year))
-            and (domain is None or modelo.tax_domain == domain)
+            if (year is None or _modelo_covers_year(modelo, year)) and (domain is None or modelo.tax_domain == domain)
         ]
         return ModeloListReport(modelos=tuple(sorted(rows, key=lambda row: row.code)))
 
@@ -790,7 +794,7 @@ class RegistryQueryService:
 
         Addresses a single casilla by its canonical id or its printed
         ``number`` and surfaces the authoritative label, legal/source
-        grounding, input kind, and â€” when the casilla is computed â€” the
+        grounding, input kind, and — when the casilla is computed — the
         resolved formula expression. Revision selection follows the same
         precedence as :meth:`describe_modelo`.
 
@@ -860,7 +864,7 @@ class RegistryQueryService:
             filing_year=filing_year,
             filing_period=filing_period_from_scope(filing_year, period),
             period=period,
-            rows=_binding_rows(snapshot.revision),
+            rows=_binding_rows(snapshot.revision, modelo=str(definition.id), period=period),
         )
 
     def formulas_for_scope(
@@ -943,7 +947,7 @@ class RegistryQueryService:
             filing_year=filing_year,
             filing_period=None,
             period=None,
-            rows=_binding_rows(revision),
+            rows=_binding_rows(revision, modelo=str(definition.id)),
         )
 
     def bindings(
@@ -981,7 +985,7 @@ class RegistryQueryService:
             filing_year=filing_year,
             filing_period=_query_filing_period(filing_year, registry_period),
             period=registry_period,
-            rows=_binding_rows(revision),
+            rows=_binding_rows(revision, modelo=str(definition.id), period=registry_period),
         )
 
     def formulas(
@@ -1098,8 +1102,7 @@ class RegistryQueryService:
             token for revision in definition.revisions.values() for token in revision.period_selector.periods
         )
         registry_period = (
-            registry_period_for_request(declared_by_revision, requested_period)
-            or requested_period.upper()
+            registry_period_for_request(declared_by_revision, requested_period) or requested_period.upper()
         )
         snapshot = self._authority.snapshot(
             str(definition.id),
@@ -1110,7 +1113,12 @@ class RegistryQueryService:
         return definition, snapshot.revision, registry_period
 
 
-def _binding_rows(revision: ModeloRevision) -> tuple[ModeloBindingQueryRow, ...]:
+def _binding_rows(
+    revision: ModeloRevision,
+    *,
+    modelo: str | None = None,
+    period: str | None = None,
+) -> tuple[ModeloBindingQueryRow, ...]:
     """Build the typed binding rows for one revision.
 
     Shared by every ``bindings*`` query so the operator-facing
@@ -1119,7 +1127,8 @@ def _binding_rows(revision: ModeloRevision) -> tuple[ModeloBindingQueryRow, ...]
     as a string enum key, ``decimal`` for every other binding.
     """
     enum_consumed = enum_consumed_binding_ids(revision)
-    relation_inputs_by_target = _relation_inputs_by_target_binding(revision)
+    relation_inputs_by_target = _relation_inputs_by_target_binding(revision, period=period)
+    operator_required = _operator_input_required_by_binding(revision, modelo=modelo, period=period)
     return tuple(
         ModeloBindingQueryRow(
             binding_id=binding.id,
@@ -1133,6 +1142,7 @@ def _binding_rows(revision: ModeloRevision) -> tuple[ModeloBindingQueryRow, ...]
             borrador_capable=binding.aeat_prefilled is True,
             relation_inputs=relation_inputs_by_target.get(binding.id, ()),
             encoded_options=boolean_binding_encoded_values(binding),
+            operator_input_required=operator_required.get(binding.id, True),
         )
         for binding in revision.bindings
     )
@@ -1196,7 +1206,11 @@ def _casilla_detail_report(
     )
 
 
-def _relation_inputs_by_target_binding(revision: ModeloRevision) -> dict[BindingId, tuple[RelationId, ...]]:
+def _relation_inputs_by_target_binding(
+    revision: ModeloRevision,
+    *,
+    period: str | None = None,
+) -> dict[BindingId, tuple[RelationId, ...]]:
     """Map each binding id to the relation ids whose ``target_binding`` is that binding.
 
     A ``relation_prefill`` binding's value is materialised by one or more
@@ -1209,8 +1223,36 @@ def _relation_inputs_by_target_binding(revision: ModeloRevision) -> dict[Binding
     """
     by_target: dict[BindingId, list[RelationId]] = {}
     for relation in revision.relations:
+        if period is not None and relation.target_periods and period not in relation.target_periods:
+            continue
         by_target.setdefault(relation.target_binding, []).append(relation.id)
     return {target: tuple(relation_ids) for target, relation_ids in by_target.items()}
+
+
+def _operator_input_required_by_binding(
+    revision: ModeloRevision,
+    *,
+    modelo: str | None,
+    period: str | None,
+) -> dict[BindingId, bool]:
+    """Return missing-input visibility for relation slots with period-scoped defaults."""
+    required = {binding.id: True for binding in revision.bindings}
+    if modelo != Modelo.M202.value or period is None:
+        return required
+    relations_by_target: dict[BindingId, list] = {}
+    for relation in revision.relations:
+        relations_by_target.setdefault(relation.target_binding, []).append(relation)
+    for binding in revision.bindings:
+        if binding.source is not BindingSourceKind.RELATION_PREFILL:
+            continue
+        relations = tuple(relations_by_target.get(binding.id, ()))
+        if not relations:
+            continue
+        if any(not relation.target_periods or period in relation.target_periods for relation in relations):
+            continue
+        if all(relation.kind == "previous_period" and str(relation.source_modelo) == modelo for relation in relations):
+            required[binding.id] = False
+    return required
 
 
 def _modelo_covers_year(modelo: ModeloDefinition, year: int) -> bool:

@@ -3,14 +3,11 @@ tags:
   - '#exec'
   - '#docs-terminology-search'
 date: '2026-06-10'
-modified: '2026-06-10'
+modified: '2026-06-30'
 step_id: 'S14'
 related:
   - "[[2026-06-10-docs-terminology-search-plan]]"
 ---
-
-
-
 
 # Implement Tier-A seed importers - IATE TBX download (es/hu/en, tax/law/finance domains, reliability at least 3) and UBTERM fiscalitat (ca/es/en, CC BY 3.0), EuroVoc labels only after licence verification - stamping seed_provenance with the required attribution on every seeded value and excluding all ND/NC/unlicensed sources (ADR D9)
 
@@ -132,4 +129,3 @@ Test names (`test_seed_import.py`): `test_excluded_source_is_refused`
 - **`__init__.py`** gained the seed-import re-exports (top-level surface);
   `cli.py` gained the `seed` verb. The bundled `_data/terminology/concepts/`
   tree is untouched.
-

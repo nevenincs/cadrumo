@@ -125,9 +125,7 @@ def test_revision_replay_inputs_do_not_replay_required_manual_defaults() -> None
     work_unit = _work_unit(modelo="180", filing_year=2024, period_code="0A")
     snapshot = resources().modelos.authority.snapshot("180", filing_year=2024, period="0A")
     manual_required = next(
-        casilla
-        for casilla in snapshot.revision.casillas
-        if casilla.required and casilla.input_kind == InputKind.MANUAL
+        casilla for casilla in snapshot.revision.casillas if casilla.required and casilla.input_kind == InputKind.MANUAL
     )
     revision = _revision(
         work_unit,

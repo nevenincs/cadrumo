@@ -3,14 +3,13 @@ tags:
   - '#plan'
   - '#llm-evidence-classification'
 date: '2026-06-10'
-modified: '2026-06-10'
+modified: '2026-06-30'
 tier: L3
 related:
   - '[[2026-06-10-llm-evidence-classification-adr]]'
   - '[[2026-06-10-llm-evidence-classification-research]]'
   - '[[2026-06-04-llm-ledger-classification-adr]]'
 ---
-
 
 <!-- RETIRED: W05 -->
 
@@ -145,12 +144,6 @@ safeguard hold; and a low-confidence or refused read surfaces to the operator ra
 than persisting silently.
 
 ## Steps
-
-
-
-
-
-
 
 ## Parallelization
 

@@ -22,7 +22,6 @@ from ._registry_schema_support import _committed_modelo
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 
-
 def _casilla_id(value: object) -> CasillaId:
     try:
         return validated_casilla_id(value, surface="test casilla id")
@@ -180,9 +179,7 @@ def test_modelo_390_extraction_profile_legal_refs_match_target_casillas() -> Non
     assert revision.extraction_profiles, revision.id
     profile = next(item for item in revision.extraction_profiles if item.id == "modelo-390-declaracion-pdf")
     target_refs = frozenset(
-        legal_ref
-        for target in profile.target_casillas
-        for legal_ref in casillas_by_id[target.casilla_id].legal_refs
+        legal_ref for target in profile.target_casillas for legal_ref in casillas_by_id[target.casilla_id].legal_refs
     )
 
     assert target_refs == _M390_EXTRACTION_PROFILE_TARGET_LEGAL_REFS

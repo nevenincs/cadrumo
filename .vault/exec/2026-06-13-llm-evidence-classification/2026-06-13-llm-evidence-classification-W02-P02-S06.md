@@ -3,14 +3,11 @@ tags:
   - '#exec'
   - '#llm-evidence-classification'
 date: '2026-06-13'
-modified: '2026-06-13'
+modified: '2026-06-30'
 step_id: 'S06'
 related:
   - "[[2026-06-13-llm-evidence-classification-plan]]"
 ---
-
-
-
 
 # Generate adversarial fixture variants (prompt-injection invoice, malformed/empty PDF, multi-page, foreign-language)
 
@@ -27,4 +24,3 @@ related:
 - Four synthetic_generated adversarial fixtures added with honest sidecars. Committed `1572036a8`.
 
 ## Notes
-

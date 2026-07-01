@@ -3,7 +3,7 @@ tags:
   - '#plan'
   - '#cross-period-filing-clean-state'
 date: '2026-06-05'
-modified: '2026-06-05'
+modified: '2026-06-30'
 tier: L3
 related:
   - '[[2026-06-05-cross-period-filing-clean-state-adr]]'
@@ -12,7 +12,6 @@ related:
   - '[[2026-06-05-cross-period-calculation-guards-research]]'
   - '[[2026-06-05-cross-period-calculation-guards-reference]]'
 ---
-
 
 <!-- RETIRED: S03, S04, S05, S07, S09, S10, S11, S12, S13, S14, S15, S16, S17, S18, S19, S20 -->
 
@@ -25,7 +24,6 @@ This Wave records the completed foundation: typed clean-state proof, calculation
 ### Phase `W01.P01` - define dependency proof contract
 
 Define the application-level proof model and repository joins that classify cross-period dependencies as clean or blocking.
-
 
 Implement a uniform clean-state proof for filing-grade cross-period modelo dependencies.
 

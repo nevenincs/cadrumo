@@ -38,9 +38,7 @@ def test_filing_period_metadata_casillas_are_informational_inputs() -> None:
     authority = _authority()
     snapshot = authority.snapshot("303", filing_year=2026, period="1T")
 
-    period_casillas = [
-        casilla for casilla in snapshot.revision.casillas if casilla.semantic_role == "filing_period"
-    ]
+    period_casillas = [casilla for casilla in snapshot.revision.casillas if casilla.semantic_role == "filing_period"]
 
     assert period_casillas, "modelo 303 must declare filing-period metadata casillas"
     assert all(casilla.input_kind is InputKind.INFORMATIONAL for casilla in period_casillas)

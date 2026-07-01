@@ -3,14 +3,11 @@ tags:
   - '#exec'
   - '#storage-backend-security-review'
 date: '2026-06-15'
-modified: '2026-06-15'
+modified: '2026-06-30'
 step_id: 'S33'
 related:
   - "[[2026-06-14-storage-backend-security-review-plan]]"
 ---
-
-
-
 
 # LARGER FOLLOW-UP: enable journal_mode=WAL and synchronous=NORMAL after migrating the ~21 at-rest raw-db test readers to a shared WAL-aware helper that also scans the -wal sidecar
 
@@ -19,7 +16,6 @@ related:
 - `src/aeat/adapters/persistence/storage/sql/engine.py`
 
 ## Description
-
 
 - Add `PRAGMA journal_mode=WAL` and `PRAGMA synchronous=NORMAL` to the bucket
   engine's connect listener (alongside `foreign_keys` and `busy_timeout`); update
@@ -66,7 +62,6 @@ the at-rest consumer sweeps (outbound/profile/live/observations/modelos/
 user-profile) pass under WAL with marker safeguards intact.
 
 ## Notes
-
 
 The key safety insight: under WAL a raw `.db` scan can pass *tautologically*
 (data sits in the `-wal` sidecar), so "the test still passes" is not proof of a

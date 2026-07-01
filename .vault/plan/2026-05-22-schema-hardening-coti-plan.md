@@ -3,7 +3,7 @@ tags:
   - '#plan'
   - '#schema-hardening-coti'
 date: '2026-05-22'
-modified: '2026-05-22'
+modified: '2026-06-30'
 tier: L2
 related:
   - '[[2026-05-22-schema-hardening-coti-adr]]'
@@ -13,7 +13,6 @@ related:
   - '[[2026-05-21-schema-hardening-reference]]'
   - '[[2026-05-22-schema-hardening-plan]]'
 ---
-
 
 # `schema-hardening-coti` `quoted-fund-coti-burn-down` plan
 

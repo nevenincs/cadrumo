@@ -3,7 +3,7 @@ tags:
   - '#plan'
   - '#binding-fold-in-carry-unification'
 date: '2026-06-26'
-modified: '2026-06-26'
+modified: '2026-06-30'
 tier: L2
 related:
   - '[[2026-06-26-binding-fold-in-carry-unification-adr]]'
@@ -14,16 +14,6 @@ related:
   - '[[2026-06-21-m390-iva-carry-boxes-adr]]'
   - '[[2026-06-26-binding-resolver-contract-unification-plan]]'
 ---
-
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the
-       related: field above.
-     - The related: field carries the AUTHORISING documents
-       (ADR, research, reference, prior plan) for every Step in
-       this plan. Steps inherit this chain; per-row reference
-       footers do not exist.
-     - NEVER use [[wiki-links]] or markdown links in the
-       document body. -->
 
 # `binding-fold-in-carry-unification` plan
 
@@ -77,12 +67,6 @@ Dependencies. This plan depends on phase 2.1 (`binding-source-kind-taxonomy-unif
 Constraints carried from the ADR. Behaviour-preserving by construction, proven not asserted: NO casilla value may shift across any collapse. The M130 direct-carry and M353 `per_grupo_member` fan-in are the conformant shapes the one helper must still produce exactly. The M303 iva-wallet carve-out (`modelo-303-compensacion-pendiente-anteriores`) and the `relation-slot-bindings-declare-relation-source` collision gate must survive the dedup and fire EXACTLY ONCE post-dedup, never a double-fire. The carry reconciliation intersects already-landed carry fixes (#1 M303 refunded-period zero-carry, #7 M390 box 97 prior-pending, #12 M390 box 662 applied-credit) and the #6/#28 perceptor/percepciones count results; all must be preserved exactly.
 
 ## Steps
-
-
-
-
-
-
 
 ## Parallelization
 

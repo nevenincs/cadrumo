@@ -3,17 +3,13 @@ tags:
   - '#exec'
   - '#cli-workflow-redesign'
 date: '2026-05-14'
-modified: '2026-05-14'
+modified: '2026-06-30'
 step_id: 'W48.P236.S1411'
 related:
   - "[[2026-05-13-cli-workflow-redesign-epic-plan]]"
 ---
 
-
-
-
 # `cli-workflow-redesign` `W48.P236.S1411` / `W48.P236.S1412` / `W48.P236.S1413` / `W48.P236.S1414` / `W48.P236.S1415` / `W48.P236.S1416`
-
 
 Mapped the Modelo 100 borrador binding ADR into application-owned service state,
 added the command/result contracts required by `W48.P236.S1412`, wired the

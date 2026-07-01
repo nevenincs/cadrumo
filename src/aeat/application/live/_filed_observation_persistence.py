@@ -77,6 +77,7 @@ from ._errors import LiveApplicationError, LiveApplicationInputError
 
 logger = get_logger(__name__)
 
+
 def _casilla_id(value: object) -> CasillaId:
     try:
         return validated_casilla_id(value, surface="live filed-observation casilla constant")

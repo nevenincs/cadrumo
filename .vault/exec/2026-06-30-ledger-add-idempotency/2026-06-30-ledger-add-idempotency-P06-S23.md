@@ -9,9 +9,6 @@ related:
   - "[[2026-06-30-ledger-add-idempotency-plan]]"
 ---
 
-
-
-
 # Add real-repository tests proving a retried file of a PRESENTADO revision returns the existing record as a no-op with no duplicate record or event while a not-yet-verified file still hard-refuses
 
 ## Scope

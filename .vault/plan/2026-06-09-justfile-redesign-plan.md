@@ -3,13 +3,12 @@ tags:
   - '#plan'
   - '#justfile-redesign'
 date: '2026-06-09'
-modified: '2026-06-09'
+modified: '2026-06-30'
 tier: L1
 related:
   - '[[2026-06-09-justfile-redesign-adr]]'
   - '[[2026-06-09-justfile-redesign-research]]'
 ---
-
 
 # `justfile-redesign` `implementation` plan
 

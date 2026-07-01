@@ -838,6 +838,639 @@ _MODELO_APPLICABILITY_RULES: dict[str, ModeloApplicabilityRule] = {
             "ley-58-2003:art-93",
         ),
     ),
+    # Modelo 322 - IVA grupo de entidades, modelo individual. Filed by
+    # taxable persons that are member entities in the special IVA group
+    # regime. This is role-gated profile state, not a generic SII flag.
+    Modelo.M322: ModeloApplicabilityRule(
+        modelo=Modelo.M322,
+        applicable_entity_types=_PAYER_FACT_ENTITY_TYPES,
+        required_payer_fact=PayerFact.IVA_GROUP_MEMBER,
+        applicable_reason=(
+            "Modelo 322 (IVA grupo de entidades, modelo individual): el "
+            "contribuyente esta inscrito como entidad miembro de un grupo "
+            "de IVA y presenta la autoliquidacion mensual individual."
+        ),
+        not_applicable_reason=(
+            "Modelo 322 no aplica: solo corresponde a entidades miembro "
+            "de un grupo de IVA que hayan optado por el regimen especial "
+            "del grupo de entidades."
+        ),
+        legal_refs=(
+            "orden-eha-3434-2007:art-1",
+            "orden-eha-3434-2007:art-8",
+            "rd-1624-1992:art-71",
+        ),
+    ),
+    # Modelo 353 - IVA grupo de entidades, modelo agregado. Filed by
+    # the dominant entity of the group and grounded separately from the
+    # member-level Modelo 322 role.
+    Modelo.M353: ModeloApplicabilityRule(
+        modelo=Modelo.M353,
+        applicable_entity_types=_PAYER_FACT_ENTITY_TYPES,
+        required_payer_fact=PayerFact.IVA_GROUP_DOMINANT_ENTITY,
+        applicable_reason=(
+            "Modelo 353 (IVA grupo de entidades, modelo agregado): el "
+            "contribuyente esta inscrito como entidad dominante de un "
+            "grupo de IVA y presenta la autoliquidacion mensual agregada."
+        ),
+        not_applicable_reason=(
+            "Modelo 353 no aplica: solo corresponde a la entidad dominante "
+            "de un grupo de IVA que agrega las autoliquidaciones "
+            "individuales de las entidades del grupo."
+        ),
+        legal_refs=(
+            "orden-eha-3434-2007:art-2",
+            "orden-eha-3434-2007:art-8",
+            "rd-1624-1992:art-71",
+        ),
+    ),
+    # Modelo 216 — autoliquidación de retenciones e ingresos a cuenta del IRNR
+    # (rentas de no residentes sin establecimiento permanente). Payer's
+    # obligation: whoever satisfies such income withholds and self-assesses. The
+    # payer fact the three-axis model cannot decide alone; an undeclared fact
+    # yields INCOMPLETE.
+    Modelo.M216: ModeloApplicabilityRule(
+        modelo=Modelo.M216,
+        applicable_entity_types=_PAYER_FACT_ENTITY_TYPES,
+        required_payer_fact=PayerFact.PAYS_NON_RESIDENT_INCOME,
+        applicable_reason=(
+            "Modelo 216 (retenciones e ingresos a cuenta del IRNR): el "
+            "contribuyente satisface rentas a no residentes sin establecimiento "
+            "permanente sujetas a retención y autoliquida las retenciones "
+            "practicadas."
+        ),
+        not_applicable_reason=(
+            "Modelo 216 no aplica: la autoliquidación de retenciones del IRNR "
+            "solo corresponde a quien satisface rentas a no residentes sin "
+            "establecimiento permanente."
+        ),
+        # TRLIRNR (RD-Leg 5/2004) art. 24 — base de las rentas de no residentes
+        # sin establecimiento permanente; Orden HAC/56/2024 art. 1 — aprobación
+        # y regulación del Modelo 216.
+        legal_refs=(
+            "trlirnr-rdleg-5-2004:art-24",
+            "orden-hac-56-2024:art-1",
+        ),
+    ),
+    # Modelo 296 — resumen anual de retenciones e ingresos a cuenta del IRNR.
+    # The annual companion to Modelo 216: whoever files Modelo 216 files
+    # Modelo 296. Gated on the same payer fact.
+    Modelo.M296: ModeloApplicabilityRule(
+        modelo=Modelo.M296,
+        applicable_entity_types=_PAYER_FACT_ENTITY_TYPES,
+        required_payer_fact=PayerFact.PAYS_NON_RESIDENT_INCOME,
+        applicable_reason=(
+            "Modelo 296 (resumen anual de retenciones del IRNR): quien "
+            "satisface rentas a no residentes sin establecimiento permanente "
+            "presenta el resumen anual de las retenciones declaradas en el "
+            "Modelo 216."
+        ),
+        not_applicable_reason=(
+            "Modelo 296 no aplica: el resumen anual de retenciones del IRNR "
+            "solo corresponde a quien satisface rentas a no residentes."
+        ),
+        legal_refs=(
+            "trlirnr-rdleg-5-2004:art-24",
+            "orden-hac-56-2024:art-1",
+        ),
+    ),
+    # Modelo 194 — resumen anual de retenciones e ingresos a cuenta sobre
+    # rendimientos del capital mobiliario y transmisión/amortización de activos.
+    # Payer's obligation, gated on the capital-income withholding payer fact.
+    Modelo.M194: ModeloApplicabilityRule(
+        modelo=Modelo.M194,
+        applicable_entity_types=_PAYER_FACT_ENTITY_TYPES,
+        required_payer_fact=PayerFact.PAYS_CAPITAL_INCOME_WITH_RETENCION,
+        applicable_reason=(
+            "Modelo 194 (resumen anual de retenciones sobre capital mobiliario): "
+            "el contribuyente satisface rendimientos del capital mobiliario o "
+            "rentas de transmisión/amortización de activos sujetos a retención y "
+            "presenta el resumen anual de las retenciones practicadas."
+        ),
+        not_applicable_reason=(
+            "Modelo 194 no aplica: el resumen anual de retenciones sobre capital "
+            "mobiliario solo corresponde a quien satisface tales rendimientos "
+            "sujetos a retención."
+        ),
+        legal_refs=(
+            "ley-35-2006:art-99",
+            "rd-439-2007:art-108",
+            "orden-eha-3377-2011:art-1",
+        ),
+    ),
+    # Modelo 188 - resumen anual de retenciones sobre operaciones de
+    # capitalizacion y contratos de seguro de vida o invalidez (capital
+    # mobiliario). Same payer fact as Modelo 194.
+    Modelo.M188: ModeloApplicabilityRule(
+        modelo=Modelo.M188,
+        applicable_entity_types=_PAYER_FACT_ENTITY_TYPES,
+        required_payer_fact=PayerFact.PAYS_CAPITAL_INCOME_WITH_RETENCION,
+        applicable_reason=(
+            "Modelo 188 (resumen anual de retenciones sobre capitalizacion y "
+            "seguros de vida): el contribuyente satisface rendimientos del "
+            "capital mobiliario de operaciones de capitalizacion o seguros "
+            "sujetos a retencion y presenta el resumen anual."
+        ),
+        not_applicable_reason=(
+            "Modelo 188 no aplica: solo corresponde a quien satisface "
+            "rendimientos de capitalizacion o seguros sujetos a retencion."
+        ),
+        legal_refs=(
+            "ley-35-2006:art-99",
+            "rd-439-2007:art-108",
+            "orden-eha-3377-2011:art-1",
+        ),
+    ),
+    # Modelo 187 - acciones/participaciones de IIC y resumen anual de
+    # retenciones sobre las ganancias patrimoniales derivadas. Payer's
+    # obligation, gated on the capital-income withholding payer fact.
+    Modelo.M187: ModeloApplicabilityRule(
+        modelo=Modelo.M187,
+        applicable_entity_types=_PAYER_FACT_ENTITY_TYPES,
+        required_payer_fact=PayerFact.PAYS_CAPITAL_INCOME_WITH_RETENCION,
+        applicable_reason=(
+            "Modelo 187 (acciones y participaciones de IIC, resumen anual de "
+            "retenciones): el contribuyente satisface rentas o ganancias de IIC "
+            "sujetas a retencion y presenta el resumen anual."
+        ),
+        not_applicable_reason=(
+            "Modelo 187 no aplica: solo corresponde a quien satisface rentas o ganancias de IIC sujetas a retencion."
+        ),
+        legal_refs=(
+            "ley-35-2006:art-99",
+            "rd-439-2007:art-108",
+            "orden-eha-3377-2011:art-1",
+        ),
+    ),
+    # Modelo 126 - autoliquidacion de retenciones sobre rendimientos del capital
+    # mobiliario de cuentas y depositos en instituciones financieras. Payer
+    # withholding obligation, gated on the capital-income withholding payer fact.
+    Modelo.M126: ModeloApplicabilityRule(
+        modelo=Modelo.M126,
+        applicable_entity_types=_PAYER_FACT_ENTITY_TYPES,
+        required_payer_fact=PayerFact.PAYS_CAPITAL_INCOME_WITH_RETENCION,
+        applicable_reason=(
+            "Modelo 126 (retenciones sobre rendimientos del capital mobiliario de "
+            "cuentas y depositos): el contribuyente satisface rendimientos de "
+            "cuentas o depositos sujetos a retencion y autoliquida las retenciones."
+        ),
+        not_applicable_reason=(
+            "Modelo 126 no aplica: solo corresponde a quien satisface rendimientos "
+            "de cuentas o depositos en instituciones financieras sujetos a retencion."
+        ),
+        legal_refs=(
+            "ley-35-2006:art-99",
+            "rd-439-2007:art-108",
+            "orden-eha-3435-2007:anexo-ii",
+        ),
+    ),
+    # Modelo 128 - autoliquidacion de retenciones sobre rentas de capital
+    # mobiliario de operaciones de capitalizacion y contratos de seguro de vida
+    # o invalidez. Same payer fact.
+    Modelo.M128: ModeloApplicabilityRule(
+        modelo=Modelo.M128,
+        applicable_entity_types=_PAYER_FACT_ENTITY_TYPES,
+        required_payer_fact=PayerFact.PAYS_CAPITAL_INCOME_WITH_RETENCION,
+        applicable_reason=(
+            "Modelo 128 (retenciones sobre rentas de capitalizacion y seguros de "
+            "vida): el contribuyente satisface rentas de operaciones de "
+            "capitalizacion o seguros sujetas a retencion y autoliquida las "
+            "retenciones."
+        ),
+        not_applicable_reason=(
+            "Modelo 128 no aplica: solo corresponde a quien satisface rentas de "
+            "capitalizacion o seguros de vida o invalidez sujetas a retencion."
+        ),
+        legal_refs=(
+            "ley-35-2006:art-99",
+            "rd-439-2007:art-108",
+            "orden-eha-3435-2007:anexo-ii",
+        ),
+    ),
+    # Modelo 117 - autoliquidacion de retenciones e ingresos a cuenta sobre
+    # rentas o ganancias por transmision o reembolso de acciones y
+    # participaciones de IIC. Payer withholding obligation.
+    Modelo.M117: ModeloApplicabilityRule(
+        modelo=Modelo.M117,
+        applicable_entity_types=_PAYER_FACT_ENTITY_TYPES,
+        required_payer_fact=PayerFact.PAYS_CAPITAL_INCOME_WITH_RETENCION,
+        applicable_reason=(
+            "Modelo 117 (retenciones sobre transmision o reembolso de acciones y "
+            "participaciones de IIC): el contribuyente satisface rentas o ganancias "
+            "de IIC sujetas a retencion y autoliquida las retenciones."
+        ),
+        not_applicable_reason=(
+            "Modelo 117 no aplica: solo corresponde a quien satisface rentas o "
+            "ganancias por transmision o reembolso de participaciones de IIC "
+            "sujetas a retencion."
+        ),
+        legal_refs=(
+            "ley-35-2006:art-99",
+            "rd-439-2007:art-108",
+            "orden-eha-3435-2007:anexo-ii",
+        ),
+    ),
+    # Modelo 231 - declaracion de informacion pais por pais (country-by-country).
+    # Filed by the reporting entity of a large multinational group.
+    Modelo.M231: ModeloApplicabilityRule(
+        modelo=Modelo.M231,
+        applicable_entity_types=_PAYER_FACT_ENTITY_TYPES,
+        required_payer_fact=PayerFact.MEMBER_OF_LARGE_MULTINATIONAL_GROUP,
+        applicable_reason=(
+            "Modelo 231 (informacion pais por pais): la entidad es declarante de "
+            "un grupo multinacional por encima del umbral y presenta la "
+            "declaracion pais por pais."
+        ),
+        not_applicable_reason=(
+            "Modelo 231 no aplica: solo corresponde a la entidad declarante de un "
+            "grupo multinacional por encima del umbral de informacion pais por pais."
+        ),
+        legal_refs=("orden-hac-941-2018:art-primero-5-anexo-i",),
+    ),
+    # Modelo 361 - solicitud de devolucion del IVA soportado en el TAI por
+    # empresarios establecidos en la Comunidad pero no en el TAI.
+    Modelo.M361: ModeloApplicabilityRule(
+        modelo=Modelo.M361,
+        applicable_entity_types=_PAYER_FACT_ENTITY_TYPES,
+        required_payer_fact=PayerFact.EU_BUSINESS_SEEKING_SPANISH_VAT_REFUND,
+        applicable_reason=(
+            "Modelo 361 (devolucion IVA no establecidos): el empresario esta "
+            "establecido en la Comunidad pero no en el territorio de aplicacion "
+            "del impuesto y solicita la devolucion del IVA soportado en Espana."
+        ),
+        not_applicable_reason=(
+            "Modelo 361 no aplica: solo corresponde a empresarios establecidos en "
+            "la Comunidad pero no en el territorio de aplicacion del impuesto que "
+            "solicitan la devolucion del IVA soportado en Espana."
+        ),
+        legal_refs=(
+            "orden-eha-789-2010:art-1",
+            "orden-eha-789-2010:art-4",
+        ),
+    ),
+    # Modelo 189 - declaracion informativa anual de valores, seguros y rentas.
+    # Filed by financial/insurance intermediary entities reporting client holdings.
+    Modelo.M189: ModeloApplicabilityRule(
+        modelo=Modelo.M189,
+        applicable_entity_types=_PAYER_FACT_ENTITY_TYPES,
+        required_payer_fact=PayerFact.REPORTS_CLIENT_SECURITIES_INSURANCE_ANNUITIES,
+        applicable_reason=(
+            "Modelo 189 (valores, seguros y rentas): la entidad financiera o "
+            "aseguradora declara los valores, seguros y rentas de sus clientes en "
+            "la declaracion informativa anual."
+        ),
+        not_applicable_reason=(
+            "Modelo 189 no aplica: solo corresponde a las entidades financieras o "
+            "aseguradoras obligadas a informar de valores, seguros y rentas de "
+            "clientes."
+        ),
+        legal_refs=(
+            "orden-eha-3481-2008:art-1",
+            "orden-eha-3481-2008:art-5",
+        ),
+    ),
+    # Modelo 280
+    Modelo.M280: ModeloApplicabilityRule(
+        modelo=Modelo.M280,
+        applicable_entity_types=_PAYER_FACT_ENTITY_TYPES,
+        required_payer_fact=PayerFact.MARKETS_LONG_TERM_SAVINGS_PLANS,
+        applicable_reason=(
+            "Modelo 280 (Planes de Ahorro a Largo Plazo): la entidad aseguradora o de credito comercializa "
+            "planes de ahorro a largo plazo y declara sus titulares."
+        ),
+        not_applicable_reason=(
+            "Modelo 280 no aplica: solo corresponde a las entidades aseguradoras o de credito que "
+            "comercializan Planes de Ahorro a Largo Plazo."
+        ),
+        legal_refs=(
+            "orden-hap-2118-2015:art-1",
+            "orden-hap-2118-2015:art-4",
+        ),
+    ),
+    # Modelo 289
+    Modelo.M289: ModeloApplicabilityRule(
+        modelo=Modelo.M289,
+        applicable_entity_types=_PAYER_FACT_ENTITY_TYPES,
+        required_payer_fact=PayerFact.CRS_REPORTING_FINANCIAL_INSTITUTION,
+        applicable_reason=(
+            "Modelo 289 (cuentas financieras, CRS): la institucion financiera esta obligada a comunicar "
+            "cuentas financieras en el ambito de la asistencia mutua."
+        ),
+        not_applicable_reason=(
+            "Modelo 289 no aplica: solo corresponde a las instituciones financieras obligadas a informar de "
+            "cuentas financieras bajo el CRS."
+        ),
+        legal_refs=(
+            "orden-hap-1695-2016:art-1",
+            "orden-hap-1695-2016:art-4",
+        ),
+    ),
+    # Modelo 345
+    Modelo.M345: ModeloApplicabilityRule(
+        modelo=Modelo.M345,
+        applicable_entity_types=_PAYER_FACT_ENTITY_TYPES,
+        required_payer_fact=PayerFact.MANAGES_PENSION_PLAN_CONTRIBUTIONS,
+        applicable_reason=(
+            "Modelo 345 (planes y fondos de pensiones): la entidad gestora declara los participes, "
+            "aportaciones y contribuciones de los planes y fondos de pensiones."
+        ),
+        not_applicable_reason=(
+            "Modelo 345 no aplica: solo corresponde a las entidades gestoras de planes y fondos de pensiones "
+            "y sistemas alternativos."
+        ),
+        legal_refs=(
+            "orden-hfp-823-2022:art-1",
+            "orden-hfp-823-2022:art-4",
+        ),
+    ),
+    # Modelo 379
+    Modelo.M379: ModeloApplicabilityRule(
+        modelo=Modelo.M379,
+        applicable_entity_types=_PAYER_FACT_ENTITY_TYPES,
+        required_payer_fact=PayerFact.PAYMENT_SERVICE_PROVIDER_CESOP,
+        applicable_reason=(
+            "Modelo 379 (CESOP): el proveedor de servicios de pago declara los pagos transfronterizos cuando "
+            "supera el umbral trimestral por beneficiario."
+        ),
+        not_applicable_reason=(
+            "Modelo 379 no aplica: solo corresponde a los proveedores de servicios de pago obligados a "
+            "informar de pagos transfronterizos (CESOP)."
+        ),
+        legal_refs=(
+            "orden-hfp-1415-2023:art-1",
+            "orden-hfp-1415-2023:art-4",
+        ),
+    ),
+    # Modelo 136
+    Modelo.M136: ModeloApplicabilityRule(
+        modelo=Modelo.M136,
+        applicable_entity_types=_PAYER_FACT_ENTITY_TYPES,
+        required_payer_fact=PayerFact.SUBJECT_TO_LOTTERY_PRIZE_SPECIAL_LEVY,
+        applicable_reason=(
+            "Modelo 136 (gravamen especial premios): el contribuyente obtuvo premios de loterias sujetos al "
+            "gravamen especial que no fueron objeto de retencion y debe autoliquidarlo."
+        ),
+        not_applicable_reason=(
+            "Modelo 136 no aplica: solo corresponde a quien obtuvo premios de loterias sujetos al gravamen "
+            "especial sin retencion practicada."
+        ),
+        legal_refs=(
+            "orden-hap-70-2013:art-5",
+            "orden-hap-70-2013:art-7",
+        ),
+    ),
+    # Modelo 165
+    Modelo.M165: ModeloApplicabilityRule(
+        modelo=Modelo.M165,
+        applicable_entity_types=_PAYER_FACT_ENTITY_TYPES,
+        required_payer_fact=PayerFact.ISSUES_NEW_ENTITY_INVESTOR_CERTIFICATIONS,
+        applicable_reason=(
+            "Modelo 165 (entidades de nueva creacion): la entidad emite certificaciones individuales a sus "
+            "socios o participes para la deduccion por inversion en empresas de nueva creacion."
+        ),
+        not_applicable_reason=(
+            "Modelo 165 no aplica: solo corresponde a las entidades de nueva o reciente creacion que emiten "
+            "certificaciones a sus socios o participes."
+        ),
+        legal_refs=(
+            "orden-hap-2455-2013:art-1",
+            "orden-hap-2455-2013:art-4",
+        ),
+    ),
+    # Modelo 179
+    Modelo.M179: ModeloApplicabilityRule(
+        modelo=Modelo.M179,
+        applicable_entity_types=_PAYER_FACT_ENTITY_TYPES,
+        required_payer_fact=PayerFact.INTERMEDIATES_TOURIST_HOUSING_RENTAL,
+        applicable_reason=(
+            "Modelo 179 (viviendas turisticas): el intermediario en la cesion de uso de viviendas con fines "
+            "turisticos declara las operaciones del ano anterior."
+        ),
+        not_applicable_reason=(
+            "Modelo 179 no aplica: solo corresponde a quien intermedia en la cesion de uso de viviendas con "
+            "fines turisticos."
+        ),
+        legal_refs=(
+            "orden-hac-612-2021:art-1",
+            "orden-hac-612-2021:art-4",
+        ),
+    ),
+    # Modelo 181
+    Modelo.M181: ModeloApplicabilityRule(
+        modelo=Modelo.M181,
+        applicable_entity_types=_PAYER_FACT_ENTITY_TYPES,
+        required_payer_fact=PayerFact.CREDIT_INSTITUTION_REPORTING_PROPERTY_LOANS,
+        applicable_reason=(
+            "Modelo 181 (prestamos y creditos sobre inmuebles): la entidad de credito informa de los "
+            "prestamos, creditos y operaciones financieras relacionadas con bienes inmuebles."
+        ),
+        not_applicable_reason=(
+            "Modelo 181 no aplica: solo corresponde a las entidades de credito que informan de prestamos y "
+            "operaciones financieras relacionadas con inmuebles."
+        ),
+        legal_refs=(
+            "orden-eha-3514-2009:art-1",
+            "orden-eha-3514-2009:art-6",
+        ),
+    ),
+    # Modelo 182
+    Modelo.M182: ModeloApplicabilityRule(
+        modelo=Modelo.M182,
+        applicable_entity_types=_PAYER_FACT_ENTITY_TYPES,
+        required_payer_fact=PayerFact.RECEIVES_DEDUCTIBLE_DONATIONS,
+        applicable_reason=(
+            "Modelo 182 (donativos recibidos): la entidad recibe donativos, donaciones y aportaciones que "
+            "dan derecho a deduccion y los declara."
+        ),
+        not_applicable_reason=(
+            "Modelo 182 no aplica: solo corresponde a las entidades que reciben donativos o aportaciones que "
+            "dan derecho a deduccion."
+        ),
+        legal_refs=(
+            "orden-eha-3021-2007:art-1",
+            "orden-eha-3021-2007:art-5",
+        ),
+    ),
+    # Modelo 233
+    Modelo.M233: ModeloApplicabilityRule(
+        modelo=Modelo.M233,
+        applicable_entity_types=_PAYER_FACT_ENTITY_TYPES,
+        required_payer_fact=PayerFact.AUTHORIZED_CHILDCARE_CENTER,
+        applicable_reason=(
+            "Modelo 233 (guarderias): la guarderia o centro de educacion infantil autorizado declara los "
+            "gastos satisfechos para la deduccion por maternidad."
+        ),
+        not_applicable_reason=(
+            "Modelo 233 no aplica: solo corresponde a las guarderias o centros de educacion infantil autorizados."
+        ),
+        legal_refs=(
+            "orden-hac-1400-2018:art-1",
+            "orden-hac-1400-2018:art-4",
+        ),
+    ),
+    # Modelo 238
+    Modelo.M238: ModeloApplicabilityRule(
+        modelo=Modelo.M238,
+        applicable_entity_types=_PAYER_FACT_ENTITY_TYPES,
+        required_payer_fact=PayerFact.REPORTING_PLATFORM_OPERATOR,
+        applicable_reason=(
+            "Modelo 238 (DAC7 plataformas): el operador de plataforma comunica la informacion de los "
+            "vendedores y actividades conforme a la DAC7."
+        ),
+        not_applicable_reason=(
+            "Modelo 238 no aplica: solo corresponde a los operadores de plataforma obligados a comunicar "
+            "informacion conforme a la DAC7."
+        ),
+        legal_refs=(
+            "orden-hac-72-2024:art-1",
+            "orden-hac-72-2024:art-9",
+        ),
+    ),
+    # Modelo 270
+    Modelo.M270: ModeloApplicabilityRule(
+        modelo=Modelo.M270,
+        applicable_entity_types=_PAYER_FACT_ENTITY_TYPES,
+        required_payer_fact=PayerFact.PAYS_LOTTERY_PRIZES_SPECIAL_LEVY,
+        applicable_reason=(
+            "Modelo 270 (resumen premios loterias): la entidad que satisface premios de loterias sujetos al "
+            "gravamen especial presenta el resumen anual de retenciones."
+        ),
+        not_applicable_reason=(
+            "Modelo 270 no aplica: solo corresponde a las entidades que satisfacen premios de loterias "
+            "sujetos al gravamen especial y practican retencion."
+        ),
+        legal_refs=(
+            "orden-hap-2368-2013:art-1",
+            "orden-hap-2368-2013:art-3",
+        ),
+    ),
+    # Modelo 222
+    Modelo.M222: ModeloApplicabilityRule(
+        modelo=Modelo.M222,
+        applicable_entity_types=_PAYER_FACT_ENTITY_TYPES,
+        required_payer_fact=PayerFact.MEMBER_OF_FISCAL_CONSOLIDATION_GROUP,
+        applicable_reason=(
+            "Modelo 222 (pago fraccionado grupos): la entidad representante del grupo fiscal en regimen de "
+            "consolidacion presenta el pago fraccionado del Impuesto sobre Sociedades del grupo."
+        ),
+        not_applicable_reason=(
+            "Modelo 222 no aplica: solo corresponde a la entidad representante de un grupo fiscal en regimen "
+            "de consolidacion del Impuesto sobre Sociedades."
+        ),
+        legal_refs=(
+            "orden-hfp-227-2017:art-2",
+            "orden-hfp-227-2017:art-5",
+        ),
+    ),
+    # Modelo 234
+    Modelo.M234: ModeloApplicabilityRule(
+        modelo=Modelo.M234,
+        applicable_entity_types=_PAYER_FACT_ENTITY_TYPES,
+        required_payer_fact=PayerFact.DAC6_REPORTABLE_ARRANGEMENT_PARTY,
+        applicable_reason=(
+            "Modelo 234 (DAC6): el intermediario o el obligado tributario interesado declara un mecanismo "
+            "transfronterizo de planificacion fiscal sujeto a comunicacion."
+        ),
+        not_applicable_reason=(
+            "Modelo 234 no aplica: solo corresponde a los intermediarios u obligados tributarios de "
+            "mecanismos transfronterizos de planificacion fiscal sujetos a declaracion (DAC6)."
+        ),
+        legal_refs=(
+            "orden-hac-342-2021:art-1",
+            "orden-hac-342-2021:art-4",
+        ),
+    ),
+    # Modelo 038
+    Modelo.M038: ModeloApplicabilityRule(
+        modelo=Modelo.M038,
+        applicable_entity_types=_PAYER_FACT_ENTITY_TYPES,
+        required_payer_fact=PayerFact.FILES_PUBLIC_REGISTRY_OPERATIONS,
+        applicable_reason=(
+            "Modelo 038 (registros publicos): el titular del registro publico declara las inscripciones de "
+            "constitucion, modificacion o extincion de entidades autorizadas en el mes anterior."
+        ),
+        not_applicable_reason=(
+            "Modelo 038 no aplica: solo corresponde a los titulares de registros publicos que autorizan "
+            "inscripciones de entidades sujetas al Impuesto sobre Sociedades."
+        ),
+        legal_refs=(
+            "orden-hac-66-2002:art-1",
+            "orden-hac-66-2002:art-6",
+        ),
+    ),
+    # Modelo 140
+    Modelo.M140: ModeloApplicabilityRule(
+        modelo=Modelo.M140,
+        applicable_entity_types=_PAYER_FACT_ENTITY_TYPES,
+        required_payer_fact=PayerFact.OPTS_MATERNITY_DEDUCTION_ADVANCE_PAYMENT,
+        applicable_reason=(
+            "Modelo 140 (deduccion por maternidad, abono anticipado): el contribuyente con derecho a la "
+            "deduccion por maternidad opta por percibirla de forma anticipada y lo solicita."
+        ),
+        not_applicable_reason=(
+            "Modelo 140 no aplica: solo corresponde a los contribuyentes del IRPF con derecho a la deduccion "
+            "por maternidad que optan por su abono anticipado."
+        ),
+        legal_refs=(
+            "orden-hac-177-2020:art-1",
+            "orden-hac-177-2020:art-5",
+        ),
+    ),
+    # Modelo 341
+    Modelo.M341: ModeloApplicabilityRule(
+        modelo=Modelo.M341,
+        applicable_entity_types=_PAYER_FACT_ENTITY_TYPES,
+        required_payer_fact=PayerFact.REAGP_COMPENSATION_REINTEGRO,
+        applicable_reason=(
+            "Modelo 341 (reintegro compensaciones REAGP): el sujeto pasivo acogido al regimen especial de la "
+            "agricultura, ganaderia y pesca solicita del Tesoro el reintegro de las compensaciones por "
+            "operaciones exportadas o intracomunitarias."
+        ),
+        not_applicable_reason=(
+            "Modelo 341 no aplica: solo corresponde a los sujetos pasivos acogidos al regimen especial de la "
+            "agricultura, ganaderia y pesca que solicitan el reintegro de compensaciones."
+        ),
+        legal_refs=(
+            "orden-min-2000-12-15-m341:art-1",
+            "orden-min-2000-12-15-m341:art-2",
+        ),
+    ),
+    # Modelo 380
+    Modelo.M380: ModeloApplicabilityRule(
+        modelo=Modelo.M380,
+        applicable_entity_types=_PAYER_FACT_ENTITY_TYPES,
+        required_payer_fact=PayerFact.PERFORMS_IVA_IMPORT_EQUIVALENT_OPERATIONS,
+        applicable_reason=(
+            "Modelo 380 (operaciones asimiladas a importaciones): el sujeto pasivo del IVA que realiza "
+            "operaciones asimiladas a las importaciones (art. 19 LIVA) declara y liquida el impuesto."
+        ),
+        not_applicable_reason=(
+            "Modelo 380 no aplica: solo corresponde a los sujetos pasivos del IVA que realizan operaciones "
+            "asimiladas a las importaciones (art. 19 LIVA)."
+        ),
+        legal_refs=(
+            "orden-eha-1308-2005:art-1",
+            "orden-eha-1308-2005:art-4",
+        ),
+    ),
+    # Modelo 220
+    Modelo.M220: ModeloApplicabilityRule(
+        modelo=Modelo.M220,
+        applicable_entity_types=_PAYER_FACT_ENTITY_TYPES,
+        required_payer_fact=PayerFact.MEMBER_OF_FISCAL_CONSOLIDATION_GROUP,
+        applicable_reason=(
+            "Modelo 220 (declaracion IS grupos): la entidad representante del grupo fiscal en regimen de "
+            "consolidacion presenta la declaracion anual del Impuesto sobre Sociedades del grupo."
+        ),
+        not_applicable_reason=(
+            "Modelo 220 no aplica: solo corresponde a la entidad representante de un grupo fiscal en regimen "
+            "de consolidacion del Impuesto sobre Sociedades."
+        ),
+        legal_refs=(
+            "orden-hac-657-2025:art-1",
+            "orden-hac-657-2025:art-6",
+        ),
+    ),
     # Modelo 115 — autoliquidación de retenciones por arrendamiento de
     # inmuebles urbanos. The PAYER's obligation: a natural person, legal
     # entity, or attribution entity who pays rent subject to retención.
@@ -1351,15 +1984,9 @@ def derive_modelo_applicability(
     if modelo == Modelo.M151:
         return ModeloApplicability(
             modelo=Modelo.M151,
-            verdict=(
-                ApplicabilityVerdict.APPLICABLE
-                if beckham_window_active
-                else ApplicabilityVerdict.NOT_APPLICABLE
-            ),
+            verdict=(ApplicabilityVerdict.APPLICABLE if beckham_window_active else ApplicabilityVerdict.NOT_APPLICABLE),
             reason=(
-                _IMPATRIADO_M151_APPLICABLE_REASON
-                if beckham_window_active
-                else _IMPATRIADO_M151_NOT_APPLICABLE_REASON
+                _IMPATRIADO_M151_APPLICABLE_REASON if beckham_window_active else _IMPATRIADO_M151_NOT_APPLICABLE_REASON
             ),
             legal_refs=_IMPATRIADO_M151_ROUTE_LEGAL_REFS,
         )

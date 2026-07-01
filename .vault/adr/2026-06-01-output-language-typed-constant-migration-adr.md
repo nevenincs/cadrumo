@@ -3,13 +3,12 @@ tags:
   - '#adr'
   - '#output-language-typed-constant-migration'
 date: '2026-06-01'
-modified: '2026-06-01'
+modified: '2026-06-30'
 related:
   - "[[2026-06-01-registry-period-code-union-cli-boundary-adr]]"
   - "[[2026-05-27-schema-hardening-casilla-continuity-contract-adr]]"
   - '[[2026-06-04-output-language-typed-constant-migration-research]]'
 ---
-
 
 # `output-language-typed-constant-migration` adr: tighten OutputLanguage consumers to the typed StrEnum | (**status:** `accepted`)
 

@@ -3,7 +3,7 @@ tags:
   - '#adr'
   - '#aeat-cli-wireframe'
 date: '2026-04-24'
-modified: '2026-04-24'
+modified: '2026-06-30'
 related:
   - "[[2026-04-24-aeat-cli-wireframe-research]]"
   - "[[2026-04-17-export-first-adr]]"
@@ -11,8 +11,6 @@ related:
   - "[[2026-04-21-auth-cli-adr]]"
   - "[[2026-04-18-unified-review-queue-adr]]"
 ---
-
-
 
 # `aeat-cli-wireframe` adr: `kent-first cli language system and root wireframe` | (**status:** `proposed (hardening iteration 1 applied 2026-04-24)`)
 
@@ -2084,7 +2082,6 @@ to `proposed (approval-ready)` when all pre-approval blockers close. Further
 hardening iterations (6+) target meta-level production concerns: error
 taxonomy, output contract, determinism, internationalization, rollout
 sequencing.
-
 
 ## Hardening iterations 6 through 33
 

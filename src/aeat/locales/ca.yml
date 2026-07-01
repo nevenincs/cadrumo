@@ -1332,21 +1332,27 @@ cli:
   app:
     ledger:
       bienes_inversion:
-        acquisition_year_help: 'Any d''adquisició del bé.'
-        art108_help: 'Si el bé té la consideració de bé d''inversió segons LIVA art. 108.'
-        asset_ref_help: 'Referència creuada opcional a un identificador d''AssetRecord.'
-        cuota_soportada_help: 'IVA suportat total en l''adquisició (positiu).'
-        declare_help: 'Declara un bé d''inversió per a la seva regularització d''IVA.'
-        description_help: 'Descripció del bé.'
-        disposal_regime_help: 'Règim de transmissió (sujeta_no_exenta o exenta_o_no_sujeta); obligatori amb --disposal-year.'
-        disposal_requires_both: '--disposal-year i --disposal-regime s''han d''indicar conjuntament.'
-        disposal_year_help: 'Any de transmissió opcional (art. 110).'
-        group_help: 'Registre de regularització d''IVA per béns d''inversió (LIVA arts. 107-110).'
-        identifier_help: 'Identificador estable del registre.'
+        acquisition_year_help: Any d'adquisició del bé.
+        art108_help: Si el bé té la consideració de bé d'inversió segons LIVA art.
+          108.
+        asset_ref_help: Referència creuada opcional a un identificador d'AssetRecord.
+        cuota_soportada_help: IVA suportat total en l'adquisició (positiu).
+        declare_help: Declara un bé d'inversió per a la seva regularització d'IVA.
+        description_help: Descripció del bé.
+        disposal_regime_help: Règim de transmissió (sujeta_no_exenta o exenta_o_no_sujeta);
+          obligatori amb --disposal-year.
+        disposal_requires_both: --disposal-year i --disposal-regime s'han d'indicar
+          conjuntament.
+        disposal_year_help: Any de transmissió opcional (art. 110).
+        group_help: Registre de regularització d'IVA per béns d'inversió (LIVA arts.
+          107-110).
+        identifier_help: Identificador estable del registre.
         kind_help: 'Període de regularització: moble (4 anys) o immoble (9 anys).'
-        list_help: 'Llista tots els béns d''inversió registrats en el perfil actiu.'
-        prorrata_inicial_help: 'Percentatge de deducció definitiu de l''any d''adquisició (0-100).'
-        unknown_disposal_regime: 'Règim de transmissió desconegut {regime!r}; acceptats: {accepted}'
+        list_help: Llista tots els béns d'inversió registrats en el perfil actiu.
+        prorrata_inicial_help: Percentatge de deducció definitiu de l'any d'adquisició
+          (0-100).
+        unknown_disposal_regime: 'Règim de transmissió desconegut {regime!r}; acceptats:
+          {accepted}'
       evidence:
         add_help: Registra un justificant de factura de compra des de PDF o imatge
         evidence_id_help: Identificador del justificant (coincidencia exacta)
@@ -1737,8 +1743,8 @@ cli:
         as_of_year_help: Any de referència per als càlculs d'antiguitat i caducitat
           del saldo arrossegat.
         balance_help: Mostra el saldo acumulat del crèdit IVA per compensació calculat
-          a partir de l'historial local del Model 303. Informa total_balance,
-          active_balance, expired_balance, lot_count i next_expiry_year.
+          a partir de l'historial local del Model 303. Informa total_balance, active_balance,
+          expired_balance, lot_count i next_expiry_year.
         correct_amount_help: Import corregit del saldo a compensar en EUR (decimal,
           p. ex. 1200.50).
         correct_confirm_help: Indicador de confirmació obligatori. Reconeix que això
@@ -2135,6 +2141,10 @@ cli:
           mutuament exclusius 40.3 casilla 34 i 40.2 casilla 03, posant 0 a la modalitat
           no usada quan introdueixis valors manuals.
         rename_help: Actualitzar el nom de visualització d'una unitat de treball
+        rescate_contingencia_year_help: 'Any en que va esdevenir la contingencia (jubilacio,
+          incapacitat, defuncio) del pla de pensions. Determina la finestra temporal
+          de l''apartat 4 DT 12a LIRPF (Llei 26/2014): si la finestra esta tancada
+          per a l''any de rescat, la reduccio del 40% es reté.'
         rescate_plan_pensiones_aportaciones_pre_2007_help: Aportacions fetes al pla
           de pensions fins al 31-des-2006 (base de prorrateig DT 12a LIRPF). Necessari
           amb --rescate-plan-pensiones-capital i --rescate-plan-pensiones-aportaciones-totales.
@@ -2147,6 +2157,14 @@ cli:
           la reducció del 40% i l'injecti a la casella 0011.
         rescate_plan_pensiones_not_decimal: Els valors --rescate-plan-pensiones-*
           han de ser imports decimals.
+        rescate_type_help: 'Tipus de rescat del pla de pensions (DT 12a LIRPF): total
+          (tot el capital de cop) o parcial (cobraments esglaonats). Es un senyal
+          de classificacio i provenance, no canvia l''import: la reduccio del 40%
+          s''aplica a la part pre-2007 del que es percep. En parcial, cada cobrament
+          comparteix la mateixa finestra de l''apartat 4.'
+        rescate_year_help: Any en que es percep la prestacio del rescat (per defecte
+          l'any de la declaracio). Es compara amb la finestra de l'apartat 4 DT 12a
+          LIRPF mesurada des de --contingencia-year.
         result_summary_header: resum del resultat  Modelo %{modelo} %{year} %{period}
         resume_help: Valida si pots reintentar una execució de flux interrompuda sense
           contactar amb AEAT. Fes servir --modelo --year --period com a ruta normal;
@@ -2222,9 +2240,6 @@ cli:
         year_help: Exercici fiscal de la unitat de treball (p. ex. 2026)
         year_out_of_range: L'exercici fiscal %{year} està fora de rang; indiqueu un
           any entre %{minimum} i %{maximum}.
-        rescate_type_help: 'Tipus de rescat del pla de pensions (DT 12a LIRPF): total (tot el capital de cop) o parcial (cobraments esglaonats). Es un senyal de classificacio i provenance, no canvia l''import: la reduccio del 40% s''aplica a la part pre-2007 del que es percep. En parcial, cada cobrament comparteix la mateixa finestra de l''apartat 4.'
-        rescate_contingencia_year_help: 'Any en que va esdevenir la contingencia (jubilacio, incapacitat, defuncio) del pla de pensions. Determina la finestra temporal de l''apartat 4 DT 12a LIRPF (Llei 26/2014): si la finestra esta tancada per a l''any de rescat, la reduccio del 40% es reté.'
-        rescate_year_help: 'Any en que es percep la prestacio del rescat (per defecte l''any de la declaracio). Es compara amb la finestra de l''apartat 4 DT 12a LIRPF mesurada des de --contingencia-year.'
   common:
     errors:
       draft_id_not_found: ID d'esborrany %{draft_id} no trobat
@@ -2605,6 +2620,13 @@ cli:
       rename_help: Canvia el nom d'un perfil i mou el punter actiu automàticament
       rename_source_help: Nom actual del perfil
       rename_target_help: Nou nom del perfil
+      sar_catalogue_info: 'Aquest arxiu conté totes les categories de dades personals
+        del perfil: identitat i dades del perfil, unitats de treball de models, moviments
+        del llibre, revisions de càlcul i registres de presentació. Els bytes de les
+        proves adjuntes i les captures d''AEAT resten en emmagatzematge xifrat; utilitzeu
+        l''arxiu de recuperació xifrat per incloure''ls.'
+      sar_help: 'Exporta totes les dades personals d''un perfil com a arxiu d''accés
+        de l''interessat (RGPD): el paquet portàtil del perfil.'
       show_help: Mostra les dades d'un perfil
       show_name_help: Id del perfil a mostrar (per defecte el perfil actiu)
       unknown_profile: 'Perfil desconegut: %{name}. Executa ''aeat config profile
@@ -3202,6 +3224,18 @@ cli:
         created_at, modified_at, ...).
       sort_order_help: 'Ordre: asc (ascendent) o desc (descendent).'
       ungrouped_label: (sense grup)
+    llm_diagnostics:
+      bad_date: '%{option} ha de ser una data ISO (AAAA-MM-DD); s''ha rebut %{value}.'
+      help: Mostra les mètriques existents d'ús, cost i confiança de classificació
+        del LLM.
+      no_data_message: Encara no hi ha mètriques d'ús ni de confiança de classificació
+        del LLM. Executa una classificació assistida per LLM per generar-les.
+      since_help: Data ISO (AAAA-MM-DD) inferior inclusiva per als registres d'ús.
+      threshold_help: Llindar de confiança per sota del qual una classificació es
+        considera de baixa confiança.
+      threshold_range: --low-confidence-below ha d'estar dins l'interval inclusiu
+        0..1.
+      until_help: Data ISO (AAAA-MM-DD) superior inclusiva per als registres d'ús.
     merge:
       actor_help: Nom de l'operador registrat a l'esdeveniment del bucket
       child_id_help: Id de transacció filla que vols fusionar; es pot repetir
@@ -3532,9 +3566,13 @@ cli:
         de les quals depèn la decisió. Local; mai contacta amb AEAT.
       modelo_help: Identificador del modelo AEAT (p. ex. 303, 130, 100).
       year_help: Exercici fiscal per avaluar l'aplicabilitat; per defecte, l'any actual.
+    local_work_units_unavailable: L'estat local de les unitats de treball de Model
+      del resum no està disponible; no es pot mostrar sense un estat de treball persistit.
     period: Període
     period_help: 'Període de declaració com a testimoni AEAT: 1T-4T (trimestres),
       0A (anual), 01-12 (mesos). Combineu-lo amb --year per triar l''any.'
+    post_filing:
+      pending: '%{count} esdeveniment(s) posteriors a la presentació d''AEAT requereixen atenció: %{kinds}. Revisa''ls amb ''aeat app live notifications list''.'
     status:
       drafts_empty: No s'han trobat esborranys de declaracions desats.
       drafts_empty_with_work_units: No hi ha esborranys de declaracions desats; es
@@ -4037,6 +4075,22 @@ errors:
     lookup_dispatch_arg_count: L''operador {op} de la fórmula espera {expected} arguments.
     lookup_dispatch_arg_kind: L''operador {op} de la fórmula requereix que {position}
       sigui una fulla de tipus {expected_kind}.
+    m100_art85_boolean_invalid: La casella booleana de l'article 85 del Model 100
+      ha de ser 0 o 1.
+    m100_art85_catastral_value_negative: El valor cadastral de l'article 85 del Model
+      100 no pot ser negatiu.
+    m100_art85_disposal_percentage_invalid: El percentatge d'ús mixt de l'article
+      85 del Model 100 ha de ser superior a 0 i com a màxim 100.
+    m100_art85_imputation_days_invalid: Els dies d'imputació de l'article 85 del Model
+      100 han de ser un nombre enter entre 1 i 365.
+    m100_art85_input_negative: Les entrades numèriques de l'article 85 del Model 100
+      no poden ser negatives.
+    m100_art85_mixed_use_inputs_without_flag: Els dies o el percentatge d'ús mixt
+      de l'article 85 del Model 100 requereixen que la casella d'ús mixt estigui marcada.
+    m100_art85_no_catastral_base_missing: La imputació de l'article 85 del Model 100
+      sense valor cadastral requereix caselles de base substitutiva que no hi són.
+    m100_art85_revision_flag_invalid: L'indicador de valor cadastral revisat de l'article
+      85 del Model 100 ha de ser el valor oficial X de la casella.
     m210_gastos_deducibles_negative: Les gastos_deducibles M210 %{casilla_id} no poden
       ser negatives; valor rebut %{value}.
     m210_gastos_deducibles_not_allowed: Les gastos_deducibles M210 %{casilla_id} nomes
@@ -4255,6 +4309,8 @@ errors:
     error_resources_not_found: No s'ha trobat el recurs inclòs sol·licitat.
     error_resources_validation: Un fitxer inclòs en l'aplicació no ha superat la validació
       estricta.
+    error_retention: No s'ha pogut avaluar la política de conservació de registres
+      tributaris.
     error_review: S'ha produït un error en la revisió.
     error_sanitization: S'ha produït un error en sanejar el document.
     error_sede: S'ha produït un error en la Seu electrònica de l'AEAT.
@@ -4827,6 +4883,11 @@ errors:
     refused_profile_schema_validation: Les dades del perfil infringeixen el contracte
       de l'esquema. Corregeix els valors indicats.
     refused_renta_maritime_exemption_inactive: errors.refused.refused_renta_maritime_exemption_inactive
+    refused_retention_floor: 'Esborrament rebutjat: %{retained_record_count} registre(s)
+      tributari(s) presentat(s) encara són dins del termini legal de conservació (Llei
+      58/2003, LGT art. 66 i 70). La data més primerenca d''esborrament segur és %{earliest_safe_erase_date}.
+      Espereu fins aleshores o torneu a executar amb --i-acknowledge-legal-retention-obligations
+      i --reason per forçar-ho.'
     refused_review_edit_parse: No s'ha pogut interpretar `--set CLAU=VALOR`. Comprova
       la sintaxi del valor indicat.
     refused_review_filter_parse: No s'ha pogut interpretar `--filter CLAU=VALOR`.
@@ -5262,6 +5323,9 @@ wizard:
           si s'indica, no es mostren obligacions de períodes anteriors a aquesta data.
       address-postcode:
         help: Codi postal del domicili fiscal
+      art109-activity-income-withholding-ge-70pct:
+        help: Cobertura Art. 109 - almenys 70% dels ingressos d'activitats professionals,
+          agricoles, ramaderes o forestals subjectes a retenció o ingrés a compte
       bienes-extranjero-above-threshold:
         help: Béns a l'estranger superen el llindar legal
       cloud-evidence-upload:
@@ -5313,6 +5377,10 @@ wizard:
         help: Operacions intracomunitàries superen 50.000 EUR
       iva-oss-enrolled:
         help: Alta en OSS
+      iva-group-member-enrolled:
+        help: Alta com a entitat membre d'un grup d'IVA
+      iva-group-dominant-entity-enrolled:
+        help: Alta com a entitat dominant d'un grup d'IVA
       iva-redeme-enrolled:
         help: Si el contribuent està inscrit a REDEME
       iva-regime:
@@ -5363,9 +5431,6 @@ wizard:
         help: Paga lloguer de local amb retenció
       professional-income-withholding-ge-70pct:
         help: Almenys 70% dels ingressos professionals amb retenció prèvia
-      art109-activity-income-withholding-ge-70pct:
-        help: Cobertura Art. 109 - almenys 70% dels ingressos d'activitats professionals,
-          agricoles, ramaderes o forestals subjectes a retenció o ingrés a compte
       representante-fiscal-nif:
         help: NIF/NIE del representant fiscal a Espanya. Obligatori per a no residents
           fora de la UE/EEE (art. 47 LGT + art. 10 TRLIRNR RDLeg 5/2004).
@@ -5453,6 +5518,10 @@ wizard:
         prompt: Operacions intracomunitàries superen 50.000 EUR
       iva-oss-enrolled:
         prompt: Alta en OSS
+      iva-group-member-enrolled:
+        prompt: Alta com a entitat membre d'un grup d'IVA
+      iva-group-dominant-entity-enrolled:
+        prompt: Alta com a entitat dominant d'un grup d'IVA
       iva-redeme-enrolled:
         prompt: Inscrit a REDEME (Registre de Devolució Mensual de l'IVA)
       iva-regime:
@@ -5467,6 +5536,8 @@ wizard:
         prompt: Notes per al teu propi record (opcional)
       title: Notes per al teu propi record
     obligations:
+      art109-activity-income-withholding-ge-70pct:
+        prompt: Aplica l'excepció Art. 109 per cobertura del 70% dels ingressos d'activitat
       bienes-extranjero-above-threshold:
         prompt: Béns a l'estranger superen el llindar legal
       does-intracomunitario:
@@ -5511,8 +5582,6 @@ wizard:
         prompt: Paga lloguer de local amb retenció
       professional-income-withholding-ge-70pct:
         prompt: Almenys 70% dels ingressos professionals amb retenció prèvia
-      art109-activity-income-withholding-ge-70pct:
-        prompt: Aplica l'excepció Art. 109 per cobertura del 70% dels ingressos d'activitat
       third-party-transactions-above-347-threshold:
         prompt: Operacions amb tercers superen el llindar del Modelo 347
       title: Obligacions

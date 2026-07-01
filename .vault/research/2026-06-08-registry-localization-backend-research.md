@@ -3,11 +3,9 @@ tags:
   - '#research'
   - '#registry-localization-backend'
 date: '2026-06-08'
-modified: '2026-06-08'
+modified: '2026-06-30'
 related: []
 ---
-
-
 
 # `registry-localization-backend` research: `schema backend localization support`
 

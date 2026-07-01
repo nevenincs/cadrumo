@@ -3,14 +3,11 @@ tags:
   - '#exec'
   - '#m303-form-vs-semantic-casilla-dual-keying'
 date: '2026-06-13'
-modified: '2026-06-13'
+modified: '2026-06-30'
 step_id: 'S19'
 related:
   - "[[2026-06-13-m303-form-vs-semantic-casilla-dual-keying-plan]]"
 ---
-
-
-
 
 # Add one box-equals-source consistency verification predicate per populated box using the new equality operator, each grounded in the box legal_refs, to catch a future mis-edit (box re-flipped to manual or projection pointed at the wrong source)
 

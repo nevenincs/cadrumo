@@ -3,14 +3,11 @@ tags:
   - '#exec'
   - '#semantic-dedup-epic'
 date: '2026-06-14'
-modified: '2026-06-15'
+modified: '2026-06-30'
 step_id: 'S25'
 related:
   - "[[2026-06-13-semantic-dedup-epic-plan]]"
 ---
-
-
-
 
 # C1-2 Delegate the five chunked-read SHA-256 loops to core.hashing.hash_file/sha256_file
 

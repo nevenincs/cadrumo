@@ -3,15 +3,13 @@ tags:
   - '#research'
   - '#corpus-registry-packaging'
 date: '2026-05-15'
-modified: '2026-05-15'
+modified: '2026-06-30'
 related:
   - "[[2026-05-01-corpus-data-hydration-adr]]"
   - "[[2026-04-21-real-pdf-fixture-corpus-adr]]"
   - "[[2026-04-25-error-code-registry-adr]]"
   - "[[2026-04-18-rename-corpus-review-schema-adr]]"
 ---
-
-
 
 # `corpus-registry-packaging` research: bundling the corpus and registry trees inside the installed wheel
 

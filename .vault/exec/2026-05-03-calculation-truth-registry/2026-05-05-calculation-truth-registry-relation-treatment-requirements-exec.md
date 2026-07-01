@@ -3,13 +3,11 @@ tags:
   - '#exec'
   - '#calculation-truth-registry'
 date: '2026-05-05'
-modified: '2026-05-05'
+modified: '2026-06-30'
 related:
   - '[[2026-05-03-calculation-truth-registry-rebuild-plan]]'
   - '[[2026-05-03-calculation-truth-registry-pending-adr]]'
 ---
-
-
 
 # `calculation-truth-registry` `relation treatment requirements`
 

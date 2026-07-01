@@ -3,7 +3,7 @@ tags:
   - "#research"
   - "#notifications-inbox"
 date: 2026-04-12
-modified: '2026-04-12'
+modified: '2026-06-13'
 title: AEAT notifications inbox — research
 related:
   - "[[2026-04-12-submission-engine-adr]]"

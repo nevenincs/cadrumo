@@ -3,14 +3,12 @@ tags:
   - '#audit'
   - '#corpus-registry-packaging'
 date: '2026-05-16'
-modified: '2026-05-16'
+modified: '2026-06-30'
 related:
   - "[[2026-05-15-corpus-registry-packaging-plan]]"
   - "[[2026-05-15-corpus-registry-packaging-adr]]"
   - "[[2026-05-15-corpus-registry-packaging-research]]"
 ---
-
-
 
 # `corpus-registry-packaging` audit: post-execution review of in-wheel bundling
 

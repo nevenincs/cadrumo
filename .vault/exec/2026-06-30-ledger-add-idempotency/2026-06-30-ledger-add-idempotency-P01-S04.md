@@ -9,9 +9,6 @@ related:
   - "[[2026-06-30-ledger-add-idempotency-plan]]"
 ---
 
-
-
-
 # Surface the duplicate no-op outcome as an info Notice on the ledger add envelope through the typed notice channel, never as a bespoke result field
 
 ## Scope
@@ -29,4 +26,3 @@ related:
 Landed in commit `02c664890`. No bespoke result field added; the uniform mutation quintet is unchanged. Locale parity and translation-honesty gates pass.
 
 ## Notes
-

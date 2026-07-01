@@ -82,21 +82,21 @@ def test_archive_bundle_round_trips_three_rows(tmp_path: Path) -> None:
 
 _ARCHIVE_BUNDLE_FIXTURE_ROWS: tuple[tuple[str, str, SensitivityClass, int, bytes], ...] = (
     (
-        "aeat.test.filing.drafts",
+        "aeat-test.filing.drafts",
         "draft-2025-1T-303-zzz",
         SensitivityClass.FINANCIAL,
         3,
         b"ENVELOPE_BYTES_FINANCIAL_303",
     ),
     (
-        "aeat.test.justificantes",
+        "aeat-test.justificantes",
         "ABCD1234EFGH5678",
         SensitivityClass.AUDIT,
         1,
         b"ENVELOPE_BYTES_AUDIT_JUSTIFICANTE",
     ),
     (
-        "aeat.test.sessions",
+        "aeat-test.sessions",
         "/profile/active/aeat-session",
         SensitivityClass.SESSION,
         1,

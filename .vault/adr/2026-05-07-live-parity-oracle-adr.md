@@ -3,7 +3,7 @@ tags:
   - '#adr'
   - '#live-parity-oracle'
 date: '2026-05-07'
-modified: '2026-05-07'
+modified: '2026-06-30'
 related:
   - "[[2026-05-06-oracle-surface-compatibility-adr]]"
   - "[[2026-05-07-aeat-vies-surface-split-ixvi-vs-groi-adr]]"
@@ -11,8 +11,6 @@ related:
   - "[[2026-05-06-cross-reference-oracle-binding-adr]]"
   - "[[2026-05-07-aeat-vies-auth-tier-research]]"
 ---
-
-
 
 # `authenticated-synthetic-surface-taxonomy` adr: `Add an authenticated_simulator surface category for auth-gated callable verification surfaces` | (**status:** `accepted`)
 

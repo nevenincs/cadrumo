@@ -9,9 +9,6 @@ related:
   - "[[2026-06-30-ledger-add-idempotency-plan]]"
 ---
 
-
-
-
 # Raise an instructive localised conflict error when a stored row exists for the same idempotency key but the command content differs, naming the conflicting field set
 
 ## Scope

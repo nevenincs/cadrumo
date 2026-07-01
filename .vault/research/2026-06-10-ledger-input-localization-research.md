@@ -3,11 +3,9 @@ tags:
   - '#research'
   - '#ledger-input-localization'
 date: '2026-06-10'
-modified: '2026-06-10'
+modified: '2026-06-30'
 related: []
 ---
-
-
 
 # `ledger-input-localization` research: `Ledger CLI amount and date input format parsing`
 

@@ -3,12 +3,10 @@ tags:
   - '#adr'
   - '#calculation-aggregation-taxonomy'
 date: '2026-06-10'
-modified: '2026-06-10'
+modified: '2026-06-30'
 related:
   - "[[2026-06-10-calculation-aggregation-taxonomy-research]]"
 ---
-
-
 
 # `calculation-aggregation-taxonomy` adr: `Canonical aggregation mechanism per calculation type` | (**status:** `accepted`)
 

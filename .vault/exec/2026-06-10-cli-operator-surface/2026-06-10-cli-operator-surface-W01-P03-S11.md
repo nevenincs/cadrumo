@@ -3,14 +3,11 @@ tags:
   - '#exec'
   - '#cli-operator-surface'
 date: '2026-06-10'
-modified: '2026-06-10'
+modified: '2026-06-30'
 step_id: 'S11'
 related:
   - "[[2026-06-10-cli-operator-surface-plan]]"
 ---
-
-
-
 
 # run a feasibility spike on deferring help-text rendering until after eager-option resolution to determine whether --language can be made to actually localize help text without destabilising the import-time i18n model
 

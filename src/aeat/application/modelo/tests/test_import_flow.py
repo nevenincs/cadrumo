@@ -269,4 +269,3 @@ def test_import_then_amend_unlocks_amendment_path(repos: _Repos) -> None:
         BucketEventType.MODELO_FILING_IMPORTED,
         BucketEventType.MODELO_AMENDED,
     )
-

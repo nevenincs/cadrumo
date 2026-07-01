@@ -3,7 +3,7 @@ tags:
   - '#plan'
   - '#calendar-filing-semantics'
 date: '2026-06-05'
-modified: '2026-06-05'
+modified: '2026-06-30'
 tier: L3
 related:
   - '[[2026-06-05-calendar-filing-semantics-adr]]'
@@ -12,7 +12,6 @@ related:
   - '[[2026-06-04-calendar-live-filing-integration-reference]]'
   - '[[2026-06-04-calendar-live-filing-integration-adr]]'
 ---
-
 
 # `calendar-filing-semantics` `implementation` plan
 

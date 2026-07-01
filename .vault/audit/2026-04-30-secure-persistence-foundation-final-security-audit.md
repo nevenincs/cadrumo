@@ -3,7 +3,7 @@ tags:
   - '#audit'
   - '#secure-persistence-foundation'
 date: '2026-04-30'
-modified: '2026-04-30'
+modified: '2026-06-30'
 related:
   - "[[2026-04-30-secure-persistence-foundation-wave7-audit]]"
   - "[[2026-04-30-secure-persistence-foundation-wave6-audit]]"
@@ -11,8 +11,6 @@ related:
   - "[[2026-04-30-secure-persistence-foundation-adr]]"
   - "[[2026-04-30-secure-persistence-foundation-audit]]"
 ---
-
-
 
 # `secure-persistence-foundation` final security audit | (**status:** `revision required`)
 

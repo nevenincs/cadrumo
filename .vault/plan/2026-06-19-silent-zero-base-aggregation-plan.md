@@ -3,7 +3,7 @@ tags:
   - '#plan'
   - '#silent-zero-base-aggregation'
 date: '2026-06-19'
-modified: '2026-06-21'
+modified: '2026-06-30'
 tier: L3
 related:
   - '[[2026-06-19-silent-zero-base-aggregation-adr]]'
@@ -11,7 +11,6 @@ related:
   - '[[2026-06-19-silent-zero-base-aggregation-audit]]'
   - '[[2026-06-10-calculation-aggregation-taxonomy-adr]]'
 ---
-
 
 # `silent-zero-base-aggregation` plan
 

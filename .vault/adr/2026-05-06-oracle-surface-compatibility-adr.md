@@ -3,7 +3,7 @@ tags:
   - '#adr'
   - '#live-parity-oracle'
 date: '2026-05-06'
-modified: '2026-05-06'
+modified: '2026-06-30'
 related:
   - '[[2026-05-06-oracle-environment-consistency-adr]]'
   - '[[2026-05-06-cross-reference-oracle-binding-adr]]'
@@ -11,7 +11,6 @@ related:
   - '[[2026-05-06-aeat-nif-iva-checker-adapter-adr]]'
   - "[[2026-05-06-live-parity-oracle-backend-research]]"
 ---
-
 
 # `oracle-surface-compatibility` adr: `Reject oracle bindings whose surface_kind is incompatible with the cross-reference surface` | (**status:** `accepted`)
 

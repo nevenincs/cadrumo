@@ -72,15 +72,9 @@ _PAYER_FACT_PROFILE_KEYS: dict[_PayerFact, tuple[str, ...]] = {
         "has_employees",
         "pays_professionals_with_retencion",
     ),
-    _PayerFact.PAYS_RENT_WITH_RETENCION: (
-        "pays_rent_with_retencion",
-    ),
-    _PayerFact.TRADES_INTRACOMMUNITY: (
-        "does_intracomunitario",
-    ),
-    _PayerFact.EXCEEDS_THIRD_PARTY_THRESHOLD: (
-        "third_party_transactions_above_347_threshold",
-    ),
+    _PayerFact.PAYS_RENT_WITH_RETENCION: ("pays_rent_with_retencion",),
+    _PayerFact.TRADES_INTRACOMMUNITY: ("does_intracomunitario",),
+    _PayerFact.EXCEEDS_THIRD_PARTY_THRESHOLD: ("third_party_transactions_above_347_threshold",),
 }
 
 _ESTIMATION_REGIME_PROFILE_KEY: dict[_IrpfEstimationRegime, tuple[str, str]] = {
@@ -191,6 +185,8 @@ def _gating_fields() -> MappingProxyType[str, tuple[tuple[str, ...], str, str]]:
             for profile_key in sorted(key_to_modelos)
         },
     )
+
+
 _CENSO_ENROLMENT_PROFILE_KEYS = frozenset(
     {
         "activities.iae_epigraph",

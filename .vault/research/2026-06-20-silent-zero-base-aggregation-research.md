@@ -3,12 +3,10 @@ tags:
   - '#research'
   - '#silent-zero-base-aggregation'
 date: '2026-06-20'
-modified: '2026-06-20'
+modified: '2026-06-30'
 related:
   - "[[2026-06-19-silent-zero-base-aggregation-adr]]"
 ---
-
-
 
 # `silent-zero-base-aggregation` research: `M130 agrarian estimacion-objetiva income classification axis`
 

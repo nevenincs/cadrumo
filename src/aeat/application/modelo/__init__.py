@@ -238,9 +238,11 @@ from ._quickfile import (
     run_modelo_quickfile,
 )
 from ._reconcile import (
+    ModeloReconciliationAdvisory,
     ModeloReconciliationBytesCommand,
     ModeloReconciliationCommand,
     ModeloReconciliationDiff,
+    ModeloReconciliationDiffKind,
     ModeloReconciliationEvidenceKind,
     ModeloReconciliationHistoryEntry,
     ModeloReconciliationReport,
@@ -457,9 +459,11 @@ __all__ = [
     "ModeloProjectServiceResult",
     "ModeloProjectionCasillaObservation",
     "ModeloProjectionError",
+    "ModeloReconciliationAdvisory",
     "ModeloReconciliationBytesCommand",
     "ModeloReconciliationCommand",
     "ModeloReconciliationDiff",
+    "ModeloReconciliationDiffKind",
     "ModeloReconciliationEvidenceKind",
     "ModeloReconciliationHistoryEntry",
     "ModeloReconciliationReport",

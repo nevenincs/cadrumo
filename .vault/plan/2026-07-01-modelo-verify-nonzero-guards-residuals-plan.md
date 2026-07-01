@@ -10,16 +10,6 @@ related:
   - '[[2026-07-01-modelo-verify-nonzero-guards-residuals-research]]'
 ---
 
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the
-       related: field above.
-     - The related: field carries the AUTHORISING documents
-       (ADR, research, reference, prior plan) for every Step in
-       this plan. Steps inherit this chain; per-row reference
-       footers do not exist.
-     - NEVER use [[wiki-links]] or markdown links in the
-       document body. -->
-
 # `modelo-verify-nonzero-guards-residuals` plan
 
 ### Phase `P01` - M202 casilla-33 DA-14 legal grounding

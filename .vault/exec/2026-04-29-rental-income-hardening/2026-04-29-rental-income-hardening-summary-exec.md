@@ -3,14 +3,12 @@ tags:
   - '#exec'
   - '#rental-income-hardening'
 date: '2026-04-29'
-modified: '2026-04-29'
+modified: '2026-06-30'
 related:
   - "[[2026-04-29-rental-income-hardening-plan]]"
   - "[[2026-04-29-rental-income-hardening-adr]]"
   - "[[2026-04-29-rental-income-hardening-research]]"
 ---
-
-
 
 # `rental-income-hardening` summary
 

@@ -3,14 +3,12 @@ tags:
   - '#exec'
   - '#schema-hardening'
 date: '2026-05-28'
-modified: '2026-05-28'
+modified: '2026-06-30'
 step_id: 'S08'
 related:
   - '[[2026-05-28-schema-hardening-continuity-conformance-plan]]'
   - '[[2026-05-27-schema-hardening-casilla-continuity-contract-adr]]'
 ---
-
-
 
 # `schema-hardening` `P05.S08`
 

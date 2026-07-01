@@ -3,7 +3,7 @@ tags:
   - '#plan'
   - '#iva-compensation-chain'
 date: '2026-05-19'
-modified: '2026-05-19'
+modified: '2026-06-30'
 tier: L2
 related:
   - '[[2026-05-19-iva-compensation-chain-audit-research]]'
@@ -15,7 +15,6 @@ related:
   - '[[2026-05-19-modelo-130-relation-regression-adr]]'
   - '[[2026-05-19-modelo-130-relation-regression-plan]]'
 ---
-
 
 # `iva-compensation-chain` `remediation` plan
 

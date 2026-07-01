@@ -100,9 +100,7 @@ def test_modelo_100_readiness_filters_ledger_bindings_after_clean_preflight() ->
     assert readiness_missing.keys() <= bindings_missing_ids
     preflight_resolved_ids = bindings_missing_ids - set(readiness_missing)
     assert preflight_resolved_ids
-    preflight_resolved_sources = {
-        bindings_missing_by_id[binding_id]["source"] for binding_id in preflight_resolved_ids
-    }
+    preflight_resolved_sources = {bindings_missing_by_id[binding_id]["source"] for binding_id in preflight_resolved_ids}
     assert {
         "ledger_renta_expense_aggregation",
         "ledger_renta_income_aggregation",
@@ -117,11 +115,17 @@ def test_modelo_100_readiness_filters_ledger_bindings_after_clean_preflight() ->
 
     text_readiness = invoke_cached_cli(
         [
-            "app", "modelo", "readiness",
-            "--modelo", _MODELO,
-            "--revision-id", _REVISION,
-            "--year", _YEAR,
-            "--period", _PERIOD,
+            "app",
+            "modelo",
+            "readiness",
+            "--modelo",
+            _MODELO,
+            "--revision-id",
+            _REVISION,
+            "--year",
+            _YEAR,
+            "--period",
+            _PERIOD,
         ],
     )
     assert text_readiness.exit_code == 0, text_readiness.output
@@ -133,6 +137,5 @@ def test_modelo_100_readiness_filters_ledger_bindings_after_clean_preflight() ->
     assert "finish_line\texport verified-complete revision via 'aeat app modelo export'" in text_readiness.output
     assert "readiness_note\tledger_ready only means" in text_readiness.output
     assert (
-        "missing_bindings_command\taeat app modelo bindings list "
-        "--modelo 100 --year 2025 --period 0A --missing"
+        "missing_bindings_command\taeat app modelo bindings list --modelo 100 --year 2025 --period 0A --missing"
     ) in text_readiness.output

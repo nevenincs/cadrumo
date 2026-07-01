@@ -215,7 +215,7 @@ def test_snapshot_integrity_checks_construct_algorithm_provider_ref() -> None:
 
     provider = AlgorithmProviderDefinition(
         id="provider.test",
-        import_path="aeat.tests.provider",
+        import_path="aeat-tests.provider",
         callable_name="run",
         deterministic=True,
         side_effect_free=True,
@@ -248,7 +248,7 @@ def test_snapshot_integrity_checks_construct_algorithm_binding_ref() -> None:
 
     provider = AlgorithmProviderDefinition(
         id="provider.test",
-        import_path="aeat.tests.provider",
+        import_path="aeat-tests.provider",
         callable_name="run",
         deterministic=True,
         side_effect_free=True,
@@ -294,7 +294,7 @@ def test_modelo_validation_checks_algorithm_binding_provider_inputs() -> None:
 
     provider = AlgorithmProviderDefinition(
         id="provider.test",
-        import_path="aeat.tests.provider",
+        import_path="aeat-tests.provider",
         callable_name="run",
         deterministic=True,
         side_effect_free=True,
@@ -328,7 +328,7 @@ def test_modelo_validation_checks_algorithm_binding_provider_outputs() -> None:
 
     provider = AlgorithmProviderDefinition(
         id="provider.test",
-        import_path="aeat.tests.provider",
+        import_path="aeat-tests.provider",
         callable_name="run",
         deterministic=True,
         side_effect_free=True,
@@ -360,7 +360,7 @@ def test_modelo_validation_checks_algorithm_binding_provider_outputs() -> None:
 def test_modelo_validation_rejects_algorithm_provider_without_official_source_guidance() -> None:
     provider = AlgorithmProviderDefinition(
         id="provider.test",
-        import_path="aeat.tests.provider",
+        import_path="aeat-tests.provider",
         callable_name="run",
         deterministic=True,
         side_effect_free=True,
@@ -382,7 +382,7 @@ def test_modelo_validation_rejects_algorithm_provider_without_official_source_gu
 def test_modelo_validation_rejects_algorithm_binding_without_official_source_guidance() -> None:
     provider = AlgorithmProviderDefinition(
         id="provider.test",
-        import_path="aeat.tests.provider",
+        import_path="aeat-tests.provider",
         callable_name="run",
         deterministic=True,
         side_effect_free=True,

@@ -3,14 +3,11 @@ tags:
   - '#exec'
   - '#silent-zero-base-aggregation'
 date: '2026-06-20'
-modified: '2026-06-20'
+modified: '2026-06-30'
 step_id: 'S15'
 related:
   - "[[2026-06-19-silent-zero-base-aggregation-plan]]"
 ---
-
-
-
 
 # add an import-deducible casilla to M390 (box, locale, manifest, extraction) and bind it to `ledger_iva_aggregation` import deducible, then add it to the cuota-deducible-total formula so the annual result stops over-stating the importer's amount to pay
 

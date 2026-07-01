@@ -3,14 +3,11 @@ tags:
   - '#exec'
   - '#first-filer-attestation'
 date: '2026-06-13'
-modified: '2026-06-13'
+modified: '2026-06-30'
 step_id: 'S17'
 related:
   - "[[2026-06-13-first-filer-attestation-plan]]"
 ---
-
-
-
 
 # Add a regression asserting no_prior_obligation provenance never enters _OFFICIAL_SOURCE_KINDS and the first local filing still persists under the non-official app_filing source kind
 

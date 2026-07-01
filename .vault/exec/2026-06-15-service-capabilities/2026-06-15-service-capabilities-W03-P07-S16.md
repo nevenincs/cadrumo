@@ -3,14 +3,11 @@ tags:
   - '#exec'
   - '#service-capabilities'
 date: '2026-06-15'
-modified: '2026-06-15'
+modified: '2026-06-30'
 step_id: 'S16'
 related:
   - "[[2026-06-15-service-capabilities-plan]]"
 ---
-
-
-
 
 # Gate every Google-write verb (verify, push, probe --no-read-only) on google_export with a no-allowlist conformance test (honesty review H1)
 

@@ -3,14 +3,11 @@ tags:
   - '#exec'
   - '#service-capabilities'
 date: '2026-06-15'
-modified: '2026-06-15'
+modified: '2026-06-30'
 step_id: 'S02'
 related:
   - "[[2026-06-15-service-capabilities-plan]]"
 ---
-
-
-
 
 # Add a capabilities `[[sections]]` with boolean fields to the user_profile schema TOML
 
@@ -30,4 +27,3 @@ Capabilities persist as encrypted profile facts via the existing schema machiner
 ## Notes
 
 None.
-

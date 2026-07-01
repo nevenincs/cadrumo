@@ -100,30 +100,14 @@ def test_gasto_casillas_cite_art19(year: int, casilla_id: CasillaId) -> None:
 # SS, art. 19.2.a), 0014/0015 (cuotas sindicato/colegio, art. 19.2.d), 0016 (defensa
 # jurídica, art. 19.2.e), 0017 (rendimiento neto previo) are art. 19.
 _TRABAJO_SECTION_GROUNDING: dict[CasillaId, str] = {
-    validated_casilla_id("0011", surface="test_trabajo_reduccion_art20_grounded.trabajo.0011"): (
-        "ley-35-2006:art-18"
-    ),
-    validated_casilla_id("0013", surface="test_trabajo_reduccion_art20_grounded.trabajo.0013"): (
-        "ley-35-2006:art-19"
-    ),
-    validated_casilla_id("0014", surface="test_trabajo_reduccion_art20_grounded.trabajo.0014"): (
-        "ley-35-2006:art-19"
-    ),
-    validated_casilla_id("0015", surface="test_trabajo_reduccion_art20_grounded.trabajo.0015"): (
-        "ley-35-2006:art-19"
-    ),
-    validated_casilla_id("0016", surface="test_trabajo_reduccion_art20_grounded.trabajo.0016"): (
-        "ley-35-2006:art-19"
-    ),
-    validated_casilla_id("0017", surface="test_trabajo_reduccion_art20_grounded.trabajo.0017"): (
-        "ley-35-2006:art-19"
-    ),
-    validated_casilla_id("0018", surface="test_trabajo_reduccion_art20_grounded.trabajo.0018"): (
-        "ley-35-2006:art-19"
-    ),
-    validated_casilla_id("0022", surface="test_trabajo_reduccion_art20_grounded.trabajo.0022"): (
-        "ley-35-2006:art-19"
-    ),
+    validated_casilla_id("0011", surface="test_trabajo_reduccion_art20_grounded.trabajo.0011"): ("ley-35-2006:art-18"),
+    validated_casilla_id("0013", surface="test_trabajo_reduccion_art20_grounded.trabajo.0013"): ("ley-35-2006:art-19"),
+    validated_casilla_id("0014", surface="test_trabajo_reduccion_art20_grounded.trabajo.0014"): ("ley-35-2006:art-19"),
+    validated_casilla_id("0015", surface="test_trabajo_reduccion_art20_grounded.trabajo.0015"): ("ley-35-2006:art-19"),
+    validated_casilla_id("0016", surface="test_trabajo_reduccion_art20_grounded.trabajo.0016"): ("ley-35-2006:art-19"),
+    validated_casilla_id("0017", surface="test_trabajo_reduccion_art20_grounded.trabajo.0017"): ("ley-35-2006:art-19"),
+    validated_casilla_id("0018", surface="test_trabajo_reduccion_art20_grounded.trabajo.0018"): ("ley-35-2006:art-19"),
+    validated_casilla_id("0022", surface="test_trabajo_reduccion_art20_grounded.trabajo.0022"): ("ley-35-2006:art-19"),
 }
 
 

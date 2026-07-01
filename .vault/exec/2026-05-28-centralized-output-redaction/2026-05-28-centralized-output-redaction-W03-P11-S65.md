@@ -3,14 +3,11 @@ tags:
   - '#exec'
   - '#centralized-output-redaction'
 date: '2026-06-02'
-modified: '2026-06-02'
+modified: '2026-06-30'
 step_id: 'S65'
 related:
   - "[[2026-05-28-centralized-output-redaction-plan]]"
 ---
-
-
-
 
 # add a production output-surface inventory gate for `_emit`, `_emit_envelope`, `typer.echo`, and direct writes
 

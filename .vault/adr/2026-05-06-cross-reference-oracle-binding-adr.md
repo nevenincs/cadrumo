@@ -3,7 +3,7 @@ tags:
   - '#adr'
   - '#live-parity-oracle'
 date: '2026-05-06'
-modified: '2026-05-06'
+modified: '2026-06-30'
 related:
   - '[[2026-05-06-live-parity-oracle-backend-adr]]'
   - '[[2026-05-06-aeat-nif-iva-checker-adapter-adr]]'
@@ -11,7 +11,6 @@ related:
   - '[[2026-05-03-calculation-truth-registry-rebuild-plan]]'
   - "[[2026-05-06-live-parity-oracle-backend-research]]"
 ---
-
 
 # `cross-reference-oracle-binding` adr: `Bind cross-references to oracles by id` | (**status:** `accepted`)
 

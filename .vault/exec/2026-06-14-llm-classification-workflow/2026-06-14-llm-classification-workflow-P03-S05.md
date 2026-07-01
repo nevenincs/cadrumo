@@ -3,14 +3,11 @@ tags:
   - '#exec'
   - '#llm-classification-workflow'
 date: '2026-06-14'
-modified: '2026-06-15'
+modified: '2026-06-30'
 step_id: 'S05'
 related:
   - "[[2026-06-14-llm-classification-workflow-plan]]"
 ---
-
-
-
 
 # Real-behaviour tests: no-split verdict, in-place apply, auto-split route, recommendation Notice
 
@@ -31,4 +28,3 @@ related:
 ## Notes
 
 Tests live under domain tests/ folders per tests-live-under-domain-tests-folders.
-

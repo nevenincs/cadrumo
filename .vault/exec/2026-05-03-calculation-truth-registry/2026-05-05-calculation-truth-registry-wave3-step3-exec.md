@@ -3,15 +3,13 @@ tags:
   - '#exec'
   - '#calculation-truth-registry'
 date: '2026-05-05'
-modified: '2026-05-05'
+modified: '2026-06-30'
 related:
   - '[[2026-05-03-calculation-truth-registry-rebuild-plan]]'
   - '[[2026-05-03-calculation-truth-registry-pending-adr]]'
   - '[[2026-05-04-calculation-authority-evidence-tiering-adr]]'
   - '[[2026-05-04-live-filing-data-capture-adr]]'
 ---
-
-
 
 # `calculation-truth-registry` `Wave 3` `Modelo 115 verification boundary`
 

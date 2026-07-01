@@ -3,19 +3,12 @@ tags:
   - '#plan'
   - '#docs-terminology-search'
 date: '2026-06-15'
-modified: '2026-06-15'
+modified: '2026-06-30'
 tier: L2
 related:
   - '[[2026-06-15-docs-terminology-search-adr]]'
   - '[[2026-06-10-docs-terminology-search-research]]'
 ---
-
-
-
-
-
-
-
 
 # `docs-terminology-search` plan: grounding and glossary follow-up
 
@@ -89,12 +82,6 @@ slice to verify the whole plan landed green.
 - [x] `P04.S26` - promote the glossary-enrolment policy to a project rule; `.vaultspec/rules/rules/`.
 - [x] `P04.S27` - promote the committed-light-data-not-heavy-index boundary to a project rule; `.vaultspec/rules/rules/`.
 - [x] `P04.S28` - run the docs-search gates (terminology, glossary, relevance, pagefind, palette) and confirm green; `dev/docs/terminology`.
-
-
-
-
-
-
 
 ## Parallelization
 

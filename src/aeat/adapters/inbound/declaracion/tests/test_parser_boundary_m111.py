@@ -75,8 +75,7 @@ def test_parser_extracts_modelo_111_casillas_from_corpus(pdf_stem: str, year: in
         f"{pdf_stem}: expected casilla {_M111_CASILLA_30!r} in extracted values, got {set(values.keys())!r}"
     )
     assert values[_M111_CASILLA_30] == Decimal("1000.00"), (
-        f"{pdf_stem}: casilla {_M111_CASILLA_30!r} expected Decimal('1000.00'), "
-        f"got {values[_M111_CASILLA_30]!r}"
+        f"{pdf_stem}: casilla {_M111_CASILLA_30!r} expected Decimal('1000.00'), got {values[_M111_CASILLA_30]!r}"
     )
 
     if pdf_stem == "2024-4T":

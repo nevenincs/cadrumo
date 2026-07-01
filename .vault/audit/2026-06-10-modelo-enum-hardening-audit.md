@@ -3,14 +3,12 @@ tags:
   - '#audit'
   - '#modelo-enum-hardening'
 date: '2026-06-10'
-modified: '2026-06-29'
+modified: '2026-06-30'
 related:
   - '[[2026-06-10-modelo-enum-hardening-adr]]'
   - '[[2026-06-10-modelo-enum-hardening-plan]]'
   - '[[2026-06-10-modelo-enum-hardening-research]]'
 ---
-
-
 
 # `modelo-enum-hardening` audit: `Verify pass: code review, broad-test triage, and incident record`
 
@@ -118,7 +116,6 @@ core-struct docstring-link ratchet on peer modules. They clear as peers land.
   suite once the concurrent peer work lands to confirm they clear.
 
 ## Codification candidates
-
 
 The primary durable lesson — production code references modelo identifiers
 through `aeat.core.Modelo`, never bare strings — was already codified this

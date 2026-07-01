@@ -3,7 +3,7 @@ tags:
   - '#plan'
   - '#live-parity-oracle'
 date: '2026-05-07'
-modified: '2026-05-07'
+modified: '2026-06-30'
 related:
   - "[[2026-05-07-aeat-vies-surface-split-ixvi-vs-groi-adr]]"
   - "[[2026-05-07-groi-oracle-delivery-checklist-research]]"
@@ -13,8 +13,6 @@ related:
   - "[[2026-05-06-aeat-nif-iva-checker-adapter-adr]]"
   - "[[2026-05-07-aeat-vies-auth-tier-research]]"
 ---
-
-
 
 # `live-parity-oracle` `groi-oracle-completion-plan` plan
 

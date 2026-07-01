@@ -3,14 +3,11 @@ tags:
   - '#exec'
   - '#ledger-input-localization'
 date: '2026-06-12'
-modified: '2026-06-12'
+modified: '2026-06-30'
 step_id: 'S13'
 related:
   - "[[2026-06-10-ledger-input-localization-plan]]"
 ---
-
-
-
 
 # Write real-behavior unit tests for parse_decimal_amount: assert refusal of 1.000, 1.234,56, NaN, Infinity, -Infinity, 1e3 (InvalidOperation or ValueError)
 

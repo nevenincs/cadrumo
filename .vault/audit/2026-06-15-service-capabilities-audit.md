@@ -3,14 +3,12 @@ tags:
   - '#audit'
   - '#service-capabilities'
 date: '2026-06-15'
-modified: '2026-06-15'
+modified: '2026-06-30'
 related:
   - "[[2026-06-15-service-capabilities-plan]]"
   - "[[2026-06-15-service-capabilities-adr]]"
   - "[[2026-06-15-dependency-provisioning-adr]]"
 ---
-
-
 
 # `service-capabilities` audit: `service-capabilities campaign close honesty review`
 
@@ -61,7 +59,6 @@ persists a profile with `capabilities.llm_vision=false` (real lifecycle save, no
 mocks) and asserts both a scan-only PDF and an image attachment refuse — pinning
 the gate's coverage of every on-host read mode. The earlier-deferred note below is
 superseded.
-
 
 **(superseded) Was DEFERRED** as a coverage nicety on confirmed-correct behavior. A
 focused regression (an `llm_vision=off` profile refuses both a scan-only PDF and
@@ -121,8 +118,6 @@ paths the resolver reads. All confirmed.
   in-scope regression (commit `402918258`).
 
 ## Codification candidates
-
-
 
 - **Candidate (not yet codified — first encounter):** finding H1 (a
   capability-governed egress was gated at only one of its several entry points).

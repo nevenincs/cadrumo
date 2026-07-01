@@ -189,8 +189,7 @@ def persist_patch(
     from ...domain.user_profile import UserProfileFact
 
     facts = tuple(
-        UserProfileFact(path=path, value=value)
-        for path, value in profile_values_from_patch(flow, supplied).items()
+        UserProfileFact(path=path, value=value) for path, value in profile_values_from_patch(flow, supplied).items()
     )
     return set_active_fields(state, facts)
 

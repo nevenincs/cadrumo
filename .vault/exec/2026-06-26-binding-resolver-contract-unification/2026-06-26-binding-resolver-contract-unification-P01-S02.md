@@ -3,14 +3,11 @@ tags:
   - '#exec'
   - '#binding-resolver-contract-unification'
 date: '2026-06-26'
-modified: '2026-06-26'
+modified: '2026-06-30'
 step_id: 'S02'
 related:
   - "[[2026-06-26-binding-resolver-contract-unification-plan]]"
 ---
-
-
-
 
 # Migrate the M349-only PerModeloRegistryBindingResolution consumer onto CalculationSourceResolution, then delete the PerModeloRegistryBindingResolution model and resolve_per_modelo_registry_binding_values in the same atomic relocation commit
 
@@ -19,7 +16,6 @@ related:
 - `src/aeat/application/aggregation/_registry_provider.py`
 
 ## Description
-
 
 Commit `52edec4b1` (covers S02 + S04). Deleted the vestigial M349-only
 `_registry_provider` module (`PerModeloRegistryBindingResolution` +
@@ -38,7 +34,6 @@ duplicated is reached in production through the live registry-binding mesh path
 `test_modelo_349_registry`). No production path changed; no casilla value shifts.
 
 ## Notes
-
 
 The `apidocs scaffold` run pulled in ~22 peer-module stub deltas (withholding,
 invoices, casilla-id, refund modules from concurrent campaigns). Surgically reverted

@@ -3,14 +3,11 @@ tags:
   - '#exec'
   - '#semantic-dedup-epic'
 date: '2026-06-13'
-modified: '2026-06-15'
+modified: '2026-06-30'
 step_id: 'S04'
 related:
   - "[[2026-06-13-semantic-dedup-epic-plan]]"
 ---
-
-
-
 
 # Prove tree-wide that the _formats currency encode/serialise/deserialise path has zero production consumers outside its own package and tests
 

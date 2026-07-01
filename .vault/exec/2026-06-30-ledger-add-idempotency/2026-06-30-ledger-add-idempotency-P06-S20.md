@@ -9,9 +9,6 @@ related:
   - "[[2026-06-30-ledger-add-idempotency-plan]]"
 ---
 
-
-
-
 # Content-pin derive_filing_record_id to the filing outcome of work_unit_id, calculation_revision_id, filed_by, and member_nif, dropping filed_at from the identity while retaining filed_at as a non-identity last-seen body field, and update the ModeloRecord model validator to re-check the outcome-pinned id
 
 ## Scope

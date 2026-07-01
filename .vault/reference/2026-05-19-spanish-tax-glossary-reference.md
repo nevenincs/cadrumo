@@ -3,7 +3,7 @@ tags:
   - '#reference'
   - '#spanish-tax-glossary'
 date: '2026-05-19'
-modified: '2026-05-19'
+modified: '2026-06-30'
 related: []
 ---
 
@@ -638,7 +638,6 @@ AEAT Sede Electronica Modelo-status nomenclature
 | ModeloAmendment   | Suggested amendment | Split into ModeloComplementaria / ModeloSustitutiva (LGT Art. 122 verbatim terms)       |
 | SubmittedModelo   | Suggested amendment | Rename to ModeloPresentado (AEAT Sede `Presentada` status verbatim)                     |
 
-
 ## Fincas Cluster Statutory Sanity Check (2026-05-19)
 
 Forward-looking sanity check of the W05.P15 Fincas cluster
@@ -653,7 +652,6 @@ surfaces this package feeds.
 
 Statutory anchors: Decreto de 8 de febrero de 1946 Ley Hipotecaria
 (BOE-A-1946-2453); RDLeg 1/2004 Catastro Inmobiliario.
-
 
 ### RentalFinca -> Finca - confirmed correct
 
@@ -717,7 +715,6 @@ verified 2026-05-19); Ley 49/2003 LAR (BOE-A-2003-21616; verbatim
 verified 2026-05-19); RDLeg 1/2004 Catastro for the cadastral
 side; Codigo Civil Articulos 1542-1582 for the general
 arrendamiento regime.
-
 
 ### Income / Expense / Amortization Spanishness - suggested amendment
 
@@ -787,7 +784,6 @@ Statutory anchors: Ley 35/2006 IRPF Articulo 85 (Imputacion de
 rentas inmobiliarias; title verbatim verified 2026-05-19).
 BOE-A-2006-20764.
 
-
 ### Summary
 
 | ADR Proposal                                        | Verdict             | Action                                                                     |
@@ -811,7 +807,6 @@ BOE-A-2006-20764.
 Cumulative verified-citation count: 16 + 2 fully-verified (LAU,
 LAR) + 1 partial (IRPF Art. 85 title only) = 18 fully verified,
 1 partial.
-
 
 ## IRPF Art. 85 verbatim verification confirmation (2026-05-19)
 

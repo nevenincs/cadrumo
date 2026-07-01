@@ -3,14 +3,11 @@ tags:
   - '#exec'
   - '#storage-backend-security-review'
 date: '2026-06-15'
-modified: '2026-06-15'
+modified: '2026-06-30'
 step_id: 'S32'
 related:
   - "[[2026-06-14-storage-backend-security-review-plan]]"
 ---
-
-
-
 
 # OWNER-GATED DEFERRED: remove the write-only standalone salt artefact and shrink the torn-install detection tuple after owner review per the no-legacy-compatibility key-management caution
 
@@ -19,7 +16,6 @@ related:
 - `src/aeat/adapters/persistence/storage/master_key/_master_key.py`
 
 ## Description
-
 
 - Prove the salt file is non-load-bearing: KEK derivation reads
   `master.kdf.salt_b64`; the standalone `salt` file is only ever
@@ -53,7 +49,6 @@ Gates: master-key suite 209 pass; full storage suite + CLI custody lifecycle 847
 pass. Lint clean.
 
 ## Notes
-
 
 This was the one campaign step the `no-legacy` key-management caution placed
 behind an explicit owner gate (a wrong deletion in the master-key store is

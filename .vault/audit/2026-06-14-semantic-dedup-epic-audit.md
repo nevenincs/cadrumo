@@ -3,13 +3,11 @@ tags:
   - '#audit'
   - '#semantic-dedup-epic'
 date: '2026-06-14'
-modified: '2026-06-15'
+modified: '2026-06-30'
 related:
   - "[[2026-06-13-semantic-dedup-epic-adr]]"
   - "[[2026-06-13-semantic-dedup-epic-plan]]"
 ---
-
-
 
 # `semantic-dedup-epic` audit: `Semantic Deduplication Discovery Pass 2 (RAG cluster sweep)`
 
@@ -208,5 +206,3 @@ RAG-under-returns-the-inline-tail / pair-with-`rg` lesson by
 `service-imports-via-top-level-reexports` and `aeat-architecture-boundaries`.
 The findings are feature-specific remediation, not new cross-session
 constraints — an empty codification section is the correct outcome.
-
-

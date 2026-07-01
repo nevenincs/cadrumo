@@ -989,8 +989,7 @@ class Transaction(BaseModel):
         if self.exemption_article is not None and self.iva_category is not IvaCategory.DOMESTIC_EXEMPT:
             actual = self.iva_category.value if self.iva_category is not None else None
             raise TransactionValidationError(
-                "exemption_article is only valid when iva_category is DOMESTIC_EXEMPT; "
-                f"got iva_category {actual!r}",
+                f"exemption_article is only valid when iva_category is DOMESTIC_EXEMPT; got iva_category {actual!r}",
             )
         return self
 

@@ -43,4 +43,3 @@ Passed:
 - Isolated latest-HEAD worktree with only W04 patch applied:
   `python -m pytest -p no:cacheprovider src/aeat/entrypoints/cli/tests/test_live_read_subgroups.py::TestReadOnlyStructuralInvariants -m "integration and hex_entrypoint" -q` -> 11 passed.
 - W04 touched-file ruff gate in isolated latest-HEAD worktree passed.
-

@@ -208,11 +208,7 @@ def test_da41_binding_is_inactive_and_has_legal_refs() -> None:
 
 def test_binding_legal_refs_resolve_against_catalogue_and_corpus() -> None:
     _, catalogues = _committed_registry_tree()
-    refs = {
-        legal_ref
-        for binding in _load_trabajador_del_mar_bindings()
-        for legal_ref in binding.get("legal_refs", [])
-    }
+    refs = {legal_ref for binding in _load_trabajador_del_mar_bindings() for legal_ref in binding.get("legal_refs", [])}
 
     assert refs == {
         "ley-35-2006:art-7",

@@ -3,14 +3,11 @@ tags:
   - '#exec'
   - '#profile-lifecycle-cli'
 date: '2026-06-02'
-modified: '2026-06-02'
+modified: '2026-06-30'
 step_id: 'S62'
 related:
   - "[[2026-05-16-profile-lifecycle-cli-plan]]"
 ---
-
-
-
 
 # delete the `aeat config repair list NAMESPACE` operator verb
 
@@ -20,8 +17,6 @@ related:
 
 ## Description
 
-
 ## Outcome
 
 ## Notes
-

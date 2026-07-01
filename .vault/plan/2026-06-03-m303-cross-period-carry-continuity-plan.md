@@ -3,13 +3,12 @@ tags:
   - '#plan'
   - '#m303-cross-period-carry-continuity'
 date: '2026-06-03'
-modified: '2026-06-03'
+modified: '2026-06-30'
 tier: L2
 related:
   - '[[2026-06-03-m303-cross-period-carry-continuity-adr]]'
   - '[[2026-06-03-m303-cross-period-carry-continuity-research]]'
 ---
-
 
 # `m303-cross-period-carry-continuity` `M303 cross-period carry continuity diagnostic + fix + anti-regression` plan
 
@@ -72,9 +71,6 @@ Per the ADR's Constraints, the test's profile-gap workaround binding values
 (autoconsumo-promotor-base = 0, state-attribution-ratio = 100, the five
 ledger_iva_aggregation cuota bindings = 0) MUST NOT mutate to mask the
 defect.
-
-
-
 
 ## Parallelization
 

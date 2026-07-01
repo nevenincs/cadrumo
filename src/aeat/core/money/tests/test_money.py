@@ -46,4 +46,3 @@ def test_round_to_cents_is_idempotent_on_already_quantised_values() -> None:
     """A value already at two digits is returned unchanged."""
     already = Decimal("100.99")
     assert round_to_cents(already) == already
-

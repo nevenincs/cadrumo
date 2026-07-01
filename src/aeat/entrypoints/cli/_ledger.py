@@ -256,8 +256,7 @@ def ledger_add(
 ) -> None:
     """Create one manual ledger transaction through the bucket-scoped backend."""
     operator_assignable_on_add = (
-        is_classified(business_classification)
-        or business_classification is BusinessClassification.NOT_YET_PROCESSED
+        is_classified(business_classification) or business_classification is BusinessClassification.NOT_YET_PROCESSED
     )
     if not operator_assignable_on_add:
         # PROCESSED_UNCLASSIFIED / SKIPPED_BY_RULE / FAILED_VALIDATION are

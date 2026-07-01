@@ -298,6 +298,14 @@ _SETUP_OPTION_INFOS: dict[str, typer.models.OptionInfo] = {
         "--iva-oss-enrolled/--no-iva-oss-enrolled",
         help=tr("wizard.setup.flags.iva-oss-enrolled.help"),
     ),
+    "iva-group-member-enrolled": typer.Option(
+        "--iva-group-member-enrolled/--no-iva-group-member-enrolled",
+        help=tr("wizard.setup.flags.iva-group-member-enrolled.help"),
+    ),
+    "iva-group-dominant-entity-enrolled": typer.Option(
+        "--iva-group-dominant-entity-enrolled/--no-iva-group-dominant-entity-enrolled",
+        help=tr("wizard.setup.flags.iva-group-dominant-entity-enrolled.help"),
+    ),
     "iva-intracommunity-operations-exceed-50000-eur": typer.Option(
         "--iva-intracommunity-operations-exceed-50000-eur/--no-iva-intracommunity-operations-exceed-50000-eur",
         help=tr("wizard.setup.flags.iva-intracommunity-operations-exceed-50000-eur.help"),

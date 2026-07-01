@@ -13,9 +13,11 @@ Submodules
 .. toctree::
    :maxdepth: 4
 
+   aeat.core.observability._capture
    aeat.core.observability._context
    aeat.core.observability._errors
    aeat.core.observability._fingerprint
+   aeat.core.observability._golden
    aeat.core.observability._models
    aeat.core.observability._recorder
    aeat.core.observability._redaction_rules

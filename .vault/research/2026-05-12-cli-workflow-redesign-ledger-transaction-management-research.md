@@ -3,7 +3,7 @@ tags:
   - '#research'
   - '#cli-workflow-redesign'
 date: '2026-05-12'
-modified: '2026-05-12'
+modified: '2026-06-30'
 related:
   - "[[2026-05-12-cli-workflow-redesign-invoice-domain-decoupling-adr]]"
   - "[[2026-05-12-cli-workflow-redesign-bucket-adr]]"
@@ -13,8 +13,6 @@ related:
   - "[[2026-05-08-cli-backend-boundary-adr]]"
   - "[[2026-05-08-ledger-renta-pipeline-adr]]"
 ---
-
-
 
 # `cli-workflow-redesign` research: `ledger transaction management`
 

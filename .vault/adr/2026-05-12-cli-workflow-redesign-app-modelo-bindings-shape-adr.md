@@ -3,7 +3,7 @@ tags:
   - '#adr'
   - '#cli-workflow-redesign'
 date: '2026-05-12'
-modified: '2026-05-12'
+modified: '2026-06-30'
 related:
   - "[[2026-05-12-cli-workflow-redesign-adr]]"
   - "[[2026-05-12-cli-workflow-redesign-app-modelo-bindings-shape-research]]"
@@ -11,8 +11,6 @@ related:
   - "[[2026-05-12-cli-workflow-redesign-modelo-calculate-revisions-adr]]"
   - "[[2026-05-12-cli-workflow-redesign-modelo-verify-adr]]"
 ---
-
-
 
 # `cli-workflow-redesign` adr: `app modelo bindings shape` | (**status:** `accepted`)
 

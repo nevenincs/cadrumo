@@ -3,12 +3,11 @@ tags:
   - '#audit'
   - '#cli-testimonial'
 date: '2026-05-26'
-modified: '2026-05-26'
+modified: '2026-06-30'
 related:
   - "[[2026-05-21-cli-testimonial-audit]]"
   - "[[2026-05-21-persona-fleet-round3-findings-audit]]"
 ---
-
 
 # `cli-testimonial` audit: `persona-fleet round 5 — Roser auth-surface findings`
 

@@ -3,7 +3,7 @@ tags:
   - '#audit'
   - '#secure-object-integrity'
 date: '2026-05-22'
-modified: '2026-05-22'
+modified: '2026-06-30'
 related:
   - '[[2026-05-22-secure-object-integrity-attribution-plan]]'
   - '[[2026-05-13-cli-workflow-redesign-config-repair-shape-adr]]'
@@ -13,11 +13,7 @@ related:
   - '[[2026-05-22-secure-object-integrity-P01-S01]]'
 ---
 
-
-
 # `secure-object-integrity` Code Review
-
-
 
 P01-S01-001 | MEDIUM | Attribution context model is not safe-by-construction for bucket/profile identifiers
 `RepairUnreadableRowAttribution` exposes `context_bucket_id`, `object_key_hint`, `context_note`, and `reason` as unrestricted strings while the plan and wallet grounding require unreadable-row attribution to carry only safe metadata and not print active profile bucket UUIDs, taxpayer ids, filing identifiers, private natural keys, or payload-derived context. The current list-report builder redacts active bucket context to `active_profile`, but the new attribution model itself would accept and serialize a raw bucket/profile id or natural-key hint without validation. This leaves the safety contract dependent on every future P01.S02/P01.S03 producer remembering redaction discipline instead of making unsafe attribution states unreachable at the Pydantic boundary. Replace raw context string fields with constrained safe labels or validators that reject UUID/profile/taxpayer/natural-key forms, and add invariant tests that prove rejected disclosure attempts fail validation.

@@ -47,4 +47,3 @@ Latest isolated retest note: current clean `HEAD` blocks registry-dependent file
 capture tests on baseline source byte-count mismatch `boe-modelo-210-base-order`.
 The same retest also hit transient Windows resource exhaustion (`WinError 1450` /
 `WinError 10055`) after parallel verification. These are not W04-owned changes.
-

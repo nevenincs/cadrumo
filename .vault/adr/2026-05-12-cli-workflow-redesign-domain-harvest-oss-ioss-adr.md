@@ -3,7 +3,7 @@ tags:
   - '#adr'
   - '#cli-workflow-redesign'
 date: '2026-05-12'
-modified: '2026-05-12'
+modified: '2026-06-30'
 related:
   - "[[2026-05-12-cli-workflow-redesign-adr]]"
   - "[[2026-05-12-cli-workflow-redesign-domain-harvest-oss-ioss-research]]"
@@ -18,7 +18,6 @@ related:
 > **PARTIALLY-SUPERSEDED 2026-05-19**: The Value-Added Tax direction in this ADR is reversed: Spanish stems are authoritative for tax-domain identifiers and domain/vat/_oss.py migrates into domain/iva/_oss.py. The app-modelo orchestration surface, profile keys (iva.regime, iva.oss_enrolled), ledger_oss_aggregation binding flow, calculation event surface, destination-country VAT rate validation, and rejected-shapes list remain in force; only the substrate module path renames per the canonical rename ledger.
 > See `2026-05-19-spanish-stem-terminology-authority-adr` for the canonical
 > rename ledger and Spanish-stem terminology authority.
-
 
 ## CLI Backend Boundary
 

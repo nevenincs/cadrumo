@@ -52,6 +52,7 @@ def _binding_id(value: object) -> BindingId:
     except ValidationError as exc:
         raise AssertionError(f"test fixture binding key {value!r} is not a canonical binding.id") from exc
 
+
 _PERIOD = Period.from_year_and_code(2026, "1T")
 _TAX_ID = "12345678Z"
 _M303_REPERCUTIDO_GENERAL_CUOTA_BINDING: BindingId = _binding_id("modelo-303-iva-repercutido-general-cuota")

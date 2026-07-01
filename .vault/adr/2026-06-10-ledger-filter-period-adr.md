@@ -3,14 +3,12 @@ tags:
   - '#adr'
   - '#ledger-filter-period'
 date: '2026-06-10'
-modified: '2026-06-10'
+modified: '2026-06-30'
 related:
   - "[[2026-06-10-ledger-filter-period-research]]"
   - "[[2026-06-10-cli-operator-surface-adr]]"
   - "[[2026-06-01-registry-period-code-union-cli-boundary-adr]]"
 ---
-
-
 
 # `ledger-filter-period` adr: `Single shared year.period filter; delete residual notation; continuity gate` | (**status:** `accepted`)
 

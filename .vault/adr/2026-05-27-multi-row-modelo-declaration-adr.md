@@ -3,7 +3,7 @@ tags:
   - '#adr'
   - '#multi-row-modelo-declaration'
 date: '2026-05-27'
-modified: '2026-05-27'
+modified: '2026-06-30'
 related:
   - "[[2026-05-12-cli-workflow-redesign-modelo-work-units-adr]]"
   - "[[2026-04-13-modelo-inventory-adr]]"
@@ -11,7 +11,6 @@ related:
   - "[[2026-05-21-corporate-entity-calculation-adr]]"
   - '[[2026-06-04-multi-row-modelo-declaration-research]]'
 ---
-
 
 # `multi-row-modelo-declaration` adr: Multi-row modelo declaration mechanism | (**status:** `accepted`)
 

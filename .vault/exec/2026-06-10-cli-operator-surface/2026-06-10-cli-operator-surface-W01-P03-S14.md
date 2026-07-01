@@ -3,14 +3,11 @@ tags:
   - '#exec'
   - '#cli-operator-surface'
 date: '2026-06-10'
-modified: '2026-06-10'
+modified: '2026-06-30'
 step_id: 'S14'
 related:
   - "[[2026-06-10-cli-operator-surface-plan]]"
 ---
-
-
-
 
 # update locale strings via the aeat.locales CLI for any new warning text and regenerate the CLI reference if the flag surface changes
 

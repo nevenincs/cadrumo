@@ -3,7 +3,7 @@ tags:
   - '#adr'
   - '#user-profile-backend-schema'
 date: '2026-05-07'
-modified: '2026-05-07'
+modified: '2026-06-30'
 related:
   - "[[2026-05-07-user-profile-schema-research]]"
   - "[[2026-05-07-user-profile-registry-dependencies-reference]]"
@@ -12,8 +12,6 @@ related:
   - "[[2026-05-07-user-profile-census-business-dependencies-reference]]"
   - '[[2026-06-04-user-profile-backend-schema-research]]'
 ---
-
-
 
 # `user-profile-backend-schema` adr: `User Profile Backend Schema And Persistence` | (**status:** `accepted`)
 

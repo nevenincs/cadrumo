@@ -3,13 +3,11 @@ tags:
   - '#reference'
   - '#m303-form-vs-semantic-casilla-dual-keying'
 date: '2026-06-13'
-modified: '2026-06-13'
+modified: '2026-06-30'
 related:
   - "[[2026-06-13-m303-form-vs-semantic-casilla-dual-keying-adr]]"
   - "[[2026-06-13-m303-form-vs-semantic-casilla-dual-keying-plan]]"
 ---
-
-
 
 # `m303-form-vs-semantic-casilla-dual-keying` reference: `M303 official box to semantic source projection map`
 

@@ -3,15 +3,13 @@ tags:
   - "#reference"
   - "#core-authority-types-v2"
 date: "2026-05-31"
-modified: '2026-05-31'
+modified: '2026-06-30'
 related: []
 ---
 
 # core-authority-types-v2 reference: module-scope type definitions
 
 Mechanical AST-based audit of all .py files under src/aeat/. 1,655 files, 0 parse failures.
-
-
 
 ## Per-category totals
 
@@ -973,4 +971,3 @@ Every __all__ entry that re-exports a name not declared in that module.
 ## 14. Parse failures (0)
 
 No files failed AST parsing. All 1,655 .py files processed successfully.
-

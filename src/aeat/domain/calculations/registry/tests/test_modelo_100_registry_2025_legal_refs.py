@@ -44,9 +44,18 @@ def test_modelo_100_2025_autonomic_deduction_sections_use_art77_only() -> None:
     expected_refs = {_AUTONOMIC_DEDUCTION_ART_77_REF, "orden-hac-277-2026:art-3"}
     for section, expected_count in _AUTONOMIC_DEDUCTION_2025_SECTION_COUNTS.items():
         checked = [casilla for casilla in revision.casillas if tuple(casilla.section[:2]) == section]
-        art77_only_casillas = [
-            casilla for casilla in checked if casilla.semantic_role != "irpf_deduccion_nueva_empresa_entidad_nif"
-        ]
+        # The nueva-empresa NIF box and the computed Madrid nacimiento/adopción
+        # deducción (casilla 1039) legitimately carry more than the art-77
+        # framework default: the latter is a computed regulatory value whose
+        # per-child cuantía and income limits MUST cite their binding provision
+        # (Madrid DL 1/2010 arts. 4 y 18.1) per registry-calculation-legal-grounding.
+        _ART77_ONLY_EXEMPT_ROLES = frozenset(
+            {
+                "irpf_deduccion_nueva_empresa_entidad_nif",
+                "irpf_deduccion_madrid_nacimiento_adopcion",
+            }
+        )
+        art77_only_casillas = [casilla for casilla in checked if casilla.semantic_role not in _ART77_ONLY_EXEMPT_ROLES]
 
         assert len(checked) == expected_count
         offenders = {

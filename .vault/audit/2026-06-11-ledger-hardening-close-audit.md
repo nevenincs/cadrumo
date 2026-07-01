@@ -3,13 +3,11 @@ tags:
   - '#audit'
   - '#ledger-hardening-close'
 date: '2026-06-11'
-modified: '2026-06-11'
+modified: '2026-06-30'
 related:
   - '[[2026-06-10-ledger-interface-contract-plan]]'
   - '[[2026-06-10-ledger-invoice-unification-plan]]'
 ---
-
-
 
 # `ledger-hardening-close` audit: `ledger hardening close honesty review`
 

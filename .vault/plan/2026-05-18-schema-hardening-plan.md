@@ -3,13 +3,12 @@ tags:
   - '#plan'
   - '#schema-hardening'
 date: '2026-05-18'
-modified: '2026-05-18'
+modified: '2026-06-30'
 tier: L2
 related:
   - '[[2026-05-18-schema-hardening-adr]]'
   - '[[2026-05-18-schema-hardening-research]]'
 ---
-
 
 # `schema-hardening` Plan A: `data_type` Literal extension plan
 

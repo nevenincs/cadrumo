@@ -147,9 +147,7 @@ def _build_secure_object_custody_payload(
 
     repository = secure_object_repository_for_bucket(bucket_id)
     populated_namespaces = tuple(repository.list_namespaces())
-    row_counts_by_namespace = {
-        namespace: len(repository.list_keys(namespace)) for namespace in populated_namespaces
-    }
+    row_counts_by_namespace = {namespace: len(repository.list_keys(namespace)) for namespace in populated_namespaces}
 
     carried_namespace_set = frozenset(
         definition.namespace for definition in carried_namespace_definitions(custody_profile)
@@ -168,9 +166,7 @@ def _build_secure_object_custody_payload(
         # or the DERIVED participation index), so it is accounted for. The gate fails
         # closed only on a populated namespace that is NOT in the registry at all — an
         # unclassified durable store that would otherwise be silently dropped.
-        registered_namespaces = frozenset(
-            definition.namespace for definition in STORAGE_NAMESPACE_REGISTRY.namespaces
-        )
+        registered_namespaces = frozenset(definition.namespace for definition in STORAGE_NAMESPACE_REGISTRY.namespaces)
         _assert_full_custody_coverage(
             populated_namespaces=populated_namespaces,
             covered_namespaces=carried_or_typed | registered_namespaces,

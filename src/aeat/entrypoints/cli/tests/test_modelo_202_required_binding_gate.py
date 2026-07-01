@@ -19,10 +19,10 @@ pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 _M202_INCN_BINDING = "modelo-202-2025-y-siguientes-incn-prior-12-months"
 _M202_CUOTA_BASE_BINDING = "modelo-202-2025-y-siguientes-cuota-base-ejercicio-anterior"
 _M202_PRIOR_PAYMENTS_BINDING = "modelo-202-2025-y-siguientes-pagos-fraccionados-anteriores"
+_M202_2023_2024_PRIOR_PAYMENTS_BINDING = "modelo-202-2023-2024-pagos-fraccionados-anteriores"
 _MISSING_M202_BINDINGS = {
     _M202_INCN_BINDING,
     _M202_CUOTA_BASE_BINDING,
-    _M202_PRIOR_PAYMENTS_BINDING,
 }
 
 
@@ -47,6 +47,31 @@ def _create_laura_taller_sol_profile() -> None:
         "B12345674",
         "--activity",
         "taller mecanico",
+    )
+    assert result.exit_code == 0, result.output
+
+
+def _create_lorentz_irene_profile() -> None:
+    result = create_quiet_profile(
+        "lorentz-irene",
+        "--entity-type",
+        "legal_entity",
+        "--legal-entity-form",
+        "sl",
+        "--tax-id",
+        "B12345674",
+        "--legal-name",
+        "Lorentz Irene SL",
+        "--activity",
+        "IVA corporate run",
+        "--incn-prior-12-months",
+        "500000",
+        "--activity-start-date",
+        "2024-01-15",
+        "--tax-residence-ccaa",
+        "madrid",
+        "--iva-regime",
+        "GENERAL",
     )
     assert result.exit_code == 0, result.output
 
@@ -183,3 +208,51 @@ def test_laura_m202_not_ready_refuses_calculate_and_no_zero_artifact_is_reachabl
     )
     assert exported.exit_code != 0, exported.output
     assert export_path.exists() is False
+
+
+def test_lorentz_m202_2024_1p_calculates_with_first_period_prior_payments_zero() -> None:
+    _create_lorentz_irene_profile()
+
+    created = invoke_cached_cli(
+        [
+            "--format",
+            "json",
+            "app",
+            "modelo",
+            "work",
+            "create",
+            "--modelo",
+            "202",
+            "--year",
+            "2024",
+            "--period",
+            "1P",
+            "--revision",
+            "2023-2024",
+        ],
+    )
+    assert created.exit_code == 0, created.output
+
+    calculated = invoke_cached_cli(
+        [
+            "--format",
+            "json",
+            "app",
+            "modelo",
+            "work",
+            "calculate",
+            "--modelo",
+            "202",
+            "--year",
+            "2024",
+            "--period",
+            "1P",
+            "--revision",
+            "2023-2024",
+        ],
+    )
+    assert calculated.exit_code == 0, calculated.output
+    payload = _payload(calculated.output)
+    assert payload["binding_overrides"][_M202_2023_2024_PRIOR_PAYMENTS_BINDING] == "0"
+    assert payload["casilla_values"]["30"] == "0"
+    assert payload["relation_overrides"] == {}

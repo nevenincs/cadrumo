@@ -3,7 +3,7 @@ tags:
   - '#research'
   - '#modelo-100-renta-full-calc'
 date: '2026-04-27'
-modified: '2026-06-29'
+modified: '2026-06-30'
 related:
   - "[[2026-04-21-modelo-100-renta-research]]"
   - "[[2026-04-21-modelo-100-renta-adr]]"
@@ -18,8 +18,6 @@ related:
   - "[[2026-04-27-modelo-115-calc-verify-adr]]"
   - "[[2026-04-27-modelo-123-calc-verify-adr]]"
 ---
-
-
 
 # `modelo-100-renta-full-calc` research: full-form RENTA universe across 2024/2025/2026
 

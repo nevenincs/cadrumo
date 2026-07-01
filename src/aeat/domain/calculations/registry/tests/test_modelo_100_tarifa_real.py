@@ -49,6 +49,7 @@ def _casilla_id(value: object) -> CasillaId:
     except ValueError as exc:
         raise AssertionError(f"test fixture casilla key {value!r} is not a canonical casilla.id") from exc
 
+
 # -----------------------------------------------------------------------
 # Expected values — derived from LIRPF 2024 tables, not engine output.
 #

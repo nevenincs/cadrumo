@@ -104,9 +104,17 @@ def _render_reconciliation_report(
     *,
     command: str,
 ) -> None:
-    """Render a :class:`~aeat.application.modelo.ModeloReconciliationReport` through the typed envelope."""
+    """Render a :class:`~aeat.application.modelo.ModeloReconciliationReport` through the typed envelope.
+
+    ``command`` is the registered leaf id (``modelo.reconcile.pull`` /
+    ``modelo.reconcile.file``); reconciliation advisories ride the typed
+    ``Notice`` channel (``cli-notices-are-the-only-diagnostic-channel``) and are
+    folded into the same text lines so JSON and text cannot drift.
+    """
+    from ...core.json_contract import Notice, NoticeSeverity
     from ._modelo_payloads import (
         ModeloReconcileResult,
+        ModeloReconciliationAdvisoryPayload,
         ModeloReconciliationDiffPayload,
     )
 
@@ -122,12 +130,32 @@ def _render_reconciliation_report(
                 work_unit_value=diff.work_unit_value,
                 evidence_value=diff.evidence_value,
                 kind=diff.kind,
+                diff_kind=diff.diff_kind.value,
+                legal_refs=diff.legal_refs,
+                source_refs=diff.source_refs,
             )
             for diff in report.diffs
+        ),
+        advisories=tuple(
+            ModeloReconciliationAdvisoryPayload(
+                code=advisory.code,
+                message=advisory.message,
+                context=dict(advisory.context),
+            )
+            for advisory in report.advisories
         ),
         reconciled_at=report.reconciled_at.isoformat(),
         narrative=report.narrative,
     )
+    notices = [
+        Notice(
+            severity=NoticeSeverity.WARNING,
+            code=advisory.code,
+            message=advisory.message,
+            context=dict(advisory.context) or None,
+        )
+        for advisory in report.advisories
+    ]
     lines = [
         f"work_unit_id\t{report.work_unit_id}",
         f"bucket\t{report.bucket_id}",
@@ -140,7 +168,9 @@ def _render_reconciliation_report(
         lines.append(
             f"diff\t{diff.field_name}\twork_unit={diff.work_unit_value}\tevidence={diff.evidence_value}",
         )
-    _emit_envelope(ctx, command=command, result=result, lines=lines)
+    for advisory in report.advisories:
+        lines.append(f"advisory\t{advisory.code}\t{advisory.message}")
+    _emit_envelope(ctx, command=command, result=result, lines=lines, notices=notices)
 
 
 _WorkUnitIdArg = Annotated[
@@ -199,7 +229,7 @@ def reconcile_pull_verb(
         ),
     )
     report = reconcile_capture(work_unit_id=unit.work_unit_id, snapshot=snapshot, actor=resolved_actor)
-    _render_reconciliation_report(ctx, report, command="modelo.reconcile")
+    _render_reconciliation_report(ctx, report, command="modelo.reconcile.pull")
 
 
 @reconcile_app.command(
@@ -254,7 +284,7 @@ def reconcile_file_verb(
             actor=resolved_actor,
         ),
     )
-    _render_reconciliation_report(ctx, report, command="modelo.reconcile")
+    _render_reconciliation_report(ctx, report, command="modelo.reconcile.file")
 
 
 @reconcile_app.command(

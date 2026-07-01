@@ -3,14 +3,11 @@ tags:
   - '#exec'
   - '#live-justificante-reconcile'
 date: '2026-06-10'
-modified: '2026-06-10'
+modified: '2026-06-30'
 step_id: 'S05'
 related:
   - "[[2026-06-10-live-justificante-reconcile-plan]]"
 ---
-
-
-
 
 # Prove period disambiguation (1T vs 2T resolve to distinct expedientes, never the wrong quarter) and orchestrator wiring offline with a real service and a seam-injected session.
 

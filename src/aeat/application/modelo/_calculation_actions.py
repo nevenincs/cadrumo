@@ -841,10 +841,12 @@ def calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
         bound_inputs=backend_source_inputs,
     )
     caller_binding_values = binding_values or {}
+    target_period = work_unit.period.registry_token
     caller_relation_values_from_bindings = {
         relation.id: _calculated_decimal(caller_binding_values[relation.target_binding])
         for relation in snapshot.revision.relations
         if relation.target_binding in caller_binding_values
+        and (not relation.target_periods or target_period in relation.target_periods)
     }
     # Feed the relation-resolver's resolved relation_values onto the engine's
     # first-class relation channel so computed casillas that reference

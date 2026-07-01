@@ -3,14 +3,11 @@ tags:
   - '#exec'
   - '#first-filer-attestation'
 date: '2026-06-13'
-modified: '2026-06-13'
+modified: '2026-06-30'
 step_id: 'S13'
 related:
   - "[[2026-06-13-first-filer-attestation-plan]]"
 ---
-
-
-
 
 # Add a real-storage test proving the alta-containing period stays in scope as the first obligation and is NOT suppressed
 

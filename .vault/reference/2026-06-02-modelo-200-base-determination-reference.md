@@ -3,12 +3,10 @@ tags:
   - '#reference'
   - '#modelo-200-base-determination'
 date: '2026-06-02'
-modified: '2026-06-02'
+modified: '2026-06-30'
 related:
   - "[[2026-06-02-modelo-200-base-determination-adr]]"
 ---
-
-
 
 # `modelo-200-base-determination` reference: `Modelo 200 IS base-determination formula spec + registry-structure prerequisite (grounded)`
 

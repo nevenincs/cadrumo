@@ -3,11 +3,9 @@ tags:
   - '#audit'
   - '#legal-grounding-verification'
 date: '2026-06-14'
-modified: '2026-06-15'
+modified: '2026-06-30'
 related: []
 ---
-
-
 
 # `legal-grounding-verification` audit: `Legal Codification vs Code Surface — Semantic + Online Verification Pass 1`
 
@@ -126,5 +124,3 @@ drift.
   calculation-tests`); derive cap/threshold expectations from the BOE figure.
 
 ## Codification candidates
-
-

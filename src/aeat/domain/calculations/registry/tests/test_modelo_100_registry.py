@@ -192,9 +192,7 @@ def test_modelo_100_immovable_gain_cadastral_reference_roles_match_source_blocks
         "irpf_ganancia_inmueble_catastral_4_b",
     }
     assert not any(
-        casilla.semantic_role in legacy_roles
-        for revision in modelo.revisions.values()
-        for casilla in revision.casillas
+        casilla.semantic_role in legacy_roles for revision in modelo.revisions.values() for casilla in revision.casillas
     )
 
 

@@ -1,0 +1,100 @@
+[revisions."2019-y-siguientes"]
+label = "Orden EHA/3377/2011, ejercicios 2019 y siguientes"
+valid_from = 2019-01-01
+period_selector = { year_from = 2019, periods = ["0A"] }
+orden_aplicabilidad = ["orden-eha-3377-2011:art-1"]
+legal_refs = ["orden-eha-3377-2011:art-1", "ley-35-2006:art-99", "rd-439-2007:art-108"]
+source_refs = ["aeat-modelo-188-procedure", "boe-modelo-188-form-layout"]
+
+[[revisions."2019-y-siguientes".casillas]]
+id = "03"
+number = "03"
+label = "Base retenciones e ingresos a cuenta"
+section = ["resumen"]
+data_type = "money"
+semantic_role = "capitalizacion_seguros_resumen_base"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-99", "orden-eha-3377-2011:art-1"]
+source_refs = ["boe-modelo-188-form-layout"]
+
+[[revisions."2019-y-siguientes".casillas]]
+id = "04"
+number = "04"
+label = "Retenciones e ingresos a cuenta declarados"
+section = ["resumen"]
+data_type = "money"
+semantic_role = "capitalizacion_seguros_resumen_retenciones"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-99", "orden-eha-3377-2011:art-1"]
+source_refs = ["boe-modelo-188-form-layout"]
+
+[[revisions."2019-y-siguientes".casillas]]
+id = "05"
+number = "05"
+label = "Total retenciones del resumen anual"
+section = ["resumen"]
+data_type = "money"
+semantic_role = "capitalizacion_seguros_resumen_total"
+required = false
+input_kind = "computed"
+formula = "modelo-188-total"
+legal_refs = ["ley-35-2006:art-99", "orden-eha-3377-2011:art-1"]
+source_refs = ["boe-modelo-188-form-layout"]
+
+[[revisions."2019-y-siguientes".formulas]]
+id = "modelo-188-total"
+target_casilla_id = "05"
+expression = { op = "add", args = [ { casilla_id = "04" } ] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-99", "orden-eha-3377-2011:art-1"]
+source_refs = ["aeat-modelo-188-procedure", "boe-modelo-188-form-layout"]
+
+[[revisions."2019-y-siguientes".formulas.source_citations]]
+source_ref = "aeat-modelo-188-procedure"
+required_text = ["188"]
+
+[[revisions."2019-y-siguientes".workbook_parity_refs]]
+id = "modelo-188-record-design"
+workbook_source = "boe-modelo-188-form-layout"
+fixture_id = "modelo-188-record-design-layout"
+formula_coverage = "record_design_layout"
+runner_required = false
+tolerance = "0.00"
+legal_refs = ["orden-eha-3377-2011:art-1"]
+source_refs = ["boe-modelo-188-form-layout"]
+
+[[revisions."2019-y-siguientes".application_links]]
+id = "modelo-188-calculation"
+surface = "calculation"
+consumer = "aeat.domain.calculations.registry"
+requires_snapshot = true
+legal_refs = ["orden-eha-3377-2011:art-1", "ley-35-2006:art-99"]
+source_refs = ["aeat-modelo-188-procedure", "boe-modelo-188-form-layout"]
+
+[[revisions."2019-y-siguientes".application_links]]
+id = "modelo-188-deadline"
+surface = "deadline"
+consumer = "aeat.domain.deadlines"
+requires_snapshot = true
+legal_refs = ["orden-eha-3377-2011:art-1"]
+source_refs = ["aeat-modelo-188-procedure"]
+
+[[revisions."2019-y-siguientes".application_links]]
+id = "modelo-188-filing"
+surface = "filing"
+consumer = "aeat.application.filing"
+requires_snapshot = true
+legal_refs = ["orden-eha-3377-2011:art-1"]
+source_refs = ["aeat-modelo-188-procedure"]
+
+[[revisions."2019-y-siguientes".deadline_windows]]
+id = "modelo-188-2025-0a"
+filing_year = 2025
+period = "2025 0A"
+period_kind = "annual"
+opens_on = 2026-01-01
+closes_on = 2026-01-31
+legal_refs = ["orden-eha-3377-2011:art-1"]
+source_refs = ["aeat-modelo-188-procedure", "boe-modelo-188-form-layout"]

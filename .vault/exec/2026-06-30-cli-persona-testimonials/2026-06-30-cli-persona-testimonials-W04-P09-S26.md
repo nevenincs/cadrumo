@@ -50,4 +50,3 @@ Latest isolated retest note: clean `HEAD` currently fails source-catalogue
 verification for `aeat-calendario-contribuyente-2026-domiciliacion` and
 `boe-modelo-210-base-order` byte-count mismatches. A no-W04 baseline worktree
 reproduced those failures, so they are recorded as baseline blockers outside S26.
-

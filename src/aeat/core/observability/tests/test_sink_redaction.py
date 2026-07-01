@@ -53,7 +53,7 @@ def _emit(sink: JsonlRunSink, event: RunEvent) -> None:
     on-disk file is fsync'd before the assertions read it.
     """
     record = logging.LogRecord(
-        name="aeat.test",
+        name="aeat-test",
         level=logging.INFO,
         pathname=__file__,
         lineno=0,
@@ -75,7 +75,7 @@ def _build_form_fill_event(value: str) -> RunEvent:
             form_fill=FormFillPayload(form_id="aeat-130", display_number="01", value=value),
         ),
         timestamp=datetime(2026, 4, 30, 0, 0, 0, tzinfo=UTC),
-        module="aeat.test",
+        module="aeat-test",
     )
 
 
@@ -86,7 +86,7 @@ def _build_navigation_event(url: str) -> RunEvent:
         kind=RunEventKind.NAVIGATION,
         payload=RunEventPayload(navigation=NavigationPayload(url=url)),
         timestamp=datetime(2026, 4, 30, 0, 0, 1, tzinfo=UTC),
-        module="aeat.test",
+        module="aeat-test",
     )
 
 
@@ -99,7 +99,7 @@ def _build_error_event(message: str) -> RunEvent:
             error=ErrorPayload(error_type="ValueError", message=message),
         ),
         timestamp=datetime(2026, 4, 30, 0, 0, 2, tzinfo=UTC),
-        module="aeat.test",
+        module="aeat-test",
     )
 
 
@@ -187,7 +187,7 @@ def test_run_scoped_records_scrubbed_before_reaching_jsonl_via_attach_run_sink(
         # sink so the event is not filtered by the run-id guard.
         event = _build_form_fill_event(value=_NIF_CANARY)
         record = logging.LogRecord(
-            name="aeat.test",
+            name="aeat-test",
             level=logging.INFO,
             pathname=__file__,
             lineno=0,

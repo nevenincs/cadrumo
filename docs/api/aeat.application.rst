@@ -15,6 +15,7 @@ Subpackages
 
    aeat.application.aggregation
    aeat.application.auth
+   aeat.application.bienes_inversion
    aeat.application.bucket_maintenance
    aeat.application.calculations
    aeat.application.evidence
@@ -47,6 +48,7 @@ Submodules
    aeat.application._errors
    aeat.application.config_reset
    aeat.application.diagnostics
+   aeat.application.preflight
    aeat.application.provisioning
    aeat.application.repair_integrity
    aeat.application.state_projection

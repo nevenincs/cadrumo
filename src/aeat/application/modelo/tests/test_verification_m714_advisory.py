@@ -34,9 +34,7 @@ def _m714_advisory_predicate() -> VerificationPredicateDefinition:
     revision = resources().modelos.authority.validate_modelo("714").revisions["2021-y-siguientes"]
     predicate = next(p for p in revision.verification_predicates if p.predicate_id == _M714_PREDICATE_ID)
     assert predicate.finding_kind == "ADVISORY"
-    assert predicate.expression == (
-        'implies_nonzero(["patrimonio.cuota-integra", "patrimonio.total-cuota-integra"])'
-    )
+    assert predicate.expression == ('implies_nonzero(["patrimonio.cuota-integra", "patrimonio.total-cuota-integra"])')
     return predicate
 
 

@@ -3,12 +3,11 @@ tags:
   - "#exec"
   - "#cross-domain-continuity"
 date: "2026-05-27"
-modified: '2026-05-27'
+modified: '2026-06-30'
 step_id: S340
 related:
   - "[[2026-05-26-cross-domain-continuity-plan]]"
 ---
-
 
 # cross-domain-continuity W04.P19.S340 — workflow abort surface: DRAFT_HAS_ERRORS next_action pointer
 

@@ -3,15 +3,13 @@ tags:
   - '#research'
   - '#schema-hardening'
 date: '2026-05-28'
-modified: '2026-05-28'
+modified: '2026-06-30'
 related:
   - '[[2026-05-28-schema-hardening-continuity-conformance-plan]]'
   - '[[2026-05-27-schema-hardening-casilla-continuity-contract-adr]]'
   - '[[2026-05-27-schema-hardening-casilla-continuity-contract-research]]'
   - '[[2026-05-28-schema-hardening-m100-continuity-inventory-research]]'
 ---
-
-
 
 # `schema-hardening` research: `continuity-conformance`
 

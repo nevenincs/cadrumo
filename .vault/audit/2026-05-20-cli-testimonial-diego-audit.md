@@ -3,7 +3,7 @@ tags:
   - '#audit'
   - '#cli-testimonial'
 date: '2026-05-20'
-modified: '2026-05-20'
+modified: '2026-06-30'
 related:
   - "[[2026-05-20-schema-hardening-verification-ledger-audit]]"
 ---
@@ -288,56 +288,56 @@ What did not work:
 
 ### 1
 
-**Command:** `aeat config profile create` with boolean flag variants  
-**Expected:** Flag names in `--help` match flag names accepted at runtime  
-**Actual:** Flags shown as `--pays-professionals-with-retention` but only `--pays-professionals-with-retencion` is accepted; `--tax-residence-region` shown but `--tax-residence-ccaa` required; four successive failures before a working invocation  
+**Command:** `aeat config profile create` with boolean flag variants
+**Expected:** Flag names in `--help` match flag names accepted at runtime
+**Actual:** Flags shown as `--pays-professionals-with-retention` but only `--pays-professionals-with-retencion` is accepted; `--tax-residence-region` shown but `--tax-residence-ccaa` required; four successive failures before a working invocation
 **Severity:** Major — breaks first-use flow for any user attempting non-interactive profile creation
 
 ### 2
 
-**Command:** `aeat config profile create ...` (success)  
-**Expected:** Confirmation output (profile name, key settings, next steps)  
-**Actual:** Silent exit — no stdout output on success  
+**Command:** `aeat config profile create ...` (success)
+**Expected:** Confirmation output (profile name, key settings, next steps)
+**Actual:** Silent exit — no stdout output on success
 **Severity:** Minor — disorienting but not blocking; the follow-up `profile status` confirms state
 
 ### 3
 
-**Command:** `aeat app modelo work calculate <id>` (without `--binding` for required bindings)  
-**Expected:** Pre-flight error listing all missing bindings before attempting computation  
-**Actual:** Compute attempt runs until first missing binding, surfaces one error per invocation; requires N round-trips for N missing bindings  
+**Command:** `aeat app modelo work calculate <id>` (without `--binding` for required bindings)
+**Expected:** Pre-flight error listing all missing bindings before attempting computation
+**Actual:** Compute attempt runs until first missing binding, surfaces one error per invocation; requires N round-trips for N missing bindings
 **Severity:** Major — two-round-trip discovery loop for required inputs that the tool already knows about from `bindings list`
 
 ### 4
 
-**Command:** Calculation output  
-**Expected:** Legal references (BOE articles, formula_id, source_refs) and casilla descriptions alongside values, per the tool's documented contract  
-**Actual:** Flat `casilla X value` table only — no legal refs, no formula provenance, no casilla labels  
+**Command:** Calculation output
+**Expected:** Legal references (BOE articles, formula_id, source_refs) and casilla descriptions alongside values, per the tool's documented contract
+**Actual:** Flat `casilla X value` table only — no legal refs, no formula provenance, no casilla labels
 **Severity:** Major — the primary stated value proposition (regulatory grounding at every output surface) is unmet at the CLI layer
 
 ### 5
 
-**Command:** `aeat app modelo work create --modelo 130 --year 2026 --period 1T`  
-**Expected:** Warning or refusal when the filing window for the requested period is already closed  
-**Actual:** Work unit accepted silently; closure only enforced at `verify` time (much later in the lifecycle)  
+**Command:** `aeat app modelo work create --modelo 130 --year 2026 --period 1T`
+**Expected:** Warning or refusal when the filing window for the requested period is already closed
+**Actual:** Work unit accepted silently; closure only enforced at `verify` time (much later in the lifecycle)
 **Severity:** Minor — allows wasted work but does correctly block the final step
 
 ### 6
 
-**Command:** All commands following first `verify` failure  
-**Expected:** CLI remains operational  
-**Actual:** Non-deterministic `ModuleNotFoundError` crashes (`_bucket_pointer_io`, `aeat.core.resources._registry`) caused by mid-refactor missing modules on the `chore/eliminate-shims` branch; clearing `__pycache__` makes failures deterministic but does not resolve the underlying import breakage  
+**Command:** All commands following first `verify` failure
+**Expected:** CLI remains operational
+**Actual:** Non-deterministic `ModuleNotFoundError` crashes (`_bucket_pointer_io`, `aeat.core.resources._registry`) caused by mid-refactor missing modules on the `chore/eliminate-shims` branch; clearing `__pycache__` makes failures deterministic but does not resolve the underlying import breakage
 **Severity:** Blocker — the CLI becomes entirely non-functional after certain command sequences on this branch
 
 ### 7
 
-**Command:** `aeat app modelo work verify <id>` for Q2 2026 on 2026-05-20  
-**Expected:** Either proceed (window is open or a preview mode exists) or a clear message explaining that the window opens on 2026-07-01 with next-step guidance  
-**Actual:** `PREFLIGHT_FAILED: deadline window for modelo 130 period 2026Q2 is not open on 2026-05-20` with no next-step guidance  
+**Command:** `aeat app modelo work verify <id>` for Q2 2026 on 2026-05-20
+**Expected:** Either proceed (window is open or a preview mode exists) or a clear message explaining that the window opens on 2026-07-01 with next-step guidance
+**Actual:** `PREFLIGHT_FAILED: deadline window for modelo 130 period 2026Q2 is not open on 2026-05-20` with no next-step guidance
 **Severity:** Minor — technically correct, but a real user would not know whether to wait, use a different period, or conclude the tool is broken
 
 ### 8
 
-**Command:** `aeat app overview status`  
-**Expected:** Surface outstanding quarterly filing obligations given my profile (self-employed, quarterly IRPF, Q2 window opening in July)  
-**Actual:** Only reports ledger import status and encrypted storage health; no modelo obligation calendar  
+**Command:** `aeat app overview status`
+**Expected:** Surface outstanding quarterly filing obligations given my profile (self-employed, quarterly IRPF, Q2 window opening in July)
+**Actual:** Only reports ledger import status and encrypted storage health; no modelo obligation calendar
 **Severity:** Minor — missed UX opportunity; the registry knows the deadlines and the profile declares the cadence

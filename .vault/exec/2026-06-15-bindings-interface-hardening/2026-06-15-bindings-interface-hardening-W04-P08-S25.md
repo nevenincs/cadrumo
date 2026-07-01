@@ -3,14 +3,11 @@ tags:
   - '#exec'
   - '#bindings-interface-hardening'
 date: '2026-06-15'
-modified: '2026-06-15'
+modified: '2026-06-30'
 step_id: 'S25'
 related:
   - "[[2026-06-15-bindings-interface-hardening-plan]]"
 ---
-
-
-
 
 # replace the --binding numeric-vs-enum try-Decimal-except heuristic with a registry-data-type-driven coercion that rejects a malformed amount instead of reclassifying it as an enum
 

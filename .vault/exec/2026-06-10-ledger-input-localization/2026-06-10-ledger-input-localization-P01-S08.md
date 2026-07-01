@@ -3,14 +3,11 @@ tags:
   - '#exec'
   - '#ledger-input-localization'
 date: '2026-06-12'
-modified: '2026-06-12'
+modified: '2026-06-30'
 step_id: 'S08'
 related:
   - "[[2026-06-10-ledger-input-localization-plan]]"
 ---
-
-
-
 
 # Run pytest --collect-only -q to verify zero collection errors across all six migrated modules
 

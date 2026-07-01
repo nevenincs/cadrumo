@@ -3,7 +3,7 @@ tags:
   - '#exec'
   - '#aeat-verify'
 date: '2026-04-24'
-modified: '2026-04-24'
+modified: '2026-06-30'
 related:
   - "[[2026-04-24-aeat-verify-plan]]"
   - "[[2026-04-24-aeat-verify-adr]]"
@@ -11,8 +11,6 @@ related:
   - "[[2026-04-24-aeat-verify-phase2-summary-exec]]"
   - "[[2026-04-24-aeat-verify-phase3-summary-exec]]"
 ---
-
-
 
 # `aeat-verify` `phase-4` `cli-surface`
 

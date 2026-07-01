@@ -3,14 +3,11 @@ tags:
   - '#exec'
   - '#live-justificante-reconcile'
 date: '2026-06-10'
-modified: '2026-06-10'
+modified: '2026-06-30'
 step_id: 'S02'
 related:
   - "[[2026-06-10-live-justificante-reconcile-plan]]"
 ---
-
-
-
 
 # Author the JustificanteCaptureSnapshot payload (modelo via core Modelo enum, filing_year, period, expediente_id, csv, pdf_sha256, pdf_bytes, official source_kind, lifecycle), object-key, content-addressed id, repository and SnapshotService hooks mirroring Borrador100.
 

@@ -3,14 +3,13 @@ tags:
   - '#plan'
   - '#registry-casilla-identity'
 date: '2026-05-20'
-modified: '2026-05-20'
+modified: '2026-06-30'
 tier: L2
 related:
   - '[[2026-05-20-registry-casilla-identity-adr]]'
   - '[[2026-05-20-registry-casilla-identity-research]]'
   - '[[2026-05-20-branch-reconciliation-audit]]'
 ---
-
 
 # `registry-casilla-identity` plan
 

@@ -1,13 +1,12 @@
 ---
 tags: ['#exec', '#live-iva-compensation-wallet']
 date: '2026-06-05'
-modified: '2026-06-05'
+modified: '2026-06-30'
 step_id: 'S100'
 related:
   - '[[2026-05-19-live-iva-compensation-wallet-plan]]'
   - '[[2026-06-05-clave-session-reuse-diagnostics-reference]]'
 ---
-
 
 # W10.P24.S100 full-range IVA remote-state acquisition
 

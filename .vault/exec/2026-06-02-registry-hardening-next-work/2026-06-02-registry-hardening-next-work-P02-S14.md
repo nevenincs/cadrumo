@@ -3,7 +3,7 @@ tags:
   - '#exec'
   - '#schema-hardening'
 date: '2026-06-02'
-modified: '2026-06-02'
+modified: '2026-06-13'
 step_id: 'P02.S14'
 related:
   - '[[2026-06-02-registry-hardening-next-work-plan]]'

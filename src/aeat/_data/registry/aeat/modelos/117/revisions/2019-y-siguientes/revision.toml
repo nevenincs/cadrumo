@@ -133,7 +133,8 @@ number = "11"
 label = "Resultado a ingresar"
 section = ["liquidacion", "resultado"]
 data_type = "money"
-semantic_role = "resultado_ingresar"
+semantic_role = "cuota_a_ingresar"
+constraints = { sign = "non_negative", legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-108", "orden-eha-3435-2007:anexo-i"], source_refs = ["boe-modelo-117-form-text", "boe-modelo-117-form-layout"] }
 required = false
 input_kind = "computed"
 formula = "modelo-117-resultado-ingresar"

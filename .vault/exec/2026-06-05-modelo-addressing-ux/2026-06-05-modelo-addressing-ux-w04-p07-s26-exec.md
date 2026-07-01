@@ -1,7 +1,7 @@
 ---
 tags: ['#exec', '#modelo-addressing-ux']
 date: '2026-06-05'
-modified: '2026-06-05'
+modified: '2026-06-30'
 step_id: 'S26'
 related:
   - '[[2026-06-05-modelo-addressing-ux-plan]]'
@@ -32,4 +32,3 @@ The workflow layer already has a local-only resume gate over exact run ids and a
 ## Consequence
 
 Implementation may proceed under the accepted `2026-06-04` ADR. If later work proposes hidden resume state, a new selector axis beyond registry revision, or a different ambiguity policy for multiple workflow runs, that must stop for a new ADR.
-

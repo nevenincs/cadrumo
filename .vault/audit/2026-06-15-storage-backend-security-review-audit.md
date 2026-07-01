@@ -3,11 +3,9 @@ tags:
   - '#audit'
   - '#storage-backend-security-review'
 date: '2026-06-15'
-modified: '2026-06-15'
+modified: '2026-06-30'
 related: []
 ---
-
-
 
 # `storage-backend-security-review` audit: `campaign close honesty review`
 
@@ -96,5 +94,3 @@ marker-verified; the HIGH finding shows several were pre-dispose and marker-less
   Per the `vaultspec-codify` discipline, promote after the lesson holds across at
   least one more cycle (e.g. the next new at-rest test that correctly uses the
   helper, or a peer reintroducing a raw read that the lesson would have caught).
-
-

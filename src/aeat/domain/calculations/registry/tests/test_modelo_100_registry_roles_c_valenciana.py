@@ -17,9 +17,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 _ExpectedRows = Mapping[str, tuple[str, str]]
 
 _VA35_ACCIONES_PARTICIPACIONES_ROLE = "irpf_deduccion_c_valenciana_acciones_participaciones"
-_VA35_ACCIONES_PARTICIPACIONES_GENERADO_ROLE = (
-    "irpf_deduccion_c_valenciana_acciones_participaciones_generado"
-)
+_VA35_ACCIONES_PARTICIPACIONES_GENERADO_ROLE = "irpf_deduccion_c_valenciana_acciones_participaciones_generado"
 _VA35_ACCIONES_PARTICIPACIONES_GENERADO_PENDIENTE_1_ROLE = (
     "irpf_deduccion_c_valenciana_acciones_participaciones_generado_pendiente_1"
 )
@@ -35,23 +33,13 @@ _VA35_ACCIONES_PARTICIPACIONES_APLICADO_EJERCICIO_ANTERIOR_ROLE = (
 _VA35_ACCIONES_PARTICIPACIONES_APLICADO_EJERCICIO_ROLE = (
     "irpf_deduccion_c_valenciana_acciones_participaciones_aplicado_ejercicio"
 )
-_VA35_ACCIONES_PARTICIPACIONES_PENDIENTE_ROLE = (
-    "irpf_deduccion_c_valenciana_acciones_participaciones_pendiente"
-)
-_VA35_ACCIONES_PARTICIPACIONES_PENDIENTE_1_ROLE = (
-    "irpf_deduccion_c_valenciana_acciones_participaciones_pendiente_1"
-)
-_VA35_ACCIONES_PARTICIPACIONES_PENDIENTE_2_ROLE = (
-    "irpf_deduccion_c_valenciana_acciones_participaciones_pendiente_2"
-)
+_VA35_ACCIONES_PARTICIPACIONES_PENDIENTE_ROLE = "irpf_deduccion_c_valenciana_acciones_participaciones_pendiente"
+_VA35_ACCIONES_PARTICIPACIONES_PENDIENTE_1_ROLE = "irpf_deduccion_c_valenciana_acciones_participaciones_pendiente_1"
+_VA35_ACCIONES_PARTICIPACIONES_PENDIENTE_2_ROLE = "irpf_deduccion_c_valenciana_acciones_participaciones_pendiente_2"
 _VA39_AUTOCONSUMO_ROLE = "irpf_deduccion_c_valenciana_autoconsumo_desde_2023"
 _VA39_AUTOCONSUMO_GENERADO_ROLE = "irpf_deduccion_c_valenciana_autoconsumo_generado"
-_VA39_AUTOCONSUMO_GENERADO_PENDIENTE_1_ROLE = (
-    "irpf_deduccion_c_valenciana_autoconsumo_generado_pendiente_1"
-)
-_VA39_AUTOCONSUMO_GENERADO_PENDIENTE_2_ROLE = (
-    "irpf_deduccion_c_valenciana_autoconsumo_generado_pendiente_2"
-)
+_VA39_AUTOCONSUMO_GENERADO_PENDIENTE_1_ROLE = "irpf_deduccion_c_valenciana_autoconsumo_generado_pendiente_1"
+_VA39_AUTOCONSUMO_GENERADO_PENDIENTE_2_ROLE = "irpf_deduccion_c_valenciana_autoconsumo_generado_pendiente_2"
 _VA39_AUTOCONSUMO_PENDIENTE_ROLE = "irpf_deduccion_c_valenciana_autoconsumo_pendiente"
 _VA39_AUTOCONSUMO_PENDIENTE_1_ROLE = "irpf_deduccion_c_valenciana_autoconsumo_pendiente_1"
 _VA39_AUTOCONSUMO_PENDIENTE_2_ROLE = "irpf_deduccion_c_valenciana_autoconsumo_pendiente_2"
@@ -61,19 +49,13 @@ _VA42_DANOS_VIVIENDA_DANA_GENERADO_PENDIENTE_1_ROLE = (
     "irpf_deduccion_c_valenciana_danos_vivienda_dana_generado_pendiente_1"
 )
 _VA42_DANOS_VIVIENDA_DANA_PENDIENTE_ROLE = "irpf_deduccion_c_valenciana_danos_vivienda_dana_pendiente"
-_VA42_DANOS_VIVIENDA_DANA_PENDIENTE_1_ROLE = (
-    "irpf_deduccion_c_valenciana_danos_vivienda_dana_pendiente_1"
-)
+_VA42_DANOS_VIVIENDA_DANA_PENDIENTE_1_ROLE = "irpf_deduccion_c_valenciana_danos_vivienda_dana_pendiente_1"
 _VA43_APORTACIONES_FONDOS_PROPIOS_ROLE = "irpf_deduccion_c_valenciana_aportaciones_fondos_propios"
-_VA43_APORTACIONES_FONDOS_PROPIOS_GENERADO_ROLE = (
-    "irpf_deduccion_c_valenciana_aportaciones_fondos_propios_generado"
-)
+_VA43_APORTACIONES_FONDOS_PROPIOS_GENERADO_ROLE = "irpf_deduccion_c_valenciana_aportaciones_fondos_propios_generado"
 _VA43_APORTACIONES_FONDOS_PROPIOS_GENERADO_PENDIENTE_1_ROLE = (
     "irpf_deduccion_c_valenciana_aportaciones_fondos_propios_generado_pendiente_1"
 )
-_VA43_APORTACIONES_FONDOS_PROPIOS_PENDIENTE_ROLE = (
-    "irpf_deduccion_c_valenciana_aportaciones_fondos_propios_pendiente"
-)
+_VA43_APORTACIONES_FONDOS_PROPIOS_PENDIENTE_ROLE = "irpf_deduccion_c_valenciana_aportaciones_fondos_propios_pendiente"
 _VA43_APORTACIONES_FONDOS_PROPIOS_PENDIENTE_1_ROLE = (
     "irpf_deduccion_c_valenciana_aportaciones_fondos_propios_pendiente_1"
 )
@@ -103,8 +85,7 @@ _LEGACY_VALENCIANA_FAMILY_ROLES = frozenset(
 )
 
 _VA35_PARENT_LABEL = (
-    "Por inversión en adquisición de acciones o participaciones sociales "
-    "en entidades nuevas o de reciente creación"
+    "Por inversión en adquisición de acciones o participaciones sociales en entidades nuevas o de reciente creación"
 )
 _VA35_EXPECTED_ROWS: Mapping[int, _ExpectedRows] = {
     2021: {
@@ -277,8 +258,7 @@ _VA39_EXPECTED_ROWS: Mapping[int, _ExpectedRows] = {
 }
 
 _VA42_PARENT_LABEL = (
-    "Por destinar cantidades a paliar los daños materiales sobre la vivienda habitual "
-    "derivados del temporal"
+    "Por destinar cantidades a paliar los daños materiales sobre la vivienda habitual derivados del temporal"
 )
 _VA43_PARENT_LABEL_BY_YEAR = {
     2024: (

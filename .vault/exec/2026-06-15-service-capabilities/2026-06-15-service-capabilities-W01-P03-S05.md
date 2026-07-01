@@ -3,14 +3,11 @@ tags:
   - '#exec'
   - '#service-capabilities'
 date: '2026-06-15'
-modified: '2026-06-15'
+modified: '2026-06-30'
 step_id: 'S05'
 related:
   - "[[2026-06-15-service-capabilities-plan]]"
 ---
-
-
-
 
 # Add config profile capabilities show/set verbs routed through EditProfileSectionCommand
 
@@ -30,4 +27,3 @@ Operators can review and set per-profile service opt-in/out from the CLI.
 ## Notes
 
 The wizard capabilities-section offer at profile creation is a deferred nice-to-have (capabilities are settable via `capabilities set`).
-

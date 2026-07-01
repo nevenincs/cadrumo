@@ -70,4 +70,3 @@ Passed:
 Latest isolated retest note: current clean `HEAD` blocks these registry-loading
 tests on baseline source byte-count mismatch `boe-modelo-210-base-order`, proven
 in a no-W04 baseline worktree.
-

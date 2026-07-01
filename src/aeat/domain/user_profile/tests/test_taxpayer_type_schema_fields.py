@@ -289,6 +289,16 @@ def test_iva_regime_enum_includes_reagp(schema: ProfileSchemaDefinition) -> None
 def test_sii_and_redeme_enrolment_fields_are_present_and_grounded(
     schema: ProfileSchemaDefinition,
 ) -> None:
+    group_member = schema.field("iva.group_member_enrolled")
+    assert group_member.type.value == "boolean"
+    assert group_member.legal_refs, "iva.group_member_enrolled must declare legal_refs"
+    assert group_member.schedule_predicates
+
+    group_dominant = schema.field("iva.group_dominant_entity_enrolled")
+    assert group_dominant.type.value == "boolean"
+    assert group_dominant.legal_refs, "iva.group_dominant_entity_enrolled must declare legal_refs"
+    assert group_dominant.schedule_predicates
+
     sii = schema.field("iva.sii_enrolled")
     assert sii.type.value == "boolean"
     assert sii.legal_refs, "iva.sii_enrolled must declare legal_refs"
@@ -315,6 +325,8 @@ def test_iva_profile_selector_legal_refs_resolve_against_catalogue(
         "censo.public_administration_budget_gt_6000000": {"orden-eha-586-2011:art-1", "rd-439-2007:art-108"},
         "iva.sii_enrolled": {"rd-596-2016", "rd-1624-1992:art-71"},
         "iva.redeme_enrolled": {"rd-1624-1992:art-30"},
+        "iva.group_member_enrolled": {"orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"},
+        "iva.group_dominant_entity_enrolled": {"orden-eha-3434-2007:art-2", "rd-1624-1992:art-71"},
         "iva.autoconsumo_promotor_base": {"ley-37-1992:art-9", "ley-37-1992:art-79"},
     }
 

@@ -3,14 +3,11 @@ tags:
   - '#exec'
   - '#docs-terminology-search'
 date: '2026-06-10'
-modified: '2026-06-10'
+modified: '2026-06-30'
 step_id: 'S15'
 related:
   - "[[2026-06-10-docs-terminology-search-plan]]"
 ---
-
-
-
 
 # Implement the casilla projection compiler: per-modelo casilla search records from registry snapshots via the validated authority (modelo, casilla number, localised label/description including per-revision locale fragments where authored - conforming to the official casilla descriptions - plus legal_refs), deduplicated across revisions, never hand-curated (ADR D4)
 
@@ -137,4 +134,3 @@ Test names (`test_casilla_projection.py`, 12):
   (c) any ranking-weight normalisation across the kinds. The record kinds and
   their `descriptions` / `target` / `legal_links` fields are the stable inputs
   S17 reconciles.
-

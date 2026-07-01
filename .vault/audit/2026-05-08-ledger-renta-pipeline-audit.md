@@ -3,13 +3,11 @@ tags:
   - '#audit'
   - '#ledger-renta-pipeline'
 date: '2026-05-08'
-modified: '2026-05-08'
+modified: '2026-06-30'
 related:
   - "[[2026-05-08-ledger-renta-pipeline-plan]]"
   - "[[2026-05-08-ledger-renta-pipeline-phase2-contract-decisions-adr]]"
 ---
-
-
 
 # `ledger-renta-pipeline` audit: `phase3-code-review`
 

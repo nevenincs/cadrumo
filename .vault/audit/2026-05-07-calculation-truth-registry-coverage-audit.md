@@ -3,16 +3,13 @@ tags:
   - '#audit'
   - '#calculation-truth-registry'
 date: '2026-05-07'
-modified: '2026-05-07'
+modified: '2026-06-30'
 related:
   - '[[2026-05-03-calculation-truth-registry-rebuild-plan]]'
   - '[[2026-05-07-calculation-truth-registry-phase0b-coverage-exec]]'
 ---
 
-
-
 # `calculation-truth-registry` Code Review
-
 
 CTR-COVERAGE-001 | CRITICAL | Focused registry catalogue suite must pass before accepting the gate
 

@@ -3,14 +3,11 @@ tags:
   - '#exec'
   - '#service-capabilities'
 date: '2026-06-15'
-modified: '2026-06-15'
+modified: '2026-06-30'
 step_id: 'S08'
 related:
   - "[[2026-06-15-service-capabilities-plan]]"
 ---
-
-
-
 
 # Add aeat config doctor: per-service availability + active-profile capability posture + remediation
 
@@ -30,4 +27,3 @@ One command reports the capability/dependency/safety axes together with the fix 
 ## Notes
 
 Resilient to a locked secret store (falls back to defaults). Avoid on/off as locale key leaves (YAML boolean coercion); reused the capabilities enabled/disabled keys.
-

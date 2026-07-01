@@ -3,11 +3,9 @@ tags:
   - '#research'
   - '#zero-legacy-purge'
 date: '2026-06-10'
-modified: '2026-06-10'
+modified: '2026-06-30'
 related: []
 ---
-
-
 
 # `zero-legacy-purge` research: `zero-legacy purge inventory`
 

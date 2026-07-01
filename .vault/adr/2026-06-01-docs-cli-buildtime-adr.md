@@ -3,12 +3,10 @@ tags:
   - '#adr'
   - '#docs-cli-buildtime'
 date: '2026-06-01'
-modified: '2026-06-01'
+modified: '2026-06-30'
 related:
   - "[[2026-06-01-docs-cli-buildtime-research]]"
 ---
-
-
 
 # `docs-cli-buildtime` adr: build-time CLI reference extraction | (**status:** `accepted`)
 

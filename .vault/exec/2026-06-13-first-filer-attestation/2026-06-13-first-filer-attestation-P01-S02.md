@@ -3,14 +3,11 @@ tags:
   - '#exec'
   - '#first-filer-attestation'
 date: '2026-06-13'
-modified: '2026-06-13'
+modified: '2026-06-30'
 step_id: 'S02'
 related:
   - "[[2026-06-13-first-filer-attestation-plan]]"
 ---
-
-
-
 
 # Add the typed NoPriorObligationProvenance model carrying activity_start_date, provenance kind (operator-declared vs censo-corroborated), and optional censo snapshot id
 

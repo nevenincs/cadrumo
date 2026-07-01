@@ -25,9 +25,7 @@ from ....core.resources import resources
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_domain]
 
-_REPLAY_DIR = (
-    Path(__file__).resolve().parents[3] / "_data" / "corpus" / "parity_replays" / "renta_web_open"
-)
+_REPLAY_DIR = Path(__file__).resolve().parents[3] / "_data" / "corpus" / "parity_replays" / "renta_web_open"
 
 
 def _oracle_payloads() -> list[Path]:

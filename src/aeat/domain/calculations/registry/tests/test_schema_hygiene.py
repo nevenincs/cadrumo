@@ -37,6 +37,7 @@ _FORBIDDEN_XML_ROOT_TOKENS = frozenset(
     },
 )
 
+
 @cache
 def _all_modelos() -> tuple[ModeloDefinition, ...]:
     return resources().modelos.all()
@@ -69,9 +70,7 @@ def test_operator_input_id_map_contains_only_casilla_ids() -> None:
             observed = input_casilla_id_map(revision)
             extra_keys = sorted(set(observed) - expected)
             wrong_values = sorted(
-                f"{key}->{value}"
-                for key, value in observed.items()
-                if key not in expected or value != key
+                f"{key}->{value}" for key, value in observed.items() if key not in expected or value != key
             )
             if extra_keys or wrong_values:
                 offences.append(
@@ -209,8 +208,7 @@ def _renta_replay_captured_targets(replay_dir: Path) -> set[CasillaId]:
             section = document.get(key) or {}
             if isinstance(section, dict):
                 captured.update(
-                    _renta_replay_casilla_id(k, payload_path=payload_path, section_name=key)
-                    for k in section
+                    _renta_replay_casilla_id(k, payload_path=payload_path, section_name=key) for k in section
                 )
     return captured
 

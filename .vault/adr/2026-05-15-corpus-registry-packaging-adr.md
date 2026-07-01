@@ -3,15 +3,13 @@ tags:
   - '#adr'
   - '#corpus-registry-packaging'
 date: '2026-05-15'
-modified: '2026-05-15'
+modified: '2026-06-30'
 related:
   - "[[2026-05-15-corpus-registry-packaging-research]]"
   - "[[2026-05-01-corpus-data-hydration-adr]]"
   - "[[2026-04-21-real-pdf-fixture-corpus-adr]]"
   - "[[2026-04-25-error-code-registry-adr]]"
 ---
-
-
 
 # `corpus-registry-packaging` adr: Bundle corpus and registry trees as in-wheel package resources | (**status:** `accepted`)
 

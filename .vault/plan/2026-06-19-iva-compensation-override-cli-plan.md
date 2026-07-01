@@ -3,26 +3,17 @@ tags:
   - '#plan'
   - '#iva-compensation-override-cli'
 date: '2026-06-19'
-modified: '2026-06-19'
+modified: '2026-06-30'
 tier: L2
 related:
   - '[[2026-06-19-iva-compensation-override-cli-adr]]'
 ---
-
-
-
-
-
-
-
 
 # `iva-compensation-override-cli` plan
 
 ### Phase `P01` - Application recorder + persistence
 
 Record an explicit taxpayer override as a persisted taxpayer_override IVA-wallet decision so the calculate path applies the cross-period carry, with mandatory provenance and an audit event.
-
-
 
 - [ ] `P01.S01` - Add record_iva_compensation_override_for_bucket: resolve NIF, build IvaCompensationOverride(amount, reason, evidence_locator, recorded_at), drive reconcile_modelo_303_iva_compensation with override and persist the taxpayer_override decision; `src/aeat/application/modelo/_iva_wallet_seed.py`.
 - [ ] `P01.S02` - Emit a MODELO_IVA_WALLET override audit event carrying reason and evidence_locator provenance through the single BucketEventHistoryRepository; `src/aeat/application/modelo/_iva_wallet_seed.py`.
@@ -59,12 +50,6 @@ dependent-period verify gate (which still requires official external evidence)
 are explicitly out of scope here.
 
 ## Steps
-
-
-
-
-
-
 
 ## Parallelization
 

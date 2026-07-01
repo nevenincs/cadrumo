@@ -110,13 +110,9 @@ def test_historical_0604_folds_m130_and_m131_pagos_fraccionados(
         f"renta-{year}-rel-131-pagos-fraccionados",
     )
     assert pagos_entry.operand_values == (_EXPECTED_M130_TOTAL, _EXPECTED_M131_TOTAL)
-    assert {"ley-35-2006:art-99", "rd-439-2007:art-109", "rd-439-2007:art-110"} <= set(
-        pagos_entry.legal_refs
-    )
+    assert {"ley-35-2006:art-99", "rd-439-2007:art-109", "rd-439-2007:art-110"} <= set(pagos_entry.legal_refs)
     assert {"orden-eha-672-2007:art-1", "orden-eha-672-2007:art-3"} <= set(pagos_entry.legal_refs)
-    assert {f"aeat-renta-{year}-manual-parte1", f"boe-modelo-100-{year}-form"} <= set(
-        pagos_entry.source_refs
-    )
+    assert {f"aeat-renta-{year}-manual-parte1", f"boe-modelo-100-{year}-form"} <= set(pagos_entry.source_refs)
     assert result.values[_M100_TOTAL_PAGOS_A_CUENTA_CASILLA] == _EXPECTED_0604
 
 

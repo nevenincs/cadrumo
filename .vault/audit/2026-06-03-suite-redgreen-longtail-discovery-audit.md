@@ -2,7 +2,7 @@
 name: 2026-06-03-suite-redgreen-longtail-discovery-audit
 description: Longtail error cluster grouping from suite-final-1.log (reds 110-220)
 date: 2026-06-03
-modified: '2026-06-03'
+modified: '2026-06-30'
 tags:
   - '#audit'
   - '#suite-redgreen-longtail-discovery'
@@ -54,7 +54,7 @@ related:
   - `28 parameter-Any site(s) found without a rationale marker:` (7x)
   - `14 new type-ignore drift site(s) found without a rationale marker:` (6x)
 - Pattern: Source code inventory ratchets failing due to missing documentation markers
-- Affected files: 
+- Affected files:
   - `entrypoints/cli/_app_live.py` (11 type-ignore sites)
   - `entrypoints/cli/_app_config.py` / workflow adapters
   - `adapters/outbound/google_drive.py` (4 missing ANY-RETURN markers)
@@ -94,7 +94,7 @@ related:
   - `profile create failed: ...`
   - `"classification" not in <dict>`
 - Pattern: Setup or profile-creation path hitting missing enum value, schema field, or init order issue
-- Root cause suspect: 
+- Root cause suspect:
   a. Recent profile schema axis addition (e.g., irpf_special_regime, start_date from #162) not hydrated in test setup
   b. Lifecycle status enum or bucket manifest status field not initialized by profile-create flow
   c. Cross-domain binding (M100 → profile) missing axis that setup tests assume

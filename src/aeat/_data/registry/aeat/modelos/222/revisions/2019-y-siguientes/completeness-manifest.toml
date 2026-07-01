@@ -1,0 +1,12 @@
+[revisions."2019-y-siguientes".completeness_manifest]
+source_ref = "enrolled-modelo-222-layout"
+legal_refs = ["orden-hfp-227-2017:art-5", "orden-hfp-227-2017:art-2"]
+source_refs = ["enrolled-modelo-222-layout"]
+
+[[revisions."2019-y-siguientes".completeness_manifest.casillas]]
+casilla_id = "02"
+number = "02"
+
+[[revisions."2019-y-siguientes".completeness_manifest.casillas]]
+casilla_id = "01"
+number = "01"

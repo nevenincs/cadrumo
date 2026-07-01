@@ -3,15 +3,13 @@ tags:
   - '#adr'
   - '#cli-workflow-redesign'
 date: '2026-05-12'
-modified: '2026-05-12'
+modified: '2026-06-30'
 related:
   - "[[2026-05-12-cli-design-research]]"
   - "[[2026-05-07-config-cli-profile-surface-adr]]"
   - "[[2026-05-12-cli-workflow-redesign-ledger-transaction-management-adr]]"
   - "[[2026-05-12-cli-workflow-redesign-invoice-domain-decoupling-adr]]"
 ---
-
-
 
 # `cli-workflow-redesign` adr: `Profile-scoped bucket storage invariant` | (**status:** `accepted`)
 

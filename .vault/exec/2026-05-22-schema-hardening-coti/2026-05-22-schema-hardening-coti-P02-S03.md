@@ -3,13 +3,11 @@ tags:
   - '#exec'
   - '#schema-hardening-coti'
 date: '2026-05-22'
-modified: '2026-05-22'
+modified: '2026-06-30'
 step_id: 'S03'
 related:
   - '[[2026-05-22-schema-hardening-coti-plan]]'
 ---
-
-
 
 # `schema-hardening-coti` `P02.S03`
 

@@ -3,14 +3,12 @@ tags:
   - '#adr'
   - '#domain-boundary-audit'
 date: '2026-06-01'
-modified: '2026-06-01'
+modified: '2026-06-30'
 related:
   - '[[2026-04-30-aeat-restructure-research]]'
   - '[[2026-06-01-domain-boundary-audit-audit]]'
   - '[[2026-06-04-domain-boundary-audit-research]]'
 ---
-
-
 
 # `domain-boundary-audit` adr: `AEAT hexagonal ownership and layering contract` | (**status:** `accepted`)
 
@@ -181,7 +179,6 @@ is large enough to be its own sub-campaign and must preserve `CasillaObservation
 provenance through the move.
 
 ## Codification candidates
-
 
 - **Rule slug:** `import-from-public-surface-not-private-submodule`.
   **Rule:** A package's declared `__all__` is its import contract; consumers MUST import

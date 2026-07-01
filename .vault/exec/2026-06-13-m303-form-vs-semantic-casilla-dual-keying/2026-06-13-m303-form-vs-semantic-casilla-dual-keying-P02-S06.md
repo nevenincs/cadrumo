@@ -3,14 +3,11 @@ tags:
   - '#exec'
   - '#m303-form-vs-semantic-casilla-dual-keying'
 date: '2026-06-13'
-modified: '2026-06-13'
+modified: '2026-06-30'
 step_id: 'S06'
 related:
   - "[[2026-06-13-m303-form-vs-semantic-casilla-dual-keying-plan]]"
 ---
-
-
-
 
 # Flip box 11 (AIC bienes y servicios devengado cuota) to computed with formula modelo-303-dr303-11-projection copying iva.autorepercutido.intracomunitaria.devengado (oficial casillas 10/11 parity casilla, NOT the netted iva.autorepercutido.intracomunitaria), carrying box 11 legal_refs
 

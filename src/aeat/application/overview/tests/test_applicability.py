@@ -930,8 +930,5 @@ def test_seed_legal_refs_resolve_against_the_registry() -> None:
     for ref in sorted(seed_refs):
         assert ":" in ref, f"seed legal_ref is not in scoped article form: {ref!r}"
 
-    legal_refs = {
-        ref: resources().modelos.authority.catalogues.legal[ref]
-        for ref in sorted(seed_refs)
-    }
+    legal_refs = {ref: resources().modelos.authority.catalogues.legal[ref] for ref in sorted(seed_refs)}
     verify_legal_catalogue(legal_refs, source_root=bundled_path())

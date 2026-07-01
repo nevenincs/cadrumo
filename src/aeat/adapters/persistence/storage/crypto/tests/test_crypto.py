@@ -250,7 +250,7 @@ class TestHkdfDerivation:
         derived = derive_key(
             key_material=master,
             salt=b"per-store-salt",
-            context=b"aeat.test.v1",
+            context=b"aeat-test.v1",
         )
         plaintext = b"end-to-end derived-key encryption"
         blob = encrypt_record(plaintext, key=derived)

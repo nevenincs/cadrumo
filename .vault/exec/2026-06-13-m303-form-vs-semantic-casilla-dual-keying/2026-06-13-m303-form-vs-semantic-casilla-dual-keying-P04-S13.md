@@ -3,14 +3,11 @@ tags:
   - '#exec'
   - '#m303-form-vs-semantic-casilla-dual-keying'
 date: '2026-06-13'
-modified: '2026-06-13'
+modified: '2026-06-30'
 step_id: 'S13'
 related:
   - "[[2026-06-13-m303-form-vs-semantic-casilla-dual-keying-plan]]"
 ---
-
-
-
 
 # Author the ten single-leaf projection FormulaDefinition blocks (modelo-303-dr303-NN-projection for boxes 09/06/03/11/13/27/29/33/37/45) in revision.toml, each with target the box id, an expression that is the one semantic casilla-id leaf, money-2 rounding, and the box legal_refs
 

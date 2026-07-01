@@ -3,14 +3,13 @@ tags:
   - '#adr'
   - '#registry-period-code-union'
 date: '2026-06-01'
-modified: '2026-06-01'
+modified: '2026-06-30'
 related:
   - "[[2026-05-27-schema-hardening-casilla-continuity-contract-adr]]"
   - "[[2026-06-01-m303-form-vs-semantic-casilla-dual-keying-adr]]"
   - "[[2026-05-22-schema-hardening-adr]]"
   - '[[2026-06-04-registry-period-code-union-research]]'
 ---
-
 
 # `registry-period-code-union` adr: CLI-boundary period-code typing — closed-set hint vs registry-driven refusal | (**status:** `accepted`)
 

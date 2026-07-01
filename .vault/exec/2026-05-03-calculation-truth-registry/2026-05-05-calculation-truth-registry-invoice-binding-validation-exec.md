@@ -3,14 +3,12 @@ tags:
   - '#exec'
   - '#calculation-truth-registry'
 date: '2026-05-05'
-modified: '2026-05-05'
+modified: '2026-06-30'
 related:
   - '[[2026-05-03-calculation-truth-registry-rebuild-plan]]'
   - '[[2026-05-03-calculation-truth-registry-pending-adr]]'
   - '[[2026-05-05-calculation-truth-registry-invoice-source-bindings-exec]]'
 ---
-
-
 
 # `calculation-truth-registry` `invoice binding validation`
 

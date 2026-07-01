@@ -356,7 +356,7 @@ def _settings_factory():
     """Yield a cert-shaped Settings factory built on the centralized scope helper.
 
     Delegates the async-context-safe ContextVar mutation to
-    :func:`aeat.tests.settings_scope.settings_factory`, then wraps the
+    :func:`aeat-tests.settings_scope.settings_factory`, then wraps the
     generic factory with this module's certificate-bundle defaults
     (path, passphrase, backend, verify URL, token-dir derived from the
     bundle path). Tests pass the bundle ``Path`` as the single

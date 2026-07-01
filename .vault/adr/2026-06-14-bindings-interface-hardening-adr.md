@@ -3,14 +3,12 @@ tags:
   - '#adr'
   - '#bindings-interface-hardening'
 date: '2026-06-14'
-modified: '2026-06-15'
+modified: '2026-06-30'
 related:
   - "[[2026-06-14-bindings-interface-hardening-research]]"
   - "[[2026-05-20-calculation-source-connectivity-adr]]"
   - "[[2026-06-10-calculation-aggregation-taxonomy-adr]]"
 ---
-
-
 
 # `bindings-interface-hardening` adr: `bindings interface hardening: one validation contract, provenance parity, semantic disambiguation` | (**status:** `accepted`)
 

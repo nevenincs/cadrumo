@@ -9,9 +9,6 @@ related:
   - "[[2026-06-30-ledger-add-idempotency-plan]]"
 ---
 
-
-
-
 # Confirm the keyless add path remains append-only so two genuine identical same-day movements both persist as distinct rows, and add a regression that locks this behaviour
 
 ## Scope
@@ -27,4 +24,3 @@ related:
 Landed in commit `3d8a6c14b`. The keyless path takes no idempotency guard, so genuine duplicates are never collapsed.
 
 ## Notes
-

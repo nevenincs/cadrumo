@@ -3,7 +3,7 @@ tags:
   - '#adr'
   - '#m210-irnr-full-engine'
 date: '2026-05-27'
-modified: '2026-06-29'
+modified: '2026-06-30'
 related:
   - "[[2026-05-27-non-resident-irnr-axis-adr]]"
   - "[[2026-04-21-calc-verification-adr]]"
@@ -11,7 +11,6 @@ related:
   - "[[2026-05-26-cross-domain-continuity-adr]]"
   - '[[2026-06-04-m210-irnr-full-engine-research]]'
 ---
-
 
 # `m210-irnr-full-engine` adr: Modelo 210 IRNR full calculation engine (post Path-B stub) | (**status:** `accepted`)
 

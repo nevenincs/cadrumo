@@ -53,7 +53,7 @@ from ....core.errors import AeatError
 from ....core.resources import resources
 from ....domain.buckets import BucketEventHistoryRepository
 from ....domain.calculations.registry import CasillaId, validated_casilla_id
-from ....domain.deadlines import IVARegime, TaxpayerProfile
+from ....domain.deadlines import EntityType, IVARegime, LegalEntityForm, TaxpayerProfile
 from ....domain.invoices import InvoiceCatalogue, InvoiceCatalogueRepository
 from ....domain.iva import EUMemberState, InvoiceKind, IvaCategory
 from ....domain.iva_compensation._reconciliation import IvaCompensationReconciliationDecision
@@ -86,6 +86,7 @@ from .. import (
     calculate_modelo_revision_from_bucket_aggregation,
     create_work_unit,
     export_modelo_revision,
+    file_modelo_revision,
     persist_filed_revision_observation,
     verify_modelo_revision,
 )
@@ -95,8 +96,11 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 _BUCKET_ID = "30330303-3030-4303-8303-303303303303"
 _YEAR = 2025
 _TAX_ID = "12345678Z"
+_IRENE_YEAR = 2024
+_IRENE_TAX_ID = "B12345674"
 _T0 = datetime(2025, 1, 10, 10, 0, tzinfo=UTC)
 _FILE_AT = datetime(2025, 4, 10, 12, 0, tzinfo=UTC)
+_IRENE_FILE_AT = datetime(2026, 7, 1, 12, 0, tzinfo=UTC)
 
 _M303_REVISION = "2023-y-siguientes"
 _QUARTER_ORDER = ("1T", "2T", "3T", "4T")
@@ -172,6 +176,23 @@ _LAURA_ANNUAL_EXPECTED = {
     "deducible": Decimal("2163.00"),
     "resultado": Decimal("7665.00"),
 }
+_IRENE_QUARTER_FACTS: dict[str, dict[str, Decimal]] = {
+    period: {
+        "issued_base": Decimal("10000.00"),
+        "issued_iva": Decimal("2100.00"),
+        "received_base": Decimal("3000.00"),
+        "received_iva": Decimal("630.00"),
+        "eu_supply_base": Decimal("0.00"),
+        "reverse_charge_base": Decimal("0.00"),
+        "reverse_charge_iva": Decimal("0.00"),
+    }
+    for period in _QUARTER_ORDER
+}
+_IRENE_ANNUAL_EXPECTED = {
+    "devengada": Decimal("8400.00"),
+    "deducible": Decimal("2520.00"),
+    "resultado": Decimal("5880.00"),
+}
 _QUARTER_MONTH: dict[str, int] = {"1T": 2, "2T": 5, "3T": 8, "4T": 11}
 
 
@@ -189,13 +210,14 @@ def _iva_transaction(
     taxable_base: Decimal,
     iva_amount: Decimal,
     period: str,
+    filing_year: int = _YEAR,
     iva_rate: Decimal = _IVA_RATE,
     amount: Decimal | None = None,
     iva_category: IvaCategory | None = None,
     counterparty_eu_member_state: EUMemberState | None = None,
     purchase_invoice_evidence_id: str | None = None,
 ) -> Transaction:
-    booked = date(_YEAR, _QUARTER_MONTH[period], 10)
+    booked = date(filing_year, _QUARTER_MONTH[period], 10)
     payload: dict[str, object] = {
         "raw": RawTransaction(
             provider_transaction_id=provider_id,
@@ -235,7 +257,12 @@ def _iva_transaction(
     return Transaction.model_validate(payload)
 
 
-def _persist_year_of_invoices(secure_objects: SecureObjectRepository) -> StoredIvaByPeriod:
+def _persist_year_of_invoices(
+    secure_objects: SecureObjectRepository,
+    *,
+    filing_year: int = _YEAR,
+    facts_by_period: dict[str, dict[str, Decimal]] = _LAURA_QUARTER_FACTS,
+) -> StoredIvaByPeriod:
     """Persist all four quarters' issued + received IVA operations once upfront.
 
     Each M303 quarter's bucket aggregation selects only its own period's
@@ -252,15 +279,15 @@ def _persist_year_of_invoices(secure_objects: SecureObjectRepository) -> StoredI
     transactions: list[Transaction] = []
     purchase_invoices = []
     stored: StoredIvaByPeriod = {}
-    for period, facts in _LAURA_QUARTER_FACTS.items():
+    for period, facts in facts_by_period.items():
         purchase_invoice = build_catalogue_invoice(
             bucket_id=_BUCKET_ID,
             kind=InvoiceKind.RECEIVED,
             counterparty_name="Proveedor Taller SL",
             counterparty_tax_id="A58818501",
             counterparty_country="ES",
-            invoice_number=f"REC-{_YEAR}-{period}",
-            issued_at=date(_YEAR, _QUARTER_MONTH[period], 10),
+            invoice_number=f"REC-{filing_year}-{period}",
+            issued_at=date(filing_year, _QUARTER_MONTH[period], 10),
             taxable_base=facts["received_base"],
             iva_rate=Decimal("21"),
             currency="EUR",
@@ -272,6 +299,7 @@ def _persist_year_of_invoices(secure_objects: SecureObjectRepository) -> StoredI
             taxable_base=facts["issued_base"],
             iva_amount=facts["issued_iva"],
             period=period,
+            filing_year=filing_year,
         )
         received = _iva_transaction(
             f"purchase-{period}",
@@ -279,6 +307,7 @@ def _persist_year_of_invoices(secure_objects: SecureObjectRepository) -> StoredI
             taxable_base=facts["received_base"],
             iva_amount=facts["received_iva"],
             period=period,
+            filing_year=filing_year,
             purchase_invoice_evidence_id=purchase_invoice.invoice_id,
         )
         transactions.extend((issued, received))
@@ -293,6 +322,7 @@ def _persist_year_of_invoices(secure_objects: SecureObjectRepository) -> StoredI
                     iva_amount=Decimal("0.00"),
                     iva_rate=Decimal("0.00"),
                     period=period,
+                    filing_year=filing_year,
                     iva_category=IvaCategory.INTRA_COMMUNITY_SUPPLY,
                     counterparty_eu_member_state=EUMemberState.DE,
                 ),
@@ -306,6 +336,7 @@ def _persist_year_of_invoices(secure_objects: SecureObjectRepository) -> StoredI
                     iva_amount=facts["reverse_charge_iva"],
                     amount=facts["reverse_charge_base"],
                     period=period,
+                    filing_year=filing_year,
                     iva_category=IvaCategory.DOMESTIC_REVERSE_CHARGE,
                 ),
             )
@@ -323,12 +354,18 @@ def _persist_year_of_invoices(secure_objects: SecureObjectRepository) -> StoredI
     return stored
 
 
-def _wallet_decision(*, period: str) -> IvaCompensationReconciliationDecision:
+def _wallet_decision(
+    *,
+    period: str,
+    filing_year: int = _YEAR,
+    taxpayer_nif: str = _TAX_ID,
+    decided_at: datetime = _FILE_AT,
+) -> IvaCompensationReconciliationDecision:
     """A neutral (zero, non-blocking) IVA-wallet decision for the quarter."""
     return IvaCompensationReconciliationDecision(
-        taxpayer_nif=_TAX_ID,
-        target_year=_YEAR,
-        target_period=Period.from_year_and_code(_YEAR, period),
+        taxpayer_nif=taxpayer_nif,
+        target_year=filing_year,
+        target_period=Period.from_year_and_code(filing_year, period),
         selected_authority="aeat_wallet",
         selected_amount=Decimal("0.00"),
         wallet_amount=Decimal("0.00"),
@@ -338,8 +375,8 @@ def _wallet_decision(*, period: str) -> IvaCompensationReconciliationDecision:
         blocked=False,
         stale_wallet=False,
         reason="e2e IVA vertical fixture",
-        wallet_captured_at=_FILE_AT,
-        decided_at=_FILE_AT,
+        wallet_captured_at=decided_at,
+        decided_at=decided_at,
     )
 
 
@@ -368,6 +405,33 @@ def _store_profile(secure_objects: SecureObjectRepository) -> None:
     )
 
 
+def _store_irene_sl_profile(secure_objects: SecureObjectRepository) -> None:
+    """Seed Irene SL's IVA profile for the late-local-file persona path."""
+    UserProfileLifecycleRepository(bucket_id=_BUCKET_ID, objects=secure_objects).save(
+        UserProfileRecord(
+            profile_id=_BUCKET_ID,
+            display_name="Irene SL",
+            facts=(
+                UserProfileFact(path="identity.tax_id", value=_IRENE_TAX_ID),
+                UserProfileFact(path="identity.legal_name", value="Irene SL"),
+                UserProfileFact(path="activities.description", value="consultoria IVA"),
+                UserProfileFact(path="tax_residence.ccaa", value="madrid"),
+                UserProfileFact(path="tax_residence.jurisdiction_scope", value="common_regime"),
+                UserProfileFact(path="iva.regime", value="GENERAL"),
+                UserProfileFact(path="taxpayer_type.entity_type", value="legal_entity"),
+                UserProfileFact(path="taxpayer_type.legal_entity_form", value="sl"),
+                UserProfileFact(path="taxpayer_type.incn_prior_12_months", value="500000"),
+                UserProfileFact(path="taxpayer_type.new_entity_first_two_profit_periods", value=True),
+                UserProfileFact(path="taxpayer_type.tributacion_estado_porcentaje", value="100"),
+                UserProfileFact(path="provenance.source", value="test_fixture"),
+                UserProfileFact(path="censo.activity_start_date", value=date(_IRENE_YEAR, 1, 1)),
+            ),
+            created_at=_T0,
+            updated_at=_T0,
+        ),
+    )
+
+
 def _workflow_profile() -> TaxpayerProfile:
     return TaxpayerProfile(
         tax_id=_TAX_ID,
@@ -380,10 +444,30 @@ def _workflow_profile() -> TaxpayerProfile:
     )
 
 
+def _irene_workflow_profile() -> TaxpayerProfile:
+    return TaxpayerProfile(
+        tax_id=_IRENE_TAX_ID,
+        entity_type=EntityType.LEGAL_ENTITY,
+        legal_entity_form=LegalEntityForm.SL,
+        iva_regime=IVARegime.GENERAL,
+        has_employees=False,
+        pays_rent_with_retencion=False,
+        does_intracomunitario=False,
+        bienes_extranjero_above_threshold=False,
+        activity_start_date=date(_IRENE_YEAR, 1, 1),
+        incn_prior_12_months=Decimal("500000"),
+        new_entity_first_two_profit_periods=True,
+        tributacion_estado_porcentaje=Decimal("100"),
+    )
+
+
 def _calculate_m303_quarter_revision(
     secure_objects: SecureObjectRepository,
     *,
     period: str,
+    filing_year: int = _YEAR,
+    taxpayer_nif: str = _TAX_ID,
+    calculated_at: datetime = _FILE_AT,
 ) -> tuple[WorkUnit, CalculationRevision]:
     """Run the live bucket-aggregation M303 calc for one quarter without projecting filed observations."""
     wu_repo = WorkUnitCatalogueRepository(objects=secure_objects)
@@ -393,13 +477,15 @@ def _calculate_m303_quarter_revision(
     work_unit = create_work_unit(
         bucket_id=_BUCKET_ID,
         modelo="303",
-        filing_year=_YEAR,
-        period=Period.from_year_and_code(_YEAR, period),
+        filing_year=filing_year,
+        period=Period.from_year_and_code(filing_year, period),
         revision_id=_M303_REVISION,
         repository=wu_repo,
         clock=_T0,
     )
-    decision = _wallet_decision(period=period)
+    decision = _wallet_decision(
+        period=period, filing_year=filing_year, taxpayer_nif=taxpayer_nif, decided_at=calculated_at
+    )
     IvaWalletDecisionRepository(objects=secure_objects).save_decision(decision)
     revision = calculate_modelo_revision_from_bucket_aggregation(
         work_unit.work_unit_id,
@@ -415,7 +501,7 @@ def _calculate_m303_quarter_revision(
         calculation_repository=cr_repo,
         bucket_event_repository=event_repo,
         transaction_repository=tx_repo,
-        clock=_FILE_AT,
+        clock=calculated_at,
     )
     return work_unit, revision
 
@@ -495,18 +581,18 @@ def test_persisted_m303_ledger_revision_verifies_and_exports_fichero_boe(
     assert _TAX_ID.encode("ascii") in exported_bytes
 
 
-def _calculate_m390_annual(secure_objects: SecureObjectRepository) -> CalculationRevision:
+def _calculate_m390_annual(secure_objects: SecureObjectRepository, *, filing_year: int = _YEAR) -> CalculationRevision:
     """Run the live M390/annual calc, leaving the 303-reconciliation relations to fold."""
     wu_repo = WorkUnitCatalogueRepository(objects=secure_objects)
     cr_repo = CalculationRevisionCatalogueRepository(objects=secure_objects)
     tx_repo = TransactionCatalogueRepository(bucket_id=_BUCKET_ID, objects=secure_objects)
     invoice_repo = InvoiceCatalogueRepository(objects=secure_objects)
-    snapshot = resources().modelos.authority.snapshot("390", filing_year=_YEAR, period="0A")
+    snapshot = resources().modelos.authority.snapshot("390", filing_year=filing_year, period="0A")
     work_unit = create_work_unit(
         bucket_id=_BUCKET_ID,
         modelo="390",
-        filing_year=_YEAR,
-        period=Period.from_year_and_code(_YEAR, "0A"),
+        filing_year=filing_year,
+        period=Period.from_year_and_code(filing_year, "0A"),
         revision_id=snapshot.revision.id,
         repository=wu_repo,
         clock=_T0,
@@ -520,6 +606,166 @@ def _calculate_m390_annual(secure_objects: SecureObjectRepository) -> Calculatio
         invoice_repository=invoice_repo,
         clock=_FILE_AT,
     )
+
+
+def _non_official_local_chain_advisory_periods(report) -> set[str]:
+    periods: set[str] = set()
+    for finding in report.findings:
+        if finding.kind.value != "advisory":
+            continue
+        if "app_filing" not in finding.message or "303" not in finding.message:
+            continue
+        periods.update(period for period in _QUARTER_ORDER if f"={period}" in finding.message)
+    return periods
+
+
+def test_irene_sl_2024_local_m303_files_support_m390_verify_export(
+    secure_objects: SecureObjectRepository,
+    tmp_path: Path,
+) -> None:
+    """Irene SL: 2024 M303 late local FILE chain feeds M390 without claiming AEAT acceptance.
+
+    This is the persona path that direct observation seeding did not cover:
+    calculate -> verify -> export -> local file for each closed/overdue M303
+    quarter, then calculate -> verify -> export M390 from those local records.
+    The local filing records remain non-official (``aeat_accepted=False``);
+    dependent periods surface the non-official-local-chain advisory.
+    """
+    _store_irene_sl_profile(secure_objects)
+    stored = _persist_year_of_invoices(
+        secure_objects,
+        filing_year=_IRENE_YEAR,
+        facts_by_period=_IRENE_QUARTER_FACTS,
+    )
+    workflow_profile = _irene_workflow_profile()
+    wu_repo = WorkUnitCatalogueRepository(objects=secure_objects)
+    cr_repo = CalculationRevisionCatalogueRepository(objects=secure_objects)
+    filing_repo = ModeloRecordCatalogueRepository(objects=secure_objects)
+    verification_repo = VerificationReportCatalogueRepository(objects=secure_objects)
+    event_repo = BucketEventHistoryRepository(objects=secure_objects)
+    observation_repo = CalculationObservationRepository(objects=secure_objects)
+    wallet_repo = IvaWalletDecisionRepository(objects=secure_objects)
+    tx_repo = TransactionCatalogueRepository(bucket_id=_BUCKET_ID, objects=secure_objects)
+
+    computed: ComputedM303CasillasByPeriod = {}
+    for period in _QUARTER_ORDER:
+        _work_unit, revision = _calculate_m303_quarter_revision(
+            secure_objects,
+            period=period,
+            filing_year=_IRENE_YEAR,
+            taxpayer_nif=_IRENE_TAX_ID,
+            calculated_at=_IRENE_FILE_AT,
+        )
+        assert Decimal(revision.casilla_values[_DEVENGADA_TOTAL]) == stored[period]["devengada"]
+        assert Decimal(revision.casilla_values[_DEDUCIBLE_TOTAL]) == stored[period]["deducible"]
+        assert Decimal(revision.casilla_values[_RESULTADO]) == stored[period]["resultado"]
+        computed[period] = {
+            _DEVENGADA_TOTAL: Decimal(revision.casilla_values[_DEVENGADA_TOTAL]),
+            _DEDUCIBLE_TOTAL: Decimal(revision.casilla_values[_DEDUCIBLE_TOTAL]),
+            _RESULTADO: Decimal(revision.casilla_values[_RESULTADO]),
+        }
+
+        report = verify_modelo_revision(
+            revision.calculation_revision_id,
+            actor="irene",
+            workflow_profile=workflow_profile,
+            work_unit_repository=wu_repo,
+            calculation_repository=cr_repo,
+            filing_repository=filing_repo,
+            transaction_repository=tx_repo,
+            verification_repository=verification_repo,
+            bucket_event_repository=event_repo,
+            iva_compensation_decision_repository=wallet_repo,
+            calculation_observation_repository=observation_repo,
+            clock=_IRENE_FILE_AT,
+        )
+        assert report.granted_verificado_completo is True, report.findings
+
+        quarter_output = tmp_path / f"m303-{_IRENE_YEAR}-{period}.boe"
+        exported = export_modelo_revision(
+            ModeloExportCommand(
+                calculation_revision_id=revision.calculation_revision_id,
+                output_path=quarter_output,
+                actor="irene",
+            ),
+            workflow_profile=workflow_profile,
+            work_unit_repository=wu_repo,
+            calculation_repository=cr_repo,
+            filing_repository=filing_repo,
+            verification_repository=verification_repo,
+            bucket_event_repository=event_repo,
+            iva_compensation_decision_repository=wallet_repo,
+            calculation_observation_repository=observation_repo,
+            clock=_IRENE_FILE_AT,
+        )
+        assert exported.output_path == quarter_output
+        assert quarter_output.stat().st_size > 0
+
+        filing = file_modelo_revision(
+            revision.calculation_revision_id,
+            actor="irene",
+            workflow_profile=workflow_profile,
+            work_unit_repository=wu_repo,
+            calculation_repository=cr_repo,
+            filing_repository=filing_repo,
+            verification_repository=verification_repo,
+            bucket_event_repository=event_repo,
+            iva_compensation_decision_repository=wallet_repo,
+            calculation_observation_repository=observation_repo,
+            clock=_IRENE_FILE_AT,
+        )
+        assert filing.aeat_accepted is False
+        assert filing.external_evidence is None
+        stored_observation = observation_repo.load_observation("303", Period.from_year_and_code(_IRENE_YEAR, period))
+        assert stored_observation is not None
+        assert stored_observation.source_kind == "app_filing"
+
+    annual = _calculate_m390_annual(secure_objects, filing_year=_IRENE_YEAR)
+    for m390_casilla, m303_output in (
+        (_M390_DEVENGADA, _DEVENGADA_TOTAL),
+        (_M390_DEDUCIBLE, _DEDUCIBLE_TOTAL),
+        (_M390_RESULTADO, _RESULTADO),
+    ):
+        expected = sum((computed[p][m303_output] for p in _QUARTER_ORDER), Decimal("0"))
+        assert Decimal(annual.casilla_values[m390_casilla]) == expected
+    assert Decimal(annual.casilla_values[_M390_DEVENGADA]) == _IRENE_ANNUAL_EXPECTED["devengada"]
+    assert Decimal(annual.casilla_values[_M390_DEDUCIBLE]) == _IRENE_ANNUAL_EXPECTED["deducible"]
+    assert Decimal(annual.casilla_values[_M390_RESULTADO]) == _IRENE_ANNUAL_EXPECTED["resultado"]
+
+    annual_report = verify_modelo_revision(
+        annual.calculation_revision_id,
+        actor="irene",
+        workflow_profile=workflow_profile,
+        work_unit_repository=wu_repo,
+        calculation_repository=cr_repo,
+        filing_repository=filing_repo,
+        transaction_repository=tx_repo,
+        verification_repository=verification_repo,
+        bucket_event_repository=event_repo,
+        calculation_observation_repository=observation_repo,
+        clock=_IRENE_FILE_AT,
+    )
+    assert annual_report.granted_verificado_completo is True, annual_report.findings
+    assert _non_official_local_chain_advisory_periods(annual_report) == set(_QUARTER_ORDER), annual_report.findings
+
+    annual_output = tmp_path / f"m390-{_IRENE_YEAR}.boe"
+    annual_export = export_modelo_revision(
+        ModeloExportCommand(
+            calculation_revision_id=annual.calculation_revision_id,
+            output_path=annual_output,
+            actor="irene",
+        ),
+        workflow_profile=workflow_profile,
+        work_unit_repository=wu_repo,
+        calculation_repository=cr_repo,
+        filing_repository=filing_repo,
+        verification_repository=verification_repo,
+        bucket_event_repository=event_repo,
+        calculation_observation_repository=observation_repo,
+        clock=_IRENE_FILE_AT,
+    )
+    assert annual_export.output_path == annual_output
+    assert annual_output.stat().st_size > 0
 
 
 def test_ledger_drives_m303_quarters_and_folds_into_m390_annual(

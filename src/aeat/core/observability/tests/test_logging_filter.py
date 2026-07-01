@@ -47,7 +47,7 @@ class _CaptureHandler(logging.Handler):
 
 def _record_with_optional_run_event(*, message: str, run_event: object | None = None) -> logging.LogRecord:
     record = logging.LogRecord(
-        name="aeat.test",
+        name="aeat-test",
         level=logging.INFO,
         pathname=__file__,
         lineno=0,

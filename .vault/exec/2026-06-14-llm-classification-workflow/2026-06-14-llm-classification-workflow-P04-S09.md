@@ -3,14 +3,11 @@ tags:
   - '#exec'
   - '#llm-classification-workflow'
 date: '2026-06-15'
-modified: '2026-06-15'
+modified: '2026-06-30'
 step_id: 'S09'
 related:
   - "[[2026-06-14-llm-classification-workflow-plan]]"
 ---
-
-
-
 
 # Add classify --reject (stage-1/saturate/auto-split) and surface the rejection in ledger history
 
@@ -34,4 +31,3 @@ related:
 ## Notes
 
 The classify helpers were renamed public (`ledger_classify_llm` etc.) on extraction; `_ledger_autosplit_cli.py` was renamed to `_ledger_llm_cli.py` for naming honesty.
-

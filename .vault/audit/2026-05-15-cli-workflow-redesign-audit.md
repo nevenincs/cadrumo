@@ -3,14 +3,12 @@ tags:
   - '#audit'
   - '#cli-workflow-redesign'
 date: '2026-05-15'
-modified: '2026-05-15'
+modified: '2026-06-30'
 related:
   - "[[2026-05-13-cli-workflow-redesign-epic-plan]]"
   - "[[2026-05-12-cli-workflow-redesign-adr]]"
   - "[[2026-05-14-cli-workflow-redesign-modelo-145-reopen-adr]]"
 ---
-
-
 
 # `cli-workflow-redesign` audit: `Apex CLI workflow redesign — 85-wave ground-truth audit`
 

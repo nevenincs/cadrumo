@@ -3,14 +3,13 @@ tags:
   - '#plan'
   - '#cli-errors-domain-package-lazy-import'
 date: '2026-06-03'
-modified: '2026-06-03'
+modified: '2026-06-30'
 tier: L2
 related:
   - '[[2026-06-03-cli-errors-domain-package-lazy-import-adr]]'
   - '[[2026-06-03-cli-errors-domain-package-lazy-import-research]]'
   - '[[2026-06-03-user-profile-lazy-import-adr]]'
 ---
-
 
 # `cli-errors-domain-package-lazy-import` `Lazy domain-package boundary execution` plan
 
@@ -36,12 +35,6 @@ Successor execution to the application-package boundary fix that landed under th
 The successor ADR adopts Pattern (a) / (E) - lazy domain-package boundary via PEP 562. The fix mirrors the parent ADR's mechanism one layer down the import graph: dispatch `UserProfilePortableExport` through a module-level `__getattr__` while keeping every lightweight re-export (errors, values, schema, loader, registry-contract) eager. No consumer code changes; the public surface is unchanged. The producer-side regression probe lands in the same atomic commit.
 
 ## Steps
-
-
-
-
-
-
 
 ## Parallelization
 

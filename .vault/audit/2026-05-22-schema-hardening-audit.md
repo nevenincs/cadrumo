@@ -3,14 +3,12 @@ tags:
   - '#audit'
   - '#schema-hardening'
 date: '2026-05-22'
-modified: '2026-05-22'
+modified: '2026-06-30'
 related:
   - "[[2026-05-22-schema-hardening-plan]]"
   - "[[2026-05-22-schema-hardening-adr]]"
   - "[[2026-05-22-schema-hardening-research]]"
 ---
-
-
 
 # `schema-hardening` audit: `optional-numeric-suppressor-burn-down`
 

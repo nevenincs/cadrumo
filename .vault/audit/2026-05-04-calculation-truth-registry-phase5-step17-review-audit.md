@@ -3,16 +3,13 @@ tags:
   - '#audit'
   - '#calculation-truth-registry'
 date: '2026-05-04'
-modified: '2026-05-04'
+modified: '2026-06-30'
 related:
   - '[[2026-05-03-calculation-truth-registry-rebuild-plan]]'
   - '[[2026-05-04-calculation-truth-registry-phase5-step17-exec]]'
 ---
 
-
-
 # `calculation-truth-registry` Code Review
-
 
 P5S17-001 | MEDIUM | Deletion gates do not prove the removed schema/modelo authority packages stay absent
 

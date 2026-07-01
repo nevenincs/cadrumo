@@ -13,15 +13,9 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 _MURCIA_DEDUCTION_SECTION = ("resultados", "deduccion_autonomica_res", "murcia_res")
 _MURCIA_RECURSOS_ENERGETICOS_ROLE = "irpf_deduccion_murcia_recursos_energeticos_renovables"
-_MURCIA_RECURSOS_ENERGETICOS_GENERADO_ROLE = (
-    "irpf_deduccion_murcia_recursos_energeticos_renovables_generado"
-)
-_MURCIA_RECURSOS_ENERGETICOS_PENDIENTE_ROLE = (
-    "irpf_deduccion_murcia_recursos_energeticos_renovables_pendiente"
-)
-_MURCIA_RECURSOS_ENERGETICOS_PENDIENTE_1_ROLE = (
-    "irpf_deduccion_murcia_recursos_energeticos_renovables_pendiente_1"
-)
+_MURCIA_RECURSOS_ENERGETICOS_GENERADO_ROLE = "irpf_deduccion_murcia_recursos_energeticos_renovables_generado"
+_MURCIA_RECURSOS_ENERGETICOS_PENDIENTE_ROLE = "irpf_deduccion_murcia_recursos_energeticos_renovables_pendiente"
+_MURCIA_RECURSOS_ENERGETICOS_PENDIENTE_1_ROLE = "irpf_deduccion_murcia_recursos_energeticos_renovables_pendiente_1"
 _MURCIA_RECURSOS_ENERGETICOS_PENDIENTE_EJERCICIO_ANTERIOR_ROLE = (
     "irpf_deduccion_murcia_recursos_energeticos_renovables_pendiente_ejercicio_anterior"
 )

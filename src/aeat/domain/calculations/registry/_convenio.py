@@ -198,9 +198,7 @@ class ConvenioAuthority(RegistryModel):
 
     def all_legal_refs(self) -> frozenset[LegalRefId]:
         """Every ``legal_ref`` cited by any override row across every treaty."""
-        return frozenset(
-            ref for treaty in self.treaties.values() for row in treaty.overrides for ref in row.legal_refs
-        )
+        return frozenset(ref for treaty in self.treaties.values() for row in treaty.overrides for ref in row.legal_refs)
 
 
 def load_convenio_authority(treaties_dir: Path) -> ConvenioAuthority:

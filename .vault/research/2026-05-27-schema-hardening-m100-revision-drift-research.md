@@ -3,14 +3,12 @@ tags:
   - '#research'
   - '#schema-hardening'
 date: '2026-05-27'
-modified: '2026-05-27'
+modified: '2026-06-30'
 related:
   - '[[2026-05-27-schema-hardening-m180-legal-ref-drift-repair-exec]]'
   - '[[2026-05-27-schema-hardening-m202-label-drift-repair-exec]]'
   - '[[2026-05-27-schema-hardening-m100-marriage-citation-repair-exec]]'
 ---
-
-
 
 # `schema-hardening` research: `m100-revision-drift`
 

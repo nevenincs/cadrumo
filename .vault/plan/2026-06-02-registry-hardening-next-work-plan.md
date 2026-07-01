@@ -3,7 +3,7 @@ tags:
   - '#plan'
   - '#schema-hardening'
 date: '2026-06-02'
-modified: '2026-06-02'
+modified: '2026-06-30'
 tier: L3
 related:
   - '[[2026-06-02-registry-hardening-next-work-health-audit]]'
@@ -14,7 +14,6 @@ related:
   - '[[2026-05-19-schema-hardening-role-taxonomy-reference]]'
 ---
 
-
 # `schema-hardening` `registry hardening next work` plan
 
 ## Wave `W01` - reviewability and continuity stabilization
@@ -24,7 +23,6 @@ Complete the first registry-hardening pass: reviewability pressure, continuity r
 ### Phase `W01.P01` - file-size gate stabilization
 
 Make the existing file-size and row-size gate boring by splitting near-threshold registry artifacts before they become failures.
-
 
 Plan the next registry-hardening substrate after continuity conformance reached
 100 percent completion.

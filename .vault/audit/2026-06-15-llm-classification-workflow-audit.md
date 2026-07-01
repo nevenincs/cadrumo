@@ -3,12 +3,10 @@ tags:
   - '#audit'
   - '#llm-classification-workflow'
 date: '2026-06-15'
-modified: '2026-06-15'
+modified: '2026-06-30'
 related:
   - "[[2026-06-15-llm-classification-workflow-adr]]"
 ---
-
-
 
 # `llm-classification-workflow` audit: `Campaign-close honesty review: audit-trailed reject terminal (F10)`
 
@@ -64,7 +62,6 @@ is correctly generic English review-workflow vocabulary (not an AEAT Spanish sur
   (approve / reject / override) with an auditable trail.
 
 ## Codification candidates
-
 
 **None.** The reject terminal's constraints are already bound by existing rules:
 the confirmation notice rides `cli-notices-are-the-only-diagnostic-channel`, the

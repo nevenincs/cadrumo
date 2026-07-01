@@ -3,14 +3,11 @@ tags:
   - '#exec'
   - '#llm-classification-workflow'
 date: '2026-06-14'
-modified: '2026-06-15'
+modified: '2026-06-30'
 step_id: 'S01'
 related:
   - "[[2026-06-14-llm-classification-workflow-plan]]"
 ---
-
-
-
 
 # Relax LLMSplitResponse to >=1 child + recommends_split
 
@@ -35,4 +32,3 @@ Single-line invoices now have a first-class no-split verdict. `test_llm_split_sc
 ## Notes
 
 The manual `split_transaction` still requires two-or-more children; only the LLM evidence-split derivation relaxed.
-

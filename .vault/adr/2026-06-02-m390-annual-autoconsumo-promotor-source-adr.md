@@ -3,13 +3,12 @@ tags:
   - '#adr'
   - '#m390-annual-autoconsumo-promotor-source'
 date: '2026-06-02'
-modified: '2026-06-02'
+modified: '2026-06-30'
 related:
   - "[[2026-06-01-m303-form-vs-semantic-casilla-dual-keying-adr]]"
   - "[[2026-06-02-m303-parser-engine-totals-impedance-adr]]"
   - '[[2026-06-04-m390-annual-autoconsumo-promotor-source-research]]'
 ---
-
 
 # `m390-annual-autoconsumo-promotor-source` adr: previous_filing aggregation over four quarterly M303 filings | (**status:** `accepted`)
 

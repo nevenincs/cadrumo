@@ -3,13 +3,11 @@ tags:
   - '#reference'
   - '#aeat-verify'
 date: '2026-04-24'
-modified: '2026-04-24'
+modified: '2026-06-30'
 related:
   - "[[2026-04-24-aeat-verify-adr]]"
   - "[[2026-04-24-aeat-verify-research]]"
 ---
-
-
 
 # `aeat-verify` reference: `post-auth-sede-ground-truth`
 

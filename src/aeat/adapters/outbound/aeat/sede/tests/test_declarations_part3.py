@@ -50,7 +50,8 @@ class TestFiledObservationRelations:
                 requirement.filing_year,
                 period,
                 requirement.source_casilla_ids[0],
-            ) not in available
+            )
+            not in available
         ]
 
         assert not missing

@@ -3,11 +3,9 @@ tags:
   - '#research'
   - '#docs-architecture'
 date: '2026-05-30'
-modified: '2026-05-30'
+modified: '2026-06-30'
 related: []
 ---
-
-
 
 # `docs-architecture` research: `documentation surfaces landscape audit`
 

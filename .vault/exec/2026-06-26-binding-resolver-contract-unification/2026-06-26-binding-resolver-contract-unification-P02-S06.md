@@ -3,14 +3,11 @@ tags:
   - '#exec'
   - '#binding-resolver-contract-unification'
 date: '2026-06-26'
-modified: '2026-06-26'
+modified: '2026-06-30'
 step_id: 'S06'
 related:
   - "[[2026-06-26-binding-resolver-contract-unification-plan]]"
 ---
-
-
-
 
 # Promote the borrador mesh resolver result onto CalculationSourceResolution and drop the Modelo100BorradorBindingResult wrap, preserving the borrador_snapshot_id and bindings_sourced_from_borrador provenance trace the downstream observation builder consumes
 

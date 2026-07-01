@@ -3,7 +3,7 @@ tags:
   - '#audit'
   - '#legal-corpus-structure'
 date: '2026-06-08'
-modified: '2026-06-08'
+modified: '2026-06-30'
 related:
   - '[[2026-05-15-corpus-registry-packaging-adr]]'
   - '[[2026-06-05-test-topology-refactor-adr]]'
@@ -26,7 +26,7 @@ This audit performs a thorough review of the codebase to analyze and verify:
 All production read-only legal references, consolidated legislation catalogues, and registry TOML definitions are fully bundled inside the installed package source under `src/aeat/_data/`. Specifically, `src/aeat/_data/corpus/` holds manuals and consolidated HTML normatives, while `src/aeat/_data/registry/` holds the modelo TOML definitions. These are successfully force-included inside the built wheel via the hatchling package targets, which has been verified by the built-wheel tripwire tests in `src/aeat/tests/test_wheel_bundles_corpus_and_registry.py`.
 
 ### Finding A2: Runtime Resource and Settings Path Resolution
-At runtime, all read-only resource lookups are strictly routed through the resource boundary functions `packaged_data()` and `bundled_path()` defined in `src/aeat/core/resources/_boundary.py`. 
+At runtime, all read-only resource lookups are strictly routed through the resource boundary functions `packaged_data()` and `bundled_path()` defined in `src/aeat/core/resources/_boundary.py`.
 1. The `Settings` class in `src/aeat/core/config.py` uses `default_factory` wrappers pointing to `bundled_path()` (e.g. `aeat_normatives_root` defaults to `bundled_path("corpus", "normatives")`), guaranteeing that default paths resolve into the installed package directory.
 2. Relative paths provided via environment overrides are normalized against `PROJECT_ROOT` in `src/aeat/core/paths.py`. This resolution is restricted to operator-writable outputs (such as `var/logs` or `var/secrets`) and is never used to fetch production legal metadata. No runtime-critical code references files outside `src/aeat/` by default.
 

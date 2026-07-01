@@ -47,7 +47,6 @@ from ._declarations_support import (
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 
 
-
 def _casilla_id(value: object) -> CasillaId:
     return validated_casilla_id(value, surface="test casilla id")
 
@@ -244,8 +243,7 @@ def test_modelo_303_filed_observation_derives_compensation_available() -> None:
     derived = _with_derived_303_compensation_available_observation(observation)
     registry_observation = registry_observation_from_filed_declaration(derived)
     registry_casillas = {
-        casilla.id: casilla
-        for casilla in _modelo_snapshot("303", filing_year=2024, period="4T").revision.casillas
+        casilla.id: casilla for casilla in _modelo_snapshot("303", filing_year=2024, period="4T").revision.casillas
     }
 
     assert {casilla.casilla_id: casilla.value for casilla in derived.casillas}[_M303_DISPONIBLE_CASILLA] == "258.02"
@@ -276,9 +274,7 @@ def test_modelo_303_filed_observation_derives_compensation_available_from_regist
     derived_value = next(casilla for casilla in derived.casillas if casilla.casilla_id == _M303_DISPONIBLE_CASILLA)
     assert derived_value.value == "12.50"
     assert derived_value.source_artefact_kind == "derived_registry_formula"
-    assert derived_value.source_locator == (
-        f"formula:{_M303_POSTERIOR_CASILLA}+{_M303_GENERADA_CASILLA}"
-    )
+    assert derived_value.source_locator == (f"formula:{_M303_POSTERIOR_CASILLA}+{_M303_GENERADA_CASILLA}")
 
 
 def test_registry_observation_from_filed_declaration_refuses_noncanonical_casilla_ids() -> None:

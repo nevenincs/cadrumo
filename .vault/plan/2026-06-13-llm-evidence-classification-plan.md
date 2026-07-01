@@ -3,7 +3,7 @@ tags:
   - '#plan'
   - '#llm-evidence-classification'
 date: '2026-06-13'
-modified: '2026-06-13'
+modified: '2026-06-30'
 tier: L3
 related:
   - '[[2026-06-10-llm-evidence-classification-adr]]'
@@ -12,18 +12,11 @@ related:
 ---
 <!-- RETIRED: W04, W05, W06, W07 -->
 
-
-
-
-
-
-
 # `llm-evidence-classification` `Evidence corpus and adversarial hardening` plan
 
 ## Wave `W01` - Classify provider-optional UX
 
 Make --llm optional when --read-evidence routes scan/image evidence to the on-host vision model; require a provider only for the text/cloud path.
-
 
 ### Phase `W01.P01` - Provider-optional classify/saturate/split
 
@@ -58,17 +51,8 @@ Adversarial tests for evidence parsing and the allow-list parser against the cor
 
 ## Description
 
-
 ## Steps
-
-
-
-
-
-
 
 ## Parallelization
 
-
 ## Verification
-

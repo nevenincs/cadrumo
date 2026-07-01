@@ -3,15 +3,13 @@ tags:
   - '#audit'
   - '#live-submit-permanently-forbidden-code-review'
 date: '2026-04-27'
-modified: '2026-04-27'
+modified: '2026-06-30'
 related:
   - "[[2026-04-27-live-submit-permanently-forbidden-plan]]"
   - "[[2026-04-27-live-submit-permanently-forbidden-adr]]"
   - "[[2026-04-27-live-submit-permanently-forbidden-research]]"
   - "[[2026-04-27-security-storage-audit-audit]]"
 ---
-
-
 
 # `live-submit-permanently-forbidden-code-review` audit: `code review`
 

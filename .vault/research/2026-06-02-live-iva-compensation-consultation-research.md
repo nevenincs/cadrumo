@@ -1,7 +1,7 @@
 ---
 tags: ['#research', '#live-iva-compensation-wallet']
 date: '2026-06-02'
-modified: '2026-06-02'
+modified: '2026-06-30'
 related:
   - '[[2026-05-19-live-iva-compensation-wallet-plan]]'
   - '[[2026-06-02-live-iva-persistent-failure-team-brief-audit]]'
@@ -58,4 +58,3 @@ IVA compensation state, without filing or mutating AEAT state.
   `https://sede.agenciatributaria.gob.es/Sede/iva/gestiones-iva.html`
 - AEAT declaration-query help:
   `https://sede.agenciatributaria.gob.es/Sede/eu_es/ayuda/consultas-informaticas/otros-servicios-ayuda-tecnica/consulta-declaraciones-presentadas.html`
-

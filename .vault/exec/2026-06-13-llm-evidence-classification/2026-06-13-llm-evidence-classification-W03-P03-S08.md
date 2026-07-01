@@ -3,14 +3,11 @@ tags:
   - '#exec'
   - '#llm-evidence-classification'
 date: '2026-06-13'
-modified: '2026-06-13'
+modified: '2026-06-30'
 step_id: 'S08'
 related:
   - "[[2026-06-13-llm-evidence-classification-plan]]"
 ---
-
-
-
 
 # Adversarially test parse_response: prompt-injection JSON, hostile/oversized output, out-of-allow-list values are rejected
 
@@ -27,4 +24,3 @@ related:
 - 8 parser tests pass; the allow-list contains every hostile output. Committed `1572036a8`.
 
 ## Notes
-

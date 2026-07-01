@@ -131,9 +131,7 @@ def test_committed_modelo_115_registry_snapshot_calculates_rental_withholding(
     assert {"aeat-modelo-115-180-folleto-actividades"} <= set(entries["03"].source_refs)
     assert entries["05"].operand_refs == ("03", "04")
     assert entries["05"].operand_casilla_refs == ("03", "04")
-    assert {"ley-35-2006:art-99", "rd-439-2007:art-100", "rd-439-2007:art-108"} <= set(
-        entries["05"].legal_refs
-    )
+    assert {"ley-35-2006:art-99", "rd-439-2007:art-100", "rd-439-2007:art-108"} <= set(entries["05"].legal_refs)
     assert {"aeat-dr-115-2019-v13", "aeat-modelo-115-guia-censal"} <= set(entries["05"].source_refs)
 
 

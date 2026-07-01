@@ -3,7 +3,7 @@ tags:
   - '#plan'
   - '#schema-hardening'
 date: '2026-05-20'
-modified: '2026-05-20'
+modified: '2026-06-30'
 tier: L3
 related:
   - '[[2026-05-18-schema-hardening-adr]]'
@@ -13,7 +13,6 @@ related:
   - '[[2026-05-19-modelo-registry-fragment-architecture-adr]]'
   - '[[2026-05-19-modelo-registry-fragment-architecture-research]]'
 ---
-
 
 # `schema-hardening` Plan C: inline `semantic_role` validator plan
 

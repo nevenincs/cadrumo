@@ -3,11 +3,9 @@ tags:
   - '#audit'
   - '#test-tautology'
 date: '2026-05-05'
-modified: '2026-05-05'
+modified: '2026-06-30'
 related: []
 ---
-
-
 
 # `test-tautology` audit: `python test sweep`
 

@@ -3,14 +3,11 @@ tags:
   - '#exec'
   - '#modelo-130-pagos-fraccionados-carry'
 date: '2026-06-13'
-modified: '2026-06-13'
+modified: '2026-06-30'
 step_id: 'S15'
 related:
   - "[[2026-06-13-modelo-130-pagos-fraccionados-carry-plan]]"
 ---
-
-
-
 
 # add a parity-style regression proving the casilla-15 single-offset op=copy carry and the casilla-05 expanding-span op=sum carry both resolve correctly on a shared multi-quarter fixture, so the selector extension does not regress the modelo-130-relation-regression guarantees
 

@@ -8,41 +8,11 @@ related:
   - "[[2026-05-26-cross-domain-continuity-plan]]"
 ---
 
-<!-- FRONTMATTER RULES:
-     tags: one directory tag (hardcoded #audit) and one feature tag.
-     Replace cross-domain-continuity-m136 with a kebab-case feature tag, e.g. #foo-bar.
-     Additional tags may be appended below the required pair.
-
-     Related: use wiki-links as '[[yyyy-mm-dd-foo-bar]]'.
-
-     modified: CLI-maintained last-modified stamp; set at scaffold time,
-     refreshed by mutating CLI verbs and vault check fix; never hand-edit.
-
-     DO NOT add fields beyond those scaffolded; metadata lives
-     only in the frontmatter. -->
-
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the related: field above.
-     - NEVER use [[wiki-links]] or markdown links in the document body.
-     - NEVER reference file paths in the body. If you must name a source file,
-       class, or function, use inline backtick code: `src/module.py`. -->
-
 # `cross-domain-continuity-m136` audit: `Modelo 136 Registry Grounding Review`
 
 ## Scope
 
-<!-- What was audited and why -->
-
 ## Findings
-
-<!-- A rolling log of findings: append one subsection per finding, grouped or ordered by
-     severity, using the heading form
-
-       ### Modelo 136 Registry Grounding Review | {level} | {summary}
-
-     followed by a paragraph carrying the detail. Modelo 136 Registry Grounding Review is a concise kebab-case slug,
-     {level} is the severity (critical, high, medium, low), and {summary} is a one-line
-     statement. Append continuously as findings surface; do not rewrite settled entries. -->
 
 ### modelo-136-corpus-blob-fingerprints | high | Registry source fingerprints match dirty worktree bytes, not committed corpus blobs
 
@@ -51,5 +21,3 @@ The M136 source catalogue fingerprints for `aeat-modelo-136-procedure-record`, `
 Resolution 2026-07-01: resolved by cataloguing the committed LF-normalised blob fingerprints for all three M136 source refs and by making the model-local `.txt` form extraction explicitly `text eol=lf`. Validation now compares `verify_source_catalogue` raw file bytes against the same bytes a clean checkout materialises.
 
 ## Recommendations
-
-<!-- Actionable recommendations -->

@@ -96,9 +96,7 @@ def test_modelo_036_declaration_pdf_profile_legal_refs_match_target_casillas() -
     profile = next(profile for profile in revision.extraction_profiles if profile.id == "modelo-036-declaracion-pdf")
 
     target_refs = frozenset(
-        legal_ref
-        for target in profile.target_casillas
-        for legal_ref in casillas_by_id[target.casilla_id].legal_refs
+        legal_ref for target in profile.target_casillas for legal_ref in casillas_by_id[target.casilla_id].legal_refs
     )
 
     assert target_refs == _DECLARATION_PROFILE_TARGET_LEGAL_REFS

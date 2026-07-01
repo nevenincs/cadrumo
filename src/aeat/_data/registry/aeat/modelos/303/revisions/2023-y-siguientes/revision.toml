@@ -781,6 +781,46 @@ legal_refs = ["rd-1624-1992:art-71", "ley-37-1992:art-121"]
 source_refs = ["boe-modelo-303-2008-form", "aeat-modelo-303-procedure"]
 
 [[revisions.2023-y-siguientes.deadline_windows]]
+id = "modelo-303-2024-1t"
+filing_year = 2024
+period = "2024 1T"
+period_kind = "quarterly"
+opens_on = 2024-04-01
+closes_on = 2024-04-22
+legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-7"]
+source_refs = ["boe-modelo-303-2008-form", "aeat-modelo-303-procedure"]
+
+[[revisions.2023-y-siguientes.deadline_windows]]
+id = "modelo-303-2024-2t"
+filing_year = 2024
+period = "2024 2T"
+period_kind = "quarterly"
+opens_on = 2024-07-01
+closes_on = 2024-07-22
+legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-7"]
+source_refs = ["boe-modelo-303-2008-form", "aeat-modelo-303-procedure"]
+
+[[revisions.2023-y-siguientes.deadline_windows]]
+id = "modelo-303-2024-3t"
+filing_year = 2024
+period = "2024 3T"
+period_kind = "quarterly"
+opens_on = 2024-10-01
+closes_on = 2024-10-21
+legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-7"]
+source_refs = ["boe-modelo-303-2008-form", "aeat-modelo-303-procedure"]
+
+[[revisions.2023-y-siguientes.deadline_windows]]
+id = "modelo-303-2024-4t"
+filing_year = 2024
+period = "2024 4T"
+period_kind = "quarterly"
+opens_on = 2025-01-01
+closes_on = 2025-01-30
+legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-7"]
+source_refs = ["boe-modelo-303-2008-form", "aeat-modelo-303-procedure"]
+
+[[revisions.2023-y-siguientes.deadline_windows]]
 id = "modelo-303-2025-1t"
 filing_year = 2025
 period = "2025 1T"
@@ -1204,6 +1244,10 @@ live_cross_references = ["modelo-303-static-documentation", "modelo-303-filed-de
 application_links = ["modelo-303-portal", "modelo-303-filing", "modelo-303-extractor", "modelo-303-verification", "modelo-303-review", "modelo-303-approval", "modelo-303-reconciliation", "modelo-303-workflow", "modelo-303-deadline", "modelo-303-calculation"]
 filing_schedules = ["modelo-303-trimestral", "modelo-303-mensual"]
 deadline_windows = [
+    "modelo-303-2024-1t",
+    "modelo-303-2024-2t",
+    "modelo-303-2024-3t",
+    "modelo-303-2024-4t",
     "modelo-303-2025-1t",
     "modelo-303-2025-2t",
     "modelo-303-2025-3t",

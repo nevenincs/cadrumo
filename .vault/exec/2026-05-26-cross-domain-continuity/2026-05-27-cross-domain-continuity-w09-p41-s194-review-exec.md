@@ -3,7 +3,7 @@ tags:
   - "#exec"
   - "#cross-domain-continuity"
 date: 2026-05-27
-modified: '2026-05-27'
+modified: '2026-06-30'
 related:
   - "[[2026-05-26-cross-domain-continuity-plan]]"
 ---
@@ -71,4 +71,3 @@ The two foral-refusal tests cover the `parse_tax_region` → `ForalRegimeError` 
 ## Safety Audit
 
 No crash paths introduced. `parse_tax_region` raises `ForalRegimeError` (a typed `AeatError` subclass); `command_error_boundary` handles it. `causante_ccaa: CCAA | None = None` with a pydantic default is safe for existing records that do not carry the field. No raw `os.environ` reads, no `dict[str, Any]` at persistence boundaries, no unclosed handles, no unsafe FFI.
-

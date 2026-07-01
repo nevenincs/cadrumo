@@ -14,9 +14,11 @@ from __future__ import annotations
 
 from datetime import date
 
-from ...core import Period, TaxDomain
+from ...core._period import Period
+from ...core._tax_domain import TaxDomain
 from ...core.resources import resources
-from ...domain.calculations.registry import InputKind, RegistryQueryService
+from ...domain.calculations.registry._queries import RegistryQueryService
+from ...domain.calculations.registry._schema_input_kind import InputKind
 
 
 def _service() -> RegistryQueryService:

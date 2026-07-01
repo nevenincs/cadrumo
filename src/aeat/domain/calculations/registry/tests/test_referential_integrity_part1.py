@@ -379,6 +379,8 @@ def test_dangling_parameter_source_refs() -> None:
     snapshot = build_snapshot_with_missing_source(revision, _extra)
     with pytest.raises(RegistryValidationError, match=r"parameter test.param.source_refs"):
         check_all_id_references(snapshot)
+
+
 def test_dangling_binding_source_refs() -> None:
     """binding.source_refs referencing a SourceRefId absent from snapshot.sources raises."""
     _extra = "aeat-dr-binding-v1"

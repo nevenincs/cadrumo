@@ -3,7 +3,7 @@ tags:
   - '#plan'
   - '#ledger-operator-hardening'
 date: '2026-06-02'
-modified: '2026-06-02'
+modified: '2026-06-30'
 tier: L3
 related:
   - '[[2026-06-02-ledger-operator-hardening-adr]]'
@@ -12,21 +12,13 @@ related:
   - '[[2026-06-04-ledger-operator-hardening-research]]'
 ---
 
-
 <!-- RETIRED: W04, P11, P27, S29, S30, S90, S91, S92 -->
-
-
-
-
-
-
 
 # `ledger-operator-hardening` `ledger operator-testimonial corpus and persona-driven hardening` plan
 
 ## Wave `W01` - Corpus foundation
 
 Hand-author the calculation-grounded raw corpus and the oracle, and lock them with a fidelity test.
-
 
 ### Phase `W01.P01` - Raw corpus authoring
 
@@ -302,17 +294,8 @@ Local, no-network deliverables: an XLSX/Sheets-shaped workbook export of the buc
 
 ## Description
 
-
 ## Steps
-
-
-
-
-
-
 
 ## Parallelization
 
-
 ## Verification
-

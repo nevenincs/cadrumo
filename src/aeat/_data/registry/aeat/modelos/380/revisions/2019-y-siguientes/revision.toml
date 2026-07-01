@@ -1,0 +1,78 @@
+[revisions."2019-y-siguientes"]
+label = "Orden EHA/1308/2005, ejercicios 2019 y siguientes"
+valid_from = 2019-01-01
+period_selector = { year_from = 2019, periods = ["1T", "2T", "3T", "4T"] }
+orden_aplicabilidad = ["orden-eha-1308-2005:art-1"]
+legal_refs = ["orden-eha-1308-2005:art-4", "orden-eha-1308-2005:art-1"]
+source_refs = ["enrolled-modelo-380-procedure", "enrolled-modelo-380-layout"]
+
+[[revisions."2019-y-siguientes".casillas]]
+id = "01"
+number = "01"
+label = "Base de las operaciones declaradas"
+section = ["resumen"]
+data_type = "money"
+semantic_role = "operaciones_asimiladas_importacion_base"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-eha-1308-2005:art-4", "orden-eha-1308-2005:art-1"]
+source_refs = ["enrolled-modelo-380-layout"]
+
+[[revisions."2019-y-siguientes".casillas]]
+id = "02"
+number = "02"
+label = "Total del resumen"
+section = ["resumen"]
+data_type = "money"
+semantic_role = "operaciones_asimiladas_importacion_total"
+required = false
+input_kind = "computed"
+formula = "modelo-380-total"
+legal_refs = ["orden-eha-1308-2005:art-4", "orden-eha-1308-2005:art-1"]
+source_refs = ["enrolled-modelo-380-layout"]
+
+[[revisions."2019-y-siguientes".formulas]]
+id = "modelo-380-total"
+target_casilla_id = "02"
+expression = { op = "add", args = [ { casilla_id = "01" } ] }
+rounding = "money-2"
+legal_refs = ["orden-eha-1308-2005:art-4", "orden-eha-1308-2005:art-1"]
+source_refs = ["enrolled-modelo-380-procedure", "enrolled-modelo-380-layout"]
+
+[[revisions."2019-y-siguientes".formulas.source_citations]]
+source_ref = "enrolled-modelo-380-procedure"
+required_text = ["380"]
+
+[[revisions."2019-y-siguientes".workbook_parity_refs]]
+id = "modelo-380-record-design"
+workbook_source = "enrolled-modelo-380-layout"
+fixture_id = "modelo-380-record-design-layout"
+formula_coverage = "record_design_layout"
+runner_required = false
+tolerance = "0.00"
+legal_refs = ["orden-eha-1308-2005:art-1"]
+source_refs = ["enrolled-modelo-380-layout"]
+
+[[revisions."2019-y-siguientes".application_links]]
+id = "modelo-380-calculation"
+surface = "calculation"
+consumer = "aeat.domain.calculations.registry"
+requires_snapshot = true
+legal_refs = ["orden-eha-1308-2005:art-4", "orden-eha-1308-2005:art-1"]
+source_refs = ["enrolled-modelo-380-procedure", "enrolled-modelo-380-layout"]
+
+[[revisions."2019-y-siguientes".application_links]]
+id = "modelo-380-deadline"
+surface = "deadline"
+consumer = "aeat.domain.deadlines"
+requires_snapshot = true
+legal_refs = ["orden-eha-1308-2005:art-1"]
+source_refs = ["enrolled-modelo-380-procedure"]
+
+[[revisions."2019-y-siguientes".application_links]]
+id = "modelo-380-filing"
+surface = "filing"
+consumer = "aeat.application.filing"
+requires_snapshot = true
+legal_refs = ["orden-eha-1308-2005:art-1"]
+source_refs = ["enrolled-modelo-380-procedure"]

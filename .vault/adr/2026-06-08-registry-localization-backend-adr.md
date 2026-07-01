@@ -3,12 +3,10 @@ tags:
   - '#adr'
   - '#registry-localization-backend'
 date: '2026-06-08'
-modified: '2026-06-08'
+modified: '2026-06-30'
 related:
   - "[[2026-06-08-registry-localization-backend-research]]"
 ---
-
-
 
 # `registry-localization-backend` adr: `schema localization support architecture` | (**status:** `accepted`)
 
@@ -48,4 +46,3 @@ This decision is backed by the `2026-06-08-registry-localization-backend-researc
 ## Codification candidates
 
 None.
-

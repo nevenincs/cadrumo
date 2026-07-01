@@ -3,7 +3,7 @@ tags:
   - '#exec'
   - '#cross-domain-continuity'
 date: '2026-05-27'
-modified: '2026-05-27'
+modified: '2026-06-13'
 step_id: 'task-183'
 related:
   - '[[2026-05-27-schema-hardening-m200-estado-share-binding-repair-exec]]'

@@ -3,15 +3,13 @@ tags:
   - '#adr'
   - '#binding-vocabulary-cli-cohesion'
 date: '2026-06-26'
-modified: '2026-06-26'
+modified: '2026-06-30'
 related:
   - "[[2026-06-26-bindings-architecture-unification-audit]]"
   - "[[2026-06-26-bindings-architecture-unification-research]]"
   - "[[2026-06-26-binding-source-kind-taxonomy-unification-adr]]"
   - "[[2026-06-10-cli-pull-file-standard-adr]]"
 ---
-
-
 
 # `binding-vocabulary-cli-cohesion` adr: `vocabulary and CLI cohesion: retire the binding homonyms and reconcile the source-pull verb surface` | (**status:** `accepted`)
 
@@ -217,5 +215,3 @@ new verb from the live Typer tree once it is registered, schema-bound, and docum
 This is behaviour-affecting (a flag retires, a verb is born) and so is operator-visible and
 carries a code-review obligation at phase close; it is recorded here so the in-scope
 behaviour change is sanctioned rather than smuggled under "pure rename".
-
-

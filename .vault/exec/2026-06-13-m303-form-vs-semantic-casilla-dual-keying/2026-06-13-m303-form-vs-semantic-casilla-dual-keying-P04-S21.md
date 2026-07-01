@@ -3,14 +3,11 @@ tags:
   - '#exec'
   - '#m303-form-vs-semantic-casilla-dual-keying'
 date: '2026-06-13'
-modified: '2026-06-13'
+modified: '2026-06-30'
 step_id: 'S21'
 related:
   - "[[2026-06-13-m303-form-vs-semantic-casilla-dual-keying-plan]]"
 ---
-
-
-
 
 # Verify the BOE/fichero export field modelo-303-page-01-casilla-27 and the sibling casilla-NN export refs now write the projected value not zero, and confirm the workbook/BOE parity gate stays green (modelo-export-mirrors-official-structure)
 

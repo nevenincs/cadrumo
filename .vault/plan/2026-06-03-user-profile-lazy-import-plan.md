@@ -3,13 +3,12 @@ tags:
   - '#plan'
   - '#user-profile-lazy-import'
 date: '2026-06-03'
-modified: '2026-06-03'
+modified: '2026-06-30'
 tier: L2
 related:
   - '[[2026-06-03-user-profile-lazy-import-adr]]'
   - '[[2026-06-03-user-profile-lazy-import-research]]'
 ---
-
 
 # `user-profile-lazy-import` `Lazy user_profile package boundary via PEP 562` plan
 
@@ -37,12 +36,6 @@ This plan restores the lazy-loading discipline at the `aeat.application.user_pro
 The research document enumerates the boundary's re-export surface and traces the 69-submodule registry pull through `aeat.domain.user_profile._registry_contract`. The ADR captures the decision, the rejected alternatives (`TYPE_CHECKING` guard, package split, revert of the boundary-tightening commit), and the regression-gate contract: the existing `src/aeat/entrypoints/cli/test_lazy_command_tree.py` ratchet stays canonical, augmented by a new producer-side probe at the application-layer boundary.
 
 ## Steps
-
-
-
-
-
-
 
 ## Parallelization
 

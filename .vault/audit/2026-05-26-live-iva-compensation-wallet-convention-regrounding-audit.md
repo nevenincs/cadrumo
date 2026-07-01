@@ -3,12 +3,10 @@ tags:
   - '#audit'
   - '#live-iva-compensation-wallet'
 date: '2026-05-26'
-modified: '2026-05-26'
+modified: '2026-06-30'
 related:
   - '[[2026-05-19-live-iva-compensation-wallet-plan]]'
 ---
-
-
 
 # `live-iva-compensation-wallet` Code Review
 

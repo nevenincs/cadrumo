@@ -78,7 +78,7 @@ def _binding(
             "source": source,
             "selector": selector,
             "legal_refs": ("ley-35-2006:art-99",),
-            "source_refs": ("aeat.test",),
+            "source_refs": ("aeat-test",),
         },
     )
 
@@ -420,7 +420,7 @@ def test_collectible_invoice_row_field_selector_accepts_grouping() -> None:
             },
             "aggregation": BindingAggregation(op=BindingAggregationOp.ROWS),
             "legal_refs": ("ley-35-2006:art-99",),
-            "source_refs": ("aeat.test",),
+            "source_refs": ("aeat-test",),
         },
     )
     assert validate_binding_selector_shape(binding) == []
@@ -660,7 +660,7 @@ def test_invoice_binding_fact_op_mismatch_caught_at_snapshot_build() -> None:
             },
             "aggregation": BindingAggregation(op=BindingAggregationOp.SUM),  # mismatched op
             "legal_refs": ("ley-35-2006:art-99",),
-            "source_refs": ("aeat.test",),
+            "source_refs": ("aeat-test",),
         },
     )
     failures = validate_binding_selector_shape(binding)
@@ -689,7 +689,7 @@ def test_counterpart_binding_fact_op_mismatch_caught_at_snapshot_build() -> None
             },
             "aggregation": BindingAggregation(op=BindingAggregationOp.SUM),  # mismatched op
             "legal_refs": ("ley-35-2006:art-99",),
-            "source_refs": ("aeat.test",),
+            "source_refs": ("aeat-test",),
         },
     )
     failures = validate_binding_selector_shape(binding)

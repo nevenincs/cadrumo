@@ -3,17 +3,14 @@ tags:
   - '#audit'
   - '#cli-workflow-redesign'
 date: '2026-05-14'
-modified: '2026-05-14'
+modified: '2026-06-30'
 related:
   - '[[2026-05-13-cli-workflow-redesign-epic-plan]]'
   - '[[2026-05-13-cli-workflow-redesign-manual-ledger-storage-adr]]'
   - '[[2026-05-12-cli-workflow-redesign-ledger-transaction-management-adr]]'
 ---
 
-
-
 # `cli-workflow-redesign` Code Review
-
 
 S1827-001 | MEDIUM | S1827 CLI handlers still own ledger result projection
 

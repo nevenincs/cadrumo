@@ -3,14 +3,11 @@ tags:
   - '#exec'
   - '#docs-terminology-search'
 date: '2026-06-10'
-modified: '2026-06-10'
+modified: '2026-06-30'
 step_id: 'S25'
 related:
   - "[[2026-06-10-docs-terminology-search-plan]]"
 ---
-
-
-
 
 # Generate the glossary page from approved Handbook concepts at the builder-inited seam (uncommitted, like the CLI reference), one term per entry, with term anchors and hover tooltips via sphinx-hoverxref (ADR D7)
 

@@ -189,9 +189,7 @@ def test_autonomic_deductions_ground_in_own_article_not_actividades(year: int) -
     )
     missing = []
     for casilla in casillas:
-        expected_ref = _AUTONOMIC_DEDUCTION_REFS_BY_ROLE.get(
-            casilla.semantic_role, _AUTONOMIC_DEDUCTION_FRAMEWORK_REF
-        )
+        expected_ref = _AUTONOMIC_DEDUCTION_REFS_BY_ROLE.get(casilla.semantic_role, _AUTONOMIC_DEDUCTION_FRAMEWORK_REF)
         if expected_ref not in set(casilla.legal_refs):
             missing.append((casilla.id, casilla.semantic_role, expected_ref, sorted(casilla.legal_refs)))
     assert not missing, f"M100 {year}: autonomic-deduction boxes not grounded in their article: {missing[:10]}"

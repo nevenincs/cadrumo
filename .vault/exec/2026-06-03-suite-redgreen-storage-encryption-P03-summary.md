@@ -3,7 +3,7 @@ tags:
   - '#exec'
   - '#storage-encryption'
 date: 2026-06-03
-modified: '2026-06-03'
+modified: '2026-06-13'
 related:
   - '[[2026-06-03-secure-storage-production-hardening-W06-P11-S441]]'
 ---

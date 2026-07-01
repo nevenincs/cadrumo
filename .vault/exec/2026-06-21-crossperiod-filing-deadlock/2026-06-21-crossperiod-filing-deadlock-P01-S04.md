@@ -3,14 +3,11 @@ tags:
   - '#exec'
   - '#crossperiod-filing-deadlock'
 date: '2026-06-21'
-modified: '2026-06-21'
+modified: '2026-06-30'
 step_id: 'S04'
 related:
   - "[[2026-06-21-crossperiod-filing-deadlock-plan]]"
 ---
-
-
-
 
 # Skip the submission filing-window preflight for the local FILE purpose alongside VERIFY
 
@@ -28,4 +25,3 @@ related:
 Landed in commit `6e635f566`. Fixes `test_verify_reaches_done_for_a_closed_filing_window`. The window gate now binds only an actual AEAT submission, which this app never performs.
 
 ## Notes
-

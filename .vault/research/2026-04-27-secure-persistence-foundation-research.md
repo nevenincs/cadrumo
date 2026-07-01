@@ -3,7 +3,7 @@ tags:
   - '#research'
   - '#secure-persistence-foundation'
 date: '2026-04-27'
-modified: '2026-04-27'
+modified: '2026-06-30'
 related:
   - "[[2026-04-27-security-storage-audit-audit]]"
   - "[[2026-04-12-data-storage-research]]"
@@ -12,8 +12,6 @@ related:
   - "[[2026-04-17-session-persistence-review-audit]]"
   - "[[2026-04-21-run-trace-rolling-audit]]"
 ---
-
-
 
 # `secure-persistence-foundation` research: `secure-persistence-foundation-research`
 

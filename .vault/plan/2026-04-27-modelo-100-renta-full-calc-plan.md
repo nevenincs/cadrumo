@@ -3,14 +3,12 @@ tags:
   - '#plan'
   - '#modelo-100-renta-full-calc'
 date: '2026-04-27'
-modified: '2026-06-13'
+modified: '2026-06-30'
 related:
   - "[[2026-04-27-modelo-100-renta-full-calc-adr]]"
   - "[[2026-04-27-modelo-100-renta-full-calc-research]]"
   - "[[2026-04-21-modelo-100-renta-plan]]"
 ---
-
-
 
 # `modelo-100-renta-full-calc` implementation plan
 

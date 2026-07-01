@@ -3,12 +3,11 @@ tags:
   - '#plan'
   - '#binding-source-kind-taxonomy-unification'
 date: '2026-06-26'
-modified: '2026-06-26'
+modified: '2026-06-30'
 tier: L2
 related:
   - '[[2026-06-26-binding-source-kind-taxonomy-unification-adr]]'
 ---
-
 
 <!-- RETIRED: S16 -->
 
@@ -17,7 +16,6 @@ related:
 ### Phase `P01` - Foundations: members and extended parity gate
 
 Add the two mesh-only source tokens as BindingSourceKind members and extend the parity gate to the enum-to-mesh half, as one atomic behaviour-preserving landing.
-
 
 Phase 2.1 of the central bindings architecture: make one core `BindingSourceKind`
 the single typed source-kind authority across registry and mesh.
@@ -96,12 +94,6 @@ binding declares), so S01 and S02 land together as one atomic, behaviour-preserv
 change.
 
 ## Steps
-
-
-
-
-
-
 
 ## Parallelization
 

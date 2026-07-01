@@ -3,14 +3,13 @@ tags:
   - '#adr'
   - '#non-resident-irnr-axis'
 date: '2026-05-27'
-modified: '2026-05-27'
+modified: '2026-06-30'
 related:
   - "[[2026-05-07-user-profile-backend-schema-adr]]"
   - "[[2026-05-21-taxpayer-type-applicability-adr]]"
   - "[[2026-04-28-ccaa-in-profile-adr]]"
   - '[[2026-06-04-non-resident-irnr-axis-research]]'
 ---
-
 
 # `non-resident-irnr-axis` adr: Non-resident IRNR fiscal-residency axis | (**status:** `accepted`)
 

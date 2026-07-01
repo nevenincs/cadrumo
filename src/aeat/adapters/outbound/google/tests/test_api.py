@@ -164,8 +164,11 @@ def test_http_403_rate_limit_translates_to_quota_error() -> None:
         b'{"error":{"code":403,"message":"quota","errors":[{"reason":"rateLimitExceeded"}],'
         b'"status":"RESOURCE_EXHAUSTED"}}'
     )
-    with _request_raising(_make_http_error(403, content=content)) as (req, _paths), pytest.raises(
-        OutboundStorageQuotaError,
+    with (
+        _request_raising(_make_http_error(403, content=content)) as (req, _paths),
+        pytest.raises(
+            OutboundStorageQuotaError,
+        ),
     ):
         execute_request(req, action="sheets.spreadsheets.get")
 

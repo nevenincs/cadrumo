@@ -570,3 +570,318 @@ published_at = 2021-04-13
 applies_from = 2021-04-14
 source_url = "https://www.boe.es/buscar/act.php?id=BOE-A-2021-5780"
 review_status = "reviewed"
+
+[legal."orden-hac-66-2002:art-1"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "orden"
+corpus_ref = "corpus/normatives/html/orden-hac-66-2002.html#a1"
+document_id = "BOE-A-2002-1041"
+article = "1"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2002-1041"
+published_at = 2002-01-19
+effective_from = 2002-01-20
+review_status = "reviewed"
+reviewed_at = 2026-07-01
+reviewed_by = "wgergely"
+notes = "Articulo 1: aprobacion del modelo 038. Corpus agent-fetched from BOE; pending operator re-verification."
+required_text = [
+    "Se aprueba el modelo 038",
+    "registros públicos",
+]
+
+[legal."orden-hac-66-2002:art-6"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "orden"
+corpus_ref = "corpus/normatives/html/orden-hac-66-2002.html#a6"
+document_id = "BOE-A-2002-1041"
+article = "6"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2002-1041"
+published_at = 2002-01-19
+effective_from = 2002-01-20
+review_status = "reviewed"
+reviewed_at = 2026-07-01
+reviewed_by = "wgergely"
+notes = "Articulo 6: plazo de presentacion del modelo 038. Corpus agent-fetched from BOE; pending operator re-verification."
+required_text = [
+    "durante cada mes natural",
+]
+
+[sources."enrolled-modelo-038-procedure"]
+evidence_tier = "official_source_guidance"
+authority = "boe"
+kind = "form_spec"
+corpus_path = "corpus/normatives/html/orden-hac-66-2002.html"
+sha256 = "c123f133bec99b783a698eb3b595f8a5ef580629760e4857f4fc463f0d2adab9"
+bytes = 1093
+retrieved_at = 2026-07-01
+published_at = 2002-01-19
+applies_from = 2002-01-20
+source_url = "https://www.boe.es/buscar/act.php?id=BOE-A-2002-1041"
+review_status = "reviewed"
+
+[sources."enrolled-modelo-038-layout"]
+evidence_tier = "layout_authority"
+authority = "boe"
+kind = "form_spec"
+corpus_path = "corpus/normatives/html/orden-hac-66-2002.html"
+sha256 = "c123f133bec99b783a698eb3b595f8a5ef580629760e4857f4fc463f0d2adab9"
+bytes = 1093
+retrieved_at = 2026-07-01
+published_at = 2002-01-19
+applies_from = 2002-01-20
+source_url = "https://www.boe.es/buscar/act.php?id=BOE-A-2002-1041"
+review_status = "reviewed"
+
+[legal."orden-hac-177-2020:art-1"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "orden"
+corpus_ref = "corpus/normatives/html/orden-hac-177-2020.html#a1"
+document_id = "BOE-A-2020-2901"
+article = "1"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2020-2901"
+published_at = 2020-02-28
+effective_from = 2020-02-29
+review_status = "reviewed"
+reviewed_at = 2026-07-01
+reviewed_by = "wgergely"
+notes = "Articulo 1: aprobacion del modelo 140. Corpus agent-fetched from BOE; pending operator re-verification."
+required_text = [
+    "Se aprueba el modelo 140",
+    "Deducción por maternidad",
+]
+
+[legal."orden-hac-177-2020:art-5"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "orden"
+corpus_ref = "corpus/normatives/html/orden-hac-177-2020.html#a5"
+document_id = "BOE-A-2020-2901"
+article = "5"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2020-2901"
+published_at = 2020-02-28
+effective_from = 2020-02-29
+review_status = "reviewed"
+reviewed_at = 2026-07-01
+reviewed_by = "wgergely"
+notes = "Articulo 5: plazo de presentacion del modelo 140. Corpus agent-fetched from BOE; pending operator re-verification."
+required_text = [
+    "abono anticipado",
+]
+
+[sources."enrolled-modelo-140-procedure"]
+evidence_tier = "official_source_guidance"
+authority = "boe"
+kind = "form_spec"
+corpus_path = "corpus/normatives/html/orden-hac-177-2020.html"
+sha256 = "a50a1a3e49f4b45045037dcc584367d27077755de3bb26e31bd3d294b763b897"
+bytes = 1094
+retrieved_at = 2026-07-01
+published_at = 2020-02-28
+applies_from = 2020-02-29
+source_url = "https://www.boe.es/buscar/act.php?id=BOE-A-2020-2901"
+review_status = "reviewed"
+
+[sources."enrolled-modelo-140-layout"]
+evidence_tier = "layout_authority"
+authority = "boe"
+kind = "form_spec"
+corpus_path = "corpus/normatives/html/orden-hac-177-2020.html"
+sha256 = "a50a1a3e49f4b45045037dcc584367d27077755de3bb26e31bd3d294b763b897"
+bytes = 1094
+retrieved_at = 2026-07-01
+published_at = 2020-02-28
+applies_from = 2020-02-29
+source_url = "https://www.boe.es/buscar/act.php?id=BOE-A-2020-2901"
+review_status = "reviewed"
+
+[legal."orden-hac-657-2025:art-1"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "orden"
+corpus_ref = "corpus/normatives/html/orden-hac-657-2025.html#a1"
+document_id = "BOE-A-2025-12818"
+article = "1"
+permalink = "https://www.boe.es/buscar/doc.php?id=BOE-A-2025-12818"
+published_at = 2025-06-25
+effective_from = 2025-07-01
+review_status = "reviewed"
+reviewed_at = 2026-07-01
+reviewed_by = "wgergely"
+notes = "Articulo 1: aprobacion del modelo 220. Corpus agent-fetched from BOE; pending operator re-verification."
+required_text = [
+    "Modelo 220",
+    "consolidación fiscal",
+]
+
+[legal."orden-hac-657-2025:art-6"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "orden"
+corpus_ref = "corpus/normatives/html/orden-hac-657-2025.html#a6"
+document_id = "BOE-A-2025-12818"
+article = "6"
+permalink = "https://www.boe.es/buscar/doc.php?id=BOE-A-2025-12818"
+published_at = 2025-06-25
+effective_from = 2025-07-01
+review_status = "reviewed"
+reviewed_at = 2026-07-01
+reviewed_by = "wgergely"
+notes = "Articulo 6: plazo de presentacion del modelo 220. Corpus agent-fetched from BOE; pending operator re-verification."
+required_text = [
+    "entidad representante del grupo fiscal",
+]
+
+[sources."enrolled-modelo-220-procedure"]
+evidence_tier = "official_source_guidance"
+authority = "boe"
+kind = "form_spec"
+corpus_path = "corpus/normatives/html/orden-hac-657-2025.html"
+sha256 = "95a937f9b4debf43ae809c07016c71bd39dc91f807bc1b80ad46d54016ec9e02"
+bytes = 1258
+retrieved_at = 2026-07-01
+published_at = 2025-06-25
+applies_from = 2025-07-01
+source_url = "https://www.boe.es/buscar/doc.php?id=BOE-A-2025-12818"
+review_status = "reviewed"
+
+[sources."enrolled-modelo-220-layout"]
+evidence_tier = "layout_authority"
+authority = "boe"
+kind = "form_spec"
+corpus_path = "corpus/normatives/html/orden-hac-657-2025.html"
+sha256 = "95a937f9b4debf43ae809c07016c71bd39dc91f807bc1b80ad46d54016ec9e02"
+bytes = 1258
+retrieved_at = 2026-07-01
+published_at = 2025-06-25
+applies_from = 2025-07-01
+source_url = "https://www.boe.es/buscar/doc.php?id=BOE-A-2025-12818"
+review_status = "reviewed"
+
+[legal."orden-min-2000-12-15-m341:art-1"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "orden"
+corpus_ref = "corpus/normatives/html/orden-min-2000-12-15-m341.html#a1"
+document_id = "BOE-A-2000-22794"
+article = "1"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2000-22794"
+published_at = 2000-12-19
+effective_from = 2001-01-01
+review_status = "reviewed"
+reviewed_at = 2026-07-01
+reviewed_by = "wgergely"
+notes = "Articulo 1: aprobacion del modelo 341. Corpus agent-fetched from BOE; pending operator re-verification."
+required_text = [
+    "modelos 341",
+    "agricultura, ganadería y pesca",
+]
+
+[legal."orden-min-2000-12-15-m341:art-2"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "orden"
+corpus_ref = "corpus/normatives/html/orden-min-2000-12-15-m341.html#a2"
+document_id = "BOE-A-2000-22794"
+article = "2"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2000-22794"
+published_at = 2000-12-19
+effective_from = 2001-01-01
+review_status = "reviewed"
+reviewed_at = 2026-07-01
+reviewed_by = "wgergely"
+notes = "Articulo 2: plazo de presentacion del modelo 341. Corpus agent-fetched from BOE; pending operator re-verification."
+required_text = [
+    "veinte primeros días naturales posteriores a cada trimestre natural",
+]
+
+[sources."enrolled-modelo-341-procedure"]
+evidence_tier = "official_source_guidance"
+authority = "boe"
+kind = "form_spec"
+corpus_path = "corpus/normatives/html/orden-min-2000-12-15-m341.html"
+sha256 = "c9ad6a1966b333a2b147423299df8acd4f3595c57cc3be94f33f1302cceb01f8"
+bytes = 1203
+retrieved_at = 2026-07-01
+published_at = 2000-12-19
+applies_from = 2001-01-01
+source_url = "https://www.boe.es/buscar/act.php?id=BOE-A-2000-22794"
+review_status = "reviewed"
+
+[sources."enrolled-modelo-341-layout"]
+evidence_tier = "layout_authority"
+authority = "boe"
+kind = "form_spec"
+corpus_path = "corpus/normatives/html/orden-min-2000-12-15-m341.html"
+sha256 = "c9ad6a1966b333a2b147423299df8acd4f3595c57cc3be94f33f1302cceb01f8"
+bytes = 1203
+retrieved_at = 2026-07-01
+published_at = 2000-12-19
+applies_from = 2001-01-01
+source_url = "https://www.boe.es/buscar/act.php?id=BOE-A-2000-22794"
+review_status = "reviewed"
+
+[legal."orden-eha-1308-2005:art-1"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "orden"
+corpus_ref = "corpus/normatives/html/orden-eha-1308-2005.html#a1"
+document_id = "BOE-A-2005-7775"
+article = "1"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2005-7775"
+published_at = 2005-05-13
+effective_from = 2005-05-14
+review_status = "reviewed"
+reviewed_at = 2026-07-01
+reviewed_by = "wgergely"
+notes = "Articulo 1: aprobacion del modelo 380. Corpus agent-fetched from BOE; pending operator re-verification."
+required_text = [
+    "Se aprueba el modelo 380",
+    "asimiladas a las importaciones",
+]
+
+[legal."orden-eha-1308-2005:art-4"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "orden"
+corpus_ref = "corpus/normatives/html/orden-eha-1308-2005.html#a4"
+document_id = "BOE-A-2005-7775"
+article = "4"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2005-7775"
+published_at = 2005-05-13
+effective_from = 2005-05-14
+review_status = "reviewed"
+reviewed_at = 2026-07-01
+reviewed_by = "wgergely"
+notes = "Articulo 4: plazo de presentacion del modelo 380. Corpus agent-fetched from BOE; pending operator re-verification."
+required_text = [
+    "declaración-liquidación",
+]
+
+[sources."enrolled-modelo-380-procedure"]
+evidence_tier = "official_source_guidance"
+authority = "boe"
+kind = "form_spec"
+corpus_path = "corpus/normatives/html/orden-eha-1308-2005.html"
+sha256 = "f6f51e3b2cec5691de8b8c059f39ff972040e8244ca5878c17abbfe3e36447d1"
+bytes = 1115
+retrieved_at = 2026-07-01
+published_at = 2005-05-13
+applies_from = 2005-05-14
+source_url = "https://www.boe.es/buscar/act.php?id=BOE-A-2005-7775"
+review_status = "reviewed"
+
+[sources."enrolled-modelo-380-layout"]
+evidence_tier = "layout_authority"
+authority = "boe"
+kind = "form_spec"
+corpus_path = "corpus/normatives/html/orden-eha-1308-2005.html"
+sha256 = "f6f51e3b2cec5691de8b8c059f39ff972040e8244ca5878c17abbfe3e36447d1"
+bytes = 1115
+retrieved_at = 2026-07-01
+published_at = 2005-05-13
+applies_from = 2005-05-14
+source_url = "https://www.boe.es/buscar/act.php?id=BOE-A-2005-7775"
+review_status = "reviewed"

@@ -3,14 +3,11 @@ tags:
   - '#exec'
   - '#profile-lifecycle-cli'
 date: '2026-06-02'
-modified: '2026-06-02'
+modified: '2026-06-30'
 step_id: 'S50'
 related:
   - "[[2026-05-16-profile-lifecycle-cli-plan]]"
 ---
-
-
-
 
 # add `rename(profile_id, new_name)` to the lifecycle service
 
@@ -20,8 +17,6 @@ related:
 
 ## Description
 
-
 ## Outcome
 
 ## Notes
-

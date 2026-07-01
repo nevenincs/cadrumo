@@ -3,7 +3,7 @@ tags:
   - '#adr'
   - '#llm-evidence-classification'
 date: '2026-06-10'
-modified: '2026-06-10'
+modified: '2026-06-30'
 related:
   - "[[2026-06-10-llm-evidence-classification-research]]"
   - "[[2026-06-04-llm-ledger-classification-adr]]"
@@ -11,8 +11,6 @@ related:
   - "[[2026-05-27-iva-classification-enrichment-adr]]"
   - "[[2026-04-17-attachment-service-adr]]"
 ---
-
-
 
 # `llm-evidence-classification` adr: `Evidence-aware LLM ledger classification (Stage-3): on-host/local-first reading; cloud only behind a consent gate; splitting in scope` | (**status:** `accepted`)
 
@@ -343,4 +341,3 @@ use** — with a narrow, explicitly-consented cloud exception:
 The downstream research finding and the implementation plan are corrected to match
 this ruling (on-host reader Waves replace the temp-file/cloud-first design; the
 consent gate is its own Phase).
-

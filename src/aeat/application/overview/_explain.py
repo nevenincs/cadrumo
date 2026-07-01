@@ -161,6 +161,8 @@ def _extract_profile_facts(profile: TaxpayerProfile) -> dict[str, _ProfileFactVa
     if iva is not None:
         facts["iva.roi_enrolled"] = iva.roi_enrolled
         facts["iva.oss_enrolled"] = iva.oss_enrolled
+        facts["iva.group_member_enrolled"] = iva.group_member_enrolled
+        facts["iva.group_dominant_entity_enrolled"] = iva.group_dominant_entity_enrolled
         facts["iva.intracommunity_operations_exceed_50000_eur"] = iva.intracommunity_operations_exceed_50000_eur
     return facts
 

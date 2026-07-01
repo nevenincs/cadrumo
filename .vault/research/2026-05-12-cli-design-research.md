@@ -3,15 +3,13 @@ tags:
   - '#research'
   - '#cli-design'
 date: '2026-05-12'
-modified: '2026-05-12'
+modified: '2026-06-30'
 related:
   - "[[2026-05-10-eliminate-user-cli-shim-plan]]"
   - "[[2026-05-10-cli-structural-localization-audit]]"
   - "[[2026-04-12-workflow-engine-adr]]"
   - "[[2026-04-12-workflow-engine-audit]]"
 ---
-
-
 
 # `cli-design` research: `Current CLI state and rewrite history`
 

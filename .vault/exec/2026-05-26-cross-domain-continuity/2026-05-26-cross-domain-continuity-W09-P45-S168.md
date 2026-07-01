@@ -3,14 +3,11 @@ tags:
   - '#exec'
   - '#cross-domain-continuity'
 date: '2026-06-02'
-modified: '2026-06-02'
+modified: '2026-06-30'
 step_id: 'S168'
 related:
   - "[[2026-05-26-cross-domain-continuity-plan]]"
 ---
-
-
-
 
 # extract _covered_by_namespace to one location and import from the other
 

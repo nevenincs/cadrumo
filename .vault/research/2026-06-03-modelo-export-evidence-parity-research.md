@@ -3,11 +3,9 @@ tags:
   - '#research'
   - '#modelo-export-evidence-parity'
 date: '2026-06-03'
-modified: '2026-06-03'
+modified: '2026-06-30'
 related: []
 ---
-
-
 
 # `modelo-export-evidence-parity` research: `ledger-evidence-bundled modelo exports + official workbook parity`
 

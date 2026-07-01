@@ -116,6 +116,3 @@ def test_import_internal_transfer_row_stores_magnitude_with_transfer_direction(
     (stored,) = transaction_repository.load().values()
     assert stored.raw.amount == Decimal("5000.00")
     assert stored.direction is TransactionDirection.INTERNAL_TRANSFER
-
-
-

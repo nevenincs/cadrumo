@@ -212,10 +212,7 @@ def test_full_export_tolerates_populated_process_local_namespace(tmp_path: Path)
     from ....tests.secure_sql import isolated_runtime_profile
     from ...user_profile._bundle import _build_secure_object_custody_payload
 
-    envelope = (
-        b'{"schema_version":1,"written_at":"2026-06-30T00:00:00Z",'
-        b'"classification":"financial","payload":{}}'
-    )
+    envelope = b'{"schema_version":1,"written_at":"2026-06-30T00:00:00Z","classification":"financial","payload":{}}'
     with isolated_runtime_profile(
         tmp_path=tmp_path,
         bucket_id="9b9b9b9b-9b9b-49b9-89b9-9b9b9b9b9b9b",

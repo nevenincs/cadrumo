@@ -3,14 +3,11 @@ tags:
   - '#exec'
   - '#cross-domain-continuity'
 date: '2026-06-02'
-modified: '2026-06-02'
+modified: '2026-06-30'
 step_id: 'S205'
 related:
   - "[[2026-05-26-cross-domain-continuity-plan]]"
 ---
-
-
-
 
 # consolidate UserProfileLifecycleRepository.__init__ and UserProfileSnapshotRepository.__init__ identical signatures into shared base class or factory
 

@@ -430,11 +430,7 @@ _SECTION_5_6_RANGE = (13, 3072)
 
 
 def _layout_bindings_for(revision: ModeloRevision, record_name: str) -> tuple[DataBindingDefinition, ...]:
-    return tuple(
-        binding
-        for binding in revision.bindings
-        if selector_as_dict(binding).get("record") == record_name
-    )
+    return tuple(binding for binding in revision.bindings if selector_as_dict(binding).get("record") == record_name)
 
 
 def _selector_int(binding: DataBindingDefinition, key: str) -> int:

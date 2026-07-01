@@ -3,14 +3,11 @@ tags:
   - '#exec'
   - '#docs-terminology-search'
 date: '2026-06-10'
-modified: '2026-06-10'
+modified: '2026-06-30'
 step_id: 'S11'
 related:
   - "[[2026-06-10-docs-terminology-search-plan]]"
 ---
-
-
-
 
 # Implement the scaffold verb walking every enrolment source (registry snapshots via the validated authority, core enums, legal catalogue, topics, CLI tree introspection, locale catalogues) under the msgmerge three-outcome contract: preserve curated fields verbatim, scaffold new enrolables as empty drafts with no fuzzy auto-fill, retire vanished entries as tombstones with replaced_by (ADR D3)
 

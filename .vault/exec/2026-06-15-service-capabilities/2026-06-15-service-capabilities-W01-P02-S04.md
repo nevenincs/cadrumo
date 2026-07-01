@@ -3,14 +3,11 @@ tags:
   - '#exec'
   - '#service-capabilities'
 date: '2026-06-15'
-modified: '2026-06-15'
+modified: '2026-06-30'
 step_id: 'S04'
 related:
   - "[[2026-06-15-service-capabilities-plan]]"
 ---
-
-
-
 
 # Rewire cloud_evidence_read_permitted, the vision path, and google export through resolve_capability with typed refusals
 
@@ -29,4 +26,3 @@ All three service gates route through the one resolver; existing evidence/vision
 ## Notes
 
 Profile linkage complete for the three operator-named services (cloud, llm vision, google).
-

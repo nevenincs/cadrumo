@@ -3,13 +3,12 @@ tags:
   - '#adr'
   - '#calculation-truth-registry'
 date: '2026-05-06'
-modified: '2026-05-06'
+modified: '2026-06-30'
 related:
   - '[[2026-05-03-calculation-truth-registry-rebuild-plan]]'
   - '[[2026-05-03-calculation-truth-registry-pending-adr]]'
   - "[[2026-05-04-calculation-authority-evidence-tiering-research]]"
 ---
-
 
 # `modelo-chain-tier-passage` adr: `Three-tier passage spec for modelo linkage-chain implementation work` | (**status:** `accepted`)
 

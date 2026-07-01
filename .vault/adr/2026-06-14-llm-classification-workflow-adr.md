@@ -3,12 +3,10 @@ tags:
   - '#adr'
   - '#llm-classification-workflow'
 date: '2026-06-14'
-modified: '2026-06-15'
+modified: '2026-06-30'
 related:
   - "[[2026-06-14-llm-classification-workflow-research]]"
 ---
-
-
 
 # `llm-classification-workflow` adr: `LLM classification workflow contract: split recommendation, evidence-driven auto-split, and the review loop` | (**status:** `accepted`)
 

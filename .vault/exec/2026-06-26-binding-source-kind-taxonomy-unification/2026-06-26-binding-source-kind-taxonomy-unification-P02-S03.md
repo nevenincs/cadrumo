@@ -3,14 +3,11 @@ tags:
   - '#exec'
   - '#binding-source-kind-taxonomy-unification'
 date: '2026-06-26'
-modified: '2026-06-26'
+modified: '2026-06-30'
 step_id: 'S03'
 related:
   - "[[2026-06-26-binding-source-kind-taxonomy-unification-plan]]"
 ---
-
-
-
 
 # Re-type owned_sources and both source_kind carriers to BindingSourceKind
 
@@ -19,7 +16,6 @@ related:
 - `src/aeat/application/aggregation/_source_mesh.py`
 
 ## Description
-
 
 This record covers the whole of P02 (S03 narrowed plus the S04-S12 resolver and
 mesh-set re-typing) — commits `b4bde7d46` (S03), `1200e0532` (S06-S12), and
@@ -46,7 +42,6 @@ carriers were deliberately LEFT as `str` (narrowed §3) — they are a mixed
 diagnostic channel carrying non-source-kind tokens.
 
 ## Notes
-
 
 STRICT_FROZEN_CONFIG (strict=True) blocks pydantic string-to-enum coercion, so
 re-typing the field alone would break every resolver still passing bare strings

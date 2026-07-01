@@ -3,14 +3,12 @@ tags:
   - '#exec'
   - '#user-profile-backend-schema'
 date: '2026-05-07'
-modified: '2026-05-07'
+modified: '2026-06-30'
 related:
   - "[[2026-05-07-user-profile-backend-schema-plan]]"
   - "[[2026-05-07-user-profile-backend-schema-adr]]"
   - "[[2026-05-07-user-profile-schema-research]]"
 ---
-
-
 
 # `user-profile-backend-schema` `Wave 1 Schema Foundation Step` `Wave 1 Schema Foundation Step`
 

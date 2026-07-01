@@ -41,9 +41,9 @@ def _fully_populated_taxpayer() -> TaxpayerProfile:
 
     entity_type, legal_entity_form, irpf_income_categories,
     irpf_estimation_regime, iva_regime (REAGP, the new member), and the
-    sii_enrolled / redeme_enrolled enrolment flags are all non-default
-    so a save-drops-field / load-re-defaults-field regression surfaces
-    as model inequality.
+    SII, REDEME, and IVA-group enrolment flags are all non-default so
+    a save-drops-field / load-re-defaults-field regression surfaces as
+    model inequality.
     """
 
     return TaxpayerProfile(
@@ -62,6 +62,8 @@ def _fully_populated_taxpayer() -> TaxpayerProfile:
         iva=ModeloIVAProfile(
             roi_enrolled=True,
             oss_enrolled=True,
+            group_member_enrolled=True,
+            group_dominant_entity_enrolled=True,
             sii_enrolled=True,
             redeme_enrolled=True,
             intracommunity_operations_exceed_50000_eur=True,
@@ -96,6 +98,8 @@ class TestTaxpayerModelRoundTrip:
         )
         assert restored.irpf_estimation_regime is IrpfEstimationRegime.DIRECTA_SIMPLIFICADA
         assert restored.iva_regime is IVARegime.REAGP
+        assert restored.iva.group_member_enrolled is True
+        assert restored.iva.group_dominant_entity_enrolled is True
         assert restored.iva.sii_enrolled is True
         assert restored.iva.redeme_enrolled is True
         assert restored.cross_period_group_member_rosters == (

@@ -3,7 +3,7 @@ tags:
   - '#plan'
   - '#filing-architecture-docs'
 date: '2026-06-08'
-modified: '2026-06-08'
+modified: '2026-06-30'
 tier: L3
 related:
   - '[[2026-06-08-filing-architecture-docs-research]]'
@@ -12,19 +12,11 @@ related:
   - '[[2026-05-30-docs-architecture-adr]]'
 ---
 
-
-
-
-
-
-
-
 # `filing-architecture-docs` `Filing Architecture Documentation` plan
 
 ## Wave `W01` - Config and Ledger Surfaces
 
 Discover and document profile, censo, authentication, and ledger transaction surfaces, generalizing taxpayer identity terminology.
-
 
 ### Phase `W01.P01` - Config and Profile Discovery
 

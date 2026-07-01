@@ -3,14 +3,11 @@ tags:
   - '#exec'
   - '#docs-terminology-search'
 date: '2026-06-10'
-modified: '2026-06-10'
+modified: '2026-06-30'
 step_id: 'S12'
 related:
   - "[[2026-06-10-docs-terminology-search-plan]]"
 ---
-
-
-
 
 # Implement the curation verbs (set, relate, retire), the audit health report (draft counts, empty short_descriptions, unresolved relations, seed provenance coverage), and scaffold --check as the fast drift gate wired into CI and pre-commit (ADR D3/D8)
 

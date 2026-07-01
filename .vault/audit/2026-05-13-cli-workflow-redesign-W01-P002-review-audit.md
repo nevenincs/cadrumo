@@ -3,7 +3,7 @@ tags:
   - '#audit'
   - '#cli-workflow-redesign'
 date: '2026-05-13'
-modified: '2026-05-13'
+modified: '2026-06-30'
 related:
   - "[[2026-05-13-cli-workflow-redesign-epic-plan]]"
   - "[[2026-05-12-cli-workflow-redesign-adr]]"
@@ -11,7 +11,6 @@ related:
 ---
 
 # `cli-workflow-redesign` Code Review
-
 
 W01-P002-001 | HIGH | Review drill commands target an unregistered `app review` surface
 `src/aeat/application/review/_adapters.py:279`, `src/aeat/application/review/_adapters.py:367`, `src/aeat/application/review/_adapters.py:386`, and `src/aeat/application/review/_adapters.py:403` now emit `aeat app review show ...` drill commands, but `src/aeat/entrypoints/cli/__init__.py:150` through `src/aeat/entrypoints/cli/__init__.py:158` never mounts an `app review` mini-app. Runtime verification confirms `aeat app review --help` fails with "No such command 'review'." The same registration block still exposes retired app mini-apps (`invoice`, `declaration`, `archive`, `topic`) that the apex ADR and the app-modelo / app-review / ledger ADRs reject. This leaves review queue rows pointing operators at a dead command and preserves shadow operator surfaces rather than the accepted `aeat app review queue/show` path.

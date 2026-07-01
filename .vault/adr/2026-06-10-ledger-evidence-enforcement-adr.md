@@ -3,12 +3,10 @@ tags:
   - '#adr'
   - '#ledger-evidence-enforcement'
 date: '2026-06-10'
-modified: '2026-06-10'
+modified: '2026-06-30'
 related:
   - "[[2026-06-10-ledger-evidence-enforcement-research]]"
 ---
-
-
 
 # `ledger-evidence-enforcement` adr: `Require encrypted evidence bytes; advisory evidence gate` | (**status:** `accepted`)
 
@@ -219,6 +217,3 @@ non-silent.
   bytes in a bucket-scoped secure-object namespace; a Gmail/Drive/URL reference
   must be fetched-and-encrypted or the attachment refused — never stored as a
   `text/uri-list` link-only manifest.
-
-
-

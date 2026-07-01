@@ -3,15 +3,13 @@ tags:
   - '#adr'
   - '#docs-architecture'
 date: '2026-05-30'
-modified: '2026-05-30'
+modified: '2026-06-30'
 related:
   - "[[2026-05-30-docs-architecture-research]]"
   - "[[2026-04-12-docs-rewrite-adr]]"
   - "[[2026-04-17-relative-imports-adr]]"
   - "[[2026-04-25-json-output-contract-adr]]"
 ---
-
-
 
 # `docs-architecture` adr: `documentation surface taxonomy and conventions` | (**status:** `accepted`)
 

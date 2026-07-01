@@ -1,0 +1,88 @@
+[revisions."2019-y-siguientes"]
+label = "Orden HAC/657/2025, ejercicios 2019 y siguientes"
+valid_from = 2019-01-01
+period_selector = { year_from = 2019, periods = ["0A"] }
+orden_aplicabilidad = ["orden-hac-657-2025:art-1"]
+legal_refs = ["orden-hac-657-2025:art-6", "orden-hac-657-2025:art-1"]
+source_refs = ["enrolled-modelo-220-procedure", "enrolled-modelo-220-layout"]
+
+[[revisions."2019-y-siguientes".casillas]]
+id = "01"
+number = "01"
+label = "Base de las operaciones declaradas"
+section = ["resumen"]
+data_type = "money"
+semantic_role = "is_grupo_declaracion_base"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-6", "orden-hac-657-2025:art-1"]
+source_refs = ["enrolled-modelo-220-layout"]
+
+[[revisions."2019-y-siguientes".casillas]]
+id = "02"
+number = "02"
+label = "Total del resumen"
+section = ["resumen"]
+data_type = "money"
+semantic_role = "is_grupo_declaracion_total"
+required = false
+input_kind = "computed"
+formula = "modelo-220-total"
+legal_refs = ["orden-hac-657-2025:art-6", "orden-hac-657-2025:art-1"]
+source_refs = ["enrolled-modelo-220-layout"]
+
+[[revisions."2019-y-siguientes".formulas]]
+id = "modelo-220-total"
+target_casilla_id = "02"
+expression = { op = "add", args = [ { casilla_id = "01" } ] }
+rounding = "money-2"
+legal_refs = ["orden-hac-657-2025:art-6", "orden-hac-657-2025:art-1"]
+source_refs = ["enrolled-modelo-220-procedure", "enrolled-modelo-220-layout"]
+
+[[revisions."2019-y-siguientes".formulas.source_citations]]
+source_ref = "enrolled-modelo-220-procedure"
+required_text = ["220"]
+
+[[revisions."2019-y-siguientes".workbook_parity_refs]]
+id = "modelo-220-record-design"
+workbook_source = "enrolled-modelo-220-layout"
+fixture_id = "modelo-220-record-design-layout"
+formula_coverage = "record_design_layout"
+runner_required = false
+tolerance = "0.00"
+legal_refs = ["orden-hac-657-2025:art-1"]
+source_refs = ["enrolled-modelo-220-layout"]
+
+[[revisions."2019-y-siguientes".application_links]]
+id = "modelo-220-calculation"
+surface = "calculation"
+consumer = "aeat.domain.calculations.registry"
+requires_snapshot = true
+legal_refs = ["orden-hac-657-2025:art-6", "orden-hac-657-2025:art-1"]
+source_refs = ["enrolled-modelo-220-procedure", "enrolled-modelo-220-layout"]
+
+[[revisions."2019-y-siguientes".application_links]]
+id = "modelo-220-deadline"
+surface = "deadline"
+consumer = "aeat.domain.deadlines"
+requires_snapshot = true
+legal_refs = ["orden-hac-657-2025:art-1"]
+source_refs = ["enrolled-modelo-220-procedure"]
+
+[[revisions."2019-y-siguientes".application_links]]
+id = "modelo-220-filing"
+surface = "filing"
+consumer = "aeat.application.filing"
+requires_snapshot = true
+legal_refs = ["orden-hac-657-2025:art-1"]
+source_refs = ["enrolled-modelo-220-procedure"]
+
+[[revisions."2019-y-siguientes".deadline_windows]]
+id = "modelo-220-2024-0a"
+filing_year = 2024
+period = "2024 0A"
+period_kind = "annual"
+opens_on = 2025-07-01
+closes_on = 2025-07-25
+legal_refs = ["orden-hac-657-2025:art-1"]
+source_refs = ["enrolled-modelo-220-procedure"]

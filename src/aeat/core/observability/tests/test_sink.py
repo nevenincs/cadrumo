@@ -109,7 +109,7 @@ class TestJsonlRunSinkRunIdFilter:
 
     def _emit(self, sink: JsonlRunSink, event: RunEvent) -> None:
         record = logging.LogRecord(
-            name="aeat.test",
+            name="aeat-test",
             level=logging.INFO,
             pathname=__file__,
             lineno=0,
@@ -141,7 +141,7 @@ class TestJsonlRunSinkRunIdFilter:
         sink = JsonlRunSink(target, run_id="0000000000000002")
         try:
             record = logging.LogRecord(
-                name="aeat.test",
+                name="aeat-test",
                 level=logging.INFO,
                 pathname=__file__,
                 lineno=0,
@@ -392,7 +392,7 @@ class TestSinkEmitFailureWarningIsScrubbed:
         sink = JsonlRunSink(target, run_id=run_id)
         try:
             record = logging.LogRecord(
-                name="aeat.test",
+                name="aeat-test",
                 level=logging.INFO,
                 pathname=__file__,
                 lineno=0,

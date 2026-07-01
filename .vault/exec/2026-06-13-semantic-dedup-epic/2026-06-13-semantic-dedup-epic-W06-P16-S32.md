@@ -3,14 +3,11 @@ tags:
   - '#exec'
   - '#semantic-dedup-epic'
 date: '2026-06-14'
-modified: '2026-06-15'
+modified: '2026-06-30'
 step_id: 'S32'
 related:
   - "[[2026-06-13-semantic-dedup-epic-plan]]"
 ---
-
-
-
 
 # A3 Delegate _display_decimal and _decimal_to_string to core.decimal.format_decimal
 

@@ -1,7 +1,7 @@
 ---
 step_id: S206
 date: 2026-05-28
-modified: '2026-05-28'
+modified: '2026-06-13'
 tags:
   - "#exec"
   - "#declaracion-extraction-architecture"

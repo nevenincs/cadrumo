@@ -3,14 +3,12 @@ tags:
   - '#research'
   - '#live-justificante-reconcile'
 date: '2026-06-10'
-modified: '2026-06-10'
+modified: '2026-06-30'
 related:
   - '[[2026-04-25-aeat-verify-adr]]'
   - '[[2026-04-25-aeat-verify-research]]'
   - '[[2026-06-09-modelo-iva-routing-carry-adr]]'
 ---
-
-
 
 # `live-justificante-reconcile` research: `live-sourced justificante reconciliation`
 

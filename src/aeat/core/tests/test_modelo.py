@@ -71,8 +71,7 @@ def test_non_registry_modelos_have_no_registry_source_paths() -> None:
     offenders = [
         member.value
         for member in NON_REGISTRY_MODELOS
-        if (modelos_dir / f"{member.value}.toml").exists()
-        or (modelos_dir / member.value / "manifest.toml").exists()
+        if (modelos_dir / f"{member.value}.toml").exists() or (modelos_dir / member.value / "manifest.toml").exists()
     ]
 
     assert offenders == [], f"NON_REGISTRY_MODELOS have registry sources: {offenders}"
