@@ -65,6 +65,7 @@ def _work_unit(*, modelo: str, filing_year: int, period_code: str) -> WorkUnit:
 def _revision(
     work_unit: WorkUnit,
     *,
+    state: CalculationRevisionState = CalculationRevisionState.BORRADOR,
     input_values_by_casilla_id: dict[CasillaId, str] | None = None,
     binding_overrides: dict[str, str] | None = None,
     relation_overrides: dict[str, str] | None = None,
@@ -85,7 +86,7 @@ def _revision(
             detail_rows=detail_rows,
         ),
         work_unit_id=work_unit.work_unit_id,
-        state=CalculationRevisionState.BORRADOR,
+        state=state,
         input_values_by_casilla_id=inputs,
         binding_overrides=bindings,
         relation_overrides=relations,
@@ -99,6 +100,8 @@ def _revision(
         ),
         created_at=_CLOCK,
         updated_at=_CLOCK,
+        verified_at=_CLOCK if state is not CalculationRevisionState.BORRADOR else None,
+        verified_by="operator" if state is not CalculationRevisionState.BORRADOR else None,
     )
 
 
@@ -191,6 +194,30 @@ def test_revision_replay_inputs_recover_salary_certificate_binding_for_m100_2024
     replay_inputs = revision_filing_replay_inputs(revision=revision, work_unit=work_unit)
 
     assert replay_inputs[_M100_SALARY_CERT_RETENCIONES_BINDING] == "4500"
+    assert _M100_RETENCIONES_TRABAJO_CASILLA not in replay_inputs
+    assert _M100_M111_RETENCIONES_BINDING not in replay_inputs
+
+
+def test_revision_replay_inputs_recover_m100_2024_0596_from_verified_revision_values() -> None:
+    work_unit = _work_unit(modelo="100", filing_year=2024, period_code="0A")
+    revision = _revision(
+        work_unit,
+        state=CalculationRevisionState.VERIFICADO_COMPLETO,
+        relation_overrides={
+            "renta-2024-rel-130-pagos-fraccionados": "1520.00",
+            "renta-2024-rel-131-pagos-fraccionados": "0",
+        },
+        casilla_values={
+            _M100_RETENCIONES_TRABAJO_CASILLA: Decimal("4500.00"),
+            "0604": Decimal("1520.00"),
+            "0609": Decimal("6020.00"),
+        },
+    )
+
+    replay_inputs = revision_filing_replay_inputs(revision=revision, work_unit=work_unit)
+
+    assert replay_inputs[_M100_SALARY_CERT_RETENCIONES_BINDING] == "4500"
+    assert replay_inputs["renta-2024-rel-130-pagos-fraccionados"] == "1520.00"
     assert _M100_RETENCIONES_TRABAJO_CASILLA not in replay_inputs
     assert _M100_M111_RETENCIONES_BINDING not in replay_inputs
 

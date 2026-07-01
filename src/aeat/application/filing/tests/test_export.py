@@ -22,6 +22,7 @@ from ....domain.calculations.registry import (
     RegistryValidationError,
     parse_export_payload,
     validated_casilla_id,
+    xml_dictionary_entries,
 )
 from ....domain.filing import (
     FilingExportError,
@@ -368,27 +369,33 @@ def _approved_modelo_100_xml_dictionary_draft() -> ModeloDraft:
         ),
         ModeloValue(
             casilla_id="0596",
-            value=Decimal("1500.50"),
+            value=Decimal("4500.00"),
             kind=ModeloValueKind.INHERITED,
-            source="test observed withholding",
+            source="Marta verified salary withholding",
         ),
         ModeloValue(
             casilla_id="0604",
-            value=Decimal("325.75"),
+            value=Decimal("1520.00"),
             kind=ModeloValueKind.COMPUTED,
-            source="test relation fold",
+            source="Marta verified Modelo 130 relation fold",
         ),
         ModeloValue(
             casilla_id="0609",
-            value=Decimal("1826.25"),
+            value=Decimal("6020.00"),
             kind=ModeloValueKind.COMPUTED,
-            source="test total payments",
+            source="Marta verified total payments",
         ),
         ModeloValue(
             casilla_id="0610",
-            value=Decimal("-12.34"),
+            value=Decimal("2007.50"),
             kind=ModeloValueKind.COMPUTED,
-            source="test cuota diferencial",
+            source="Marta verified cuota diferencial",
+        ),
+        ModeloValue(
+            casilla_id="0670",
+            value=Decimal("2007.50"),
+            kind=ModeloValueKind.COMPUTED,
+            source="Marta verified resultado declaracion",
         ),
     )
     provenance_by_id = {
@@ -477,6 +484,11 @@ def test_export_writes_modelo_100_xml_dictionary_layout(tmp_path: Path) -> None:
     official_paths = _official_modelo_100_2024_dictionary_paths()
     parsed = parse_export_payload(layout, payload, source_root=provider.source_root, sources=provider.sources)
     parsed_values = {entry.casilla_id: entry.value for entry in parsed.casillas if entry.casilla_id is not None}
+    official_fields = {
+        entry.casilla_id: entry.field_id
+        for entry in xml_dictionary_entries(layout, source_root=provider.source_root, sources=provider.sources)
+        if entry.casilla_id in {"0596", "0604", "0609", "0610", "0670"}
+    }
 
     assert receipt.format is DeclaracionExportFormat.XML_DICTIONARY
     assert receipt.byte_size == len(payload)
@@ -488,16 +500,25 @@ def test_export_writes_modelo_100_xml_dictionary_layout(tmp_path: Path) -> None:
     assert root.attrib["{http://www.w3.org/2001/XMLSchema-instance}noNamespaceSchemaLocation"].endswith(
         "Renta2024.xsd",
     )
+    assert official_fields == {
+        "0596": "RET1",
+        "0604": "RET9",
+        "0609": "PAGOS",
+        "0610": "CDIF",
+        "0670": "RESULTADO",
+    }
     assert _xml_value(root, official_paths["0003"]) == "12000.25"
-    assert _xml_value(root, official_paths["0596"]) == "1500.50"
-    assert _xml_value(root, official_paths["0604"]) == "325.75"
-    assert _xml_value(root, official_paths["0609"]) == "1826.25"
-    assert _xml_value(root, official_paths["0610"]) == "-12.34"
+    assert _xml_value(root, official_paths["0596"]) == "4500.00"
+    assert _xml_value(root, official_paths["0604"]) == "1520.00"
+    assert _xml_value(root, official_paths["0609"]) == "6020.00"
+    assert _xml_value(root, official_paths["0610"]) == "2007.50"
+    assert _xml_value(root, official_paths["0670"]) == "2007.50"
     assert parsed_values["0003"] == Decimal("12000.25")
-    assert parsed_values["0596"] == Decimal("1500.50")
-    assert parsed_values["0604"] == Decimal("325.75")
-    assert parsed_values["0609"] == Decimal("1826.25")
-    assert parsed_values["0610"] == Decimal("-12.34")
+    assert parsed_values["0596"] == Decimal("4500.00")
+    assert parsed_values["0604"] == Decimal("1520.00")
+    assert parsed_values["0609"] == Decimal("6020.00")
+    assert parsed_values["0610"] == Decimal("2007.50")
+    assert parsed_values["0670"] == Decimal("2007.50")
     assert verify_export(draft, file_path=output, schema_provider=provider).verdict is DeclaracionVerifyVerdict.MATCH
 
 
