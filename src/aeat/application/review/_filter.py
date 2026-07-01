@@ -164,6 +164,7 @@ class LedgerReviewStatus(StrEnum):
     PENDING = "pending"
     REVIEWED = "reviewed"
     SKIPPED = "skipped"
+    EXCLUDED = "excluded"
 
 
 class InvoiceReviewFilterKey(StrEnum):

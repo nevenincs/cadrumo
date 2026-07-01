@@ -69,9 +69,11 @@ def transactions_pending(
     ``catalogue`` is an optional :class:`TransactionCatalogue` override; the repository is
     loaded when ``None``.
 
-    Skips fully-classified rows (BUSINESS / PERSONAL / MIXED) and rows
-    explicitly skipped by rule (``SKIPPED_BY_RULE``) — those have a
-    final disposition and do not want the operator's attention.
+    Skips fully-classified rows (BUSINESS / PERSONAL / MIXED), rows
+    explicitly skipped by rule (``SKIPPED_BY_RULE``), and rows the
+    operator reviewed and deliberately excluded (``REVIEWED_EXCLUDED``)
+    — those have a final disposition and do not want the operator's
+    attention.
     """
     if catalogue is None:
         catalogue = _load_transactions(settings, bucket_id=bucket_id)
@@ -127,11 +129,14 @@ def _classify_transaction(state: BusinessClassification) -> ReviewSeverity | Non
     """First-match-wins severity per the BusinessClassification states.
 
     Returns ``None`` when the state has a final disposition that does
-    not warrant the operator's attention (classified or rule-excluded).
+    not warrant the operator's attention (classified, rule-excluded, or
+    reviewed-and-excluded).
     """
     if is_classified(state):
         return None
     if state is BusinessClassification.SKIPPED_BY_RULE:
+        return None
+    if state is BusinessClassification.REVIEWED_EXCLUDED:
         return None
     if state is BusinessClassification.FAILED_VALIDATION:
         return ReviewSeverity.CRITICAL

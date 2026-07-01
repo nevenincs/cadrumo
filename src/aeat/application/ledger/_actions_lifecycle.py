@@ -20,6 +20,7 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     pass
 
+from ...core.external_constants import CLASSIFIED_BY_MANUAL
 from ...domain.buckets import (
     BucketEvent,
     BucketEventObjectType,
@@ -33,6 +34,7 @@ from ...domain.modelos._protocols import (
     WorkUnitCatalogueRepositoryProtocol,
 )
 from ...domain.transactions import (
+    BusinessClassification,
     Transaction,
     TransactionCatalogue,
     TransactionLifecycleLineageEntry,
@@ -208,6 +210,110 @@ def restore_manual_transaction(
         calculation_repository=calculation_repository,
         occurred_at=occurred_at,
     )
+
+
+def mark_transaction_reviewed_excluded(
+    *,
+    bucket_id: str,
+    transaction_id: str,
+    actor: str,
+    reason: str = "",
+    source_command: str = "aeat app ledger exclude",
+    transaction_repository: TransactionCatalogueRepositoryProtocol | None = None,
+    bucket_event_repository: BucketEventHistoryRepositoryProtocol | None = None,
+    work_unit_repository: WorkUnitCatalogueRepositoryProtocol | None = None,
+    calculation_repository: CalculationRevisionCatalogueRepositoryProtocol | None = None,
+    occurred_at: datetime | None = None,
+) -> ManualLedgerTransactionResult:
+    """Mark one active ledger transaction as reviewed and excluded from filing.
+
+    Sets the transaction's ``business_classification`` to
+    :attr:`~aeat.domain.transactions.BusinessClassification.REVIEWED_EXCLUDED` —
+    the operator's assertion "I reviewed this, it is not filing-relevant, stop
+    surfacing it." The row stays ``ACTIVE`` and visible in the ledger with review
+    status ``excluded``, drops out of the review queue, and is omitted from every
+    tax aggregation. The operator re-includes it by re-classifying the row
+    (``aeat app ledger classify``).
+
+    The finalized-modelo guard refuses the exclusion when the row is cited by a
+    sealed (``VERIFICADO_COMPLETO`` / ``PRESENTADO`` / ``PRESENTADO_SUPERSEDIDO``)
+    calculation revision, so an exclusion cannot silently change the input basis
+    of an already-filed period.
+
+    Returns a :class:`~aeat.application.ledger.ManualLedgerTransactionResult`
+    carrying the uniform mutation quintet.
+
+    Raises:
+        TransactionValidationError: when the row is not ``ACTIVE``, when it is
+            already ``REVIEWED_EXCLUDED``, or when a finalized-modelo reference
+            blocks the exclusion.
+        TransactionNotFoundError: when no transaction matches ``transaction_id``.
+    """
+    now = _normalise_timestamp(occurred_at)
+    trimmed_actor = _require_actor(actor, operation="ledger review exclusion")
+    trimmed_source_command = _require_source_command(source_command, operation="ledger review exclusion")
+    repository = _transaction_repository(bucket_id=bucket_id, repository=transaction_repository)
+    event_repository = _bucket_event_repository(bucket_id=bucket_id, repository=bucket_event_repository)
+    catalogue = repository.load()
+    current = _require_transaction(catalogue, transaction_id)
+    if current.lifecycle_state is not TransactionLifecycleState.ACTIVE:
+        raise TransactionValidationError(
+            "only active ledger transactions can be reviewed-excluded; archived, stashed, "
+            "and split-parent rows are already out of filing scope",
+            context={
+                "bucket_id": bucket_id,
+                "transaction_id": transaction_id,
+                "lifecycle_state": current.lifecycle_state.value,
+            },
+        )
+    if current.business_classification is BusinessClassification.REVIEWED_EXCLUDED:
+        raise TransactionValidationError(
+            "ledger transaction is already reviewed-excluded",
+            context={"bucket_id": bucket_id, "transaction_id": transaction_id},
+        )
+    blockers = _blocking_modelo_references(
+        bucket_id=bucket_id,
+        transaction_ids=_transaction_modelo_source_ids(current),
+        work_unit_repository=work_unit_repository,
+        calculation_repository=calculation_repository,
+    )
+    if blockers:
+        _raise_finalized_modelo_blocked(
+            operation="ledger transaction review exclusion",
+            transaction_ids=_transaction_modelo_source_ids(current),
+            blockers=blockers,
+        )
+    event = _build_bucket_event(
+        bucket_id=bucket_id,
+        event_type=BucketEventType.LEDGER_TRANSACTION_REVIEWED_EXCLUDED,
+        occurred_at=now,
+        actor=trimmed_actor,
+        object_id=current.transaction_id,
+        payload={
+            "source_command": trimmed_source_command,
+            "previous_classification": current.business_classification.value,
+            "business_classification": BusinessClassification.REVIEWED_EXCLUDED.value,
+            "reason": reason.strip(),
+        },
+    )
+    replacement = current.model_copy(
+        update={
+            "business_classification": BusinessClassification.REVIEWED_EXCLUDED,
+            # business_pct is coupled to MIXED; a reviewed-excluded row carries no
+            # proportion, so clear it or the persisted row fails validation on load.
+            "business_pct": None,
+            "classified_by": CLASSIFIED_BY_MANUAL,
+            "modified_at": now,
+        },
+    )
+    updated = _replace_transaction(catalogue, old_transaction_id=current.transaction_id, replacement=replacement)
+    _save_transaction_catalogue_and_events(
+        transaction_repository=repository,
+        event_repository=event_repository,
+        catalogue=updated,
+        events=(event,),
+    )
+    return _result(bucket_id, replacement, (event.event_id,))
 
 
 def remove_manual_transaction(
