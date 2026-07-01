@@ -9,6 +9,7 @@ no-tautological-calculation-tests rule.
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from decimal import Decimal
 
 import pytest
@@ -19,6 +20,98 @@ from .._errors import PensionReduccionError
 from .._sal_reserva_especial import compute_sal_reserva_especial_dotacion
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+
+_ReductionCompute = Callable[..., Decimal]
+
+_GUARD_ERROR_CASES: tuple[tuple[str, _ReductionCompute, dict[str, Decimal], str, str], ...] = (
+    (
+        "dt12-pre2007-exceeds-totales",
+        compute_dt12_reduccion_plan_pensiones,
+        {
+            "gross_rescate": Decimal("60000"),
+            "aportaciones_pre_2007": Decimal("40000"),
+            "aportaciones_totales": Decimal("33000"),
+        },
+        "must not exceed aportaciones_totales",
+        "aportaciones_pre_2007",
+    ),
+    (
+        "dt12-zero-totales",
+        compute_dt12_reduccion_plan_pensiones,
+        {
+            "gross_rescate": Decimal("60000"),
+            "aportaciones_pre_2007": Decimal("9600"),
+            "aportaciones_totales": Decimal("0"),
+        },
+        "aportaciones_totales must be positive",
+        "aportaciones_totales",
+    ),
+    (
+        "dt12-negative-gross",
+        compute_dt12_reduccion_plan_pensiones,
+        {
+            "gross_rescate": Decimal("-1"),
+            "aportaciones_pre_2007": Decimal("9600"),
+            "aportaciones_totales": Decimal("33000"),
+        },
+        "gross_rescate must be non-negative",
+        "gross_rescate",
+    ),
+    (
+        "dt12-negative-pre2007",
+        compute_dt12_reduccion_plan_pensiones,
+        {
+            "gross_rescate": Decimal("60000"),
+            "aportaciones_pre_2007": Decimal("-1"),
+            "aportaciones_totales": Decimal("33000"),
+        },
+        "aportaciones_pre_2007 must be non-negative",
+        "aportaciones_pre_2007",
+    ),
+    (
+        "sal-zero-capital",
+        compute_sal_reserva_especial_dotacion,
+        {
+            "beneficio_neto": Decimal("120000"),
+            "reserva_dotada": Decimal("30000"),
+            "capital_social": Decimal("0"),
+        },
+        "capital_social must be positive",
+        "capital_social",
+    ),
+    (
+        "sal-negative-beneficio",
+        compute_sal_reserva_especial_dotacion,
+        {
+            "beneficio_neto": Decimal("-1"),
+            "reserva_dotada": Decimal("30000"),
+            "capital_social": Decimal("100000"),
+        },
+        "beneficio_neto must be non-negative",
+        "beneficio_neto",
+    ),
+    (
+        "sal-negative-reserva",
+        compute_sal_reserva_especial_dotacion,
+        {
+            "beneficio_neto": Decimal("120000"),
+            "reserva_dotada": Decimal("-1"),
+            "capital_social": Decimal("100000"),
+        },
+        "reserva_dotada must be non-negative",
+        "reserva_dotada",
+    ),
+)
+
+
+def test_fiscal_reduction_guard_errors_carry_context() -> None:
+    for case_id, compute, kwargs, message, field_name in _GUARD_ERROR_CASES:
+        with pytest.raises(PensionReduccionError, match=message) as exc_info:
+            compute(**kwargs)
+        exc = exc_info.value
+        assert field_name in str(exc), case_id
+        assert exc.context is not None, case_id
+        assert exc.context["field"] == field_name, case_id
 
 
 class TestDt12ReduccionPlanPensiones:
@@ -83,33 +176,6 @@ class TestDt12ReduccionPlanPensiones:
         )
         assert result == Decimal("24000.00")
 
-    def test_pre_2007_exceeds_totales_raises(self) -> None:
-        # DT 12ª apartado 2: the reduced part is a subset of total contributions,
-        # so pre_2007 cannot exceed totales; a share > 1 would over-reduce silently.
-        with pytest.raises(PensionReduccionError, match="must not exceed aportaciones_totales"):
-            compute_dt12_reduccion_plan_pensiones(
-                gross_rescate=Decimal("60000"),
-                aportaciones_pre_2007=Decimal("40000"),
-                aportaciones_totales=Decimal("33000"),
-            )
-
-    def test_zero_totales_raises(self) -> None:
-        with pytest.raises(PensionReduccionError, match="aportaciones_totales must be positive"):
-            compute_dt12_reduccion_plan_pensiones(
-                gross_rescate=Decimal("60000"),
-                aportaciones_pre_2007=Decimal("9600"),
-                aportaciones_totales=Decimal("0"),
-            )
-
-    def test_negative_gross_raises(self) -> None:
-        with pytest.raises(PensionReduccionError, match="gross_rescate must be non-negative"):
-            compute_dt12_reduccion_plan_pensiones(
-                gross_rescate=Decimal("-1"),
-                aportaciones_pre_2007=Decimal("9600"),
-                aportaciones_totales=Decimal("33000"),
-            )
-
-
 class TestSalReservaEspecialDotacion:
     """Oracle tests for the Ley 44/2015 art. 14 SAL/SLL reserva especial dotacion."""
 
@@ -172,23 +238,6 @@ class TestSalReservaEspecialDotacion:
         )
         assert result == Decimal("0.00")
 
-    def test_zero_capital_raises(self) -> None:
-        with pytest.raises(PensionReduccionError, match="capital_social must be positive"):
-            compute_sal_reserva_especial_dotacion(
-                beneficio_neto=Decimal("120000"),
-                reserva_dotada=Decimal("30000"),
-                capital_social=Decimal("0"),
-            )
-
-    def test_negative_beneficio_raises(self) -> None:
-        with pytest.raises(PensionReduccionError, match="beneficio_neto must be non-negative"):
-            compute_sal_reserva_especial_dotacion(
-                beneficio_neto=Decimal("-1"),
-                reserva_dotada=Decimal("30000"),
-                capital_social=Decimal("100000"),
-            )
-
-
 class TestPensionReduccionErrorEnvelope:
     """PensionReduccionError carries structured context, registry code, and ancestry.
 
@@ -196,70 +245,6 @@ class TestPensionReduccionErrorEnvelope:
     error is a CoreValidationError / ValueError subclass, carries structured
     context, and maps to a stable registry code.
     """
-
-    def test_dt12_zero_totales_context(self) -> None:
-        with pytest.raises(PensionReduccionError) as exc_info:
-            compute_dt12_reduccion_plan_pensiones(
-                gross_rescate=Decimal("60000"),
-                aportaciones_pre_2007=Decimal("9600"),
-                aportaciones_totales=Decimal("0"),
-            )
-        exc = exc_info.value
-        assert "aportaciones_totales" in str(exc)
-        assert exc.context is not None
-        assert exc.context["field"] == "aportaciones_totales"
-
-    def test_dt12_negative_gross_context(self) -> None:
-        with pytest.raises(PensionReduccionError) as exc_info:
-            compute_dt12_reduccion_plan_pensiones(
-                gross_rescate=Decimal("-1"),
-                aportaciones_pre_2007=Decimal("9600"),
-                aportaciones_totales=Decimal("33000"),
-            )
-        assert exc_info.value.context is not None
-        assert exc_info.value.context["field"] == "gross_rescate"
-
-    def test_dt12_negative_pre2007_context(self) -> None:
-        with pytest.raises(PensionReduccionError) as exc_info:
-            compute_dt12_reduccion_plan_pensiones(
-                gross_rescate=Decimal("60000"),
-                aportaciones_pre_2007=Decimal("-1"),
-                aportaciones_totales=Decimal("33000"),
-            )
-        assert exc_info.value.context is not None
-        assert exc_info.value.context["field"] == "aportaciones_pre_2007"
-
-    def test_sal_zero_capital_context(self) -> None:
-        with pytest.raises(PensionReduccionError) as exc_info:
-            compute_sal_reserva_especial_dotacion(
-                beneficio_neto=Decimal("120000"),
-                reserva_dotada=Decimal("30000"),
-                capital_social=Decimal("0"),
-            )
-        exc = exc_info.value
-        assert "capital_social" in str(exc)
-        assert exc.context is not None
-        assert exc.context["field"] == "capital_social"
-
-    def test_sal_negative_beneficio_context(self) -> None:
-        with pytest.raises(PensionReduccionError) as exc_info:
-            compute_sal_reserva_especial_dotacion(
-                beneficio_neto=Decimal("-1"),
-                reserva_dotada=Decimal("30000"),
-                capital_social=Decimal("100000"),
-            )
-        assert exc_info.value.context is not None
-        assert exc_info.value.context["field"] == "beneficio_neto"
-
-    def test_sal_negative_reserva_context(self) -> None:
-        with pytest.raises(PensionReduccionError) as exc_info:
-            compute_sal_reserva_especial_dotacion(
-                beneficio_neto=Decimal("120000"),
-                reserva_dotada=Decimal("-1"),
-                capital_social=Decimal("100000"),
-            )
-        assert exc_info.value.context is not None
-        assert exc_info.value.context["field"] == "reserva_dotada"
 
     def test_pension_reduccion_error_is_core_validation_error(self) -> None:
         assert issubclass(PensionReduccionError, CoreValidationError)
