@@ -12,7 +12,7 @@ This service is a stateful :class:`SnapshotService` sibling of the
 Modelo 100 borrador service: it keys supersession on the
 ``(modelo, filing_year, period)`` axis so a re-filed period's fresh
 capture supersedes the prior ACTIVE one, and it persists each snapshot
-through a :class:`~aeat.adapters.persistence.storage.sql.SecureObjectRepository`
+through a :class:`~aeat.adapters.persistence.storage.SecureObjectRepository`
 at FINANCIAL sensitivity under
 :data:`aeat.adapters.persistence.storage.LIVE_JUSTIFICANTE_CAPTURE_SNAPSHOT_NAMESPACE`,
 and records each capture as a lifecycle event via
@@ -63,9 +63,9 @@ from ...adapters.persistence.storage import (
 )
 from ...adapters.persistence.storage import (
     Envelope,
+    SecureObjectRepository,
 )
 from ...adapters.persistence.storage.runtime_repository import secure_object_repository_for_bucket
-from ...adapters.persistence.storage.sql import SecureObjectRepository
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core import Modelo, Period
 from ...core.external_constants import UTF_8_ENCODING
@@ -274,7 +274,7 @@ class JustificanteCaptureSnapshotRepository:
     Each :class:`JustificanteCaptureSnapshot` is written through an
     :class:`~aeat.adapters.persistence.storage.Envelope` so the captured PDF,
     CSV, and expediente metadata stay inside the encrypted
-    :class:`~aeat.adapters.persistence.storage.sql.SecureObjectRepository`
+    :class:`~aeat.adapters.persistence.storage.SecureObjectRepository`
     bucket store.
     """
 
