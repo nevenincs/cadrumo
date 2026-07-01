@@ -9,6 +9,7 @@ from pathlib import Path
 import pytest
 from pydantic import ValidationError
 
+from ...iva._schema import IvaCategory, IvaExemptionArticle
 from .. import (
     BusinessClassification,
     ClassificationHistoryEntry,
@@ -197,6 +198,43 @@ def test_transaction_tax_fields_are_typed_and_round_trip_through_json() -> None:
     assert restored.prorrata_reference == "prorrata-2026"
     assert restored.purchase_invoice_evidence_id == "purchase-evidence-1"
     assert restored.attachment_ids == ("attachment-1",)
+
+
+def test_transaction_exemption_article_round_trips_for_domestic_exempt_category() -> None:
+    original = Transaction.model_validate(
+        {
+            "raw": _sample_raw(),
+            "direction": TransactionDirection.INCOMING,
+            "group_label": None,
+            "source_jurisdiction": "ES",
+            "iva_category": IvaCategory.DOMESTIC_EXEMPT,
+            "exemption_article": IvaExemptionArticle.ART_20_UNO_26,
+        },
+    )
+
+    restored = Transaction.model_validate_json(original.model_dump_json())
+
+    assert restored == original
+    assert restored.iva_category is IvaCategory.DOMESTIC_EXEMPT
+    assert restored.exemption_article is IvaExemptionArticle.ART_20_UNO_26
+
+
+@pytest.mark.parametrize("iva_category", (None, IvaCategory.DOMESTIC_GENERAL_21))
+def test_transaction_rejects_exemption_article_without_domestic_exempt_category(
+    iva_category: IvaCategory | None,
+) -> None:
+    payload: dict[str, object] = {
+        "raw": _sample_raw(),
+        "direction": TransactionDirection.INCOMING,
+        "group_label": None,
+        "source_jurisdiction": "ES",
+        "exemption_article": IvaExemptionArticle.ART_20_UNO_26,
+    }
+    if iva_category is not None:
+        payload["iva_category"] = iva_category
+
+    with pytest.raises(ValidationError, match="exemption_article"):
+        Transaction.model_validate(payload)
 
 
 def test_transaction_lineage_fields_are_typed_and_round_trip_through_json() -> None:

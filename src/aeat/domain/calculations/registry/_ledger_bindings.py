@@ -7,7 +7,7 @@ from datetime import date
 from decimal import Decimal
 from typing import Literal, Protocol
 
-from pydantic import BaseModel, ConfigDict, Field, field_validator
+from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
 from ....core import STRICT_FROZEN_CONFIG, Modelo
 from ....core.aggregation import LEDGER_BINDING_SOURCE_KINDS, BindingAggregationOp, BindingSourceKind
@@ -21,6 +21,7 @@ from ...iva import (
     OssIossRegime,
     TransactionKind,
 )
+from ...iva._schema import IvaExemptionArticle
 from ._binding_aggregation import binding_aggregation_op
 from ._binding_selector_utils import invariant_diagnostics, selector_against_model
 from ._binding_selector_utils import selector_as_dict as _selector_as_dict
@@ -325,6 +326,7 @@ class IvaLedgerObservation(BaseModel):
     ledger_id: str = Field(min_length=1, max_length=128)
     transaction_date: date
     category: IvaCategory
+    exemption_article: IvaExemptionArticle | None = None
     rate_kind: IvaRateKind
     flow_direction: IvaFlowDirection
     base_amount: Decimal
@@ -343,6 +345,15 @@ class IvaLedgerObservation(BaseModel):
     a manual join against the parallel ``prorrata_references`` tuple.
     """
 
+    @model_validator(mode="after")
+    def _enforce_exemption_article_category(self) -> IvaLedgerObservation:
+        if self.exemption_article is not None and self.category is not IvaCategory.DOMESTIC_EXEMPT:
+            raise RegistryValidationError(
+                "exemption_article is only valid when category is DOMESTIC_EXEMPT; "
+                f"got category {self.category.value!r}",
+            )
+        return self
+
 
 class _IvaLedgerSelector(BaseModel):
     """Validated form of a ledger_iva_aggregation binding selector."""
@@ -350,6 +361,7 @@ class _IvaLedgerSelector(BaseModel):
     model_config = ConfigDict(strict=False, frozen=True, extra="forbid")
 
     categories: tuple[IvaCategory, ...] = Field(min_length=1)
+    exemption_articles: tuple[IvaExemptionArticle, ...] | None = Field(default=None, min_length=1)
     rate_kinds: tuple[IvaRateKind, ...] = Field(min_length=1)
     flow_direction: IvaFlowDirection
     fact: Literal["iva_amount_sum", "base_amount_sum", "recargo_amount_sum"] = "iva_amount_sum"
@@ -367,6 +379,24 @@ class _IvaLedgerSelector(BaseModel):
         if len(set(value)) != len(value):
             raise RegistryValidationError("rate_kinds entries must be unique")
         return value
+
+    @field_validator("exemption_articles", mode="after")
+    @classmethod
+    def _exemption_articles_unique(
+        cls,
+        value: tuple[IvaExemptionArticle, ...] | None,
+    ) -> tuple[IvaExemptionArticle, ...] | None:
+        if value is not None and len(set(value)) != len(value):
+            raise RegistryValidationError("exemption_articles entries must be unique")
+        return value
+
+    @model_validator(mode="after")
+    def _exemption_article_filter_requires_domestic_exempt(self) -> _IvaLedgerSelector:
+        if self.exemption_articles is not None and IvaCategory.DOMESTIC_EXEMPT not in self.categories:
+            raise RegistryValidationError(
+                "exemption_articles selector requires DOMESTIC_EXEMPT in categories",
+            )
+        return self
 
 
 def _iva_ledger_selector(binding: DataBindingDefinition) -> _IvaLedgerSelector:
@@ -410,6 +440,24 @@ def validate_ledger_iva_aggregation_binding_definition(
         )
 
 
+def _iva_ledger_observation_matches_selector(
+    observation: IvaLedgerObservation,
+    selector: _IvaLedgerSelector,
+    *,
+    categories: set[IvaCategory],
+    rate_kinds: set[IvaRateKind],
+) -> bool:
+    if observation.category not in categories:
+        return False
+    if observation.rate_kind not in rate_kinds:
+        return False
+    if observation.flow_direction is not selector.flow_direction:
+        return False
+    if selector.exemption_articles is None:
+        return True
+    return observation.exemption_article in set(selector.exemption_articles)
+
+
 def resolve_ledger_iva_aggregation_binding_values(
     revision: ModeloRevision,
     observations: Iterable[IvaLedgerObservation],
@@ -440,9 +488,12 @@ def resolve_ledger_iva_aggregation_binding_values(
         matched = [
             observation
             for observation in available
-            if observation.category in cat_set
-            and observation.rate_kind in kind_set
-            and observation.flow_direction is selector.flow_direction
+            if _iva_ledger_observation_matches_selector(
+                observation,
+                selector,
+                categories=cat_set,
+                rate_kinds=kind_set,
+            )
         ]
         if selector.fact == "iva_amount_sum":
             total = sum((observation.iva_amount for observation in matched), Decimal("0"))
@@ -497,9 +548,12 @@ def unsupported_ledger_iva_observations(
         if observation.category in CUOTA_LESS_M303_IVA_CATEGORIES:
             continue
         if not any(
-            observation.category in selector.categories
-            and observation.rate_kind in selector.rate_kinds
-            and observation.flow_direction is selector.flow_direction
+            _iva_ledger_observation_matches_selector(
+                observation,
+                selector,
+                categories=set(selector.categories),
+                rate_kinds=set(selector.rate_kinds),
+            )
             for selector in selectors
         ):
             unsupported.append(observation)

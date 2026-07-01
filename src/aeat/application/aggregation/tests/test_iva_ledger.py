@@ -15,6 +15,7 @@ from ....core import Period
 from ....core.resources import resources
 from ....domain.calculations.registry import ModeloRevision, resolve_ledger_iva_aggregation_binding_values
 from ....domain.iva import IvaCategory, IvaFlowDirection, IvaRateKind, ProrrataKind, ProrrataRegime
+from ....domain.iva._schema import IvaExemptionArticle
 from ....domain.transactions import (
     BusinessClassification,
     RawProvenance,
@@ -108,6 +109,8 @@ def _transaction(
     lifecycle_state: TransactionLifecycleState = TransactionLifecycleState.ACTIVE,
     fx_rate: Decimal | None = None,
     value_in_eur: Decimal | None = None,
+    iva_category: IvaCategory | None = None,
+    exemption_article: IvaExemptionArticle | None = None,
 ) -> Transaction:
     # Keep the gross consistent with base + iva (the Transaction
     # gross == taxable_base + iva_amount invariant). When the caller does not
@@ -132,6 +135,8 @@ def _transaction(
             "taxable_base": taxable_base,
             "iva_rate": iva_rate,
             "iva_amount": iva_amount,
+            "iva_category": iva_category,
+            "exemption_article": exemption_article,
             "prorrata_reference": prorrata_reference,
             "lifecycle_state": lifecycle_state,
             "fx_rate": fx_rate,
@@ -599,6 +604,51 @@ def test_zero_and_super_reduced_rates_project_to_canonical_iva_categories() -> N
         IvaCategory.DOMESTIC_ZERO,
         IvaCategory.DOMESTIC_SUPER_REDUCED_4,
     ]
+
+
+def test_transaction_exemption_article_projects_to_iva_observation() -> None:
+    transaction = _transaction(
+        "row-art-20-26",
+        amount=Decimal("400.00"),
+        direction=TransactionDirection.INCOMING,
+        taxable_base=Decimal("400.00"),
+        iva_rate=Decimal("0"),
+        iva_amount=Decimal("0"),
+        iva_category=IvaCategory.DOMESTIC_EXEMPT,
+        exemption_article=IvaExemptionArticle.ART_20_UNO_26,
+    )
+
+    result = aggregate_iva_ledger_observations(
+        TransactionCatalogue.from_transactions((transaction,)),
+        period=_Q2_2026,
+    )
+
+    assert result.issues == ()
+    assert len(result.observations) == 1
+    observation = result.observations[0]
+    assert observation.category is IvaCategory.DOMESTIC_EXEMPT
+    assert observation.ledger_id == transaction.transaction_id
+    assert observation.exemption_article is IvaExemptionArticle.ART_20_UNO_26
+
+
+def test_preclassified_candidate_preserves_exemption_article_on_observation_projection() -> None:
+    candidate = IvaLedgerCandidate(
+        ledger_id="art-20-26-candidate",
+        transaction_date=date(2026, 4, 10),
+        category=IvaCategory.DOMESTIC_EXEMPT,
+        exemption_article=IvaExemptionArticle.ART_20_UNO_26,
+        rate_kind=IvaRateKind.EXEMPT,
+        flow_direction=IvaFlowDirection.REPERCUTIDO,
+        base_amount=Decimal("400.00"),
+        iva_amount=Decimal("0.00"),
+    )
+
+    observation = validate_iva_ledger_observation(candidate)
+    aggregation = aggregate_iva_ledger_candidates((candidate,), period=_Q2_2026)
+
+    assert observation.exemption_article is IvaExemptionArticle.ART_20_UNO_26
+    assert aggregation.issues == ()
+    assert aggregation.observations == (observation,)
 
 
 def test_preclassified_candidates_cover_non_domestic_exempt_recargo_and_adjustments() -> None:
