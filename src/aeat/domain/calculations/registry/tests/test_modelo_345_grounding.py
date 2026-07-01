@@ -83,3 +83,46 @@ def test_modelo_345_current_registry_uses_2025_sources_without_fake_calculation(
         source_root=bundled_path(),
     )
     verify_source_catalogue(bundled_path(), {ref: authority.catalogues.sources[ref] for ref in _M345_SOURCE_REFS})
+
+
+def test_modelo_345_additional_data_subfields_follow_official_record_design() -> None:
+    revision = resources().modelos.authority.modelo("345").revisions["2025"]
+    casillas = {str(casilla.id): casilla for casilla in revision.casillas}
+
+    expected = (
+        ("datos-adicionales-claves-abc", "tipo2.107-160", "text", None),
+        ("plan-pensiones-denominacion", "tipo2.107-146", "text", "m345_plan_pensiones_denominacion"),
+        (
+            "fondo-pensiones-numero-registro",
+            "tipo2.147-151",
+            "text",
+            "m345_fondo_pensiones_numero_registro",
+        ),
+        ("fondo-pensiones-nif", "tipo2.152-160", "nif", "m345_fondo_pensiones_nif"),
+        ("entidad-aseguradora-nif", "tipo2.161-169", "nif", "m345_entidad_aseguradora_nif"),
+        ("datos-adicionales-clave-i", "tipo2.170-189", "text", None),
+        ("pias-fecha-primera-prima", "tipo2.170-177", "date", "m345_pias_fecha_primera_prima"),
+        ("pias-importe-acumulado", "tipo2.178-189", "money", "m345_pias_importe_acumulado"),
+        ("datos-adicionales-clave-m", "tipo2.190-270", "text", None),
+        ("pepp-denominacion", "tipo2.190-229", "text", "m345_pepp_denominacion"),
+        ("pepp-numero-inscripcion", "tipo2.230-269", "text", "m345_pepp_numero_inscripcion"),
+        ("pepp-cuenta-subcuenta", "tipo2.270", "text", "m345_pepp_cuenta_subcuenta"),
+    )
+
+    for casilla_id, number, data_type, semantic_role in expected:
+        casilla = casillas[casilla_id]
+        assert casilla.number == number
+        assert casilla.data_type == data_type
+        assert casilla.semantic_role == semantic_role
+        assert "aeat-dr-345-2025" in casilla.source_refs
+
+    assert casillas["plan-pensiones-denominacion"].constraints is not None
+    assert casillas["plan-pensiones-denominacion"].constraints.max_length == 40
+    assert casillas["fondo-pensiones-numero-registro"].constraints is not None
+    assert casillas["fondo-pensiones-numero-registro"].constraints.max_length == 5
+    assert casillas["pepp-denominacion"].constraints is not None
+    assert casillas["pepp-denominacion"].constraints.max_length == 40
+    assert casillas["pepp-numero-inscripcion"].constraints is not None
+    assert casillas["pepp-numero-inscripcion"].constraints.max_length == 40
+    assert casillas["pepp-cuenta-subcuenta"].constraints is not None
+    assert casillas["pepp-cuenta-subcuenta"].constraints.enum == ("C", "S")

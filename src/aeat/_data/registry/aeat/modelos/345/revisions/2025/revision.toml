@@ -219,13 +219,98 @@ number = "tipo2.107-160"
 label = "Datos adicionales para las claves A, B y C"
 section = ["registro_declarado", "datos_adicionales"]
 data_type = "text"
-semantic_role = "m345_datos_adicionales_claves_abc"
-semantic_role_cardinality = "intentional_singleton"
-semantic_role_cardinality_reason = "Modelo 345 exposes the combined 107-160 additional-data block for keys A, B, and C as one current record-design slot."
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hfp-823-2022:art-3", "orden-hfp-528-2023:art-unico"]
 source_refs = ["aeat-dr-345-2025", "boe-modelo-345-base-order", "boe-modelo-345-2023-amendment-hfp-528"]
+
+[[revisions."2025".casillas]]
+id = "plan-pensiones-denominacion"
+number = "tipo2.107-146"
+label = "Denominacion del plan de pensiones"
+section = ["registro_declarado", "datos_adicionales", "claves_abc"]
+data_type = "text"
+semantic_role = "m345_plan_pensiones_denominacion"
+required = false
+input_kind = "manual"
+constraints = { max_length = 40, legal_refs = ["orden-hfp-823-2022:art-3"], source_refs = ["aeat-dr-345-2025", "boe-modelo-345-base-order"] }
+legal_refs = ["orden-hfp-823-2022:art-3"]
+source_refs = ["aeat-dr-345-2025", "boe-modelo-345-base-order"]
+
+[[revisions."2025".casillas]]
+id = "fondo-pensiones-numero-registro"
+number = "tipo2.147-151"
+label = "Numero de registro del fondo de pensiones"
+section = ["registro_declarado", "datos_adicionales", "claves_abc"]
+data_type = "text"
+semantic_role = "m345_fondo_pensiones_numero_registro"
+required = false
+input_kind = "manual"
+constraints = { max_length = 5, legal_refs = ["orden-hfp-823-2022:art-3"], source_refs = ["aeat-dr-345-2025", "boe-modelo-345-base-order"] }
+legal_refs = ["orden-hfp-823-2022:art-3"]
+source_refs = ["aeat-dr-345-2025", "boe-modelo-345-base-order"]
+
+[[revisions."2025".casillas]]
+id = "fondo-pensiones-nif"
+number = "tipo2.152-160"
+label = "NIF del fondo de pensiones"
+section = ["registro_declarado", "datos_adicionales", "claves_abc"]
+data_type = "nif"
+semantic_role = "m345_fondo_pensiones_nif"
+required = false
+input_kind = "manual"
+constraints = { max_length = 9, legal_refs = ["orden-hfp-823-2022:art-3"], source_refs = ["aeat-dr-345-2025", "boe-modelo-345-base-order"] }
+legal_refs = ["orden-hfp-823-2022:art-3"]
+source_refs = ["aeat-dr-345-2025", "boe-modelo-345-base-order"]
+
+[[revisions."2025".casillas]]
+id = "entidad-aseguradora-nif"
+number = "tipo2.161-169"
+label = "NIF de la entidad aseguradora"
+section = ["registro_declarado", "datos_adicionales", "clave_d"]
+data_type = "nif"
+semantic_role = "m345_entidad_aseguradora_nif"
+required = false
+input_kind = "manual"
+constraints = { max_length = 9, legal_refs = ["orden-hfp-823-2022:art-3"], source_refs = ["aeat-dr-345-2025", "boe-modelo-345-base-order"] }
+legal_refs = ["orden-hfp-823-2022:art-3"]
+source_refs = ["aeat-dr-345-2025", "boe-modelo-345-base-order"]
+
+[[revisions."2025".casillas]]
+id = "datos-adicionales-clave-i"
+number = "tipo2.170-189"
+label = "Datos adicionales para la clave I"
+section = ["registro_declarado", "datos_adicionales"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hfp-823-2022:art-3"]
+source_refs = ["aeat-dr-345-2025", "boe-modelo-345-base-order"]
+
+[[revisions."2025".casillas]]
+id = "pias-fecha-primera-prima"
+number = "tipo2.170-177"
+label = "Fecha de pago de la primera prima"
+section = ["registro_declarado", "datos_adicionales", "clave_i"]
+data_type = "date"
+semantic_role = "m345_pias_fecha_primera_prima"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hfp-823-2022:art-3"]
+source_refs = ["aeat-dr-345-2025", "boe-modelo-345-base-order"]
+
+[[revisions."2025".casillas]]
+id = "pias-importe-acumulado"
+number = "tipo2.178-189"
+label = "Importe acumulado PIAS"
+section = ["registro_declarado", "datos_adicionales", "clave_i"]
+data_type = "money"
+semantic_role = "m345_pias_importe_acumulado"
+required = false
+input_kind = "manual"
+constraints = { sign = "non_negative", legal_refs = ["orden-hfp-823-2022:art-3"], source_refs = ["aeat-dr-345-2025", "boe-modelo-345-base-order"] }
+legal_refs = ["orden-hfp-823-2022:art-3"]
+source_refs = ["aeat-dr-345-2025", "boe-modelo-345-base-order"]
 
 [[revisions."2025".casillas]]
 id = "datos-adicionales-clave-m"
@@ -233,11 +318,47 @@ number = "tipo2.190-270"
 label = "Datos adicionales para la clave M"
 section = ["registro_declarado", "datos_adicionales"]
 data_type = "text"
-semantic_role = "m345_datos_adicionales_clave_m"
-semantic_role_cardinality = "intentional_singleton"
-semantic_role_cardinality_reason = "Modelo 345 exposes the combined 190-270 additional-data block for key M as one current record-design slot."
 required = false
 input_kind = "manual"
+legal_refs = ["orden-hfp-528-2023:art-unico"]
+source_refs = ["aeat-dr-345-2025", "boe-modelo-345-2023-amendment-hfp-528"]
+
+[[revisions."2025".casillas]]
+id = "pepp-denominacion"
+number = "tipo2.190-229"
+label = "Denominacion del PEPP"
+section = ["registro_declarado", "datos_adicionales", "clave_m"]
+data_type = "text"
+semantic_role = "m345_pepp_denominacion"
+required = false
+input_kind = "manual"
+constraints = { max_length = 40, legal_refs = ["orden-hfp-528-2023:art-unico"], source_refs = ["aeat-dr-345-2025", "boe-modelo-345-2023-amendment-hfp-528"] }
+legal_refs = ["orden-hfp-528-2023:art-unico"]
+source_refs = ["aeat-dr-345-2025", "boe-modelo-345-2023-amendment-hfp-528"]
+
+[[revisions."2025".casillas]]
+id = "pepp-numero-inscripcion"
+number = "tipo2.230-269"
+label = "Numero de inscripcion del PEPP"
+section = ["registro_declarado", "datos_adicionales", "clave_m"]
+data_type = "text"
+semantic_role = "m345_pepp_numero_inscripcion"
+required = false
+input_kind = "manual"
+constraints = { max_length = 40, legal_refs = ["orden-hfp-528-2023:art-unico"], source_refs = ["aeat-dr-345-2025", "boe-modelo-345-2023-amendment-hfp-528"] }
+legal_refs = ["orden-hfp-528-2023:art-unico"]
+source_refs = ["aeat-dr-345-2025", "boe-modelo-345-2023-amendment-hfp-528"]
+
+[[revisions."2025".casillas]]
+id = "pepp-cuenta-subcuenta"
+number = "tipo2.270"
+label = "Cuenta/subcuenta"
+section = ["registro_declarado", "datos_adicionales", "clave_m"]
+data_type = "text"
+semantic_role = "m345_pepp_cuenta_subcuenta"
+required = false
+input_kind = "manual"
+constraints = { max_length = 1, enum = ["C", "S"], legal_refs = ["orden-hfp-528-2023:art-unico"], source_refs = ["aeat-dr-345-2025", "boe-modelo-345-2023-amendment-hfp-528"] }
 legal_refs = ["orden-hfp-528-2023:art-unico"]
 source_refs = ["aeat-dr-345-2025", "boe-modelo-345-2023-amendment-hfp-528"]
 
