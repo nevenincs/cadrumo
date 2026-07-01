@@ -47,7 +47,13 @@ from ._renta_codes import (
     SituacionFamiliar,
     SituacionFamiliarM145,
 )
-from .family import DescendantInfo, RentaAscendantProfile, RentaDescendantProfile, RentaFamilyProfile
+from .family import (
+    DescendantInfo,
+    RentaAscendantProfile,
+    RentaDescendantProfile,
+    RentaFamilyProfile,
+    within_multi_year_applicability_window,
+)
 
 if TYPE_CHECKING:
     # ``PROFILE_KEYS`` is defined lazily via ``__getattr__`` below so the
@@ -199,4 +205,5 @@ __all__ = [
     "parse_marriage_date_flag",
     "parse_tax_region",
     "required_profile_keys",
+    "within_multi_year_applicability_window",
 ]

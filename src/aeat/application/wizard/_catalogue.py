@@ -217,6 +217,10 @@ _MARITAL_STATUS_CHOICES: tuple[WizardChoice, ...] = (
         value=RentaMaritalStatus.SEPARADO_DIVORCIADO.value,
         label=tr("wizard.setup.taxpayer.taxpayer-marital-status.choices.separado-divorciado.label"),
     ),
+    WizardChoice(
+        value=RentaMaritalStatus.PAREJA_HECHO.value,
+        label=tr("wizard.setup.taxpayer.taxpayer-marital-status.choices.pareja-hecho.label"),
+    ),
 )
 
 _SITUACION_FAMILIAR_CHOICES: tuple[WizardChoice, ...] = (

@@ -34,6 +34,40 @@ from ._errors import ProfileValidationError
 _FULL_YEAR_CUTOFF_MONTH = 7
 _FULL_YEAR_CUTOFF_DAY = 1
 
+# Comunidad de Madrid "Por nacimiento o adopción de hijos" deducción autonómica
+# (DL 1/2010, de 21 octubre, arts. 4 y 18.1). Ámbito temporal: the deducción
+# applies in the period of nacimiento/adopción AND in each of the two following
+# periods — a three-period window keyed on the entry (nacimiento/adopción) year.
+# Grounded in the bundled AEAT Renta 2025 manual, parte 2 (deducciones
+# autonómicas), "Ámbito temporal de aplicación de la deducción".
+_NACIMIENTO_ADOPCION_APPLICABILITY_FOLLOWING_PERIODS = 2
+
+
+def within_multi_year_applicability_window(
+    entry_year: int,
+    filing_year: int,
+    *,
+    following_periods: int,
+) -> bool:
+    """Return whether *filing_year* is inside a multi-year applicability window.
+
+    A reusable primitive for autonomic deducciones that apply in the period of
+    a triggering event (a nacimiento, an adopción, a rehabilitación, ...) plus a
+    fixed number of following periods. The window is the closed interval
+    ``[entry_year, entry_year + following_periods]``; ``following_periods = 0``
+    yields a single-year window.
+
+    Args:
+        entry_year: Calendar year of the triggering event.
+        filing_year: The filing year whose eligibility is being tested.
+        following_periods: Count of periods after ``entry_year`` in which the
+            deducción remains applicable. Must be non-negative.
+    """
+    if following_periods < 0:
+        raise ProfileValidationError("following_periods must be non-negative")
+    return entry_year <= filing_year <= entry_year + following_periods
+
+
 # Art. 58 thresholds sourced from the central authority: age < 25 (exclusive)
 # for ordinary mínimo eligibility, age < 3 (exclusive) for the bajo-3-años
 # supplement. The module-private aliases keep the internal call sites stable.
@@ -171,6 +205,44 @@ class DescendantInfo(BaseModel):
         if entry.year > filing_year:
             return False
         return (entry.month, entry.day) < (_FULL_YEAR_CUTOFF_MONTH, _FULL_YEAR_CUTOFF_DAY)
+
+    def entry_year(self) -> int:
+        """Calendar year of the nacimiento/adopción event (deducción-window anchor)."""
+        return self._entry_date().year
+
+    def is_nacimiento_adopcion_eligible(
+        self,
+        filing_year: int,
+        *,
+        following_periods: int = _NACIMIENTO_ADOPCION_APPLICABILITY_FOLLOWING_PERIODS,
+    ) -> bool:
+        """True when this descendant is inside the nacimiento/adopción window and cohabits.
+
+        The Madrid nacimiento/adopción deducción (DL 1/2010 art. 4) requires both
+        that the parent cohabits with the child ("Solo tendrán derecho a practicar
+        la deducción los padres que convivan con los hijos nacidos o adoptados")
+        and that the filing year falls inside the applicability window measured
+        from the entry (nacimiento/adopción) year.
+        """
+        if not self.convive_con_contribuyente:
+            return False
+        return within_multi_year_applicability_window(
+            self.entry_year(),
+            filing_year,
+            following_periods=following_periods,
+        )
+
+    def nacimiento_adopcion_prorrateo_share(self) -> Decimal:
+        """Return this descendant's share of the deducción after prorrateo.
+
+        When the child cohabits with both parents and they file individually the
+        Madrid manual splits the amount equally between the two declarations
+        (":data:`CUSTODIA_COMPARTIDA_PRORRATA_FACTOR`" / ``Decimal("0.5")``);
+        otherwise the full amount accrues to this filer (``Decimal("1")``).
+        ``custodia_compartida`` is the profile signal for the shared-cohabitation
+        case that triggers the ÷2 prorrateo.
+        """
+        return CUSTODIA_COMPARTIDA_PRORRATA_FACTOR if self.custodia_compartida else Decimal("1")
 
 
 class _RentaPersonProfileBase(BaseModel):
@@ -355,6 +427,49 @@ class RentaFamilyProfile(BaseModel):
         return None
 
     # ------------------------------------------------------------------
+    # Comunidad de Madrid "Por nacimiento o adopción de hijos" deducción
+    # autonómica (DL 1/2010 arts. 4 y 18.1) — casilla 1039 framework primitives
+    # ------------------------------------------------------------------
+
+    def madrid_nacimiento_adopcion_eligible_count(self, filing_year: int) -> int:
+        """Count of descendants inside the Madrid nacimiento/adopción window who cohabit.
+
+        The raw (unweighted) eligible count; ``madrid_nacimiento_adopcion_weighted_count``
+        applies the per-descendant prorrateo the registry cuantía is multiplied by.
+        """
+        return sum(1 for d in self.descendientes if d.is_nacimiento_adopcion_eligible(filing_year))
+
+    def madrid_nacimiento_adopcion_weighted_count(self, filing_year: int) -> Decimal:
+        """Prorrateo-weighted eligible-descendant count for the Madrid deducción.
+
+        Each eligible descendant contributes its prorrateo share (``1``, or
+        ``0.5`` under custodia compartida). The registry formula multiplies this
+        weighted count by the per-child cuantía (721,70 € for 2023+ entries), so
+        the per-descendant prorrateo the registry schema cannot express is
+        embedded here — the Python/registry split the ADR mandates.
+        """
+        total = Decimal("0")
+        for descendant in self.descendientes:
+            if descendant.is_nacimiento_adopcion_eligible(filing_year):
+                total += descendant.nacimiento_adopcion_prorrateo_share()
+        return total
+
+    def unidad_familiar_otros_miembros_base(self) -> Decimal:
+        """Base imponible of unidad-familiar members OTHER than the filer.
+
+        Framework primitive for the autonomic double income-limit gate (the
+        unidad-familiar 61.860 € límite). For a monoparental/single filer the
+        other members are the filer's cohabiting children, whose own base
+        imponible the profile does not hold and is treated as zero; the filer's
+        own base (casillas 0435 + 0460) is added by the registry formula. A
+        conyugal unit's spouse base is not persisted, so the derived-fact
+        injector supplies this term only for the determinable single-filer case
+        and the trigger stays advisory-only otherwise (fail-closed, no
+        over-claim).
+        """
+        return Decimal("0")
+
+    # ------------------------------------------------------------------
     # Art. 81 LIRPF deducción maternidad (casilla 0611)
     # ------------------------------------------------------------------
 
@@ -445,4 +560,5 @@ __all__ = [
     "RentaAscendantProfile",
     "RentaDescendantProfile",
     "RentaFamilyProfile",
+    "within_multi_year_applicability_window",
 ]

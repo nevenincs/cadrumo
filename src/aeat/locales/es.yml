@@ -5469,7 +5469,7 @@ wizard:
           superior, 3 = incapacidad judicial, 4 = ayuda de terceros o movilidad reducida.'
       taxpayer-marital-status:
         help: 'Estado civil del primer declarante: 1 = soltero/a, 2 = casado/a, 3
-          = viudo/a, 4 = separado/a o divorciado/a.'
+          = viudo/a, 4 = separado/a o divorciado/a, 5 = pareja de hecho registrada.'
       taxpayer-marriage-date:
         help: Fecha de inicio del matrimonio actual (AAAA-MM-DD). Solo cuando estado
           civil = 2 (casado/a). Calcula casillas 0245/0246/0247 (matrimonio sobrevenido,
@@ -5716,6 +5716,8 @@ wizard:
         choices:
           casado:
             label: 2 - casado
+          pareja-hecho:
+            label: 5 - pareja de hecho registrada
           separado-divorciado:
             label: 4 - separado o divorciado
           soltero:
