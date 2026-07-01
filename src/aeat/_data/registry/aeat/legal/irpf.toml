@@ -893,6 +893,26 @@ required_text = [
     "se reducirá en el 60 por ciento",
 ]
 
+[legal."orden-eha-3435-2007:anexo-i"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "orden"
+corpus_ref = "corpus/normatives/html/orden-eha-3435-2007.html#anexo-i"
+document_id = "BOE-A-2007-20485"
+section = "Anexo I"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2007-20485#ai"
+published_at = 2007-11-29
+effective_from = 2019-01-01
+review_status = "reviewed"
+reviewed_at = 2026-07-01
+reviewed_by = "codex"
+notes = "Aprobacion del Modelo 117 como autoliquidacion periodica de retenciones, ingresos a cuenta y pagos a cuenta sobre rentas o ganancias por transmisiones o reembolsos de participaciones de IIC y transmisiones de derechos de suscripcion."
+required_text = [
+    "Modelo 117",
+    "Rentas o ganancias patrimoniales obtenidas como consecuencia de las transmisiones o reembolsos",
+    "transmisiones de derechos de suscripción",
+]
+
 [legal."orden-eha-3435-2007:anexo-ii"]
 evidence_tier = "legal_authority"
 authority = "boe"
@@ -911,6 +931,46 @@ required_text = [
     "Modelo 123",
     "Retenciones e ingresos a cuenta sobre determinados rendimientos del capital mobiliario",
     "Autoliquidación periódica-Modelo 123",
+]
+
+[legal."orden-eha-3435-2007:anexo-iv"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "orden"
+corpus_ref = "corpus/normatives/html/orden-eha-3435-2007.html#anexo-iv"
+document_id = "BOE-A-2007-20485"
+section = "Anexo IV"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2007-20485#ai-4"
+published_at = 2007-11-29
+effective_from = 2008-04-01
+review_status = "reviewed"
+reviewed_at = 2026-07-01
+reviewed_by = "codex"
+notes = "Aprobacion del Modelo 126 como autoliquidacion periodica de retenciones e ingresos a cuenta sobre rendimientos del capital mobiliario y rentas por la contraprestacion de cuentas en instituciones financieras."
+required_text = [
+    "Modelo 126",
+    "rendimientos del capital mobiliario",
+    "contraprestación derivada de cuentas",
+]
+
+[legal."orden-eha-3435-2007:anexo-v"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "orden"
+corpus_ref = "corpus/normatives/html/orden-eha-3435-2007.html#anexo-v"
+document_id = "BOE-A-2007-20485"
+section = "Anexo V"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2007-20485#av"
+published_at = 2007-11-29
+effective_from = 2008-04-01
+review_status = "reviewed"
+reviewed_at = 2026-07-01
+reviewed_by = "codex"
+notes = "Aprobacion del Modelo 128 como autoliquidacion periodica de retenciones e ingresos a cuenta sobre rentas o rendimientos del capital mobiliario procedentes de operaciones de capitalizacion y contratos de seguro."
+required_text = [
+    "Modelo 128",
+    "Rentas o rendimientos del capital mobiliario procedentes de operaciones de capitalización",
+    "contratos de seguro de vida o invalidez",
 ]
 
 [legal."orden-hac-56-2024:art-1"]

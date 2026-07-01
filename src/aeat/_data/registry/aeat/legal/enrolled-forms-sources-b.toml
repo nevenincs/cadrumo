@@ -1,0 +1,171 @@
+# Second dedicated source file for campaign-enrolled forms not yet migrated into
+# their own modelo-specific source catalogues.
+
+[sources."aeat-modelo-117-procedure"]
+evidence_tier = "official_source_guidance"
+authority = "aeat"
+kind = "instructions"
+corpus_path = "corpus/aeat_official/instructions/modelo_117/files/modelo-117-procedure.html"
+sha256 = "f17e8bf421f66a1791542c593661ee1f3606b2838f3453ce7923986ea8737517"
+bytes = 20262
+retrieved_at = 2026-07-01
+published_at = 2026-06-09
+applies_from = 2019-01-01
+source_url = "https://sede.agenciatributaria.gob.es/Sede/procedimientoini/GH03.shtml"
+review_status = "reviewed"
+
+[sources."boe-modelo-117-form-text"]
+evidence_tier = "official_source_guidance"
+authority = "boe"
+kind = "form_spec"
+corpus_path = "corpus/normatives/pdf/boe-a-2007-20485-modelo-117-annex-text.txt"
+sha256 = "56bd4038f5ab87f86d20a214252c027f139adda332fbec0b3ac440c835ca16cb"
+bytes = 1405
+retrieved_at = 2026-07-01
+published_at = 2018-12-29
+applies_from = 2019-01-01
+source_url = "https://www.boe.es/datos/imagenes/disp/2018/314/17997_6094.png"
+review_status = "reviewed"
+
+[sources."boe-modelo-117-form-layout"]
+evidence_tier = "layout_authority"
+authority = "boe"
+kind = "form_spec"
+corpus_path = "corpus/normatives/html/orden-eha-3435-2007.html"
+sha256 = "8e1bf71197d1eab6f75571bbb8dc3cdc4b7a83bf8725b72c3d3777b0295b3243"
+bytes = 150144
+retrieved_at = 2026-07-01
+published_at = 2007-11-29
+applies_from = 2008-04-01
+source_url = "https://www.boe.es/buscar/act.php?id=BOE-A-2007-20485"
+review_status = "reviewed"
+
+[sources."aeat-modelo-126-procedure"]
+evidence_tier = "official_source_guidance"
+authority = "aeat"
+kind = "instructions"
+corpus_path = "corpus/aeat_official/instructions/modelo_126/files/modelo-126-procedure.html"
+sha256 = "db00bc5bc6e92b61d88823e2c0053d8b7d75577bfdfb1c567c6a02bc40d344c1"
+bytes = 20838
+retrieved_at = 2026-07-01
+published_at = 2026-02-13
+applies_from = 2019-01-01
+source_url = "https://sede.agenciatributaria.gob.es/Sede/procedimientoini/GH06.shtml"
+review_status = "reviewed"
+
+[sources."boe-modelo-126-form-text"]
+evidence_tier = "official_source_guidance"
+authority = "boe"
+kind = "form_spec"
+corpus_path = "corpus/normatives/pdf/boe-a-2007-20485-modelo-126-annex-text.txt"
+sha256 = "0305a086ec6a613cc964af5482d275a9b765619a9a22e2aa1d29179ddffdab26"
+bytes = 1152
+retrieved_at = 2026-07-01
+published_at = 2007-11-29
+applies_from = 2008-04-01
+source_url = "https://www.boe.es/datos/imagenes/disp/2007/286/20485_14167491_image7.png"
+review_status = "reviewed"
+
+[sources."boe-modelo-126-form-layout"]
+evidence_tier = "layout_authority"
+authority = "boe"
+kind = "form_spec"
+corpus_path = "corpus/normatives/html/orden-eha-3435-2007.html"
+sha256 = "8e1bf71197d1eab6f75571bbb8dc3cdc4b7a83bf8725b72c3d3777b0295b3243"
+bytes = 150144
+retrieved_at = 2026-07-01
+published_at = 2007-11-29
+applies_from = 2008-04-01
+source_url = "https://www.boe.es/buscar/act.php?id=BOE-A-2007-20485"
+review_status = "reviewed"
+
+[sources."aeat-modelo-128-procedure"]
+evidence_tier = "official_source_guidance"
+authority = "aeat"
+kind = "instructions"
+corpus_path = "corpus/aeat_official/instructions/modelo_128/files/modelo-128-procedure.html"
+sha256 = "a798075ef88d0dafd5c1430873813b136d4dd37858889946f1f1d1e7aa9e64cf"
+bytes = 20839
+retrieved_at = 2026-07-01
+published_at = 2026-06-09
+applies_from = 2019-01-01
+source_url = "https://sede.agenciatributaria.gob.es/Sede/procedimientoini/GH07.shtml"
+review_status = "reviewed"
+
+[sources."boe-modelo-128-form-text"]
+evidence_tier = "official_source_guidance"
+authority = "boe"
+kind = "form_spec"
+corpus_path = "corpus/normatives/pdf/boe-a-2007-20485-modelo-128-annex-text.txt"
+sha256 = "21047f11f17b0dd360ae450b21e26c884d8dc2ad936dfb423b8b03355c5d4f40"
+bytes = 703
+retrieved_at = 2026-07-01
+published_at = 2007-11-29
+applies_from = 2008-04-01
+source_url = "https://www.boe.es/datos/imagenes/disp/2007/286/20485_14167491_image9.png"
+review_status = "reviewed"
+
+[sources."boe-modelo-128-form-layout"]
+evidence_tier = "layout_authority"
+authority = "boe"
+kind = "form_spec"
+corpus_path = "corpus/normatives/html/orden-eha-3435-2007.html"
+sha256 = "8e1bf71197d1eab6f75571bbb8dc3cdc4b7a83bf8725b72c3d3777b0295b3243"
+bytes = 150144
+retrieved_at = 2026-07-01
+published_at = 2007-11-29
+applies_from = 2008-04-01
+source_url = "https://www.boe.es/buscar/act.php?id=BOE-A-2007-20485"
+review_status = "reviewed"
+
+[sources."enrolled-modelo-231-procedure"]
+evidence_tier = "official_source_guidance"
+authority = "boe"
+kind = "form_spec"
+corpus_path = "corpus/normatives/html/orden-hac-941-2018.html"
+sha256 = "2481fd9016b8216a8a2bbfae9ea23e8846850a9dfb0039edd7e078e075c84218"
+bytes = 58327
+retrieved_at = 2026-05-05
+published_at = 2018-09-05
+applies_from = 2018-09-06
+source_url = "https://www.boe.es/buscar/act.php?id=BOE-A-2018-12356"
+review_status = "reviewed"
+
+[sources."enrolled-modelo-231-layout"]
+evidence_tier = "layout_authority"
+authority = "boe"
+kind = "form_spec"
+corpus_path = "corpus/normatives/html/orden-hac-941-2018.html"
+sha256 = "2481fd9016b8216a8a2bbfae9ea23e8846850a9dfb0039edd7e078e075c84218"
+bytes = 58327
+retrieved_at = 2026-05-05
+published_at = 2018-09-05
+applies_from = 2018-09-06
+source_url = "https://www.boe.es/buscar/act.php?id=BOE-A-2018-12356"
+review_status = "reviewed"
+
+[sources."enrolled-modelo-361-procedure"]
+evidence_tier = "official_source_guidance"
+authority = "boe"
+kind = "form_spec"
+corpus_path = "corpus/normatives/html/orden-eha-789-2010.html"
+sha256 = "fcdf59303556fed6edfed2798c8db2ecc16345cf101a66d289947b22fec0b61d"
+bytes = 104451
+retrieved_at = 2026-05-05
+published_at = 2010-03-16
+applies_from = 2010-03-17
+source_url = "https://www.boe.es/buscar/act.php?id=BOE-A-2010-5049"
+review_status = "reviewed"
+
+[sources."enrolled-modelo-361-layout"]
+evidence_tier = "layout_authority"
+authority = "boe"
+kind = "form_spec"
+corpus_path = "corpus/normatives/html/orden-eha-789-2010.html"
+sha256 = "fcdf59303556fed6edfed2798c8db2ecc16345cf101a66d289947b22fec0b61d"
+bytes = 104451
+retrieved_at = 2026-05-05
+published_at = 2010-03-16
+applies_from = 2010-03-17
+source_url = "https://www.boe.es/buscar/act.php?id=BOE-A-2010-5049"
+review_status = "reviewed"
