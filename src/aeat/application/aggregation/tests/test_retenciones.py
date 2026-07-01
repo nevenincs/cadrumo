@@ -6,7 +6,7 @@ from decimal import Decimal
 
 import pytest
 
-from ....core import Period
+from ....core import BindingSourceKind, Period
 from .._retenciones import (
     RETENCIONES_MODELO_SCHEME_CATALOGUE,
     RetencionesAggregation,
@@ -33,7 +33,7 @@ def _obs(
     base: str,
     retencion: str,
     name: str = "",
-    source_kind: str = "ledger_transaction",
+    source_kind: BindingSourceKind | str = BindingSourceKind.LEDGER_TRANSACTION,
     source_id: str = "tx-001",
     accrued: str = "2025-03-15",
 ) -> RetencionObservation:
@@ -53,7 +53,7 @@ class TestObservationContract:
     def test_observation_rejects_bare_invoice_source_kind(self) -> None:
         from pydantic import ValidationError
 
-        with pytest.raises(ValidationError, match="unsupported"):
+        with pytest.raises(ValidationError, match="source_kind"):
             RetencionObservation(
                 source_kind="invoice",
                 source_object_id="x",
@@ -64,10 +64,40 @@ class TestObservationContract:
                 accrued_on="2025-01-01",
             )
 
+    def test_observation_rejects_non_retenciones_source_kind_member(self) -> None:
+        from pydantic import ValidationError
+
+        with pytest.raises(ValidationError, match="unsupported"):
+            RetencionObservation(
+                source_kind=BindingSourceKind.RETENCIONES_AGGREGATION,
+                source_object_id="x",
+                perceptor_nif="A1",
+                scheme=RetencionScheme.WORK_INCOME,
+                taxable_base=Decimal("0"),
+                retencion_amount=Decimal("0"),
+                accrued_on="2025-01-01",
+            )
+
     def test_observation_accepts_canonical_source_kinds(self) -> None:
-        for kind in ("ledger_transaction", "purchase_invoice_evidence", "payable_invoice", "collectible_invoice"):
+        expected = {
+            BindingSourceKind.LEDGER_TRANSACTION,
+            BindingSourceKind.PURCHASE_INVOICE_EVIDENCE,
+            BindingSourceKind.PAYABLE_INVOICE,
+            BindingSourceKind.COLLECTIBLE_INVOICE,
+        }
+        observed: set[BindingSourceKind] = set()
+        for kind in expected:
             obs = _obs(nif="A1", scheme=RetencionScheme.WORK_INCOME, base="0", retencion="0", source_kind=kind)
-            assert obs.source_kind == kind
+            observed.add(obs.source_kind)
+            from_string = _obs(
+                nif="A1",
+                scheme=RetencionScheme.WORK_INCOME,
+                base="0",
+                retencion="0",
+                source_kind=kind.value,
+            )
+            assert from_string.source_kind is kind
+        assert observed == expected
 
 
 class TestAggregate111:
@@ -91,6 +121,7 @@ class TestAggregate111:
         result = aggregate_retenciones_111((obs,), period=_P_2025_Q1)
         assert len(result.rollups) == 1
         row = result.rollups[0]
+        assert row.source_kind is BindingSourceKind.LEDGER_TRANSACTION
         assert row.perceptor_nif == "B12345678"
         assert row.perceptor_name == "Acme S.L."
         assert row.scheme is RetencionScheme.ECONOMIC_ACTIVITY
