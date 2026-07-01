@@ -125,6 +125,14 @@ class PurchaseInvoiceEvidence(BaseModel):
         return None if value is None else str(value)
 
 
+#: Bound on the mint-time collision disambiguator. A genuine collision needs an
+#: identical record (same file, fields, and coarse-clock instant) already stored,
+#: so a handful of attempts is the realistic ceiling; the cap exists so a
+#: derivation regression that drops the disambiguator from the digest fails loudly
+#: instead of spinning forever.
+_ID_DISAMBIGUATION_CAP = 1024
+
+
 def derive_purchase_invoice_evidence_id(
     *,
     bucket_id: str,
@@ -428,8 +436,7 @@ class PurchaseInvoiceEvidenceService:
         )
         records = _load(self._settings, bucket_id)
         existing_ids = {existing.evidence_id for existing in records}
-        disambiguator = 0
-        while True:
+        for disambiguator in range(_ID_DISAMBIGUATION_CAP):
             evidence_id = derive_purchase_invoice_evidence_id(
                 bucket_id=bucket_id,
                 source_sha256=digest,
@@ -446,7 +453,15 @@ class PurchaseInvoiceEvidenceService:
             )
             if evidence_id not in existing_ids:
                 break
-            disambiguator += 1
+        else:
+            # Unreachable unless the derivation stops incorporating the
+            # disambiguator: then every attempt collides and the loop would spin
+            # forever. Fail loudly on the bounded cap instead of hanging.
+            raise RuntimeError(
+                f"could not derive a unique purchase-invoice evidence id after "
+                f"{_ID_DISAMBIGUATION_CAP} attempts; the content digest is not "
+                "incorporating the disambiguator (a derivation regression)",
+            )
         record = PurchaseInvoiceEvidence(
             evidence_id=evidence_id,
             bucket_id=bucket_id,

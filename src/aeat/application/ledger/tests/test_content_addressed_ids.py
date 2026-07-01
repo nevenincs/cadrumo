@@ -26,6 +26,7 @@ from pathlib import Path
 import pytest
 
 from ....adapters.persistence.storage.sql import SecureObjectRepository
+from ....core import IntracomOperationType
 from ....core.config import Settings
 from ....core.time import frozen_clock
 from .._business_operation_invoice import derive_business_operation_invoice_id
@@ -121,6 +122,44 @@ class TestEvidenceIdContentAddressed:
             persisted_ids = {r.evidence_id for r in svc.list_all(bucket_id=_BUCKET_ID)}
         assert persisted_ids == {first.evidence_id, second.evidence_id}
 
+    def test_evidence_id_roundtrip_antitautology(
+        self,
+        isolated_settings: Settings,
+        secure_objects: SecureObjectRepository,
+        pdf_file: Path,
+    ) -> None:
+        """Prove the evidence roundtrip is not tautological (parity with the invoice class).
+
+        Save a record, tamper the persisted payload on disk (re-save a mutated
+        record through the real encrypted repository), reload through the service,
+        and assert the reload surfaces the tampered content as strict inequality —
+        so a broken save/load path could not pass this test.
+        """
+        from .._evidence import PurchaseInvoiceEvidenceDocument, PurchaseInvoiceEvidenceRepository
+
+        svc = _make_svc(isolated_settings, secure_objects)
+        original = svc.add(
+            bucket_id=_BUCKET_ID,
+            source_path=pdf_file,
+            supplier="Acme S.L.",
+            invoice_number="ANTITAUT",
+            notes="original notes",
+        ).record
+
+        repository = PurchaseInvoiceEvidenceRepository(objects=secure_objects)
+        document = repository.load(_BUCKET_ID)
+        assert document is not None
+        tampered = original.model_copy(update={"supplier": "Tampered SL", "notes": "TAMPERED"})
+        repository.save(PurchaseInvoiceEvidenceDocument(bucket_id=_BUCKET_ID, records=(tampered,)))
+
+        reloaded = _make_svc(isolated_settings, secure_objects).view(
+            bucket_id=_BUCKET_ID,
+            evidence_id=original.evidence_id,
+        )
+        assert reloaded != original
+        assert reloaded.supplier == "Tampered SL"
+        assert original.supplier == "Acme S.L."
+
 
 class TestInvoiceIdContentAddressed:
     def test_invoice_id_equals_content_digest_and_roundtrips(
@@ -209,3 +248,47 @@ class TestInvoiceIdContentAddressed:
                 invoice_date="2026-01-15",
             ).record
         assert first.invoice_id != second.invoice_id
+
+    def test_invoice_country_code_lowercase_normalised_to_upper_in_record_and_id(
+        self,
+        isolated_settings: Settings,
+        secure_objects: SecureObjectRepository,
+    ) -> None:
+        """A lowercase country_code is stored upper AND the id derives from the upper form."""
+        record = (
+            _make_payable_svc(isolated_settings, secure_objects)
+            .add(
+                bucket_id=_BUCKET_ID,
+                counterparty_nif="B99999999",
+                invoice_number="INV-CC",
+                invoice_date="2026-01-15",
+                country_code="de",  # lowercase input
+                eu_iva_id="DE345678901",
+                operation_type=IntracomOperationType.S,
+            )
+            .record
+        )
+
+        # The model normalises the stored value to upper.
+        assert record.country_code == "DE"
+        # And the content-addressed id derives from that normalised (upper) value,
+        # not the raw lowercase input.
+        assert record.invoice_id == derive_business_operation_invoice_id(
+            bucket_id=record.bucket_id,
+            source_kind=record.source_kind,
+            counterparty_nif=record.counterparty_nif,
+            counterparty_name=record.counterparty_name,
+            invoice_number=record.invoice_number,
+            invoice_date=record.invoice_date,
+            currency=record.currency,
+            taxable_base=record.taxable_base,
+            iva_rate=record.iva_rate,
+            iva_amount=record.iva_amount,
+            total_amount=record.total_amount,
+            notes=record.notes,
+            country_code="DE",
+            eu_iva_id=record.eu_iva_id,
+            operation_type=record.operation_type,
+            created_at=record.created_at,
+            disambiguator=0,
+        )

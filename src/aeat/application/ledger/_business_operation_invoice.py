@@ -194,6 +194,14 @@ class BusinessOperationInvoice(BaseModel):
         return format(value, "f")
 
 
+#: Bound on the mint-time collision disambiguator. A genuine collision needs an
+#: identical invoice (same fields and coarse-clock instant) already stored, so a
+#: handful of attempts is the realistic ceiling; the cap exists so a derivation
+#: regression that drops the disambiguator from the digest fails loudly instead of
+#: spinning forever.
+_ID_DISAMBIGUATION_CAP = 1024
+
+
 def derive_business_operation_invoice_id(
     *,
     bucket_id: str,
@@ -477,8 +485,7 @@ class _BusinessOperationInvoiceService:
         normalised_country_code = country_code.upper() if country_code is not None else None
         records = _load(self._settings, self.source_kind, bucket_id)
         existing_ids = {existing.invoice_id for existing in records}
-        disambiguator = 0
-        while True:
+        for disambiguator in range(_ID_DISAMBIGUATION_CAP):
             invoice_id = derive_business_operation_invoice_id(
                 bucket_id=bucket_id,
                 source_kind=self.source_kind,
@@ -500,7 +507,15 @@ class _BusinessOperationInvoiceService:
             )
             if invoice_id not in existing_ids:
                 break
-            disambiguator += 1
+        else:
+            # Unreachable unless the derivation stops incorporating the
+            # disambiguator: then every attempt collides and the loop would spin
+            # forever. Fail loudly on the bounded cap instead of hanging.
+            raise RuntimeError(
+                f"could not derive a unique business-operation invoice id after "
+                f"{_ID_DISAMBIGUATION_CAP} attempts; the content digest is not "
+                "incorporating the disambiguator (a derivation regression)",
+            )
         record = BusinessOperationInvoice(
             invoice_id=invoice_id,
             source_kind=self.source_kind,
