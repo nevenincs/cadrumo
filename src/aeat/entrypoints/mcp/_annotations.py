@@ -50,6 +50,9 @@ def annotations_for_command(*, command_key: str, mutability: OperatorMutability,
         command_key: The registry command key (e.g. ``"ledger.remove"``).
         mutability: The owning family's mutability from the manifest.
         title: A human-readable tool title.
+
+    Returns:
+        :class:`McpAnnotations` for the command's MCP descriptor.
     """
     leaf = command_key.rsplit(".", 1)[-1]
     read_only = mutability is OperatorMutability.READ_ONLY

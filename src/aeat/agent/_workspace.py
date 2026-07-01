@@ -40,6 +40,9 @@ def materialise_workspace(output_dir: Path) -> WorkspaceManifest:
 
     The layout is ``output_dir/{rules,personas,skills}/...``. Each skill is written
     as ``skills/<skill-name>/SKILL.md``. Returns a manifest of what was written.
+
+    Returns:
+        :class:`WorkspaceManifest` describing the files written.
     """
     rules_dir = output_dir / "rules"
     rules = 0
