@@ -8,25 +8,6 @@ related:
   - "[[2026-06-30-ledger-add-idempotency-plan]]"
 ---
 
-<!-- FRONTMATTER RULES:
-     tags: one directory tag (hardcoded #audit) and one feature tag.
-     Replace ledger-add-idempotency with a kebab-case feature tag, e.g. #foo-bar.
-     Additional tags may be appended below the required pair.
-
-     Related: use wiki-links as '[[yyyy-mm-dd-foo-bar]]'.
-
-     modified: CLI-maintained last-modified stamp; set at scaffold time,
-     refreshed by mutating CLI verbs and vault check fix; never hand-edit.
-
-     DO NOT add fields beyond those scaffolded; metadata lives
-     only in the frontmatter. -->
-
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the related: field above.
-     - NEVER use [[wiki-links]] or markdown links in the document body.
-     - NEVER reference file paths in the body. If you must name a source file,
-       class, or function, use inline backtick code: `src/module.py`. -->
-
 # `ledger-add-idempotency` audit: `ledger-add-idempotency close honesty review`
 
 ## Scope
@@ -45,7 +26,7 @@ The filing-record anti-tautology test seeded `revision_id` with an invalid-hex v
 
 ### f5bd349a5-scope-bleed | medium | provider-id fix commit bundled unrelated M390 registry work (deferred, not reverted)
 
-Commit `f5bd349a5` (the P01.S01 provider-id lookup fix) also bundled unrelated Modelo 390 registry TOML plus a 253-line M390 fold-in test — a scope-bleed / peer-WIP capture into an atomic ledger commit. The M390 work is preserved in history; reverting would destroy it and is entangled with the ledger fix. Documented and surfaced for the M390 campaign to confirm rather than unwound.
+Commit `f5bd349a5` (the P01.S01 provider-id lookup fix) also bundled unrelated Modelo 390 registry TOML plus a 253-line M390 fold-in test — a scope-bleed / peer-WIP capture into an atomic ledger commit. The M390 work is preserved in history; reverting would destroy it and is entangled with the ledger fix. VERIFIED intact and coherent: the captured set is a complete régimen-simplificado cuota-devengada fold-in — the relation `modelo-390-rel-303-cuota-devengada-simplificado` (M390 box 79 ← M303 4T casilla 54, `op = copy`, grounded in LIVA arts. 122/123 + RD 1624/1992 art. 71) plus its `target_binding`, casillas, construct, completeness-manifest entry, dependency classification, and live test — not a half-swept fragment. Left in history under the ledger commit; the only residue is that it rode in without its own review, which this note records. Not unwound.
 
 ### s22-inline-notice-message | low | modelo-file no-op Notice uses an inline string, not a tr() key (FIXED)
 
@@ -62,7 +43,7 @@ Five `test_file_flow_filing.py` tests fail at registry load with `modelo 714 rev
 ## Recommendations
 
 - All in-scope findings are now FIXED and re-verified (my feature surface: 35 passed — idempotency 13, filing roundtrip 15, locale 7): MEDIUM-2 `bdd141a59`, MEDIUM-1 `ce1f79e38`, LOW-S16 `3f4206d3d`, LOW-S22-tr `cd3531ed7`. No further action on the feature.
-- MEDIUM-3 (`f5bd349a5` scope bleed): confirm with the M390 campaign that the bundled registry work is intact and got its own review; do not revert.
+- MEDIUM-3 (`f5bd349a5` scope bleed): VERIFIED — the bundled M390 work is a complete, coherent fold-in feature (relation + binding + casillas + construct + manifest + dependency + test), intact in history; not reverted. Residual: it rode in without its own review (recorded).
 - The `single-subject-mutation-is-idempotent-guarded` codification candidate remains flagged for post-cycle promotion only; do not promote this cycle.
 - Two OWNER-ATTRIBUTED, out-of-scope peer failures observed during the sweep, surfaced to their campaigns: (1) `test_no_parallel_work_unit_storage_namespace` — the custody campaign's `application/user_profile/_bundle.py` / `_custody_carry.py` reference the work_units namespace; (2) the five `test_file_flow_filing.py` failures — the M714 campaign's untracked invalid verification expectation. Neither is this feature's surface.
 - Shared-worktree note: the locale surface was under continuous multi-campaign churn throughout close; the `tr` promotion was landed via a temporary-index `commit-tree` specifically to avoid sweeping peer locale WIP. No destructive git ran and no peer work was swept at any point.
