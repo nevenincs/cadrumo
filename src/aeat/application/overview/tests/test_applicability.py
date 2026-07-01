@@ -815,13 +815,40 @@ def test_modelo_347_applicable_when_third_party_threshold_exceeded() -> None:
     assert result.verdict is ApplicabilityVerdict.APPLICABLE
 
 
-def test_payer_fact_modelos_without_attribution_scope_are_not_applicable() -> None:
-    """Payer-fact modelos not yet scoped to attribution entities stay excluded."""
+@pytest.mark.parametrize(
+    ("modelo", "payer_fact_update"),
+    (
+        ("115", {"pays_rent_with_retencion": True}),
+        ("180", {"pays_rent_with_retencion": True}),
+        ("349", {"does_intracomunitario": True}),
+        ("347", {"third_party_transactions_above_347_threshold": True}),
+    ),
+    ids=("rent-retention", "rent-summary", "intracommunity", "third-party-threshold"),
+)
+def test_attribution_entity_with_required_fact_owes_fact_gated_modelos(
+    modelo: str,
+    payer_fact_update: dict[str, bool],
+) -> None:
+    """Attribution entities can owe payer/informative modelos for their own facts."""
 
-    profile = _attribution_entity()
-    for modelo in ("115", "180", "349", "347"):
-        result = derive_modelo_applicability(profile, modelo)
-        assert result.verdict is ApplicabilityVerdict.NOT_APPLICABLE, modelo
+    profile = _attribution_entity().model_copy(update=payer_fact_update)
+
+    result = derive_modelo_applicability(profile, modelo)
+
+    assert result.verdict is ApplicabilityVerdict.APPLICABLE
+
+
+@pytest.mark.parametrize(
+    "modelo",
+    ("115", "180", "349", "347"),
+    ids=("rent-retention", "rent-summary", "intracommunity", "third-party-threshold"),
+)
+def test_attribution_entity_without_required_fact_is_incomplete_for_fact_gated_modelos(modelo: str) -> None:
+    """Undeclared payer/trade facts stay INCOMPLETE for attribution entities."""
+
+    result = derive_modelo_applicability(_attribution_entity(), modelo)
+
+    assert result.verdict is ApplicabilityVerdict.INCOMPLETE
 
 
 def test_undetermined_reason_distinct_from_undeclared_and_unruled() -> None:
