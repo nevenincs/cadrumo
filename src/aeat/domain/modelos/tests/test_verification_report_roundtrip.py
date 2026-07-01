@@ -185,6 +185,25 @@ def test_verification_finding_requires_legal_refs() -> None:
     assert "legal_refs" in str(raised.value)
 
 
+def test_verification_finding_rejects_blank_grounding_refs() -> None:
+    """Finding provenance entries must be registry ids, not blank strings."""
+    with pytest.raises(ValidationError, match="legal_refs"):
+        ModeloVerificationFinding(
+            kind=ModeloVerificationFindingKind.BLOCKING_RULE,
+            severity=ModeloVerificationFindingSeverity.BLOCKING,
+            message="cross-casilla predicate failed",
+            legal_refs=(" ",),
+        )
+    with pytest.raises(ValidationError, match="source_refs"):
+        ModeloVerificationFinding(
+            kind=ModeloVerificationFindingKind.BLOCKING_RULE,
+            severity=ModeloVerificationFindingSeverity.BLOCKING,
+            message="cross-casilla predicate failed",
+            legal_refs=_TEST_FINDING_LEGAL_REFS,
+            source_refs=(" ",),
+        )
+
+
 def test_report_id_is_clock_free_for_an_identical_outcome() -> None:
     """Two reports with an identical outcome but different run_at share one id.
 
