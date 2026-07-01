@@ -25,6 +25,7 @@ AEAT-oracle expected-value and trajectory assertions on top.
 from __future__ import annotations
 
 import io
+import shutil
 import warnings
 from datetime import UTC, date, datetime
 from decimal import Decimal
@@ -39,11 +40,11 @@ from ....application.ledger import (
     ledger_transaction_payload,
     ledger_transaction_review_status,
 )
-from ....core.hashing import sha256_hex
 from ....core.json_contract import SCHEMA_REGISTRY, Notice, NoticeSeverity, emit_json_success
 from ....core.observability import (
     canonicalise,
     capture_envelopes,
+    compute_db_sha256,
     differing_field_names,
     differing_paths,
     mask_document,
@@ -51,7 +52,7 @@ from ....core.observability import (
 from ....core.time import frozen_clock
 from ....domain.buckets import BucketEventHistoryRepository
 from ....domain.transactions import TransactionCatalogueRepository, TransactionDirection
-from ....tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile, read_db_at_rest_bytes
+from ....tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
 from .._ledger_payloads import EvidenceAddResult, LedgerAddResult
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
@@ -70,19 +71,25 @@ def uncovered_replayable_commands() -> frozenset[str]:
     return frozenset(SCHEMA_REGISTRY) - ENROLLED_REPLAYABLE_COMMANDS
 
 
-def _committed_db_fingerprint(profile: TestRuntimeProfile) -> str:
-    """Return a SHA-256 over the bucket database's committed at-rest bytes.
+def _committed_db_fingerprint(profile: TestRuntimeProfile, snapshot_dir: Path) -> str:
+    """Return the substrate ``compute_db_sha256`` over the bucket's committed state.
 
-    Uses the substrate's own at-rest reader (:func:`read_db_at_rest_bytes`), which
-    concatenates the main ``.db`` file with its committed ``-wal`` frames and omits
-    the ``-shm`` shared-memory WAL index. ``-shm`` carries no committed row payload
-    and its reader-marks flap on every read (so it is not a state change), and it
-    cannot be reliably removed in-session on Windows (its mmap handle outlives
-    ``engine.dispose()``); this is the faithful in-session committed-state
-    fingerprint, while the whole-tree ``compute_db_sha256`` stays valid at a
-    between-process replay boundary where no connection is open.
+    Snapshots the committed database files — the main ``.db`` plus its committed
+    ``-wal`` frames — into ``snapshot_dir``, excluding the volatile ``-shm``
+    shared-memory WAL index, then fingerprints that snapshot with the substrate's
+    :func:`compute_db_sha256` (the ADR's named db_sha256 tier). ``-shm`` carries no
+    committed row payload and its reader-marks flap on every read (not a state
+    change), and it cannot be removed in-session on Windows (its mmap handle
+    outlives ``engine.dispose()``), so the live var tree cannot be hashed directly
+    in-process; the snapshot lets the substrate fingerprint run over the committed
+    bytes exactly as it would at a between-process replay boundary where no
+    connection is open.
     """
-    return sha256_hex(read_db_at_rest_bytes(profile.paths.db_dir / "aeat.db"))
+    snapshot_dir.mkdir(parents=True, exist_ok=True)
+    for source in sorted(profile.paths.db_dir.iterdir()):
+        if source.is_file() and not source.name.endswith("-shm"):
+            shutil.copy2(source, snapshot_dir / source.name)
+    return compute_db_sha256(snapshot_dir)
 
 
 def _idempotent_command() -> ManualLedgerTransactionCommand:
@@ -190,7 +197,7 @@ class TestEnrolledCommandDeterminism:
                 bucket_event_repository=events,
                 occurred_at=_INSTANT,
             )
-            db_after_create = _committed_db_fingerprint(profile)
+            db_after_create = _committed_db_fingerprint(profile, tmp_path / "db-snap-create")
 
             second = create_manual_transaction(
                 command,
@@ -199,7 +206,7 @@ class TestEnrolledCommandDeterminism:
                 occurred_at=_INSTANT,
             )
             assert second.bucket_event_ids == ()  # the guarded-idempotent no-op signal
-            db_after_retry = _committed_db_fingerprint(profile)
+            db_after_retry = _committed_db_fingerprint(profile, tmp_path / "db-snap-retry")
 
         # The idempotent second add wrote nothing: the hermetic var-root committed
         # fingerprint is identical, proving the clock-free identity is a true
