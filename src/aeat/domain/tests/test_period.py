@@ -17,9 +17,8 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 
 class TestPeriodConstructionContract:
-    @pytest.mark.parametrize(
-        ("filing_year", "code", "expected"),
-        [
+    def test_bare_tokens_resolve_with_explicit_year(self) -> None:
+        for filing_year, code, expected in (
             (2026, "1T", Period.from_year_and_code(2026, "1T")),
             (2026, "4T", Period.from_year_and_code(2026, "4T")),
             (2026, "03", Period.from_year_and_code(2026, "03")),
@@ -28,15 +27,13 @@ class TestPeriodConstructionContract:
             (2026, "1P", Period.from_year_and_code(2026, "1P")),
             (2026, "2P", Period.from_year_and_code(2026, "2P")),
             (2026, "3P", Period.from_year_and_code(2026, "3P")),
-        ],
-    )
-    def test_bare_tokens_resolve_with_explicit_year(self, filing_year: int, code: str, expected: Period) -> None:
-        assert Period.from_year_and_code(filing_year, code) == expected
+        ):
+            assert Period.from_year_and_code(filing_year, code) == expected, code
 
-    @pytest.mark.parametrize("combined", ("2026Q1", "2026-1T", "2026-03", "2026A", "2026", "2026P1"))
-    def test_combined_forms_refuse_at_core_period_boundary(self, combined: str) -> None:
-        with pytest.raises(ValueError, match=r"invalid period code"):
-            Period.from_year_and_code(2026, combined)
+    def test_combined_forms_refuse_at_core_period_boundary(self) -> None:
+        for combined in ("2026Q1", "2026-1T", "2026-03", "2026A", "2026", "2026P1"):
+            with pytest.raises(ValueError, match=r"invalid period code"):
+                Period.from_year_and_code(2026, combined)
 
 
 class TestRegistryPeriodBoundaries:
@@ -46,9 +43,8 @@ class TestRegistryPeriodBoundaries:
     AEAT instruction payment months, not to derived quarter ranges.
     """
 
-    @pytest.mark.parametrize(
-        ("registry_period", "start", "end"),
-        [
+    def test_registry_period_boundaries(self) -> None:
+        for registry_period, start, end in (
             ("1T", date(2026, 1, 1), date(2026, 3, 31)),
             ("2T", date(2026, 4, 1), date(2026, 6, 30)),
             ("3T", date(2026, 7, 1), date(2026, 9, 30)),
@@ -57,11 +53,9 @@ class TestRegistryPeriodBoundaries:
             ("1P", date(2026, 4, 1), date(2026, 4, 30)),
             ("2P", date(2026, 10, 1), date(2026, 10, 31)),
             ("3P", date(2026, 12, 1), date(2026, 12, 31)),
-        ],
-    )
-    def test_registry_period_boundaries(self, registry_period: str, start: date, end: date) -> None:
-        assert period_start_date(2026, registry_period) == start
-        assert period_end_date(2026, registry_period) == end
+        ):
+            assert period_start_date(2026, registry_period) == start, registry_period
+            assert period_end_date(2026, registry_period) == end, registry_period
 
     def test_pago_fraccionado_no_longer_raises_invalid_registry_period(self) -> None:
         """``1P``/``2P``/``3P`` must not fall through to the
@@ -86,20 +80,17 @@ class TestBoundaryRefusals:
 class TestPagoFraccionadoConstruction:
     """The Modelo 202 IS pago-fraccionado instalment claves are bare tokens."""
 
-    @pytest.mark.parametrize(
-        ("code", "expected"),
-        [
+    def test_pago_fraccionado_tokens_resolve_with_explicit_year(self) -> None:
+        for code, expected in (
             ("1P", Period.from_year_and_code(2026, "1P")),
             ("2P", Period.from_year_and_code(2026, "2P")),
             ("3P", Period.from_year_and_code(2026, "3P")),
-        ],
-    )
-    def test_pago_fraccionado_tokens_resolve_with_explicit_year(self, code: str, expected: Period) -> None:
-        assert Period.from_year_and_code(2026, code) == expected
+        ):
+            assert Period.from_year_and_code(2026, code) == expected, code
 
-    @pytest.mark.parametrize("code", ["1P", "2P", "3P"])
-    def test_registry_period_accepted_by_boundary_helpers(self, code: str) -> None:
+    def test_registry_period_accepted_by_boundary_helpers(self) -> None:
         """Every valid bare instalment token is accepted by the boundary helpers."""
-        start = period_start_date(2026, code)
-        end = period_end_date(2026, code)
-        assert start <= end
+        for code in ("1P", "2P", "3P"):
+            start = period_start_date(2026, code)
+            end = period_end_date(2026, code)
+            assert start <= end, code
