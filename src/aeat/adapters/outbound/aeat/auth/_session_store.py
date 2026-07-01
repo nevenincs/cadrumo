@@ -5,11 +5,11 @@ This module is the concrete adapter behind
 :class:`PersistedBrowserSession` payloads in
 :data:`aeat.adapters.persistence.storage.AEAT_BROWSER_SESSION_NAMESPACE`,
 whose registry entry pins the records to bucket-local
-:class:`~aeat.adapters.persistence.storage.SensitivityClass` ``SESSION``
+``SESSION`` :class:`~aeat.adapters.persistence.storage.SensitivityClass`
 storage, schema version, process-local custody, and logical-path object-key
 grammar.
 
-:class:`~aeat.adapters.persistence.storage.sql.SecureObjectRepository` encrypts
+:class:`~aeat.adapters.persistence.storage.SecureObjectRepository` encrypts
 payload bytes and digests the logical object key at the column boundary, so
 Playwright cookies, local storage, and provider metadata never appear as
 plaintext files.
@@ -28,9 +28,8 @@ from .....core import STRICT_FROZEN_CONFIG
 from .....core.external_constants import UTF_8_ENCODING
 from .....core.hashing import sha256_hex
 from .....core.time import now
-from ....persistence.storage import AEAT_BROWSER_SESSION_NAMESPACE
+from ....persistence.storage import AEAT_BROWSER_SESSION_NAMESPACE, SecureObjectRepository
 from ....persistence.storage.runtime_repository import secure_object_repository_for_active_bucket
-from ....persistence.storage.sql import SecureObjectRepository
 
 _SESSION_VERSION = AEAT_BROWSER_SESSION_NAMESPACE.schema_version
 
@@ -73,9 +72,9 @@ def save(path: Path, *, storage_state: Mapping[str, object], metadata: Mapping[s
     """Persist ``storage_state`` and ``metadata`` in the browser-session namespace.
 
     The values are wrapped in a :class:`PersistedBrowserSession` envelope before
-    :class:`~aeat.adapters.persistence.storage.sql.SecureObjectRepository`
+    :class:`~aeat.adapters.persistence.storage.SecureObjectRepository`
     encrypts the serialized JSON payload. The namespace definition supplies the
-    :class:`~aeat.adapters.persistence.storage.SensitivityClass` ``SESSION``
+    ``SESSION`` :class:`~aeat.adapters.persistence.storage.SensitivityClass`
     classification and schema version.
     """
     payload = PersistedBrowserSession(
@@ -134,7 +133,7 @@ def logical_object_key(path: Path) -> str:
 
     The key shape follows
     :data:`aeat.adapters.persistence.storage.AEAT_BROWSER_SESSION_NAMESPACE`.
-    :class:`~aeat.adapters.persistence.storage.sql.SecureObjectRepository`
+    :class:`~aeat.adapters.persistence.storage.SecureObjectRepository`
     HMAC-digests this value before writing the row, so callers can use the same
     logical key without exposing it on disk.
     """
