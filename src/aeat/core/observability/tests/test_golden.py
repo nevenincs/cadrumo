@@ -229,20 +229,13 @@ class TestTypedReValidation:
         assert envelope.result.label == "deterministic"
         assert envelope.result.generated_at == _INSTANT
 
-    @pytest.mark.parametrize(
-        ("capture", "registry", "match"),
-        (
+    def test_invalid_captured_envelopes_are_refused(self) -> None:
+        cases: tuple[tuple[Callable[[], dict[str, object]], Mapping[str, type[OutputSchema]], str | None], ...] = (
             (_capture_scenario, {}, "not registered"),
             (lambda: {"result": {}}, {_COMMAND: _GoldenResult}, "command"),
             (_capture_with_schema_violation, {_COMMAND: _GoldenResult}, None),
-        ),
-        ids=("unregistered-command", "missing-command", "schema-violation"),
-    )
-    def test_invalid_captured_envelopes_are_refused(
-        self,
-        capture: Callable[[], dict[str, object]],
-        registry: Mapping[str, type[OutputSchema]],
-        match: str | None,
-    ) -> None:
-        with pytest.raises(GoldenCaptureError, match=match):
-            validate_captured_envelope(capture(), registry=registry)
+        )
+
+        for capture, registry, match in cases:
+            with pytest.raises(GoldenCaptureError, match=match):
+                validate_captured_envelope(capture(), registry=registry)
