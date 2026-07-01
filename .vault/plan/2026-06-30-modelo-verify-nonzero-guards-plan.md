@@ -113,11 +113,45 @@ Dispatch vaultspec-code-review over the full campaign diff and run a fresh-conte
 
 #### `W03.P09` documented deferral register
 
-- `DFR-M210-INMOBILIARIA-E2E` - add an end-to-end `calculate_modelo_work_revision` / verify regression proving text `tipo_renta` persists through the production write path and fires the M210 inmobiliaria advisory; cross-reference `2026-07-01-modelo-verify-nonzero-guards-review-closeout-audit`.
-- `DFR-M210-TEXT-INPUT-LOCALE-PARITY` - add `application.modelo.errors.calculate_text_input_empty` to the non-English locale catalogues through the sanctioned locale CLI once current locale peer WIP is clear; cross-reference `2026-07-01-modelo-verify-nonzero-guards-review-closeout-audit`.
-- `DFR-M123-RIRPF-EXONERATION-CORPUS` - bundle RD 439/2007 arts. 74-76 and re-check the M123 type-exoneration residual against verbatim corpus text; cross-reference `2026-07-01-modelo-verify-nonzero-guards-audit`.
-- `DFR-M202-B2-RESULTADO-FORMULA-WIRING` - verify and, if confirmed, fix the M202 casilla-26 to casilla-32 B2 resultado formula wiring against AEAT instructions / Diseno de Registros; cross-reference `2026-07-01-modelo-verify-nonzero-guards-m202-deferred-items-audit`.
-- `RESOLVED-CAMPAIGN-SCOPED-COMMIT` - commit `5592a0a3a` landed the scoped campaign files and vault records with explicit pathspecs while leaving unrelated peer WIP outside the commit; cross-reference `2026-07-01-modelo-verify-nonzero-guards-review-closeout-audit`.
+- `DFR-M210-INMOBILIARIA-E2E` - RESOLVED by commits `d10662573`
+  and `40c1d690c`: the real calculate -> verify path now proves text
+  `tipo_renta` persists through production input values and fires the M210
+  inmobiliaria advisory. Cross-reference
+  `2026-07-01-modelo-verify-nonzero-guards-review-closeout-audit` and exec
+  record `2026-07-01-modelo-verify-nonzero-guards-exec-DFR-M210-INMOBILIARIA-E2E`.
+- `DFR-M210-TEXT-INPUT-LOCALE-PARITY` - RESOLVED by commit `96c666d56`:
+  `application.modelo.errors.calculate_text_input_empty` resolves through the
+  four runtime locale catalogues via the sanctioned locale CLI, with a focused
+  `_text_value` / `resolve_error_message` regression. The same pass repaired
+  the locale scaffold/audit drift exposed by the gate.
+- `DFR-M123-RIRPF-EXONERATION-CORPUS` - RESOLVED by commit `b860c576e`:
+  RD 439/2007 art. 75 is bundled and catalogued, and the retained conclusion is
+  limited to non-withheld art. 75.3 classes not populating positive M123
+  withholding-base casillas. Carve-back/payment-on-account cases remain outside
+  that conclusion.
+- `DFR-M202-B2-RESULTADO-FORMULA-WIRING` - RESOLVED by commits `cb002833a`
+  and `db7f4434b`: casilla 26 now feeds casilla 32 for B2 grupos fiscales,
+  grounded in bundled AEAT instructions. Residual B1/B2 mutual-exclusion
+  validation remains a follow-up, not part of the formula wiring deferral.
+- `RESOLVED-CAMPAIGN-SCOPED-COMMIT` - commit `5592a0a3a` landed the scoped
+  campaign files and vault records with explicit pathspecs while leaving
+  unrelated peer WIP outside the commit; cross-reference
+  `2026-07-01-modelo-verify-nonzero-guards-review-closeout-audit`.
+
+#### `W03.P09` carry-forward hardening queue
+
+- `FUP-M202-B1-B2-XOR-VALIDATION` - decide and implement validation for
+  mutually exclusive M202 B1/B2 lanes. Today the calculation wiring can consume
+  both lanes additively if both are populated; the next wave should confirm the
+  official operator contract and refuse or normalize impossible dual-lane input.
+- `FUP-M210-ENUM-DISPATCH-ARG-INDEX` - correct and regress the
+  `_ENUM_DISPATCH_BINDING_ARG_INDEX["m210_resolve_rate"]` country argument
+  index so bucket-profile auto-resolution cannot route
+  `country_of_fiscal_residence` onto the Decimal channel.
+- `FUP-FILING-DRAFT-TEXT-CASILLA` - extend the post-verify filing-draft builder
+  to accept registry `data_type = "text"` casilla inputs such as M210
+  `tipo_renta`; the verify-stage guard is resolved, but draft generation still
+  needs the text channel.
 
 ### Phase `W03.P10` - Exec-record completeness and vault closeout
 
