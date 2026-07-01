@@ -1,9 +1,9 @@
 """Domain-level repository Protocol for the transaction catalogue.
 
 Application-layer code that persists or loads the :class:`TransactionCatalogue`
-depends on this Protocol, not on the concrete adapter-backed
-``TransactionCatalogueRepository``. This keeps the domain layer free of
-adapter imports while still providing a typed port surface.
+depends on :class:`TransactionCatalogueRepositoryProtocol`, not on the concrete
+adapter-backed :class:`TransactionCatalogueRepository`. This keeps the domain
+layer free of adapter imports while still providing a typed port surface.
 """
 
 from __future__ import annotations
@@ -18,8 +18,9 @@ class TransactionCatalogueRepositoryProtocol(Protocol):
     """Narrow domain-facing repository contract for the transaction catalogue.
 
     Any object that provides ``exists``, ``load``, and ``save`` over a
-    per-bucket transaction catalogue satisfies this protocol. The concrete
-    secure-object-backed implementation lives in the adapter layer.
+    per-bucket :class:`TransactionCatalogue` satisfies this protocol. The
+    concrete secure-object-backed implementation is
+    :class:`TransactionCatalogueRepository`.
     """
 
     @property
