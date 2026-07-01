@@ -489,7 +489,7 @@ def activate_subcommand_output_language(ctx: typer.Context, language: OutputLang
     if language is None:
         return
     from ...core.config import override_settings
-    from ...core.i18n._render import clear_output_language_cache
+    from ...core.i18n import clear_output_language_cache
 
     ctx.with_resource(override_settings(aeat_output_language=language))
     clear_output_language_cache()

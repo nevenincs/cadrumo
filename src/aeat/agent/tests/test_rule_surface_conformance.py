@@ -67,9 +67,9 @@ def _valid_command_paths() -> frozenset[str]:
 def _command_schema_refs_via_cli() -> tuple[CommandSchemaRef, ...]:
     # Reuse the CLI's own payload-discovery + projection so the gate sees exactly
     # the surface an operator's `aeat app contract` would.
-    from ...entrypoints.cli._app_contract import _command_schema_refs
+    from ...entrypoints.cli import command_schema_refs
 
-    return _command_schema_refs()
+    return command_schema_refs()
 
 
 def _command_path_from_invocation(invocation: str) -> str | None:

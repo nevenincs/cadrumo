@@ -24,9 +24,9 @@ _ALL_SCENARIOS = sorted(_SCENARIOS_DIR.glob("*.toml"))
 
 
 def _valid_commands() -> frozenset[str]:
-    from ....entrypoints.cli._app_contract import _command_schema_refs
+    from ....entrypoints.cli import command_schema_refs
 
-    return frozenset(ref.command for ref in _command_schema_refs())
+    return frozenset(ref.command for ref in command_schema_refs())
 
 
 @pytest.mark.parametrize("scenario_path", _ALL_SCENARIOS, ids=lambda p: p.stem)

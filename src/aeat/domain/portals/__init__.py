@@ -46,6 +46,7 @@ from ._errors import (
     PortalRegistryError,
     UnknownPortalError,
 )
+from ._hosts import portal_host_name
 
 if TYPE_CHECKING:
     from ._drift import PortalDriftEvent, PortalDriftField, evaluate_portal_drift
@@ -107,6 +108,7 @@ __all__ = (
     "UrlStability",
     "evaluate_portal_drift",
     "get_portal",
+    "portal_host_name",
     "portals_by_category",
     "portals_for_modelo",
 )
