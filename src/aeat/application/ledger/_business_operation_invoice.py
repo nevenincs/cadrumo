@@ -29,7 +29,6 @@ MutatingNounGroupContract.
 from __future__ import annotations
 
 import re
-import uuid
 from datetime import datetime
 from decimal import Decimal
 from enum import StrEnum
@@ -46,8 +45,10 @@ from ...core import STRICT_FROZEN_CONFIG, IntracomOperationType
 from ...core.config import Settings
 from ...core.errors import AeatError
 from ...core.external_constants import DEFAULT_CURRENCY
+from ...core.hashing import content_hash_hex
 from ...core.identity import BucketId
 from ...core.time import now as _utc_now
+from ...domain._identifiers import canonical_decimal_string
 from ...domain.buckets import (
     BucketEventHistoryRepository,
     BucketEventObjectType,
@@ -191,6 +192,60 @@ class BusinessOperationInvoice(BaseModel):
         if value is None:
             return None
         return format(value, "f")
+
+
+def derive_business_operation_invoice_id(
+    *,
+    bucket_id: str,
+    source_kind: BusinessOperationInvoiceDirection,
+    counterparty_nif: str,
+    counterparty_name: str,
+    invoice_number: str,
+    invoice_date: str,
+    currency: str,
+    taxable_base: Decimal,
+    iva_rate: Decimal | None,
+    iva_amount: Decimal,
+    total_amount: Decimal,
+    notes: str,
+    country_code: str | None,
+    eu_iva_id: str | None,
+    operation_type: IntracomOperationType | None,
+    created_at: datetime,
+    disambiguator: int = 0,
+) -> str:
+    """Return the content-addressed id for a business-operation invoice record.
+
+    Mirrors :func:`aeat.domain.transactions.derive_transaction_id`: a SHA-256
+    digest (truncated to 16 hex chars, the prior surrogate's width) over the
+    record's identifying fields, so the id is stable under a frozen-clock replay
+    and directly referenceable as an ``aeat app ledger invoice`` argument,
+    needing no output mask. ``created_at`` plus the ``disambiguator`` ordinal
+    preserve the genuine-duplicate case: two legitimately distinct invoices must
+    keep distinct ids, so the mint site increments ``disambiguator`` on the rare
+    digest collision rather than colliding.
+    """
+    return content_hash_hex(
+        {
+            "bucket_id": bucket_id,
+            "source_kind": source_kind.value,
+            "counterparty_nif": counterparty_nif,
+            "counterparty_name": counterparty_name,
+            "invoice_number": invoice_number,
+            "invoice_date": invoice_date,
+            "currency": currency,
+            "taxable_base": canonical_decimal_string(taxable_base),
+            "iva_rate": canonical_decimal_string(iva_rate) if iva_rate is not None else "",
+            "iva_amount": canonical_decimal_string(iva_amount),
+            "total_amount": canonical_decimal_string(total_amount),
+            "notes": notes,
+            "country_code": country_code or "",
+            "eu_iva_id": eu_iva_id or "",
+            "operation_type": operation_type.value if operation_type is not None else "",
+            "created_at": created_at.isoformat(),
+            "disambiguator": disambiguator,
+        },
+    )[:16]
 
 
 class BusinessOperationInvoicePatch(BaseModel):
@@ -417,8 +472,37 @@ class _BusinessOperationInvoiceService:
         actor: str = "cli",
     ) -> BusinessOperationInvoiceResult:
         now = _utc_now()
+        # Normalise country_code to the stored (upper) form so the id derives
+        # from the same value the record persists (the model upper-cases it).
+        normalised_country_code = country_code.upper() if country_code is not None else None
+        records = _load(self._settings, self.source_kind, bucket_id)
+        existing_ids = {existing.invoice_id for existing in records}
+        disambiguator = 0
+        while True:
+            invoice_id = derive_business_operation_invoice_id(
+                bucket_id=bucket_id,
+                source_kind=self.source_kind,
+                counterparty_nif=counterparty_nif,
+                counterparty_name=counterparty_name,
+                invoice_number=invoice_number,
+                invoice_date=invoice_date,
+                currency=currency,
+                taxable_base=taxable_base,
+                iva_rate=iva_rate,
+                iva_amount=iva_amount,
+                total_amount=total_amount,
+                notes=notes,
+                country_code=normalised_country_code,
+                eu_iva_id=eu_iva_id,
+                operation_type=operation_type,
+                created_at=now,
+                disambiguator=disambiguator,
+            )
+            if invoice_id not in existing_ids:
+                break
+            disambiguator += 1
         record = BusinessOperationInvoice(
-            invoice_id=uuid.uuid4().hex[:16],
+            invoice_id=invoice_id,
             source_kind=self.source_kind,
             bucket_id=bucket_id,
             counterparty_nif=counterparty_nif,
@@ -437,7 +521,6 @@ class _BusinessOperationInvoiceService:
             created_at=now,
             updated_at=now,
         )
-        records = _load(self._settings, self.source_kind, bucket_id)
         records.append(record)
         _save(self._settings, self.source_kind, bucket_id, records)
         created_type = _EVENT_MAP[self.source_kind.value][0]
