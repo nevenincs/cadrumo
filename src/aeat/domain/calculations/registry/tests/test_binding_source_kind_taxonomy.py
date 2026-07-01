@@ -92,6 +92,24 @@ _MESH_ONLY_SOURCE_KINDS: frozenset[BindingSourceKind] = frozenset(
 )
 
 
+# Enum members that are explicitly deferred on the application mesh
+# (``DEFERRED_SOURCE_KINDS``) AND carry no registry binding yet, by design. Unlike
+# the other deferred members (M184 / M232 / M720 / M360 — Sheets-pull sources that
+# ARE registry-declared and merely lack a live resolver), these are advisory-backed
+# feeds whose registry binding waits on a separately-deferred upstream. The
+# ``bienes_inversion_regularizacion`` capital-goods regularización source (LIVA
+# arts. 107-110) is deferred until the prorrata-definitiva source lands, per ADR
+# ``2026-07-01-iva-bienes-inversion-regularizacion``; it surfaces an advisory rather
+# than resolving silently to zero. A member here that later gains a registry binding
+# must be removed from this carve-out (the disjointness assertion below fails
+# otherwise).
+_DEFERRED_UNDECLARED_SOURCE_KINDS: frozenset[BindingSourceKind] = frozenset(
+    {
+        BindingSourceKind.BIENES_INVERSION_REGULARIZACION,
+    },
+)
+
+
 def test_enum_members_have_no_undeclared_orphans_beyond_reserved_sources() -> None:
     """No enum member sits unused beyond the design-fenced reserved carve-out.
 
@@ -106,10 +124,22 @@ def test_enum_members_have_no_undeclared_orphans_beyond_reserved_sources() -> No
     declared = _declared_source_kinds()
     enum_members = set(BindingSourceKind)
 
-    orphans = enum_members - declared - _RESERVED_UNDECLARED_SOURCE_KINDS - _MESH_ONLY_SOURCE_KINDS
+    orphans = (
+        enum_members
+        - declared
+        - _RESERVED_UNDECLARED_SOURCE_KINDS
+        - _MESH_ONLY_SOURCE_KINDS
+        - _DEFERRED_UNDECLARED_SOURCE_KINDS
+    )
     assert not orphans, (
         "BindingSourceKind member(s) declared by no registry binding and not in "
-        f"the reserved/mesh-only carve-outs (orphan or typo): {sorted(str(kind) for kind in orphans)}"
+        f"the reserved/mesh-only/deferred carve-outs (orphan or typo): {sorted(str(kind) for kind in orphans)}"
+    )
+
+    spuriously_declared_deferred = _DEFERRED_UNDECLARED_SOURCE_KINDS & declared
+    assert not spuriously_declared_deferred, (
+        "Deferred-undeclared source kind(s) now declared by the registry; remove "
+        f"from _DEFERRED_UNDECLARED_SOURCE_KINDS: {sorted(str(kind) for kind in spuriously_declared_deferred)}"
     )
 
     spuriously_reserved = _RESERVED_UNDECLARED_SOURCE_KINDS & declared
