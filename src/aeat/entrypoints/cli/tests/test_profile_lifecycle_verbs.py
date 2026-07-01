@@ -16,12 +16,20 @@ import pytest
 from click.testing import Result
 
 from ....adapters.persistence.storage._namespace_registry import BUCKETS_DIRNAME, KEYSTORE_DIRNAME
+from ....core.i18n import tr
 from ....core.redaction import CLI_PROFILE_ID_PLACEHOLDER
 from ....tests.cli_runner import invoke_cached_cli
 from ....tests.secure_sql import isolated_profile_storage_root
 from ._profile_lifecycle_support import distinct_nif, seed, stage_bucket_manifest
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
+
+_PROFILE_LABEL = tr("application.wizard.output_labels.profile", locale="en")
+_ACTIVE_PROFILE_LABEL = tr("application.wizard.output_labels.active_profile", locale="en")
+_STATUS_LABEL = tr("application.wizard.output_labels.status", locale="en")
+_NEXT_LABEL = tr("application.wizard.output_labels.next", locale="en")
+_CREATED = tr("wizard.commands.status.created", locale="en")
+_UPDATED = tr("wizard.commands.status.updated", locale="en")
 
 
 @pytest.fixture(autouse=True)
@@ -80,8 +88,8 @@ def test_config_profile_create_second_profile_uses_requested_identity_while_firs
         ),
     )
     assert alpha.exit_code == 0, alpha.output
-    assert "profile\talpha" in alpha.output
-    assert "active_profile\talpha" in alpha.output
+    assert f"{_PROFILE_LABEL}\talpha" in alpha.output
+    assert f"{_ACTIVE_PROFILE_LABEL}\talpha" in alpha.output
 
     beta = _invoke_profile(
         (
@@ -103,10 +111,10 @@ def test_config_profile_create_second_profile_uses_requested_identity_while_firs
         ),
     )
     assert beta.exit_code == 0, beta.output
-    assert "profile\tbeta" in beta.output
-    assert "active_profile\tbeta" in beta.output
-    assert "profile\talpha" not in beta.output
-    assert "active_profile\talpha" not in beta.output
+    assert f"{_PROFILE_LABEL}\tbeta" in beta.output
+    assert f"{_ACTIVE_PROFILE_LABEL}\tbeta" in beta.output
+    assert f"{_PROFILE_LABEL}\talpha" not in beta.output
+    assert f"{_ACTIVE_PROFILE_LABEL}\talpha" not in beta.output
 
     from ....application.workflow._profile_bucket_scan import read_profile_bucket
 
@@ -652,10 +660,10 @@ def test_config_profile_create_quiet_emits_confirmation() -> None:
     )
 
     assert result.exit_code == 0, result.output
-    assert "profile\tfreshprofile" in result.output
-    assert "Status\tcreated" in result.output
-    assert "active_profile\tfreshprofile" in result.output
-    assert "next\t" in result.output
+    assert f"{_PROFILE_LABEL}\tfreshprofile" in result.output
+    assert f"{_STATUS_LABEL}\t{_CREATED}" in result.output
+    assert f"{_ACTIVE_PROFILE_LABEL}\tfreshprofile" in result.output
+    assert f"{_NEXT_LABEL}\t" in result.output
 
 
 def test_config_profile_edit_quiet_emits_updated_confirmation() -> None:
@@ -680,8 +688,8 @@ def test_config_profile_edit_quiet_emits_updated_confirmation() -> None:
     )
 
     assert result.exit_code == 0, result.output
-    assert "profile\teditme" in result.output
-    assert "Status\tupdated" in result.output
+    assert f"{_PROFILE_LABEL}\teditme" in result.output
+    assert f"{_STATUS_LABEL}\t{_UPDATED}" in result.output
 
 
 def test_config_profile_edit_non_tty_recovery_hint_points_at_edit() -> None:

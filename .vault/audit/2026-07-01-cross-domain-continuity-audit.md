@@ -45,6 +45,10 @@ related:
 - Reviewed W09.P45.S283 as a no-code closure against the retired `src/aeat/diagnostics/profile.py` target.
 - Checked that `aeat.diagnostics` was removed as an unapproved production package, the last pre-delete profile implementation already used `tr("cli.diagnostics.profile.errors.*")`, and current approved diagnostics/profile-adjacent modules do not contain the targeted `BadParameter` residual.
 - Checked validation evidence from source/history searches, retired-surface tests, feature-scoped vault checks, reviewer output, and RAG grounding.
+- Reviewed W09.P45.S284 changes to `src/aeat/application/wizard/_commands.py` and focused wizard/profile CLI tests.
+- Checked that retired `aeat.diagnostics` secure-object code is not restored, locale CLI audit/scaffold output was already localized, and root `--version` remains the intentional machine-format semver path.
+- Checked that wizard success text rows now localize `profile`, `status`, `active_profile`, and `next` labels while JSON payload keys and notice shape remain unchanged.
+- Checked validation evidence from focused wizard tests, focused profile-create/edit CLI integration tests, touched-file ruff, reviewer output, and RAG grounding.
 
 ## Findings
 
@@ -91,6 +95,10 @@ No findings for the profile-create validation specificity fix. The dynamic wizar
 ### w09-p45-s283 | low | no findings
 
 No findings for the no-code diagnostics-profile closure. The targeted file and package are absent by design after the unapproved `aeat.diagnostics` package removal, and the last pre-delete implementation already localized the listed refusal helpers. Current approved adjacent modules do not carry the targeted `BadParameter` sites, and no source/project references reintroduce `aeat.diagnostics` or stale `cli.diagnostics.profile.*` locale leaves. Reviewer Erdos noted only RAG index freshness lag, not a closure blocker.
+
+### w09-p45-s284 | low | no findings
+
+No findings for the mixed hardcoded-string follow-up. The accepted patch is scoped to the live wizard success text surface: text labels are now drawn from `application.wizard.output_labels.*`, while JSON keys remain stable and next-step guidance still rides the `notices` channel. The stale row fragments were handled by verification rather than code churn: retired `aeat.diagnostics` targets remain absent, locale CLI labels were already localized, and bare `aeat --version` remains a documented machine-format exception.
 
 ## Recommendations
 

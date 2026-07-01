@@ -1,9 +1,7 @@
-"""Real-behavior tests for wizard status verb localization.
+"""Real-behavior tests for wizard success-output localization.
 
-Pins that the status tab-key and verb in ``build_wizard_command`` both route
-through ``tr()`` — the tab-key from ``application.wizard.output_labels.status``
-and the verb from ``wizard.commands.status.created`` /
-``wizard.commands.status.updated`` — rather than hardcoded English literals.
+Pins that success tab labels and verbs in ``build_wizard_command`` route through
+``tr()`` rather than hardcoded English literals.
 """
 
 from __future__ import annotations
@@ -60,8 +58,11 @@ def _invoke_wizard(mode: WizardPersistMode, args: Sequence[str], capsys: pytest.
     return captured.out
 
 
-# Derive expected tab-key label and verbs from the locale authority.
+# Derive expected tab-key labels and verbs from the locale authority.
+_EXPECTED_PROFILE_LABEL = tr("application.wizard.output_labels.profile")
+_EXPECTED_ACTIVE_PROFILE_LABEL = tr("application.wizard.output_labels.active_profile")
 _EXPECTED_STATUS_LABEL = tr("application.wizard.output_labels.status")
+_EXPECTED_NEXT_LABEL = tr("application.wizard.output_labels.next")
 _EXPECTED_CREATED = tr("wizard.commands.status.created")
 _EXPECTED_UPDATED = tr("wizard.commands.status.updated")
 
@@ -77,10 +78,20 @@ def test_wizard_create_status_verb_is_localized(
         capsys,
     )
 
+    lines = set(output.splitlines())
+    assert f"{_EXPECTED_PROFILE_LABEL}\toperator" in output
     assert f"{_EXPECTED_STATUS_LABEL}\t{_EXPECTED_CREATED}" in output
+    assert f"{_EXPECTED_ACTIVE_PROFILE_LABEL}\toperator" in output
+    assert f"{_EXPECTED_NEXT_LABEL}\t" in output
     # Confirm the raw English literals are absent when locale resolves differently.
+    if _EXPECTED_PROFILE_LABEL != "profile":
+        assert "profile\toperator" not in lines
     if _EXPECTED_CREATED != "created" or _EXPECTED_STATUS_LABEL != "status":
-        assert "status\tcreated" not in output
+        assert "status\tcreated" not in lines
+    if _EXPECTED_ACTIVE_PROFILE_LABEL != "active_profile":
+        assert "active_profile\toperator" not in lines
+    if _EXPECTED_NEXT_LABEL != "next":
+        assert not any(line.startswith("next\t") for line in lines)
 
 
 def test_wizard_edit_status_verb_is_localized(
@@ -101,6 +112,13 @@ def test_wizard_edit_status_verb_is_localized(
         capsys,
     )
 
+    lines = set(output.splitlines())
+    assert f"{_EXPECTED_PROFILE_LABEL}\toperator" in output
     assert f"{_EXPECTED_STATUS_LABEL}\t{_EXPECTED_UPDATED}" in output
+    assert f"{_EXPECTED_NEXT_LABEL}\t" in output
+    if _EXPECTED_PROFILE_LABEL != "profile":
+        assert "profile\toperator" not in lines
     if _EXPECTED_UPDATED != "updated" or _EXPECTED_STATUS_LABEL != "status":
-        assert "status\tupdated" not in output
+        assert "status\tupdated" not in lines
+    if _EXPECTED_NEXT_LABEL != "next":
+        assert not any(line.startswith("next\t") for line in lines)

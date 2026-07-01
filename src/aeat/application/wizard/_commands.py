@@ -1174,12 +1174,12 @@ def _emit_wizard_success(
         return
 
     lines = [
-        f"profile\t{profile_name}",
+        f"{tr('application.wizard.output_labels.profile')}\t{profile_name}",
         f"{tr('application.wizard.output_labels.status')}\t{verb}",
     ]
     if mode == "create":
-        lines.append(f"active_profile\t{profile_name}")
-    lines.append(f"next\t{next_command}")
+        lines.append(f"{tr('application.wizard.output_labels.active_profile')}\t{profile_name}")
+    lines.append(f"{tr('application.wizard.output_labels.next')}\t{next_command}")
     if ccaa_defaulted:
         lines.append(ccaa_message)
     rendered = render_command_output(format_name="text", payload=payload, lines=lines)

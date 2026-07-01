@@ -18,6 +18,7 @@ from pathlib import Path
 
 import pytest
 
+from ....core.i18n import tr
 from ....tests.cli_runner import invoke_cached_cli
 from ....tests.secure_sql import isolated_profile_storage_root
 from ._profile_cli_support import (
@@ -31,6 +32,10 @@ from ._profile_cli_support import (
 )
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
+
+_STATUS_LABEL = tr("application.wizard.output_labels.status", locale="en")
+_NEXT_LABEL = tr("application.wizard.output_labels.next", locale="en")
+_CREATED = tr("wizard.commands.status.created", locale="en")
 
 
 @pytest.fixture(autouse=True)
@@ -92,7 +97,7 @@ def test_legal_entity_profile_creates_non_interactively_without_spouse_flags() -
     )
 
     assert result.exit_code == 0, result.output
-    assert "Status\tcreated" in result.output
+    assert f"{_STATUS_LABEL}\t{_CREATED}" in result.output
     rows = _profile_rows("webco")
     assert rows["taxpayer_type.entity_type"] == "legal_entity"
     assert rows["taxpayer_type.legal_entity_form"] == "sl"
@@ -159,8 +164,8 @@ def test_non_resident_irnr_create_guides_to_m210_discovery_not_work_create() -> 
     )
 
     assert result.exit_code == 0, result.output
-    assert "next\taeat app modelo describe 210" in result.output
-    assert "next\taeat app modelo work create" not in result.output
+    assert f"{_NEXT_LABEL}\taeat app modelo describe 210" in result.output
+    assert f"{_NEXT_LABEL}\taeat app modelo work create" not in result.output
 
 
 def test_gb_legal_entity_irnr_quiet_create_requires_representante_before_registration() -> None:
