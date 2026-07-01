@@ -2246,6 +2246,9 @@ cli:
         year_help: Ejercicio fiscal de la unidad de trabajo (p. ej. 2026)
         year_out_of_range: El ejercicio fiscal %{year} está fuera de rango; indique
           un año entre %{minimum} y %{maximum}.
+        rescate_type_help: 'Tipo de rescate del plan de pensiones (DT 12a LIRPF): total (todo el capital de una vez) o parcial (cobros escalonados). Es una senal de clasificacion y provenance, no cambia el importe: la reduccion del 40% se aplica a la parte pre-2007 de lo percibido. En parcial, cada cobro comparte la misma ventana del apartado 4.'
+        rescate_contingencia_year_help: 'Ano en que acaecio la contingencia (jubilacion, incapacidad, fallecimiento) del plan de pensiones. Determina la ventana temporal del apartado 4 DT 12a LIRPF (Ley 26/2014): si la ventana esta cerrada para el ano de rescate, la reduccion del 40% se retiene.'
+        rescate_year_help: 'Ano en que se percibe la prestacion del rescate (por defecto el ano de la declaracion). Se compara con la ventana del apartado 4 DT 12a LIRPF medida desde --contingencia-year.'
   common:
     errors:
       draft_id_not_found: ID de borrador %{draft_id} no encontrado

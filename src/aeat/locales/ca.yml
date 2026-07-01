@@ -2221,6 +2221,9 @@ cli:
         year_help: Exercici fiscal de la unitat de treball (p. ex. 2026)
         year_out_of_range: L'exercici fiscal %{year} està fora de rang; indiqueu un
           any entre %{minimum} i %{maximum}.
+        rescate_type_help: 'Tipus de rescat del pla de pensions (DT 12a LIRPF): total (tot el capital de cop) o parcial (cobraments esglaonats). Es un senyal de classificacio i provenance, no canvia l''import: la reduccio del 40% s''aplica a la part pre-2007 del que es percep. En parcial, cada cobrament comparteix la mateixa finestra de l''apartat 4.'
+        rescate_contingencia_year_help: 'Any en que va esdevenir la contingencia (jubilacio, incapacitat, defuncio) del pla de pensions. Determina la finestra temporal de l''apartat 4 DT 12a LIRPF (Llei 26/2014): si la finestra esta tancada per a l''any de rescat, la reduccio del 40% es reté.'
+        rescate_year_help: 'Any en que es percep la prestacio del rescat (per defecte l''any de la declaracio). Es compara amb la finestra de l''apartat 4 DT 12a LIRPF mesurada des de --contingencia-year.'
   common:
     errors:
       draft_id_not_found: ID d'esborrany %{draft_id} no trobat

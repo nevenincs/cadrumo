@@ -2166,6 +2166,9 @@ cli:
         year_help: A munkaegység adóéve (pl. 2026).
         year_out_of_range: A(z) %{year} benyújtási év kívül esik a tartományon; adjon
           meg évet %{minimum} és %{maximum} között.
+        rescate_type_help: 'A nyugdijpenztari toke visszavaltasanak tipusa (LIRPF DT 12a): total (a teljes toke egyszerre) vagy parcial (reszletekben). Osztalyozasi es eredetjelzo jel, nem valtoztatja meg az osszeget: a 40%-os csokkentes a kifizetett osszeg 2007 elotti reszere vonatkozik. Parcialis eseten minden reszkifizetes ugyanazt a 4. bekezdes szerinti ablakot osztja.'
+        rescate_contingencia_year_help: 'Az az ev, amikor a nyugdijpenztari esemeny (nyugdijazas, rokkantsag, halal) bekovetkezett. Meghatarozza a LIRPF DT 12a 4. bekezdes szerinti idoablakot (26/2014 torveny): ha az ablak zarva van a visszavaltas evere, a 40%-os csokkentest visszatartjak.'
+        rescate_year_help: 'Az az ev, amikor a visszavaltasi juttatast megkapjak (alapertelmezetten a bevallas eve). Osszehasonlitva a LIRPF DT 12a 4. bekezdes szerinti ablakkal, a --contingencia-year evtol merve.'
   common:
     errors:
       draft_id_not_found: A(z) %{draft_id} azonosítójú piszkozat nem található
