@@ -37,8 +37,7 @@ _ANNOTATED_FILES: list[tuple[str, str]] = [
 ]
 
 
-@pytest.mark.parametrize("rel_path,anchor_text", _ANNOTATED_FILES)
-def test_boundary_rationale_comment_present(rel_path: str, anchor_text: str) -> None:
+def test_boundary_rationale_comment_present() -> None:
     """Assert that the boundary rationale marker comment exists in the adapter file.
 
     The marker substring ``"irreducible"`` is embedded in every legitimate
@@ -46,11 +45,12 @@ def test_boundary_rationale_comment_present(rel_path: str, anchor_text: str) -> 
     (e.g., "irreducible Google Drive API boundary shape").  If it disappears
     the boundary is unannotated and the assertion must be re-evaluated.
     """
-    path = _SRC / rel_path
-    assert path.exists(), f"Adapter file not found: {path}"
-    source = path.read_text(encoding="utf-8")
-    assert _BOUNDARY_RATIONALE_MARKER in source, (
-        f"Boundary rationale comment containing {_BOUNDARY_RATIONALE_MARKER!r} "
-        f"is missing from {rel_path!r}.  Re-add the ``dict[str, Any]`` "
-        f"annotation near the function containing {anchor_text!r}."
-    )
+    for rel_path, anchor_text in _ANNOTATED_FILES:
+        path = _SRC / rel_path
+        assert path.exists(), f"Adapter file not found: {path}"
+        source = path.read_text(encoding="utf-8")
+        assert _BOUNDARY_RATIONALE_MARKER in source, (
+            f"Boundary rationale comment containing {_BOUNDARY_RATIONALE_MARKER!r} "
+            f"is missing from {rel_path!r}.  Re-add the ``dict[str, Any]`` "
+            f"annotation near the function containing {anchor_text!r}."
+        )
