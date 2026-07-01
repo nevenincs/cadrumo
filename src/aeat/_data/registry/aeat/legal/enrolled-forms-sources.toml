@@ -1,0 +1,108 @@
+# Source entries for obligation-enrollment forms authored by this campaign in a
+# dedicated file so peer edits to the shared per-tax legal catalogues (irpf.toml,
+# irnr.toml) cannot sweep them.
+
+# Modelo 194 sources — resumen anual de retenciones sobre capital mobiliario y
+# transmisión/amortización de activos, governed by the bundled Orden EHA/3377/2011.
+[sources."aeat-modelo-194-procedure"]
+evidence_tier = "official_source_guidance"
+authority = "aeat"
+kind = "instructions"
+corpus_path = "corpus/aeat_official/instructions/modelo_194/files/modelo-194-procedure.html"
+sha256 = "6e31c9a577bc9f35da0b4f4cb9863a270541a4f082f703d6cab00138b61d992e"
+bytes = 45836
+retrieved_at = 2026-07-01
+applies_from = 2019-01-01
+source_url = "https://sede.agenciatributaria.gob.es/Sede/procedimientoini/GI13.shtml"
+review_status = "reviewed"
+
+[sources."boe-modelo-194-form-layout"]
+evidence_tier = "layout_authority"
+authority = "boe"
+kind = "form_spec"
+corpus_path = "corpus/normatives/html/orden-eha-3377-2011.html"
+sha256 = "6a5405402732de445caf7bbb801142f4dd0e7247f79747e2f0cf289b59cfcb6b"
+bytes = 251495
+retrieved_at = 2026-05-05
+published_at = 2011-12-12
+applies_from = 2011-12-13
+source_url = "https://www.boe.es/buscar/act.php?id=BOE-A-2011-19396"
+review_status = "reviewed"
+
+# Modelo 188 sources — resumen anual retenciones capitalización/seguros de vida (Orden EHA/3377/2011).
+[sources."aeat-modelo-188-procedure"]
+evidence_tier = "official_source_guidance"
+authority = "aeat"
+kind = "instructions"
+corpus_path = "corpus/aeat_official/instructions/modelo_188/files/modelo-188-procedure.html"
+sha256 = "770ec0924cd50a5c9a26cee5e5cdd02a7515d83a641618401f3287b1a967ba32"
+bytes = 47562
+retrieved_at = 2026-07-01
+applies_from = 2019-01-01
+source_url = "https://sede.agenciatributaria.gob.es/Sede/procedimientoini/GI08.shtml"
+review_status = "reviewed"
+
+[sources."boe-modelo-188-form-layout"]
+evidence_tier = "layout_authority"
+authority = "boe"
+kind = "form_spec"
+corpus_path = "corpus/normatives/html/orden-eha-3377-2011.html"
+sha256 = "6a5405402732de445caf7bbb801142f4dd0e7247f79747e2f0cf289b59cfcb6b"
+bytes = 251495
+retrieved_at = 2026-05-05
+published_at = 2011-12-12
+applies_from = 2011-12-13
+source_url = "https://www.boe.es/buscar/act.php?id=BOE-A-2011-19396"
+review_status = "reviewed"
+
+# Modelo 187 sources — acciones/participaciones IIC + resumen anual retenciones (Orden EHA/3377/2011).
+[sources."aeat-modelo-187-procedure"]
+evidence_tier = "official_source_guidance"
+authority = "aeat"
+kind = "instructions"
+corpus_path = "corpus/aeat_official/instructions/modelo_187/files/modelo-187-procedure.html"
+sha256 = "86fe1e9a92454fdb84b52da16919cd1e1918ae506b0c4c1f13ca106caf501bf5"
+bytes = 49579
+retrieved_at = 2026-07-01
+applies_from = 2019-01-01
+source_url = "https://sede.agenciatributaria.gob.es/Sede/procedimientoini/GI07.shtml"
+review_status = "reviewed"
+
+[sources."boe-modelo-187-form-layout"]
+evidence_tier = "layout_authority"
+authority = "boe"
+kind = "form_spec"
+corpus_path = "corpus/normatives/html/orden-eha-3377-2011.html"
+sha256 = "6a5405402732de445caf7bbb801142f4dd0e7247f79747e2f0cf289b59cfcb6b"
+bytes = 251495
+retrieved_at = 2026-05-05
+published_at = 2011-12-12
+applies_from = 2011-12-13
+source_url = "https://www.boe.es/buscar/act.php?id=BOE-A-2011-19396"
+review_status = "reviewed"
+
+# Modelo 198 sources — operaciones con activos financieros (Orden EHA/3435/2007).
+[sources."aeat-modelo-198-procedure"]
+evidence_tier = "official_source_guidance"
+authority = "aeat"
+kind = "instructions"
+corpus_path = "corpus/aeat_official/instructions/modelo_198/files/modelo-198-procedure.html"
+sha256 = "015d6a325dcf13e4cfa5e522f4faaf31da8d4e8bfb0d79940ba62febee8443ef"
+bytes = 62814
+retrieved_at = 2026-07-01
+applies_from = 2019-01-01
+source_url = "https://sede.agenciatributaria.gob.es/Sede/procedimientoini/GI17.shtml"
+review_status = "reviewed"
+
+[sources."boe-modelo-198-form-layout"]
+evidence_tier = "layout_authority"
+authority = "boe"
+kind = "form_spec"
+corpus_path = "corpus/normatives/html/orden-eha-3435-2007.html"
+sha256 = "8e1bf71197d1eab6f75571bbb8dc3cdc4b7a83bf8725b72c3d3777b0295b3243"
+bytes = 150144
+retrieved_at = 2026-05-05
+published_at = 2007-11-30
+applies_from = 2007-12-01
+source_url = "https://www.boe.es/buscar/act.php?id=BOE-A-2007-20440"
+review_status = "reviewed"
