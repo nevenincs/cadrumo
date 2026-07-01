@@ -280,32 +280,6 @@ class TestAuthenticateFresh:
 
         _run(run())
 
-    def test_non_qr_fallback_fills_dni_form(
-        self,
-        tmp_path: Path,
-    ) -> None:
-        settings = _settings_for(
-            tmp_path,
-            AEAT_CLAVE_MOVIL_DNI_NIE="12345678Z",
-            AEAT_CLAVE_MOVIL_DNI_FECHA="2030-01-01",
-            AEAT_CLAVE_PREFER_NON_QR="true",
-        )
-        provider = ClaveMovilAuthProvider(settings)
-        browser_session = _RecordingBrowserSession(target_path=settings.aeat_sede_expedientes_path)
-
-        async def run() -> None:
-            session = await provider.authenticate(browser_session=browser_session)
-            detail = session.provider_detail
-            assert isinstance(detail, ClaveMovilSessionDetail)
-            assert detail.used_non_qr_fallback is True
-            page = browser_session.contexts[0].pages[0]
-            assert ("#NIF", "12345678Z") in page.types
-            assert ("#FECHA", "2030-01-01") in page.types
-            assert page.clicks.count(_CLAVE_SURFACE.authorize_button_selector) == 1
-            assert _CLAVE_SURFACE.continue_button_selector in page.clicks
-
-        _run(run())
-
     def test_initial_selector_navigation_timeout_is_typed(
         self,
         tmp_path: Path,
@@ -326,14 +300,35 @@ class TestAuthenticateFresh:
         assert browser_session.contexts
         assert browser_session.contexts[0].pages[0].gotos
 
-    def test_non_qr_fallback_fills_nie_support_form(
+    @pytest.mark.parametrize(
+        ("env_overrides", "expected_types"),
+        (
+            (
+                {
+                    "AEAT_CLAVE_MOVIL_DNI_NIE": "12345678Z",
+                    "AEAT_CLAVE_MOVIL_DNI_FECHA": "2030-01-01",
+                },
+                (("#NIF", "12345678Z"), ("#FECHA", "2030-01-01")),
+            ),
+            (
+                {
+                    "AEAT_CLAVE_MOVIL_DNI_NIE": "Y0000000Z",
+                    "AEAT_CLAVE_MOVIL_NIE_SOPORTE": "E00000000",
+                },
+                (("#NIF", "Y0000000Z"), ("#SOPORTE", "E00000000")),
+            ),
+        ),
+        ids=("dni", "nie"),
+    )
+    def test_non_qr_fallback_fills_identity_form(
         self,
         tmp_path: Path,
+        env_overrides: dict[str, str],
+        expected_types: tuple[tuple[str, str], ...],
     ) -> None:
         settings = _settings_for(
             tmp_path,
-            AEAT_CLAVE_MOVIL_DNI_NIE="Y0000000Z",
-            AEAT_CLAVE_MOVIL_NIE_SOPORTE="E00000000",
+            **env_overrides,
             AEAT_CLAVE_PREFER_NON_QR="true",
         )
         provider = ClaveMovilAuthProvider(settings)
@@ -345,8 +340,8 @@ class TestAuthenticateFresh:
             assert isinstance(detail, ClaveMovilSessionDetail)
             assert detail.used_non_qr_fallback is True
             page = browser_session.contexts[0].pages[0]
-            assert ("#NIF", "Y0000000Z") in page.types
-            assert ("#SOPORTE", "E00000000") in page.types
+            for expected_type in expected_types:
+                assert expected_type in page.types
             assert page.clicks.count(_CLAVE_SURFACE.authorize_button_selector) == 1
             assert _CLAVE_SURFACE.continue_button_selector in page.clicks
 
