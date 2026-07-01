@@ -38,6 +38,7 @@ See Also:
 from ._engine import build_export_plan, collect_row_sets, registry_sha
 from ._evidence import sheet_evidence_from_ledger_filing
 from ._layout import BracketRanges, SheetLayout, plan_layout
+from ._parity_harness import OperatorInputScenario, verify_modelo_parity
 from ._records import (
     OperatorInput,
     OperatorInputs,
@@ -95,6 +96,7 @@ __all__ = [
     "OfflineWorkbookEvidenceSidecar",
     "OfflineWorkbookExportResult",
     "OperatorInput",
+    "OperatorInputScenario",
     "OperatorInputs",
     "ParameterCell",
     "RelationValue",
@@ -140,4 +142,5 @@ __all__ = [
     "serialize_offline_workbook",
     "sheet_evidence_from_ledger_filing",
     "translate_formula",
+    "verify_modelo_parity",
 ]

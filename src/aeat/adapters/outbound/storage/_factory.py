@@ -62,7 +62,7 @@ def _parse_kind(raw: str) -> ProviderKind:
         ) from exc
 
 
-def _build_google_credentials(*, profile: str) -> Credentials:
+def build_google_credentials(*, profile: str) -> Credentials:
     """Hydrate Google ``Credentials`` from the per-profile OAuth records.
 
     Loads :class:`aeat.adapters.outbound.google.OAuthClient` and
@@ -121,7 +121,7 @@ def _resolve_profile() -> str:
     return resolve_active_profile()
 
 
-def _resolve_drive_root_folder_id(*, profile: str, settings: Settings) -> str:
+def resolve_drive_root_folder_id(*, profile: str, settings: Settings) -> str:
     """Resolve the Drive root folder id with the canonical precedence.
 
     1. ``AEAT_GOOGLE_DRIVE_ROOT_FOLDER_ID`` env var / ``.env`` value
@@ -178,7 +178,7 @@ def get_storage_provider(
     if kind is ProviderKind.GOOGLE_DRIVE:
         from ._google_drive import GoogleDriveProvider
 
-        root_folder_id = _resolve_drive_root_folder_id(profile=profile, settings=settings_resolved)
+        root_folder_id = resolve_drive_root_folder_id(profile=profile, settings=settings_resolved)
         if not root_folder_id:
             raise OutboundStorageValidationError(
                 "no Drive root folder id is configured for this profile",
@@ -186,7 +186,7 @@ def get_storage_provider(
                 suggestion="aeat config google folder set <id>",
                 translated_message="adapters.outbound.storage.factory.errors.drive_root_missing",
             )
-        credentials = _build_google_credentials(profile=profile)
+        credentials = build_google_credentials(profile=profile)
         return GoogleDriveProvider(
             credentials=credentials,
             root_folder_id=root_folder_id,

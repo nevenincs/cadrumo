@@ -29,7 +29,7 @@ from ._errors import (
     OutboundStorageValidationError,
     StorageCorruptionError,
 )
-from ._factory import get_storage_provider
+from ._factory import build_google_credentials, get_storage_provider, resolve_drive_root_folder_id
 from ._mirror_manifest import (
     REMOTE_MIRROR_MANIFEST_NAMESPACE,
     REMOTE_MIRROR_MANIFEST_SCHEMA_VERSION,
@@ -75,6 +75,7 @@ __all__ = [
     "RemoteMirrorObjectManifest",
     "StorageCorruptionError",
     "StorageProvider",
+    "build_google_credentials",
     "build_remote_mirror_namespace_manifest",
     "compare_remote_mirror_manifests",
     "get_remote_mirror_namespace_manifest",
@@ -83,4 +84,5 @@ __all__ = [
     "inspect_remote_mirror_upload",
     "put_remote_mirror_namespace_manifest",
     "remote_mirror_object_key_hmac",
+    "resolve_drive_root_folder_id",
 ]
