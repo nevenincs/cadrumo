@@ -43,6 +43,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 
 _FILE_ID = "1AbcDEfgHIjkLMnoPQRstuVWxyz12345"
 _DRIVE_LINK = f"https://drive.google.com/file/d/{_FILE_ID}/view"
+_CAPTURED_AT = datetime(2026, 5, 28, 12, 45, 0, tzinfo=UTC)
 
 
 def _store_resolved_link(store: AttachmentStore, *, payload: bytes):
@@ -62,7 +63,7 @@ def _store_resolved_link(store: AttachmentStore, *, payload: bytes):
         source=AttachmentSource.GOOGLE_DRIVE,
         source_reference=_DRIVE_LINK,
         mime_type="application/pdf",
-        captured_at=datetime.now(UTC).replace(microsecond=0),
+        captured_at=_CAPTURED_AT,
         bucket_id="b" * 32,
         link_transaction_ids=("tx-doclink-1",),
         metadata={"source": "GOOGLE_DRIVE", "source_reference": _DRIVE_LINK},

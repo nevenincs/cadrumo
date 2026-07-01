@@ -35,6 +35,7 @@ from typing import Any
 
 import pytest
 
+from ....core.paths import PROJECT_ROOT
 from ....core.resources import resources
 from ....domain.calculations.registry import RegistrySnapshot
 from ....domain.user_profile import (
@@ -58,6 +59,11 @@ _BUCKET_ID = _PROFILE_ID
 _YEAR = 2025
 _PERIOD = "0A"
 _CLOCK = datetime(2026, 5, 27, 9, 0, 0, tzinfo=UTC)
+_M100_2025_XSD = (
+    PROJECT_ROOT
+    / "src/aeat/_data/corpus/aeat_official/disenos_registro/modelo_100/files"
+    / "03-100-esquema-xsd-ejercicio-2025-actualizado-14-04-2026-796-kb-ejecutable.xsd"
+)
 
 
 def _modelo_100_snapshot() -> RegistrySnapshot:
@@ -263,6 +269,47 @@ def test_unmarried_profile_resolves_neutral_marriage_facts_without_marriage_date
 
     resolved = resolve_profile_sourced_bindings(snapshot, bucket_id=_BUCKET_ID, profile_record=record)
 
+    assert resolved.binding_values["renta-2025-profile-marriage-full-year"] == Decimal("0")
+    assert resolved.binding_values["renta-2025-profile-marriage-month-start"] == Decimal("0")
+    assert resolved.binding_values["renta-2025-profile-marriage-month-end"] == Decimal("0")
+
+
+def test_pareja_hecho_status_does_not_feed_official_ecivil_channels() -> None:
+    """Profile-only marital status 5 must not reach Modelo 100 ECIVIL export channels."""
+    snapshot = _modelo_100_snapshot()
+    ecivil_casilla = next(casilla for casilla in snapshot.revision.casillas if casilla.id == "ECIVIL")
+    ecivil_binding_id = ecivil_casilla.binding
+    assert ecivil_casilla.data_type == "text"
+    assert ecivil_binding_id == "renta-2025-profile-marital-status"
+
+    ecivil_binding = next(binding for binding in snapshot.revision.bindings if binding.id == ecivil_binding_id)
+    selector = ecivil_binding.selector
+    assert selector.profile_key == "renta_taxpayer.marital_status"
+    assert selector.xsd_path == "/DatosIdentificativos/Declarante/ECIVIL"
+    assert selector.dictionary_field == "ECIVIL"
+    assert selector.valid_at == "2025-12-31"
+    assert b'<xs:pattern value="([1-4]){1}"/>' in _M100_2025_XSD.read_bytes()
+
+    record = UserProfileRecord(
+        profile_id=_PROFILE_ID,
+        display_name="Registered pareja de hecho binding pin taxpayer",
+        facts=(
+            UserProfileFact(path="identity.tax_id", value="12345678Z"),
+            UserProfileFact(path="tax_residence.ccaa", value="madrid"),
+            UserProfileFact(path="filing_export.declaration_type", value="1"),
+            UserProfileFact(path="renta_taxpayer.birth_date", value=date(1985, 6, 15)),
+            UserProfileFact(path="renta_taxpayer.marital_status", value="5"),
+            UserProfileFact(path="renta_family.minor_children_in_unit", value=Decimal("0")),
+        ),
+        created_at=_CLOCK,
+        updated_at=_CLOCK,
+    )
+
+    resolved = resolve_profile_sourced_bindings(snapshot, bucket_id=_BUCKET_ID, profile_record=record)
+
+    assert ecivil_binding_id not in resolved.binding_values
+    assert ecivil_binding_id not in resolved.enum_binding_values
+    assert ecivil_binding_id not in resolved.date_binding_values
     assert resolved.binding_values["renta-2025-profile-marriage-full-year"] == Decimal("0")
     assert resolved.binding_values["renta-2025-profile-marriage-month-start"] == Decimal("0")
     assert resolved.binding_values["renta-2025-profile-marriage-month-end"] == Decimal("0")

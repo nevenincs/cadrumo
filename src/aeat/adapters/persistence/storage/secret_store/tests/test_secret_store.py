@@ -11,7 +11,7 @@ import json
 import logging
 import secrets
 from collections.abc import Iterator
-from datetime import UTC, datetime, timedelta
+from datetime import UTC, datetime
 from pathlib import Path
 
 import pytest
@@ -32,9 +32,8 @@ from .._secret_store import SecretRecord, SecretStore
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 _STORE_LOGGER_NAME = "aeat.adapters.persistence.storage.secret_store._secret_store"
 
-
-def _expiry() -> datetime:
-    return datetime.now(UTC) + timedelta(hours=1)
+_SECRET_CREATED_AT = datetime(2026, 5, 28, 11, 55, 0, tzinfo=UTC)
+_SECRET_EXPIRES_AT = datetime(2099, 5, 28, 11, 55, 0, tzinfo=UTC)
 
 
 @pytest.fixture
@@ -68,8 +67,8 @@ def _make_record(
         value=value,
         classification=classification,
         metadata={"issued_by": "test-suite"},
-        created_at=datetime.now(UTC),
-        expires_at=expires_at if expires_at is not None else _expiry(),
+        created_at=_SECRET_CREATED_AT,
+        expires_at=expires_at if expires_at is not None else _SECRET_EXPIRES_AT,
     )
 
 
@@ -167,7 +166,7 @@ class TestRetentionPolicy:
             key="aeat:test:no-expiry",
             value=b"x",
             classification=SensitivityClass.SECRET,
-            created_at=datetime.now(UTC),
+            created_at=_SECRET_CREATED_AT,
             expires_at=None,
         )
         with pytest.raises(RetentionPolicyError):
@@ -178,7 +177,7 @@ class TestRetentionPolicy:
             key="aeat:test:session-no-expiry",
             value=b"x",
             classification=SensitivityClass.SESSION,
-            created_at=datetime.now(UTC),
+            created_at=_SECRET_CREATED_AT,
             expires_at=None,
         )
         with pytest.raises(RetentionPolicyError):
@@ -204,7 +203,7 @@ class TestRetentionPolicy:
                 key="x",
                 value=b"y",
                 classification=SensitivityClass.FINANCIAL,
-                created_at=datetime.now(UTC),
+                created_at=_SECRET_CREATED_AT,
                 expires_at=None,
             )
 
@@ -291,12 +290,12 @@ class TestRotate:
     def test_rotate_replaces_value(self, store: SecretStore) -> None:
         original = _make_record(value=b"v1")
         store.put(original)
-        store.rotate(original.key, b"v2", expires_at=_expiry())
+        store.rotate(original.key, b"v2", expires_at=_SECRET_EXPIRES_AT)
         assert store.get(original.key).value == b"v2"
 
     def test_rotate_missing_raises(self, store: SecretStore) -> None:
         with pytest.raises(SecretNotFoundError):
-            store.rotate("never-stored", b"x", expires_at=_expiry())
+            store.rotate("never-stored", b"x", expires_at=_SECRET_EXPIRES_AT)
 
 
 class TestListDigests:

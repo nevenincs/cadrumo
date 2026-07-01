@@ -24,6 +24,8 @@ from .._usage import UsageRecorder
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 
+_TODAY = datetime(2026, 5, 28, 12, 40, 0, tzinfo=UTC)
+
 
 def _record(when: datetime, *, caller: str, prompt_id: str, request_id: str) -> UsageRecord:
     return UsageRecord(
@@ -47,7 +49,7 @@ def test_llm_usage_records_survive_encrypted_storage_roundtrip(
     """Two UsageRecord rows survive the encrypted append-only sink with date filtering."""
 
     recorder = UsageRecorder(root_dir=tmp_path / "llm-usage")
-    today = datetime.now(UTC).replace(microsecond=0)
+    today = _TODAY
     yesterday = today - timedelta(days=1)
     record_today = _record(
         today,

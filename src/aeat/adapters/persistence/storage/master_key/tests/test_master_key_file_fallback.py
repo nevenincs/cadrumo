@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import base64
 import json
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
 from pathlib import Path
 
 import pytest
@@ -305,9 +305,11 @@ class TestFileFallbackProvider:
             ),
             activate_master_key_provider(provider, fallback_bucket_id="short-idle"),
         ):
-            assert provider._session is not None
-            remaining = provider._session.idle_deadline - datetime.now(UTC)
-            assert 120 <= remaining.total_seconds() <= 181
+            session = provider._session
+            assert session is not None
+            probe_time = datetime(2026, 5, 28, 12, 15, 0, tzinfo=UTC)
+            session.touch(probe_time)
+            assert session.idle_deadline == probe_time + timedelta(minutes=3)
 
     def test_round_trip_across_provider_instances(self, tmp_path: Path) -> None:
         """A second provider over the same dir + passphrase recovers the same key."""

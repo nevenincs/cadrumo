@@ -22,10 +22,12 @@ new revision keeps legal/source provenance for both overridden and inherited
 casillas.
 
 See Also:
-    :func:`aeat.application.modelo._external_import_actions.import_external_filing_evidence`:
+    :func:`aeat.application.modelo.import_external_filing_evidence`:
         Creates the AEAT-attested baseline that this module amends.
     :func:`aeat.application.modelo._calculation_helpers.amendment_observations`:
         Carries or rebuilds observation provenance for the corrected casilla map.
+    :class:`~aeat.domain.modelos.ExternalEvidence`:
+        Filing-record evidence marker required before this amendment path can run.
     :func:`aeat.application.modelo._registry_helpers.reject_unknown_override_casillas`:
         Canonicalizes amendment override casilla ids against the registry.
     :func:`aeat.application.modelo._registry_helpers.reject_incomplete_amendment_casillas`:
@@ -173,7 +175,7 @@ def amend_modelo_revision[CasillaKey](
         ``aeat app modelo work amend``:
             CLI command that validates ``--from-filing-record``, ``--kind``,
             ``--reason``, and ``--set`` before calling this service.
-        :func:`aeat.application.modelo._external_import_actions.import_external_filing_evidence`:
+        :func:`aeat.application.modelo.import_external_filing_evidence`:
             Production import path that creates accepted external-evidence
             baselines.
         :func:`aeat.application.modelo._calculation_helpers.amendment_observations`:

@@ -1,17 +1,17 @@
-"""Reconstruct a :class:`ModeloDraft` from an AEAT justificante PDF.
+"""Reconstruct a :class:`~aeat.domain.filing.ModeloDraft` from an AEAT justificante PDF.
 
 The operator keeps the justificante PDF of a past filing on disk. This
-module parses the PDF into a :class:`aeat.domain.justificante.Justificante`
+module parses the PDF into a :class:`~aeat.domain.justificante.Justificante`
 via :func:`aeat.adapters.inbound.justificante.parse_justificante`, validates
 the printed period against the active registry subview, asks
 :func:`aeat.application.filing.build_draft` to materialise an empty draft
 scaffold, and co-produces a companion
-:class:`aeat.domain.submission.ModeloPresentado` record so the import can be
+:class:`~aeat.domain.submission.ModeloPresentado` record so the import can be
 used as an amendment baseline.
 
 The justificante is receipt metadata, not a full casilla-value source. When
 the active registry requires inputs or binding values that the receipt cannot
-provide, import fails with :class:`aeat.domain.filing.ModeloImportError`
+provide, import fails with :class:`~aeat.domain.filing.ModeloImportError`
 instead of fabricating tax values.
 
 No AEAT certificate authentication or network call is involved — the
@@ -19,8 +19,8 @@ command is a pure offline transform from (PDF bytes) → (draft, submission,
 warnings).
 
 This is not the production external-evidence import path for current filing
-records. It does not create a :class:`aeat.domain.modelos.ModeloRecord`, attach
-:class:`aeat.domain.modelos.ExternalEvidence`, or infer missing casilla values
+records. It does not create a :class:`~aeat.domain.modelos.ModeloRecord`, attach
+:class:`~aeat.domain.modelos.ExternalEvidence`, or infer missing casilla values
 from receipt metadata.
 
 See Also:
@@ -31,9 +31,9 @@ See Also:
         and build the draft scaffold.
     :func:`aeat.application.filing.build_complementaria`
         Amendment flow that can consume the imported submission baseline.
-    :func:`aeat.application.modelo._external_import_actions.import_external_filing_evidence`
+    :func:`aeat.application.modelo.import_external_filing_evidence`
         External-evidence import path that builds the current
-        :class:`aeat.domain.modelos.ModeloRecord` baseline consumed by
+        :class:`~aeat.domain.modelos.ModeloRecord` baseline consumed by
         work-unit amendments.
 """
 
@@ -91,8 +91,8 @@ class JustificanteImportResult:
     pulling ``ModeloPresentado`` in at module scope would cycle).
 
     Attributes:
-        draft: The freshly built :class:`ModeloDraft` scaffold.
-        submission: The companion :class:`aeat.domain.submission.ModeloPresentado`
+        draft: The freshly built :class:`~aeat.domain.filing.ModeloDraft` scaffold.
+        submission: The companion :class:`~aeat.domain.submission.ModeloPresentado`
             that lets the amendment engine treat the imported draft as a
             baseline.
         warnings: Multilingual advisory messages. The CLI renders these so
@@ -239,7 +239,7 @@ def _build_submission_record(
     justificante: Justificante,
     draft: ModeloDraft,
 ) -> ModeloPresentado:
-    """Build the companion :class:`ModeloPresentado` for an import.
+    """Build the companion :class:`~aeat.domain.submission.ModeloPresentado` for an import.
 
     The ``submission_id`` hashes the CSV and the draft id together so it
     stays stable across re-imports of the same PDF and remains distinct

@@ -18,6 +18,10 @@ delegates cross-period carry projection to
 which stamps locally-filed observations as non-official ``app_filing`` evidence.
 
 See Also:
+    :func:`aeat.application.modelo.import_external_filing_evidence`:
+        Separate AEAT-attested import path that creates
+        :class:`~aeat.domain.modelos.ExternalEvidence` baselines; this local
+        filing action deliberately does not.
     :func:`~aeat.application.modelo._revision_persistence.persist_filed_revision`:
         Persists the filing catalogue, revision state, work-unit pointers,
         bucket events, participation index rows, and optional carry observation.
@@ -213,6 +217,10 @@ def file_modelo_revision(
     See Also:
         :func:`~aeat.application.modelo._revision_persistence.persist_filed_revision`:
             Performs the repository writes once all gates pass.
+        :func:`aeat.application.modelo.import_external_filing_evidence`:
+            Creates official-evidence baselines for imported filings; use that
+            path when a :class:`~aeat.domain.modelos.ExternalEvidence` reference
+            must be carried.
         :func:`aeat.application.modelo._filed_revision_observation.persist_filed_revision_observation`:
             Saves the non-official ``app_filing`` observation used by later
             ``previous_filing`` calculations.

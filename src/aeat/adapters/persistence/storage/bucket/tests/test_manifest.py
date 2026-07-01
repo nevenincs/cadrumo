@@ -15,6 +15,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 _VALID_SALT = bytes(range(16))
 _SHORT_SALT = bytes(range(15))
 _PLUS_ONE = timezone(timedelta(hours=1))
+_CREATED_AT = datetime(2026, 5, 28, 12, 10, 0, tzinfo=UTC)
 
 
 def _kdf_params(**overrides: object) -> ManifestKdfParams:
@@ -35,15 +36,11 @@ def _kdf() -> ManifestKdfParams:
     return _kdf_params()
 
 
-def now() -> datetime:
-    return datetime.now(tz=UTC)
-
-
 def _manifest_payload(**overrides: object) -> dict[str, object]:
     defaults: dict[str, Any] = {
         "bucket_id": "bucket-001",
         "label": "Primary",
-        "created_at": now(),
+        "created_at": _CREATED_AT,
         "last_unlocked_at": None,
         "kdf_params": _kdf(),
         "recovery_enrolled": False,

@@ -35,6 +35,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 
 _TEST_LEGAL_REFS = ("ley-58-2003:art-119",)
 _TEST_SOURCE_REFS = ("aeat-dr-190-2025",)
+_EXPORTED_AT = datetime(2026, 5, 28, 12, 50, 0, tzinfo=UTC)
 
 _TEST_CASILLA: CasillaId = validated_casilla_id("test.casilla", surface="_TEST_CASILLA")
 
@@ -54,7 +55,7 @@ def _plan(
             period=Period.from_year_and_code(2025, "0A"),
             engine_version="test/0.1",
             registry_sha="abcdef1234567890",
-            exported_at=datetime.now(UTC),
+            exported_at=_EXPORTED_AT,
         ),
         value_cells=value_cells,
         formula_cells=formula_cells,

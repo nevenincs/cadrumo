@@ -16,7 +16,9 @@ content-addressed, stateful, source-transaction aware, and records
 :class:`ModeloRecord` is the durable filing-record receipt paired with a filed
 revision. Local filing writes keep ``aeat_accepted=False`` and no
 :class:`ExternalEvidence`; only the external import path may stamp
-AEAT-attested evidence and turn that record into an amendment baseline.
+AEAT-attested evidence, validated against
+:class:`aeat.domain.justificante.Justificante` metadata for receipt-bound
+evidence kinds, and turn that record into an amendment baseline.
 
 The package also owns the transaction participation index. A
 :class:`TransactionRevisionParticipationIndex` is a rebuildable read-side cache
@@ -45,12 +47,18 @@ See Also:
     :class:`ExternalEvidence`
         Official evidence metadata carried only by imported AEAT-attested
         filing records.
-    :func:`aeat.application.modelo._filing_actions.file_modelo_revision`
+    :func:`aeat.application.modelo.file_modelo_revision`
         Application service that records a verified revision as local/internal
         filed state without AEAT acceptance.
-    :func:`aeat.application.modelo._external_import_actions.import_external_filing_evidence`
+    :func:`aeat.application.modelo.import_external_filing_evidence`
         Application service that imports AEAT-attested evidence into a current
         filing record.
+    :func:`aeat.application.modelo.amend_modelo_revision`
+        Application service that consumes an externally evidenced current
+        filing record as the amendment baseline.
+    :mod:`aeat.domain.justificante`
+        Receipt metadata domain referenced by justificante PDF, CSV-register,
+        and live-capture evidence kinds.
     :class:`TransactionRevisionParticipationIndex`
         Rebuildable inverse index from ledger transaction ids to finalized
         calculation revisions and filing records.

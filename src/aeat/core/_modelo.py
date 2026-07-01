@@ -34,9 +34,10 @@ non-registry member to its deliberately-absent registry definition.
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from enum import StrEnum
 
-__all__ = ["NON_REGISTRY_MODELOS", "Modelo"]
+__all__ = ["NON_REGISTRY_MODELOS", "UNMODELED_OBLIGATIONS", "Modelo"]
 
 
 class Modelo(StrEnum):
@@ -67,18 +68,25 @@ class Modelo(StrEnum):
     M100 = "100"
     M111 = "111"
     M115 = "115"
+    M117 = "117"
     M123 = "123"
+    M126 = "126"
+    M128 = "128"
     M130 = "130"
     M131 = "131"
     M151 = "151"
     M180 = "180"
     M184 = "184"
+    M189 = "189"
     M190 = "190"
     M193 = "193"
     M200 = "200"
     M202 = "202"
     M210 = "210"
+    M216 = "216"
+    M231 = "231"
     M232 = "232"
+    M280 = "280"
     M303 = "303"
     M308 = "308"
     M309 = "309"
@@ -87,12 +95,20 @@ class Modelo(StrEnum):
     M349 = "349"
     M353 = "353"
     M360 = "360"
+    M361 = "361"
     M369 = "369"
+    M379 = "379"
     M390 = "390"
     M714 = "714"
     M720 = "720"
     M721 = "721"
     M840 = "840"
+
+
+#: Recognized AEAT obligation modelos the registry does not yet model.
+UNMODELED_OBLIGATIONS: Mapping[Modelo, str] = {
+    Modelo.M216: "IRNR retenciones e ingresos a cuenta for non-resident income, not yet registry-modeled",
+}
 
 
 #: Known modelo identifiers that intentionally have **no registry definition**.
@@ -104,4 +120,4 @@ class Modelo(StrEnum):
 #: compares the remaining members to
 #: :func:`aeat.application.modelo.registry_modelo_codes`, so the enum can carry
 #: retired-but-supported codes without implying the registry can load them.
-NON_REGISTRY_MODELOS: frozenset[Modelo] = frozenset({Modelo.M037})
+NON_REGISTRY_MODELOS: frozenset[Modelo] = frozenset({Modelo.M037}) | frozenset(UNMODELED_OBLIGATIONS)

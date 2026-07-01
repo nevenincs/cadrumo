@@ -48,6 +48,13 @@ See Also:
         it is not a live-submit path.
     :func:`aeat.application.filing.import_filing_from_justificante`
         Historical filing-evidence import into the submission audit trail.
+    :mod:`aeat.domain.justificante`
+        Receipt metadata that can seed imported submission-audit baselines
+        without becoming casilla-value authority.
+    :func:`aeat.application.modelo.import_external_filing_evidence`
+        Separate work-unit path that stamps
+        :class:`aeat.domain.modelos.ExternalEvidence` on current filing records;
+        it does not create :class:`ModeloPresentado` audit records.
     :mod:`aeat.domain.filing`
         Draft construction and review records used before preflight or evidence
         import.

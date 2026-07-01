@@ -882,6 +882,19 @@ def _normalised_observation_refs(observations: Iterable[CasillaObservation | Non
     return refs
 
 
+def _optional_observation_refs(observations: Iterable[CasillaObservation | None], field_name: str) -> tuple[str, ...]:
+    refs = tuple(
+        dict.fromkeys(
+            str(ref).strip()
+            for observation in observations
+            if observation is not None
+            for ref in getattr(observation, field_name)
+            if str(ref).strip()
+        ),
+    )
+    return refs
+
+
 def _manual_fact_basis_entries(
     input_values_by_casilla_id: Mapping[CasillaId, str],
     observations: Iterable[CasillaObservation],
@@ -967,6 +980,7 @@ def _missing_evidence_findings(
     ]
     diagnostics: tuple[CalculationSourceDiagnostic, ...] = missing_evidence_advisory_observations(transactions)
     findings: list[ModeloVerificationFinding] = []
+    registry_source_refs = _optional_observation_refs(target.observations, "source_refs")
     for diagnostic in diagnostics:
         is_deductible_gap = diagnostic.source_kind == MISSING_DEDUCTIBLE_VAT_EVIDENCE_SOURCE_KIND
         findings.append(
@@ -997,7 +1011,7 @@ def _missing_evidence_findings(
                     )
                 ),
                 legal_refs=_MISSING_EVIDENCE_LEGAL_REFS,
-                source_refs=(diagnostic.source_kind,),
+                source_refs=registry_source_refs,
             ),
         )
     return findings

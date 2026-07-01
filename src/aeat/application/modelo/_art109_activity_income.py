@@ -1,4 +1,24 @@
-"""Period-scoped Art. 109 activity-income coverage from ledger evidence."""
+"""Period-scoped Art. 109 activity-income coverage from ledger evidence.
+
+The coverage helper derives the RIRPF Art. 109 70 percent withholding fact from
+current-period ledger rows in a
+:class:`~aeat.domain.transactions.TransactionCatalogue`. Work-unit consumers use
+a bucket-scoped :class:`~aeat.domain.transactions.TransactionCatalogueRepository`
+to load that catalogue before applying the same pure calculation.
+
+The result is intentionally evidence-scoped: the denominator and withholding
+status must be proven from invoice-substrate ledger facts, so gross-only bank
+movements fail closed instead of fabricating an activity-income ratio.
+
+See Also:
+    :func:`derive_art109_activity_income_coverage`
+        Pure catalogue-level derivation for already-loaded ledger rows.
+    :func:`derive_art109_activity_income_coverage_for_work_unit`
+        Work-unit adapter that resolves the matching bucket repository.
+    :mod:`aeat.application.modelo._verification_actions`
+        Verification path that folds a proven coverage fact into the workflow
+        profile used for M130 verification.
+"""
 
 from __future__ import annotations
 
@@ -87,7 +107,13 @@ def derive_art109_activity_income_coverage(
     *,
     period: Period,
 ) -> Art109ActivityIncomeCoverage:
-    """Derive Art. 109 current-period activity-income coverage from a transaction catalogue."""
+    """Derive Art. 109 current-period coverage from a transaction catalogue.
+
+    Args:
+        catalogue: :class:`~aeat.domain.transactions.TransactionCatalogue`
+            containing the ledger rows to classify for the target period.
+        period: Filing period whose date span selects the current-payment rows.
+    """
     if not period.has_date_span():
         return _insufficient("period_without_date_span")
 
