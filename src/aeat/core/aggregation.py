@@ -279,6 +279,18 @@ class BindingSourceKind(StrEnum):
     # it carries no registry binding yet and surfaces an advisory rather than a
     # hard binding (ADR 2026-07-01-iva-bienes-inversion-regularizacion).
     BIENES_INVERSION_REGULARIZACION = "bienes_inversion_regularizacion"
+    # Annual prorrata-general regularización por porcentaje definitivo (LIVA arts.
+    # 104-105): the source that would materialise Modelo 303 casilla 44 / the
+    # Modelo 390 annual regularización field from the provisional percentage
+    # (prior-year definitive, art. 105.Uno) applied across the year and the
+    # current-year definitive percentage (art. 104) over full-year volumes.
+    # Registered in ``DEFERRED_SOURCE_KINDS`` for the first slice — it carries no
+    # registry binding yet and surfaces an advisory (the automatic casilla-44
+    # feed is promoted to a live mesh binding once the provisional-carry store
+    # lands), per ADR 2026-07-01-iva-complexity-hardening-scope. This is the same
+    # definitive-percentage source the capital-goods regularización (#349) is
+    # blocked on.
+    PRORRATA_REGULARIZACION = "prorrata_regularizacion"
     # Mesh-only sourcing decisions with NO registry binding declaration. Both are
     # resolved by a pre-mesh gate, not a registry `DataBindingDefinition.source`:
     # `borrador` materialises the Modelo 100 borrador prefill
