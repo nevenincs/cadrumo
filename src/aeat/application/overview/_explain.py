@@ -25,19 +25,17 @@ from typing import Protocol
 
 from pydantic import BaseModel, Field
 
-from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ...core._modelo import UNMODELED_OBLIGATIONS as _UNMODELED_OBLIGATIONS
+from ...core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.time import now
-from ...domain.calculations.registry import LegalRefId
+from ...domain.calculations.registry._ids import LegalRefId
 from ...domain.calculations.registry.applicability import (
     ApplicabilityVerdict,
     derive_modelo_applicability,
 )
-from ...domain.deadlines import (
-    DeadlineEngine,
-    DeadlineValidationError,
-    NoDeadlineWindowsError,
-    TaxpayerProfile,
-)
+from ...domain.deadlines._engine import DeadlineEngine
+from ...domain.deadlines._errors import DeadlineValidationError, NoDeadlineWindowsError
+from ...domain.deadlines._models import TaxpayerProfile
 from ._errors import OverviewExplainError
 
 _ProfileFactValue = str | bool | int
@@ -49,6 +47,15 @@ booleans (most applicability gates), strings (tax_id, enum values
 coerced via ``.value``), and integers (numeric thresholds). Widening
 this union is a contract change; keep it tight so the boundary
 remains a typed surface rather than a ``dict[str, Any]`` escape hatch.
+"""
+
+
+_UNMODELED_MODELO_DESCRIPTIONS: dict[str, str] = {str(code): desc for code, desc in _UNMODELED_OBLIGATIONS.items()}
+"""Recognized-but-unmodeled obligations keyed by bare modelo code.
+
+Derived once from :data:`~aeat.core.UNMODELED_OBLIGATIONS` so ``explain`` can
+tell an operator that a code like ``"216"`` is a real AEAT obligation the app
+does not model yet — distinct from an unknown-identifier typo.
 """
 
 
@@ -226,6 +233,18 @@ def build_overview_explain(
     resolved_year = year or date.today().year
 
     if not _modelo_is_registered(modelo_id):
+        unmodeled_description = _UNMODELED_MODELO_DESCRIPTIONS.get(modelo_id)
+        if unmodeled_description is not None:
+            # A recognized AEAT obligation the registry does not model: it is a
+            # real obligation, not an operator typo, so distinguish it from an
+            # unknown identifier. The coverage reconciliation advises it as
+            # ``registry_unmodeled``; explain says the same in prose.
+            raise OverviewExplainError(
+                f"modelo {modelo_id!r} ({unmodeled_description}) is a recognized AEAT "
+                "obligation the application does not model yet: it cannot be positively "
+                "scoped here (coverage: registry_unmodeled). Investigate whether it "
+                "applies and file it through AEAT.",
+            )
         # Refuse operator typos before calling the domain applicability
         # model: the domain schema validates known ModeloId shape and
         # must not leak a Pydantic error through the overview boundary.

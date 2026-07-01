@@ -22,13 +22,14 @@ from types import MappingProxyType
 
 from pydantic import BaseModel, Field, field_serializer, field_validator, model_validator
 
-from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
-from ...core import Period as _Period
-from ...core import PostFilingEventKind as _PostFilingEventKind
+from ...core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ...core._period import Period as _Period
+from ...core._post_filing_event import PostFilingEventKind as _PostFilingEventKind
 from ...domain.calculations.registry.applicability import ApplicabilityVerdict
-from ...domain.deadlines import HolidayJurisdiction as _HolidayJurisdiction
-from ...domain.deadlines import ObligationStatus as _ObligationStatus
-from ...domain.deadlines import Recovery as _Recovery
+from ...domain.deadlines._festivos import HolidayJurisdiction as _HolidayJurisdiction
+from ...domain.deadlines._models import ObligationStatus as _ObligationStatus
+from ...domain.deadlines._models import Recovery as _Recovery
+from ._coverage import ObligationCoverageReport
 
 
 def _period_from_serialized(value: object) -> object:
@@ -54,6 +55,13 @@ class OverviewCensoEnrolmentState(StrEnum):
     NOT_REQUIRED = "not_required"
     UNVERIFIED = "unverified"
     VERIFIED = "verified"
+
+
+class OverviewCalendarEntrySource(StrEnum):
+    """Origin of one overview calendar row."""
+
+    REGISTRY_DEADLINE = "registry_deadline"
+    LOCAL_WORK_UNIT = "local_work_unit"
 
 
 class OverviewLocalFilingState(StrEnum):
@@ -215,6 +223,10 @@ class OverviewCalendarEntry(BaseModel):
     filing_year: int | None = Field(default=None, ge=2000, le=2099)
     censo_enrolment_state: OverviewCensoEnrolmentState = OverviewCensoEnrolmentState.NOT_CHECKED
     filing_evidence: OverviewCalendarFilingEvidence = Field(default_factory=lambda: OverviewCalendarFilingEvidence())
+    source: OverviewCalendarEntrySource = OverviewCalendarEntrySource.REGISTRY_DEADLINE
+    local_work_unit_id: str | None = Field(default=None, min_length=64, max_length=64)
+    local_work_unit_name: str | None = Field(default=None, min_length=1, max_length=200)
+    local_work_unit_revision_id: str | None = Field(default=None, min_length=1, max_length=128)
 
     @field_serializer("period", mode="plain")
     def _serialize_period(self, value: _Period) -> str:
@@ -381,6 +393,10 @@ class OverviewCalendar(BaseModel):
     ``entries`` contains legal filing windows, ``events`` contains additive
     local observations, and ``suppressed_entries`` preserves filtered
     applicability rows only when the caller explicitly requests them.
+    ``coverage`` is the always-populated reconciliation of the full registry
+    modelo set against ``entries``: its ``advised`` bucket names every filing
+    obligation the surface would otherwise have silently dropped, so a machine
+    consumer never has to infer coverage from the presence or absence of a row.
     """
 
     model_config = _STRICT_FROZEN
@@ -394,6 +410,7 @@ class OverviewCalendar(BaseModel):
     incomplete_reason: str | None = None
     suppressed_entries: tuple[SuppressedCalendarEntry, ...] = Field(default=())
     events: tuple[OverviewCalendarEvent, ...] = Field(default=())
+    coverage: ObligationCoverageReport = Field(default_factory=ObligationCoverageReport)
 
 
 class OverviewStatusReport(BaseModel):
@@ -424,6 +441,7 @@ __all__ = [
     "OverviewAeatSubmissionState",
     "OverviewCalendar",
     "OverviewCalendarEntry",
+    "OverviewCalendarEntrySource",
     "OverviewCalendarEvent",
     "OverviewCalendarEventType",
     "OverviewCalendarFilingEvidence",
