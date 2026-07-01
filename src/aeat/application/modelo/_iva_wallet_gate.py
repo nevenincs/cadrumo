@@ -27,13 +27,13 @@ profile activity-start evidence and the
 Modelo 303 compensation dependency is pre-activity.
 
 See Also:
-    :func:`aeat.application.calculations.reconcile_modelo_303_iva_compensation`:
+    :func:`~aeat.application.calculations.reconcile_modelo_303_iva_compensation`:
         Builds and persists the reconciliation decision consumed here.
     :class:`~aeat.application.calculations.IvaWalletDecisionSourceResolver`:
         Projects a non-blocking decision into calculation binding values.
-    :func:`aeat.application.modelo._verification_actions._require_cross_period_clean_state`:
+    :func:`~aeat.application.modelo._verification_actions._require_cross_period_clean_state`:
         Treats matching IVA-wallet authority as the Modelo 303 compensation gate.
-    :func:`aeat.application.modelo._export.export_modelo_revision`:
+    :func:`~aeat.application.modelo._export.export_modelo_revision`:
         Replays this gate before writing a Modelo 303 export artefact.
 """
 
