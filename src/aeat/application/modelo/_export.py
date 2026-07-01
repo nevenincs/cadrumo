@@ -41,6 +41,7 @@ from __future__ import annotations
 from collections.abc import Iterable
 from datetime import date, datetime
 from pathlib import Path
+from typing import Annotated
 
 from pydantic import BaseModel, Field
 
@@ -150,6 +151,7 @@ _LOCAL_EXPORT_OFFICIAL_EVIDENCE_NEXT_ACTION = (
     "`aeat app modelo filing-record import WORK_UNIT_ID --evidence-kind aeat_justificante_pdf "
     "--evidence-id CSV --set CASILLA=VALUE`."
 )
+type _Sha256Ref = Annotated[str, Field(min_length=71, max_length=71, pattern=r"^sha256:[0-9a-f]{64}$")]
 
 
 def _compose_legal_full_name(*, surnames: str, name: str) -> str:
@@ -167,13 +169,13 @@ class ModeloIvaWalletDecisionProvenance(BaseModel):
 
     model_config = _STRICT_FROZEN
 
-    decision_ref: str = Field(min_length=71, max_length=71)
+    decision_ref: _Sha256Ref
     selected_authority: str = Field(min_length=1, max_length=64)
     divergence: str = Field(min_length=1, max_length=64)
     target_year: int = Field(ge=2000, le=2099)
     target_period: Period
     authority_source_kinds: tuple[str, ...] = Field(default_factory=tuple)
-    authority_source_refs: tuple[str, ...] = Field(default_factory=tuple)
+    authority_source_refs: tuple[_Sha256Ref, ...] = Field(default_factory=tuple)
 
 
 class ModeloExportCrossBucketRefusedError(ModeloError):
