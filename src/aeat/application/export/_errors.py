@@ -1,9 +1,10 @@
-"""Errors raised by :func:`serialize_tabular_rows` and tabular export models.
+"""Errors raised by :func:`~aeat.application.export.serialize_tabular_rows` and tabular export models.
 
-:class:`ExportFormatError` rejects unsupported
-:class:`ExportSerializationFormat` values, while :class:`ExportFieldError`
-carries :class:`TabularExportResult` field and payload invariant failures
-through the typed error registry.
+:class:`~aeat.application.export._errors.ExportFormatError` rejects unsupported
+:class:`~aeat.application.export.ExportSerializationFormat` values, while
+:class:`~aeat.application.export._errors.ExportFieldError` carries
+:class:`~aeat.application.export.TabularExportResult` field and payload
+invariant failures through the typed error registry.
 """
 
 from __future__ import annotations
