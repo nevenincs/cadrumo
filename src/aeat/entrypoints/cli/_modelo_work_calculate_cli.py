@@ -9,7 +9,8 @@ service, and serializes the resulting
 :class:`~aeat.entrypoints.cli._modelo_payloads.WorkCalculateResult` envelope.
 
 The emitted confirmation is centered on the persisted
-:class:`CalculationRevision` and parent :class:`WorkUnit`;
+:class:`~aeat.domain.modelos.CalculationRevision` and parent
+:class:`~aeat.domain.modelos.WorkUnit`;
 advisory material such as backend authorization and non-blocking source
 diagnostics is carried on the uniform
 :class:`~aeat.core.json_contract.Notice` channel instead of bespoke payload
@@ -346,7 +347,7 @@ def register_work_calculate_commands(
         autoconsumo_promotor_base: _AutoconsumoPromotorOpt = None,
         output_language: OutputLanguageOpt = None,
     ) -> None:
-        """Persist a new draft :class:`CalculationRevision` for the resolved work unit."""
+        """Persist a new draft :class:`~aeat.domain.modelos.CalculationRevision` for the resolved work unit."""
         _run_work_calculate(
             deps=deps,
             ctx=ctx,
@@ -537,7 +538,7 @@ def _work_calculate_authorization_output(
 
     ``authorization_state`` remains structured result data (the backend's
     authorization lifecycle state); the advisory prose moves onto the
-    uniform :class:`aeat.core.json_contract.Notice` channel so it is no longer a
+    uniform :class:`~aeat.core.json_contract.Notice` channel so it is no longer a
     bespoke ``authorization_advisory`` payload field. The text lines are
     unchanged.
     """
@@ -574,7 +575,7 @@ def _work_calculate_source_advisory_output(
 
     Each diagnostic the source mesh raised while resolving the bucket ledger
     (notably the unconsumed-declarable-IVA advisory) becomes one
-    warning-severity :class:`aeat.core.json_contract.Notice` on the envelope
+    warning-severity :class:`~aeat.core.json_contract.Notice` on the envelope
     ``notices`` channel and one human-facing ADVISORY line. The structured
     provenance (``reason`` / ``source_kind`` / ``resolver_id``) rides on the
     notice ``context`` so no machine-queryable field is lost relative to the
