@@ -1005,7 +1005,7 @@ source_url = "https://sede.agenciatributaria.gob.es/Sede/procedimientoini/GI43.s
 review_status = "reviewed"
 
 [sources."boe-modelo-232-2017-form"]
-evidence_tier = "official_source_guidance"
+evidence_tier = "layout_authority"
 authority = "boe"
 kind = "form_spec"
 corpus_path = "corpus/normatives/html/orden-hfp-816-2017.html"
