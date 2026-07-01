@@ -482,6 +482,41 @@ exemption is enforced even when ``bienes_extranjero_above_threshold`` is
 ``True``.
 """
 
+_IMPATRIADO_M151_ROUTE_LEGAL_REFS: tuple[LegalRefId, ...] = (
+    "ley-35-2006:art-93",  # LIRPF Art. 93 — impatriados opt into IRNR taxation.
+    "rd-439-2007:art-115",  # RIRPF Art. 115 — duration of the special regime.
+    "rd-439-2007:art-116",  # RIRPF Art. 116 — option exercise / start-date selector.
+    "orden-eha-2887-2008:modelo-151",  # Form order for the Modelo 151 declaration.
+)
+"""Legal refs grounding the Art. 93 Modelo 151 route and M100 suppression."""
+
+_IMPATRIADO_M100_SUPPRESSED_REASON = (
+    "Modelo 100 no aplica: el contribuyente tiene activo el régimen especial "
+    "de trabajadores, profesionales, emprendedores e inversores desplazados "
+    "a territorio español (LIRPF Art. 93) dentro de la ventana de seis "
+    "ejercicios. Durante esa ventana tributa por las reglas del IRNR "
+    "manteniendo la condición de contribuyente IRPF, y la declaración anual "
+    "correspondiente es el Modelo 151, no el Modelo 100."
+)
+"""``NOT_APPLICABLE`` rationale for suppressing M100 during Art. 93."""
+
+_IMPATRIADO_M151_APPLICABLE_REASON = (
+    "Modelo 151 aplica: el contribuyente tiene activo el régimen especial de "
+    "impatriados del Art. 93 LIRPF dentro de la ventana de seis ejercicios "
+    "del año de opción y los cinco siguientes; la declaración anual del "
+    "régimen se presenta por Modelo 151."
+)
+"""``APPLICABLE`` rationale for the active Art. 93 Modelo 151 route."""
+
+_IMPATRIADO_M151_NOT_APPLICABLE_REASON = (
+    "Modelo 151 no aplica: el perfil no tiene activo el régimen especial de "
+    "impatriados del Art. 93 LIRPF dentro de su ventana de seis ejercicios. "
+    "Fuera de esa ventana, o sin opción por el régimen, la persona física "
+    "residente vuelve a la ruta ordinaria del IRPF y al Modelo 100 cuando "
+    "proceda."
+)
+"""``NOT_APPLICABLE`` rationale for M151 outside the active Art. 93 window."""
+
 
 def _incomplete_applicability(
     modelo: str,
@@ -1208,6 +1243,36 @@ def derive_modelo_applicability(
         The :class:`ModeloApplicability` for ``modelo`` and ``profile``.
     """
     _today = today if today is not None else date.today()
+    beckham_window_active = profile.beckham_window_active(_today)
+
+    # The Art. 93 impatriado route is a modelo-level switch while the
+    # six-year Beckham window is active: the annual declaration is Modelo
+    # 151, and the ordinary Renta self-assessment (Modelo 100) is not the
+    # filing route. Once the window expires, both modelos fall back to their
+    # ordinary applicability rules: M100 through the seed table below, M151
+    # to a positive NOT_APPLICABLE.
+    if beckham_window_active and modelo == Modelo.M100:
+        return ModeloApplicability(
+            modelo=Modelo.M100,
+            verdict=ApplicabilityVerdict.NOT_APPLICABLE,
+            reason=_IMPATRIADO_M100_SUPPRESSED_REASON,
+            legal_refs=_IMPATRIADO_M151_ROUTE_LEGAL_REFS,
+        )
+    if modelo == Modelo.M151:
+        return ModeloApplicability(
+            modelo=Modelo.M151,
+            verdict=(
+                ApplicabilityVerdict.APPLICABLE
+                if beckham_window_active
+                else ApplicabilityVerdict.NOT_APPLICABLE
+            ),
+            reason=(
+                _IMPATRIADO_M151_APPLICABLE_REASON
+                if beckham_window_active
+                else _IMPATRIADO_M151_NOT_APPLICABLE_REASON
+            ),
+            legal_refs=_IMPATRIADO_M151_ROUTE_LEGAL_REFS,
+        )
 
     # An impatriado (LIRPF Art. 93 special regime) is taxed as a non-resident
     # for the duration of the six-year Beckham window (RIRPF Art. 116.1) and
@@ -1217,7 +1282,7 @@ def derive_modelo_applicability(
     # exemption before the rule table so the payer-fact gate is never reached.
     # Year-7+ filers whose window has expired revert to the general IRPF
     # regime and owe M720 again — the window-expiry check is wired here.
-    if modelo == Modelo.M720 and profile.beckham_window_active(_today):
+    if modelo == Modelo.M720 and beckham_window_active:
         return ModeloApplicability(
             modelo=Modelo.M720,
             verdict=ApplicabilityVerdict.NOT_APPLICABLE,
