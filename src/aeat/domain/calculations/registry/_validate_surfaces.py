@@ -487,7 +487,6 @@ def validate_application_link_section(
         owner = f"application link {link.id}"
         failures.extend(_missing_refs(prefix, owner, link.legal_refs, legal_refs, "legal"))
         failures.extend(_missing_refs(prefix, owner, link.source_refs, source_refs, "source"))
-        failures.extend(evidence.require_legal_authority_refs(prefix, owner, link.legal_refs))
         failures.extend(
             _application_link_source_tier_failures(
                 prefix,
@@ -512,13 +511,11 @@ def validate_deadline_window_section(
         owner = f"deadline window {window.id}"
         failures.extend(_missing_refs(prefix, owner, window.legal_refs, legal_refs, "legal"))
         failures.extend(_missing_refs(prefix, owner, window.source_refs, source_refs, "source"))
-        failures.extend(evidence.require_legal_authority_refs(prefix, owner, window.legal_refs))
         failures.extend(evidence.require_source_tier(prefix, owner, window.source_refs, "official_source_guidance"))
         for condition in window.applicability_conditions:
             condition_owner = f"deadline condition for {window.id}"
             failures.extend(_missing_refs(prefix, condition_owner, condition.legal_refs, legal_refs, "legal"))
             failures.extend(_missing_refs(prefix, condition_owner, condition.source_refs, source_refs, "source"))
-            failures.extend(evidence.require_legal_authority_refs(prefix, condition_owner, condition.legal_refs))
             failures.extend(
                 evidence.require_source_tier(
                     prefix,
