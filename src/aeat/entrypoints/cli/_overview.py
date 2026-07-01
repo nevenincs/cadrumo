@@ -28,15 +28,17 @@ from pathlib import Path
 
 import typer
 
-from ...application.overview import (
+from ...application import overview as _overview_application
+from ...application.overview._calendar import (
+    build_overview_calendar,
+    build_overview_calendar_events,
+    calendar_events_from_modelo_records,
+    calendar_filing_evidence_from_sources,
+)
+from ...application.overview._calendar_models import (
     OverviewCalendar,
     OverviewCalendarEvent,
     OverviewCalendarRange,
-    build_overview_calendar,
-    build_overview_calendar_events,
-    build_overview_status_report,
-    calendar_events_from_modelo_records,
-    calendar_filing_evidence_from_sources,
 )
 from ...core.hashing import sha256_hex
 from ...core.i18n import tr
@@ -59,6 +61,7 @@ from ._overview_payloads import (
     OverviewStatusResult,
 )
 from ._overview_rendering import (
+    overview_coverage_notices,
     overview_next_step_notices,
     overview_post_filing_event_notices,
     render_cli_overview_status_lines,
@@ -95,8 +98,10 @@ def _local_live_calendar_events(
     :func:`~aeat.application.overview.build_overview_calendar_events` builder
     performs the projection without contacting AEAT.
     """
-    from ...application.live import ExpedientesService, JustificanteCaptureSnapshotService, NotificationsService
-    from ...domain.justificante import JustificanteRepository
+    from ...application.live._expedientes import ExpedientesService
+    from ...application.live._justificante import JustificanteCaptureSnapshotService
+    from ...application.live._notifications import NotificationsService
+    from ...domain.justificante._repository import JustificanteRepository
 
     try:
         expedientes = ExpedientesService().list_snapshots(bucket_id=bucket_id)
@@ -141,8 +146,8 @@ def _local_modelo_record_calendar_events(
     loading bucket-local filing records and justificante metadata.
     """
     try:
-        from ...domain.justificante import JustificanteRepository
-        from ...domain.modelos import ModeloRecordCatalogueRepository
+        from ...domain.justificante._repository import JustificanteRepository
+        from ...domain.modelos._filing_repository import ModeloRecordCatalogueRepository
 
         filing_records = tuple(ModeloRecordCatalogueRepository(bucket_id=bucket_id).load().values())
         justificantes = tuple(JustificanteRepository().iter_justificantes())
@@ -169,11 +174,36 @@ def _local_modelo_record_calendar_events(
     )
 
 
+def _local_modelo_work_units(bucket_id: str):
+    """Return active local Modelo work units for overview obligation surfaces."""
+    try:
+        from ...application.modelo._work_lifecycle import list_work_units
+        from ...domain.modelos._repository import WorkUnitCatalogueRepository
+
+        repository = WorkUnitCatalogueRepository(bucket_id=bucket_id)
+        return list_work_units(bucket_id=bucket_id, include_discarded=False, repository=repository)
+    except Exception as exc:
+        logger.warning(
+            "overview: failed to load local modelo work units for bucket %s",
+            bucket_id,
+            exc_info=True,
+        )
+        raise _bad(
+            tr(
+                "cli.overview.local_work_units_unavailable",
+                default=(
+                    "Overview local Modelo work-unit state is unavailable; "
+                    "refusing to render without persisted work state."
+                ),
+            ),
+        ) from exc
+
+
 def _live_censo_verified_profile_keys(record) -> tuple[str, ...]:
     """Return profile paths whose current value was stamped from live censo sync."""
     if record is None:
         return ()
-    from ...application.user_profile import CENSO_DERIVED_SOURCE_TAG, CENSO_SOURCE_TAG
+    from ...application.user_profile._censo_sync import CENSO_DERIVED_SOURCE_TAG, CENSO_SOURCE_TAG
 
     verified_sources = {CENSO_SOURCE_TAG, CENSO_DERIVED_SOURCE_TAG}
     return tuple(
@@ -185,7 +215,7 @@ def _live_censo_verified_profile_keys(record) -> tuple[str, ...]:
 
 def _overview_status_period(period: str, *, year: int | None):
     """Resolve ``overview status --period`` through the registry-token union."""
-    from ...core import Period, PeriodError
+    from ...core._period import Period, PeriodError
 
     token = period.strip()
     if not token:
@@ -213,10 +243,10 @@ def _local_calendar_filing_evidence(
     """
     try:
         from ...adapters.outbound.aeat.sede._observation_store import FiledDeclaracionObservationStore
-        from ...application.calculations import CalculationObservationRepository
-        from ...application.live import JustificanteCaptureSnapshotService
-        from ...domain.justificante import JustificanteRepository
-        from ...domain.modelos import ModeloRecordCatalogueRepository
+        from ...application.calculations._observations_repository import CalculationObservationRepository
+        from ...application.live._justificante import JustificanteCaptureSnapshotService
+        from ...domain.justificante._repository import JustificanteRepository
+        from ...domain.modelos._filing_repository import ModeloRecordCatalogueRepository
 
         filing_records = tuple(ModeloRecordCatalogueRepository(bucket_id=bucket_id).load().values())
         justificantes = tuple(JustificanteRepository().iter_justificantes())
@@ -278,6 +308,17 @@ def _calendar_filing_evidence_text_fields(filing_evidence) -> str:
         fields.append(f"verified_justificante_csv={filing_evidence.verified_justificante_csv}")
     if filing_evidence.evidence_source:
         fields.append(f"evidence_source={filing_evidence.evidence_source}")
+    return "\t".join(fields)
+
+
+def _calendar_entry_work_unit_text_fields(entry) -> str:
+    fields = [f"source={entry.source.value}"]
+    if entry.local_work_unit_id:
+        fields.append(f"work_unit={entry.local_work_unit_id}")
+    if entry.local_work_unit_name:
+        fields.append(f"work_name={entry.local_work_unit_name}")
+    if entry.local_work_unit_revision_id:
+        fields.append(f"work_revision={entry.local_work_unit_revision_id}")
     return "\t".join(fields)
 
 
@@ -423,8 +464,8 @@ def overview_status(
     :func:`~aeat.application.overview.build_overview_status_report`; the period branch
     emits only the matching draft rows.
     """
-    from ...application.user_profile import record_to_values
-    from ...core import resolve_active_bucket_id
+    from ...application.user_profile._projections import record_to_values
+    from ...core._bucket_pointer_io import resolve_active_bucket_id
 
     current = _state() if resolve_active_bucket_id() is not None else None
     if period is not None:
@@ -465,14 +506,34 @@ def overview_status(
         return
     profile_record = current.active_profile_record() if current is not None else None
     raw_values = record_to_values(profile_record) if profile_record is not None else None
-    report = build_overview_status_report(state=current, raw_values=raw_values)
+    report = _overview_application.build_overview_status_report(state=current, raw_values=raw_values)
     typed_status = OverviewStatusResult.model_validate(report.model_dump(mode="json"))
+    status_notices = list(overview_next_step_notices(report))
+    coverage_lines: list[str] = []
+    # ``status`` is a "what must I file" surface too: reconcile the active
+    # profile's obligation coverage over the current year and surface the same
+    # default advisory the calendar does, so status never reads as complete while
+    # obligations go unscoped. The coverage report rides the Notice channel.
+    if current is not None and current.active_profile_bucket_id() is not None:
+        status_today = _date.today()
+        status_cal = build_overview_calendar(
+            _profile_to_taxpayer(current),
+            OverviewCalendarRange(
+                from_date=_date(status_today.year, 1, 1),
+                to_date=_date(status_today.year, 12, 31),
+            ),
+            today=status_today,
+            raw_values=raw_values,
+        )
+        for notice in overview_coverage_notices(status_cal.coverage):
+            status_notices.append(notice)
+            coverage_lines.append(f"coverage_advised\t{len(status_cal.coverage.advised)}\t{notice.message}")
     _emit_envelope(
         ctx,
         command="overview.status",
         result=typed_status,
-        lines=render_cli_overview_status_lines(report),
-        notices=overview_next_step_notices(report),
+        lines=[*render_cli_overview_status_lines(report), *coverage_lines],
+        notices=status_notices,
     )
 
 
@@ -545,7 +606,7 @@ def overview_calendar(
     filing-evidence rows, and then delegates the legal calendar projection to
     :func:`~aeat.application.overview.build_overview_calendar`.
     """
-    from ...application.user_profile import record_to_values
+    from ...application.user_profile._projections import record_to_values
 
     rng = OverviewCalendarRange(
         from_date=_parse_iso_date(from_date, label="--from"),
@@ -580,6 +641,7 @@ def overview_calendar(
         events,
         expected_tax_id=workflow_profile.tax_id,
     )
+    work_units = _local_modelo_work_units(bucket_id)
     cal: OverviewCalendar = build_overview_calendar(
         workflow_profile,
         rng,
@@ -588,6 +650,7 @@ def overview_calendar(
         show_suppressed=show_suppressed,
         events=events,
         filing_evidence=filing_evidence,
+        work_units=work_units,
         live_censo_verified_profile_keys=_live_censo_verified_profile_keys(record),
     )
     if not cal.taxpayer_model_declared:
@@ -597,7 +660,10 @@ def overview_calendar(
         raise _bad(cal.incomplete_reason or tr("cli.overview.taxpayer_model_undeclared"))
     if cal.warnings and not allow_incomplete:
         _refuse_calendar_warnings(cal)
-    cal_dump = cal.model_dump(mode="json")
+    # ``coverage`` is surfaced through the typed ``Notice`` channel (the
+    # canonical diagnostic surface), not as a bespoke payload field, so it is
+    # excluded from the result dump the payload schema validates.
+    cal_dump = cal.model_dump(mode="json", exclude={"coverage"})
     typed_cal = OverviewCalendarResult.model_validate(cal_dump)
     lines: list[str] = [
         f"from\t{rng.from_date.isoformat()}",
@@ -613,7 +679,8 @@ def overview_calendar(
             f"\tadjusted={entry.adjusted_closes_on.isoformat()}"
             f"\tshift={entry.shift_reason}"
             f"\tcenso_enrolment={entry.censo_enrolment_state.value}"
-            f"\t{_calendar_filing_evidence_text_fields(entry.filing_evidence)}",
+            f"\t{_calendar_filing_evidence_text_fields(entry.filing_evidence)}"
+            f"\t{_calendar_entry_work_unit_text_fields(entry)}",
         )
     for warning in cal.warnings:
         lines.append(f"warning\t{warning.code}\t{tr(warning.message)}\tfix={warning.fix_command}")
@@ -630,6 +697,9 @@ def overview_calendar(
             f"\tverdict={suppressed.verdict.value}"
             f"\treason={suppressed.reason[:80]}",
         )
+    coverage_notices = overview_coverage_notices(cal.coverage)
+    for notice in coverage_notices:
+        lines.append(f"coverage_advised\t{len(cal.coverage.advised)}\t{notice.message}")
     post_filing_notices = overview_post_filing_event_notices(cal.events)
     for notice in post_filing_notices:
         lines.append(f"post_filing_pending\t{len(notice.context)}\t{notice.message}")
@@ -638,7 +708,7 @@ def overview_calendar(
         command="overview.calendar",
         result=typed_cal,
         lines=lines,
-        notices=post_filing_notices,
+        notices=[*coverage_notices, *post_filing_notices],
     )
 
 
@@ -661,13 +731,10 @@ def _overview_calendar_all_profiles(
     schema registered for ``overview.calendar``.
     """
     from ...adapters.persistence.storage.bucket import BucketLifecycleStatus
-    from ...application.user_profile import (
-        ProfileRepository,
-        profile_storage_session,
-        projection_for_taxpayer,
-        record_to_values,
-    )
-    from ...application.workflow import list_profile_buckets
+    from ...application.user_profile._orchestration import profile_storage_session
+    from ...application.user_profile._profile_repository import ProfileRepository
+    from ...application.user_profile._projections import projection_for_taxpayer, record_to_values
+    from ...application.workflow._profile_bucket_scan import list_profile_buckets
 
     today = _date.today()
     buckets = list_profile_buckets()
@@ -679,7 +746,7 @@ def _overview_calendar_all_profiles(
         f"profiles\t{len(active_buckets)}",
     ]
     all_calendars: list[dict[str, object]] = []
-    all_post_filing_notices: list[Notice] = []
+    all_coverage_notices: list[Notice] = []
 
     repository = ProfileRepository()
     for bucket_id, pointer in sorted(active_buckets.items(), key=lambda kv: kv[1].label):
@@ -701,6 +768,7 @@ def _overview_calendar_all_profiles(
                     events,
                     expected_tax_id=taxpayer.tax_id,
                 )
+                work_units = _local_modelo_work_units(bucket_id)
         except typer.BadParameter:
             raise
         except Exception:
@@ -721,6 +789,7 @@ def _overview_calendar_all_profiles(
             show_suppressed=show_suppressed,
             events=events,
             filing_evidence=filing_evidence,
+            work_units=work_units,
             live_censo_verified_profile_keys=live_censo_verified_profile_keys,
         )
 
@@ -735,7 +804,8 @@ def _overview_calendar_all_profiles(
                 f"\tadjusted={entry.adjusted_closes_on.isoformat()}"
                 f"\tshift={entry.shift_reason}"
                 f"\tcenso_enrolment={entry.censo_enrolment_state.value}"
-                f"\t{_calendar_filing_evidence_text_fields(entry.filing_evidence)}",
+                f"\t{_calendar_filing_evidence_text_fields(entry.filing_evidence)}"
+                f"\t{_calendar_entry_work_unit_text_fields(entry)}",
             )
         if not cal.taxpayer_model_declared:
             all_lines.append(
@@ -754,27 +824,27 @@ def _overview_calendar_all_profiles(
                 f"\tverdict={suppressed.verdict.value}"
                 f"\treason={suppressed.reason[:80]}",
             )
+        for notice in overview_coverage_notices(cal.coverage):
+            # Attribute the advisory to its profile so the multi-profile
+            # envelope keeps each profile's coverage gap distinguishable.
+            tagged = notice.model_copy(update={"context": {**(notice.context or {}), "profile": pointer.label}})
+            all_coverage_notices.append(tagged)
+            all_lines.append(f"coverage_advised\t{pointer.label}\t{len(cal.coverage.advised)}\t{notice.message}")
         for notice in overview_post_filing_event_notices(cal.events):
             tagged = notice.model_copy(update={"context": {**(notice.context or {}), "profile": pointer.label}})
-            all_post_filing_notices.append(tagged)
+            all_coverage_notices.append(tagged)
             all_lines.append(f"post_filing_pending\t{pointer.label}\t{len(notice.context)}\t{notice.message}")
 
         all_calendars.append(
             {
                 "profile_id": bucket_id,
                 "label": pointer.label,
-                "calendar": cal.model_dump(mode="json"),
+                "calendar": cal.model_dump(mode="json", exclude={"coverage"}),
             },
         )
 
     typed_all = OverviewCalendarResult.model_validate({"profiles": all_calendars})
-    _emit_envelope(
-        ctx,
-        command="overview.calendar",
-        result=typed_all,
-        lines=all_lines,
-        notices=all_post_filing_notices,
-    )
+    _emit_envelope(ctx, command="overview.calendar", result=typed_all, lines=all_lines, notices=all_coverage_notices)
 
 
 @app.command(
@@ -821,8 +891,8 @@ def overview_agenda(
     :func:`~aeat.application.overview.build_overview_agenda` and only adapts the
     application DTO to the CLI envelope and tabular text lines.
     """
-    from ...application.overview import build_overview_agenda
-    from ...application.user_profile import record_to_values
+    from ...application.overview._agenda import build_overview_agenda
+    from ...application.user_profile._projections import record_to_values
 
     current = _state()
     as_of_date = _parse_iso_date(as_of, label="--date") if as_of else _date.today()
@@ -852,7 +922,7 @@ def overview_agenda(
             ),
         )
 
-    typed_agenda = OverviewAgendaResult.model_validate(agenda.model_dump(mode="json"))
+    typed_agenda = OverviewAgendaResult.model_validate(agenda.model_dump(mode="json", exclude={"coverage"}))
     lines: list[str] = [
         f"as_of\t{agenda.as_of.isoformat()}",
         f"horizon_days\t{agenda.horizon_days}",
@@ -875,7 +945,10 @@ def overview_agenda(
         lines.append(f"  {entry.modelo}\t{entry.period}\t{entry.adjusted_closes_on.isoformat()}")
     for warning in agenda.warnings:
         lines.append(f"warning\t{warning.code}\t{tr(warning.message)}\tfix={warning.fix_command}")
-    _emit_envelope(ctx, command="overview.agenda", result=typed_agenda, lines=lines)
+    coverage_notices = overview_coverage_notices(agenda.coverage)
+    for notice in coverage_notices:
+        lines.append(f"coverage_advised\t{len(agenda.coverage.advised)}\t{notice.message}")
+    _emit_envelope(ctx, command="overview.agenda", result=typed_agenda, lines=lines, notices=coverage_notices)
 
 
 @app.command(
@@ -921,19 +994,24 @@ def overview_backlog(
     :func:`~aeat.application.overview.build_overview_backlog`; it does not resume
     or mutate modelo workflows.
     """
-    from ...application.overview import build_overview_backlog
-    from ...application.user_profile import record_to_values
+    from ...application.overview._backlog import build_overview_backlog
+    from ...application.user_profile._projections import record_to_values
 
     current = _state()
     parsed_from = _parse_iso_date(from_date, label="--from") if from_date else None
     parsed_to = _parse_iso_date(to_date, label="--to") if to_date else None
     record = current.active_profile_record()
     raw_values = record_to_values(record) if record is not None else None
+    bucket_id = current.active_profile_bucket_id()
+    if bucket_id is None:
+        raise _bad(tr("cli.config.errors.no_active_profile"))
+    work_units = _local_modelo_work_units(bucket_id)
     backlog = build_overview_backlog(
         _profile_to_taxpayer(current),
         from_date=parsed_from,
         to_date=parsed_to,
         raw_values=raw_values,
+        work_units=work_units,
     )
     if not backlog.taxpayer_model_declared:
         raise _bad(backlog.incomplete_reason or tr("cli.overview.taxpayer_model_undeclared"))
@@ -946,7 +1024,7 @@ def overview_backlog(
             ),
         )
 
-    typed_backlog = OverviewBacklogResult.model_validate(backlog.model_dump(mode="json"))
+    typed_backlog = OverviewBacklogResult.model_validate(backlog.model_dump(mode="json", exclude={"coverage"}))
     lines: list[str] = [
         f"from\t{backlog.range.from_date.isoformat()}",
         f"to\t{backlog.range.to_date.isoformat()}",
@@ -954,10 +1032,16 @@ def overview_backlog(
         f"late_count\t{backlog.late_count}",
     ]
     for entry in backlog.items:
-        lines.append(f"{entry.modelo}\t{entry.period}\tcloses={entry.adjusted_closes_on.isoformat()}")
+        lines.append(
+            f"{entry.modelo}\t{entry.period}\tcloses={entry.adjusted_closes_on.isoformat()}"
+            f"\t{_calendar_entry_work_unit_text_fields(entry)}",
+        )
     for warning in backlog.warnings:
         lines.append(f"warning\t{warning.code}\t{tr(warning.message)}\tfix={warning.fix_command}")
-    _emit_envelope(ctx, command="overview.backlog", result=typed_backlog, lines=lines)
+    coverage_notices = overview_coverage_notices(backlog.coverage)
+    for notice in coverage_notices:
+        lines.append(f"coverage_advised\t{len(backlog.coverage.advised)}\t{notice.message}")
+    _emit_envelope(ctx, command="overview.backlog", result=typed_backlog, lines=lines, notices=coverage_notices)
 
 
 @app.command(
@@ -995,7 +1079,8 @@ def overview_explain(
     :func:`~aeat.application.overview.build_overview_explain`; this adapter only
     maps application errors to CLI validation and renders the typed envelope.
     """
-    from ...application.overview import OverviewExplainError, build_overview_explain
+    from ...application.overview._errors import OverviewExplainError
+    from ...application.overview._explain import build_overview_explain
 
     current = _state()
     try:

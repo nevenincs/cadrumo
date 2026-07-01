@@ -38,29 +38,33 @@ from datetime import UTC, date, datetime
 from types import MappingProxyType
 from typing import TYPE_CHECKING
 
-from ...core import Period as _Period
-from ...core import PostFilingEventKind as _PostFilingEventKind
-from ...core import classify_post_filing_event_kind as _classify_post_filing_event_kind
-from ...core import post_filing_event_is_actionable as _post_filing_event_is_actionable
+from ...core._period import Period as _Period
+from ...core._post_filing_event import PostFilingEventKind as _PostFilingEventKind
+from ...core._post_filing_event import classify_post_filing_event_kind as _classify_post_filing_event_kind
+from ...core._post_filing_event import post_filing_event_is_actionable as _post_filing_event_is_actionable
 from ...core.external_constants import IVA_REGIME_MODELOS
 from ...core.i18n import tr as _tr
 from ...core.logging import get_logger as _get_logger
 from ...core.time import now
 from ...domain.calculations.registry.applicability import ApplicabilityVerdict, derive_modelo_applicability
 from ...domain.calculations.registry.applicability import taxpayer_model_is_declared as _taxpayer_model_is_declared
-from ...domain.deadlines import DeadlineEngine as _DeadlineEngine
-from ...domain.deadlines import ModeloDeadline as _ModeloDeadline
-from ...domain.deadlines import Schedule as _Schedule
-from ...domain.deadlines import ScheduleProducer as _ScheduleProducer
-from ...domain.deadlines import TaxpayerProfile as _TaxpayerProfile
-from ...domain.deadlines import shift_deadline as _shift_deadline
+from ...domain.deadlines._engine import DeadlineEngine as _DeadlineEngine
+from ...domain.deadlines._engine import ScheduleProducer as _ScheduleProducer
 from ...domain.deadlines._errors import NoDeadlineWindowsError as _NoDeadlineWindowsError
 from ...domain.deadlines._festivos import DeadlineValidationError as _DeadlineValidationError
+from ...domain.deadlines._festivos import shift_deadline as _shift_deadline
+from ...domain.deadlines._models import ModeloDeadline as _ModeloDeadline
+from ...domain.deadlines._models import ObligationStatus as _ObligationStatus
+from ...domain.deadlines._models import Schedule as _Schedule
+from ...domain.deadlines._models import TaxpayerProfile as _TaxpayerProfile
+from ...domain.modelos._work_unit import WorkUnit as _WorkUnit
+from ...domain.modelos._work_unit import WorkUnitState as _WorkUnitState
 from ._calendar_models import (
     CalendarCompleteness,
     OverviewAeatSubmissionState,
     OverviewCalendar,
     OverviewCalendarEntry,
+    OverviewCalendarEntrySource,
     OverviewCalendarEvent,
     OverviewCalendarEventType,
     OverviewCalendarFilingEvidence,
@@ -94,11 +98,12 @@ from ._calendar_warnings import (
 from ._calendar_warnings import (
     calendar_censo_enrolment_profile_keys as calendar_censo_enrolment_profile_keys,
 )
+from ._coverage import build_obligation_coverage
 
 if TYPE_CHECKING:
-    from ...adapters.outbound.aeat.sede import FiledDeclaracionObservation
-    from ...domain.justificante import Justificante
-    from ...domain.modelos import ModeloRecord
+    from ...adapters.outbound.aeat.sede._schema import FiledDeclaracionObservation
+    from ...domain.justificante._schema import Justificante
+    from ...domain.modelos._filing_record import ModeloRecord
     from ..live._expedientes import PersistedExpedientesSnapshot
     from ..live._justificante import JustificanteCaptureSnapshot
     from ..live._notifications import PersistedNotificationsSnapshot
@@ -127,6 +132,11 @@ _AEAT_SUBMISSION_RANK: MappingProxyType[OverviewAeatSubmissionState, int] = Mapp
         OverviewAeatSubmissionState.JUSTIFICANTE_VERIFIED: 3,
     },
 )
+_ANNUAL_PERIOD_CODE = "0A"
+_DEFAULT_LOCAL_WORK_UNIT_DUE_SOON_DAYS = 14
+_LOCAL_WORK_UNIT_APPLIES_BECAUSE = (
+    "Local modelo work unit created by the operator; registry deadline window unavailable or not surfaced."
+)
 
 
 def _entry_intersects_range(
@@ -135,6 +145,212 @@ def _entry_intersects_range(
 ) -> bool:
     """Return whether ``obligation``'s [opens_on, closes_on] intersects the range."""
     return obligation.closes_on >= calendar_range.from_date and obligation.opens_on <= calendar_range.to_date
+
+
+def _calendar_entry_key(entry: OverviewCalendarEntry) -> tuple[str, int, str]:
+    return (
+        entry.modelo,
+        entry.filing_year or entry.period.filing_year,
+        entry.period.registry_token,
+    )
+
+
+def _work_unit_key(unit: _WorkUnit) -> tuple[str, int, str]:
+    return (str(unit.modelo), unit.filing_year, unit.period.registry_token)
+
+
+def _work_unit_window_matches(unit: _WorkUnit, window: object) -> bool:
+    period = getattr(window, "period", None)
+    if period is None:
+        return False
+    if getattr(period, "registry_token", None) != unit.period.registry_token:
+        return False
+    window_year = getattr(period, "filing_year", None)
+    if window_year == unit.filing_year:
+        return True
+    return unit.period.registry_token == _ANNUAL_PERIOD_CODE and window_year == unit.filing_year + 1
+
+
+def _registry_window_for_work_unit(unit: _WorkUnit) -> object | None:
+    """Return a registry deadline window for ``unit`` when one is bundled."""
+    from ...core.resources import resources
+    from ...domain.calculations.registry._errors import RegistryError
+
+    authority = resources().modelos.authority
+    for query_year in (unit.filing_year, unit.filing_year + 1):
+        try:
+            windows = authority.deadline_windows(query_year)
+        except RegistryError:
+            continue
+        for modelo, _revision, window in windows:
+            if modelo == str(unit.modelo) and _work_unit_window_matches(unit, window):
+                return window
+    return None
+
+
+def _work_unit_window_dates(unit: _WorkUnit) -> tuple[date, date, date | None]:
+    """Return the calendar span used to place a local work unit row."""
+    window = _registry_window_for_work_unit(unit)
+    if window is not None:
+        return window.opens_on, window.closes_on, window.payment_cutoff_on
+    if unit.period.has_date_span():
+        return unit.period.start_date, unit.period.end_date, None
+    anchor = unit.created_at.date()
+    return anchor, anchor, None
+
+
+def _work_unit_intersects_range(unit: _WorkUnit, calendar_range: OverviewCalendarRange) -> bool:
+    opens_on, closes_on, _payment_cutoff_on = _work_unit_window_dates(unit)
+    return closes_on >= calendar_range.from_date and opens_on <= calendar_range.to_date
+
+
+def _work_unit_has_filing_pointers(unit: _WorkUnit) -> bool:
+    return unit.filed_calculation_revision_id is not None or unit.current_filing_record_id is not None
+
+
+def _filing_evidence_has_local_state(
+    unit: _WorkUnit,
+    filing_evidence: tuple[OverviewCalendarFilingEvidence, ...],
+) -> bool:
+    key = _work_unit_key(unit)
+    for evidence in filing_evidence:
+        if evidence.modelo is None or evidence.filing_year is None or evidence.period is None:
+            continue
+        evidence_key = (evidence.modelo, evidence.filing_year, evidence.period.registry_token)
+        if evidence_key == key and evidence.local_filing_state is not OverviewLocalFilingState.NOT_READY_TO_FILE:
+            return True
+    return False
+
+
+def _local_work_unit_status(
+    unit: _WorkUnit,
+    closes_on: date,
+    today: date,
+    due_soon_days: int,
+) -> _ObligationStatus:
+    if _work_unit_has_filing_pointers(unit):
+        return _ObligationStatus.FILED
+    if today > closes_on:
+        return _ObligationStatus.OVERDUE
+    if today == closes_on:
+        return _ObligationStatus.DUE_TODAY
+    delta = (closes_on - today).days
+    if 1 <= delta <= due_soon_days:
+        return _ObligationStatus.DUE_SOON
+    return _ObligationStatus.UPCOMING
+
+
+def _filing_evidence_with_work_unit_pointers(
+    unit: _WorkUnit,
+    filing_evidence: tuple[OverviewCalendarFilingEvidence, ...],
+) -> tuple[OverviewCalendarFilingEvidence, ...]:
+    if not _work_unit_has_filing_pointers(unit):
+        return filing_evidence
+    if _filing_evidence_has_local_state(unit, filing_evidence):
+        return filing_evidence
+    pointer_evidence = OverviewCalendarFilingEvidence(
+        modelo=str(unit.modelo),
+        filing_year=unit.filing_year,
+        period=unit.period,
+        local_filing_state=OverviewLocalFilingState.READY_TO_FILE,
+        local_filing_record_id=unit.current_filing_record_id,
+        local_calculation_revision_id=unit.filed_calculation_revision_id,
+        evidence_source="work_unit_filing_pointers",
+    )
+    return (*filing_evidence, pointer_evidence)
+
+
+def _annotate_entry_with_work_unit(entry: OverviewCalendarEntry, unit: _WorkUnit) -> OverviewCalendarEntry:
+    return entry.model_copy(
+        update={
+            "local_work_unit_id": unit.work_unit_id,
+            "local_work_unit_name": unit.name,
+            "local_work_unit_revision_id": unit.revision_id,
+        },
+    )
+
+
+def _calendar_entry_from_work_unit(
+    unit: _WorkUnit,
+    *,
+    today: date,
+    due_soon_days: int,
+    filing_evidence: tuple[OverviewCalendarFilingEvidence, ...],
+    live_censo_verified_profile_keys: tuple[str, ...] | None,
+) -> OverviewCalendarEntry:
+    opens_on, closes_on, payment_cutoff_on = _work_unit_window_dates(unit)
+    effective_filing_evidence = _filing_evidence_with_work_unit_pointers(unit, filing_evidence)
+    obligation = _ModeloDeadline(
+        modelo=str(unit.modelo),
+        period=unit.period,
+        opens_on=opens_on,
+        closes_on=closes_on,
+        payment_cutoff_on=payment_cutoff_on,
+        status=_local_work_unit_status(unit, closes_on, today, due_soon_days),
+        applies_because=_LOCAL_WORK_UNIT_APPLIES_BECAUSE,
+        boe_references=(),
+        recovery=None,
+    )
+    return _calendar_entry_from_obligation(
+        obligation,
+        filing_evidence=effective_filing_evidence,
+        live_censo_verified_profile_keys=live_censo_verified_profile_keys,
+    ).model_copy(
+        update={
+            "source": OverviewCalendarEntrySource.LOCAL_WORK_UNIT,
+            "local_work_unit_id": unit.work_unit_id,
+            "local_work_unit_name": unit.name,
+            "local_work_unit_revision_id": unit.revision_id,
+        },
+    )
+
+
+def _merge_work_units_into_entries(
+    entries: tuple[OverviewCalendarEntry, ...],
+    *,
+    work_units: tuple[_WorkUnit, ...],
+    calendar_range: OverviewCalendarRange,
+    today: date,
+    due_soon_days: int,
+    filing_evidence: tuple[OverviewCalendarFilingEvidence, ...],
+    live_censo_verified_profile_keys: tuple[str, ...] | None,
+) -> tuple[OverviewCalendarEntry, ...]:
+    merged = list(entries)
+    registry_index = {_calendar_entry_key(entry): index for index, entry in enumerate(entries)}
+    annotated_registry_keys: set[tuple[str, int, str]] = set()
+    for unit in sorted(
+        (item for item in work_units if item.state is not _WorkUnitState.DESCARTADO),
+        key=lambda item: (str(item.modelo), item.filing_year, item.period.registry_token, item.work_unit_id),
+    ):
+        key = _work_unit_key(unit)
+        existing_index = registry_index.get(key)
+        if existing_index is not None and key not in annotated_registry_keys:
+            merged[existing_index] = _annotate_entry_with_work_unit(merged[existing_index], unit)
+            annotated_registry_keys.add(key)
+            continue
+        if not _work_unit_intersects_range(unit, calendar_range):
+            continue
+        merged.append(
+            _calendar_entry_from_work_unit(
+                unit,
+                today=today,
+                due_soon_days=due_soon_days,
+                filing_evidence=filing_evidence,
+                live_censo_verified_profile_keys=live_censo_verified_profile_keys,
+            ),
+        )
+    return tuple(
+        sorted(
+            merged,
+            key=lambda entry: (
+                entry.closes_on,
+                entry.modelo,
+                entry.period.year,
+                entry.period.registry_token,
+                entry.local_work_unit_id or "",
+            ),
+        ),
+    )
 
 
 def _calendar_event_sort_key(event: OverviewCalendarEvent) -> tuple[date, str, str, str]:
@@ -1267,6 +1483,7 @@ def build_overview_calendar(
     show_suppressed: bool = False,
     events: tuple[OverviewCalendarEvent, ...] = (),
     filing_evidence: tuple[OverviewCalendarFilingEvidence, ...] = (),
+    work_units: tuple[_WorkUnit, ...] = (),
     live_censo_verified_profile_keys: tuple[str, ...] | None = None,
 ) -> OverviewCalendar:
     """Build a typed calendar view for ``profile`` over ``calendar_range``.
@@ -1304,6 +1521,10 @@ def build_overview_calendar(
             calendar obligations. These rows are preloaded by callers
             that own storage access; the calendar builder only merges
             them onto legal deadline entries.
+        work_units: Optional active or audit-loaded Modelo work units. Active
+            units are merged onto matching registry rows or projected as
+            local-work-unit rows when registry windows do not cover the
+            historical target.
         live_censo_verified_profile_keys: Optional profile paths whose
             current values carry live Modelo 036 / censo provenance.
             When supplied, active Modelo rows whose applicability cannot
@@ -1323,7 +1544,11 @@ def build_overview_calendar(
     if not _taxpayer_model_is_declared(profile):
         # An undeclared taxpayer model yields an explicit
         # incomplete answer — never a confident wrong obligation. The
-        # engine does not fall back to the autónomo guess.
+        # engine does not fall back to the autónomo guess. Coverage is still
+        # reconciled (nothing surfaced), so the report honestly shows the whole
+        # obligation universe as advised/undetermined rather than empty — an
+        # undeclared profile can under-scope the most, so it must not read as
+        # "nothing to file".
         return OverviewCalendar(
             range=calendar_range,
             entries=(),
@@ -1333,6 +1558,7 @@ def build_overview_calendar(
             taxpayer_model_declared=False,
             incomplete_reason=_tr("cli.overview.taxpayer_model_undeclared"),
             events=_calendar_events_with_filing_evidence(events, filing_evidence),
+            coverage=build_obligation_coverage(profile, frozenset(), today=today),
         )
 
     deadline_engine = engine if engine is not None else _DeadlineEngine()
@@ -1399,8 +1625,17 @@ def build_overview_calendar(
             )
 
     entries.sort(key=lambda entry: (entry.closes_on, entry.modelo, entry.period.year, entry.period.registry_token))
+    due_soon_days = getattr(deadline_engine, "due_soon_days", _DEFAULT_LOCAL_WORK_UNIT_DUE_SOON_DAYS)
     suppressed.sort(key=lambda s: (s.modelo, s.period.year, s.period.registry_token))
-    entries_tuple = tuple(entries)
+    entries_tuple = _merge_work_units_into_entries(
+        tuple(entries),
+        work_units=work_units,
+        calendar_range=calendar_range,
+        today=today,
+        due_soon_days=due_soon_days,
+        filing_evidence=filing_evidence,
+        live_censo_verified_profile_keys=live_censo_verified_profile_keys,
+    )
     completeness, warnings = _build_completeness_and_warnings(raw_values, entries_tuple)
     censo_warnings = _calendar_censo_reconciliation_warnings(
         entries=entries_tuple,
@@ -1412,6 +1647,11 @@ def build_overview_calendar(
         events=enriched_events,
     )
     evidence_conflict_warnings = _calendar_aeat_evidence_conflict_warnings(entries=entries_tuple)
+    coverage = build_obligation_coverage(
+        profile,
+        {entry.modelo for entry in entries_tuple},
+        today=today,
+    )
     return OverviewCalendar(
         range=calendar_range,
         entries=entries_tuple,
@@ -1420,4 +1660,5 @@ def build_overview_calendar(
         completeness=completeness,
         suppressed_entries=tuple(suppressed),
         events=enriched_events,
+        coverage=coverage,
     )
