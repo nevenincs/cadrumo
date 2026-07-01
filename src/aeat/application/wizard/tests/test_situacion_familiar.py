@@ -30,51 +30,35 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 # ---------------------------------------------------------------------------
 
 
-@pytest.mark.parametrize(
-    ("situacion_familiar", "expected"),
-    (
-        pytest.param(SituacionFamiliar.CASADO, True, id="casado"),
-        pytest.param(
+def test_conjunta_eligible() -> None:
+    for situacion_familiar, expected in (
+        (SituacionFamiliar.CASADO, True),
+        (
             SituacionFamiliar.PAREJA_HECHO_REGISTRADA,
             True,
-            id="pareja-registrada",
         ),
-        pytest.param(
+        (
             SituacionFamiliar.PAREJA_HECHO_NO_REGISTRADA,
             False,
-            id="pareja-no-registrada",
         ),
-    ),
-)
-def test_conjunta_eligible(
-    situacion_familiar: SituacionFamiliar,
-    expected: bool,
-) -> None:
-    assert situacion_familiar.conjunta_eligible() is expected
+    ):
+        assert situacion_familiar.conjunta_eligible() is expected, situacion_familiar
 
 
-@pytest.mark.parametrize(
-    ("situacion_familiar", "expected"),
-    (
-        pytest.param(SituacionFamiliar.CASADO, True, id="casado"),
-        pytest.param(
+def test_requires_spouse_or_partner() -> None:
+    for situacion_familiar, expected in (
+        (SituacionFamiliar.CASADO, True),
+        (
             SituacionFamiliar.PAREJA_HECHO_REGISTRADA,
             True,
-            id="pareja-registrada",
         ),
-        pytest.param(SituacionFamiliar.SOLTERO, False, id="soltero"),
-        pytest.param(
+        (SituacionFamiliar.SOLTERO, False),
+        (
             SituacionFamiliar.PAREJA_HECHO_NO_REGISTRADA,
             False,
-            id="pareja-no-registrada",
         ),
-    ),
-)
-def test_requires_spouse_or_partner(
-    situacion_familiar: SituacionFamiliar,
-    expected: bool,
-) -> None:
-    assert situacion_familiar.requires_spouse_or_partner() is expected
+    ):
+        assert situacion_familiar.requires_spouse_or_partner() is expected, situacion_familiar
 
 
 # ---------------------------------------------------------------------------
@@ -93,24 +77,17 @@ def _base_answers(**overrides: object) -> SetupAnswers:
     return SetupAnswers.model_validate(defaults)
 
 
-@pytest.mark.parametrize(
-    ("raw_value", "expected"),
-    (
-        pytest.param("", "", id="blank"),
-        pytest.param("casado", SituacionFamiliar.CASADO, id="string-token"),
-        pytest.param(
+def test_situacion_familiar_validation() -> None:
+    for raw_value, expected in (
+        ("", ""),
+        ("casado", SituacionFamiliar.CASADO),
+        (
             SituacionFamiliar.PAREJA_HECHO_REGISTRADA,
             SituacionFamiliar.PAREJA_HECHO_REGISTRADA,
-            id="enum-member",
         ),
-    ),
-)
-def test_situacion_familiar_validation(
-    raw_value: object,
-    expected: object,
-) -> None:
-    answers = _base_answers(situacion_familiar=raw_value)
-    assert answers.situacion_familiar == expected
+    ):
+        answers = _base_answers(situacion_familiar=raw_value)
+        assert answers.situacion_familiar == expected, raw_value
 
 
 def test_situacion_familiar_invalid_token_rejected() -> None:
@@ -118,20 +95,14 @@ def test_situacion_familiar_invalid_token_rejected() -> None:
         _base_answers(situacion_familiar="viudo")
 
 
-@pytest.mark.parametrize(
-    ("raw_value", "expected"),
-    (
-        pytest.param("", "", id="blank"),
-        pytest.param("true", True, id="true-string"),
-        pytest.param(False, False, id="bool-false"),
-    ),
-)
-def test_unidad_familiar_descendientes_exclusivos_validation(
-    raw_value: object,
-    expected: object,
-) -> None:
-    answers = _base_answers(unidad_familiar_descendientes_exclusivos=raw_value)
-    assert answers.unidad_familiar_descendientes_exclusivos == expected
+def test_unidad_familiar_descendientes_exclusivos_validation() -> None:
+    for raw_value, expected in (
+        ("", ""),
+        ("true", True),
+        (False, False),
+    ):
+        answers = _base_answers(unidad_familiar_descendientes_exclusivos=raw_value)
+        assert answers.unidad_familiar_descendientes_exclusivos == expected, raw_value
 
 
 # ---------------------------------------------------------------------------
@@ -144,28 +115,28 @@ def _finding(answers: SetupAnswers, name: str) -> WizardCheckFinding:
     return next(item for item in report.findings if item.name == name)
 
 
-@pytest.mark.parametrize(
-    ("overrides", "expected_severity", "expected_message_key"),
-    (
-        pytest.param(
+def test_joint_taxation_situacion_familiar_cases() -> None:
+    for case_id, overrides, expected_severity, expected_message_key in (
+        (
+            "individual-taxation",
             {
                 "taxation_type": "1",
                 "situacion_familiar": SituacionFamiliar.PAREJA_HECHO_NO_REGISTRADA,
             },
             WizardCheckSeverity.OK,
             "wizard.setup.verifier.joint_taxation_situacion_familiar_ok",
-            id="individual-taxation",
         ),
-        pytest.param(
+        (
+            "taxation-type-blank",
             {
                 "taxation_type": "",
                 "situacion_familiar": SituacionFamiliar.PAREJA_HECHO_NO_REGISTRADA,
             },
             WizardCheckSeverity.OK,
             "wizard.setup.verifier.joint_taxation_situacion_familiar_ok",
-            id="taxation-type-blank",
         ),
-        pytest.param(
+        (
+            "situacion-blank",
             {
                 "taxation_type": "2",
                 "situacion_familiar": "",
@@ -173,9 +144,9 @@ def _finding(answers: SetupAnswers, name: str) -> WizardCheckFinding:
             },
             WizardCheckSeverity.OK,
             "wizard.setup.verifier.joint_taxation_situacion_familiar_ok",
-            id="situacion-blank",
         ),
-        pytest.param(
+        (
+            "casado-conjunta",
             {
                 "taxation_type": "2",
                 "situacion_familiar": SituacionFamiliar.CASADO,
@@ -183,9 +154,9 @@ def _finding(answers: SetupAnswers, name: str) -> WizardCheckFinding:
             },
             WizardCheckSeverity.OK,
             "wizard.setup.verifier.joint_taxation_situacion_familiar_ok",
-            id="casado-conjunta",
         ),
-        pytest.param(
+        (
+            "pareja-registrada-conjunta",
             {
                 "taxation_type": "2",
                 "situacion_familiar": SituacionFamiliar.PAREJA_HECHO_REGISTRADA,
@@ -193,9 +164,9 @@ def _finding(answers: SetupAnswers, name: str) -> WizardCheckFinding:
             },
             WizardCheckSeverity.OK,
             "wizard.setup.verifier.joint_taxation_situacion_familiar_ok",
-            id="pareja-registrada-conjunta",
         ),
-        pytest.param(
+        (
+            "pareja-no-registrada-conjunta",
             {
                 "taxation_type": "2",
                 "situacion_familiar": SituacionFamiliar.PAREJA_HECHO_NO_REGISTRADA,
@@ -203,19 +174,12 @@ def _finding(answers: SetupAnswers, name: str) -> WizardCheckFinding:
             },
             WizardCheckSeverity.ERROR,
             "wizard.setup.verifier.joint_taxation_situacion_familiar_refused",
-            id="pareja-no-registrada-conjunta",
         ),
-    ),
-)
-def test_joint_taxation_situacion_familiar_cases(
-    overrides: dict[str, object],
-    expected_severity: WizardCheckSeverity,
-    expected_message_key: str,
-) -> None:
-    answers = _base_answers(**overrides)
-    finding = _finding(answers, "joint_taxation_situacion_familiar")
-    assert finding.severity is expected_severity
-    assert finding.message_key == expected_message_key
+    ):
+        answers = _base_answers(**overrides)
+        finding = _finding(answers, "joint_taxation_situacion_familiar")
+        assert finding.severity is expected_severity, case_id
+        assert finding.message_key == expected_message_key, case_id
 
 
 # ---------------------------------------------------------------------------
