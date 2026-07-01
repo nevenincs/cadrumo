@@ -9,10 +9,16 @@ import pytest
 
 from ....iva import (
     CUOTA_LESS_M303_IVA_CATEGORIES,
+    CustomerTaxStatus,
+    EUMemberState,
     InvoiceKind,
     IvaCategory,
     IvaFlowDirection,
+    IvaInvoiceClassificationCriteria,
     IvaRateKind,
+    IvaTerritorialScope,
+    TransactionKind,
+    classify_iva,
     derive_flow_for_classification,
 )
 from .. import (
@@ -117,6 +123,79 @@ def test_calculate_303_aic_official_box_parity_books_boxes_and_leaves_resultado_
         with_aic.values[_M303_RESULTADO_REGIMEN_GENERAL_CASILLA]
         == domestic_only.values[_M303_RESULTADO_REGIMEN_GENERAL_CASILLA]
     )
+
+
+def _received_from_eu_criteria(*, kind: TransactionKind) -> IvaInvoiceClassificationCriteria:
+    """EU_MEMBER -> ES B2B RECEIVED criteria differing only by supply ``kind``."""
+    return IvaInvoiceClassificationCriteria.model_validate(
+        {
+            "transaction_date": date(2025, 3, 1),
+            "issuer_residency": IvaTerritorialScope.EU_MEMBER,
+            "issuer_member_state": EUMemberState.DE,
+            "customer_residency": IvaTerritorialScope.ES_MAINLAND,
+            "customer_tax_status": CustomerTaxStatus.B2B_IVA_REGISTERED,
+            "kind": kind,
+            "direction": InvoiceKind.RECEIVED,
+            "rate_tier": IvaRateKind.GENERAL,
+        },
+    )
+
+
+def test_intracom_goods_and_services_share_the_combined_official_casilla_10_11() -> None:
+    """Issue #566: intra-community GOODS and SERVICES share ONE M303 casilla, not two.
+
+    The official AEAT Modelo 303 diseño de registros (``aeat-dr-303-2025``) titles
+    boxes 10/11 "Adquisiciones intracomunitarias de bienes y servicios" and boxes
+    36/37 "adquisiciones intracomunitarias corrientes" — goods AND services are
+    combined by design, not split across distinct boxes. This is the deliberate
+    official structure (``modelo-export-mirrors-official-structure``), so the
+    classifier collapses both legs onto one category and the aggregation sums them
+    into one casilla.
+
+    The live classifier is the ground truth for the leg -> category mapping: an
+    intra-community acquisition of GOODS (LIVA art. 13 + 15) and a reverse-charge
+    reception of SERVICES from an EU-established provider (LIVA art. 84.Uno.2) both
+    resolve to ``INTRA_COMMUNITY_ACQUISITION_REVERSE_CHARGE``. Booking one goods leg
+    and one services leg on that category then sums BOTH cuotas into the single
+    devengado box-10/11 parity casilla (and the box-36/37 deducible casilla),
+    proving they are not separated. The combined value is derived by summing the two
+    input legs (the ``op = "sum"`` aggregation contract), never from the registry
+    formula (``no-tautological-calculation-tests``). A future erroneous split of
+    goods away from services would break this assertion.
+    """
+    goods = classify_iva(_received_from_eu_criteria(kind=TransactionKind.GOODS))
+    services = classify_iva(_received_from_eu_criteria(kind=TransactionKind.SERVICES_GENERAL))
+    assert goods.category is IvaCategory.INTRA_COMMUNITY_ACQUISITION_REVERSE_CHARGE
+    assert services.category is IvaCategory.INTRA_COMMUNITY_ACQUISITION_REVERSE_CHARGE
+    assert goods.matched_rule_id == "R11_intra_community_acquisition"
+    assert services.matched_rule_id == "R13_services_b2b_eu_inbound"
+
+    goods_cuota = Decimal("63.00")
+    services_cuota = Decimal("21.00")
+    combined = goods_cuota + services_cuota
+    revision = _revision_with_bindings(
+        _binding("modelo-303-iva-autorepercutido-intracomunitaria-devengado-cuota"),
+        _binding("modelo-303-iva-autorepercutido-intracomunitaria-deducible-cuota"),
+    )
+    observations = [
+        _observation(
+            ledger_id="aic-goods-leg",
+            category=goods.category,
+            flow=IvaFlowDirection.INVERSION_SUJETO_PASIVO,
+            iva=goods_cuota,
+        ),
+        _observation(
+            ledger_id="aic-services-leg",
+            category=services.category,
+            flow=IvaFlowDirection.INVERSION_SUJETO_PASIVO,
+            iva=services_cuota,
+        ),
+    ]
+    result = resolve_ledger_iva_aggregation_binding_values(revision, observations)
+    assert result == {
+        "modelo-303-iva-autorepercutido-intracomunitaria-devengado-cuota": combined,
+        "modelo-303-iva-autorepercutido-intracomunitaria-deducible-cuota": combined,
+    }
 
 
 def test_resolve_import_third_country_routes_deducible_only() -> None:
