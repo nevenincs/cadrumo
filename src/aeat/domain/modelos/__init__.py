@@ -13,8 +13,10 @@ a :class:`WorkUnit` fixes the bucket/modelo/year/period/registry-revision target
 and carries current/filed pointers, while a :class:`CalculationRevision` is
 content-addressed, stateful, source-transaction aware, and records
 :class:`CasillaObservation` values plus ``ModeloDetailRow`` rows. A
-:class:`ModeloRecord` is the local filing receipt; AEAT acceptance still requires
-external evidence.
+:class:`ModeloRecord` is the durable filing-record receipt paired with a filed
+revision. Local filing writes keep ``aeat_accepted=False`` and no
+:class:`ExternalEvidence`; only the external import path may stamp
+AEAT-attested evidence and turn that record into an amendment baseline.
 
 The package also owns the transaction participation index. A
 :class:`TransactionRevisionParticipationIndex` is a rebuildable read-side cache
@@ -40,6 +42,15 @@ See Also:
         ids, typed casilla observations, and content-addressed identity.
     :class:`ModeloRecord`
         Filing event record paired with the filed calculation revision.
+    :class:`ExternalEvidence`
+        Official evidence metadata carried only by imported AEAT-attested
+        filing records.
+    :func:`aeat.application.modelo._filing_actions.file_modelo_revision`
+        Application service that records a verified revision as local/internal
+        filed state without AEAT acceptance.
+    :func:`aeat.application.modelo._external_import_actions.import_external_filing_evidence`
+        Application service that imports AEAT-attested evidence into a current
+        filing record.
     :class:`TransactionRevisionParticipationIndex`
         Rebuildable inverse index from ledger transaction ids to finalized
         calculation revisions and filing records.
