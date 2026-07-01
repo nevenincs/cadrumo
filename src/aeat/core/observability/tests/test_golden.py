@@ -17,6 +17,7 @@ masking.
 from __future__ import annotations
 
 import io
+from collections.abc import Callable, Mapping
 from datetime import UTC, datetime
 from typing import Any, cast
 
@@ -83,6 +84,11 @@ def _capture_scenario() -> dict[str, object]:
         with capture_envelopes() as sink:
             emit_json_success(_COMMAND, result, stream=stream)
         return sink[-1]
+
+
+def _capture_with_schema_violation() -> dict[str, object]:
+    captured = _capture_scenario()
+    return {**captured, "result": {"unexpected": "field"}}
 
 
 class TestCaptureSink:
@@ -223,17 +229,20 @@ class TestTypedReValidation:
         assert envelope.result.label == "deterministic"
         assert envelope.result.generated_at == _INSTANT
 
-    def test_unregistered_command_is_refused(self) -> None:
-        captured = _capture_scenario()
-        with pytest.raises(GoldenCaptureError, match="not registered"):
-            validate_captured_envelope(captured, registry={})
-
-    def test_missing_command_is_refused(self) -> None:
-        with pytest.raises(GoldenCaptureError, match="command"):
-            validate_captured_envelope({"result": {}}, registry={_COMMAND: _GoldenResult})
-
-    def test_payload_that_violates_schema_is_refused(self) -> None:
-        captured = _capture_scenario()
-        broken = {**captured, "result": {"unexpected": "field"}}
-        with pytest.raises(GoldenCaptureError):
-            validate_captured_envelope(broken, registry={_COMMAND: _GoldenResult})
+    @pytest.mark.parametrize(
+        ("capture", "registry", "match"),
+        (
+            (_capture_scenario, {}, "not registered"),
+            (lambda: {"result": {}}, {_COMMAND: _GoldenResult}, "command"),
+            (_capture_with_schema_violation, {_COMMAND: _GoldenResult}, None),
+        ),
+        ids=("unregistered-command", "missing-command", "schema-violation"),
+    )
+    def test_invalid_captured_envelopes_are_refused(
+        self,
+        capture: Callable[[], dict[str, object]],
+        registry: Mapping[str, type[OutputSchema]],
+        match: str | None,
+    ) -> None:
+        with pytest.raises(GoldenCaptureError, match=match):
+            validate_captured_envelope(capture(), registry=registry)
