@@ -45,6 +45,22 @@ _M123_2019_2023_RESULTADO_CASILLA: CasillaId = _casilla_id("06")
 _M123_2019_2023_INGRESO_CASILLA: CasillaId = _casilla_id("07")
 
 
+def test_modelo_123_guidance_and_layout_sources_are_separated() -> None:
+    modelo, catalogues = _committed_modelo("123")
+
+    procedure = catalogues.sources["aeat-modelo-123-procedure"]
+    assert "aeat-modelo-123-procedure" in modelo.source_refs
+    assert procedure.evidence_tier == "official_source_guidance"
+    assert procedure.authority == "aeat"
+    assert procedure.kind == "instructions"
+    assert (bundled_path() / procedure.corpus_path).is_file()
+
+    assert catalogues.sources["aeat-dr-123-2024-v20"].evidence_tier == "layout_authority"
+    assert catalogues.sources["aeat-dr-123-2019-2023-v13"].evidence_tier == "layout_authority"
+    assert catalogues.sources["boe-modelo-123-2007-form"].evidence_tier == "layout_authority"
+    assert catalogues.sources["boe-modelo-123-2024-form"].evidence_tier == "layout_authority"
+
+
 @pytest.mark.parametrize(
     ("filing_year", "required_surfaces"),
     [
