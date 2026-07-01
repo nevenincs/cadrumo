@@ -239,7 +239,7 @@ class TestEnvFileFingerprint:
 
         vault_dir = tmp_path / ".vault"
         vault_dir.mkdir()
-        (vault_dir / "dummy.md").write_text("content", encoding="utf-8")
+        (vault_dir / "replay-corpus-note.md").write_text("fingerprint baseline\n", encoding="utf-8")
         env_dir = tmp_path / "env"
         env_dir.mkdir()
         env_file = env_dir / ".env"
