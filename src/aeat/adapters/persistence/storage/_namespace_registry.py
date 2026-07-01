@@ -230,7 +230,7 @@ class StorageHierarchyRegistry(BaseModel):
         self,
         profile: StorageCustodyProfile,
     ) -> tuple[SecureObjectNamespaceDefinition, ...]:
-        """Return carried secure-object namespaces for a custody profile."""
+        """Return carried :class:`SecureObjectNamespaceDefinition` rows for a custody profile."""
         dispositions = _CUSTODY_PROFILE_DISPOSITIONS[profile]
         return tuple(
             namespace for namespace in self.namespaces if namespace.custody_disposition in dispositions
