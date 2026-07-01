@@ -275,7 +275,7 @@ class TestPreRegistrationObligationGate:
         )
 
     def test_unset_activity_start_date_keeps_full_2025_schedule(self) -> None:
-        """A profile with no alta date behaves exactly as before.
+        """A profile with no alta date keeps the full 2025 schedule.
 
         The gate is opt-in: when ``activity_start_date`` is ``None`` no
         window is suppressed, so the 2025 schedule still carries the
