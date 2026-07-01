@@ -17,6 +17,7 @@ from __future__ import annotations
 
 import logging
 from collections.abc import Callable
+from datetime import UTC, datetime
 from pathlib import Path
 
 import pytest
@@ -29,6 +30,8 @@ from .._models import WorkflowState
 from .._profile_bucket_scan import resolve_profile_bucket
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+
+_MANIFEST_CREATED_AT = datetime(2026, 5, 25, 13, 45, 0, tzinfo=UTC)
 
 
 def test_workflow_models_do_not_expose_active_bucket_resolver_shims() -> None:
@@ -92,8 +95,6 @@ def _write_live_bucket(root: Path, *, bucket_id: str, label: str) -> None:
     ``bucket_id`` and the operator ``label``, exactly as ``profile create``
     materialises it.
     """
-    from datetime import UTC, datetime
-
     from ....adapters.persistence.storage.bucket import (
         BucketLifecycleStatus,
         BucketManifest,
@@ -103,14 +104,13 @@ def _write_live_bucket(root: Path, *, bucket_id: str, label: str) -> None:
     )
     from ....adapters.persistence.storage.master_key import KdfParams
 
-    now = datetime.now(UTC).replace(microsecond=0)
     provision_bucket_directory(root, bucket_id)
     write_manifest(
         bucket_paths(root, bucket_id),
         BucketManifest(
             bucket_id=bucket_id,
             label=label,
-            created_at=now,
+            created_at=_MANIFEST_CREATED_AT,
             last_unlocked_at=None,
             kdf_params=KdfParams.default().to_manifest_params(),
             recovery_enrolled=False,
@@ -122,8 +122,6 @@ def _write_live_bucket(root: Path, *, bucket_id: str, label: str) -> None:
 
 def _tombstone_bucket(root: Path, *, bucket_id: str, label: str) -> None:
     """Write a real tombstoned bucket manifest at ``<root>/buckets/<bucket_id>/``."""
-    from datetime import UTC, datetime
-
     from ....adapters.persistence.storage.bucket import (
         BucketLifecycleStatus,
         BucketManifest,
@@ -133,14 +131,13 @@ def _tombstone_bucket(root: Path, *, bucket_id: str, label: str) -> None:
     )
     from ....adapters.persistence.storage.master_key import KdfParams
 
-    now = datetime.now(UTC).replace(microsecond=0)
     provision_bucket_directory(root, bucket_id)
     write_manifest(
         bucket_paths(root, bucket_id),
         BucketManifest(
             bucket_id=bucket_id,
             label=label,
-            created_at=now,
+            created_at=_MANIFEST_CREATED_AT,
             last_unlocked_at=None,
             kdf_params=KdfParams.default().to_manifest_params(),
             recovery_enrolled=False,
