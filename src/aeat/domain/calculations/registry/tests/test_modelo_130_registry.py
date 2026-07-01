@@ -188,7 +188,7 @@ def test_modelo_130_art109_profile_advisory_is_not_a_casilla_17_formula_branch(
     assert expression.args[0].op == "subtract"
     assert tuple(arg.casilla_id for arg in expression.args[0].args) == ("14", "15")
     assert expression.args[1].casilla_id == "16"
-    assert predicate.expression == 'profile_flag_enabled("professional_income_withholding_ge_70pct")'
+    assert predicate.expression == 'profile_flag_enabled("art109_activity_income_withholding_ge_70pct")'
     assert predicate.legal_refs == ("rd-439-2007:art-109",)
 
 

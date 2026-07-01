@@ -532,7 +532,17 @@ sensitivity = "financial"
 effective_dated = true
 description = "Whether professional income withholding reaches the 70 percent threshold."
 model_selectors = ["professional_income_withholding_ge_70pct"]
-schedule_predicates = ["professional_income_withholding_ge_70pct"]
+
+[[sections.fields]]
+key = "art109_activity_income_withholding_ge_70pct"
+type = "boolean"
+required = false
+sensitivity = "financial"
+effective_dated = true
+description = "Whether the Art. 109 RIRPF 70 percent income-coverage exception is met for covered professional, agricultural, livestock, or forestry activity income. For activity-start cases this is the current payment-period coverage fact, not a prior-year fact."
+model_selectors = ["art109_activity_income_withholding_ge_70pct"]
+schedule_predicates = ["art109_activity_income_withholding_ge_70pct"]
+legal_refs = ["rd-439-2007:art-109"]
 
 [[sections.fields]]
 key = "estimation_regime"

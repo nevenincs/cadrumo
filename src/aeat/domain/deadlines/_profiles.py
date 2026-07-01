@@ -75,6 +75,7 @@ def taxpayer_profile_from_mapping(
     for bare, canonical_key in (
         ("has_employees", "withholding.has_employees"),
         ("pays_professionals_with_retencion", "withholding.pays_professionals_with_retencion"),
+        ("art109_activity_income_withholding_ge_70pct", "irpf.art109_activity_income_withholding_ge_70pct"),
         ("pays_rent_with_retencion", "withholding.pays_rent_with_retencion"),
         ("pays_capital_income_with_retencion", "withholding.pays_capital_income_with_retencion"),
         ("does_intracomunitario", "iva.does_intracomunitario"),
@@ -111,6 +112,7 @@ def taxpayer_profile_from_mapping(
         has_employees=typed.has_employees,
         pays_professionals_with_retencion=typed.pays_professionals_with_retencion,
         professional_income_withholding_ge_70pct=typed.professional_income_withholding_ge_70pct,
+        art109_activity_income_withholding_ge_70pct=typed.art109_activity_income_withholding_ge_70pct,
         pays_rent_with_retencion=typed.pays_rent_with_retencion,
         pays_capital_income_with_retencion=typed.pays_capital_income_with_retencion,
         objective_estimation_prior_year_gross_income_eur=_parse_decimal(

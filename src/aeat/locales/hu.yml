@@ -5272,6 +5272,10 @@ wizard:
         help: Forrásadóval terhelt helyi bérleti díjat fizet
       professional-income-withholding-ge-70pct:
         help: A szakmai jövedelmek legalább 70%-a előzetes forrásadóval terhelt
+      art109-activity-income-withholding-ge-70pct:
+        help: Art. 109 fedezet - a lefedett szakmai, mezőgazdasági, állattenyésztési
+          vagy erdészeti tevékenységi jövedelem legalább 70%-a forrásadóval vagy
+          számlára történő befizetéssel terhelt
       representante-fiscal-nif:
         help: A spanyolországi adóügyi képviselő NIF/NIE száma. Kötelező az EU-n/EGT-n
           kívüli nem rezidensek számára (LGT 47. cikkely + TRLIRNR 10. cikkely, RDLeg
@@ -5416,6 +5420,8 @@ wizard:
         prompt: Forrásadóval terhelt helyi bérleti díjat fizet
       professional-income-withholding-ge-70pct:
         prompt: A szakmai jövedelmek legalább 70%-a előzetes forrásadóval terhelt
+      art109-activity-income-withholding-ge-70pct:
+        prompt: Alkalmazandó az Art. 109 szerinti 70%-os tevékenységi jövedelemfedezeti kivétel
       third-party-transactions-above-347-threshold:
         prompt: Harmadik féllel folytatott ügyletek meghaladják a Modelo 347 küszöbértékét
       title: Modelo kötelezettségek

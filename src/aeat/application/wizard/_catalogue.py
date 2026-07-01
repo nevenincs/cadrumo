@@ -758,8 +758,8 @@ _OBLIGATIONS_SECTION = WizardSection(
             suffix="obligations",
         ),
         _confirm(
-            "professional-income-withholding-ge-70pct",
-            "irpf.professional_income_withholding_ge_70pct",
+            "art109-activity-income-withholding-ge-70pct",
+            "irpf.art109_activity_income_withholding_ge_70pct",
             suffix="obligations",
         ),
         _confirm("pays-rent-with-retencion", "withholding.pays_rent_with_retencion", suffix="obligations"),
