@@ -2,33 +2,35 @@
 
 This package builds, reviews, approves, exports, verifies, imports, and
 summarises local filing artefacts. All draft creation and validation consume
-a :class:`aeat.domain.calculations.registry.RegistrySnapshot` to resolve the
-active modelo revision, its casilla schema, relation inputs, and formula graph.
+a :class:`~aeat.domain.calculations.registry.RegistrySnapshot` to resolve the
+active :class:`~aeat.domain.calculations.registry.ModeloRevision`, its casilla
+schema, relation inputs, and formula graph.
 
 Major entry points:
 
 * :func:`build_draft` constructs a validated
-  :class:`aeat.domain.filing.ModeloDraft` from registry-backed inputs.
+  :class:`~aeat.domain.filing.ModeloDraft` from registry-backed inputs.
 * :func:`approve_draft`, :func:`unapprove_draft`, and
   :func:`refresh_review_status` manage local review state and approval basis.
 * :func:`export_draft` writes a local fichero-BOE artefact, and
   :func:`verify_export` re-reads that file through the registry export parser.
 * :func:`import_filing_from_justificante` reconstructs a draft-level local
-  receipt baseline and companion :class:`aeat.domain.submission.ModeloPresentado`
-  audit record from a justificante PDF without treating the receipt as a
-  casilla-value authority.
+  receipt baseline and companion
+  :class:`~aeat.domain.submission.ModeloPresentado` audit record from a
+  justificante PDF without treating the receipt as a casilla-value authority.
 * :func:`build_complementaria`, :func:`list_amendments`, and
   :func:`load_amendment` build and read governed
-  :class:`aeat.domain.filing.ModeloComplementaria` and
-  :class:`aeat.domain.filing.ModeloSustitutiva` amendment records.
+  :class:`~aeat.domain.filing.ModeloComplementaria` and
+  :class:`~aeat.domain.filing.ModeloSustitutiva` amendment records.
 * :class:`ModeloHistoryRepository` persists encrypted lightweight
-  :class:`ModeloHistory` summaries for local filing-history views.
+  :class:`~aeat.application.filing.ModeloHistory` summaries for local
+  filing-history views.
 * :func:`build_runtime_schema_provider` supplies the runtime registry view used
   by draft construction, review, export, and verification.
 
 The facade deliberately separates local filing state from live submission.
 Remote AEAT submission is not exposed here; attempted live writes are refused
-by :class:`aeat.core.access_gate.LiveSubmitForbiddenError`.
+by :class:`~aeat.core.access_gate.LiveSubmitForbiddenError`.
 
 Imports from external PDFs stay evidence-scoped. A justificante import creates a
 local draft plus submission-audit baseline, while casilla-complete declaration
@@ -40,8 +42,8 @@ Work-unit filing records for calculation revisions live in
 :mod:`aeat.application.modelo` and :mod:`aeat.domain.modelos`. This package owns
 draft-level construction, review, export, verification, justificante import,
 local amendment construction, and lightweight local history; it does not create
-:class:`aeat.domain.modelos.ModeloRecord` entries or stamp
-:class:`aeat.domain.modelos.ExternalEvidence`.
+:class:`~aeat.domain.modelos.ModeloRecord` entries or stamp
+:class:`~aeat.domain.modelos.ExternalEvidence`.
 
 See Also:
     :mod:`aeat.application.modelo`
@@ -49,10 +51,10 @@ See Also:
         this filing surface.
     :func:`aeat.application.modelo.file_modelo_revision`
         Work-unit action that records a verified calculation revision as a
-        current local :class:`aeat.domain.modelos.ModeloRecord`.
+        current local :class:`~aeat.domain.modelos.ModeloRecord`.
     :func:`aeat.application.modelo.import_external_filing_evidence`
         External-evidence import path that creates an evidenced
-        :class:`aeat.domain.modelos.ModeloRecord` baseline for amendments.
+        :class:`~aeat.domain.modelos.ModeloRecord` baseline for amendments.
     :mod:`aeat.domain.justificante`
         Receipt-metadata domain used by justificante PDF imports and
         receipt-bound external evidence.
@@ -204,20 +206,24 @@ def build_draft(
 
     Args:
         modelo: Stable modelo string ID.
-        period: Typed filing period built from a filing year and bare registry
-            token.
-        profile: Taxpayer profile the draft would be built for.
-        inputs: Raw filing inputs.
-        schema_provider: Registry-backed casilla schema provider.
-        deadline_checker: Optional deadline checker.
+        period: Typed :class:`~aeat.core.Period` built from a filing year and
+            bare registry token.
+        profile: :class:`~aeat.domain.filing.ModeloProfile` the draft would be
+            built for.
+        inputs: Raw :class:`~aeat.domain.filing.ModeloInputs`.
+        schema_provider: Registry-backed
+            :class:`~aeat.domain.filing.CasillaSchemaProvider`.
+        deadline_checker: Optional
+            :class:`~aeat.domain.filing.DeadlineChecker`.
         fail_on_warning: Raise when validation produces any warning or error.
 
     Returns:
-        A fully constructed and validated :class:`ModeloDraft`.
+        A fully constructed and validated
+        :class:`~aeat.domain.filing.ModeloDraft`.
 
     Raises:
-        ModeloBuilderError: If the registry has no matching snapshot,
-            inputs are malformed, or strict validation fails.
+        :class:`~aeat.domain.filing.ModeloBuilderError`: If the registry has no
+            matching snapshot, inputs are malformed, or strict validation fails.
     """
     snapshot = _load_registry_snapshot(modelo=modelo, period=period)
     filing_year, registry_period = _registry_period(period)
@@ -605,8 +611,8 @@ def _binding_provenance(
     the filing builder; its ``source`` is a typed
     :class:`~aeat.core.BindingSourceKind` and its ``legal_refs`` / ``source_refs``
     carry the binding's regulatory grounding. Carrying them onto every
-    :class:`ModeloBindingValue` brings bound values to provenance parity with
-    casillas (the casilla half already populates
+    :class:`~aeat.domain.filing.ModeloBindingValue` brings bound values to
+    provenance parity with casillas (the casilla half already populates
     :class:`~aeat.domain.filing.ModeloCasillaProvenance`).
     """
     source = getattr(binding, "source", None)
@@ -778,16 +784,17 @@ def validate_draft(
     excludes findings, status, ``updated_at`` and ``notes``.
 
     Args:
-        draft: The draft to re-validate.
+        draft: The :class:`~aeat.domain.filing.ModeloDraft` to re-validate.
         bucket_id: Stable bucket identifier; forwarded to
             :func:`refresh_review_status` after validation.
-        schema_provider: Resolves the casilla collection for the
-            draft's modelo.
-        deadline_checker: Optional deadline check Protocol implementation.
+        schema_provider: :class:`~aeat.domain.filing.CasillaSchemaProvider`
+            resolving the casilla collection for the draft's modelo.
+        deadline_checker: Optional :class:`~aeat.domain.filing.DeadlineChecker`
+            Protocol implementation.
 
     Returns:
-        A new :class:`ModeloDraft` with refreshed findings, status
-        and ``updated_at``.
+        A new :class:`~aeat.domain.filing.ModeloDraft` with refreshed findings,
+        status and ``updated_at``.
     """
     validator = ModeloValidator(
         schema_provider=schema_provider,
@@ -820,14 +827,15 @@ def iter_findings(
     """Yield findings filtered by minimum severity.
 
     Args:
-        draft: The :class:`ModeloDraft` to scan for validation findings.
+        draft: The :class:`~aeat.domain.filing.ModeloDraft` to scan for
+            validation findings.
         severity_at_least: Minimum severity to yield, one of
             ``"INFO"``, ``"WARNING"``, ``"ERROR"``. Defaults to
             ``"WARNING"``.
 
     Yields:
-        Each :class:`ModeloValidationFinding` whose severity meets
-        or exceeds the threshold, in declaration order.
+        Each :class:`~aeat.domain.filing.ModeloValidationFinding` whose severity
+        meets or exceeds the threshold, in declaration order.
 
     Raises:
         ModeloCalculateError: When ``severity_at_least`` is not a known
