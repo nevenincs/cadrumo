@@ -62,7 +62,7 @@ class BucketEventHistoryRepository:
         if objects is not None:
             self._objects = objects
             return
-        from ...adapters.persistence.storage.runtime_repository import secure_object_repository_for_active_bucket
+        from ...adapters.persistence.storage import secure_object_repository_for_active_bucket
 
         self._objects = secure_object_repository_for_active_bucket()
 
@@ -92,8 +92,12 @@ class BucketEventHistoryRepository:
             :class:`BucketEventHistoryPersistenceError`: If secure-object
                 classification, envelope version, or payload validation fails.
         """
-        from ...adapters.persistence.storage import Envelope, SensitivityClass
-        from ...adapters.persistence.storage.errors import ClassificationError, EnvelopeVersionError
+        from ...adapters.persistence.storage import (
+            ClassificationError,
+            Envelope,
+            EnvelopeVersionError,
+            SensitivityClass,
+        )
 
         try:
             record = self._objects.load(
