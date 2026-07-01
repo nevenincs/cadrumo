@@ -150,6 +150,28 @@ bulk (~867 computed casillas), which by this audit's critical finding is a
 dedicated per-casilla, extraction-reconciled, verify-regression-gated campaign -
 never a mechanical sweep - and is out of scope for the small-modelos-first tranche.
 
+### every-casilla-enrolled-via-reconcile-when-present | resolved | the gate redesign shipped; all 894 remaining computed casillas are now enrolled, non-breaking
+
+The `no-safe-second-expectation-escape-hatch` blocker was resolved by the gate
+redesign in ADR `2026-07-01-verification-reconcile-when-present-adr`. A new
+`reconcile_when_present_casilla_ids` class on `VerificationExpectationDefinition`
+value-reconciles a casilla WHEN the filing prints it but EXCLUDES it from the
+coverage denominator (`RegistryVerificationPolicy` folds it as a separate union;
+`_verify.py` reconciles over `computed ∪ reconcile_when_present` while
+`_compute_coverage` stays on `computed_casilla_ids` only). Because enrolling here
+can never lower coverage, it is safe by construction. One reconcile-when-present
+fragment per gap revision (16 revisions, 894 casillas — the ~867 Modelo 100 bulk
+plus the situational casillas of 303/200/130/131/210/714) enrolls every
+computed-but-unenrolled casilla at `computed_casilla_ids = []`,
+`min_coverage = "0"`, grounded in each revision's existing expectation
+`legal_refs`/`source_refs`. The registry validates; the completeness gate
+`test_every_computed_casilla_enrolled.py` now passes with zero unenrolled computed
+casillas across the whole registry and keeps it exhaustive as new casillas are
+authored; `test_reconcile_when_present_casilla_surfaces_a_present_divergence`
+proves the class reconciles a present divergent value; and the M130 verify test
+confirms a clean filing stays VERIFIED at coverage 1.0. Every modelo and casilla
+not previously enrolled now carries a verification contract.
+
 ## Recommendations
 
 Do NOT mechanically enroll the 922 casillas: at `min_coverage = 1` it breaks

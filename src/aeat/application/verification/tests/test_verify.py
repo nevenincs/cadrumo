@@ -120,10 +120,69 @@ def test_verify_declaracion_uses_modelo_130_registry_snapshot() -> None:
     )
 
     assert verdict.registry_snapshot_id == "registry:130:2019-y-siguientes"
-    assert verdict.verification_expectation_ids == ("modelo-130-calculation-verification",)
+    # The coverage-gated contract plus the exhaustive reconcile-when-present
+    # contract both apply; the reconcile-when-present casillas (15,
+    # saldo-negativo) are excluded from the coverage denominator, so a clean
+    # filing that prints them stays VERIFIED at coverage 1.0 with no discrepancy.
+    assert verdict.verification_expectation_ids == (
+        "modelo-130-calculation-verification",
+        "modelo-130-2019-y-siguientes-reconcile-when-present",
+    )
     assert verdict.status is VerificationStatus.VERIFIED
     assert verdict.coverage == 1.0
     assert verdict.discrepancies == ()
+
+
+def test_reconcile_when_present_casilla_surfaces_a_present_divergence() -> None:
+    """A reconcile-when-present casilla is value-reconciled when the filing prints it.
+
+    Casilla ``15`` (M130 saldo positivo period cap) is enrolled in the exhaustive
+    reconcile-when-present contract, not the coverage-gated one. The clean filing
+    above prints ``15 = 0`` and stays VERIFIED. Here the same filing prints a
+    divergent ``15``; the reconcile-when-present class must surface the
+    filed-vs-computed discrepancy and drive NEEDS_REVIEW - proving the class
+    actually reconciles rather than silently ignoring the casilla.
+    """
+    filing = _build_filing(
+        values=(
+            ("01", Decimal("10000")),
+            ("02", Decimal("4000")),
+            ("03", Decimal("6000.00")),
+            ("04", Decimal("1200.00")),
+            ("05", Decimal("250")),
+            ("06", Decimal("100")),
+            ("07", Decimal("850.00")),
+            ("08", Decimal("2000")),
+            ("09", Decimal("40.00")),
+            ("10", Decimal("10")),
+            ("12", Decimal("600.00")),
+            ("13", Decimal("0")),
+            ("14", Decimal("600.00")),
+            ("15", Decimal("5000.00")),
+            ("16", Decimal("0")),
+            ("17", Decimal("880.00")),
+            ("18", Decimal("0")),
+            ("19", Decimal("880.00")),
+        ),
+    )
+
+    verdict = verify_declaracion(
+        filing,
+        binding_values={
+            "irpf.previous_year_economic_activity_net_income": Decimal("13000"),
+            "modelo-130-actividad-economica-ingresos-cumulative": Decimal("10000"),
+            "modelo-130-actividad-economica-ingresos-taxable-base-cumulative": Decimal("0"),
+            "modelo-130-actividad-economica-rendimiento-neto-cumulative": Decimal("0"),
+            "modelo-130-actividad-economica-retenciones-cumulative": Decimal("0"),
+            "modelo-130-actividad-economica-gastos-cumulative": Decimal("4000"),
+            "modelo-130-resultados-negativos-anteriores": Decimal("0"),
+            "modelo-130-pagos-fraccionados-anteriores": Decimal("250"),
+        },
+    )
+
+    assert verdict.status is VerificationStatus.NEEDS_REVIEW
+    diverged = {d.casilla_id for d in verdict.discrepancies}
+    assert _casilla_id("15") in diverged
 
 
 def test_verify_declaracion_classifies_registry_divergence() -> None:
