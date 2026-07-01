@@ -39,7 +39,13 @@ class TestPeriodConstructionContract:
             Period.from_year_and_code(2026, combined)
 
 
-class TestQuarterlyAndAnnualBoundaries:
+class TestRegistryPeriodBoundaries:
+    """Registry boundary helpers return literal calendar windows.
+
+    The Modelo 202 IS pago-fraccionado instalment claves map to their
+    AEAT instruction payment months, not to derived quarter ranges.
+    """
+
     @pytest.mark.parametrize(
         ("registry_period", "start", "end"),
         [
@@ -48,34 +54,12 @@ class TestQuarterlyAndAnnualBoundaries:
             ("3T", date(2026, 7, 1), date(2026, 9, 30)),
             ("4T", date(2026, 10, 1), date(2026, 12, 31)),
             ("0A", date(2026, 1, 1), date(2026, 12, 31)),
-        ],
-    )
-    def test_quarterly_and_annual_boundaries(self, registry_period: str, start: date, end: date) -> None:
-        assert period_start_date(2026, registry_period) == start
-        assert period_end_date(2026, registry_period) == end
-
-
-class TestPagoFraccionadoBoundaries:
-    """The Modelo 202 IS pago-fraccionado instalment claves.
-
-    Per the AEAT Modelo 202 instructions, ``1P`` is the payment made in
-    the first twenty calendar days of April, ``2P`` the equivalent
-    October payment, and ``3P`` the December payment. The period-boundary
-    helpers map each instalment clave to its payment month so the
-    calculate path can resolve a ``filing_period`` date context for a
-    Modelo 202 work unit. The expected months are read directly from the
-    AEAT instruction text, not derived from the helper under test.
-    """
-
-    @pytest.mark.parametrize(
-        ("registry_period", "start", "end"),
-        [
             ("1P", date(2026, 4, 1), date(2026, 4, 30)),
             ("2P", date(2026, 10, 1), date(2026, 10, 31)),
             ("3P", date(2026, 12, 1), date(2026, 12, 31)),
         ],
     )
-    def test_pago_fraccionado_boundaries(self, registry_period: str, start: date, end: date) -> None:
+    def test_registry_period_boundaries(self, registry_period: str, start: date, end: date) -> None:
         assert period_start_date(2026, registry_period) == start
         assert period_end_date(2026, registry_period) == end
 
