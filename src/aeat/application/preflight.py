@@ -3,8 +3,9 @@
 This module is the read-only doctor surface for the health dimensions that sit
 *beside* the external-dependency probes in :mod:`aeat.application.provisioning`:
 per-auth-provider certificate / Cl@ve Móvil configuration health, secure-storage
-and bundled-corpus reachability, key configuration sanity, and registry
-referential integrity. Each probe answers one health question and returns a
+and bundled-corpus reachability, key configuration sanity, registry referential
+integrity, and portal-registry assembly health with any recorded portal drift.
+Each probe answers one health question and returns a
 typed :class:`PreflightCheck` — it never raises; a broken dimension is report
 data (an ``error`` severity row with a concrete remediation), not an exception
 path, so the doctor reports status rather than crashing on a red row.
@@ -25,6 +26,7 @@ beside the capability posture and dependency probes.
 from __future__ import annotations
 
 import os
+from collections.abc import Sequence
 from enum import StrEnum
 from pathlib import Path
 from typing import TYPE_CHECKING, Protocol
@@ -37,6 +39,7 @@ from ..core.errors import AeatError
 
 if TYPE_CHECKING:
     from ..domain.calculations.registry import ModeloDefinition, RegistrySnapshot
+    from ..domain.portals import PortalDriftEvent
 
 
 class _RegistryAuthorityLike(Protocol):
@@ -67,6 +70,7 @@ __all__ = [
     "HealthSeverity",
     "PreflightCheck",
     "probe_auth_providers",
+    "probe_portal_registry_health",
     "probe_registry_referential_integrity",
     "probe_storage_corpus_env",
     "run_preflight_checks",
@@ -408,18 +412,99 @@ def _representative_filing_context(revision: object) -> tuple[int | None, str | 
     return filing_year, period
 
 
+# ── #413 — portal-registry health / recorded portal drift ────────────────────
+
+# UrlStability tiers whose drift is a real integrity concern (the URL was
+# promised to change only via explicit Orden / campaign-boundary publication).
+# A drift on a volatile app-path shell is an expected rotation, not an error.
+_PORTAL_DRIFT_ERROR_STABILITIES = frozenset({"stable_protocol_grade"})
+
+
+def probe_portal_registry_health(
+    *,
+    drift_events: Sequence[PortalDriftEvent] = (),
+) -> PreflightCheck:
+    """Report portal-registry assembly health and any recorded portal drift.
+
+    Read-only and offline: this probe never contacts AEAT. It confirms the
+    bundled :data:`~aeat.domain.portals.PORTAL_REGISTRY` assembled (a
+    :class:`~aeat.domain.portals.PortalIntegrityError` at import is caught and
+    reported as an ``error`` row) and reports the count of any *recorded*
+    :class:`~aeat.domain.portals.PortalDriftEvent` passed in. The events are
+    produced elsewhere, under the live-read access gate, by
+    :func:`~aeat.domain.portals.evaluate_portal_drift`; this row reports the
+    registered / recorded state, it does not perform a live probe.
+
+    With no recorded drift (the offline default) the row is ``OK``. A recorded
+    drift on a ``stable_protocol_grade`` (BOE-referenced) URL is an ``ERROR``;
+    a drift on a campaign-stable or volatile app-path URL is a ``WARN``
+    advisory, since those tiers are expected to rotate.
+
+    Args:
+        drift_events: Recorded portal-drift events to surface. Defaults to
+            empty — no live probe, nothing recorded.
+
+    Returns:
+        One :class:`PreflightCheck` row with id ``portal-registry:health``.
+    """
+    from ..domain.portals import PORTAL_REGISTRY
+    from ..domain.portals import PortalRegistryError as _PortalRegistryError
+
+    try:
+        portal_count = len(PORTAL_REGISTRY)
+    except _PortalRegistryError as exc:  # registry failed structural assembly
+        return PreflightCheck(
+            check="portal-registry:health",
+            healthy=False,
+            severity=HealthSeverity.ERROR,
+            detail=f"the portal registry failed to assemble: {type(exc).__name__}: {exc}",
+            remediation="inspect the portal registry entries under `aeat.domain.portals._entries`",
+        )
+
+    if not drift_events:
+        return PreflightCheck(
+            check="portal-registry:health",
+            healthy=True,
+            severity=HealthSeverity.OK,
+            detail=f"{portal_count} portals registered; no portal drift recorded",
+        )
+
+    has_error = any(str(event.url_stability) in _PORTAL_DRIFT_ERROR_STABILITIES for event in drift_events)
+    preview = "; ".join(
+        f"{event.portal.value} {event.field.value}: {event.expected} -> {event.observed}" for event in drift_events[:3]
+    )
+    if has_error:
+        return PreflightCheck(
+            check="portal-registry:health",
+            healthy=False,
+            severity=HealthSeverity.ERROR,
+            detail=f"{len(drift_events)} recorded portal drift(s), including a stable-URL divergence: {preview}",
+            remediation="re-verify the drifted portal URL against the AEAT sede and update the portal registry entry",
+        )
+    return PreflightCheck(
+        check="portal-registry:health",
+        healthy=True,
+        severity=HealthSeverity.WARN,
+        detail=f"{len(drift_events)} recorded portal drift(s) on rotatable URLs: {preview}",
+        remediation="confirm the observed portal URL(s) and refresh the registry entry if the rotation is permanent",
+    )
+
+
 def run_preflight_checks(*, settings: Settings | None = None) -> tuple[PreflightCheck, ...]:
     """Run every workstation-preflight probe and return the typed rows.
 
     Concatenates the per-auth-provider certificate / Cl@ve Móvil health
     rows (#286), the secure-storage / bundled-corpus / configuration rows
-    (#102), and the registry referential-integrity row (#98). Every probe
-    catches its own failures and reports them as ``error`` rows, so the
-    aggregate never raises.
+    (#102), the registry referential-integrity row (#98), and the
+    portal-registry health / recorded-drift row (#413). Every probe catches
+    its own failures and reports them as ``error`` rows, so the aggregate
+    never raises. The portal-drift row runs with the offline default (no
+    recorded drift), reporting registered state rather than a live probe.
     """
     resolved = settings if settings is not None else load_settings()
     return (
         *probe_auth_providers(settings=resolved),
         *probe_storage_corpus_env(settings=resolved),
         probe_registry_referential_integrity(),
+        probe_portal_registry_health(),
     )
