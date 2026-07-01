@@ -312,21 +312,18 @@ class TestUnhandledEnvelope:
         synthetic.__cause__ = exc
         return build_error_envelope(synthetic)
 
-    @pytest.mark.parametrize(
-        "exc",
-        [
-            pytest.param(ValueError("bad value"), id="value-error"),
-            pytest.param(TypeError("wrong type"), id="type-error"),
-            pytest.param(KeyError("missing"), id="key-error"),
-            pytest.param(RuntimeError("boom"), id="runtime-error"),
-            pytest.param(AttributeError("no attr"), id="attribute-error"),
-        ],
-    )
-    def test_envelope_code_for_common_exception(self, exc: BaseException) -> None:
-        env = self._envelope_for_unhandled(exc)
-        assert env.code == "INTERNAL_WORKFLOW_UNHANDLED"
-        assert env.category == ErrorCategory.INTERNAL.value
-        assert env.retryable is False
+    def test_envelope_code_for_common_exceptions(self) -> None:
+        for exc in (
+            ValueError("bad value"),
+            TypeError("wrong type"),
+            KeyError("missing"),
+            RuntimeError("boom"),
+            AttributeError("no attr"),
+        ):
+            env = self._envelope_for_unhandled(exc)
+            assert env.code == "INTERNAL_WORKFLOW_UNHANDLED"
+            assert env.category == ErrorCategory.INTERNAL.value
+            assert env.retryable is False
 
     def test_envelope_context_carries_stage_and_error_type(self) -> None:
         """The envelope context must surface the stage and error_type
@@ -364,55 +361,43 @@ class TestUnhandledEnvelope:
         else:
             raise AssertionError(f"unknown unhandled workflow source: {source}")
 
-    @pytest.mark.parametrize(
-        ("source", "exc", "expected_stage"),
-        [
-            pytest.param(
+    def test_real_engine_unhandled_paths_emit_envelope_code(self) -> None:
+        cases = (
+            (
                 "deadline",
                 ValueError("registry unavailable"),
                 WorkflowStage.COMPUTING_DEADLINES,
-                id="computing-deadlines",
             ),
-            pytest.param(
+            (
                 "notifications",
                 TypeError("unexpected type"),
                 WorkflowStage.CHECKING_INBOX,
-                id="checking-inbox",
             ),
-            pytest.param(
+            (
                 "expedientes",
                 KeyError("no expediente"),
                 WorkflowStage.BUILDING_DRAFT,
-                id="building-draft-expedientes",
             ),
-            pytest.param(
+            (
                 "inputs",
                 RuntimeError("inputs fetch failed"),
                 WorkflowStage.BUILDING_DRAFT,
-                id="building-draft-inputs",
             ),
-            pytest.param(
+            (
                 "draft_builder",
                 AttributeError("missing field"),
                 WorkflowStage.BUILDING_DRAFT,
-                id="building-draft-builder",
             ),
-            pytest.param(
+            (
                 "preflight",
                 OSError("network error"),
                 WorkflowStage.RUNNING_PREFLIGHT,
-                id="running-preflight",
             ),
-        ],
-    )
-    def test_real_engine_unhandled_paths_emit_envelope_code(
-        self,
-        source: str,
-        exc: BaseException,
-        expected_stage: WorkflowStage,
-    ) -> None:
-        fx = _fixtures()
-        self._arm_unhandled_case(fx, source, exc)
-        result = _run_next(fx)
-        assert result.aborted_reason is WorkflowAbortReason.UNHANDLED_EXCEPTION
-        assert result.steps[-1].stage is expected_stage
+        )
+
+        for source, exc, expected_stage in cases:
+            fx = _fixtures()
+            self._arm_unhandled_case(fx, source, exc)
+            result = _run_next(fx)
+            assert result.aborted_reason is WorkflowAbortReason.UNHANDLED_EXCEPTION
+            assert result.steps[-1].stage is expected_stage
