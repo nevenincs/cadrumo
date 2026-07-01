@@ -161,44 +161,42 @@ def test_setup_answers_minimal_valid() -> None:
     assert sa.output_language == "es"
 
 
-def test_setup_answers_iva_regime_string_coercion() -> None:
-    """SetupAnswers coerces a string IVA regime token to the enum."""
+@pytest.mark.parametrize(
+    ("field", "token", "expected"),
+    (
+        pytest.param("iva_regime", "GENERAL", "IVARegime.GENERAL", id="iva-regime"),
+        pytest.param("entity_type", "natural_person", "EntityType.NATURAL_PERSON", id="entity-type"),
+    ),
+)
+def test_setup_answers_string_enum_coercion(field: str, token: str, expected: str) -> None:
+    """SetupAnswers coerces known string tokens to their enum members."""
+    from ...domain.deadlines._models import EntityType, IVARegime
     from ..setup_answers import SetupAnswers
 
-    sa = SetupAnswers(tax_id="12345678A", iva_regime="GENERAL")
-    # iva_regime should be the enum member, not the raw string.
-    from ...domain.deadlines._models import IVARegime
+    expected_member = {
+        "IVARegime.GENERAL": IVARegime.GENERAL,
+        "EntityType.NATURAL_PERSON": EntityType.NATURAL_PERSON,
+    }[expected]
 
-    assert sa.iva_regime == IVARegime.GENERAL
+    sa = SetupAnswers(tax_id="12345678A", **{field: token})
+    assert getattr(sa, field) == expected_member
 
 
-def test_setup_answers_invalid_iva_regime_raises() -> None:
-    """SetupAnswers raises on an unrecognised IVA regime token."""
+@pytest.mark.parametrize(
+    "invalid_field",
+    (
+        pytest.param({"iva_regime": "NOT_A_REGIME"}, id="iva-regime"),
+        pytest.param({"activity_start_date": "31-12-2024"}, id="activity-start-date"),
+    ),
+)
+def test_setup_answers_invalid_fields_raise(invalid_field: dict[str, str]) -> None:
+    """SetupAnswers rejects malformed enum and date field values."""
     import pydantic
 
     from ..setup_answers import SetupAnswers
 
     with pytest.raises(pydantic.ValidationError):
-        SetupAnswers(tax_id="12345678A", iva_regime="NOT_A_REGIME")
-
-
-def test_setup_answers_entity_type_coercion() -> None:
-    """SetupAnswers coerces a string entity type token to the enum."""
-    from ...domain.deadlines._models import EntityType
-    from ..setup_answers import SetupAnswers
-
-    sa = SetupAnswers(tax_id="12345678A", entity_type="natural_person")
-    assert sa.entity_type == EntityType.NATURAL_PERSON
-
-
-def test_setup_answers_invalid_date_raises() -> None:
-    """SetupAnswers raises on a non-ISO activity_start_date."""
-    import pydantic
-
-    from ..setup_answers import SetupAnswers
-
-    with pytest.raises(pydantic.ValidationError):
-        SetupAnswers(tax_id="12345678A", activity_start_date="31-12-2024")
+        SetupAnswers(tax_id="12345678A", **invalid_field)
 
 
 def test_setup_answers_valid_date_accepted() -> None:
