@@ -65,6 +65,43 @@ captured from AEAT's official Renta WEB Open simulator, each carrying
 grounding both for any future M100 enrollment reconciliation and for the S56
 operator numeric value-oracle. No such captured oracle exists yet for 130/303.
 
+### tranche-1-no-contract-modelos-enrolled | resolved | M151, M210, M714 enrolled with grounded, non-breaking contracts
+
+The three computing revisions that had no reconciliation contract are now enrolled
+(commit `2224fb063`), each enrolling only the always-present computed finals at
+`min_coverage = 1` so the 100%-coverage contract cannot flip a legitimate filing to
+NEEDS_REVIEW: M151 (cuota integra general + cuota diferencial), M210 (base imponible
++ cuota integra + cuota diferencial; `tipo_gravamen` excluded as a rate, not a
+money-2 value), M714 (cuota integra; `patrimonio.reduccion-limite-80` excluded as a
+situational reduction). Grounded in each revision's own AEAT procedure / BOE layout
+`source_refs`. The registry validated and 46 verify + registry tests passed at
+commit time. Note: casilla references in a `verification_expectation` are the
+canonical casilla `id` (e.g. `patrimonio.cuota-integra`), not the display `number` -
+the registry validator enforces this.
+
+### small-gaps-analysis | medium | 130/131 exclusions are correct calibration; 200/303 have genuine always-present finals
+
+The small-modelo gaps split into two kinds. Correct calibration (situational
+casillas rightly excluded, must NOT be enrolled at `min_coverage = 1`): M130 `15`
+and `saldo-negativo-fin-periodo` (negative-result carryforwards, absent in a
+positive-result quarter); the M131 analogue; M200 `bin-aplicada-maxima` (BIN
+compensation), `00558` (tipo de gravamen, a rate), `00582` (bonificaciones);
+M303 per-rate cuotas (`03`/`06`/`09`), per-type deducibles (`29`/`33`/`37`),
+`iva.autoconsumo.promotor.cuota`, and `prorrata-porcentaje` (a rate). Genuine
+always-present finals worth enrolling: M200 `DP200014:00562` (cuota integra),
+`DP200014B:00592` (cuota liquida), `DP200014B:00611` (cuota diferencial); M303
+`27` (total cuota devengada), `45` (total a deducir). These are the next tranche.
+
+### tranche-2-blocked-by-peer-m100-wip | medium | the M200/M303 finals cannot be verified non-breaking while peer M100 binding WIP reds the registry
+
+Uncommitted peer work on M100 bindings (`renta-2024/2025-certificado-trabajo-
+retenciones requires source citations`) currently fails `validate_registry`, so the
+whole registry does not load and the M200/M303 always-present-final enrollments
+cannot be proven non-breaking against the verify gate. Per
+`full-tree-gate-must-distinguish-owner` this is peer churn, not this campaign's
+surface. Tranche 2 (enroll the M200/M303 finals) is deferred until the registry
+loads clean.
+
 ## Recommendations
 
 Do NOT mechanically enroll the 922 casillas: at `min_coverage = 1` it breaks
