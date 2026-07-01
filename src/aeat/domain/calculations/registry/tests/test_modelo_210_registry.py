@@ -142,6 +142,7 @@ def test_modelo_210_form_order_is_boe_corpus_backed() -> None:
     assert reference.consolidated_as_of == date(2026, 6, 23)
     assert "Se aprueba el modelo 210" in reference.required_text
 
+    assert source.evidence_tier == "layout_authority"
     assert source.corpus_path == "corpus/normatives/html/orden-eha-3316-2010.html"
     assert source.sha256 == "413352a4ff18d20aad32a88e422375598c16fdc9d98553fb6e0ee7b9be4559af"
     assert source.bytes == 249463

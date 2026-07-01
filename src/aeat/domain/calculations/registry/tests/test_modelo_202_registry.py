@@ -127,6 +127,7 @@ def test_committed_modelo_202_order_chain_is_boe_corpus_backed() -> None:
 
     for source_id, (corpus_path, sha256, byte_count, applies_from) in _M202_SOURCE_EXPECTATIONS.items():
         source = catalogues.sources[source_id]
+        assert source.evidence_tier == "layout_authority"
         assert source.corpus_path == corpus_path
         assert source.sha256 == sha256
         assert source.bytes == byte_count
