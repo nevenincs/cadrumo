@@ -161,6 +161,7 @@ def _validate_revision_surface_sections(
         exported_casillas=context.exported_casillas,
         legal_refs=legal_refs,
         source_refs=source_refs,
+        evidence=evidence,
         corpus_root=justificante_corpus_root,
     )
     validate_cross_reference_section(
