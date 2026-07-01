@@ -1390,7 +1390,7 @@ source_url = "https://sede.agenciatributaria.gob.es/Sede/procedimientoini/GH04.s
 review_status = "reviewed"
 
 [sources."boe-modelo-123-2007-form"]
-evidence_tier = "official_source_guidance"
+evidence_tier = "layout_authority"
 authority = "boe"
 kind = "form_spec"
 corpus_path = "corpus/normatives/html/orden-eha-3435-2007.html"
@@ -1403,7 +1403,7 @@ source_url = "https://www.boe.es/buscar/act.php?id=BOE-A-2007-20485"
 review_status = "reviewed"
 
 [sources."boe-modelo-123-2024-form"]
-evidence_tier = "official_source_guidance"
+evidence_tier = "layout_authority"
 authority = "boe"
 kind = "form_spec"
 corpus_path = "corpus/normatives/html/orden-hac-56-2024.html"
