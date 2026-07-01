@@ -20,6 +20,15 @@ matching current :class:`~aeat.domain.modelos.ModeloRecord` with
 :class:`~aeat.domain.modelos.ExternalEvidence` only after the local filing record
 already exists.
 
+Snapshot payloads that depend on an authenticated taxpayer carry a normalised
+``authenticated_identity`` when the upstream AEAT session exposes it. The
+notifications snapshot id includes that identity so captures from different
+taxpayers do not collapse to the same local row; expedientes and notifications
+calendar projection compares the snapshot identity and row-level taxpayer ids
+against the expected active-profile tax id before surfacing observed events.
+Persisted capture/enrolment orchestration emits bucket events with sanitized
+summary payloads; non-persisting read/list surfaces remain event-free.
+
 IVA remote-state helpers separate stored-evidence reads from live acquisition.
 :func:`~aeat.application.live.load_iva_remote_state` returns the local
 :class:`~aeat.application.live.IvaRemoteStateStoredEvidenceReport` without
@@ -38,7 +47,7 @@ See Also:
         services.
     :mod:`aeat.application.overview`
         Local-only summary surface that reads captured live evidence without
-        contacting AEAT.
+        contacting AEAT and filters calendar events by active-profile identity.
 """
 
 from __future__ import annotations
