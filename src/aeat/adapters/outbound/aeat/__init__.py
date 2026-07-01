@@ -19,6 +19,15 @@ See Also:
     :mod:`aeat.adapters.outbound.aeat._playwright`
         Import-safe Playwright exception aliases shared by browser and Sede
         modules when the optional ``browser`` extra is absent.
+    :mod:`aeat.application.auth`
+        Application facade that selects auth providers and owns operator-facing
+        session lifecycle commands.
+    :mod:`aeat.application.live`
+        Read-only acquisition facade that consumes Sede, browser, and
+        verification adapters.
+    :mod:`aeat.core.access_gate`
+        Core live-read gate and permanent live-write refusal applied before
+        authenticated AEAT access proceeds.
     :mod:`aeat.adapters.outbound`
         Parent outbound adapter layer for all external counterparts.
 """
