@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from pathlib import Path
 
 import pytest
@@ -12,6 +13,30 @@ from .. import PathContainmentError
 from .._path_safety import safe_record_path, safe_repository_id, safe_subpath
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
+
+
+def _raise_unsafe_subpath(root: Path) -> None:
+    safe_subpath(root, "../escape", context="test")
+
+
+def _raise_unsafe_repository_id(_root: Path) -> None:
+    safe_repository_id("foo/bar", context="x")
+
+
+@pytest.mark.parametrize(
+    "operation",
+    (
+        pytest.param(_raise_unsafe_subpath, id="subpath"),
+        pytest.param(_raise_unsafe_repository_id, id="repository-id"),
+    ),
+)
+def test_path_containment_errors_inherit_value_error(
+    tmp_path: Path,
+    operation: Callable[[Path], None],
+) -> None:
+    """Legacy ``except ValueError`` callers must still catch typed errors."""
+    with pytest.raises(ValueError):
+        operation(tmp_path)
 
 
 class TestSafeSubpath:
@@ -34,12 +59,6 @@ class TestSafeSubpath:
     def test_unsafe_relative_paths_rejected(self, tmp_path: Path, unsafe_path: str) -> None:
         with pytest.raises(PathContainmentError):
             safe_subpath(tmp_path, unsafe_path, context="test")
-
-    def test_inherits_value_error(self, tmp_path: Path) -> None:
-        """Legacy ``except ValueError`` callers must still catch the typed error."""
-        with pytest.raises(ValueError):
-            safe_subpath(tmp_path, "../escape", context="test")
-
 
 class TestSafeRecordPath:
     """``safe_record_path`` enforces the simple-token allow-list."""
@@ -110,12 +129,6 @@ class TestSafeRepositoryId:
             "path_context": "taxpayer_nif",
             "violation": "repository_id_separator",
         }
-
-    def test_failure_inherits_value_error(self) -> None:
-        """Legacy ``except ValueError`` callers in test surface keep working."""
-        with pytest.raises(ValueError):
-            safe_repository_id("foo/bar", context="x")
-
 
 class TestErrorCodeBinding:
     """``PathContainmentError`` binds to the registered INTEGRITY code."""
