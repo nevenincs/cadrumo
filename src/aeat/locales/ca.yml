@@ -2573,12 +2573,11 @@ cli:
         %{error}. Corregeix l''identificador i torna a exportar, o importa un paquet
         vàlid.'
       import_label_help: Nom visible per al perfil importat; per defecte el nom desat
-        al paquet. Fes-lo servir per importar una segona còpia amb un altre nom.
+        al paquet. Fes-lo servir quan l'etiqueta desada ja s'estigui utilitzant.
       import_label_taken: Ja existeix un perfil amb el nom %{name}. Torna a executar
         amb `--label NOM_NOU` per importar-lo amb un nom diferent.
-      import_label_taken_different_id: L'etiqueta especificada pertany a un perfil
-        amb un identificador diferent. Useu --label NOU_NOM per importar amb un nom
-        diferent.
+      import_label_taken_different_id: L'etiqueta de perfil %{name} ja s'està
+        utilitzant. Useu --label NOU_NOM per importar amb una etiqueta diferent.
       import_missing_bundle: No s'ha trobat el paquet de perfil a %{path}
       import_missing_filing_baseline: 'Al paquet de perfil li falten dades d''identitat
         per presentar models. Corregeix el paquet o torna a exportar un perfil complet

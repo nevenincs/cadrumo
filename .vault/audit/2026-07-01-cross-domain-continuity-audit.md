@@ -30,6 +30,9 @@ related:
 - Reviewed W09.P45.S294 changes to `src/aeat/entrypoints/cli/tests/test_ledger_period_grammar.py`.
 - Checked that the regression uses the real `ledger import` CLI path, a real CSV dry run, and the current canonical period grammar `--period 1T --year 2026`.
 - Checked validation evidence from the focused ledger period grammar integration run, touched-file ruff, reviewer output, and RAG grounding.
+- Reviewed W09.P45.S295 changes to `src/aeat/entrypoints/cli/tests/test_profile_import_idempotency.py` and the four locale files.
+- Checked that the current D5 profile-import behavior remains identity-preserving, while operator text now distinguishes UUID collision from label collision and no longer describes `--label` as fresh-copy creation.
+- Checked validation evidence from focused profile-import integration tests, touched-file ruff, locale scaffold/audit, reviewer output, and RAG grounding.
 
 ## Findings
 
@@ -56,6 +59,10 @@ No production-code findings for the CLI provenance surface. The row's sibling-co
 ### w09-p45-s294 | low | no findings
 
 No findings for the ledger import period-regression guard. Production already refused the `2026T1` testimonial shape through the shared strict period parser; the new test pins the import verb specifically and asserts the refusal teaches `1T` plus `--year` rather than the retired `2026-Q1` shape. A reviewer rerun encountered unrelated dirty-tree collection failure from `PayerFact.REPORTING_PLATFORM_OPERATOR` drift in registry applicability labels; the S294-focused file had already passed `43` integration tests before that peer WIP surfaced.
+
+### w09-p45-s295 | low | resolved test-prose drift
+
+Initial review found no behavioral issue but identified stale test prose describing UUID-collision refusal as "already registered" while the new executable assertions require UUID/conflict wording and reject label-collision wording. The prose was corrected before closure. A final orchestration pass also removed stale fresh-copy wording from the `--label` help text. No findings remain for the locale wording or public-output tests.
 
 ## Recommendations
 
