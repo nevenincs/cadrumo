@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import tomllib
 from datetime import UTC, datetime
 from pathlib import Path
 
@@ -11,7 +12,7 @@ from pydantic import ValidationError
 from ......core.errors import build_error_envelope
 from ......core.external_constants import UTF_8_ENCODING
 from ...errors import StorageValidationError
-from .._layout import bucket_paths, provision_bucket_directory
+from .._layout import BucketPaths, bucket_paths, provision_bucket_directory
 from .._manifest import (
     BucketLifecycleStatus,
     BucketManifest,
@@ -48,33 +49,27 @@ def _fixture_manifest(*, last_unlocked: bool = True) -> BucketManifest:
     )
 
 
-def test_write_then_read_round_trip(tmp_path: Path) -> None:
+def _write_fixture_manifest(
+    tmp_path: Path,
+    *,
+    last_unlocked: bool = True,
+) -> tuple[BucketPaths, BucketManifest]:
     paths = provision_bucket_directory(tmp_path, "alpha")
-    manifest = _fixture_manifest()
-
+    manifest = _fixture_manifest(last_unlocked=last_unlocked)
     write_manifest(paths, manifest)
+    return paths, manifest
+
+
+def test_write_then_read_round_trip(tmp_path: Path) -> None:
+    paths, manifest = _write_fixture_manifest(tmp_path)
     loaded = read_manifest(paths)
 
     assert loaded == manifest
     assert loaded.kdf_params.salt == manifest.kdf_params.salt
 
 
-def test_write_emits_datetime_fields_as_toml_offset_datetimes(tmp_path: Path) -> None:
-    paths = provision_bucket_directory(tmp_path, "alpha")
-    manifest = _fixture_manifest()
-
-    write_manifest(paths, manifest)
-    text = manifest_path(paths).read_text(encoding=UTF_8_ENCODING)
-
-    assert "created_at = 2026-05-14T12:00:00+00:00\n" in text
-    assert "last_unlocked_at = 2026-05-14T13:30:00+00:00\n" in text
-
-
 def test_round_trip_preserves_absent_last_unlocked(tmp_path: Path) -> None:
-    paths = provision_bucket_directory(tmp_path, "alpha")
-    manifest = _fixture_manifest(last_unlocked=False)
-
-    write_manifest(paths, manifest)
+    paths, manifest = _write_fixture_manifest(tmp_path, last_unlocked=False)
     loaded = read_manifest(paths)
 
     assert loaded.last_unlocked_at is None
@@ -82,10 +77,7 @@ def test_round_trip_preserves_absent_last_unlocked(tmp_path: Path) -> None:
 
 
 def test_write_is_atomic_no_tmp_file_lingers(tmp_path: Path) -> None:
-    paths = provision_bucket_directory(tmp_path, "alpha")
-    manifest = _fixture_manifest()
-
-    write_manifest(paths, manifest)
+    paths, _manifest = _write_fixture_manifest(tmp_path)
 
     target = manifest_path(paths)
     assert target.is_file()
@@ -105,8 +97,7 @@ def test_overwrite_replaces_previous_manifest(tmp_path: Path) -> None:
 
 
 def test_read_rejects_unknown_key(tmp_path: Path) -> None:
-    paths = provision_bucket_directory(tmp_path, "alpha")
-    write_manifest(paths, _fixture_manifest())
+    paths, _manifest = _write_fixture_manifest(tmp_path)
 
     target = manifest_path(paths)
     text = target.read_text(encoding=UTF_8_ENCODING)
@@ -117,8 +108,7 @@ def test_read_rejects_unknown_key(tmp_path: Path) -> None:
 
 
 def test_read_rejects_missing_status_key(tmp_path: Path) -> None:
-    paths = provision_bucket_directory(tmp_path, "alpha")
-    write_manifest(paths, _fixture_manifest())
+    paths, _manifest = _write_fixture_manifest(tmp_path)
 
     target = manifest_path(paths)
     text = target.read_text(encoding=UTF_8_ENCODING)
@@ -188,13 +178,12 @@ def test_manifest_datetimes_are_written_as_rfc3339_offset_datetimes(tmp_path: Pa
     carries an unquoted, timezone-aware, UTC ISO-8601 value.
     """
 
-    import tomllib
-
-    paths = provision_bucket_directory(tmp_path, "alpha")
-    manifest = _fixture_manifest()
-    write_manifest(paths, manifest)
+    paths, manifest = _write_fixture_manifest(tmp_path)
 
     text = manifest_path(paths).read_text(encoding=UTF_8_ENCODING)
+    assert "created_at = 2026-05-14T12:00:00+00:00\n" in text
+    assert "last_unlocked_at = 2026-05-14T13:30:00+00:00\n" in text
+
     lines = {
         key: value.strip()
         for key, _, value in (line.partition(" = ") for line in text.splitlines())
