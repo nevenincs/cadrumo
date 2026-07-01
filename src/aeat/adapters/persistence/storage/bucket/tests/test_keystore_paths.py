@@ -31,44 +31,59 @@ def test_keystore_path_rejects_empty_bucket_id(tmp_path: Path) -> None:
         keystore_path(tmp_path, "")
 
 
-def test_keystore_path_rejects_path_separator(tmp_path: Path) -> None:
+@pytest.mark.parametrize(
+    "bucket_id",
+    (
+        pytest.param("a/b", id="forward-slash"),
+        pytest.param("a\\b", id="backslash"),
+    ),
+)
+def test_keystore_path_rejects_path_separator(tmp_path: Path, bucket_id: str) -> None:
     with pytest.raises(BucketValidationError, match="path separator"):
-        keystore_path(tmp_path, "a/b")
-    with pytest.raises(BucketValidationError, match="path separator"):
-        keystore_path(tmp_path, "a\\b")
+        keystore_path(tmp_path, bucket_id)
 
 
 def test_default_separation_validates(tmp_path: Path) -> None:
     validate_keystore_separation(tmp_path, "alpha")
 
 
-def test_rejects_nesting_under_buckets_parent(tmp_path: Path) -> None:
-    bad = tmp_path / "buckets" / "alpha" / "stowaway"
-    with pytest.raises(BucketValidationError, match="buckets parent") as excinfo:
+@pytest.mark.parametrize(
+    ("relative_parts", "error_match", "expected_context"),
+    (
+        pytest.param(
+            ("buckets", "alpha", "stowaway"),
+            "buckets parent",
+            {
+                "reason": "under_buckets_parent",
+                "surface": "bucket_keystore",
+            },
+            id="under-buckets-parent",
+        ),
+        pytest.param(
+            ("buckets", "alpha", "db", "stowaway"),
+            r"buckets parent|db dir",
+            {
+                "reason": "under_bucket_db_dir",
+                "surface": "bucket_keystore",
+            },
+            id="under-bucket-db-dir",
+        ),
+    ),
+)
+def test_rejects_keystore_paths_nested_under_bucket_storage(
+    tmp_path: Path,
+    relative_parts: tuple[str, ...],
+    error_match: str,
+    expected_context: dict[str, str],
+) -> None:
+    bad = tmp_path.joinpath(*relative_parts)
+    with pytest.raises(BucketValidationError, match=error_match) as excinfo:
         validate_keystore_separation(tmp_path, "alpha", configured_keystore=bad)
 
     message = str(excinfo.value)
     assert str(bad) not in message
     assert str(tmp_path) not in message
-    assert excinfo.value.context == {
-        "reason": "under_buckets_parent",
-        "surface": "bucket_keystore",
-    }
-    assert excinfo.value.translated_message == "errors.integrity.integrity_storage_bucket_validation"
-
-
-def test_rejects_nesting_under_bucket_db_dir(tmp_path: Path) -> None:
-    bad = tmp_path / "buckets" / "alpha" / "db" / "stowaway"
-    with pytest.raises(BucketValidationError, match=r"buckets parent|db dir") as excinfo:
-        validate_keystore_separation(tmp_path, "alpha", configured_keystore=bad)
-
-    message = str(excinfo.value)
-    assert str(bad) not in message
-    assert str(tmp_path) not in message
-    assert excinfo.value.context == {
-        "reason": "under_bucket_db_dir",
-        "surface": "bucket_keystore",
-    }
+    assert excinfo.value.context == expected_context
     assert excinfo.value.translated_message == "errors.integrity.integrity_storage_bucket_validation"
 
 
