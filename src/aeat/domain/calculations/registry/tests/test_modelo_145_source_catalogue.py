@@ -71,6 +71,9 @@ def test_modelo_145_source_authority_files_match_catalogue_fingerprints() -> Non
     assert sources["aeat-modelo-145-obligaciones-retenedor"].evidence_tier == "official_source_guidance"
     assert sources["aeat-modelo-145-form"].kind == "form_spec"
     assert sources["aeat-dr-145-v20"].evidence_tier == "layout_authority"
+    assert sources["boe-modelo-145-2011-approval"].evidence_tier == "layout_authority"
+    assert sources["boe-modelo-145-2013-amendment"].evidence_tier == "layout_authority"
+    assert sources["boe-modelo-145-2014-amendment"].evidence_tier == "layout_authority"
 
 
 def test_modelo_145_form_cites_rd_439_art_88_regulatory_anchor() -> None:
