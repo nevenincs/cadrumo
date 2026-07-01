@@ -331,6 +331,7 @@ aggregation:
   source_mesh:
     errors:
       ambiguous_source_disposition: aggregation.source_mesh.errors.ambiguous_source_disposition
+      binding_source_mismatch: 'source_kind and binding_source refer to different binding-source families.'
       duplicate_binding_owner: 'Internal error: duplicate binding owner in source
         mesh.'
       duplicate_bound_casilla_owner: 'Internal error: duplicate bound-casilla owner
@@ -340,6 +341,7 @@ aggregation:
       owned_sources_blank: Source mesh owned sources must not contain blank source
         kinds.
       owned_sources_duplicate: Source mesh owned sources must be unique.
+      relation_provenance_incomplete: 'Relation provenance must include source modelo, filing year, periods, casillas, legal refs, and source refs.'
       source_transaction_ids_blank: Source mesh transaction ids must not contain blanks.
       source_transaction_ids_duplicate: Source mesh transaction ids must be unique.
       unresolved_binding_ids_blank: aggregation.source_mesh.errors.unresolved_binding_ids_blank
@@ -565,7 +567,6 @@ application:
     importing:
       errors:
         import_file_read_failed: 'The invoice import file could not be read: %{path_name}.'
-        invalid_base_total: 'The invoice base_total value is not a decimal: %{base_total}.'
         invalid_json: The invoice JSON payload is not valid JSON at line %{line},
           column %{column}.
         invalid_json_shape: The invoice JSON payload must be an object or a list of
@@ -589,9 +590,11 @@ application:
     errors:
       evidence_attachment_requires_ids: Ledger evidence attachment requires purchase
         evidence or attachment ids.
+      idempotency_key_conflict: The idempotency key already identifies a stored transaction
+        with different details. Use a new idempotency key for a different movement,
+        or omit the key to append a deliberate duplicate.
       purchase_evidence_already_set: Ledger transaction already has a purchase_invoice_evidence_id;
         remove or replace through the attachments workflow.
-      idempotency_key_conflict: 'The idempotency key already identifies a stored transaction with different details. Use a new idempotency key for a different movement, or omit the key to append a deliberate duplicate.'
   live:
     expedientes:
       errors:
@@ -667,6 +670,10 @@ application:
       calculate_binding_unknown: '--binding %{key} does not match any binding id in
         this revision. Accepted binding ids: %{accepted}. Use `aeat app modelo bindings
         list <MODELO>` to list valid binding ids.'
+      calculate_boolean_binding_encoding_invalid: 'Binding value for %{key} is a decimal-encoded
+        boolean flag and must be one of: %{accepted}. Received %{value}. Accepted
+        encoding: %{mapping}. Run ''aeat app modelo bindings list <MODELO>'' to see
+        each binding''s decimal encoding.'
       calculate_casilla_noncanonical_refused: '--casilla %{key} is not a canonical
         casilla.id or is ambiguous. Use the exact canonical casilla.id: %{accepted}.'
       calculate_casilla_unknown: --casilla %{key} is not a canonical casilla.id in
@@ -696,6 +703,8 @@ application:
         casilla.id safely.
       calculate_semantic_role_missing: The modelo revision has no casilla with semantic
         role %{semantic_role}.
+      calculate_text_input_empty: The --casilla value targets a text casilla and must
+        be a non-empty string.
       calculation_registry_root_missing: Registry root %{registry_root} is missing;
         modelo calculation cannot continue.
       calculation_registry_snapshot_unresolved: Registry snapshot for modelo %{modelo},
@@ -824,7 +833,6 @@ application:
         the work unit to bind it to the current revision.
       workflow_input_mismatch: Workflow input request does not match the calculation
         revision.
-      calculate_boolean_binding_encoding_invalid: 'Binding value for %{key} is a decimal-encoded boolean flag and must be one of: %{accepted}. Received %{value}. Accepted encoding: %{mapping}. Run ''aeat app modelo bindings list <MODELO>'' to see each binding''s decimal encoding.'
     findings:
       art20_reduccion_next_action: Verify whether your other non-work income excluding
         exempt income for the year does not exceed 6500 EUR; if it does not, declare
@@ -882,6 +890,8 @@ application:
         (C595) is zero; confirm this is a legitimate zero (base at or below the personal
         and family minimum, or fully offset by deductions) rather than an unmodelled
         gap.
+      modelo_123_2024_base_total_implica_retenciones_total: Base total is positive
+        but total retenciones is zero; review the withholding determination.
       modelo_130_art109_exencion_alta_retencion: 'Art. 109 RIRPF: exempt from filing
         M130 this quarter because accumulated withholdings and payments on account
         for the year represent 70% or more of gross income.'
@@ -901,6 +911,8 @@ application:
         income from datos-base activities (C01) is positive but the fractional payment
         for datos-base (C02) is zero; check casilla 02 using the applicable Orden
         de módulos rate (minimum 2 per cent).
+      modelo_151_base_liquidable_implica_cuota_integra: Base liquidable general is
+        positive but cuota íntegra general is zero; review the cuota íntegra determination.
       modelo_200_base_imponible_determinada_cuando_resultado_positivo: The accounting
         result is positive but the taxable base (C552) is zero; review the taxable
         base determination.
@@ -908,6 +920,15 @@ application:
         does not reconcile to the roll-forward (opening C670 minus applied C547 plus
         the BIN generated this period); review the carryforward so future-year compensation
         is not mis-stated.
+      modelo_202_base_imponible_previa_determinada_cuando_resultado_positivo: Resultado
+        contable is positive but the base imponible previa is zero; review the base
+        imponible determination.
+      modelo_210_2025_inmobiliaria_implica_base_imponible: Tipo de renta is inmobiliaria
+        but the base imponible is zero; review the imputed-rent base imponible determination
+        (valor catastral, coeficiente, días de imputación).
+      modelo_210_2025_rendimientos_integros_implica_base_imponible: Gross income (rendimientos
+        íntegros) is positive but the base imponible is zero; review the base imponible
+        determination.
       modelo_303_official_deducible_boxes_unpopulated_cuando_cuota_deducible_positiva: Total
         IVA deducible (cuota-deducible-total) is positive, but every official numbered
         box on the Diseño de Registros (29 interiores corrientes, 33 importaciones,
@@ -920,18 +941,14 @@ application:
         13 inversion del sujeto pasivo) is still zero. The calculate path does not
         auto-populate the official numbered boxes; transcribe the cuota into the applicable
         boxes before filing.
+      modelo_714_cuota_integra_implica_total_cuota_integra: Cuota íntegra is positive
+        but total cuota íntegra is zero; review the total cuota íntegra transcription.
       registry_snapshot_unresolved: registry snapshot for modelo=%{modelo} filing_year=%{filing_year}
         period=%{period} could not be resolved
       representante_fiscal_required:
         next_action: Designate a fiscal representative in Spain by setting profile.representante_fiscal_nif
           via the `aeat config profile edit` command. TRLIRNR Art. 10 requires non-EEA
           IRNR filers to declare a representative for AEAT communications.
-      modelo_210_2025_rendimientos_integros_implica_base_imponible: 'Gross income (rendimientos íntegros) is positive but the base imponible is zero; review the base imponible determination.'
-      modelo_210_2025_inmobiliaria_implica_base_imponible: 'Tipo de renta is inmobiliaria but the base imponible is zero; review the imputed-rent base imponible determination (valor catastral, coeficiente, días de imputación).'
-      modelo_202_base_imponible_previa_determinada_cuando_resultado_positivo: 'Resultado contable is positive but the base imponible previa is zero; review the base imponible determination.'
-      modelo_123_2024_base_total_implica_retenciones_total: 'Base total is positive but total retenciones is zero; review the withholding determination.'
-      modelo_151_base_liquidable_implica_cuota_integra: 'Base liquidable general is positive but cuota íntegra general is zero; review the cuota íntegra determination.'
-      modelo_714_cuota_integra_implica_total_cuota_integra: 'Cuota íntegra is positive but total cuota íntegra is zero; review the total cuota íntegra transcription.'
     iva_wallet:
       correct_no_record: No seeded compensation record exists for %{filing_year}/%{period}.
         Run 'aeat app modelo iva-wallet seed' first; correction overwrites an existing
@@ -1143,7 +1160,9 @@ application:
     next_hint:
       modelo_work_create: aeat app modelo work create
     notices:
-      ccaa_defaulted: 'No comunidad autónoma was chosen, so %{ccaa} was assumed for this profile. Autonomic deductions and the autonomic part of the tax scale are calculated for %{ccaa}. Set --tax-residence-ccaa to use a different comunidad.'
+      ccaa_defaulted: No comunidad autónoma was chosen, so %{ccaa} was assumed for
+        this profile. Autonomic deductions and the autonomic part of the tax scale
+        are calculated for %{ccaa}. Set --tax-residence-ccaa to use a different comunidad.
     output_labels:
       active_profile: Active profile
       next: Next
@@ -1216,10 +1235,12 @@ categories:
     display_label_851219: Display label 851219
 cli:
   agent:
-    app_help: 'Materialise the operator agent harness (rules, personas, skills) for an agent runtime.'
+    app_help: Materialise the operator agent harness (rules, personas, skills) for
+      an agent runtime.
     materialise:
-      output_help: 'Directory to write the operator workspace into.'
-      summary: 'Wrote operator workspace to {path}: {rules} rules, {personas} personas, {skills} skills.'
+      output_help: Directory to write the operator workspace into.
+      summary: 'Wrote operator workspace to {path}: {rules} rules, {personas} personas,
+        {skills} skills.'
   app:
     ledger:
       evidence:
@@ -1444,7 +1465,13 @@ cli:
         modelo_help: Supported modelo code for the backend aggregation service (111,
           115, 123, 180, 190, 193, 347, 349, or 720).
         period_help: 'Aggregation period token: 0A annual, 1T-4T quarters, 01-12 months.'
-        retencion_observation_help: 'JSON RetencionObservation object. The source_kind value must be ledger_transaction, purchase_invoice_evidence, payable_invoice, or collectible_invoice. For Modelo 111 trabajo, scheme rendimientos_trabajo is the empleado progressive rate (LIRPF art. 101.1) and rendimientos_trabajo_administrador is the fixed administrador/consejero rate (LIRPF art. 101.2: 35 percent, or 19 percent when the entity''s net turnover is below 100,000 EUR). Repeat for multiple observations.'
+        retencion_observation_help: 'JSON RetencionObservation object. The source_kind
+          value must be ledger_transaction, purchase_invoice_evidence, payable_invoice,
+          or collectible_invoice. For Modelo 111 trabajo, scheme rendimientos_trabajo
+          is the empleado progressive rate (LIRPF art. 101.1) and rendimientos_trabajo_administrador
+          is the fixed administrador/consejero rate (LIRPF art. 101.2: 35 percent,
+          or 19 percent when the entity''s net turnover is below 100,000 EUR). Repeat
+          for multiple observations.'
         withholding_observation_help: Per-perceptor-clave withholding observation
           (JSON) for the Modelo 190 percepciones count; repeatable.
       aggregate_help: Run the backend per-modelo aggregation service from explicit
@@ -1476,13 +1503,19 @@ cli:
         override_help: Temporary binding override with KEY=VALUE syntax (repeatable)
         period_help: 'Period token: 0A annual, 1T-4T quarters, 01-12 months; for censo
           modelos (036) use alta, modificacion, or baja.'
+        relation_input_channel: "%{binding_id}\tfed by relation %{relation_id}\tuse\
+          \ --relation %{relation_id}=VALUE"
+        relation_input_guidance: Some bindings below are fed by registry relations
+          (cross-modelo or cross-period fold-ins), not direct --binding values. Supply
+          each with --relation RELATION_ID=VALUE before calculating.
         resolve_help: Resolve bindings and show their values with optional temporary
           overrides, without mutating state
         unknown_keys: 'Unknown --binding key(s) {keys}; known bindings for {code}@{revision}
           ({period}): {suggestion}.'
         year_help: Tax year of the modelo (e.g. 2026)
-        relation_input_guidance: 'Some bindings below are fed by registry relations (cross-modelo or cross-period fold-ins), not direct --binding values. Supply each with --relation RELATION_ID=VALUE before calculating.'
-        relation_input_channel: "%{binding_id}\tfed by relation %{relation_id}\tuse --relation %{relation_id}=VALUE"
+      casilla:
+        casilla_help: 'Casilla id or printed casilla number to describe (e.g. 0596).'
+        help: 'Show the label, legal grounding, input kind, and formula for one casilla on the resolved registry snapshot.'
       casillas:
         as_of_help: Resolve the modelo revision active on the supplied ISO date (YYYY-MM-DD)
         explain_help: Include localized help text in the text output.
@@ -1650,9 +1683,10 @@ cli:
         seed_invalid_amount: The seed amount must be a valid, non-negative decimal.
         seed_period_help: 'Period of the Modelo 303 filing: 1T-4T quarters (e.g. 4T).'
       list:
+        domain_help: Filter the modelo catalogue to a single tax family (e.g. iva,
+          irpf, is)
         help: List all official tax forms (modelos) registered in the system.
         year_help: Filter the modelo catalogue to a single fiscal year
-        domain_help: 'Filter the modelo catalogue to a single tax family (e.g. iva, irpf, is)'
       m036:
         alta_help: Record an M036 alta declaration (initial census registration) filed
           at sede.
@@ -1783,6 +1817,7 @@ cli:
         create_not_applicable_refused: 'Modelo %{modelo} does not apply to the active
           profile''s taxpayer type: %{reason} If you have a reason to create the work
           unit anyway, re-run the command with --allow-not-applicable.'
+        create_quiet_help: 'Skip human-readable confirmation output; the --format json envelope, notices, and exit code are unaffected.'
         create_reused: Existing work unit returned (idempotent on modelo/year/period/revision);
           nothing new was created. Rename it with `aeat app modelo work rename`.
         create_reused_name_match: Existing work unit returned (idempotent on modelo/year/period/revision);
@@ -1833,6 +1868,8 @@ cli:
         dt12_computation_error: 'DT12 computation error: %{message}'
         file_help: Mark a verified revision as internally filed. Does NOT submit to
           AEAT
+        file_idempotent_noop: 'Idempotent no-op: calculation revision %{calculation_revision_id}
+          is already filed; returned the existing filing record without changes.'
         from_filing_record_help: Stable id of the baseline filing record to amend.
           Must carry imported external evidence (justificante / CSV register / live
           capture)
@@ -1974,7 +2011,8 @@ cli:
         revision_selector_help: Revision selector.
         revision_show_help: Show one stored calculation revision's persisted casilla
           values (without recomputing)
-        revision_verbose_help: Expose the full per-casilla formula trace (op, formula_id, operand refs and values).
+        revision_verbose_help: Expose the full per-casilla formula trace (op, formula_id,
+          operand refs and values).
         revisions_help: List calculation revisions, optionally filtered to one work
           unit
         row_empty_key: Empty field key in --row {token}; each field must be in KEY=VALUE
@@ -2030,7 +2068,6 @@ cli:
         year_help: Tax year of the work unit (e.g. 2026)
         year_out_of_range: Filing year %{year} is out of range; supply a year between
           %{minimum} and %{maximum}.
-        file_idempotent_noop: 'Idempotent no-op: calculation revision %{calculation_revision_id} is already filed; returned the existing filing record without changes.'
   common:
     errors:
       draft_id_not_found: Draft ID %{draft_id} not found
@@ -2583,8 +2620,11 @@ cli:
       description_help: Non-blank narrative
       direction_help: Transaction direction (INCOMING / OUTGOING / INTERNAL_TRANSFER)
       help: Add one manual ledger transaction in the active profile
-      idempotency_key_help: 'Stable key for this logical add: passing the same key again is a safe no-op, so retries do not duplicate the row. Omit it to append a deliberate duplicate.'
-      idempotent_noop: 'Idempotent no-op: a transaction with this idempotency key already exists (%{transaction_id}); nothing was added.'
+      idempotency_key_help: 'Stable key for this logical add: passing the same key
+        again is a safe no-op, so retries do not duplicate the row. Omit it to append
+        a deliberate duplicate.'
+      idempotent_noop: 'Idempotent no-op: a transaction with this idempotency key
+        already exists (%{transaction_id}); nothing was added.'
       irpf_category_help: IRPF-specific category key
       iva_amount_help: Optional IVA amount on the row
       iva_rate_help: Optional IVA rate as a decimal fraction
@@ -2743,7 +2783,10 @@ cli:
         it to the classifier.
       reaffirm_help: Reaffirm the classification of an already-classified transaction.
       reaffirmed: Classification reaffirmed.
-      reason_help: 'Free-text reason recorded as the transaction notes for a manual classification, or with a --reject decision.'
+      reason_empty: Refused. --reason must record why you are classifying this transaction.
+        Pass a non-empty rationale, or omit --reason.
+      reason_help: Free-text reason recorded as the transaction notes for a manual
+        classification, or with a --reject decision.
       reject_apply_exclusive: '--reject cannot be combined with --apply: reject records
         a declined suggestion, apply records an accepted one.'
       reject_help: Record an explicit rejection of the LLM suggestion as an audit
@@ -2763,7 +2806,6 @@ cli:
       taxable_base_help: Taxable base amount
       vision_model_help: Override the local Ollama vision model for an image/scanned-invoice
         read (e.g. qwen2.5vl:7b); defaults to the configured model.
-      reason_empty: 'Refused. --reason must record why you are classifying this transaction. Pass a non-empty rationale, or omit --reason.'
     doclink:
       actor_help: Operator label.
       help: Fetch a Drive document link and store its bytes as encrypted evidence
@@ -2807,6 +2849,12 @@ cli:
         app ledger categories` to list every recognised id.
       unknown_provider: 'Unknown import --provider {provider!r}. Recognised providers:
         {providers}.'
+    exclude:
+      actor_help: 'Operator label.'
+      help: 'Mark one reviewed ledger transaction as deliberately excluded from filing.'
+      id_help: 'Ledger transaction id.'
+      reason_help: 'Optional note recording why the row is excluded.'
+      yes_help: 'Confirm the reviewed-excluded decision.'
     export:
       actor_help: Operator name recorded on the bucket event
       format_help: Export serialization format
@@ -3251,6 +3299,8 @@ cli:
     calendar_refused_incomplete: 'Calendar has unresolved profile checks: %{keys}.
       Run the warning fix command or pass --allow-incomplete to inspect the provisional
       calendar.'
+    coverage:
+      investigate: '%{count} filing obligation(s) could not be positively scoped for this profile and may be under-reported: %{modelos}. Investigate each with ''aeat app overview explain <modelo>''.'
     drafts: Drafts
     explain:
       help: Decompose a modelo's applicability against the active profile. Surfaces
@@ -3269,6 +3319,10 @@ cli:
       drafts_present: '%{count} saved declaration draft(s) exist in this local storage.
         A fresh empty workspace normally has 0, so this profile/database already contains
         local draft state.'
+      filing_obligation_multiple_pagadores: Work income from more than one pagador,
+        with over EUR 1,500 from the secondary pagadores, lowers your IRPF filing-exemption
+        limit to the reduced Art. 96.3 LIRPF threshold; you may be obliged to file
+        Modelo 100 if your total work income exceeds it.
       integrity_next: Run `aeat config repair` for detail. Do not quarantine rows
         unless you intentionally want to archive unreadable old local data.
       invoices_empty: No sales or purchase invoices are stored in the invoice register.
@@ -3309,7 +3363,6 @@ cli:
       work_units_present_with_discarded: '%{count} active modelo work unit(s) (%{discarded}
         discarded) in this local storage - your active modelo work is saved; resume
         it with `aeat app modelo work list`.'
-      filing_obligation_multiple_pagadores: 'Work income from more than one pagador, with over EUR 1,500 from the secondary pagadores, lowers your IRPF filing-exemption limit to the reduced Art. 96.3 LIRPF threshold; you may be obliged to file Modelo 100 if your total work income exceeds it.'
     status_help: Show profile, ledger, and modelo readiness
     taxpayer_model_undeclared: The active profile does not declare this taxpayer model;
       update the profile or rerun with the incomplete-profile override.
@@ -3424,8 +3477,9 @@ cli:
     app_help: 'Operator review queue: triage ledger transactions, purchase evidence,
       and modelo findings'
     errors:
+      invalid_confidence: Confidence threshold %{value} is out of range; supply a
+        value between 0 and 1.
       invalid_state: 'Invalid review state: %{state}'
-      invalid_confidence: 'Confidence threshold %{value} is out of range; supply a value between 0 and 1.'
     labels:
       affected_object_id: Object
       id: ID
@@ -3436,6 +3490,9 @@ cli:
       severity: Severity
       source_kind: Source kind
     queue:
+      confidence_below_help: Restrict the queue to classified transactions whose classification
+        confidence is strictly below this threshold (a value between 0 and 1). Lowest-confidence
+        rows surface first so they can be triaged.
       empty: No items pending review.
       explain_help: Include the legal_refs that ground each finding in the text output.
         The JSON payload always carries them.
@@ -3444,7 +3501,6 @@ cli:
       modelo_help: Restrict the queue to one modelo
       source_kind_help: Restrict the queue to one source kind
       state_help: Restrict the queue to one review state
-      confidence_below_help: 'Restrict the queue to classified transactions whose classification confidence is strictly below this threshold (a value between 0 and 1). Lowest-confidence rows surface first so they can be triaged.'
     show:
       explain_help: Include the legal_refs that ground this finding in the text output.
         The JSON payload always carries them.

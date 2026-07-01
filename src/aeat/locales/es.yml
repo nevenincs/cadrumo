@@ -369,6 +369,7 @@ aggregation:
   source_mesh:
     errors:
       ambiguous_source_disposition: aggregation.source_mesh.errors.ambiguous_source_disposition
+      binding_source_mismatch: 'source_kind y binding_source se refieren a familias de origen de binding distintas.'
       duplicate_binding_owner: 'Error interno: propietario de vinculacion duplicado
         en la malla de fuentes.'
       duplicate_bound_casilla_owner: 'Error interno: propietario de casilla vinculada
@@ -379,6 +380,7 @@ aggregation:
         contener tipos de fuente en blanco.
       owned_sources_duplicate: Las fuentes propiedad del mallado de fuentes deben
         ser únicas.
+      relation_provenance_incomplete: 'La procedencia de la relacion debe incluir modelo origen, ejercicio, periodos, casillas, referencias legales y referencias de origen.'
       source_transaction_ids_blank: Los identificadores de transacción del mallado
         de fuentes no pueden contener blancos.
       source_transaction_ids_duplicate: Los identificadores de transacción del mallado
@@ -627,7 +629,6 @@ application:
       errors:
         import_file_read_failed: 'No se pudo leer el archivo de importacion de facturas:
           %{path_name}.'
-        invalid_base_total: 'El valor base_total de la factura no es decimal: %{base_total}.'
         invalid_json: El contenido JSON de facturas no es valido en la linea %{line},
           columna %{column}.
         invalid_json_shape: El contenido JSON de facturas debe ser un objeto o una
@@ -652,9 +653,11 @@ application:
     errors:
       evidence_attachment_requires_ids: El adjunto de evidencia del libro mayor requiere
         evidencia de compra o identificadores de adjunto.
+      idempotency_key_conflict: La clave de idempotencia ya identifica una transacción
+        almacenada con datos distintos. Use una clave de idempotencia nueva para un
+        movimiento diferente, u omita la clave para añadir un duplicado deliberado.
       purchase_evidence_already_set: La transacción del libro mayor ya tiene un purchase_invoice_evidence_id;
         elimine o reemplace a través del flujo de adjuntos.
-      idempotency_key_conflict: 'La clave de idempotencia ya identifica una transacción almacenada con datos distintos. Use una clave de idempotencia nueva para un movimiento diferente, u omita la clave para añadir un duplicado deliberado.'
   live:
     expedientes:
       errors:
@@ -740,6 +743,10 @@ application:
       calculate_binding_unknown: '--binding %{key} no coincide con ningun binding
         de esta revision. Bindings aceptados: %{accepted}. Use `aeat app modelo bindings
         list <MODELO>` para listar los bindings validos.'
+      calculate_boolean_binding_encoding_invalid: 'El valor del binding %{key} es
+        un indicador booleano codificado como decimal y debe ser uno de: %{accepted}.
+        Se recibió %{value}. Codificación aceptada: %{mapping}. Ejecuta ''aeat app
+        modelo bindings list <MODELO>'' para ver la codificación decimal de cada binding.'
       calculate_casilla_noncanonical_refused: '--casilla %{key} no es un casilla.id
         canonico o es ambiguo. Usa el casilla.id canonico exacto: %{accepted}.'
       calculate_casilla_unknown: --casilla %{key} no es un casilla.id canonico de
@@ -770,6 +777,8 @@ application:
         casilla.id canonico de forma segura.
       calculate_semantic_role_missing: La revision del modelo no contiene ninguna
         casilla con el rol semantico %{semantic_role}.
+      calculate_text_input_empty: El valor de --casilla corresponde a una casilla
+        de texto y no puede estar vacío.
       calculation_registry_root_missing: Registry root %{registry_root} is missing;
         modelo calculation cannot continue.
       calculation_registry_snapshot_unresolved: Registry snapshot for modelo %{modelo},
@@ -903,7 +912,6 @@ application:
         Vuelva a crear la unidad de trabajo para vincularla a la revision actual.
       workflow_input_mismatch: La solicitud de entrada del flujo de trabajo no coincide
         con la revisión de cálculo.
-      calculate_boolean_binding_encoding_invalid: 'El valor del binding %{key} es un indicador booleano codificado como decimal y debe ser uno de: %{accepted}. Se recibió %{value}. Codificación aceptada: %{mapping}. Ejecuta ''aeat app modelo bindings list <MODELO>'' para ver la codificación decimal de cada binding.'
     findings:
       art20_reduccion_next_action: Verifique si sus otras rentas distintas de las
         del trabajo excluidas las exentas del ejercicio no superan 6500 EUR; en ese
@@ -963,6 +971,8 @@ application:
         autoliquidación (C595) es cero; confirme que es un cero legítimo (base igual
         o inferior al mínimo personal y familiar, o compensada por deducciones) y
         no una laguna no modelada.
+      modelo_123_2024_base_total_implica_retenciones_total: La base total es positiva
+        pero las retenciones totales son cero; revise la determinación de la retención.
       modelo_130_art109_exencion_alta_retencion: 'Art. 109 RIRPF: exento de presentar
         M130 este trimestre porque las retenciones e ingresos a cuenta acumulados
         en el año representan el 70% o más de los rendimientos íntegros.'
@@ -982,6 +992,9 @@ application:
         rendimientos netos de actividades en datos-base (C01) son positivos pero el
         pago fraccionado previo por datos-base (C02) es cero; revise la casilla 02
         con el porcentaje de la Orden de módulos (mínimo 2 por 100).
+      modelo_151_base_liquidable_implica_cuota_integra: La base liquidable general
+        es positiva pero la cuota íntegra general es cero; revise la determinación
+        de la cuota íntegra.
       modelo_200_base_imponible_determinada_cuando_resultado_positivo: El resultado
         contable es positivo pero la base imponible (C552) es cero; revise la determinación
         de la base imponible.
@@ -989,6 +1002,15 @@ application:
         imponibles negativas pendientes (C671) no concilia con el arrastre (apertura
         C670 menos aplicado C547 más la BIN generada en el periodo); revise el saldo
         a compensar en ejercicios futuros.
+      modelo_202_base_imponible_previa_determinada_cuando_resultado_positivo: El resultado
+        contable es positivo pero la base imponible previa es cero; revise la determinación
+        de la base imponible.
+      modelo_210_2025_inmobiliaria_implica_base_imponible: El tipo de renta es inmobiliaria
+        pero la base imponible es cero; revise la determinación de la base imponible
+        de la renta inmobiliaria imputada (valor catastral, coeficiente, días de imputación).
+      modelo_210_2025_rendimientos_integros_implica_base_imponible: Los rendimientos
+        íntegros son positivos pero la base imponible es cero; revise la determinación
+        de la base imponible.
       modelo_303_official_deducible_boxes_unpopulated_cuando_cuota_deducible_positiva: El
         IVA deducible total (cuota-deducible-total) es positivo, pero todas las casillas
         oficiales del Diseño de Registros (29 interiores corrientes, 33 importaciones,
@@ -1001,6 +1023,9 @@ application:
         13 inversion del sujeto pasivo) siguen a cero. El calculo no rellena automaticamente
         las casillas oficiales numeradas; traslade la cuota a las casillas correspondientes
         antes de presentar.
+      modelo_714_cuota_integra_implica_total_cuota_integra: La cuota íntegra es positiva
+        pero la cuota íntegra total es cero; revise la transcripción de la cuota íntegra
+        total.
       registry_snapshot_unresolved: registry snapshot for modelo=%{modelo} filing_year=%{filing_year}
         period=%{period} could not be resolved
       representante_fiscal_required:
@@ -1008,12 +1033,6 @@ application:
           mediante el comando `aeat config profile edit`. El TRLIRNR Art. 10 exige
           que los declarantes IRNR no residentes en la UE/EEE designen un representante
           para comunicaciones con la AEAT.
-      modelo_210_2025_rendimientos_integros_implica_base_imponible: 'Los rendimientos íntegros son positivos pero la base imponible es cero; revise la determinación de la base imponible.'
-      modelo_210_2025_inmobiliaria_implica_base_imponible: 'El tipo de renta es inmobiliaria pero la base imponible es cero; revise la determinación de la base imponible de la renta inmobiliaria imputada (valor catastral, coeficiente, días de imputación).'
-      modelo_202_base_imponible_previa_determinada_cuando_resultado_positivo: 'El resultado contable es positivo pero la base imponible previa es cero; revise la determinación de la base imponible.'
-      modelo_123_2024_base_total_implica_retenciones_total: 'La base total es positiva pero las retenciones totales son cero; revise la determinación de la retención.'
-      modelo_151_base_liquidable_implica_cuota_integra: 'La base liquidable general es positiva pero la cuota íntegra general es cero; revise la determinación de la cuota íntegra.'
-      modelo_714_cuota_integra_implica_total_cuota_integra: 'La cuota íntegra es positiva pero la cuota íntegra total es cero; revise la transcripción de la cuota íntegra total.'
     iva_wallet:
       correct_no_record: No existe ningún registro de compensación sembrado para %{filing_year}/%{period}.
         Ejecuta primero 'aeat app modelo iva-wallet seed'; la corrección sobrescribe
@@ -1229,7 +1248,10 @@ application:
     next_hint:
       modelo_work_create: aeat app modelo work create
     notices:
-      ccaa_defaulted: 'No se eligió comunidad autónoma, por lo que se asumió %{ccaa} para este perfil. Las deducciones autonómicas y el tramo autonómico de la escala se calculan para %{ccaa}. Use --tax-residence-ccaa para elegir otra comunidad.'
+      ccaa_defaulted: No se eligió comunidad autónoma, por lo que se asumió %{ccaa}
+        para este perfil. Las deducciones autonómicas y el tramo autonómico de la
+        escala se calculan para %{ccaa}. Use --tax-residence-ccaa para elegir otra
+        comunidad.
     output_labels:
       active_profile: Perfil activo
       next: Siguiente
@@ -1305,10 +1327,12 @@ categories:
     display_label_851219: Etiqueta de visualización 851219
 cli:
   agent:
-    app_help: 'Materializa el harness del operador (reglas, personas, habilidades) para un runtime de agente.'
+    app_help: Materializa el harness del operador (reglas, personas, habilidades)
+      para un runtime de agente.
     materialise:
-      output_help: 'Directorio donde escribir el espacio de trabajo del operador.'
-      summary: 'Espacio de trabajo del operador escrito en {path}: {rules} reglas, {personas} personas, {skills} habilidades.'
+      output_help: Directorio donde escribir el espacio de trabajo del operador.
+      summary: 'Espacio de trabajo del operador escrito en {path}: {rules} reglas,
+        {personas} personas, {skills} habilidades.'
   app:
     ledger:
       evidence:
@@ -1591,13 +1615,20 @@ cli:
         override_help: Sobrescritura temporal de binding con sintaxis KEY=VALUE (repetible)
         period_help: 'Token de periodo: 0A anual, 1T-4T trimestres, 01-12 meses; para
           modelos censales (036) usa alta, modificacion o baja.'
+        relation_input_channel: "%{binding_id}\talimentada por la relación %{relation_id}\t\
+          use --relation %{relation_id}=VALUE"
+        relation_input_guidance: Algunas vinculaciones siguientes se alimentan de
+          relaciones del registro (agregaciones entre modelos o entre periodos), no
+          de valores --binding directos. Indique cada una con --relation RELATION_ID=VALUE
+          antes de calcular.
         resolve_help: Resuelve los bindings y muestra sus valores con sobrescrituras
           temporales opcionales, sin mutar el estado
         unknown_keys: 'Clave(s) de --binding desconocida(s) {keys}; vinculaciones
           conocidas para {code}@{revision} ({period}): {suggestion}.'
         year_help: Ejercicio fiscal del modelo (p. ej. 2026)
-        relation_input_guidance: 'Algunas vinculaciones siguientes se alimentan de relaciones del registro (agregaciones entre modelos o entre periodos), no de valores --binding directos. Indique cada una con --relation RELATION_ID=VALUE antes de calcular.'
-        relation_input_channel: "%{binding_id}\talimentada por la relación %{relation_id}\tuse --relation %{relation_id}=VALUE"
+      casilla:
+        casilla_help: 'Id de casilla o numero impreso de casilla que se debe describir (p. ej. 0596).'
+        help: 'Muestra la etiqueta, fundamento legal, tipo de entrada y formula de una casilla en el snapshot de registro resuelto.'
       casillas:
         as_of_help: Resolver la revisión del modelo vigente en la fecha ISO indicada
           (AAAA-MM-DD)
@@ -1775,9 +1806,10 @@ cli:
         seed_period_help: 'Periodo de la presentacion del Modelo 303: trimestres 1T-4T
           (p. ej. 4T).'
       list:
+        domain_help: Filtra el catálogo de modelos por familia tributaria (p. ej.
+          iva, irpf, is)
         help: Listar todos los modelos tributarios oficiales registrados en el sistema.
         year_help: Filtrar el catálogo de modelos por un único ejercicio fiscal
-        domain_help: 'Filtra el catálogo de modelos por familia tributaria (p. ej. iva, irpf, is)'
       m036:
         alta_help: Registra una declaración M036 de alta (inscripción censal inicial)
           presentada en sede.
@@ -1914,6 +1946,7 @@ cli:
         create_not_applicable_refused: 'Modelo %{modelo} no aplica al tipo de contribuyente
           del perfil activo: %{reason} Si tiene un motivo para crear la unidad de
           trabajo de todas formas, repita el comando con --allow-not-applicable.'
+        create_quiet_help: 'Omitir la salida de confirmacion legible; el envoltorio --format json, los avisos y el codigo de salida no se ven afectados.'
         create_reused: Se devolvió la unidad de trabajo existente (idempotente sobre
           modelo/ejercicio/periodo/revisión); no se creó nada nuevo. Renómbrala con
           `aeat app modelo work rename`.
@@ -1970,6 +2003,9 @@ cli:
         dt12_computation_error: 'Error de cómputo DT12: %{message}'
         file_help: Marcar una revisión verificada como internamente presentada. NO
           envía a la AEAT
+        file_idempotent_noop: 'Operación idempotente sin efecto: la revisión de cálculo
+          %{calculation_revision_id} ya está presentada; se devolvió el registro de
+          presentación existente sin cambios.'
         from_filing_record_help: Identificador estable del filing record base a amendar.
           Debe llevar evidencia externa importada (justificante / CSV / captura en
           vivo)
@@ -2120,7 +2156,8 @@ cli:
         revision_selector_help: Selector de revision.
         revision_show_help: Mostrar los valores de casilla guardados de una revisión
           de cálculo concreta (sin recalcular)
-        revision_verbose_help: Mostrar la traza completa de la fórmula por casilla (op, formula_id, referencias y valores de los operandos).
+        revision_verbose_help: Mostrar la traza completa de la fórmula por casilla
+          (op, formula_id, referencias y valores de los operandos).
         revisions_help: Listar las revisiones de cálculo, opcionalmente filtradas
           por unidad de trabajo
         row_empty_key: Clave de campo --row vacía en {token}; cada campo debe tener
@@ -2181,7 +2218,6 @@ cli:
         year_help: Ejercicio fiscal de la unidad de trabajo (p. ej. 2026)
         year_out_of_range: El ejercicio fiscal %{year} está fuera de rango; indique
           un año entre %{minimum} y %{maximum}.
-        file_idempotent_noop: 'Operación idempotente sin efecto: la revisión de cálculo %{calculation_revision_id} ya está presentada; se devolvió el registro de presentación existente sin cambios.'
   common:
     errors:
       draft_id_not_found: ID de borrador %{draft_id} no encontrado
@@ -2775,8 +2811,11 @@ cli:
       description_help: Descripción no vacía de la transacción
       direction_help: Sentido de la transacción (INCOMING, OUTGOING o INTERNAL_TRANSFER)
       help: Añade una transacción manual al libro del perfil activo
-      idempotency_key_help: 'Clave estable para esta anotación lógica: repetir la misma clave es una operación sin efecto, por lo que los reintentos no duplican la fila. Omítala para añadir un duplicado deliberado.'
-      idempotent_noop: 'Operación idempotente sin efecto: ya existe una transacción con esta clave de idempotencia (%{transaction_id}); no se añadió nada.'
+      idempotency_key_help: 'Clave estable para esta anotación lógica: repetir la
+        misma clave es una operación sin efecto, por lo que los reintentos no duplican
+        la fila. Omítala para añadir un duplicado deliberado.'
+      idempotent_noop: 'Operación idempotente sin efecto: ya existe una transacción
+        con esta clave de idempotencia (%{transaction_id}); no se añadió nada.'
       irpf_category_help: Categoría de IRPF para cálculos de modelos
       iva_amount_help: Importe de IVA de la transacción
       iva_rate_help: Tipo de IVA como decimal, por ejemplo 0.21
@@ -2941,7 +2980,10 @@ cli:
         pasa al clasificador.
       reaffirm_help: Reafirmar la clasificación de una transacción ya clasificada.
       reaffirmed: Clasificación reafirmada.
-      reason_help: 'Motivo en texto libre que se registra como notas de la transacción en una clasificación manual, o con una decisión --reject.'
+      reason_empty: Rechazado. --reason debe registrar por qué clasificas esta transacción.
+        Indica un motivo no vacío, u omite --reason.
+      reason_help: Motivo en texto libre que se registra como notas de la transacción
+        en una clasificación manual, o con una decisión --reject.
       reject_apply_exclusive: '--reject no se puede combinar con --apply: reject registra
         una sugerencia rechazada, apply una aceptada.'
       reject_help: Registra un rechazo explícito de la sugerencia del modelo como
@@ -2961,7 +3003,6 @@ cli:
       vision_model_help: Sustituye el modelo de visión local de Ollama para leer una
         factura escaneada o en imagen (p. ej. qwen2.5vl:7b); por defecto usa el modelo
         configurado.
-      reason_empty: 'Rechazado. --reason debe registrar por qué clasificas esta transacción. Indica un motivo no vacío, u omite --reason.'
     doclink:
       actor_help: Etiqueta del operador.
       help: Descarga un enlace de documento de Drive y guarda sus bytes como evidencia
@@ -3010,6 +3051,12 @@ cli:
         Ejecuta `aeat app ledger categories` para ver todos los identificadores reconocidos.
       unknown_provider: 'Proveedor de importación --provider {provider!r} desconocido.
         Proveedores reconocidos: {providers}.'
+    exclude:
+      actor_help: 'Etiqueta del operador.'
+      help: 'Marca una transaccion de libro revisada como excluida deliberadamente de la declaracion.'
+      id_help: 'Id de transaccion del libro.'
+      reason_help: 'Nota opcional que registra por que la fila esta excluida.'
+      yes_help: 'Confirma la decision de exclusion revisada.'
     export:
       actor_help: Nombre del operador registrado en el evento del bucket
       format_help: Formato de serialización de exportación
@@ -3472,6 +3519,8 @@ cli:
     calendar_refused_incomplete: 'El calendario tiene comprobaciones de perfil sin
       resolver: %{keys}. Ejecuta el comando de correccion del aviso o usa --allow-incomplete
       para inspeccionar el calendario provisional.'
+    coverage:
+      investigate: '%{count} obligacion(es) de declaracion no se pudieron delimitar con certeza para este perfil y podrian estar infradeclaradas: %{modelos}. Investiga cada una con ''aeat app overview explain <modelo>''.'
     drafts: Borradores
     explain:
       help: Descompone la aplicabilidad de un modelo frente al perfil activo. Muestra
@@ -3490,6 +3539,10 @@ cli:
       drafts_present: '%{count} borrador(es) de declaraciones guardados existen en
         este almacenamiento local. Un espacio vacio recien creado normalmente tiene
         0, asi que este perfil/base de datos ya contiene estado local de borradores.'
+      filing_obligation_multiple_pagadores: Percibir rendimientos del trabajo de más
+        de un pagador, con más de 1.500 € de los pagadores secundarios, reduce el
+        límite de la obligación de declarar (art. 96.3 LIRPF); puede estar obligado
+        a presentar el Modelo 100 si su total de rendimientos del trabajo lo supera.
       integrity_next: Ejecuta `aeat config repair` para ver el detalle. No pongas
         filas en cuarentena salvo que quieras archivar deliberadamente datos locales
         antiguos ilegibles.
@@ -3533,7 +3586,6 @@ cli:
       work_units_present_with_discarded: '%{count} unidad(es) de trabajo de modelos
         activas (%{discarded} descartada(s)) en este almacenamiento local; tu trabajo
         de modelos activo esta guardado, retomalo con `aeat app modelo work list`.'
-      filing_obligation_multiple_pagadores: 'Percibir rendimientos del trabajo de más de un pagador, con más de 1.500 € de los pagadores secundarios, reduce el límite de la obligación de declarar (art. 96.3 LIRPF); puede estar obligado a presentar el Modelo 100 si su total de rendimientos del trabajo lo supera.'
     status_help: Mostrar el estado del perfil, libro y modelos
     taxpayer_model_undeclared: El perfil activo no declara este modelo fiscal; actualiza
       el perfil o vuelve a ejecutar con la anulación de perfil incompleto.
@@ -3652,8 +3704,9 @@ cli:
     app_help: 'Cola de revisión del operador: clasifica transacciones del libro, justificantes
       de compra e incidencias de modelo'
     errors:
+      invalid_confidence: El umbral de confianza %{value} está fuera de rango; indica
+        un valor entre 0 y 1.
       invalid_state: 'Estado de revisión inválido: %{state}'
-      invalid_confidence: 'El umbral de confianza %{value} está fuera de rango; indica un valor entre 0 y 1.'
     labels:
       affected_object_id: Objeto
       id: ID
@@ -3664,6 +3717,9 @@ cli:
       severity: Severidad
       source_kind: Tipo origen
     queue:
+      confidence_below_help: Limita la cola a las transacciones clasificadas cuya
+        confianza de clasificación es estrictamente inferior a este umbral (un valor
+        entre 0 y 1). Las filas de menor confianza aparecen primero para poder priorizarlas.
       empty: No hay elementos pendientes de revisión.
       explain_help: Incluir las referencias legales que fundamentan cada hallazgo
         en la salida de texto. La carga JSON siempre las incluye.
@@ -3672,7 +3728,6 @@ cli:
       modelo_help: Restringir la cola a un modelo
       source_kind_help: Restringir la cola a un tipo de origen
       state_help: Restringir la cola a un estado de revisión
-      confidence_below_help: 'Limita la cola a las transacciones clasificadas cuya confianza de clasificación es estrictamente inferior a este umbral (un valor entre 0 y 1). Las filas de menor confianza aparecen primero para poder priorizarlas.'
     show:
       explain_help: Incluir las referencias legales que fundamentan este hallazgo
         en la salida de texto. La carga JSON siempre las incluye.
