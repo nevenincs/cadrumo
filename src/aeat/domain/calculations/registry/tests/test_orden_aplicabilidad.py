@@ -48,6 +48,7 @@ _VALID_LEGAL_REF = LegalReference(
     permalink="https://www.boe.es/eli/es/o/2000/01/01/test-0001",
     effective_from=date(2000, 1, 1),
     review_status="reviewed",
+    required_text=("Artículo 1",),
 )
 # Minimal source ref used wherever a test revision needs one valid reference
 # before the orden_aplicabilidad gate can run.

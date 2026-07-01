@@ -8,6 +8,7 @@ from datetime import date
 from pathlib import Path
 
 import pytest
+from pydantic import ValidationError
 
 from .....core.config import Settings
 from .._citation_blocklist import KnownBadCitation, find_known_bad, known_bad_citations
@@ -148,6 +149,24 @@ def test_verify_legal_catalogue_accepts_reviewed_reference() -> None:
     assert reference.id, "reference must have an id for verification to be meaningful"
     result = verify_legal_catalogue({reference.id: reference})
     assert result is None
+
+
+def test_legal_reference_requires_required_text() -> None:
+    reference = _legal_reference()
+    payload = reference.model_dump(mode="python")
+    payload.pop("required_text")
+
+    with pytest.raises(ValidationError, match="required_text"):
+        LegalReference.model_validate(payload)
+
+
+def test_legal_reference_rejects_empty_required_text() -> None:
+    reference = _legal_reference()
+    payload = reference.model_dump(mode="python")
+    payload["required_text"] = ()
+
+    with pytest.raises(ValidationError, match="at least 1 item"):
+        LegalReference.model_validate(payload)
 
 
 def test_verify_legal_catalogue_checks_required_local_corpus_text(tmp_path: Path) -> None:
@@ -415,6 +434,7 @@ def test_verify_legal_reference_checks_manual_section_json(tmp_path: Path) -> No
         reviewed_at=date(2026, 5, 6),
         reviewed_by="operator",
         notes="Notes",
+        required_text=("Seccion 1",),
     )
 
     with pytest.raises(RegistryValidationError, match="manual section JSON validation failed"):
