@@ -153,13 +153,9 @@ def _request_raising(exc: BaseException) -> Iterator[tuple[HttpRequest, list[str
     return _local_google_request((200, _json_body({"ok": True})), postproc=_postproc_raises(exc))
 
 
-def test_http_401_translates_to_permission_error() -> None:
-    with _request_raising(_make_http_error(401)) as (req, _paths), pytest.raises(OutboundStoragePermissionError):
-        execute_request(req, action="drive.files.get")
-
-
-def test_http_403_translates_to_permission_error() -> None:
-    with _request_raising(_make_http_error(403)) as (req, _paths), pytest.raises(OutboundStoragePermissionError):
+@pytest.mark.parametrize("status", (401, 403), ids=("unauthorized", "forbidden"))
+def test_permission_http_errors_translate_to_permission_error(status: int) -> None:
+    with _request_raising(_make_http_error(status)) as (req, _paths), pytest.raises(OutboundStoragePermissionError):
         execute_request(req, action="drive.files.get")
 
 
