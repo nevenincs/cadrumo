@@ -25,6 +25,7 @@ from .._modelo_payloads import (
     WorkObservationsResult,
     WorkRevisionResult,
 )
+from .._modelo_revision_payload_parts import DetailRowPayload
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -64,6 +65,30 @@ def _base_revision_fields() -> dict[str, Any]:
                 source_refs=("libro-1",),
             ),
         ),
+        detail_rows=(
+            DetailRowPayload(
+                index=1,
+                row_type="operador",
+                fields={
+                    "codigo_pais": "DE",
+                    "nif_comunitario": "DE123456789",
+                    "razon_social": "DE Auto GmbH",
+                    "clave_operacion": "E",
+                    "importe": "1500.00",
+                },
+            ),
+            DetailRowPayload(
+                index=2,
+                row_type="operador",
+                fields={
+                    "codigo_pais": "FR",
+                    "nif_comunitario": "FR12345678901",
+                    "razon_social": "Equipement Garage SARL",
+                    "clave_operacion": "E",
+                    "importe": "900.00",
+                },
+            ),
+        ),
         binding_overrides={"src1": "ledger-abc"},
         relation_overrides={_RELATION_OVERRIDE: "725.75"},
         input_values_by_casilla_id={_INPUT_EJERCICIO_CASILLA: "2024", _INPUT_PERIODO_CASILLA: "1T"},
@@ -86,6 +111,8 @@ def test_calculation_revision_payload_input_values_by_casilla_id_roundtrips() ->
     assert restored == original
     assert restored.input_values_by_casilla_id == {_INPUT_EJERCICIO_CASILLA: "2024", _INPUT_PERIODO_CASILLA: "1T"}
     assert restored.relation_overrides == {_RELATION_OVERRIDE: "725.75"}
+    assert restored.detail_rows[0].fields["nif_comunitario"] == "DE123456789"
+    assert restored.detail_rows[1].fields["importe"] == "900.00"
 
 
 def test_calculation_revision_payload_input_values_by_casilla_id_rejects_non_string_values() -> None:
@@ -209,6 +236,7 @@ def test_work_calculate_result_input_values_by_casilla_id_roundtrips() -> None:
     assert restored == payload
     assert isinstance(restored.input_values_by_casilla_id, dict)
     assert all(isinstance(v, str) for v in restored.input_values_by_casilla_id.values())
+    assert restored.detail_rows[0].fields["razon_social"] == "DE Auto GmbH"
 
 
 def test_work_calculate_result_input_values_by_casilla_id_rejects_non_string_values() -> None:
@@ -248,6 +276,7 @@ def test_work_revision_result_input_values_by_casilla_id_roundtrips() -> None:
     assert restored == payload
     assert isinstance(restored.input_values_by_casilla_id, dict)
     assert all(isinstance(v, str) for v in restored.input_values_by_casilla_id.values())
+    assert {row.fields["nif_comunitario"] for row in restored.detail_rows} == {"DE123456789", "FR12345678901"}
 
 
 def test_work_revision_result_input_values_by_casilla_id_rejects_non_string_values() -> None:

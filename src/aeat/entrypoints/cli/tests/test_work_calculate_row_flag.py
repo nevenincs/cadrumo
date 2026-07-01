@@ -12,6 +12,7 @@ operator output.
 
 from __future__ import annotations
 
+import json
 import subprocess
 from decimal import Decimal
 from pathlib import Path
@@ -462,6 +463,120 @@ class TestRevisionViewSurfacesDetailRows:
         assert result.returncode == 0, result.stderr
         assert "razon_social=\"DE Auto GmbH\"" in result.stdout
         assert "operador codigo_pais=DE" in result.stdout
+
+    def test_m349_json_calculate_materialises_operador_detail_rows(self, tmp_path: Path) -> None:
+        """M349 ``--row operador`` data reaches JSON calculate and revision payloads."""
+        setup = self._run_cli(
+            tmp_path,
+            [
+                "config",
+                "profile",
+                "create",
+                "m349",
+                "--tax-id",
+                "12345678Z",
+                "--entity-type",
+                "natural_person",
+                "--name",
+                "Ana",
+                "--surnames",
+                "M349",
+                "--irpf-income-categories",
+                "actividad_economica",
+                "--activity",
+                "consultoria intracomunitaria",
+                "--quiet",
+            ],
+        )
+        assert setup.returncode == 0, f"profile create failed: {setup.stdout}\n{setup.stderr}"
+        created = self._run_cli(
+            tmp_path,
+            [
+                "app",
+                "modelo",
+                "work",
+                "create",
+                "--modelo",
+                "349",
+                "--year",
+                "2026",
+                "--period",
+                "1T",
+                "--revision",
+                "2020-y-siguientes",
+            ],
+        )
+        assert created.returncode == 0, f"work create failed: {created.stdout}\n{created.stderr}"
+
+        de_row = (
+            'operador codigo_pais=DE nif_comunitario=DE123456789 razon_social="DE Auto GmbH" '
+            "clave_operacion=E importe=1500.00"
+        )
+        fr_row = (
+            'operador codigo_pais=FR nif_comunitario=FR12345678901 razon_social="Equipement Garage SARL" '
+            "clave_operacion=E importe=900.00"
+        )
+        calc = self._run_cli(
+            tmp_path,
+            [
+                "--format",
+                "json",
+                "app",
+                "modelo",
+                "work",
+                "calculate",
+                "--modelo",
+                "349",
+                "--year",
+                "2026",
+                "--period",
+                "1T",
+                "--row",
+                de_row,
+                "--row",
+                fr_row,
+            ],
+        )
+        assert calc.returncode == 0, f"calculate failed: {calc.stdout}\n{calc.stderr}"
+        calc_payload = json.loads(calc.stdout)["result"]
+
+        assert calc_payload["casilla_values"]["decl.numero-operadores"] == "2"
+        assert calc_payload["casilla_values"]["decl.importe-operaciones"] == "2400.00"
+        detail_rows = calc_payload["detail_rows"]
+        assert len(detail_rows) == 2
+        calc_rows_by_nif = {row["fields"]["nif_comunitario"]: row for row in detail_rows}
+        assert set(calc_rows_by_nif) == {"DE123456789", "FR12345678901"}
+        assert calc_rows_by_nif["DE123456789"]["row_type"] == "operador"
+        assert calc_rows_by_nif["DE123456789"]["fields"]["codigo_pais"] == "DE"
+        assert calc_rows_by_nif["DE123456789"]["fields"]["razon_social"] == "DE Auto GmbH"
+        assert calc_rows_by_nif["DE123456789"]["fields"]["clave_operacion"] == "E"
+        assert calc_rows_by_nif["DE123456789"]["fields"]["importe"] == "1500.00"
+        assert calc_rows_by_nif["FR12345678901"]["fields"]["codigo_pais"] == "FR"
+        assert calc_rows_by_nif["FR12345678901"]["fields"]["razon_social"] == "Equipement Garage SARL"
+        assert calc_rows_by_nif["FR12345678901"]["fields"]["importe"] == "900.00"
+
+        revision = self._run_cli(
+            tmp_path,
+            [
+                "--format",
+                "json",
+                "app",
+                "modelo",
+                "work",
+                "revision",
+                "--modelo",
+                "349",
+                "--year",
+                "2026",
+                "--period",
+                "1T",
+            ],
+        )
+        assert revision.returncode == 0, f"revision failed: {revision.stdout}\n{revision.stderr}"
+        revision_payload = json.loads(revision.stdout)["result"]
+        revision_rows_by_nif = {row["fields"]["nif_comunitario"]: row for row in revision_payload["detail_rows"]}
+
+        assert revision_rows_by_nif == calc_rows_by_nif
 
     def test_m184_member_rows_surface_in_revision_view(self, tmp_path: Path) -> None:
         """A cold M184 ``--row`` flow renders the members as ``detail_row`` lines.
