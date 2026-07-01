@@ -73,6 +73,7 @@ def validate_dependency_classification_section(
     relation_by_id: Mapping[str, RelationDefinition],
     legal_refs: Mapping[str, LegalReference],
     source_refs: Mapping[str, SourceReference],
+    evidence: EvidenceValidator,
 ) -> None:
     for classification in revision.dependency_classifications:
         _validate_single_dependency_classification(
@@ -83,6 +84,7 @@ def validate_dependency_classification_section(
             relation_by_id=relation_by_id,
             legal_refs=legal_refs,
             source_refs=source_refs,
+            evidence=evidence,
         )
 
     for duplicate in sorted(_duplicates([item.source_modelo for item in revision.dependency_classifications])):
@@ -120,10 +122,15 @@ def _validate_single_dependency_classification(
     relation_by_id: Mapping[str, RelationDefinition],
     legal_refs: Mapping[str, LegalReference],
     source_refs: Mapping[str, SourceReference],
+    evidence: EvidenceValidator,
 ) -> None:
     owner = f"dependency classification {classification.id}"
     failures.extend(_missing_refs(prefix, owner, classification.legal_refs, legal_refs, "legal"))
     failures.extend(_missing_refs(prefix, owner, classification.source_refs, source_refs, "source"))
+    failures.extend(evidence.require_legal_authority_refs(prefix, owner, classification.legal_refs))
+    failures.extend(
+        evidence.require_source_tier(prefix, owner, classification.source_refs, "official_source_guidance"),
+    )
     for construct_id in classification.target_constructs:
         construct = construct_by_id.get(construct_id)
         if construct is None:

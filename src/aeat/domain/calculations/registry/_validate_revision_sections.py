@@ -114,6 +114,7 @@ def _validate_revision_surface_sections(
         relation_by_id=context.relation_by_id,
         legal_refs=legal_refs,
         source_refs=source_refs,
+        evidence=evidence,
     )
     validate_filing_schedule_section(
         failures,
