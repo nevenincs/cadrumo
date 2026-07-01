@@ -672,8 +672,8 @@ def run_registry_workbook_parity(
     }
     formulas_by_target = {formula.target_casilla_id: formula for formula in snapshot.revision.formulas}
     casillas_by_id = {casilla.id: casilla for casilla in snapshot.revision.casillas}
-    legal_refs: dict[WorkbookOutputId, tuple[str, ...]] = {}
-    source_refs: dict[WorkbookOutputId, tuple[str, ...]] = {}
+    legal_refs: dict[WorkbookOutputId, tuple[LegalRefId, ...]] = {}
+    source_refs: dict[WorkbookOutputId, tuple[SourceRefId, ...]] = {}
     for output_id, casilla_id in registry_outputs.items():
         formula = formulas_by_target.get(casilla_id)
         if formula is not None:
@@ -885,9 +885,7 @@ def _workbook_output_id_set(
     values: Mapping[WorkbookOutputId, object],
 ) -> frozenset[WorkbookOutputId]:
     invalid = sorted(
-        repr(output_id)
-        for output_id in values
-        if not isinstance(output_id, str) or not is_registry_id(output_id)
+        repr(output_id) for output_id in values if not isinstance(output_id, str) or not is_registry_id(output_id)
     )
     if invalid:
         raise RegistryValidationError(f"{surface} contains invalid workbook output ids: {invalid!r}")
