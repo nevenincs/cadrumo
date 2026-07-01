@@ -180,11 +180,8 @@ class TestClassificationGate:
 
 
 class TestUnsafeAmendmentIds:
-    @pytest.mark.parametrize(
-        "bad",
-        ["", "..", ".", ".hidden", "../escape", "a/b", "a\\b"],
-    )
-    def test_unsafe_id_rejected(self, bad: str) -> None:
+    def test_unsafe_id_rejected(self) -> None:
         repo = ModeloAmendmentRepository()
-        with pytest.raises(ValueError):
-            repo.envelope_path_for(bad)
+        for bad in ("", "..", ".", ".hidden", "../escape", "a/b", "a\\b"):
+            with pytest.raises(ValueError):
+                repo.envelope_path_for(bad)
