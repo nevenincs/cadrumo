@@ -223,6 +223,7 @@ def build_draft(
             f"{snapshot.revision.id!r}",
         )
     casilla_ids = set(_declared_casilla_ids(snapshot.revision))
+    text_casilla_ids = _text_casilla_ids(snapshot)
     bindings = {binding.id: binding for binding in snapshot.revision.bindings}
     calculation_binding_ids = _formula_binding_ids(snapshot) | _bound_casilla_binding_ids(snapshot)
     enum_binding_ids = _enum_consumed_binding_ids(snapshot.revision)
@@ -236,7 +237,8 @@ def build_draft(
         accepted_ids=casilla_ids | set(bindings) | relation_ids,
         snapshot=snapshot,
     )
-    casilla_inputs = _decimal_inputs_for_ids(inputs, casilla_ids)
+    casilla_inputs = _decimal_inputs_for_ids(inputs, casilla_ids - text_casilla_ids)
+    text_casilla_inputs = _text_inputs_for_ids(inputs, text_casilla_ids)
     binding_inputs = _decimal_inputs_for_ids(inputs, decimal_binding_ids)
     enum_binding_inputs = _string_inputs_for_ids(inputs, enum_binding_ids)
     # Date bindings (e.g. taxpayer birth_date for age_at_year_end) and period
@@ -261,6 +263,7 @@ def build_draft(
             enum_binding_values=enum_binding_inputs or None,
             relation_values=relation_inputs or None,
             date_binding_values=date_binding_inputs or None,
+            text_inputs=text_casilla_inputs or None,
         )
     except _RegistryValidationError as exc:
         raise ModeloBuilderError(f"registry calculation failed: {exc}") from exc
@@ -313,6 +316,16 @@ def build_draft(
                 ModeloValue(
                     casilla_id=casilla.id,
                     value=casilla_inputs[casilla.id],
+                    kind=ModeloValueKind.LITERAL,
+                    source="registry input",
+                ),
+            )
+            continue
+        if casilla.id in text_casilla_inputs:
+            values.append(
+                ModeloValue(
+                    casilla_id=casilla.id,
+                    value=text_casilla_inputs[casilla.id],
                     kind=ModeloValueKind.LITERAL,
                     source="registry input",
                 ),
@@ -445,6 +458,11 @@ def _relation_ids(snapshot: _RegistrySnapshot) -> set[_RelationId]:
     return {relation.id for relation in snapshot.revision.relations}
 
 
+def _text_casilla_ids(snapshot: _RegistrySnapshot) -> set[_CasillaId]:
+    """Collect declared casillas that travel on the registry text-input channel."""
+    return {casilla.id for casilla in snapshot.revision.casillas if casilla.data_type == "text"}
+
+
 def _validate_filing_input_keys(
     inputs: ModeloInputs,
     *,
@@ -536,6 +554,21 @@ def _decimal_inputs_for_ids[InputId: str](
             continue
         decimal_inputs[input_id] = _decimal_input(input_id, value)
     return decimal_inputs
+
+
+def _text_inputs_for_ids(inputs: ModeloInputs, input_ids: set[_CasillaId]) -> dict[_CasillaId, str]:
+    text_inputs: dict[_CasillaId, str] = {}
+    for input_id in input_ids:
+        value = inputs.get(input_id)
+        if value is None:
+            continue
+        if not isinstance(value, str):
+            raise ModeloBuilderError(f"text casilla input {input_id!r} must be a string")
+        stripped = value.strip()
+        if not stripped:
+            raise ModeloBuilderError(f"text casilla input {input_id!r} must be a non-empty string")
+        text_inputs[input_id] = stripped
+    return text_inputs
 
 
 def _string_inputs_for_ids(inputs: ModeloInputs, input_ids: frozenset[_BindingId]) -> dict[_BindingId, str]:
