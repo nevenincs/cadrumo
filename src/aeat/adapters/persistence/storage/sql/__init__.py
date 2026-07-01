@@ -1,4 +1,4 @@
-"""SQL substrate: ORM, engine, session, repositories, records, and schema setup.
+"""SQL substrate: ORM, engine, sessions, repositories, and secure objects.
 
 Public surface for the SQLAlchemy-backed relational storage components.
 Re-exports the engine factory (:func:`create_engine_from_settings`,
@@ -10,8 +10,19 @@ Re-exports the engine factory (:func:`create_engine_from_settings`,
 :class:`CorpusArtifactRepository`), and the encrypted key-value store
 :class:`SecureObjectRepository`.
 
-Schema is materialised from the ORM metadata on first engine access; the
-codebase is forward-only and carries no migration history.
+The secure-object surface also exports :class:`SecureObjectRecord`,
+:class:`SecureObjectWrite`, :class:`SecureObjectDeletion`,
+:class:`SecureObjectMetadata`, :class:`SecureObjectNamespaceIntegrity`,
+and :class:`SecureObjectDecryptabilityRow`. The repository stores payloads as
+AES-GCM encrypted bytes, stores natural keys through
+:class:`~aeat.adapters.persistence.storage.HashedLookup`, binds row identity
+into AEAD associated data, and gates reads by sensitivity class and schema
+version. Listing defaults fail closed on unreadable rows; explicit diagnostic
+APIs return typed decryptability metadata without plaintext disclosure.
+
+Schema is materialised from the ORM metadata on first engine access. Runtime
+route ownership stays in the storage-runtime and repository-factory modules;
+this package facade only re-exports the SQL storage API.
 """
 
 from __future__ import annotations
