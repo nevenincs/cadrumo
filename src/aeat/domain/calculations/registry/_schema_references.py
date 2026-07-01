@@ -107,8 +107,8 @@ class LegalReference(RegistryModel):
     effective_to: date | None = None
     consolidated_as_of: date | None = None
     review_status: ReviewStatus
-    reviewed_at: date | None = None
-    reviewed_by: str | None = None
+    reviewed_at: date
+    reviewed_by: str = Field(min_length=1)
     notes: str | None = None
     required_text: tuple[str, ...] = Field(min_length=1)
 
