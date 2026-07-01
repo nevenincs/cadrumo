@@ -1,23 +1,39 @@
-"""Declaración PDF parsing boundary.
+"""Public parsing boundary for filed declaration PDFs.
 
-The module exposes strict declaration parser records and the public
-``parse_declaracion`` / ``parse_declaracion_bytes`` entry points. The parser
-returns observed PDF values interpreted through a validated
-:class:`~aeat.domain.calculations.registry.RegistrySnapshot`; the snapshot's
-``declaracion_pdf`` extraction profile decides target casillas, extraction
-coverage, and filing usability.
+The package exposes :func:`parse_declaracion` for filesystem PDF input and
+:func:`parse_declaracion_bytes` for in-memory or decrypted PDF bytes. Both entry
+points return :class:`DeclaracionObservation` records interpreted through a
+validated :class:`~aeat.domain.calculations.registry.RegistrySnapshot`.
 
-This is the registry-profile-driven declaration-copy parser. It deliberately
-has no per-modelo extractor class registry: template detection resolves the
-modelo/year/revision coordinate, and registry metadata supplies the extraction
-shape. The sibling :mod:`aeat.adapters.inbound.borrador` parser is a different
-observed-value surface for Renta drafts and simulations.
+Parsing resolves :class:`TemplateRevision` and period, selects one
+:class:`~aeat.domain.calculations.registry.ExtractionProfileDefinition` with
+``surface == "declaracion_pdf"`` and accepted artefact kind
+``"declaration_pdf"``, and extracts filed-declaration casilla values. Without
+an explicit profile id, registry profile selection must find exactly one match.
+
+Returned observations stamp a re-resolvable
+:class:`~aeat.domain.calculations.registry.RegistrySnapshotRef`,
+privacy-preserving source reference, and SHA-256. They are observations, not
+calculation authority; filing workflow, persistence, tax-law classification,
+and CLI presentation live outside inbound parsing.
+
+Template detection resolves identity only; registry validation and profile
+choice happen in the parser. This boundary is distinct from
+:mod:`aeat.adapters.inbound.borrador`, which parses Renta draft PDFs, and
+:mod:`aeat.adapters.inbound.justificante`, which parses receipt metadata.
+
+Successful parses currently return ``warnings=()``. :class:`ExtractionWarning`
+remains public, while malformed, ambiguous, or low-coverage extraction raises
+:exc:`DeclaracionParseError`; missing template identity raises
+:exc:`TemplateNotDetectedError`.
 
 Public API::
 
     from aeat.adapters.inbound.declaracion import (
         DeclaracionObservation,
         DeclaracionParseError,
+        ExtractionWarning,
+        TemplateNotDetectedError,
         TemplateRevision,
         parse_declaracion,
         parse_declaracion_bytes,
