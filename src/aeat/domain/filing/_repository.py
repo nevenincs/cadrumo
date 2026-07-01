@@ -2,8 +2,8 @@
 
 :class:`ModeloDraft` records carry exact casilla arithmetic and tax due
 values. They are stored as encrypted byte objects via
-:class:`~aeat.adapters.persistence.storage.sql.SecureObjectRepository` at
-:class:`~aeat.adapters.persistence.storage.SensitivityClass` ``FINANCIAL`` and
+:class:`~aeat.adapters.persistence.storage.SecureObjectRepository` at
+``FINANCIAL`` :class:`~aeat.adapters.persistence.storage.SensitivityClass` and
 serialised through an :class:`~aeat.adapters.persistence.storage.Envelope` by
 :class:`~aeat.adapters.persistence.storage.SecureBoundRepository`; no plaintext
 draft JSON or envelope file lands on disk.
@@ -42,7 +42,7 @@ class ModeloDraftRepository(SecureBoundRepository[ModeloDraft]):
     :data:`aeat.adapters.persistence.storage.FILING_DRAFTS_NAMESPACE`. The
     draft id is the natural key, so list and iteration APIs expose draft
     aggregates rather than submission or amendment records. The namespace
-    definition supplies the FINANCIAL
+    definition supplies the ``FINANCIAL``
     :class:`~aeat.adapters.persistence.storage.SensitivityClass`, schema
     version, object-key grammar, and custody contract.
     """
