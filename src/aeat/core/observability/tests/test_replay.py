@@ -267,50 +267,79 @@ class TestEnvFileFingerprint:
 
 
 class TestArgvReconstruction:
-    def test_positional_emitted_without_prefix_and_first(self) -> None:
-        args = (
-            ArgumentRecord(name="notificacion_id", value="N-42", source=ArgumentSource.POSITIONAL),
-            ArgumentRecord(name="by", value="gw", source=ArgumentSource.FLAG),
-        )
-        argv = _argv_from_arguments("aeat inbox ack", args)
-        assert argv == ["inbox", "ack", "N-42", "--by=gw"]
-
-    def test_multiple_positionals_preserve_declared_order(self) -> None:
-        args = (
-            ArgumentRecord(name="modelo", value="130", source=ArgumentSource.POSITIONAL),
-            ArgumentRecord(name="period", value="2026Q1", source=ArgumentSource.POSITIONAL),
-            ArgumentRecord(name="force", value="True", source=ArgumentSource.FLAG),
-        )
-        argv = _argv_from_arguments("aeat app modelo work file", args)
-        # Boolean True renders as a bare flag (no =True); value-less
-        # Typer Option flags reject the =value form.
-        assert argv == ["app", "modelo", "work", "file", "130", "2026Q1", "--force"]
-
-    def test_flag_name_underscore_converted_to_dash(self) -> None:
-        args = (ArgumentRecord(name="as_json", value="True", source=ArgumentSource.FLAG),)
-        argv = _argv_from_arguments("aeat workflow list", args)
-        # Name-underscore → dash conversion + bare-flag emission for True.
-        assert argv == ["workflow", "list", "--as-json"]
-
-    def test_boolean_false_flag_is_skipped(self) -> None:
-        """Boolean ``False`` flags must not be re-emitted on replay.
-
-        Replaying ``--unread=False`` as a literal would both fail to
-        parse (Typer options don't take ``=False``) and contradict
-        user intent — the user did not pass the flag.
-        """
-        args = (
-            ArgumentRecord(name="unread", value="False", source=ArgumentSource.FLAG),
-            ArgumentRecord(name="modelo", value="130", source=ArgumentSource.FLAG),
-        )
-        argv = _argv_from_arguments("aeat inbox list", args)
-        assert argv == ["inbox", "list", "--modelo=130"], f"False bool must be skipped; got {argv}"
-
-    def test_boolean_true_flag_uses_bare_form(self) -> None:
-        """Bare-flag form is required when the option is a value-less boolean."""
-        args = (ArgumentRecord(name="json", value="True", source=ArgumentSource.FLAG),)
-        argv = _argv_from_arguments("aeat workflow show", args)
-        assert argv == ["workflow", "show", "--json"]
+    @pytest.mark.parametrize(
+        ("entrypoint", "args", "expected"),
+        (
+            (
+                "aeat inbox ack",
+                (
+                    ArgumentRecord(name="notificacion_id", value="N-42", source=ArgumentSource.POSITIONAL),
+                    ArgumentRecord(name="by", value="gw", source=ArgumentSource.FLAG),
+                ),
+                ["inbox", "ack", "N-42", "--by=gw"],
+            ),
+            (
+                "aeat app modelo work file",
+                (
+                    ArgumentRecord(name="modelo", value="130", source=ArgumentSource.POSITIONAL),
+                    ArgumentRecord(name="period", value="2026Q1", source=ArgumentSource.POSITIONAL),
+                    ArgumentRecord(name="force", value="True", source=ArgumentSource.FLAG),
+                ),
+                ["app", "modelo", "work", "file", "130", "2026Q1", "--force"],
+            ),
+            (
+                "aeat workflow list",
+                (ArgumentRecord(name="as_json", value="True", source=ArgumentSource.FLAG),),
+                ["workflow", "list", "--as-json"],
+            ),
+            (
+                "aeat inbox list",
+                (
+                    ArgumentRecord(name="unread", value="False", source=ArgumentSource.FLAG),
+                    ArgumentRecord(name="modelo", value="130", source=ArgumentSource.FLAG),
+                ),
+                ["inbox", "list", "--modelo=130"],
+            ),
+            (
+                "aeat workflow show",
+                (ArgumentRecord(name="json", value="True", source=ArgumentSource.FLAG),),
+                ["workflow", "show", "--json"],
+            ),
+            (
+                "aeat sync resolve-divergence",
+                (
+                    ArgumentRecord(name="record_id", value="R-42", source=ArgumentSource.POSITIONAL),
+                    ArgumentRecord(name="notes", value="--urgent", source=ArgumentSource.FLAG),
+                ),
+                ["sync", "resolve-divergence", "R-42", "--notes=--urgent"],
+            ),
+            (
+                "aeat run show",
+                (
+                    ArgumentRecord(name="run_id", value="abc", source=ArgumentSource.POSITIONAL),
+                    ArgumentRecord(name="aeat_runs_dir", value="var/runs", source=ArgumentSource.ENV),
+                    ArgumentRecord(name="mode", value="quiet", source=ArgumentSource.DEFAULT),
+                ),
+                ["run", "show", "abc"],
+            ),
+        ),
+        ids=(
+            "positional-first",
+            "multiple-positionals",
+            "underscore-flag",
+            "false-bool-skipped",
+            "true-bool-bare",
+            "leading-dash-value",
+            "env-default-skipped",
+        ),
+    )
+    def test_argv_reconstruction_cases(
+        self,
+        entrypoint: str,
+        args: tuple[ArgumentRecord, ...],
+        expected: list[str],
+    ) -> None:
+        assert _argv_from_arguments(entrypoint, args) == expected
 
     def test_cli_flag_override_wins_over_name_derivation(self) -> None:
         """:attr:`ArgumentRecord.cli_flag` overrides the name-derived flag.
@@ -343,25 +372,6 @@ class TestArgvReconstruction:
         argv_false = _argv_from_arguments("aeat workflow show", args_false)
         # False-bool override still gets skipped, not re-emitted.
         assert argv_false == ["workflow", "show"]
-
-    def test_flag_value_with_leading_dash_uses_equals_form(self) -> None:
-        args = (
-            ArgumentRecord(name="record_id", value="R-42", source=ArgumentSource.POSITIONAL),
-            ArgumentRecord(name="notes", value="--urgent", source=ArgumentSource.FLAG),
-        )
-        argv = _argv_from_arguments("aeat sync resolve-divergence", args)
-        # Without the ``=`` form Typer would see ``--urgent`` as an unknown flag.
-        assert "--notes=--urgent" in argv
-        assert "--urgent" not in argv  # never as a standalone token
-
-    def test_env_and_default_sources_skipped(self) -> None:
-        args = (
-            ArgumentRecord(name="run_id", value="abc", source=ArgumentSource.POSITIONAL),
-            ArgumentRecord(name="aeat_runs_dir", value="var/runs", source=ArgumentSource.ENV),
-            ArgumentRecord(name="mode", value="quiet", source=ArgumentSource.DEFAULT),
-        )
-        argv = _argv_from_arguments("aeat run show", args)
-        assert argv == ["run", "show", "abc"]
 
 
 class TestReplayActiveEnvVarCanonicity:
