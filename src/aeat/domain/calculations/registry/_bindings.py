@@ -528,17 +528,16 @@ class _IvaCompensationAnnualPartitionSelector(BaseModel):
     def _source_periods_are_full_year(cls, value: tuple[str, ...]) -> tuple[str, ...]:
         if value != _IVA_COMPENSATION_ANNUAL_PARTITION_PERIODS:
             raise RegistryValidationError(
-                "iva_compensation_annual_partition selector must declare source_periods "
-                "('1T', '2T', '3T', '4T')",
+                "iva_compensation_annual_partition selector must declare source_periods ('1T', '2T', '3T', '4T')",
             )
         return value
 
 
 def binding_source_casilla_ids(binding: DataBindingDefinition) -> tuple[CasillaId, ...]:
     """Return typed source casilla ids declared by binding families that have them."""
-    if binding.source == "previous_filing":
+    if binding.source == BindingSourceKind.PREVIOUS_FILING:
         return previous_filing_source_reference(binding).source_casilla_ids
-    if binding.source == "relation_prefill":
+    if binding.source == BindingSourceKind.RELATION_PREFILL:
         return _relation_prefill_source_ids(_relation_prefill_selector(binding))
     if binding.source == BindingSourceKind.IVA_COMPENSATION_ANNUAL_PARTITION:
         return _IvaCompensationAnnualPartitionSelector.model_validate(selector_as_dict(binding)).source_casilla_ids
@@ -547,9 +546,9 @@ def binding_source_casilla_ids(binding: DataBindingDefinition) -> tuple[CasillaI
 
 def binding_source_modelo(binding: DataBindingDefinition) -> ModeloId | None:
     """Return the typed source modelo declared by binding families that have one."""
-    if binding.source == "previous_filing":
+    if binding.source == BindingSourceKind.PREVIOUS_FILING:
         return previous_filing_source_reference(binding).source_modelo
-    if binding.source == "relation_prefill":
+    if binding.source == BindingSourceKind.RELATION_PREFILL:
         return _relation_prefill_selector(binding).source_modelo
     if binding.source == BindingSourceKind.IVA_COMPENSATION_ANNUAL_PARTITION:
         return _IvaCompensationAnnualPartitionSelector.model_validate(selector_as_dict(binding)).source_modelo

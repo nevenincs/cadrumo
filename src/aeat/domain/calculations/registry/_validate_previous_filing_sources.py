@@ -9,6 +9,7 @@ from __future__ import annotations
 
 from collections.abc import Iterable, Mapping
 
+from ....core import BindingSourceKind
 from ._bindings_previous_filing import previous_filing_source_reference
 from ._errors import RegistryValidationError
 from ._schema import DataBindingDefinition, ModeloDefinition
@@ -24,7 +25,7 @@ def validate_previous_filing_binding_closure(
         for revision in modelo.revisions.values():
             prefix = f"modelo {modelo.id} revision {revision.id}"
             for binding in revision.bindings:
-                if binding.source != "previous_filing":
+                if binding.source != BindingSourceKind.PREVIOUS_FILING:
                     continue
                 failures.extend(
                     _validate_previous_filing_binding(

@@ -10,6 +10,7 @@ from __future__ import annotations
 from collections.abc import Mapping
 from decimal import Decimal
 
+from ....core import BindingSourceKind
 from ._binding_selector_utils import selector_as_dict as _binding_selector_as_dict
 from ._bindings import CasillaObservation, bound_casilla_binding_ids, resolve_bound_casilla_binding_value
 from ._bindings_previous_filing import _PreviousModeloSelector
@@ -296,9 +297,9 @@ def _binding_is_absent_by_design(binding: DataBindingDefinition, *, target_perio
     # by hand). Treat an unresolved relation_prefill slot as absent-by-design
     # rather than raising — the same operator-manual fallback the relation
     # resolver documents.
-    if str(binding.source) == "relation_prefill":
+    if binding.source == BindingSourceKind.RELATION_PREFILL:
         return True
-    if binding.source != "previous_filing":
+    if binding.source != BindingSourceKind.PREVIOUS_FILING:
         return False
     try:
         selector = _PreviousModeloSelector.model_validate(_binding_selector_as_dict(binding))
