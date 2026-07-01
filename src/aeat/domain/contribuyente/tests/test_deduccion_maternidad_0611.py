@@ -184,21 +184,18 @@ class TestMesesTornoFacts:
 class TestParseDescendienteFlagMesesTrabajo:
     """parse_descendiente_flag must accept MESES_TRABAJO= and validate 0–12 range."""
 
-    def test_meses_trabajo_12_parsed(self) -> None:
-        d = parse_descendiente_flag("NACIMIENTO=2022-06-01,MESES_TRABAJO=12")
-        assert d.meses_madre_trabajo_2024 == 12
-
-    def test_meses_trabajo_6_parsed(self) -> None:
-        d = parse_descendiente_flag("NACIMIENTO=2022-06-01,MESES_TRABAJO=6")
-        assert d.meses_madre_trabajo_2024 == 6
-
-    def test_meses_trabajo_absent_defaults_zero(self) -> None:
-        d = parse_descendiente_flag("NACIMIENTO=2022-06-01")
-        assert d.meses_madre_trabajo_2024 == 0
-
-    def test_meses_trabajo_zero_accepted(self) -> None:
-        d = parse_descendiente_flag("NACIMIENTO=2022-06-01,MESES_TRABAJO=0")
-        assert d.meses_madre_trabajo_2024 == 0
+    @pytest.mark.parametrize(
+        ("spec", "expected"),
+        (
+            pytest.param("NACIMIENTO=2022-06-01,MESES_TRABAJO=12", 12, id="twelve"),
+            pytest.param("NACIMIENTO=2022-06-01,MESES_TRABAJO=6", 6, id="six"),
+            pytest.param("NACIMIENTO=2022-06-01,MESES_TRABAJO=0", 0, id="zero"),
+            pytest.param("NACIMIENTO=2022-06-01", 0, id="absent"),
+        ),
+    )
+    def test_meses_trabajo_parsed(self, spec: str, expected: int) -> None:
+        d = parse_descendiente_flag(spec)
+        assert d.meses_madre_trabajo_2024 == expected
 
     @pytest.mark.parametrize(
         "spec",
