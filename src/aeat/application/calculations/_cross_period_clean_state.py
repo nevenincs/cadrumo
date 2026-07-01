@@ -1,7 +1,7 @@
 """Clean-state proof for filing-grade cross-period modelo dependencies.
 
 :func:`evaluate_cross_period_clean_state` derives dependency requirements from a
-:class:`~aeat.domain.calculations.registry.RegistrySnapshot`, then joins filed
+:class:`RegistrySnapshot`, then joins filed
 :class:`ModeloRecord` rows, calculation revisions, verification reports, and
 justificante evidence into a
 :class:`~aeat.application.calculations._cross_period_models.CrossPeriodCleanStateVerdict`.
@@ -9,7 +9,7 @@ justificante evidence into a
 The same verdict feeds modelo verification, filing, and export gates. See also
 :class:`~aeat.application.calculations._cross_period_models.CrossPeriodDependencyEvidence`
 for per-dependency blocker/advisory rows
-and :class:`~aeat.domain.calculations.registry.ValidatedRegistryAuthority` for
+and :class:`ValidatedRegistryAuthority` for
 the authority surface that produces the snapshots evaluated here.
 """
 
@@ -87,7 +87,10 @@ def cross_period_dependency_requirements(snapshot: RegistrySnapshot) -> tuple[Cr
 
     Derives
     :class:`~aeat.application.calculations._cross_period_models.CrossPeriodDependencyRequirement`
-    records from :class:`RegistrySnapshot`.
+    records from :class:`RegistrySnapshot` through
+    :func:`~aeat.domain.calculations.registry.previous_filing_observation_requirements`
+    and
+    :func:`~aeat.domain.calculations.registry.relation_source_requirements`.
     """
     requirements: dict[
         tuple[str, int, str, CrossPeriodDependencyOrigin, tuple[str, ...]],
@@ -167,9 +170,9 @@ def cross_period_dependency_inventory(
     periods are in scope for the clean-state guard before they wire
     model-specific workflow tests or operator diagnostics.
 
-    The :class:`~aeat.domain.calculations.registry.ValidatedRegistryAuthority`
+    The :class:`ValidatedRegistryAuthority`
     supplies candidate modelos and resolves each target
-    :class:`~aeat.domain.calculations.registry.RegistrySnapshot` evaluated for
+    :class:`RegistrySnapshot` evaluated for
     dependency coverage.
     """
     selected_modelos = authority.modelos if modelos is None else tuple(authority.modelo(modelo) for modelo in modelos)
@@ -415,7 +418,7 @@ def evaluate_cross_period_clean_state(
     Returns a
     :class:`~aeat.application.calculations._cross_period_models.CrossPeriodCleanStateVerdict`.
 
-    The supplied :class:`~aeat.domain.calculations.registry.RegistrySnapshot` is
+    The supplied :class:`RegistrySnapshot` is
     the authority for target revision, filing period, and dependency
     requirements.
 
