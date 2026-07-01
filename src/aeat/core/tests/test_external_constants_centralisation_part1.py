@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import ast
+from decimal import Decimal
 from pathlib import Path
 
 import pytest
@@ -10,6 +11,26 @@ import pytest
 from ..config import Settings
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
+
+_DECIMAL_CONSTANT_CASES = (
+    ("M347_THRESHOLD_EUR", "3005.06"),
+    ("MODELO_720_REPORTING_THRESHOLD_EUR", "50000.00"),
+    ("ART_7P_EXEMPTION_CAP_EUR", "60100"),
+    ("MULTIPLE_PAGADORES_SECONDARY_THRESHOLD_EUR", "1500"),
+    ("WORK_INCOME_GENERAL_DECLARATION_LIMIT_EUR", "22000"),
+)
+_DECIMAL_CONSTANT_IDS = tuple(name.lower() for name, _ in _DECIMAL_CONSTANT_CASES)
+
+
+@pytest.mark.parametrize(("constant_name", "expected"), _DECIMAL_CONSTANT_CASES, ids=_DECIMAL_CONSTANT_IDS)
+def test_decimal_external_constant_values_and_types(constant_name: str, expected: str) -> None:
+    """Decimal external constants carry their legal scalar values as ``Decimal`` instances."""
+
+    from .. import external_constants
+
+    value = getattr(external_constants, constant_name)
+    assert Decimal(expected) == value
+    assert isinstance(value, Decimal)
 
 
 # ---------------------------------------------------------------------------
@@ -431,26 +452,6 @@ def test_no_bare_json_mime_literal_in_declarations() -> None:
 # ---------------------------------------------------------------------------
 
 
-def test_m347_threshold_eur_value() -> None:
-    """``M347_THRESHOLD_EUR`` equals €3,005.06 per RD 1065/2007 art. 33.1."""
-
-    from decimal import Decimal
-
-    from ..external_constants import M347_THRESHOLD_EUR
-
-    assert Decimal("3005.06") == M347_THRESHOLD_EUR
-
-
-def test_m347_threshold_eur_is_final_decimal() -> None:
-    """``M347_THRESHOLD_EUR`` is a ``Decimal`` instance (typed ``Final[Decimal]``)."""
-
-    from decimal import Decimal
-
-    from ..external_constants import M347_THRESHOLD_EUR
-
-    assert isinstance(M347_THRESHOLD_EUR, Decimal)
-
-
 def test_counterpart_aggregator_reads_threshold_from_external_constants() -> None:
     """``_counterpart.py`` must import ``M347_THRESHOLD_EUR`` from core, not define it locally."""
 
@@ -497,26 +498,6 @@ def test_no_bare_threshold_347_literal_in_counterpart() -> None:
 # ---------------------------------------------------------------------------
 # contract — MODELO_720_REPORTING_THRESHOLD_EUR centralisation tests
 # ---------------------------------------------------------------------------
-
-
-def test_modelo_720_reporting_threshold_eur_value() -> None:
-    """``MODELO_720_REPORTING_THRESHOLD_EUR`` equals €50,000.00 per AEAT instrucciones."""
-
-    from decimal import Decimal
-
-    from ..external_constants import MODELO_720_REPORTING_THRESHOLD_EUR
-
-    assert Decimal("50000.00") == MODELO_720_REPORTING_THRESHOLD_EUR
-
-
-def test_modelo_720_reporting_threshold_eur_is_final_decimal() -> None:
-    """``MODELO_720_REPORTING_THRESHOLD_EUR`` is a ``Decimal`` instance."""
-
-    from decimal import Decimal
-
-    from ..external_constants import MODELO_720_REPORTING_THRESHOLD_EUR
-
-    assert isinstance(MODELO_720_REPORTING_THRESHOLD_EUR, Decimal)
 
 
 def test_foreign_assets_aggregator_reads_threshold_from_external_constants() -> None:
@@ -589,26 +570,6 @@ def test_no_bare_csv_mime_literal_in_tabular() -> None:
 # ---------------------------------------------------------------------------
 
 
-def test_art_7p_exemption_cap_eur_value() -> None:
-    """``ART_7P_EXEMPTION_CAP_EUR`` equals €60,100 per Art. 7.p) LIRPF (Ley 35/2006)."""
-
-    from decimal import Decimal
-
-    from ..external_constants import ART_7P_EXEMPTION_CAP_EUR
-
-    assert Decimal("60100") == ART_7P_EXEMPTION_CAP_EUR
-
-
-def test_art_7p_exemption_cap_eur_is_final_decimal() -> None:
-    """``ART_7P_EXEMPTION_CAP_EUR`` is a ``Decimal`` instance (typed ``Final[Decimal]``)."""
-
-    from decimal import Decimal
-
-    from ..external_constants import ART_7P_EXEMPTION_CAP_EUR
-
-    assert isinstance(ART_7P_EXEMPTION_CAP_EUR, Decimal)
-
-
 def test_maritime_exemption_imports_art_7p_cap_from_core() -> None:
     """``domain/renta/_maritime_exemption.py`` reads ``ART_7P_EXEMPTION_CAP_EUR`` from core."""
 
@@ -670,26 +631,6 @@ def test_no_bare_art_7p_cap_decimal_literal_in_maritime_exemption() -> None:
 # ---------------------------------------------------------------------------
 
 
-def test_multiple_pagadores_secondary_threshold_eur_value() -> None:
-    """``MULTIPLE_PAGADORES_SECONDARY_THRESHOLD_EUR`` equals €1,500 per Art. 96.3 LIRPF."""
-
-    from decimal import Decimal
-
-    from ..external_constants import MULTIPLE_PAGADORES_SECONDARY_THRESHOLD_EUR
-
-    assert Decimal("1500") == MULTIPLE_PAGADORES_SECONDARY_THRESHOLD_EUR
-
-
-def test_multiple_pagadores_secondary_threshold_eur_is_final_decimal() -> None:
-    """``MULTIPLE_PAGADORES_SECONDARY_THRESHOLD_EUR`` is a ``Decimal`` instance."""
-
-    from decimal import Decimal
-
-    from ..external_constants import MULTIPLE_PAGADORES_SECONDARY_THRESHOLD_EUR
-
-    assert isinstance(MULTIPLE_PAGADORES_SECONDARY_THRESHOLD_EUR, Decimal)
-
-
 def test_deadlines_models_imports_multiple_pagadores_threshold_from_core() -> None:
     """``domain/deadlines/_models.py`` imports ``MULTIPLE_PAGADORES_SECONDARY_THRESHOLD_EUR`` from core."""
 
@@ -739,17 +680,6 @@ def test_no_bare_multiple_pagadores_threshold_literal_in_deadlines_models() -> N
 # ---------------------------------------------------------------------------
 
 
-def test_work_income_general_declaration_limit_eur_value() -> None:
-    """General work-income exemption ceiling is €22,000 per Art. 96.2.a) LIRPF."""
-
-    from decimal import Decimal
-
-    from ..external_constants import WORK_INCOME_GENERAL_DECLARATION_LIMIT_EUR
-
-    assert Decimal("22000") == WORK_INCOME_GENERAL_DECLARATION_LIMIT_EUR
-    assert isinstance(WORK_INCOME_GENERAL_DECLARATION_LIMIT_EUR, Decimal)
-
-
 def test_multiple_pagadores_reduced_limit_per_year_values() -> None:
     """Reduced limit schedule matches the dated statutory amounts (Art. 96.3 LIRPF).
 
@@ -757,8 +687,6 @@ def test_multiple_pagadores_reduced_limit_per_year_values() -> None:
     BOE-A-2022-22128), 15.876 EUR for 2024 onward (RD-Ley 4/2024,
     BOE-A-2024-13066; confirmed by the bundled consolidated LIRPF art-96 corpus).
     """
-
-    from decimal import Decimal
 
     from ..external_constants import WORK_INCOME_MULTIPLE_PAGADORES_REDUCED_LIMIT_EUR_BY_YEAR
 
@@ -772,8 +700,6 @@ def test_multiple_pagadores_reduced_limit_per_year_values() -> None:
 
 def test_multiple_pagadores_reduced_limit_table_is_immutable() -> None:
     """The per-year schedule is a read-only mapping; it cannot be mutated in place."""
-
-    from decimal import Decimal
 
     from ..external_constants import WORK_INCOME_MULTIPLE_PAGADORES_REDUCED_LIMIT_EUR_BY_YEAR
 
