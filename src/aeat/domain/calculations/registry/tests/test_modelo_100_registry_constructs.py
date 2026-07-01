@@ -7,7 +7,7 @@ from decimal import Decimal
 from typing import Any, cast
 
 import pytest
-from pydantic import AnyUrl
+from pydantic import AnyUrl, ValidationError
 
 from ....contribuyente import PROFILE_KEYS, TaxResidenceProfile
 from ....contribuyente.family import RentaAscendantProfile, RentaDescendantProfile, RentaFamilyProfile
@@ -693,6 +693,27 @@ def test_construct_reader_rejects_unknown_member_id_at_runtime() -> None:
         match=rf"construct '{construct.id}' references unknown casilla '{_UNKNOWN_CONSTRUCT_MEMBER_CASILLA}'",
     ):
         resolve_construct(mutated_revision, construct.id)
+
+
+def test_construct_reader_rejects_blank_grounding_refs_at_projection_boundary() -> None:
+    _modelo, revision = _modelo_100_revision_2025()
+    construct = next(item for item in revision.constructs if item.legal_refs and item.source_refs)
+
+    for update in (
+        {"legal_refs": ("",)},
+        {"source_refs": ("",)},
+    ):
+        mutated_construct = construct.model_copy(update=update)
+        mutated_revision = revision.model_copy(
+            update={
+                "constructs": tuple(
+                    mutated_construct if item.id == construct.id else item for item in revision.constructs
+                ),
+            },
+        )
+
+        with pytest.raises(ValidationError, match=next(iter(update))):
+            resolve_construct(mutated_revision, construct.id)
 
 
 def test_validator_rejects_construct_member_outside_revision() -> None:
