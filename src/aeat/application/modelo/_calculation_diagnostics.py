@@ -18,13 +18,13 @@ source mesh's no-silent-under-declaration diagnostics with checks whose evidence
 only exists after the revision has been calculated.
 
 See Also:
-    :func:`aeat.application.modelo.calculate_modelo_revision_from_bucket_aggregation_with_diagnostics`:
+    :func:`~aeat.application.modelo.calculate_modelo_revision_from_bucket_aggregation_with_diagnostics`:
         Calls this coordinator after the calculation revision has been created.
-    :func:`aeat.application.modelo._official_box_advisory.collect_official_box_unpopulated_diagnostics`:
+    :func:`~aeat.application.modelo._official_box_advisory.collect_official_box_unpopulated_diagnostics`:
         Mirrors registry-authored ADVISORY predicates as calculate diagnostics.
-    :mod:`aeat.application.modelo._prior_payment_advisory`:
+    :mod:`~aeat.application.modelo._prior_payment_advisory`:
         Emits Modelo 130 prior-payment carry degradation advisories.
-    :func:`aeat.application.modelo._settlement_grade_advisory.collect_settlement_not_computed_diagnostics`:
+    :func:`~aeat.application.modelo._settlement_grade_advisory.collect_settlement_not_computed_diagnostics`:
         Emits structural settlement-completeness advisories for partially modelled revisions.
 """
 
@@ -85,7 +85,7 @@ def collect_bucket_aggregation_advisory_diagnostics(
         :class:`~aeat.application.calculations.CalculationObservationRepository`:
             Supplies the prior-filing observation catalogue used by the Modelo
             130 prior-payment advisory collectors.
-        :func:`aeat.application.modelo.calculate_modelo_revision_from_bucket_aggregation_with_diagnostics`:
+        :func:`~aeat.application.modelo.calculate_modelo_revision_from_bucket_aggregation_with_diagnostics`:
             Appends this tuple to the source mesh diagnostics on the returned
             bucket aggregation result.
     """
