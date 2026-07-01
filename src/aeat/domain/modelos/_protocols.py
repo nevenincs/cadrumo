@@ -5,9 +5,10 @@ filing records, calculation results, or verification reports depends on these
 Protocols, not on the concrete adapter-backed repository classes. This keeps
 the domain layer free of adapter imports while still providing typed port surfaces.
 
-The filing-record protocol returns :class:`ModeloRecord` catalogues while
-the verification-report protocol returns
-:class:`VerificationReportCatalogue` instances; both keep application code
+The work-unit, calculation-revision, filing-record, and verification-report
+protocols return :class:`WorkUnitCatalogue`,
+:class:`CalculationRevisionCatalogue`, :class:`ModeloRecordCatalogue`, and
+:class:`VerificationReportCatalogue` instances while keeping application code
 independent of concrete storage adapters.
 """
 
@@ -30,8 +31,8 @@ class WorkUnitCatalogueRepositoryProtocol(Protocol):
     """Narrow domain-facing repository contract for the work-unit catalogue.
 
     Any object that provides ``exists``, ``load``, and ``save`` over a
-    per-bucket work-unit catalogue satisfies this protocol. The concrete
-    secure-object-backed implementation lives in ``_repository.py``.
+    per-bucket :class:`WorkUnitCatalogue` satisfies this protocol. The concrete
+    secure-object-backed implementation is :class:`WorkUnitCatalogueRepository`.
     """
 
     @property
@@ -57,9 +58,9 @@ class CalculationRevisionCatalogueRepositoryProtocol(Protocol):
     """Narrow domain-facing repository contract for calculation revisions.
 
     Any object that provides ``exists``, ``load``, and ``save`` over a
-    per-bucket calculation-revision catalogue satisfies this protocol.
-    The concrete secure-object-backed implementation lives in
-    ``_calculation_repository.py``.
+    per-bucket :class:`CalculationRevisionCatalogue` satisfies this protocol.
+    The concrete secure-object-backed implementation is
+    :class:`CalculationRevisionCatalogueRepository`.
     """
 
     @property
@@ -130,10 +131,11 @@ class ModeloRecordCatalogueRepositoryProtocol(Protocol):
     """Narrow domain-facing repository contract for modelo filing records.
 
     Any object that provides ``exists``, ``load``, and ``save`` over a
-    per-bucket modelo-record catalogue satisfies this protocol. The
-    concrete secure-object-backed implementation lives in
-    ``_filing_repository.py``. The loaded catalogue supports member-scoped
-    ``current_for`` and ``history_for`` lookups for grupo fan-in filings.
+    per-bucket :class:`ModeloRecordCatalogue` satisfies this protocol. The
+    concrete secure-object-backed implementation is
+    :class:`ModeloRecordCatalogueRepository`. The loaded catalogue supports
+    member-scoped ``current_for`` and ``history_for`` lookups for grupo fan-in
+    filings.
     """
 
     @property
