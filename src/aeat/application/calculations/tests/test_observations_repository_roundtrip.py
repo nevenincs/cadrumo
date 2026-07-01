@@ -388,19 +388,41 @@ def test_iva_wallet_reconciliation_decision_survives_encrypted_storage_roundtrip
             decided_at=decided_at,
         )
 
+        latest_key = iva_wallet_decision_key("12345678Z", Period.from_year_and_code(2026, "2T"))
+        event_key = iva_wallet_decision_event_key(decision)
+
         repo.save_decision(decision)
+        latest_record = repo.secure_object_repository.load(
+            repo.namespace,
+            latest_key,
+            expected_class=repo.sensitivity,
+            max_supported_version=repo.schema_version,
+        )
+        event_record = repo.secure_object_repository.load(
+            repo.history_namespace,
+            event_key,
+            expected_class=repo.sensitivity,
+            max_supported_version=repo.schema_version,
+        )
+        cleartext_key_record = repo.secure_object_repository.load(
+            repo.namespace,
+            "12345678Z:2026:2T",
+            expected_class=repo.sensitivity,
+            max_supported_version=repo.schema_version,
+        )
         loaded = repo.load_decision("12345678Z", Period.from_year_and_code(2026, "2T"))
 
+        assert latest_record is not None
+        assert event_record is not None
+        assert cleartext_key_record is None
         assert loaded == decision
         assert loaded is not None
         assert loaded.selected_authority == "aeat_wallet"
         assert loaded.selected_amount == Decimal("1200")
         assert loaded.blocked is False
         assert repo.load_decision_history("12345678Z", Period.from_year_and_code(2026, "2T")) == (decision,)
-        assert iva_wallet_decision_key("12345678Z", Period.from_year_and_code(2026, "2T")).startswith(
-            "iva-wallet-decision:",
-        )
-        assert iva_wallet_decision_event_key(decision).startswith("iva-wallet-decision-event:")
+        assert latest_key.startswith("iva-wallet-decision:")
+        assert event_key.startswith("iva-wallet-decision-event:")
         database_bytes = (profile.paths.db_dir / "aeat.db").read_bytes()
         assert b"12345678Z" not in database_bytes
         assert b"12345678Z:2026:2T" not in database_bytes
