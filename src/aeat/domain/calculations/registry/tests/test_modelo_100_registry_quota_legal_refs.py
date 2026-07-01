@@ -128,7 +128,7 @@ def test_modelo_100_2025_cuota_chain_casillas_do_not_cite_fractional_payment_art
 # a legitimate legal_ref on the autonomic escala/cuota formulas ONLY for the
 # revisions where the separate-escala régimen is modelled. It stays absent on
 # the tipo-medio and cuota-íntegra formulas, which do not carry the régimen.
-_SEPARATE_ESCALA_MODELLED_YEARS = frozenset({2024})
+_SEPARATE_ESCALA_MODELLED_YEARS = frozenset({2024, 2025})
 
 
 def _autonomic_separate_escala_formula_ids(filing_year: int) -> frozenset[str]:
