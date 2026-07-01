@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import os
 import tomllib
+import warnings
 
 # Pin the CLI output language to English BEFORE any project module is imported.
 # CLI help strings are tr() values resolved at import time; the sphinx-click
@@ -16,10 +17,13 @@ from pathlib import Path
 
 from docutils import nodes
 from docutils.parsers.rst import Directive
+from sphinx.deprecation import RemovedInSphinx90Warning
 
 # Make `aeat` importable for autodoc without installing the wheel.
 _PROJECT_ROOT = Path(os.environ.get("AEAT_DOCS_PROJECT_ROOT", Path(__file__).resolve().parents[1])).resolve()
 sys.path.insert(0, str(_PROJECT_ROOT / "src"))
+
+warnings.filterwarnings("ignore", category=RemovedInSphinx90Warning, module=r"hoverxref\.extension")
 
 
 def _project_metadata() -> dict[str, object]:
@@ -515,7 +519,7 @@ nitpick_ignore_regex = [
     # real CamelCase class.
     (
         r"py:.*",
-        r"^(T|K|V|KT|VT|RT|_T|T_co|T_contra|TPayload|PayloadT|PayloadT_co|ResultT|RecordT|PayloadType|CasillaKey|CasillaValue|BindingKey|ExpectedKey|CheckerObservation|ObservationT)$",
+        r"^(T|K|V|Key|KT|VT|RT|_T|T_co|T_contra|TPayload|PayloadT|PayloadT_co|ResultT|RecordT|PayloadType|CasillaKey|CasillaValue|BindingKey|ExpectedKey|CheckerObservation|ObservationT)$",
     ),
     # SQLAlchemy column/type vocabulary referenced from the encrypted-column
     # adapters; resolved online via the vendored sqlalchemy inventory under its
@@ -547,7 +551,7 @@ nitpick_ignore_regex = [
         r"IvaCompensationAuthorityKind|IvaCompensationDivergence|LocaleNode|"
         r"ModeloAmendment|ModeloCalculationRevisionDefault|ModeloCode|"
         r"ModeloInputScalar|ModeloInputValue|ModeloInputs|ModeloWorkTarget|"
-        r"RegisteredSchema|UserProfileFactValue)$",
+        r"RegisteredSchema|SourceEvidenceFingerprint|UserProfileFactValue)$",
     ),
     # References into private (single-underscore) modules or to private classes
     # (``pkg._mod.Thing``, ``pkg.mod._Private``), which are implementation
@@ -588,10 +592,10 @@ nitpick_ignore_regex = [
     # ApiStubManager exclusions), so references into them have no stub target.
     (r"py:.*", r".*\btest_[A-Za-z0-9_]*$"),
     (r"py:.*", r"^aeat\.tests(\..*)?$"),
-    # Dunder and numeric-literal targets that leak out of docstrings as bogus
-    # cross-references (a ``:class:`1``` or ``:data:`__all__```), never real
-    # documentable objects.
-    (r"py:.*", r"^([0-9]+|__all__|__repr__|__str__|__init__|__init_subclass__)$"),
+    # Dunder, numeric-literal, and hex-like HTML-id targets that leak out of
+    # docstrings as bogus cross-references (``:class:`1``` or AEAT source
+    # anchors such as ``89ab``), never real documentable objects.
+    (r"py:.*", r"^([0-9][0-9a-fA-F]*|__all__|__repr__|__str__|__init__|__init_subclass__)$"),
     # Playwright SDK classes referenced bare (``:class:`Page```, ``BrowserContext``,
     # ``Locator``, ``Response``, ``Playwright``) from the browser/sede adapters.
     # Playwright is in ``autodoc_mock_imports`` (offline, no inventory), so the
