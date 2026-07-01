@@ -80,6 +80,12 @@ from ._period import (
     accepted_period_codes,
     accepted_period_patterns,
 )
+from ._post_filing_event import (
+    ACTIONABLE_POST_FILING_EVENT_KINDS,
+    PostFilingEventKind,
+    classify_post_filing_event_kind,
+    post_filing_event_is_actionable,
+)
 from ._refund_election import RefundElection
 from ._rescate_type import RescateType
 from ._result_disposition import (
@@ -108,6 +114,7 @@ if TYPE_CHECKING:
     from .aggregation import BindingSourceKind, IntracomOperationType
 
 __all__: list[str] = [
+    "ACTIONABLE_POST_FILING_EVENT_KINDS",
     "ANTHROPIC_EXTRA",
     "BROWSER_EXTRA",
     "GOOGLE_EXTRA",
@@ -128,6 +135,7 @@ __all__: list[str] = [
     "Period",
     "PeriodError",
     "PeriodKind",
+    "PostFilingEventKind",
     "RefundElection",
     "RegistryPeriodCode",
     "RescateType",
@@ -138,6 +146,7 @@ __all__: list[str] = [
     "TipoRentaIrnr",
     "accepted_period_codes",
     "accepted_period_patterns",
+    "classify_post_filing_event_kind",
     "derive_result_disposition",
     "freeze_toml",
     "freeze_toml_value",
@@ -146,6 +155,7 @@ __all__: list[str] = [
     "optional_extra_available",
     "parse_toml_text",
     "pointer_path",
+    "post_filing_event_is_actionable",
     "read_pointer",
     "read_toml",
     "require_active_bucket_id",
