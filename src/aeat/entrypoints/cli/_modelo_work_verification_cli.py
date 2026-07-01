@@ -534,12 +534,9 @@ def _register_work_file_command(
         lines.append("filing_disambiguation\t(internal only — does not submit to AEAT)")
         notices: list[Notice] = []
         if already_filed:
-            # Inline operator message, mirroring the hardcoded `filing_disambiguation`
-            # line emitted just above in this handler; the notice carries the
-            # machine-queryable ids on `context`.
-            noop_message = (
-                f"Idempotent no-op: calculation revision {record.calculation_revision_id} is already "
-                "filed; returned the existing filing record without changes."
+            noop_message = tr(
+                "cli.app.modelo.work.file_idempotent_noop",
+                calculation_revision_id=record.calculation_revision_id,
             )
             notices.append(
                 Notice(

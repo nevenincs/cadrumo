@@ -2027,6 +2027,7 @@ cli:
         year_help: Tax year of the work unit (e.g. 2026)
         year_out_of_range: Filing year %{year} is out of range; supply a year between
           %{minimum} and %{maximum}.
+        file_idempotent_noop: 'Idempotent no-op: calculation revision %{calculation_revision_id} is already filed; returned the existing filing record without changes.'
   common:
     errors:
       draft_id_not_found: Draft ID %{draft_id} not found
