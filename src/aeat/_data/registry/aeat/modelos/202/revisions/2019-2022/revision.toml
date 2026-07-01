@@ -18,7 +18,6 @@ orden_aplicabilidad = [
 source_refs = [
     "aeat-dr-202-2019",
     "aeat-modelo-202-instructions-2018-2022",
-    "aeat-modelo-202-instructions-2023-2024",
     "boe-modelo-202-base-order",
     "boe-modelo-202-2018-amendment",
 ]

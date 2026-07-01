@@ -136,6 +136,46 @@ def test_committed_modelo_202_order_chain_is_boe_corpus_backed() -> None:
         assert "modelo 202" in source_text or "Modelo 202" in source_text
 
 
+@pytest.mark.parametrize(
+    ("revision_id", "expected_source_ref", "applies_from", "applies_to", "forbidden_source_refs"),
+    (
+        (
+            "2019-2022",
+            "aeat-modelo-202-instructions-2018-2022",
+            date(2018, 1, 1),
+            date(2022, 12, 31),
+            ("aeat-modelo-202-instructions", "aeat-modelo-202-instructions-2023-2024"),
+        ),
+        (
+            "2023-2024",
+            "aeat-modelo-202-instructions-2023-2024",
+            date(2023, 1, 1),
+            date(2024, 12, 31),
+            ("aeat-modelo-202-instructions", "aeat-modelo-202-instructions-2018-2022"),
+        ),
+    ),
+)
+def test_committed_modelo_202_closed_revisions_use_period_matching_instruction_sources(
+    revision_id: str,
+    expected_source_ref: str,
+    applies_from: date,
+    applies_to: date,
+    forbidden_source_refs: tuple[str, ...],
+) -> None:
+    modelo, catalogues = _load_modelo_202()
+    revision = modelo.revisions[revision_id]
+    instruction_source = catalogues.sources[expected_source_ref]
+
+    assert instruction_source.evidence_tier == "official_source_guidance"
+    assert instruction_source.applies_from == applies_from
+    assert instruction_source.applies_to == applies_to
+    assert expected_source_ref in revision.source_refs
+
+    revision_payload = revision.model_dump_json()
+    for source_ref in forbidden_source_refs:
+        assert f'"{source_ref}"' not in revision_payload
+
+
 def test_committed_modelo_202_marks_2025_only_b2_rate_bands_as_intentional_singletons() -> None:
     modelo, _catalogues = _load_modelo_202()
     revision = modelo.revisions["2025-y-siguientes"]
@@ -306,16 +346,14 @@ def test_committed_modelo_202_b2_resultado_previo_feeds_modalidad_40_3_resultado
     # precisely the clave 18 and clave 26 leaves (not, say, a "subtract" or
     # "max" that would zero or misstate one lane).
     combination_nodes = [node for node in _iter_expression_nodes(expression) if node.op == "add"]
-    assert any(
-        {getattr(arg, "casilla_id", None) for arg in node.args} == {"18", "26"} for node in combination_nodes
-    ), "expected an add(clave 18, clave 26) node combining the B1 and B2 resultado previo lanes"
+    assert any({getattr(arg, "casilla_id", None) for arg in node.args} == {"18", "26"} for node in combination_nodes), (
+        "expected an add(clave 18, clave 26) node combining the B1 and B2 resultado previo lanes"
+    )
 
     predicate_ids = {p.predicate_id for p in revision.verification_predicates}
     assert _M202_B2_RESULTADO_PREVIO_ADVISORY_PREDICATE_ID not in predicate_ids
     predicate = next(
-        p
-        for p in revision.verification_predicates
-        if p.predicate_id == _M202_B1_B2_RESULTADO_PREVIO_XOR_PREDICATE_ID
+        p for p in revision.verification_predicates if p.predicate_id == _M202_B1_B2_RESULTADO_PREVIO_XOR_PREDICATE_ID
     )
     assert predicate.expression == 'at_most_one_positive(["18", "26"])'
     assert predicate.finding_kind == "BLOCKING_RULE"
