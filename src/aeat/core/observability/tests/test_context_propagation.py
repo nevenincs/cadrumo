@@ -1,9 +1,9 @@
 """Verify run_id propagates across nested subpackage call sites.
 
 Uses real, tiny classes that satisfy a structural Protocol — no mocks,
-no patches. Each "subpackage" is a small class that in turn calls into
-the next, recording an event at every layer. The assertion is that
-every recorded event carries the same ``run_id`` set by the outer
+no patches. Each test stage is a small class that in turn calls into the
+next, recording an event at every layer. The assertion is that every
+recorded event carries the same ``run_id`` set by the outer
 :func:`run_context`.
 """
 
@@ -40,7 +40,7 @@ class _Step(Protocol):
 
 
 class _StatusStep:
-    """Stand-in for the status stage."""
+    """Concrete status test stage."""
 
     def __call__(self, label: str) -> None:
         record_event(
@@ -50,7 +50,7 @@ class _StatusStep:
 
 
 class _InboxStep:
-    """Stand-in for the inbox stage, which calls into status next."""
+    """Concrete inbox test stage, which calls into status next."""
 
     def __init__(self, downstream: _Step) -> None:
         self._downstream = downstream
@@ -64,7 +64,7 @@ class _InboxStep:
 
 
 class _SubmissionStep:
-    """Stand-in for ``aeat.adapters.outbound.aeat.export`` — top of the chain."""
+    """Concrete submission test stage at the top of the chain."""
 
     def __init__(self, downstream: _Step) -> None:
         self._downstream = downstream
@@ -88,37 +88,35 @@ class TestRunContextOutcome:
             trace = load_trace(run_id)
             assert trace.outcome is RunOutcome.OK
 
-    def test_outcome_failed_when_yield_raises(
+    @pytest.mark.parametrize(
+        ("exception", "entrypoint"),
+        (
+            pytest.param(RuntimeError("boom"), "aeat test fail", id="runtime-error"),
+            pytest.param(KeyboardInterrupt(), "aeat test int", id="keyboard-interrupt"),
+        ),
+    )
+    def test_outcome_failed_when_body_raises(
         self,
         tmp_path: Path,
+        exception: BaseException,
+        entrypoint: str,
     ) -> None:
         with override_settings(aeat_runs_dir=str(tmp_path)):
             captured: dict[str, str] = {}
+            expected_error = (
+                pytest.raises(type(exception), match=str(exception))
+                if str(exception)
+                else pytest.raises(type(exception))
+            )
             with (
-                pytest.raises(RuntimeError, match="boom"),
-                run_context(entrypoint="aeat test fail", arguments=()) as info,
+                expected_error,
+                run_context(entrypoint=entrypoint, arguments=()) as info,
             ):
                 captured["run_id"] = info.run_id
-                raise RuntimeError("boom")
+                raise exception
             trace = load_trace(captured["run_id"])
             # Pessimistic default: yield raised, so outcome must be FAILED
             # even though the persisted trace was written from a finally.
-            assert trace.outcome is RunOutcome.FAILED
-
-    def test_keyboard_interrupt_recorded_as_failed(
-        self,
-        tmp_path: Path,
-    ) -> None:
-        with override_settings(aeat_runs_dir=str(tmp_path)):
-            captured: dict[str, str] = {}
-            with (
-                pytest.raises(KeyboardInterrupt),
-                run_context(entrypoint="aeat test int", arguments=()) as info,
-            ):
-                captured["run_id"] = info.run_id
-                raise KeyboardInterrupt
-            trace = load_trace(captured["run_id"])
-            # BaseException path: Ctrl-C must still leave a FAILED trace.
             assert trace.outcome is RunOutcome.FAILED
 
     def test_trace_persistence_failure_surfaces_on_clean_exit(
