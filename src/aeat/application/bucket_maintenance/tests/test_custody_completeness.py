@@ -19,6 +19,7 @@ import pytest
 
 from ....adapters.persistence.storage.attachment import AttachmentStore
 from ....core.resources import resources
+from ....domain.attachments import AttachmentValidationError
 from ....domain.buckets._event import (
     BucketEvent,
     BucketEventHistoryCatalogue,
@@ -27,6 +28,7 @@ from ....domain.buckets._event import (
     derive_bucket_event_id,
 )
 from ....domain.buckets._event_repository import BucketEventHistoryRepository
+from ....domain.user_profile._errors import ProfileExportError
 from ....domain.user_profile._schema import ProfileSchemaDefinition
 from ....domain.user_profile._values import UserProfileFact
 from ....tests.secure_sql import TestRuntimeProfile, isolated_profile_storage_root, isolated_runtime_profile
@@ -176,10 +178,10 @@ def test_carried_evidence_carry_is_not_tautological(tmp_path: Path) -> None:
 
         with multi.switch_to_secondary():
             restore_carried_objects((tampered, *others), target_bucket_id=multi.secondary.bucket_id)
-            # The original sha now indexes tampered bytes, so a digest re-hash of
-            # the restored blob no longer matches its content address.
+            # The original sha now indexes tampered bytes, so the restored blob
+            # no longer validates as a framed attachment payload.
             store = AttachmentStore()
-            with pytest.raises(Exception):  # noqa: B017 - AttachmentValidationError (digest drift)
+            with pytest.raises(AttachmentValidationError, match="envelope prefix"):
                 store.verify_blob(sha)
 
 
@@ -187,7 +189,7 @@ def test_full_custody_coverage_gate_refuses_unclassified_namespace() -> None:
     """A populated namespace with no registry classification fails the full-custody export."""
     from ...user_profile._bundle import _assert_full_custody_coverage
 
-    with pytest.raises(Exception) as excinfo:
+    with pytest.raises(ProfileExportError) as excinfo:
         _assert_full_custody_coverage(
             populated_namespaces=("aeat.domain.buckets.event_history", "aeat.surprise.new_store"),
             covered_namespaces=frozenset({"aeat.domain.buckets.event_history"}),
