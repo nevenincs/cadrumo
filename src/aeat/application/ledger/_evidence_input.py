@@ -20,11 +20,11 @@ from typing import Never, Self, SupportsIndex, override
 
 from pydantic import BaseModel, Field, model_serializer, model_validator
 
-from ...adapters.persistence.storage.attachment import AttachmentStore
 from ...core import STRICT_FROZEN_CONFIG
 from ...core.config import Settings
 from ...core.external_constants import PDF_MIME_TYPE
 from ...core.hashing import sha256_hex
+from ...domain.attachments import AttachmentStoreProtocol
 from ._evidence import MediaKind, PurchaseInvoiceEvidence, PurchaseInvoiceEvidenceInputError
 
 __all__ = [
@@ -91,7 +91,7 @@ class EvidenceInput(BaseModel):
         evidence_id: Originating purchase-invoice ``evidence_id`` when the bytes
             came from a :class:`PurchaseInvoiceEvidence` record, else ``None``.
         attachment_id: Originating ``attachment_id`` when the bytes came from an
-            :class:`Attachment`, else ``None``.
+            :class:`~aeat.domain.attachments.Attachment`, else ``None``.
     """
 
     model_config = STRICT_FROZEN_CONFIG
@@ -158,11 +158,12 @@ def _media_kind_from_mime(mime_type: str) -> MediaKind:
     )
 
 
-def resolve_attachment_evidence_input(attachment_id: str, *, store: AttachmentStore) -> EvidenceInput:
+def resolve_attachment_evidence_input(attachment_id: str, *, store: AttachmentStoreProtocol) -> EvidenceInput:
     """Read a linked attachment's bytes from secure storage into an ``EvidenceInput``.
 
     Loads the attachment manifest and its encrypted blob from the
-    :class:`AttachmentStore` (active bucket) into memory. No file is written.
+    :class:`~aeat.domain.attachments.AttachmentStoreProtocol` (active bucket)
+    into memory. No file is written.
 
     Args:
         attachment_id: Content-addressed id of the linked attachment.
@@ -185,7 +186,7 @@ def resolve_attachment_evidence_input(attachment_id: str, *, store: AttachmentSt
 def resolve_purchase_invoice_evidence_input(
     evidence: PurchaseInvoiceEvidence,
     *,
-    store: AttachmentStore,
+    store: AttachmentStoreProtocol,
 ) -> EvidenceInput:
     """Read a purchase-invoice evidence record's bytes from secure storage.
 

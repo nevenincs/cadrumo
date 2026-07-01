@@ -211,7 +211,7 @@ def ledger_doclink(
     from ...adapters.outbound.google._active_profile import resolve_active_profile
     from ...adapters.outbound.storage import OutboundStorageError
     from ...adapters.outbound.storage._factory import _build_google_credentials
-    from ...adapters.persistence.storage.attachment import AttachmentStore
+    from ...adapters.persistence.storage import AttachmentStore
     from ...domain.attachments import AttachmentKind, add_attachment_bytes
 
     attachment_source = source.to_attachment_source()

@@ -189,7 +189,7 @@ class PurchaseInvoiceEvidenceRepository(SecureBoundRepository[PurchaseInvoiceEvi
     See Also:
         :class:`PurchaseInvoiceEvidenceService`
             CRUD service that mutates this repository and emits bucket events.
-        :class:`AttachmentStore`
+        :class:`~aeat.adapters.persistence.storage.AttachmentStore`
             Encrypted byte store that holds the referenced source files.
     """
 
@@ -316,10 +316,12 @@ class PurchaseInvoiceEvidenceService:
 
         Resolves ``source_path`` to an absolute path, verifies the file
         exists, infers the ``MediaKind`` from the extension, copies the file's
-        bytes into the encrypted :class:`AttachmentStore` (active bucket) and
-        records the resulting content-addressed ``attachment_id`` on the record
-        (the bytes thereafter live only in secure storage; ``source_path`` is a
-        provenance breadcrumb), creates a ``PurchaseInvoiceEvidence`` record,
+        bytes into the encrypted
+        :class:`~aeat.adapters.persistence.storage.AttachmentStore` (active
+        bucket) and records the resulting content-addressed ``attachment_id`` on
+        the record (the bytes thereafter live only in secure storage;
+        ``source_path`` is a provenance breadcrumb), creates a
+        ``PurchaseInvoiceEvidence`` record,
         appends it to the in-memory catalogue, persists the encrypted bucket-local catalogue
         in secure-object storage, and emits a
         ``PURCHASE_INVOICE_EVIDENCE_ATTACHED`` audit event.
