@@ -56,7 +56,6 @@ class OperatorMutability(StrEnum):
 
     READ_ONLY = "read_only"
     LOCAL_STATE_MUTATING = "local_state_mutating"
-    LIVE_READ = "live_read"
 
 
 class HelpSurface(StrEnum):
