@@ -100,6 +100,29 @@ def _assert_missing_legal_ref_rejected(revision: ModeloRevision, expected_match:
         check_all_id_references(snapshot)
 
 
+def test_modelo_validation_rejects_modelo_sourced_only_by_executable_parity() -> None:
+    modelo = minimal_modelo(minimal_revision()).model_copy(update={"source_refs": (_PARITY_SOURCE_ID,)})
+
+    with pytest.raises(
+        RegistryValidationError,
+        match=r"modelo: 130 requires one of official_source_guidance, layout_authority source evidence",
+    ):
+        RegistryValidator(_catalogues_with_executable_parity_source()).validate_modelo(modelo)
+
+
+def test_modelo_validation_rejects_revision_sourced_only_by_executable_parity() -> None:
+    revision = minimal_revision().model_copy(update={"source_refs": (_PARITY_SOURCE_ID,)})
+
+    with pytest.raises(
+        RegistryValidationError,
+        match=(
+            r"modelo 130 revision test-revision: revision "
+            r"requires one of official_source_guidance, layout_authority source evidence"
+        ),
+    ):
+        RegistryValidator(_catalogues_with_executable_parity_source()).validate_modelo(minimal_modelo(revision))
+
+
 def test_dangling_application_link_legal_refs() -> None:
     """application_link.legal_refs referencing a LegalRefId absent from snapshot.legal raises."""
     link = ApplicationLinkDefinition(
