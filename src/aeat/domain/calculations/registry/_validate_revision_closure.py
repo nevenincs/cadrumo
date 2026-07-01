@@ -12,6 +12,7 @@ from collections.abc import Mapping
 from ._schema import LegalReference, ModeloRevision, SourceReference
 from ._validate_application_links import validate_application_link_closure
 from ._validate_constructs import validate_construct_closure, validate_support_removal_decisions
+from ._validate_evidence import EvidenceValidator
 from ._validate_formulas import validate_formula_dag
 from ._validate_helpers import _missing_refs
 from ._validate_orden_aplicabilidad import orden_aplicabilidad_hard_failures
@@ -31,6 +32,7 @@ def _validate_revision_closure_sections(
     context: RevisionValidationContext,
     legal_refs: Mapping[str, LegalReference],
     source_refs: Mapping[str, SourceReference],
+    evidence: EvidenceValidator,
 ) -> None:
     failures.extend(
         validate_support_removal_decisions(
@@ -60,6 +62,7 @@ def _validate_revision_closure_sections(
             member_objects=context.construct_member_objects,
             legal_refs=legal_refs,
             source_refs=source_refs,
+            evidence=evidence,
         ),
     )
     failures.extend(validate_formula_dag(prefix, revision))

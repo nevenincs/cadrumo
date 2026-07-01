@@ -247,5 +247,6 @@ def validate_revision_definition(
         context=context,
         legal_refs=legal_refs,
         source_refs=source_refs,
+        evidence=evidence,
     )
     return failures
