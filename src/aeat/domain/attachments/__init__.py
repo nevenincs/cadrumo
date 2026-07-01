@@ -54,7 +54,7 @@ from ._errors import (
     AttachmentPersistenceError,
     AttachmentValidationError,
 )
-from ._models import Attachment, AttachmentCatalogue
+from ._models import Attachment, AttachmentCatalogue, is_link_only_mime_type
 from ._protocols import AttachmentStoreProtocol
 from ._service import add_attachment, add_attachment_bytes, list_attachments, load_attachment
 
@@ -71,6 +71,7 @@ __all__ = [
     "DocumentLinkSource",
     "add_attachment",
     "add_attachment_bytes",
+    "is_link_only_mime_type",
     "list_attachments",
     "load_attachment",
 ]

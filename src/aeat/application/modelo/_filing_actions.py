@@ -452,7 +452,10 @@ def list_verification_reports(
 ) -> tuple[VerificationReport, ...]:
     """List :class:`~aeat.domain.modelos.VerificationReport` records.
 
-    Optionally filtered to one calculation revision. Results are sorted by
+    Optionally filtered to one
+    :class:`~aeat.domain.modelos.CalculationRevision`. The
+    :class:`~aeat.domain.modelos.VerificationReportCatalogueRepositoryProtocol`
+    supplies the persisted report catalogue. Results are sorted by
     ``(calculation_revision_id, run_at)``.
     """
     vr_repo = verification_repository or VerificationReportCatalogueRepository()
@@ -470,7 +473,13 @@ def get_verification_report(
     *,
     verification_repository: VerificationReportCatalogueRepositoryProtocol | None = None,
 ) -> VerificationReport:
-    """Return one :class:`~aeat.domain.modelos.VerificationReport` by id, or raise."""
+    """Return one :class:`~aeat.domain.modelos.VerificationReport` by id, or raise.
+
+    The optional
+    :class:`~aeat.domain.modelos.VerificationReportCatalogueRepositoryProtocol`
+    supplies the persisted report catalogue for tests or alternate storage
+    boundaries.
+    """
     vr_repo = verification_repository or VerificationReportCatalogueRepository()
     catalogue = vr_repo.load()
     report = catalogue.get(verification_report_id)

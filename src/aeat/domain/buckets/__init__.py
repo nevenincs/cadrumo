@@ -90,6 +90,7 @@ from ._event_repository import (
     BucketEventHistoryRepository,
     append_bucket_event,
 )
+from ._protocols import BucketEventHistoryRepositoryProtocol
 
 __all__ = [
     "BucketBrowseError",
@@ -98,6 +99,7 @@ __all__ = [
     "BucketEventHistoryCatalogue",
     "BucketEventHistoryPersistenceError",
     "BucketEventHistoryRepository",
+    "BucketEventHistoryRepositoryProtocol",
     "BucketEventObjectType",
     "BucketEventType",
     "BucketEventValidationError",

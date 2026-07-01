@@ -41,12 +41,22 @@ from ._catalogue import WIZARD_FLOWS
 from ._commands import build_wizard_command
 from ._errors import WizardValidationError
 from ._persistence import project_answers
+from ._status import (
+    WizardStatusError,
+    WizardStatusReport,
+    build_wizard_status,
+    load_active_taxpayer_profile,
+)
 from ._widgets import validate_widget_answer
 
 __all__ = [
     "WIZARD_FLOWS",
+    "WizardStatusError",
+    "WizardStatusReport",
     "WizardValidationError",
     "build_wizard_command",
+    "build_wizard_status",
+    "load_active_taxpayer_profile",
     "project_answers",
     "validate_widget_answer",
 ]

@@ -14,7 +14,7 @@ from defusedxml import ElementTree
 
 from ....core.decimal import normalize_decimal_separators
 from ....core.external_constants import LATIN_1_ENCODING as _LATIN_1_ENCODING
-from ....core.parsing._utils import _parse_bool as _core_parse_bool
+from ....core.parsing import parse_bool as _core_parse_bool
 from ._errors import RegistryValidationError
 from ._ids import BindingId, CasillaId, ExportFieldId, ExportLayoutId, RecordId, validated_casilla_id
 from ._schema import (
@@ -421,7 +421,7 @@ _REGISTRY_FALSY = frozenset({"0", "n", "no", "false"})
 
 
 def _parse_boolean(raw: str) -> bool | None:
-    """Thin wrapper around :func:`aeat.core.parsing._utils._parse_bool`.
+    """Thin wrapper around :func:`aeat.core.parsing.parse_bool`.
 
     The registry export format uses uppercase affirmative tokens ("X", "S",
     "SI") that extend the core truthy set.  This wrapper normalises the raw

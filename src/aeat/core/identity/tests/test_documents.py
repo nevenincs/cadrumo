@@ -19,35 +19,22 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 class TestNif:
     """Spanish NIF (8 digits + check letter)."""
 
-    @pytest.mark.parametrize(
-        "candidate",
-        [
+    def test_valid_nif_variants_round_trip(self) -> None:
+        candidates = (
             # AEAT example: 00000000T -> 0 % 23 = 0 -> T
             "00000000T",
             # 12345678Z -> 12345678 % 23 = 14 -> Z
             "12345678Z",
             # 87654321X -> 87654321 % 23 = 10 -> X
             "87654321X",
-        ],
-    )
-    def test_valid_nif_round_trip(self, candidate: str) -> None:
-        assert validate_identity(candidate) is IdentityDocument.NIF
+            "12345678z",
+            "  12345678Z  ",
+            "12345678-Z",
+        )
+        for candidate in candidates:
+            assert validate_identity(candidate) is IdentityDocument.NIF
 
-    def test_lowercase_input_normalised(self) -> None:
-        assert validate_identity("12345678z") is IdentityDocument.NIF
-
-    def test_surrounding_whitespace_trimmed(self) -> None:
-        assert validate_identity("  12345678Z  ") is IdentityDocument.NIF
-
-    def test_dash_separator_tolerated(self) -> None:
-        assert validate_identity("12345678-Z") is IdentityDocument.NIF
-
-    def test_wrong_check_letter_rejected(self) -> None:
-        with pytest.raises(IdentityError) as excinfo:
-            validate_identity("12345678A")
-        assert excinfo.value.translated_message == "errors.identity.nif_check_letter_mismatch"
-
-    def test_wrong_check_letter_error_names_correct_letter(self) -> None:
+    def test_wrong_check_letter_rejected_with_correct_letter_context(self) -> None:
         """The rejection carries the numeric body and the correct check letter.
 
         An operator who typed ``12345678A`` must be told that the check
@@ -64,25 +51,18 @@ class TestNif:
         assert context["expected"] == "Z"
         assert context["got"] == "A"
 
-    @pytest.mark.parametrize(
-        "candidate",
-        (
-            pytest.param("1234567Z", id="too-short"),
-            pytest.param("123456789Z", id="too-long"),
-        ),
-    )
-    def test_invalid_shape_rejected(self, candidate: str) -> None:
-        with pytest.raises(IdentityError) as excinfo:
-            validate_identity(candidate)
-        assert excinfo.value.translated_message == "errors.identity.nif_invalid_shape"
+    def test_invalid_shape_rejected(self) -> None:
+        for candidate in ("1234567Z", "123456789Z"):
+            with pytest.raises(IdentityError) as excinfo:
+                validate_identity(candidate)
+            assert excinfo.value.translated_message == "errors.identity.nif_invalid_shape"
 
 
 class TestNie:
     """Spanish NIE (X/Y/Z + 7 digits + check letter)."""
 
-    @pytest.mark.parametrize(
-        "candidate",
-        [
+    def test_valid_nie_variants_round_trip(self) -> None:
+        candidates = (
             # X1234567L -> 01234567 % 23 = 0 + offset; verify by direct table.
             # Computed: 01234567 % 23 = 1234567 % 23 = 16 -> L
             "X1234567L",
@@ -90,20 +70,12 @@ class TestNie:
             "Y0000000Z",
             # Z0000000M -> 20000000 % 23 = 5 -> M
             "Z0000000M",
-        ],
-    )
-    def test_valid_nie_round_trip(self, candidate: str) -> None:
-        assert validate_identity(candidate) is IdentityDocument.NIE
+            "x1234567L",
+        )
+        for candidate in candidates:
+            assert validate_identity(candidate) is IdentityDocument.NIE
 
-    def test_lowercase_prefix_normalised(self) -> None:
-        assert validate_identity("x1234567L") is IdentityDocument.NIE
-
-    def test_wrong_check_letter_rejected(self) -> None:
-        with pytest.raises(IdentityError) as excinfo:
-            validate_identity("X1234567Z")
-        assert excinfo.value.translated_message == "errors.identity.nie_check_letter_mismatch"
-
-    def test_wrong_check_letter_error_names_correct_letter(self) -> None:
+    def test_wrong_check_letter_rejected_with_correct_letter_context(self) -> None:
         """The rejection carries the NIE body and the correct check letter.
 
         ``X1234567`` has check letter ``L``; an operator who typed
@@ -132,17 +104,9 @@ class TestNie:
 class TestCif:
     """Spanish CIF (kind letter + 7 digits + check character)."""
 
-    @pytest.mark.parametrize(
-        "candidate",
-        (
-            pytest.param("A12345674", id="digit-only-kind"),
-            pytest.param("P1234567D", id="letter-only-kind"),
-            pytest.param("C12345674", id="mixed-kind-digit-control"),
-            pytest.param("C1234567D", id="mixed-kind-letter-control"),
-        ),
-    )
-    def test_valid_cif_round_trip(self, candidate: str) -> None:
-        assert validate_identity(candidate) is IdentityDocument.CIF
+    def test_valid_cif_round_trip(self) -> None:
+        for candidate in ("A12345674", "P1234567D", "C12345674", "C1234567D"):
+            assert validate_identity(candidate) is IdentityDocument.CIF
 
     def test_wrong_check_rejected(self) -> None:
         with pytest.raises(IdentityError) as excinfo:
@@ -161,33 +125,23 @@ class TestCif:
 class TestRejection:
     """Non-strings, empty values, and arbitrary garbage are rejected."""
 
-    @pytest.mark.parametrize(
-        "candidate",
-        (
-            pytest.param("", id="empty"),
-            pytest.param("   ", id="whitespace-only"),
-        ),
-    )
-    def test_empty_document_rejected(self, candidate: str) -> None:
-        with pytest.raises(IdentityError) as excinfo:
-            validate_identity(candidate)
-        assert excinfo.value.translated_message == "errors.identity.document_empty"
-
-    def test_non_string_rejected(self) -> None:
-        non_string: object = 12345
-        assert not isinstance(non_string, str)
-        with pytest.raises(IdentityError) as excinfo:
-            validate_identity(non_string)
-        assert excinfo.value.translated_message == "errors.identity.validate_expects_str"
-
-    def test_arbitrary_garbage_rejected(self) -> None:
+    def test_invalid_documents_rejected(self) -> None:
         # "not-an-identity-doc" upper-cases to "NOTANIDENTITYDOC"; leading
         # 'N' is in _CIF_KIND_LETTERS so the validator dispatches to CIF,
         # whose regex expects exactly [kind-letter][7 digits][char] — the
         # garbage shape fails the CIF regex.
-        with pytest.raises(IdentityError) as excinfo:
-            validate_identity("not-an-identity-doc")
-        assert excinfo.value.translated_message == "errors.identity.cif_invalid_shape"
+        non_string: object = 12345
+        assert not isinstance(non_string, str)
+        cases: tuple[tuple[object, str], ...] = (
+            ("", "errors.identity.document_empty"),
+            ("   ", "errors.identity.document_empty"),
+            (non_string, "errors.identity.validate_expects_str"),
+            ("not-an-identity-doc", "errors.identity.cif_invalid_shape"),
+        )
+        for candidate, expected_message in cases:
+            with pytest.raises(IdentityError) as excinfo:
+                validate_identity(candidate)
+            assert excinfo.value.translated_message == expected_message
 
 
 class TestActionableMessages:
@@ -200,72 +154,57 @@ class TestActionableMessages:
     malformed input).
     """
 
-    @pytest.mark.parametrize(
-        ("candidate", "expected_body", "expected_letter"),
-        (
-            pytest.param("12345678A", "12345678", "Z", id="nif"),
-            pytest.param("X1234567Z", "X1234567", "L", id="nie"),
-        ),
-    )
-    def test_checksum_message_names_correct_letter(
-        self,
-        candidate: str,
-        expected_body: str,
-        expected_letter: str,
-    ) -> None:
+    def test_checksum_message_names_correct_letter(self) -> None:
         from ...errors import resolve_error_message
 
-        with pytest.raises(IdentityError) as excinfo:
-            validate_identity(candidate)
-        message = resolve_error_message(excinfo.value)
-        assert expected_body in message
-        assert expected_letter in message
+        cases = (
+            ("12345678A", "12345678", "Z"),
+            ("X1234567Z", "X1234567", "L"),
+        )
+        for candidate, expected_body, expected_letter in cases:
+            with pytest.raises(IdentityError) as excinfo:
+                validate_identity(candidate)
+            message = resolve_error_message(excinfo.value)
+            assert expected_body in message
+            assert expected_letter in message
 
-    def test_malformed_nif_message_states_expected_shape(self) -> None:
+    def test_malformed_document_messages_state_expected_shape(self) -> None:
         from ...errors import resolve_error_message
 
-        with pytest.raises(IdentityError) as excinfo:
-            validate_identity("1234567Z")
-        message = resolve_error_message(excinfo.value)
-        # The shape rule must be stated: 8 digits + a check letter.
-        assert "8" in message
-
-    def test_malformed_nie_message_states_expected_shape(self) -> None:
-        from ...errors import resolve_error_message
-
-        # Leading X routes to NIE; six digits is the wrong NIE shape.
-        with pytest.raises(IdentityError) as excinfo:
-            validate_identity("X123456Z")
-        message = resolve_error_message(excinfo.value)
-        assert excinfo.value.translated_message == "errors.identity.nie_invalid_shape"
-        # The shape rule names the X/Y/Z prefix.
-        assert "X" in message
+        cases = (
+            # The NIF shape rule must be stated: 8 digits + a check letter.
+            ("1234567Z", "errors.identity.nif_invalid_shape", "8"),
+            # Leading X routes to NIE; six digits is the wrong NIE shape.
+            ("X123456Z", "errors.identity.nie_invalid_shape", "X"),
+        )
+        for candidate, expected_translated_message, expected_fragment in cases:
+            with pytest.raises(IdentityError) as excinfo:
+                validate_identity(candidate)
+            message = resolve_error_message(excinfo.value)
+            assert excinfo.value.translated_message == expected_translated_message
+            assert expected_fragment in message
 
 
 class TestCifKindCatalogue:
     """Pin the distinction between NIF prefixes and CIF kind letters."""
 
-    @pytest.mark.parametrize("nif_prefix", ("K", "L", "M"))
-    def test_nif_prefix_absent_from_cif_kind_letters(self, nif_prefix: str) -> None:
+    def test_nif_prefix_absent_from_cif_kind_letters(self) -> None:
         from .._documents import _CIF_KIND_LETTERS
 
-        assert nif_prefix not in _CIF_KIND_LETTERS
+        for nif_prefix in ("K", "L", "M"):
+            assert nif_prefix not in _CIF_KIND_LETTERS
 
-    @pytest.mark.parametrize("candidate", ("K1234567L", "L1234567L", "M1234567L"))
-    def test_validate_spanish_tax_id_accepts_current_prefixed_nif(self, candidate: str) -> None:
+    def test_current_prefixed_nif_variants_validate_as_nif(self) -> None:
         from .._tax_id import validate_spanish_tax_id
 
-        assert validate_spanish_tax_id(candidate) == candidate
+        for candidate in ("K1234567L", "L1234567L", "M1234567L"):
+            assert validate_spanish_tax_id(candidate) == candidate
+            assert validate_identity(candidate) is IdentityDocument.NIF
 
-    @pytest.mark.parametrize("candidate", ("K1234567L", "L1234567L", "M1234567L"))
-    def test_validate_identity_routes_current_prefixed_nif_to_nif(self, candidate: str) -> None:
-        assert validate_identity(candidate) is IdentityDocument.NIF
-
-    @pytest.mark.parametrize("candidate", ("K1234567D", "L1234567D", "M1234567D"))
-    def test_prefixed_nif_wrong_check_letter_rejected(self, candidate: str) -> None:
-        with pytest.raises(IdentityError) as excinfo:
-            validate_identity(candidate)
-        assert excinfo.value.translated_message == "errors.identity.nif_check_letter_mismatch"
+        for candidate in ("K1234567D", "L1234567D", "M1234567D"):
+            with pytest.raises(IdentityError) as excinfo:
+                validate_identity(candidate)
+            assert excinfo.value.translated_message == "errors.identity.nif_check_letter_mismatch"
 
 
 class TestErrorCodeBinding:
@@ -289,24 +228,14 @@ class TestNifHardeningRejection:
     validate_identity is the correct boundary enforcer.
     """
 
-    @pytest.mark.parametrize(
-        ("candidate", "expected_message"),
-        (
-            pytest.param(
-                "12345678A",
-                "errors.identity.nif_check_letter_mismatch",
-                id="wrong-check-letter",
-            ),
-            pytest.param("1234567Z", "errors.identity.nif_invalid_shape", id="short-nif"),
-            pytest.param("NOTANIF", None, id="uppercase-garbage"),
-        ),
-    )
-    def test_malformed_nifs_rejected_not_silently_normalised(
-        self,
-        candidate: str,
-        expected_message: str | None,
-    ) -> None:
-        with pytest.raises(IdentityError) as excinfo:
-            validate_identity(candidate)
-        if expected_message is not None:
-            assert excinfo.value.translated_message == expected_message
+    def test_malformed_nifs_rejected_not_silently_normalised(self) -> None:
+        cases = (
+            ("12345678A", "errors.identity.nif_check_letter_mismatch"),
+            ("1234567Z", "errors.identity.nif_invalid_shape"),
+            ("NOTANIF", None),
+        )
+        for candidate, expected_message in cases:
+            with pytest.raises(IdentityError) as excinfo:
+                validate_identity(candidate)
+            if expected_message is not None:
+                assert excinfo.value.translated_message == expected_message

@@ -1,10 +1,10 @@
 """Preparation gates for modelo calculation actions.
 
 This module prepares calculation input channels against the registry
-:class:`ModeloRevision` for a :class:`aeat.domain.modelos.WorkUnit`, resolves
-the law-determined :class:`RegistrySnapshot`, applies the Modelo 303 IVA wallet
-gate, and runs ledger preflight through a :class:`TransactionCatalogueRepository`
-before calculation proceeds.
+:class:`ModeloRevision` for a :class:`WorkUnit`, resolves the law-determined
+:class:`RegistrySnapshot`, applies the Modelo 303 IVA wallet gate, and runs
+ledger preflight through a :class:`TransactionCatalogueRepository` before
+calculation proceeds.
 """
 
 from __future__ import annotations
@@ -52,7 +52,7 @@ resolve_iva_compensation_decision_for_calculation = _iva_wallet_gate.resolve_iva
 class PreparedCalculation:
     """Validated calculation preflight bundle consumed by the action layer.
 
-    ``work_unit`` is the loaded :class:`aeat.domain.modelos.WorkUnit`;
+    ``work_unit`` is the loaded :class:`WorkUnit`;
     ``snapshot`` is the resolved :class:`RegistrySnapshot`; ``channels`` is the
     merged :class:`ResolvedCalculationChannels` set that the registry engine will
     consume. Casilla inputs have already been canonicalised and ledger, profile,
@@ -92,14 +92,15 @@ def prepare_calculation(
     requirements. ``ledger_preflight_transaction_repository`` may provide a
     :class:`TransactionCatalogueRepository` for the ledger-tax readiness check.
     ``iva_compensation_decision_repository`` may provide the matching
-    :class:`aeat.application.calculations.IvaWalletDecisionRepository` for the
+    :class:`~aeat.application.calculations.IvaWalletDecisionRepository` for the
     Modelo 303 wallet authority, while
-    :class:`aeat.application.live.Borrador100SnapshotRepository` supplies the
+    :class:`~aeat.application.live.Borrador100SnapshotRepository` supplies the
     optional Modelo 100 borrador tier.
 
     Returns:
-        A :class:`PreparedCalculation` carrying the work unit, snapshot, validated
-        inputs, period date, and resolved binding channels.
+        A :class:`PreparedCalculation` carrying the :class:`WorkUnit`,
+        :class:`RegistrySnapshot`, validated inputs, period date, and
+        :class:`ResolvedCalculationChannels`.
     """
     work_units = work_unit_repository.load()
     work_unit = _load_work_unit_for_calculation(work_units, work_unit_id=work_unit_id)

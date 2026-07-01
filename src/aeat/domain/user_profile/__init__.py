@@ -21,7 +21,10 @@ bundle composes four heavy domain types
 calculation registry; eagerly re-exporting it at this boundary would drag the
 full registry into every consumer that touches the package surface, including
 the state-free CLI surfaces enforced by
-:mod:`aeat.entrypoints.cli.test_lazy_command_tree`. Every other
+:mod:`aeat.entrypoints.cli.test_lazy_command_tree`. :class:`CarriedSecureObject`
+and :class:`CoverageManifest` are declared in the same
+``_portable_export`` module and share the same lazy-resolution path so
+importing either does not trigger the same cascade. Every other
 re-export (errors, value records, schema records, loader,
 registry-contract) stays eager because each is genuinely lightweight
 and every consumer pays for it unconditionally.
@@ -51,13 +54,16 @@ from typing import TYPE_CHECKING
 
 from ._errors import (
     ProfileAlreadyExistsError,
+    ProfileExportError,
     ProfileNotFoundError,
     ProfilePreflightMissingError,
     ProfileSchemaValidationError,
     ProfileSnapshotHashMismatchError,
     ProfileSnapshotNotFoundError,
     StoredProfileDriftError,
+    UserProfileError,
     UserProfileSchemaLoadError,
+    UserProfileValidationError,
 )
 from ._loader import load_user_profile_schema
 from ._registry_contract import (
@@ -85,10 +91,11 @@ from ._values import (
     UserProfileStatus,
     new_profile_id,
     new_profile_snapshot_id,
+    utc_now,
 )
 
 if TYPE_CHECKING:
-    from ._portable_export import UserProfilePortableExport
+    from ._portable_export import CarriedSecureObject, CoverageManifest, UserProfilePortableExport
 
 
 def __getattr__(name: str):
@@ -97,17 +104,29 @@ def __getattr__(name: str):
     The portable-export bundle's domain-type composition cascades into
     the calculation registry; routing the symbol through ``__getattr__``
     defers that cost to first-use rather than module-import.
+    :class:`CarriedSecureObject` and :class:`CoverageManifest` are declared
+    in the same ``_portable_export`` module, so they share the same
+    lazy-resolution rationale.
     """
     if name == "UserProfilePortableExport":
         from ._portable_export import UserProfilePortableExport
 
         globals()[name] = UserProfilePortableExport
         return UserProfilePortableExport
+    if name in ("CarriedSecureObject", "CoverageManifest"):
+        from . import _portable_export
+
+        value = getattr(_portable_export, name)
+        globals()[name] = value
+        return value
     raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
 
 
 __all__ = [
+    "CarriedSecureObject",
+    "CoverageManifest",
     "ProfileAlreadyExistsError",
+    "ProfileExportError",
     "ProfileFieldDefinition",
     "ProfileFieldType",
     "ProfileNotFoundError",
@@ -120,6 +139,7 @@ __all__ = [
     "ProfileSnapshotNotFoundError",
     "ProfileSnapshotPolicy",
     "StoredProfileDriftError",
+    "UserProfileError",
     "UserProfileFact",
     "UserProfileFactValue",
     "UserProfilePortableExport",
@@ -131,10 +151,12 @@ __all__ = [
     "UserProfileSelectorIndex",
     "UserProfileSnapshot",
     "UserProfileStatus",
+    "UserProfileValidationError",
     "build_user_profile_selector_index",
     "load_user_profile_schema",
     "new_profile_id",
     "new_profile_snapshot_id",
     "profile_binding_selectors",
+    "utc_now",
     "validate_user_profile_registry_contract",
 ]

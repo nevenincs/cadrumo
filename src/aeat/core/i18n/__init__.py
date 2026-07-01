@@ -23,6 +23,7 @@ from ..external_constants import OutputLanguage
 from ._render import (
     OUTPUT_LANGUAGE_ENV_VAR,
     SUPPORTED_OUTPUT_LANGUAGES,
+    clear_output_language_cache,
     output_language,
     register_profile_language_resolver,
     tr,
@@ -34,6 +35,7 @@ __all__ = [
     "SUPPORTED_OUTPUT_LANGUAGES",
     "OutputLanguage",
     "Translatable",
+    "clear_output_language_cache",
     "output_language",
     "register_profile_language_resolver",
     "tr",

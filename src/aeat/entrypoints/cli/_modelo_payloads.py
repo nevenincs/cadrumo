@@ -239,11 +239,13 @@ class CrossPeriodCleanStatePayload(OutputSchema):
 
 
 class VerificationReportPayload(OutputSchema):
-    """Shared projection of a :class:`aeat.domain.modelos.VerificationReport`.
+    """Shared projection of a :class:`~aeat.domain.modelos.VerificationReport`.
 
     ``findings`` carries the blocking or advisory
-    :class:`FindingPayload` rows that explain whether the selected
-    :class:`~aeat.domain.modelos.CalculationRevision` earned the verified-complete transition.
+    :class:`~aeat.entrypoints.cli._modelo_payloads.FindingPayload` rows that
+    explain whether the selected
+    :class:`~aeat.domain.modelos.CalculationRevision` earned the
+    verified-complete transition.
     """
 
     verification_report_id: VerificationReportId
@@ -473,12 +475,13 @@ class WorkCalculateResult(OutputSchema):
 
     The calculate CLI flattens the persisted
     :class:`~aeat.domain.modelos.CalculationRevision` fields from
-    :class:`CalculationRevisionPayload`, then adds the presentation-only values
+    :class:`~aeat.entrypoints.cli._modelo_payloads.CalculationRevisionPayload`,
+    then adds the presentation-only values
     carried by
     :class:`~aeat.application.modelo.ModeloWorkCalculationServiceResult`: Modelo
     202 modality, backend authorization state, and optional
-    :class:`WorkPlazoDeadlinePayload`. Non-blocking authorization and source
-    diagnostics are projected into the envelope's
+    :class:`~aeat.entrypoints.cli._modelo_payloads.WorkPlazoDeadlinePayload`.
+    Non-blocking authorization and source diagnostics are projected into the envelope's
     :class:`~aeat.core.json_contract.Notice` rows, not bespoke result fields.
     """
 
@@ -512,7 +515,8 @@ class WorkCalculateResult(OutputSchema):
 class WorkRevisionsResult(OutputSchema):
     """Calculation-revision listing returned by ``aeat app modelo work revisions``.
 
-    Each entry in ``revisions`` is a :class:`CalculationRevisionPayload`
+    Each entry in ``revisions`` is a
+    :class:`~aeat.entrypoints.cli._modelo_payloads.CalculationRevisionPayload`
     carrying the full casilla table, typed observations, and provenance for one
     persisted :class:`~aeat.domain.modelos.CalculationRevision`.
     """
@@ -529,11 +533,13 @@ class WorkVerifyResult(OutputSchema):
 
     The command delegates to
     :func:`aeat.application.modelo.verify_modelo_revision` and returns the
-    resulting :class:`VerificationReportPayload`. On a successful
+    resulting
+    :class:`~aeat.entrypoints.cli._modelo_payloads.VerificationReportPayload`.
+    On a successful
     verificado-completo verdict the revision transitions to
     ``verificado_completo``; on a refused verdict the revision is unchanged and
     ``findings`` names every blocking or advisory issue. Advisory findings also
-    ride the envelope's :class:`aeat.core.json_contract.Notice` channel.
+    ride the envelope's :class:`~aeat.core.json_contract.Notice` channel.
     """
 
     operation: str = "modelo.work.verify"
@@ -671,9 +677,11 @@ class ModeloRecordShowResult(OutputSchema):
 class VerificationReportListResult(OutputSchema):
     """Typed listing of persisted verification reports.
 
-    ``reports`` contains shared :class:`VerificationReportPayload` projections;
-    filtering only constrains ``calculation_revision_id_filter`` and leaves each
-    report's finding, missing-casilla, and verificado-completo fields intact.
+    ``reports`` contains shared
+    :class:`~aeat.entrypoints.cli._modelo_payloads.VerificationReportPayload`
+    projections; filtering only constrains ``calculation_revision_id_filter`` and
+    leaves each report's finding, missing-casilla, and verificado-completo fields
+    intact.
     """
 
     operation: str = "modelo.verification_report.list"
@@ -688,8 +696,9 @@ class VerificationReportShowResult(OutputSchema):
 
     This schema mirrors :class:`WorkVerifyResult` verification fields so
     operators can re-read a saved
-    :class:`aeat.domain.modelos.VerificationReport` with the same
-    :class:`FindingPayload` legal/source-reference detail emitted by
+    :class:`~aeat.domain.modelos.VerificationReport` with the same
+    :class:`~aeat.entrypoints.cli._modelo_payloads.FindingPayload`
+    legal/source-reference detail emitted by
     ``aeat app modelo work verify``.
     """
 

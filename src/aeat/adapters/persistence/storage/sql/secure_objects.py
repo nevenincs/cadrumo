@@ -215,11 +215,10 @@ class SecureObjectRepository:
         not runtime-bound; bootstrap-exempt verbs rely on that direct mode.
         """
         from ..errors import SessionExpiredError
-        from ..master_key._active_session import _active_session
-        from ..master_key._idle_timeout import evaluate_idle
+        from ..master_key import current_active_bucket_session, evaluate_idle
         from ..runtime import _runtime_not_ready_error
 
-        session = _active_session.get()
+        session = current_active_bucket_session()
         if session is None:
             if self._require_secure_active_session:
                 raise _runtime_not_ready_error(

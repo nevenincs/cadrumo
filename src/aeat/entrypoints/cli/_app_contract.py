@@ -66,7 +66,7 @@ def _ensure_result_schemas_registered() -> None:
                 importlib.import_module(f"{package_name}.{module_info.name}")
 
 
-def _command_schema_refs() -> tuple[CommandSchemaRef, ...]:
+def command_schema_refs() -> tuple[CommandSchemaRef, ...]:
     """Project the populated ``SCHEMA_REGISTRY`` into manifest references."""
     _ensure_result_schemas_registered()
     return tuple(
@@ -95,7 +95,7 @@ def _contract_root(ctx: typer.Context) -> None:
     """
     if ctx.invoked_subcommand is not None:
         return
-    command_schemas = _command_schema_refs()
+    command_schemas = command_schema_refs()
     manifest = build_operator_surface_manifest(
         envelope_schema_version=ENVELOPE_SCHEMA_VERSION,
         command_schemas=command_schemas,

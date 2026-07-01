@@ -221,22 +221,20 @@ def test_transaction_exemption_article_round_trips_for_domestic_exempt_category(
     assert restored.exemption_article is IvaExemptionArticle.ART_20_UNO_26
 
 
-@pytest.mark.parametrize("iva_category", (None, IvaCategory.DOMESTIC_GENERAL_21))
-def test_transaction_rejects_exemption_article_without_domestic_exempt_category(
-    iva_category: IvaCategory | None,
-) -> None:
-    payload: dict[str, object] = {
-        "raw": _sample_raw(),
-        "direction": TransactionDirection.INCOMING,
-        "group_label": None,
-        "source_jurisdiction": "ES",
-        "exemption_article": IvaExemptionArticle.ART_20_UNO_26,
-    }
-    if iva_category is not None:
-        payload["iva_category"] = iva_category
+def test_transaction_rejects_exemption_article_without_domestic_exempt_category() -> None:
+    for iva_category in (None, IvaCategory.DOMESTIC_GENERAL_21):
+        payload: dict[str, object] = {
+            "raw": _sample_raw(),
+            "direction": TransactionDirection.INCOMING,
+            "group_label": None,
+            "source_jurisdiction": "ES",
+            "exemption_article": IvaExemptionArticle.ART_20_UNO_26,
+        }
+        if iva_category is not None:
+            payload["iva_category"] = iva_category
 
-    with pytest.raises(ValidationError, match="exemption_article"):
-        Transaction.model_validate(payload)
+        with pytest.raises(ValidationError, match="exemption_article"):
+            Transaction.model_validate(payload)
 
 
 def test_transaction_lineage_fields_are_typed_and_round_trip_through_json() -> None:
@@ -367,80 +365,29 @@ def test_transaction_tax_fields_reject_negative_values_and_legacy_multi_purchase
 
 def test_classified_by_accepts_only_whitelisted_shapes() -> None:
     """classified_by must be auto, manual, or rule:<rule-id>."""
-    auto = Transaction.model_validate(
-        {
-            "raw": _sample_raw(),
-            "direction": TransactionDirection.INCOMING,
-            "group_label": None,
-            "source_jurisdiction": "ES",
-            "classified_by": "auto",
-        },
-    )
-    manual = Transaction.model_validate(
-        {
-            "raw": _sample_raw(),
-            "direction": TransactionDirection.INCOMING,
-            "group_label": None,
-            "source_jurisdiction": "ES",
-            "classified_by": "manual",
-        },
-    )
-    rule = Transaction.model_validate(
-        {
-            "raw": _sample_raw(),
-            "direction": TransactionDirection.INCOMING,
-            "group_label": None,
-            "source_jurisdiction": "ES",
-            "classified_by": "rule:vendor-map",
-        },
-    )
-    derived = Transaction.model_validate(
-        {
-            "raw": _sample_raw(),
-            "direction": TransactionDirection.INCOMING,
-            "group_label": None,
-            "source_jurisdiction": "ES",
-            "classified_by": "derived:iva-category",
-        },
-    )
-
-    assert auto.classified_by == "auto"
-    assert manual.classified_by == "manual"
-    assert rule.classified_by == "rule:vendor-map"
-    assert derived.classified_by == "derived:iva-category"
-
-    with pytest.raises(ValidationError):
-        Transaction.model_validate(
+    for classified_by in ("auto", "manual", "rule:vendor-map", "derived:iva-category"):
+        transaction = Transaction.model_validate(
             {
                 "raw": _sample_raw(),
                 "direction": TransactionDirection.INCOMING,
                 "group_label": None,
                 "source_jurisdiction": "ES",
-                "classified_by": "rule:",
+                "classified_by": classified_by,
             },
         )
+        assert transaction.classified_by == classified_by
 
-    with pytest.raises(ValidationError):
-        Transaction.model_validate(
-            {
-                "raw": _sample_raw(),
-                "direction": TransactionDirection.INCOMING,
-                "group_label": None,
-                "source_jurisdiction": "ES",
-                "classified_by": "derived:",
-            },
-        )
-
-    with pytest.raises(ValidationError):
-        Transaction.model_validate(
-            {
-                "raw": _sample_raw(),
-                "direction": TransactionDirection.INCOMING,
-                "group_label": None,
-                "source_jurisdiction": "ES",
-                "classified_by": "bot",
-            },
-        )
+    for classified_by in ("rule:", "derived:", "bot"):
+        with pytest.raises(ValidationError):
+            Transaction.model_validate(
+                {
+                    "raw": _sample_raw(),
+                    "direction": TransactionDirection.INCOMING,
+                    "group_label": None,
+                    "source_jurisdiction": "ES",
+                    "classified_by": classified_by,
+                },
+            )
 
 
 def test_business_classification_rejects_unclassified_literal() -> None:
@@ -599,36 +546,22 @@ def test_normalise_movement_reference_strips_accents_case_and_noise() -> None:
 # ---------------------------------------------------------------------------
 
 
-def test_source_jurisdiction_roundtrips_es_through_json() -> None:
-    """A Spanish-source value survives JSON model roundtrip with strict equality."""
-    original = Transaction.model_validate(
-        {
-            "raw": _sample_raw(),
-            "direction": TransactionDirection.INCOMING,
-            "group_label": None,
-            "source_jurisdiction": "ES",
-        },
-    )
-    restored = Transaction.model_validate_json(original.model_dump_json())
+def test_source_jurisdiction_validation_and_json_roundtrip() -> None:
+    """Rows must carry a nullable ISO alpha-2 source-jurisdiction axis."""
+    for raw_value, expected in (("ES", "ES"), (None, None), (" FR ", "FR")):
+        original = Transaction.model_validate(
+            {
+                "raw": _sample_raw(),
+                "direction": TransactionDirection.INCOMING,
+                "group_label": None,
+                "source_jurisdiction": raw_value,
+            },
+        )
+        restored = Transaction.model_validate_json(original.model_dump_json())
 
-    assert restored == original
-    assert restored.source_jurisdiction == "ES"
+        assert restored == original
+        assert restored.source_jurisdiction == expected
 
-
-def test_source_jurisdiction_is_required_but_nullable() -> None:
-    """Rows must carry the axis key, while explicit unknown remains valid."""
-    original = Transaction.model_validate(
-        {
-            "raw": _sample_raw(),
-            "direction": TransactionDirection.INCOMING,
-            "group_label": None,
-            "source_jurisdiction": None,
-        },
-    )
-    restored = Transaction.model_validate_json(original.model_dump_json())
-
-    assert restored == original
-    assert restored.source_jurisdiction is None
     with pytest.raises(ValidationError, match="Field required"):
         Transaction.model_validate(
             {
@@ -638,9 +571,6 @@ def test_source_jurisdiction_is_required_but_nullable() -> None:
             },
         )
 
-
-def test_source_jurisdiction_rejects_non_iso_alpha2_codes() -> None:
-    """Anti-tautology: the validator must reject malformed jurisdiction codes."""
     for invalid in ("INVALID", "es", "E1", "E", "ESP", "  "):
         with pytest.raises(ValidationError):
             Transaction.model_validate(
@@ -651,20 +581,6 @@ def test_source_jurisdiction_rejects_non_iso_alpha2_codes() -> None:
                     "source_jurisdiction": invalid,
                 },
             )
-
-
-def test_source_jurisdiction_normalises_surrounding_whitespace() -> None:
-    """Trimming yields the canonical two-letter form."""
-    txn = Transaction.model_validate(
-        {
-            "raw": _sample_raw(),
-            "direction": TransactionDirection.INCOMING,
-            "group_label": None,
-            "source_jurisdiction": " FR ",
-        },
-    )
-
-    assert txn.source_jurisdiction == "FR"
 
 
 def test_group_label_is_required_but_nullable() -> None:

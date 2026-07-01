@@ -1,0 +1,14 @@
+{
+  "modelo": "100",
+  "filing_year": 2024,
+  "source_kind": "aeat_manual_worked_example",
+  "scenario_id": "m100-2024-ganancias-patrimoniales-transmision-inmueble-abatimiento",
+  "raw_evidence_locator": "corpus/manuals/renta/2024/part1/source.pdf.extracted.md#L42725-L42839",
+  "notes": "AEAT Manual practico de Renta 2024, Parte 1, Capitulo 11 (Ganancias y perdidas patrimoniales), caso practico de don J.P.C. (segunda de las cuatro operaciones: 'Transmision del piso'). The manual states its own subtotals verbatim in the solucion: 'Valor de transmision (150.000 - 1.900) (1) = 148.100' (L42778), 'Valor de adquisicion (2): 96.380' (L42779), 'Ganancia patrimonial (148.100,00 - 96.380,00) = 51.720' (L42780) and 'Ganancia patrimonial reducida (51.720 -2.157,05) = 49.562,95' (L42785). Each figure is independently re-derivable from the raw importe/gasto line items quoted in the manual via the registry's own 1826/1830/1836/1840 formula chain (see test_m100_2024_ganancias_patrimoniales_transmision_inmueble_manual_worked_example.py); the DT 9.a coeficientes-de-abatimiento sub-computation itself (19.415,38 x 11,11% = 2.157,05, note (3), L42781-L42785) is quoted as the manual's own printed figure into casilla 1839, exactly as the registry models it (a raw input casilla with no formula of its own), and is not re-derived by this test.",
+  "expected_by_casilla_id": {
+    "1826": "148100.00",
+    "1830": "96380.00",
+    "1836": "51720.00",
+    "1840": "49562.95"
+  }
+}

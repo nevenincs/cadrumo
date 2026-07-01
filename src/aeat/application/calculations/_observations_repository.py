@@ -117,7 +117,7 @@ class _ObservationEnvelopePayload(BaseModel):
     )
 
 
-class _IvaWalletDecisionEnvelopePayload(BaseModel):
+class IvaWalletDecisionEnvelopePayload(BaseModel):
     """Serialisable wrapper for an IVA wallet reconciliation decision."""
 
     model_config = STRICT_FROZEN_CONFIG
@@ -380,7 +380,7 @@ class CalculationObservationRepository(SecureBoundRepository[_ObservationEnvelop
                 yield payload
 
 
-class IvaWalletDecisionRepository(SecureBoundRepository[_IvaWalletDecisionEnvelopePayload]):
+class IvaWalletDecisionRepository(SecureBoundRepository[IvaWalletDecisionEnvelopePayload]):
     """Repository over encrypted SQL-backed IVA wallet reconciliation decisions.
 
     Holds one latest decision per ``(taxpayer_nif, target_year, target_period)``
@@ -403,18 +403,18 @@ class IvaWalletDecisionRepository(SecureBoundRepository[_IvaWalletDecisionEnvelo
     history_namespace: ClassVar[str] = IVA_WALLET_RECONCILIATION_DECISION_EVENTS_NAMESPACE.namespace
     sensitivity: ClassVar[SensitivityClass] = IVA_WALLET_RECONCILIATION_DECISIONS_NAMESPACE.sensitivity
     schema_version: ClassVar[int] = IVA_WALLET_RECONCILIATION_DECISIONS_NAMESPACE.schema_version
-    payload_type: ClassVar[type[BaseModel]] = _IvaWalletDecisionEnvelopePayload
+    payload_type: ClassVar[type[BaseModel]] = IvaWalletDecisionEnvelopePayload
 
     @override
-    def extract_identifier(self, payload: _IvaWalletDecisionEnvelopePayload) -> str:
+    def extract_identifier(self, payload: IvaWalletDecisionEnvelopePayload) -> str:
         decision = payload.decision
         return iva_wallet_decision_key(decision.taxpayer_nif, decision.target_period)
 
     def save_decision(self, decision: IvaCompensationReconciliationDecision) -> None:
         """Persist ``decision`` to latest lookup and immutable audit history."""
-        payload = _IvaWalletDecisionEnvelopePayload(decision=decision)
+        payload = IvaWalletDecisionEnvelopePayload(decision=decision)
         super().save(payload)
-        envelope = Envelope[_IvaWalletDecisionEnvelopePayload](
+        envelope = Envelope[IvaWalletDecisionEnvelopePayload](
             schema_version=self.schema_version,
             written_at=now(),
             classification=self.sensitivity,
@@ -473,7 +473,7 @@ class IvaWalletDecisionRepository(SecureBoundRepository[_IvaWalletDecisionEnvelo
             expected_class=self.sensitivity,
             max_supported_version=self.schema_version,
         ):
-            envelope = Envelope[_IvaWalletDecisionEnvelopePayload].model_validate_json(
+            envelope = Envelope[IvaWalletDecisionEnvelopePayload].model_validate_json(
                 record.payload.decode(UTF_8_ENCODING),
             )
             decision = envelope.payload.decision

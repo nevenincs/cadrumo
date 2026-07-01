@@ -164,6 +164,7 @@ if TYPE_CHECKING:
         verify_recovery_code,
     )
     from ._filing_baseline import missing_filing_baseline_flags
+    from ._keys_validation import list_profile_key_records, validate_profile_values
     from ._lifecycle import ProfileLifecycleService
     from ._orchestration import (
         ProfileAlreadyRegisteredError,
@@ -174,10 +175,12 @@ if TYPE_CHECKING:
         profile_create_storage_span,
         profile_storage_session,
         read_active_profile,
+        refuse_duplicate_label,
         register_active_profile,
         remove_active_profile,
         remove_profile_bucket_directory,
         rename_profile,
+        require_registered_label,
         select_profile,
         select_profile_with_lifecycle_span,
         set_active_field,
@@ -326,6 +329,10 @@ def __getattr__(name: str):
         from ._filing_baseline import missing_filing_baseline_flags
 
         return missing_filing_baseline_flags
+    if name in ("list_profile_key_records", "validate_profile_values"):
+        from . import _keys_validation
+
+        return getattr(_keys_validation, name)
     if name in (
         "ProfileAlreadyRegisteredError",
         "build_lifecycle_service",
@@ -335,10 +342,12 @@ def __getattr__(name: str):
         "profile_create_storage_span",
         "profile_storage_session",
         "read_active_profile",
+        "refuse_duplicate_label",
         "register_active_profile",
         "remove_active_profile",
         "remove_profile_bucket_directory",
         "rename_profile",
+        "require_registered_label",
         "select_profile",
         "select_profile_with_lifecycle_span",
         "set_active_field",
@@ -433,6 +442,7 @@ __all__ = [
     "fact_value",
     "facts_to_values",
     "inspect_recovery_status",
+    "list_profile_key_records",
     "logout_active_profile",
     "mint_recovery_code",
     "missing_filing_baseline_flags",
@@ -444,11 +454,13 @@ __all__ = [
     "record_to_values",
     "recover_secret_store",
     "recovery_wrap_path",
+    "refuse_duplicate_label",
     "register_active_profile",
     "rekey_secret_store",
     "remove_active_profile",
     "remove_profile_bucket_directory",
     "rename_profile",
+    "require_registered_label",
     "resolve_active_capability",
     "resolve_capability",
     "select_profile",
@@ -459,5 +471,6 @@ __all__ = [
     "snapshot_to_values",
     "user_profile_snapshot_object_key",
     "user_profile_value_object_key",
+    "validate_profile_values",
     "verify_recovery_code",
 ]

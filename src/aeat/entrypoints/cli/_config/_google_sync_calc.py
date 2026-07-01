@@ -20,10 +20,10 @@ from ....adapters.outbound.google._calc_sheets_apply import (
     CalcSheetsApplyResult,
     apply_export_plan,
 )
-from ....adapters.outbound.storage import OutboundStorageError
-from ....adapters.outbound.storage._factory import (
-    _build_google_credentials,
-    _resolve_drive_root_folder_id,
+from ....adapters.outbound.storage import (
+    OutboundStorageError,
+    build_google_credentials,
+    resolve_drive_root_folder_id,
 )
 from ....application.storage.calc_sheets import (
     OperatorInputs,
@@ -77,8 +77,8 @@ _YearArg = Annotated[
 def _resolve_credentials_and_root(profile: str) -> tuple[object, str]:
     """Hydrate refreshable Google credentials + the configured Drive root."""
     settings = load_settings()
-    credentials = _build_google_credentials(profile=profile)
-    root_folder_id = _resolve_drive_root_folder_id(profile=profile, settings=settings)
+    credentials = build_google_credentials(profile=profile)
+    root_folder_id = resolve_drive_root_folder_id(profile=profile, settings=settings)
     if not root_folder_id:
         raise CliRefusedBoundaryError(
             translated_message="cli.config.google.sync.calc.export.root_folder_required",
@@ -234,7 +234,7 @@ def google_sync_calc_verify(
     """Run a three-way parity check across AEAT oracle, local Decimal runtime, and Sheets."""
     from decimal import Decimal
 
-    from ....application.storage.calc_sheets._parity_harness import (
+    from ....application.storage.calc_sheets import (
         OperatorInputScenario,
         verify_modelo_parity,
     )

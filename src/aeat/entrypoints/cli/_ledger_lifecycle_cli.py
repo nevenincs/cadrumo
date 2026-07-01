@@ -217,8 +217,7 @@ def ledger_doclink(
     """
     from ...adapters.outbound.google import resolve_document_link
     from ...adapters.outbound.google._active_profile import resolve_active_profile
-    from ...adapters.outbound.storage import OutboundStorageError
-    from ...adapters.outbound.storage._factory import _build_google_credentials
+    from ...adapters.outbound.storage import OutboundStorageError, build_google_credentials
     from ...adapters.persistence.storage import AttachmentStore
     from ...domain.attachments import AttachmentKind, add_attachment_bytes
 
@@ -229,7 +228,7 @@ def ledger_doclink(
 
     profile = resolve_active_profile()
     try:
-        credentials = _build_google_credentials(profile=profile)
+        credentials = build_google_credentials(profile=profile)
         data = resolve_document_link(
             source=attachment_source,
             reference=reference,

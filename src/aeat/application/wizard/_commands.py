@@ -924,14 +924,14 @@ def _require_profile_name(flow: WizardFlow, raw_profile_name: object) -> str:
 def _resolve_profile_id_for_mode(flow: WizardFlow, mode: WizardPersistMode, profile_name: str) -> str:
     """Resolve or mint the immutable profile id for the requested wizard mode."""
     from ...domain.user_profile import new_profile_id
-    from ..user_profile._orchestration import _refuse_duplicate_label, _require_registered_label
+    from ..user_profile import refuse_duplicate_label, require_registered_label
     from ..workflow._profile_bucket_scan import read_profile_bucket
 
     if mode == "create":
-        _refuse_duplicate_label(profile_name)
+        refuse_duplicate_label(profile_name)
         return new_profile_id()
 
-    _require_registered_label(profile_name)
+    require_registered_label(profile_name)
     pointer = read_profile_bucket(profile_name)
     if pointer is not None:
         return pointer.bucket_id

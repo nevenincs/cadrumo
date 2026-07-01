@@ -1,10 +1,10 @@
 """Typer registration for modelo filing-record and verification-report commands.
 
-The filing-record commands render stored :class:`aeat.domain.modelos.ModeloRecord`
-rows, import AEAT-attested external evidence through
+The filing-record commands render stored :class:`ModeloRecord` rows, import
+AEAT-attested external evidence through
 :func:`aeat.application.modelo.import_external_filing_evidence`, and record
 operator-supplied local observations for calculation prefill. Verification-report
-commands expose persisted :class:`aeat.domain.modelos.VerificationReport` rows.
+commands expose persisted :class:`VerificationReport` rows.
 """
 
 from __future__ import annotations
@@ -250,10 +250,10 @@ def filing_record_import(
         ),
     ] = None,
 ) -> None:
-    """Import AEAT external evidence as a current :class:`aeat.domain.modelos.ModeloRecord`.
+    """Import AEAT external evidence as a current :class:`ModeloRecord`.
 
     The CLI validates :class:`ExternalEvidenceKind`, parses each ``--set`` value
-    into a ``CasillaId`` decimal, resolves the active profile tax id, and
+    into a :class:`CasillaId` decimal, resolves the active profile tax id, and
     delegates to :func:`aeat.application.modelo.import_external_filing_evidence`.
     The result is emitted as :class:`FilingRecordImportResult`; it is an
     AEAT-attested baseline for the amendment path, not a live submission from
@@ -347,11 +347,11 @@ def filing_record_observe_local(
 ) -> None:
     """Record non-official local observations for later calculation prefill.
 
-    The command parses canonical ``CasillaId`` decimal values, delegates to
+    The command parses canonical :class:`CasillaId` decimal values, delegates to
     :func:`aeat.application.modelo.record_operator_local_observation`, and emits
     :class:`FilingRecordLocalObservationResult` plus an advisory
-    :class:`aeat.core.json_contract.Notice`. It deliberately creates no
-    :class:`aeat.domain.modelos.ModeloRecord` and supplies no official AEAT
+    :class:`Notice`. It deliberately creates no
+    :class:`ModeloRecord` and supplies no official AEAT
     evidence for filing-grade clean-state checks.
     """
     modelo_code = _modelo_code(modelo)
@@ -443,10 +443,8 @@ def verification_report_list(
 ) -> None:
     """List persisted verification reports, optionally scoped to one revision.
 
-    Each row is an :class:`aeat.domain.modelos.VerificationReport` projected
-    through
-    :class:`~aeat.entrypoints.cli._modelo_payloads.VerificationReportListResult`
-    and nested
+    Each row is a persisted :class:`VerificationReport` projected through
+    :class:`VerificationReportListResult` and nested
     :class:`~aeat.entrypoints.cli._modelo_payloads.VerificationReportPayload`,
     preserving the same findings surface as ``aeat app modelo work verify``.
     """

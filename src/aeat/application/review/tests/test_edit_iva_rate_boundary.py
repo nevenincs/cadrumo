@@ -25,17 +25,17 @@ from .._errors import EditParseError
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 
-@pytest.mark.parametrize("value", ["0", "4", "10", "21"])
-def test_invoice_edit_iva_rate_accepts_canonical_substrate_slots(value: str) -> None:
-    spec = InvoiceEditSpec.from_strings([f"iva.rate={value}"])
-    assert spec.iva_rate == Decimal(value)
+def test_invoice_edit_iva_rate_accepts_canonical_substrate_slots() -> None:
+    for value in ("0", "4", "10", "21"):
+        spec = InvoiceEditSpec.from_strings([f"iva.rate={value}"])
+        assert spec.iva_rate == Decimal(value)
 
 
-@pytest.mark.parametrize("bad_value", ["5", "7", "12", "15", "16", "21.5", "100"])
-def test_invoice_edit_iva_rate_rejects_non_canonical_values(bad_value: str) -> None:
-    with pytest.raises(EditParseError, match=r"unsupported-iva-rate") as excinfo:
-        InvoiceEditSpec.from_strings([f"iva.rate={bad_value}"])
-    assert "unsupported-iva-rate" in str(excinfo.value.reason)
+def test_invoice_edit_iva_rate_rejects_non_canonical_values() -> None:
+    for bad_value in ("5", "7", "12", "15", "16", "21.5", "100"):
+        with pytest.raises(EditParseError, match=r"unsupported-iva-rate") as excinfo:
+            InvoiceEditSpec.from_strings([f"iva.rate={bad_value}"])
+        assert "unsupported-iva-rate" in str(excinfo.value.reason)
 
 
 def test_invoice_edit_iva_rate_rejects_negative_decimal() -> None:
@@ -48,17 +48,17 @@ def test_invoice_edit_iva_rate_rejects_garbage_string() -> None:
         InvoiceEditSpec.from_strings(["iva.rate=twenty-one"])
 
 
-@pytest.mark.parametrize("value", ["0", "7", "15", "19", "47", "100"])
-def test_invoice_edit_retention_rate_accepts_values_in_range(value: str) -> None:
-    spec = InvoiceEditSpec.from_strings([f"retention.rate={value}"])
-    assert spec.retention_rate == Decimal(value)
+def test_invoice_edit_retention_rate_accepts_values_in_range() -> None:
+    for value in ("0", "7", "15", "19", "47", "100"):
+        spec = InvoiceEditSpec.from_strings([f"retention.rate={value}"])
+        assert spec.retention_rate == Decimal(value)
 
 
-@pytest.mark.parametrize("bad_value", ["-1", "101", "150", "1000"])
-def test_invoice_edit_retention_rate_rejects_out_of_range_values(bad_value: str) -> None:
-    with pytest.raises(EditParseError, match=r"retention-rate-out-of-range") as excinfo:
-        InvoiceEditSpec.from_strings([f"retention.rate={bad_value}"])
-    assert "retention-rate-out-of-range" in str(excinfo.value.reason)
+def test_invoice_edit_retention_rate_rejects_out_of_range_values() -> None:
+    for bad_value in ("-1", "101", "150", "1000"):
+        with pytest.raises(EditParseError, match=r"retention-rate-out-of-range") as excinfo:
+            InvoiceEditSpec.from_strings([f"retention.rate={bad_value}"])
+        assert "retention-rate-out-of-range" in str(excinfo.value.reason)
 
 
 def test_invoice_edit_with_canonical_iva_and_retention_round_trips() -> None:

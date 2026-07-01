@@ -4,9 +4,15 @@ Re-exports the :class:`StorageProvider` Protocol, the :class:`ProviderKind`
 selector, provider boundary records such as :class:`ProviderObjectMetadata`
 and :class:`ProviderProbeReport`, remote mirror records such as
 :class:`RemoteMirrorNamespaceManifest` and :class:`RemoteMirrorInspection`,
-the :func:`get_storage_provider` factory, manifest helpers including
-:func:`build_remote_mirror_namespace_manifest` and
-:func:`inspect_remote_mirror_upload`, and the typed
+the :func:`get_storage_provider` factory, Drive setup helpers
+:func:`build_google_credentials` and :func:`resolve_drive_root_folder_id`,
+manifest helpers (:func:`build_remote_mirror_namespace_manifest`,
+:func:`put_remote_mirror_namespace_manifest`,
+:func:`get_remote_mirror_namespace_manifest`,
+:func:`compare_remote_mirror_manifests`,
+:func:`inspect_remote_mirror_upload`,
+:func:`inspect_remote_mirror_download`, and
+:func:`remote_mirror_object_key_hmac`), and the typed
 :class:`OutboundStorageError` hierarchy.
 
 Concrete backends in :mod:`aeat.adapters.outbound.storage._local` and
@@ -29,7 +35,7 @@ from ._errors import (
     OutboundStorageValidationError,
     StorageCorruptionError,
 )
-from ._factory import get_storage_provider
+from ._factory import build_google_credentials, get_storage_provider, resolve_drive_root_folder_id
 from ._mirror_manifest import (
     REMOTE_MIRROR_MANIFEST_NAMESPACE,
     REMOTE_MIRROR_MANIFEST_SCHEMA_VERSION,
@@ -75,6 +81,7 @@ __all__ = [
     "RemoteMirrorObjectManifest",
     "StorageCorruptionError",
     "StorageProvider",
+    "build_google_credentials",
     "build_remote_mirror_namespace_manifest",
     "compare_remote_mirror_manifests",
     "get_remote_mirror_namespace_manifest",
@@ -83,4 +90,5 @@ __all__ = [
     "inspect_remote_mirror_upload",
     "put_remote_mirror_namespace_manifest",
     "remote_mirror_object_key_hmac",
+    "resolve_drive_root_folder_id",
 ]

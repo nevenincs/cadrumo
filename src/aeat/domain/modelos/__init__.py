@@ -78,6 +78,12 @@ from ._calculation_revision import (
     derive_calculation_revision_id,
 )
 from ._codes import ModeloCode
+from ._dt12_reduccion import (
+    Dt12WindowEligibility,
+    compute_dt12_reduccion_plan_pensiones,
+    dt12_regime_window_eligibility,
+)
+from ._errors import ModeloError, ModeloExportError, ModeloValidationError
 from ._filing_record import (
     ExternalEvidence,
     ExternalEvidenceKind,
@@ -87,7 +93,17 @@ from ._filing_record import (
     derive_filing_record_id,
 )
 from ._filing_repository import ModeloRecordCatalogueRepository, upsert_filing_record
-from ._ids import WorkUnitId
+from ._ids import CalculationRevisionId, FilingRecordId, VerificationReportId, WorkUnitId
+from ._ledger_filing_snapshot import (
+    LedgerEvidenceRow,
+    LedgerFilingEvidence,
+    LedgerFilingSnapshot,
+    LedgerFilingStalenessVerdict,
+    LedgerRowFingerprint,
+    ManualFactBasisEntry,
+    diff_ledger_fingerprints,
+    snapshot_fingerprint,
+)
 from ._participation_index import (
     PARTICIPATION_INDEX_NAMESPACE,
     PARTICIPATION_INDEX_SCHEMA_VERSION,
@@ -107,15 +123,21 @@ from ._protocols import (
 from ._repository import WorkUnitCatalogueRepository, upsert_work_unit
 from ._row_models import (
     Modelo184MemberRow,
+    Modelo184ShareSumError,
     Modelo232VinculadaRow,
     Modelo347ContraparteRow,
+    Modelo347ThresholdError,
     Modelo349CountryPrefixContextError,
     Modelo349OperadorRow,
     Modelo349RectificacionRow,
     ModeloDetailRow,
+    m349_nif_number_for_export,
+    validate_m184_member_share_sum,
+    validate_m347_threshold,
     validate_m349_country_prefix_context,
     validate_m349_nif_format,
 )
+from ._sal_reserva_especial import compute_sal_reserva_especial_dotacion
 from ._verification_report import (
     ModeloVerificationFinding,
     ModeloVerificationFindingKind,
@@ -126,7 +148,7 @@ from ._verification_report import (
     derive_verification_report_id,
 )
 from ._verification_repository import VerificationReportCatalogueRepository, upsert_verification_report
-from ._work_unit import WorkUnit, WorkUnitCatalogue, derive_work_unit_id
+from ._work_unit import WorkUnit, WorkUnitCatalogue, WorkUnitState, derive_work_unit_id
 
 __all__ = (
     "PARTICIPATION_INDEX_NAMESPACE",
@@ -136,22 +158,36 @@ __all__ = (
     "CalculationRevisionCatalogue",
     "CalculationRevisionCatalogueRepository",
     "CalculationRevisionCatalogueRepositoryProtocol",
+    "CalculationRevisionId",
     "CalculationRevisionState",
+    "Dt12WindowEligibility",
     "ExternalEvidence",
     "ExternalEvidenceKind",
+    "FilingRecordId",
+    "LedgerEvidenceRow",
+    "LedgerFilingEvidence",
+    "LedgerFilingSnapshot",
+    "LedgerFilingStalenessVerdict",
+    "LedgerRowFingerprint",
+    "ManualFactBasisEntry",
     "Modelo184MemberRow",
+    "Modelo184ShareSumError",
     "Modelo232VinculadaRow",
     "Modelo347ContraparteRow",
+    "Modelo347ThresholdError",
     "Modelo349CountryPrefixContextError",
     "Modelo349OperadorRow",
     "Modelo349RectificacionRow",
     "ModeloCode",
     "ModeloDetailRow",
+    "ModeloError",
+    "ModeloExportError",
     "ModeloRecord",
     "ModeloRecordCatalogue",
     "ModeloRecordCatalogueRepository",
     "ModeloRecordCatalogueRepositoryProtocol",
     "ModeloRecordStatus",
+    "ModeloValidationError",
     "ModeloVerificationFinding",
     "ModeloVerificationFindingKind",
     "ModeloVerificationFindingSeverity",
@@ -164,21 +200,31 @@ __all__ = (
     "VerificationReportCatalogue",
     "VerificationReportCatalogueRepository",
     "VerificationReportCatalogueRepositoryProtocol",
+    "VerificationReportId",
     "WorkUnit",
     "WorkUnitCatalogue",
     "WorkUnitCatalogueRepository",
     "WorkUnitCatalogueRepositoryProtocol",
     "WorkUnitId",
+    "WorkUnitState",
+    "compute_dt12_reduccion_plan_pensiones",
+    "compute_sal_reserva_especial_dotacion",
     "derive_calculation_revision_id",
     "derive_filing_record_id",
     "derive_participation_index_id",
     "derive_verification_report_id",
     "derive_work_unit_id",
+    "diff_ledger_fingerprints",
+    "dt12_regime_window_eligibility",
+    "m349_nif_number_for_export",
+    "snapshot_fingerprint",
     "upsert_calculation_revision",
     "upsert_filing_record",
     "upsert_transaction_participation",
     "upsert_verification_report",
     "upsert_work_unit",
+    "validate_m184_member_share_sum",
+    "validate_m347_threshold",
     "validate_m349_country_prefix_context",
     "validate_m349_nif_format",
 )

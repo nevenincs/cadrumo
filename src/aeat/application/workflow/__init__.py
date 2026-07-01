@@ -73,6 +73,9 @@ See Also:
 
 from __future__ import annotations
 
+# ---- auth (re-exported for WorkflowState.auth field callers) ----------------
+from ..auth import AuthState
+
 # ---- adapters & engine (pull in auth / filing layers) -----------------------
 from ._adapters import (
     DeadlineEngineAdapter,
@@ -174,6 +177,7 @@ from ._resume import (
 __all__ = [
     "ActiveProfileHealth",
     "ActiveProfileRepairResult",
+    "AuthState",
     "CertificateBundleProtocol",
     "DeadlineEngineAdapter",
     "DeadlineEngineProtocol",

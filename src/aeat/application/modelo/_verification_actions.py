@@ -1,11 +1,10 @@
 """Verification actions and predicates for modelo filings.
 
 ``verify_modelo_revision`` evaluates a draft
-:class:`~aeat.domain.modelos.CalculationRevision` against
-its :class:`~aeat.domain.calculations.registry.RegistrySnapshot`, workflow
-:class:`~aeat.domain.deadlines.TaxpayerProfile`, ledger diagnostics, registry
-verification predicates, and cross-period clean-state verdicts before persisting
-a :class:`~aeat.domain.modelos.VerificationReport`.
+:class:`CalculationRevision` against its :class:`RegistrySnapshot`, workflow
+:class:`TaxpayerProfile`, ledger diagnostics, registry verification predicates,
+and cross-period clean-state verdicts before persisting a
+:class:`VerificationReport`.
 
 Verification findings are the operator-facing gate vocabulary. BLOCKING-severity
 findings refuse the verified-complete transition; WARNING-severity ADVISORY
@@ -13,14 +12,13 @@ findings remain visible in the report without bricking verify, file, or export.
 Calculate-path source diagnostics are separate
 :class:`~aeat.application.aggregation.CalculationSourceDiagnostic` advisories;
 this module converts only verify-time registry, profile, provenance, and
-cross-period facts into :class:`~aeat.domain.modelos.ModeloVerificationFinding`
-records.
+cross-period facts into :class:`ModeloVerificationFinding` records.
 
 Verification emits bucket-history entries through
-:class:`~aeat.domain.buckets.BucketEventHistoryRepository`, stores casilla-level
-:class:`~aeat.domain.calculations.registry.CasillaObservation` provenance, and
-uses :class:`~aeat.domain.transactions.TransactionCatalogueRepository` only for
-evidence advisories over source transactions.
+:class:`BucketEventHistoryRepository`, stores casilla-level
+:class:`CasillaObservation` provenance, and uses
+:class:`TransactionCatalogueRepository` only for evidence advisories over source
+transactions.
 
 See Also:
     :func:`~aeat.application.calculations.evaluate_cross_period_clean_state`:
@@ -967,16 +965,16 @@ def _missing_evidence_findings(
 ) -> list[ModeloVerificationFinding]:
     """Build verification findings for evidence-less positive IVA rows.
 
-    Loads the :class:`~aeat.domain.modelos.CalculationRevision` source
-    transactions for the supplied :class:`~aeat.domain.modelos.WorkUnit` and
+    Loads the :class:`CalculationRevision` source transactions for the supplied
+    :class:`WorkUnit` and
     projects each
     :class:`~aeat.application.aggregation.CalculationSourceDiagnostic`
     (reason ``missing_transaction_evidence``) into a
-    :class:`~aeat.domain.modelos.ModeloVerificationFinding`. Deductible input-IVA
-    and output-IVA gaps remain advisory on the verify path. A revision with no
-    contributing transactions, or whose significant rows all carry evidence,
-    yields no findings. Later filing/export finish lines may still refuse
-    unsupported deductible IVA.
+    :class:`ModeloVerificationFinding`. Deductible input-IVA and output-IVA gaps
+    remain advisory on the verify path. A revision with no contributing
+    transactions, or whose significant rows all carry evidence, yields no
+    findings. Later filing/export finish lines may still refuse unsupported
+    deductible IVA.
     """
     if not target.source_transaction_ids:
         return []
@@ -1108,26 +1106,25 @@ def verify_modelo_revision(
     """Evaluate a draft revision against registry, clean-state, provenance, and workflow gates.
 
     The verifier loads the draft
-    :class:`~aeat.domain.modelos.CalculationRevision`,
+    :class:`CalculationRevision`,
     resolves its work unit and registry snapshot, builds verify-time findings,
-    classifies the outcome, persists a
-    :class:`~aeat.domain.modelos.VerificationReport`, records
-    bucket history, and updates the calculation revision only when the
+    classifies the outcome, persists a :class:`VerificationReport`, records
+    bucket history, and updates the :class:`CalculationRevision` only when the
     verified-complete transition is granted.
 
-    The supplied :class:`~aeat.domain.deadlines.TaxpayerProfile` scopes
+    The supplied :class:`TaxpayerProfile` scopes
     deadline/applicability decisions, while
-    :class:`~aeat.domain.transactions.TransactionCatalogueRepository` supplies
+    :class:`TransactionCatalogueRepository` supplies
     non-blocking transaction-evidence advisories for source rows attached to the
     revision. WARNING-severity advisories remain report content; only BLOCKING
     severity can refuse the transition.
 
     Args:
         calculation_revision_id: Stable id of the draft
-            :class:`~aeat.domain.modelos.CalculationRevision` to verify.
+            :class:`CalculationRevision` to verify.
         actor: Operator label recorded on the verification report and bucket
             history event.
-        workflow_profile: :class:`~aeat.domain.deadlines.TaxpayerProfile`
+        workflow_profile: :class:`TaxpayerProfile`
             supplying profile facts for workflow, deadline, applicability, and
             registry predicate gates.
         work_unit_repository: Optional work-unit repository port.
@@ -1135,8 +1132,8 @@ def verify_modelo_revision(
         filing_repository: Optional modelo-record repository port for filed-state
             and cross-period checks.
         transaction_repository: Optional
-            :class:`~aeat.domain.transactions.TransactionCatalogueRepository`
-            used for transaction-evidence advisories.
+            :class:`TransactionCatalogueRepository` used for transaction-evidence
+            advisories.
         verification_repository: Optional verification-report repository port.
         bucket_event_repository: Optional bucket-event history repository port.
         iva_compensation_decision_repository: Optional IVA-wallet decision
@@ -1154,7 +1151,7 @@ def verify_modelo_revision(
         clock: Optional timestamp override for deterministic verification.
 
     Returns:
-        The persisted :class:`~aeat.domain.modelos.VerificationReport`.
+        The persisted :class:`VerificationReport`.
 
     Raises:
         :class:`~aeat.application.modelo.CalculationRevisionNotFoundError`: The

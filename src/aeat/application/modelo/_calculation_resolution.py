@@ -57,7 +57,7 @@ class ResolvedCalculationChannels:
     ``bindings`` feeds the Decimal channel, ``enum_bindings`` feeds string
     dispatch keys, and ``date_bindings`` feeds date-valued profile bindings.
     The borrador fields carry the typed snapshot trace from
-    :class:`aeat.application.aggregation.CalculationSourceResolution` through to
+    :class:`~aeat.application.aggregation.CalculationSourceResolution` through to
     the persisted :class:`CalculationRevision`.
     """
 
@@ -98,15 +98,15 @@ def resolve_calculation_binding_channels(
 ) -> ResolvedCalculationChannels:
     """Resolve all binding channels for ``work_unit`` and ``snapshot``.
 
-    The ``work_unit`` is the :class:`aeat.domain.modelos.WorkUnit` whose bucket,
-    filing year, and period select the source-resolution axis. The ``snapshot``
-    is the :class:`RegistrySnapshot` supplying the revision whose binding
+    The ``work_unit`` is the :class:`WorkUnit` whose bucket, filing year, and
+    period select the source-resolution axis. The ``snapshot`` is the
+    :class:`RegistrySnapshot` supplying the revision whose binding
     channels are being resolved.
 
     The source-precedence ladder is profile, backend, borrador, then caller. The
     returned :class:`ResolvedCalculationChannels` contains the merged Decimal,
     enum, and date channels, plus any
-    :class:`aeat.application.live.Borrador100SnapshotRepository` provenance,
+    :class:`~aeat.application.live.Borrador100SnapshotRepository` provenance,
     after
     :func:`aeat.application.modelo._binding_resolution.reject_binding_channel_mismatch`
     verifies the registry-declared channel shape and
@@ -180,7 +180,7 @@ def resolve_calculation_inputs(
     """Build the canonical casilla input map for engine execution.
 
     The ``revision`` is the :class:`ModeloRevision` whose declaration-period and
-    bound casilla inputs are being projected. The :class:`aeat.core.Period`
+    bound casilla inputs are being projected. The :class:`~aeat.core.Period`
     supplies the filing-period casilla values that the registry declares as
     inputs.
 

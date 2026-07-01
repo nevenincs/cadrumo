@@ -2,10 +2,11 @@
 
 A :class:`VerificationReport` is the decision artifact the verify
 command persists for every run. It captures whether the target
-calculation revision meets the ``verificado_completo`` contract,
+calculation :class:`CalculationRevision` meets the
+``verificado_completo`` contract,
 which blocking findings prevent that transition, which inputs are
-missing, which casilla ids are unresolved, which waivers were
-accepted, and what the operator should do next.
+missing, which :class:`CasillaId` identifiers are unresolved, which
+waivers were accepted, and what the operator should do next.
 
 The report is bucket-scoped and content-addressed by the
 verification outcome (parent calculation revision, completeness
@@ -103,6 +104,11 @@ class ModeloVerificationFinding(BaseModel):
     Findings of ``BLOCKING`` severity force ``BLOCKED`` completeness
     status. ``WARNING`` severity findings surface in the report but
     do not block ``COMPLETE`` status on their own.
+
+    A finding may point at the affected :class:`CasillaId`, the registry
+    :class:`VerificationExpectationId` that raised it, and the
+    :class:`LegalRefId` / :class:`SourceRefId` provenance that grounds the
+    operator-facing message.
     """
 
     model_config = STRICT_FROZEN_CONFIG
@@ -127,7 +133,7 @@ def derive_verification_report_id(
     """Deterministic 64-char SHA-256 id for a verification report.
 
     Content-addressed by the verification *outcome* - the parent
-    ``calculation_revision_id``, the ``completeness_status``, the ordered
+    :class:`CalculationRevision` id, the ``completeness_status``, the ordered
     ``findings`` tuple, and the ``verified_by`` actor. ``run_at`` is
     deliberately excluded from the identity so two retries of an
     identical-outcome verify collapse to one report on upsert (the id is
@@ -144,7 +150,7 @@ def derive_verification_report_id(
 
 
 class VerificationReport(BaseModel):
-    """Decision record of one verification run against a calculation revision.
+    """Decision record of one verification run against a :class:`CalculationRevision`.
 
     The id is content-addressed by the verification outcome
     (``calculation_revision_id``, ``completeness_status``, ``findings``,

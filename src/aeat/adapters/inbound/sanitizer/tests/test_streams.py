@@ -14,6 +14,7 @@ from __future__ import annotations
 
 import hashlib
 import io
+from collections.abc import Callable
 
 import pikepdf
 import pytest
@@ -68,152 +69,84 @@ def _flatten_content_streams(pdf: pikepdf.Pdf) -> bytes:
     return b"\n".join(chunks)
 
 
-class TestRewriteSingleTj:
-    """Replaces a cleartext value carried by a literal-encoded Tj operand."""
-
-    def test_replaces_literal_string(self) -> None:
-        pdf = _pdf_with_content_stream(
-            b"BT /F1 12 Tf 100 700 Td (Y1234567X) Tj ET\n",
-        )
-        mapping = TokenMap(
-            nif=(
-                NifReplacement(
-                    real=SecretStr(_REAL_NIE_CANARY),
-                    synthetic=_SYNTHETIC_NIE,
-                    surface_label="taxpayer NIE",
-                ),
+def _nif_mapping() -> TokenMap:
+    return TokenMap(
+        nif=(
+            NifReplacement(
+                real=SecretStr(_REAL_NIE_CANARY),
+                synthetic=_SYNTHETIC_NIE,
+                surface_label="taxpayer NIE",
             ),
-        )
-        edits = apply_token_map_to_pdf(pdf, mapping)
-        assert len(edits) == 1
-        assert edits[0].surface == "content_stream"
-        assert edits[0].surface_index == (0, 3)  # BT, Tf, Td, Tj
-        assert edits[0].synthetic == _SYNTHETIC_NIE
-        assert edits[0].encoding == "literal"
-        # Hash matches the cleartext.
-        expected_sha = hashlib.sha256(_REAL_NIE_CANARY.encode("utf-8")).hexdigest()
-        assert edits[0].real_sha256 == expected_sha
-        # Cleartext gone, synthetic present.
+        ),
+    )
+
+
+def _name_mapping() -> TokenMap:
+    return TokenMap(
+        name=(
+            NameReplacement(
+                real=SecretStr(_REAL_NAME_CANARY),
+                synthetic=_SYNTHETIC_NAME,
+                surface_label="taxpayer name",
+            ),
+        ),
+    )
+
+
+_RewriteCase = tuple[str, bytes, Callable[[], TokenMap], str, str]
+
+_SINGLE_REWRITE_CASES: tuple[_RewriteCase, ...] = (
+    ("literal-tj", b"BT /F1 12 Tf 100 700 Td (Y1234567X) Tj ET\n", _nif_mapping, _REAL_NIE_CANARY, _SYNTHETIC_NIE),
+    (
+        "ascii-hex-tj",
+        b"BT /F1 12 Tf 100 700 Td <593132333435363758> Tj ET\n",
+        _nif_mapping,
+        _REAL_NIE_CANARY,
+        _SYNTHETIC_NIE,
+    ),
+    (
+        "tj-array",
+        b"BT /F1 12 Tf 100 700 Td [(PERSONA PRUEBA UNO) -100 (filler)] TJ ET\n",
+        _name_mapping,
+        _REAL_NAME_CANARY,
+        _SYNTHETIC_NAME,
+    ),
+    ("quote", b"BT /F1 12 Tf 100 700 Td (Y1234567X) ' ET\n", _nif_mapping, _REAL_NIE_CANARY, _SYNTHETIC_NIE),
+    (
+        "doublequote",
+        b'BT /F1 12 Tf 100 700 Td 0 0 (Y1234567X) " ET\n',
+        _nif_mapping,
+        _REAL_NIE_CANARY,
+        _SYNTHETIC_NIE,
+    ),
+)
+
+
+def test_rewrites_single_text_show_operator_cases() -> None:
+    for case_id, stream_bytes, mapping_factory, real, synthetic in _SINGLE_REWRITE_CASES:
+        pdf = _pdf_with_content_stream(stream_bytes)
+        edits = apply_token_map_to_pdf(pdf, mapping_factory())
+
+        assert len(edits) == 1, case_id
+        assert edits[0].surface == "content_stream", case_id
+        assert edits[0].surface_index == (0, 3), case_id
+        assert edits[0].synthetic == synthetic, case_id
+        assert edits[0].encoding == "literal", case_id
+        assert edits[0].real_sha256 == hashlib.sha256(real.encode("utf-8")).hexdigest(), case_id
+
         flattened = _flatten_content_streams(pdf)
-        assert _REAL_NIE_CANARY.encode("utf-8") not in flattened
-        assert _SYNTHETIC_NIE.encode("utf-8") in flattened
-
-    def test_replaces_when_decoded_from_hex(self) -> None:
-        # Use the canonical ASCII hex of the synthetic NIE canary.
-        # `Y1234567X` -> 59 31 32 33 34 35 36 37 58
-        pdf = _pdf_with_content_stream(
-            b"BT /F1 12 Tf 100 700 Td <593132333435363758> Tj ET\n",
-        )
-        mapping = TokenMap(
-            nif=(
-                NifReplacement(
-                    real=SecretStr(_REAL_NIE_CANARY),
-                    synthetic=_SYNTHETIC_NIE,
-                    surface_label="taxpayer NIE",
-                ),
-            ),
-        )
-        edits = apply_token_map_to_pdf(pdf, mapping)
-        assert len(edits) == 1
-        assert edits[0].synthetic == _SYNTHETIC_NIE
-        flattened = _flatten_content_streams(pdf)
-        assert _REAL_NIE_CANARY.encode("utf-8") not in flattened
-        assert _SYNTHETIC_NIE.encode("utf-8") in flattened
+        assert real.encode("utf-8") not in flattened, case_id
+        assert synthetic.encode("utf-8") in flattened, case_id
 
 
-class TestRewriteTJArray:
-    """Replaces cleartext inside a TJ array of strings + kerning numbers."""
-
-    def test_replaces_one_string_in_array(self) -> None:
-        pdf = _pdf_with_content_stream(
-            b"BT /F1 12 Tf 100 700 Td [(PERSONA PRUEBA UNO) -100 (filler)] TJ ET\n",
-        )
-        mapping = TokenMap(
-            name=(
-                NameReplacement(
-                    real=SecretStr(_REAL_NAME_CANARY),
-                    synthetic=_SYNTHETIC_NAME,
-                    surface_label="taxpayer name",
-                ),
-            ),
-        )
-        edits = apply_token_map_to_pdf(pdf, mapping)
-        assert len(edits) == 1
-        assert edits[0].synthetic == _SYNTHETIC_NAME
-        flattened = _flatten_content_streams(pdf)
-        assert _REAL_NAME_CANARY.encode("utf-8") not in flattened
-        assert _SYNTHETIC_NAME.encode("utf-8") in flattened
-
-
-class TestRewriteApostropheOperator:
-    """The ' operator (move + show) is rewritten."""
-
-    def test_replaces_quote_operand(self) -> None:
-        pdf = _pdf_with_content_stream(
-            b"BT /F1 12 Tf 100 700 Td (Y1234567X) ' ET\n",
-        )
-        mapping = TokenMap(
-            nif=(
-                NifReplacement(
-                    real=SecretStr(_REAL_NIE_CANARY),
-                    synthetic=_SYNTHETIC_NIE,
-                    surface_label="taxpayer NIE",
-                ),
-            ),
-        )
-        edits = apply_token_map_to_pdf(pdf, mapping)
-        assert len(edits) == 1
-        flattened = _flatten_content_streams(pdf)
-        assert _REAL_NIE_CANARY.encode("utf-8") not in flattened
-
-
-class TestRewriteDoubleQuoteOperator:
-    """The " operator (set spacing + show) is rewritten."""
-
-    def test_replaces_doublequote_operand(self) -> None:
-        pdf = _pdf_with_content_stream(
-            b'BT /F1 12 Tf 100 700 Td 0 0 (Y1234567X) " ET\n',
-        )
-        mapping = TokenMap(
-            nif=(
-                NifReplacement(
-                    real=SecretStr(_REAL_NIE_CANARY),
-                    synthetic=_SYNTHETIC_NIE,
-                    surface_label="taxpayer NIE",
-                ),
-            ),
-        )
-        edits = apply_token_map_to_pdf(pdf, mapping)
-        assert len(edits) == 1
-        flattened = _flatten_content_streams(pdf)
-        assert _REAL_NIE_CANARY.encode("utf-8") not in flattened
-
-
-class TestNoMatch:
-    """Nothing is mutated when no real value occurs."""
-
-    def test_no_edits_when_cleartext_absent(self) -> None:
-        pdf = _pdf_with_content_stream(
-            b"BT /F1 12 Tf 100 700 Td (only a banner) Tj ET\n",
-        )
-        mapping = TokenMap(
-            nif=(
-                NifReplacement(
-                    real=SecretStr(_REAL_NIE_CANARY),
-                    synthetic=_SYNTHETIC_NIE,
-                    surface_label="taxpayer NIE",
-                ),
-            ),
-        )
-        edits = apply_token_map_to_pdf(pdf, mapping)
-        assert edits == ()
-
-    def test_no_edits_when_mapping_empty(self) -> None:
-        pdf = _pdf_with_content_stream(
-            b"BT /F1 12 Tf 100 700 Td (Y1234567X) Tj ET\n",
-        )
-        edits = apply_token_map_to_pdf(pdf, TokenMap())
-        assert edits == ()
+def test_no_edits_when_no_cleartext_match_or_mapping_empty() -> None:
+    cases = (
+        ("cleartext-absent", b"BT /F1 12 Tf 100 700 Td (only a banner) Tj ET\n", _nif_mapping()),
+        ("mapping-empty", b"BT /F1 12 Tf 100 700 Td (Y1234567X) Tj ET\n", TokenMap()),
+    )
+    for case_id, stream_bytes, mapping in cases:
+        pdf = _pdf_with_content_stream(stream_bytes)
+        assert apply_token_map_to_pdf(pdf, mapping) == (), case_id
 
 
 class TestMultipleOccurrences:

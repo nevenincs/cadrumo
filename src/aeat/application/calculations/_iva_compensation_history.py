@@ -52,11 +52,11 @@ from ...domain.calculations.registry import (
     undeclared_casilla_ids,
     validated_casilla_id,
 )
-from ...domain.iva_compensation._carry_forward import (
+from ...domain.iva_compensation import (
     IvaCompensationCarryForwardReport,
     IvaCompensationPeriodState,
-    _period_sort_key,
     derive_iva_compensation_year_end_carry_partition,
+    iva_compensation_period_sort_key,
 )
 from ...domain.iva_compensation._errors import (
     IvaCompensationCasillaReferenceError,
@@ -196,7 +196,10 @@ class IvaCompensationHistoryRepository(SecureBoundRepository[IvaCompensationPeri
         The returned tuple is sorted in chronological filing order using the
         same period sort key consumed by the domain carry-forward projection.
         """
-        return tuple(sorted(self.iter_records(), key=lambda item: (item.filing_year, _period_sort_key(item.period))))
+        def _sort_key(item: IvaCompensationPeriodState) -> tuple[int, tuple[int, str]]:
+            return (item.filing_year, iva_compensation_period_sort_key(item.period))
+
+        return tuple(sorted(self.iter_records(), key=_sort_key))
 
 
 _SEED_STATUS = "seeded"

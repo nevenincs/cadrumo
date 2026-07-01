@@ -10,7 +10,6 @@ from pathlib import Path
 import pytest
 
 from ......core.config import SecretStoreBackend, Settings, override_settings
-from ......core.external_constants import UTF_8_ENCODING
 from ...crypto import KEY_SIZE
 from ...errors import (
     KeyringUnavailableError,
@@ -51,10 +50,6 @@ class TestEphemeralProvider:
         with pytest.raises(SecretStoreError):
             EphemeralMasterKeyProvider(key=b"too-short")
 
-    def test_satisfies_protocol(self) -> None:
-        provider = EphemeralMasterKeyProvider()
-        assert isinstance(provider, MasterKeyProvider)
-
 
 class TestKeyringProvider:
     """Keyring provider tests using a protocol-compatible in-process backend."""
@@ -70,31 +65,36 @@ class TestKeyringProvider:
         assert len(first) == KEY_SIZE
         assert first == second
 
-    def test_satisfies_protocol(self) -> None:
-        assert isinstance(KeyringMasterKeyProvider(), MasterKeyProvider)
+
+class TestMasterKeyProviderProtocol:
+    """Concrete providers implement the master-key provider protocol."""
+
+    def test_providers_satisfy_protocol(self) -> None:
+        providers = [
+            EphemeralMasterKeyProvider(),
+            KeyringMasterKeyProvider(),
+            UnsecuredMasterKeyProvider(),
+        ]
+        for provider in providers:
+            assert isinstance(provider, MasterKeyProvider)
 
 
 class TestKeyringFailureSurfaces:
     """The keyring provider surfaces failures via ``KeyringUnavailableError``."""
 
-    def test_malformed_stored_value_raises(self) -> None:
+    def test_unreadable_stored_values_raise(self) -> None:
         from .._master_key import KEYRING_USERNAME
 
-        service = f"aeat:test:{secrets.token_hex(8)}"
-        client = _InMemoryKeyringClient(seeded={(service, KEYRING_USERNAME): "not!base64!"})
-        provider = KeyringMasterKeyProvider(service=service, client=client)
-        with pytest.raises(KeyringUnavailableError):
-            provider.get_master_key()
-
-    def test_wrong_size_stored_value_raises(self) -> None:
-        from .._master_key import KEYRING_USERNAME
-
-        service = f"aeat:test:{secrets.token_hex(8)}"
-        too_short = base64.b64encode(b"short").decode("ascii")
-        client = _InMemoryKeyringClient(seeded={(service, KEYRING_USERNAME): too_short})
-        provider = KeyringMasterKeyProvider(service=service, client=client)
-        with pytest.raises(KeyringUnavailableError):
-            provider.get_master_key()
+        stored_values = {
+            "malformed-base64": "not!base64!",
+            "wrong-size": base64.b64encode(b"short").decode("ascii"),
+        }
+        for label, stored_value in stored_values.items():
+            service = f"aeat:test:{label}:{secrets.token_hex(8)}"
+            client = _InMemoryKeyringClient(seeded={(service, KEYRING_USERNAME): stored_value})
+            provider = KeyringMasterKeyProvider(service=service, client=client)
+            with pytest.raises(KeyringUnavailableError):
+                provider.get_master_key()
 
     def test_set_password_failure_raises(self) -> None:
         from keyring.errors import KeyringError
@@ -126,41 +126,28 @@ class TestTornStateGate:
         with override_settings(aeat_secret_passphrase="torn-state-passphrase"):
             yield store
 
-    def test_torn_state_master_key_only_raises(
+    def test_single_artifact_torn_states_raise(
         self,
         store_dir: Path,
     ) -> None:
-        # Crash after master.key, before master.kdf and salt.
-        (store_dir / "master.key").write_bytes(b"orphan-master-key")
-
         from ...errors import MasterKeyMaterialMissingError
         from .. import FileFallbackMasterKeyProvider
 
-        provider = FileFallbackMasterKeyProvider(store_dir=store_dir)
-        with pytest.raises(MasterKeyMaterialMissingError, match="torn state") as excinfo:
-            provider.get_master_key()
-        # The runbook hints both options.
-        msg = str(excinfo.value)
-        assert "aeat config recover --recovery-key" in msg
-        assert "aeat config profile create NAME" in msg
+        torn_artifacts = {
+            "master-key-only": ("master.key", b"orphan-master-key"),
+            "kdf-only": ("master.kdf", b'{"version": 2, "algorithm": "argon2id"}'),
+        }
+        for label, (filename, content) in torn_artifacts.items():
+            case_dir = store_dir / label
+            case_dir.mkdir()
+            (case_dir / filename).write_bytes(content)
 
-    def test_torn_state_kdf_only_raises(
-        self,
-        store_dir: Path,
-    ) -> None:
-        # Inverted-order torn state: master.kdf present without master.key.
-        # The gate refuses regardless of which single artefact survives.
-        (store_dir / "master.kdf").write_text(
-            '{"version": 2, "algorithm": "argon2id"}',
-            encoding=UTF_8_ENCODING,
-        )
-
-        from ...errors import MasterKeyMaterialMissingError
-        from .. import FileFallbackMasterKeyProvider
-
-        provider = FileFallbackMasterKeyProvider(store_dir=store_dir)
-        with pytest.raises(MasterKeyMaterialMissingError, match="torn state"):
-            provider.get_master_key()
+            provider = FileFallbackMasterKeyProvider(store_dir=case_dir)
+            with pytest.raises(MasterKeyMaterialMissingError, match="torn state") as excinfo:
+                provider.get_master_key()
+            msg = str(excinfo.value)
+            assert "aeat config recover --recovery-key" in msg
+            assert "aeat config profile create NAME" in msg
 
     def test_no_install_refuses_implicit_mint(
         self,
@@ -203,14 +190,11 @@ class TestSecurityHardening:
             assert stored.get_secret_value() == "smoke-passphrase"
             assert _default_passphrase_callback() == "smoke-passphrase"
 
-    def test_passphrase_strips_trailing_crlf(self) -> None:
+    def test_passphrase_callback_sanitizes_settings_value(self) -> None:
         from .._master_key import _default_passphrase_callback
 
         with override_settings(aeat_secret_passphrase="value-with-newline\n"):
             assert _default_passphrase_callback() == "value-with-newline"
-
-    def test_passphrase_whitespace_only_rejected(self) -> None:
-        from .._master_key import _default_passphrase_callback
 
         with override_settings(aeat_secret_passphrase="\r\n"), pytest.raises(SecretStoreError):
             _default_passphrase_callback()
@@ -404,67 +388,51 @@ class TestUnsecuredProvider:
         # The key's prefix must encode its insecurity in plaintext.
         assert first.startswith(b"AEAT_UNSECURED_TEST_KEY")
 
-    def test_satisfies_master_key_provider_protocol(self) -> None:
-        provider = UnsecuredMasterKeyProvider()
-        assert isinstance(provider, MasterKeyProvider)
-
-    def test_factory_refuses_without_allow_unencrypted(self, tmp_path: Path) -> None:
+    def test_factory_unsecured_backend_requires_explicit_gate(self, tmp_path: Path) -> None:
         # AEAT_ALLOW_UNENCRYPTED=1 is the hostile-named opt-out gate.
-        settings = Settings(
+        refused_settings = Settings(
             aeat_secret_store_dir=tmp_path / "secrets",
             aeat_secret_store_backend=SecretStoreBackend.UNSECURED,
             aeat_allow_unencrypted="",  # not "1": kill-switch refuses
         )
         with pytest.raises(UnsecuredModeRefusedError, match="AEAT_ALLOW_UNENCRYPTED"):
-            get_master_key_provider(settings_override=settings)
+            get_master_key_provider(settings_override=refused_settings)
 
-    def test_factory_returns_unsecured_provider_when_gated(self, tmp_path: Path) -> None:
-        settings = Settings(
+        allowed_settings = Settings(
             aeat_secret_store_dir=tmp_path / "secrets",
             aeat_secret_store_backend=SecretStoreBackend.UNSECURED,
             aeat_allow_unencrypted="1",  # literal "1" enables the unsecured backend
         )
-        provider = get_master_key_provider(settings_override=settings)
+        provider = get_master_key_provider(settings_override=allowed_settings)
         assert isinstance(provider, UnsecuredMasterKeyProvider)
 
 
 class TestUnsecuredNifCanary:
     """The unsecured-mode NIF-canary fences off real tax data."""
 
-    @pytest.mark.parametrize(
-        "synthetic_id",
-        ["00000000T", "X0000000T", "Z0000000T", "Y0000000Z", "B00000000"],
-    )
-    def test_synthetic_tax_ids_are_not_treated_as_real(self, synthetic_id: str) -> None:
-        assert looks_like_real_tax_id(synthetic_id) is False
-
-    @pytest.mark.parametrize(
-        "real_id",
-        ["12345678Z", "X1234567L"],  # NIF + NIE shapes that validate.
-    )
-    def test_valid_non_synthetic_tax_ids_are_treated_as_real(self, real_id: str) -> None:
-        assert looks_like_real_tax_id(real_id) is True
-
-    def test_invalid_inputs_are_not_treated_as_real(self) -> None:
+    def test_tax_id_classification(self) -> None:
         # Random non-tax-id strings are not real — the canary's failure
         # mode is "let the unsecured backend through" rather than refuse;
         # the substrate's other validators reject malformed ids.
-        assert looks_like_real_tax_id("not-a-tax-id") is False
-        assert looks_like_real_tax_id("") is False
+        cases = {
+            "00000000T": False,
+            "X0000000T": False,
+            "Z0000000T": False,
+            "Y0000000Z": False,
+            "B00000000": False,
+            "12345678Z": True,
+            "X1234567L": True,
+            "not-a-tax-id": False,
+            "": False,
+        }
+        for tax_id, expected in cases.items():
+            assert looks_like_real_tax_id(tax_id) is expected
 
-    def test_refuse_unsecured_with_real_nif_no_op_for_other_providers(self) -> None:
+    def test_refuse_unsecured_with_real_nif_only_blocks_real_tax_ids_on_unsecured_provider(self) -> None:
         # A keyring or file-fallback provider passes the canary even
         # with a real tax id (the canary gates only the unsecured path).
-        provider = EphemeralMasterKeyProvider()
-        # No raise.
-        refuse_unsecured_with_real_nif("12345678Z", provider=provider)
-
-    def test_refuse_unsecured_with_real_nif_raises_for_unsecured_provider(self) -> None:
-        provider = UnsecuredMasterKeyProvider()
+        refuse_unsecured_with_real_nif("12345678Z", provider=EphemeralMasterKeyProvider())
+        # Synthetic placeholders are explicitly allowed.
+        refuse_unsecured_with_real_nif("00000000T", provider=UnsecuredMasterKeyProvider())
         with pytest.raises(UnsecuredModeRefusedError, match="real tax id"):
-            refuse_unsecured_with_real_nif("12345678Z", provider=provider)
-
-    def test_refuse_unsecured_with_real_nif_passes_for_synthetic(self) -> None:
-        provider = UnsecuredMasterKeyProvider()
-        # No raise — synthetic placeholders are explicitly allowed.
-        refuse_unsecured_with_real_nif("00000000T", provider=provider)
+            refuse_unsecured_with_real_nif("12345678Z", provider=UnsecuredMasterKeyProvider())

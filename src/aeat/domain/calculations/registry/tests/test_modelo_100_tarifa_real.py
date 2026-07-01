@@ -85,13 +85,18 @@ def _casilla_id(value: object) -> CasillaId:
 # contract fix: casilla 0505 is now computed via formula renta-2024-base-liquidable-
 # general-sometida-a-gravamen (max(0, 0500 - 0527)).  Tests must supply the leaf
 # manual casilla 0003 (trabajo ingresos íntegros) rather than 0505 directly.
-# With 0003=35400 and all reductions zero the chain produces:
-#   0500 = 35400  (base liquidable general)
+# Casilla 0019 ("otros gastos", art. 19.2.f LIRPF) deducts min(2.000, rendimiento
+# íntegro) before 0432/0500, so the leaf input must be inflated by 2,000 EUR to
+# net the intended 35,400 EUR base liquidable general.
+# With 0003=37400 and all reductions zero the chain produces:
+#   0019 = min(2000, 37400) = 2000  (otros gastos, art. 19.2.f LIRPF)
+#   0500 = 37400 - 2000 = 35400  (base liquidable general)
 #   0527 = 0      (no anualidades alimentos)
 #   0505 = 35400  (max(0, 35400 - 0))
 _BASE_LIQUIDABLE_GENERAL = Decimal("35400")
 # Input leaf to feed through the computation chain; see formula chain comment above.
-_TRABAJO_INGRESOS_INTEGROS = Decimal("35400")
+# 37,400 nets to 35,400 after the 2,000 EUR "otros gastos" deduction (0019).
+_TRABAJO_INGRESOS_INTEGROS = Decimal("37400")
 _EXPECTED_CUOTA_INTEGRA_ESTATAL = Decimal("3872.50")
 _EXPECTED_CUOTA_INTEGRA_AUTONOMICA = Decimal("4067.28")
 _EXPECTED_MINIMO_CONTRIBUYENTE = Decimal("5550.00")
@@ -320,6 +325,12 @@ def _base_binding_values() -> dict[BindingId, Decimal]:
         # resolves to zero when no prior Modelo 100 filing exists in the
         # test corpus. Test fixtures with no carry exercise this baseline.
         "renta-2024-base-liquidable-negativa-general-anterior": Decimal("0"),
+        # LIRPF art. 64/75 anualidades separate-escala eligibility flag
+        # (#532). 1 = the non-custodial payer without the mínimo por
+        # descendientes (the form-faithful default). Only read inside the
+        # régimen predicate when 0527 > 0 AND 0527 < 0505, so it is inert for
+        # every non-anualidades scenario.
+        "renta-2024-profile-anualidades-sin-minimo-descendientes": Decimal("1"),
     }
 
 
@@ -467,12 +478,25 @@ def test_m100_2024_cuota_estatal_ascendant_over_75(
 #   Cuota íntegra estatal = 1,130.12 - 527.25 = 602.87 EUR
 # -----------------------------------------------------------------------
 
-_BASE_14896 = Decimal("14896")
+# 16,896 nets to 14,896 after the 2,000 EUR "otros gastos" deduction (0019,
+# art. 19.2.f LIRPF).
+_BASE_14896 = Decimal("16896")
 _ANUALIDADES_3000 = Decimal("3000")
 _EXPECTED_0505_NO_ANUALIDADES = Decimal("14896.00")
-_EXPECTED_0505_WITH_ANUALIDADES = Decimal("11896.00")
+# LIRPF art. 64/75 (#532): 0505 is the FULL base liquidable general — the
+# anualidades are NOT subtracted from the base. They enter only through the
+# separate-escala term inside the régimen branch, so 0505 is unchanged whether
+# or not anualidades are declared.
+_EXPECTED_0505_WITH_ANUALIDADES = Decimal("14896.00")
 _EXPECTED_CUOTA_ESTATAL_14896_NO_ANUALIDADES = Decimal("949.02")
-_EXPECTED_CUOTA_ESTATAL_14896_WITH_ANUALIDADES = Decimal("602.87")
+# Separate-escala cuota (LIRPF art. 63 tramos, 9,5% first bracket):
+#   escala(3.000) + escala(11.896) - escala(5.550 + 1.980)
+#   = 285,00 + 1.130,12 - 715,35 = 699,77 EUR.
+# The old 602,87 shortcut value (escala(11.896) - escala(5.550)) under-taxed.
+_EXPECTED_CUOTA_ESTATAL_14896_SEPARATE_ESCALA = Decimal("699.77")
+# The retired shortcut value, retained only as the lower bound in the ordering
+# assertion that proves the fix raises the cuota above the defect.
+_SHORTCUT_CUOTA_ESTATAL_14896 = Decimal("602.87")
 
 
 def test_0505_computed_from_0500_no_anualidades(m100_2024_snapshot: RegistrySnapshot) -> None:
@@ -506,15 +530,17 @@ def test_0505_computed_from_0500_no_anualidades(m100_2024_snapshot: RegistrySnap
     )
 
 
-def test_anualidades_alimentos_reduces_0505(m100_2024_snapshot: RegistrySnapshot) -> None:
-    """Anualidades por alimentos hijos reduce 0505 per LIRPF arts. 64 and 75.
+def test_anualidades_alimentos_separate_escala(m100_2024_snapshot: RegistrySnapshot) -> None:
+    """Anualidades por alimentos hijos get the LIRPF art. 64/75 separate escala (#532).
 
-    With base liquidable 14,896 EUR and judicial anualidades 3,000 EUR:
+    With base liquidable 14,896 EUR and judicial anualidades 3,000 EUR (payer
+    without the mínimo por descendientes for those children):
       0527 = 3,000 (computed from casilla 1741, first child)
-      0505 = max(0, 14,896 - 3,000) = 11,896 EUR
-      cuota íntegra estatal = tarifa(11,896) - tarifa(5,550)
-                            = 1,130.12 - 527.25 = 602.87 EUR
-    Oracle: LIRPF 2024 Art. 63 escala estatal.
+      0505 = max(0, 14,896) = 14,896 EUR  (FULL base; anualidades NOT subtracted)
+      escala applied separately:
+        cuota íntegra estatal = [escala(3,000) + escala(11,896)] - escala(5,550 + 1,980)
+                              = [285.00 + 1,130.12] - 715.35 = 699.77 EUR
+    Oracle: LIRPF 2024 Art. 63 escala estatal tramos (9,5% first bracket).
     """
     result = calculate_registry_snapshot(
         m100_2024_snapshot,
@@ -534,22 +560,31 @@ def test_anualidades_alimentos_reduces_0505(m100_2024_snapshot: RegistrySnapshot
     )
     assert result.values[_BASE_LIQUIDABLE_GENERAL_GRAVAMEN_CASILLA] == _EXPECTED_0505_WITH_ANUALIDADES, (
         f"casilla 0505 = {result.values[_BASE_LIQUIDABLE_GENERAL_GRAVAMEN_CASILLA]!r}; "
-        f"expected {_EXPECTED_0505_WITH_ANUALIDADES!r} (14896 - 3000 = 11896). "
-        f"0505 formula should subtract 0527 from 0500."
+        f"expected {_EXPECTED_0505_WITH_ANUALIDADES!r} — the FULL base liquidable general. "
+        f"Per LIRPF art. 64/75 the anualidades are NOT subtracted from 0505; they enter "
+        f"only through the separate-escala term."
     )
     cuota = result.values[_CUOTA_INTEGRA_ESTATAL_CASILLA]
-    assert abs(cuota - _EXPECTED_CUOTA_ESTATAL_14896_WITH_ANUALIDADES) <= _TOLERANCE, (
+    assert abs(cuota - _EXPECTED_CUOTA_ESTATAL_14896_SEPARATE_ESCALA) <= _TOLERANCE, (
         f"cuota íntegra estatal (0545) = {cuota!r}; "
-        f"expected {_EXPECTED_CUOTA_ESTATAL_14896_WITH_ANUALIDADES!r} per LIRPF 2024 Art. 63. "
-        f"tarifa(11896) - tarifa(5550) = 1130.12 - 527.25 = 602.87 EUR."
+        f"expected {_EXPECTED_CUOTA_ESTATAL_14896_SEPARATE_ESCALA!r} per LIRPF 2024 Art. 64. "
+        f"[escala(3000) + escala(11896)] - escala(7530) = [285 + 1130.12] - 715.35 = 699.77 EUR."
     )
 
 
 def test_anti_tautology_anualidades_changes_cuota(m100_2024_snapshot: RegistrySnapshot) -> None:
-    """Anti-tautology: anualidades judicial must change cuota relative to no-anualidades.
+    """Anti-tautology + ordering: the separate escala sits strictly between the
+    retired shortcut and the no-benefit single escala (#532).
 
-    If the 0527 -> 0505 subtraction is not wired, both scenarios yield the same
-    cuota (the formula is broken). This test catches that failure.
+    Three cuota íntegra estatal values pinned to real LIRPF 2024 art. 63 tramos:
+      - no benefit (single escala on full base):  949.02 EUR
+      - separate escala (the correct #532 value): 699.77 EUR
+      - retired shortcut (the under-declaration):  602.87 EUR
+    Ordering shortcut < separate < no-benefit is a property (not a recomputation
+    of the formula under test): the fix RAISES the cuota above the defect while
+    keeping the benefit genuine (below the no-benefit single escala). If the
+    separate-escala régimen were not wired, the with-anualidades cuota would
+    collapse to either the shortcut or the no-benefit value.
     """
     result_no_anualidades = calculate_registry_snapshot(
         m100_2024_snapshot,
@@ -576,13 +611,82 @@ def test_anti_tautology_anualidades_changes_cuota(m100_2024_snapshot: RegistrySn
     cuota_no = result_no_anualidades.values[_CUOTA_INTEGRA_ESTATAL_CASILLA]
     cuota_with = result_with_anualidades.values[_CUOTA_INTEGRA_ESTATAL_CASILLA]
     assert cuota_with < cuota_no, (
-        f"cuota with anualidades ({cuota_with!r}) must be less than without ({cuota_no!r}). "
-        f"If equal, the 0527 -> 0505 subtraction is not wired in the formula."
+        f"cuota with anualidades ({cuota_with!r}) must be below the no-benefit single escala "
+        f"({cuota_no!r}); the separate-escala benefit is genuine."
     )
-    expected_delta = _EXPECTED_CUOTA_ESTATAL_14896_NO_ANUALIDADES - _EXPECTED_CUOTA_ESTATAL_14896_WITH_ANUALIDADES
-    actual_delta = cuota_no - cuota_with
-    assert abs(actual_delta - expected_delta) <= _TOLERANCE, (
-        f"cuota delta = {actual_delta!r}; expected delta {expected_delta!r} (949.02 - 602.87 = 346.15 EUR)."
+    assert cuota_with > _SHORTCUT_CUOTA_ESTATAL_14896, (
+        f"cuota with anualidades ({cuota_with!r}) must be ABOVE the retired shortcut "
+        f"({_SHORTCUT_CUOTA_ESTATAL_14896!r}); the fix closes the under-declaration. If "
+        f"cuota_with equals the shortcut, the separate-escala régimen is not wired."
+    )
+    assert abs(cuota_with - _EXPECTED_CUOTA_ESTATAL_14896_SEPARATE_ESCALA) <= _TOLERANCE, (
+        f"cuota with anualidades = {cuota_with!r}; expected the separate-escala value "
+        f"{_EXPECTED_CUOTA_ESTATAL_14896_SEPARATE_ESCALA!r} (LIRPF art. 64 tramos)."
+    )
+
+
+def test_anualidades_regime_off_shared_custody_reduces_to_single_escala(
+    m100_2024_snapshot: RegistrySnapshot,
+) -> None:
+    """Flag off (shared custody) → régimen off → ordinary single escala on full base (#532).
+
+    LIRPF art. 64 denies the separate escala to a payer who retains the mínimo
+    por descendientes (custodia compartida splits it 50/50). With the eligibility
+    flag = 0 the régimen predicate collapses and the cuota is the ordinary single
+    escala on the full base — identical to the no-anualidades value (949.02 EUR),
+    since 0505 carries no anualidades subtraction.
+    """
+    bindings = _base_binding_values()
+    bindings["renta-2024-profile-anualidades-sin-minimo-descendientes"] = Decimal("0")
+    result = calculate_registry_snapshot(
+        m100_2024_snapshot,
+        inputs={
+            _TRABAJO_INGRESOS_INTEGROS_CASILLA: _BASE_14896,
+            _ANUALIDADES_PRIMER_HIJO_CASILLA: _ANUALIDADES_3000,
+        },
+        date_context={"filing_period": date(2024, 12, 31)},
+        enum_binding_values={"renta-2024-profile-tax-residence-ccaa": "cataluna"},
+        binding_values=bindings,
+        relation_values=_RELATION_VALUES_2024,
+        date_binding_values=_BIRTH_DATE_BINDINGS_2024,
+    )
+
+    assert result.values[_BASE_LIQUIDABLE_GENERAL_GRAVAMEN_CASILLA] == _EXPECTED_0505_NO_ANUALIDADES
+    cuota = result.values[_CUOTA_INTEGRA_ESTATAL_CASILLA]
+    assert abs(cuota - _EXPECTED_CUOTA_ESTATAL_14896_NO_ANUALIDADES) <= _TOLERANCE, (
+        f"cuota íntegra estatal (0545) with shared-custody flag off = {cuota!r}; "
+        f"expected the single-escala value {_EXPECTED_CUOTA_ESTATAL_14896_NO_ANUALIDADES!r}."
+    )
+
+
+def test_anualidades_regime_off_when_anualidades_exceed_base(
+    m100_2024_snapshot: RegistrySnapshot,
+) -> None:
+    """Régimen off when anualidades >= base liquidable general (#532).
+
+    LIRPF art. 64 applies only "cuando el importe de aquellas sea inferior a la
+    base liquidable general". With anualidades (16,000) above the base (14,896)
+    the régimen predicate's less_than(0527, 0505) fails and the cuota reduces to
+    the ordinary single escala on the full base.
+    """
+    result = calculate_registry_snapshot(
+        m100_2024_snapshot,
+        inputs={
+            _TRABAJO_INGRESOS_INTEGROS_CASILLA: _BASE_14896,
+            _ANUALIDADES_PRIMER_HIJO_CASILLA: Decimal("16000"),
+        },
+        date_context={"filing_period": date(2024, 12, 31)},
+        enum_binding_values={"renta-2024-profile-tax-residence-ccaa": "cataluna"},
+        binding_values=_base_binding_values(),
+        relation_values=_RELATION_VALUES_2024,
+        date_binding_values=_BIRTH_DATE_BINDINGS_2024,
+    )
+
+    assert result.values[_BASE_LIQUIDABLE_GENERAL_GRAVAMEN_CASILLA] == _EXPECTED_0505_NO_ANUALIDADES
+    cuota = result.values[_CUOTA_INTEGRA_ESTATAL_CASILLA]
+    assert abs(cuota - _EXPECTED_CUOTA_ESTATAL_14896_NO_ANUALIDADES) <= _TOLERANCE, (
+        f"cuota íntegra estatal (0545) with anualidades >= base = {cuota!r}; "
+        f"expected the single-escala value {_EXPECTED_CUOTA_ESTATAL_14896_NO_ANUALIDADES!r}."
     )
 
 

@@ -21,6 +21,7 @@ from pydantic import BaseModel, ConfigDict, Field, field_validator
 from ...core.parsing._dates import _parse_iso8601_date
 from ._ccaa import CCAA
 from ._constants import ProfileName
+from ._deduccion_maternidad import compute_deduccion_maternidad_0611
 from ._descendant_facts import descendant_list_from_facts
 from ._errors import ForalRegimeError, ProfileNotConfiguredError, ProfileValidationError, TaxResidenceProfileError
 from ._keys import (
@@ -28,6 +29,8 @@ from ._keys import (
     ProfileKeyRequirement,
     get_profile_key,
     optional_profile_keys,
+    profile_keys,
+    register_profile_keys,
     required_profile_keys,
 )
 from ._marriage_facts import (
@@ -40,12 +43,14 @@ from ._marriage_facts import (
 from ._normalise import normalise_key
 from ._renta_codes import (
     UE_EEA_COUNTRY_CODES,
+    FiscalResidency,
     RentaDeclaracionType,
     RentaDisabilityGrade,
     RentaMaritalStatus,
     RentaSexCode,
     SituacionFamiliar,
     SituacionFamiliarM145,
+    modelo100_ecivil_export_code,
 )
 from .family import (
     DescendantInfo,
@@ -176,6 +181,7 @@ __all__ = [
     "PROFILE_KEYS",
     "UE_EEA_COUNTRY_CODES",
     "DescendantInfo",
+    "FiscalResidency",
     "ForalRegimeError",
     "ProfileKey",
     "ProfileKeyRequirement",
@@ -194,16 +200,20 @@ __all__ = [
     "SituacionFamiliarM145",
     "TaxResidenceProfile",
     "TaxResidenceProfileError",
+    "compute_deduccion_maternidad_0611",
     "descendant_list_from_facts",
     "get_profile_key",
     "marriage_date_from_facts",
     "marriage_derived_facts",
     "marriage_full_year",
     "marriage_month_start",
+    "modelo100_ecivil_export_code",
     "normalise_key",
     "optional_profile_keys",
     "parse_marriage_date_flag",
     "parse_tax_region",
+    "profile_keys",
+    "register_profile_keys",
     "required_profile_keys",
     "within_multi_year_applicability_window",
 ]

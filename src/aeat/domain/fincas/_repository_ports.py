@@ -12,6 +12,18 @@ The concrete adapter repositories satisfy these ports structurally; no
 explicit subclassing is required. Each port declares exactly the read
 method the aggregation pipeline consumes (interface segregation), so a
 port change is a real change to what the domain needs.
+
+The port set is :class:`FincaReader`, :class:`ArrendamientoReader`,
+:class:`FincaRendimientoReader`, :class:`FincaGastoReader`, and
+:class:`FincaAmortizacionLedgerReader`; each returns the corresponding
+:class:`Finca`, :class:`Arrendamiento`, :class:`FincaRendimientoRecord`,
+:class:`FincaGasto`, or :class:`FincaAmortizacionLedgerEntry` record. The
+adapter implementations are
+:class:`~aeat.adapters.persistence.profile.fincas.FincaRepository`,
+:class:`~aeat.adapters.persistence.profile.fincas.ArrendamientoRepository`,
+:class:`~aeat.adapters.persistence.profile.fincas.FincaRendimientoRepository`,
+:class:`~aeat.adapters.persistence.profile.fincas.FincaGastoRepository`, and
+:class:`~aeat.adapters.persistence.profile.fincas.FincaAmortizacionLedgerRepository`.
 """
 
 from __future__ import annotations

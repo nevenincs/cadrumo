@@ -35,8 +35,9 @@ See Also:
 
 from __future__ import annotations
 
-from ._identifiers import ModeloIdentifier
+from ._identifiers import ModeloIdentifier, canonical_decimal_string
 
 __all__ = [
     "ModeloIdentifier",
+    "canonical_decimal_string",
 ]

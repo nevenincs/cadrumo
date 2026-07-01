@@ -113,6 +113,7 @@ from ._bindings import (
     OssIossLedgerObservation,
     RefundOperationObservation,
     RegistryModeloObservation,
+    ImpatriadoIncomeObservationProtocol,
     RelatedPartyOperationObservation,
     RentaGastoObservationProtocol,
     RentaIncomeObservationProtocol,
@@ -135,6 +136,7 @@ from ._bindings import (
     resolve_foreign_asset_binding_row_values,
     resolve_invoice_binding_row_values,
     resolve_invoice_binding_values,
+    resolve_ledger_impatriado_income_aggregation_binding_values,
     resolve_ledger_iva_aggregation_binding_values,
     resolve_ledger_oss_aggregation_binding_values,
     resolve_ledger_renta_expense_aggregation_binding_values,
@@ -147,12 +149,14 @@ from ._bindings import (
     resolve_withholding_binding_row_values,
     resolve_withholding_binding_values,
     selector_model_for_source,
+    unsupported_ledger_impatriado_income_observations,
     unsupported_ledger_iva_observations,
     unsupported_ledger_oss_observations,
     unsupported_ledger_renta_expense_observations,
     unsupported_ledger_renta_gasto_observations,
     unsupported_ledger_renta_income_observations,
     validate_invoice_binding_definition,
+    validate_ledger_impatriado_income_aggregation_binding_definition,
     validate_ledger_iva_aggregation_binding_definition,
     validate_ledger_oss_aggregation_binding_definition,
     validate_ledger_renta_expense_aggregation_binding_definition,
@@ -166,6 +170,7 @@ from ._binding_selector_utils import (
     BooleanBindingEncodedValue,
     binding_row_set_selector,
     boolean_binding_encoded_values,
+    selector_as_dict,
 )
 from ._casilla_membership import (
     casilla_noncanonical_reference_targets,
@@ -273,6 +278,7 @@ from ._loader import (
     load_catalogue_file,
     load_legal_parameters_only,
     load_modelo_directory,
+    load_modelo_directory_without_locales,
     load_modelo_file,
     load_modelo_path,
     load_modelo_source,
@@ -368,6 +374,7 @@ from ._runtime_graph import (
 )
 from ._schedules import applicable_filing_schedules, evaluate_profile_conditions, profile_condition_matches
 from ._schema import (
+    KNOWN_PROFILE_FLAG_ADVISORY_FIELDS,
     KNOWN_VERIFICATION_PREDICATE_OPERATORS,
     ApplicationLinkDefinition,
     BboxAnchorSpec,
@@ -414,6 +421,7 @@ from ._schema import (
 from ._schema_input_kind import InputKind, InputKindValue
 from ._schema_rounding import RegistryRoundingCode
 from ._snapshot import build_snapshot
+from ._temporal import select_revision
 from ._validate import RegistryValidator
 from ._validate_cross_revision import (
     CrossRevisionCasillaDriftSummary,
@@ -460,6 +468,7 @@ __all__ = [
     "CENSO_MODELO_SERVICE_OWNER",
     "GROI_ORACLE_ID",
     "INVOICE_BINDING_SOURCE_KINDS",
+    "KNOWN_PROFILE_FLAG_ADVISORY_FIELDS",
     "KNOWN_VERIFICATION_PREDICATE_OPERATORS",
     "LEDGER_BINDING_SOURCE_KINDS",
     "M210_CONVENIO_MISSING_SENTINEL",
@@ -535,6 +544,7 @@ __all__ = [
     "GroiObservation",
     "GroiOracle",
     "GroiReplayDriver",
+    "ImpatriadoIncomeObservationProtocol",
     "InputKind",
     "InputKindValue",
     "InvoiceObservation",
@@ -727,6 +737,7 @@ __all__ = [
     "load_convenio_authority",
     "load_legal_parameters_only",
     "load_modelo_directory",
+    "load_modelo_directory_without_locales",
     "load_modelo_file",
     "load_modelo_path",
     "load_modelo_source",
@@ -760,6 +771,7 @@ __all__ = [
     "resolve_foreign_asset_binding_row_values",
     "resolve_invoice_binding_row_values",
     "resolve_invoice_binding_values",
+    "resolve_ledger_impatriado_income_aggregation_binding_values",
     "resolve_ledger_iva_aggregation_binding_values",
     "resolve_ledger_oss_aggregation_binding_values",
     "resolve_ledger_renta_expense_aggregation_binding_values",
@@ -785,16 +797,20 @@ __all__ = [
     "save_parity_scenario",
     "save_parity_tape",
     "scan_workbook",
+    "select_revision",
+    "selector_as_dict",
     "selector_model_for_source",
     "summarize_non_overlapping_cross_revision_casilla_drift",
     "taxpayer_model_is_declared",
     "undeclared_casilla_ids",
+    "unsupported_ledger_impatriado_income_observations",
     "unsupported_ledger_iva_observations",
     "unsupported_ledger_oss_observations",
     "unsupported_ledger_renta_expense_observations",
     "unsupported_ledger_renta_gasto_observations",
     "unsupported_ledger_renta_income_observations",
     "validate_invoice_binding_definition",
+    "validate_ledger_impatriado_income_aggregation_binding_definition",
     "validate_ledger_iva_aggregation_binding_definition",
     "validate_ledger_oss_aggregation_binding_definition",
     "validate_ledger_renta_expense_aggregation_binding_definition",

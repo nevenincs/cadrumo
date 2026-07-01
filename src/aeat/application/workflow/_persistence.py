@@ -84,7 +84,7 @@ _RUN_SENSITIVITY = WORKFLOW_RUN_STORAGE_NAMESPACE.sensitivity
 
 def _clear_output_language_cache() -> None:
     try:
-        from ...core.i18n._render import clear_output_language_cache
+        from ...core.i18n import clear_output_language_cache
     except Exception:  # pragma: no cover - cache invalidation must never block persistence
         _logger.debug("workflow persistence could not import i18n cache invalidator", exc_info=True)
         return

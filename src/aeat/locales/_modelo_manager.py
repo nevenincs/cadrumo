@@ -19,12 +19,13 @@ from ..core import CasillaId, read_toml
 from ..core.errors import AeatError
 from ..core.external_constants import UTF_8_ENCODING, OutputLanguage
 from ..core.resources import bundled_path
-from ..domain.calculations.registry._loader import (
-    _build_modelo_definition_from_data,
-    _load_modelo_manifest,
-    _load_modelo_revisions,
+from ..domain.calculations.registry import (
+    CasillaDefinition,
+    ModeloDefinition,
+    ModeloRevision,
+    RegistryLoadError,
+    load_modelo_directory_without_locales,
 )
-from ..domain.calculations.registry._schema import CasillaDefinition, ModeloDefinition, ModeloRevision
 
 
 class ModeloLocaleError(AeatError, ValueError):
@@ -208,11 +209,10 @@ class ModeloLocaleManager:
     def load_modelo(self, modelo_id: str) -> ModeloDefinition:
         """Load a directory-mode :class:`ModeloDefinition` without applying locale TOML files."""
         modelo_dir = self.resolve_modelo_dir(modelo_id)
-        revisions = _load_modelo_revisions(modelo_dir)
-        if not revisions:
-            raise ModeloLocaleError(f"{modelo_dir}: no revisions found in revisions/")
-        merged = {**_load_modelo_manifest(modelo_dir), "revisions": revisions}
-        return _build_modelo_definition_from_data(modelo_dir, merged)
+        try:
+            return load_modelo_directory_without_locales(modelo_dir)
+        except RegistryLoadError as exc:
+            raise ModeloLocaleError(str(exc)) from exc
 
     def revision_ids(self, modelo_id: str) -> tuple[str, ...]:
         """Return sorted revision ids for ``modelo_id``."""

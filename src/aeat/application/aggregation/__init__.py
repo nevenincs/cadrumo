@@ -84,6 +84,7 @@ from ._errors import (
     AggregationValidationError,
 )
 from ._evidence_advisory import (
+    MISSING_DEDUCTIBLE_VAT_EVIDENCE_SOURCE_KIND,
     MISSING_TRANSACTION_EVIDENCE_SOURCE_KIND,
     missing_evidence_advisory_observations,
 )
@@ -110,8 +111,13 @@ from ._iva_ledger import (
     validate_iva_ledger_observation,
     validate_iva_ledger_observations,
 )
-from ._ledger_filing_snapshot import stale_filed_revisions
+from ._ledger_filing_snapshot import (
+    compute_ledger_filing_evidence,
+    compute_ledger_filing_snapshot,
+    stale_filed_revisions,
+)
 from ._modelo_bindings import (
+    LedgerImpatriadoIncomeAggregationSourceResolver,
     LedgerIvaAggregationSourceResolver,
     LedgerRentaExpenseAggregationSourceResolver,
     LedgerRentaGastoAggregationSourceResolver,
@@ -195,6 +201,7 @@ __all__ = [
     "ACCEPTED_SOURCE_KINDS",
     "ADMINISTRADOR_RETENCION_RATE_SOURCE_KIND",
     "DEFERRED_SOURCE_KINDS",
+    "MISSING_DEDUCTIBLE_VAT_EVIDENCE_SOURCE_KIND",
     "MISSING_TRANSACTION_EVIDENCE_SOURCE_KIND",
     "RESERVED_SOURCE_KINDS",
     "AggregationCategoryCoverageError",
@@ -225,6 +232,7 @@ __all__ = [
     "IvaLedgerAggregationIssueReason",
     "IvaLedgerCandidate",
     "IvaLedgerInputKind",
+    "LedgerImpatriadoIncomeAggregationSourceResolver",
     "LedgerIvaAggregationSourceResolver",
     "LedgerRentaExpenseAggregationSourceResolver",
     "LedgerRentaGastoAggregationSourceResolver",
@@ -276,6 +284,8 @@ __all__ = [
     "aggregation_period_for_modelo",
     "build_binding_source_dispositions",
     "collect_unhandled_source_diagnostics",
+    "compute_ledger_filing_evidence",
+    "compute_ledger_filing_snapshot",
     "declarable_asset_classes_720",
     "declarable_class",
     "declarable_counterparty_nifs_347",

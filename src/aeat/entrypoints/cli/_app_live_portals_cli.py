@@ -44,7 +44,7 @@ def register_portals_commands(app: typer.Typer) -> None:
 
 
 def _portal_row(metadata) -> _PortalRow:
-    from ...domain.portals._hosts import portal_host_name
+    from ...domain.portals import portal_host_name
 
     # `metadata.label` and `metadata.purpose` are Translatable
     # translation keys (e.g. `entries.portal_sede_root.label`). A bare

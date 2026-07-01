@@ -30,9 +30,9 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 # ---------------------------------------------------------------------------
 
 
-@pytest.mark.parametrize(
-    ("value", "expected"),
-    [
+def test_coerce_decimal_valid_inputs_no_default() -> None:
+    """Valid inputs produce the expected Decimal regardless of default policy."""
+    for value, expected in (
         # Well-formed Decimal passthrough
         (Decimal("12.34"), Decimal("12.34")),
         (Decimal("0"), Decimal("0")),
@@ -50,39 +50,27 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
         ("1000000.99", Decimal("1000000.99")),
         # Leading/trailing whitespace is handled by Decimal constructor
         (" 5.00 ", Decimal("5.00")),
-    ],
-)
-def test_coerce_decimal_valid_inputs_no_default(value: object, expected: Decimal) -> None:
-    """Valid inputs produce the expected Decimal regardless of default policy."""
-    result = coerce_decimal(value)
-    assert result == expected
+    ):
+        result = coerce_decimal(value)
+        assert result == expected, repr(value)
 
 
-@pytest.mark.parametrize(
-    "absent_value",
-    [
-        None,
-        "",
-    ],
-)
-def test_coerce_decimal_absent_returns_none_by_default(absent_value: object) -> None:
+def test_coerce_decimal_absent_returns_none_by_default() -> None:
     """None and empty string return None when no default is given."""
-    assert coerce_decimal(absent_value) is None
+    for absent_value in (None, ""):
+        assert coerce_decimal(absent_value) is None, repr(absent_value)
 
 
-@pytest.mark.parametrize(
-    "bad_value",
-    [
+def test_coerce_decimal_malformed_returns_none_by_default() -> None:
+    """Unparseable values return None when no default is given."""
+    for bad_value in (
         "not-a-number",
         "1,234.56",  # locale-formatted — not valid Python Decimal syntax
         "€12.00",
         "NaN_custom",
         object(),
-    ],
-)
-def test_coerce_decimal_malformed_returns_none_by_default(bad_value: object) -> None:
-    """Unparseable values return None when no default is given."""
-    assert coerce_decimal(bad_value) is None
+    ):
+        assert coerce_decimal(bad_value) is None, repr(bad_value)
 
 
 def test_coerce_decimal_debug_log_omits_raw_malformed_value(
@@ -113,9 +101,9 @@ def test_coerce_decimal_debug_log_omits_raw_malformed_value(
 _ZERO = Decimal("0")
 
 
-@pytest.mark.parametrize(
-    ("value", "expected"),
-    [
+def test_coerce_decimal_with_zero_default() -> None:
+    """With default=Decimal('0') the helper never returns None."""
+    for value, expected in (
         # Valid inputs still produce the parsed value (default unused)
         ("99.50", Decimal("99.50")),
         (Decimal("1.23"), Decimal("1.23")),
@@ -126,13 +114,10 @@ _ZERO = Decimal("0")
         # Malformed inputs fall back to zero
         ("bad", _ZERO),
         ("1,000", _ZERO),
-    ],
-)
-def test_coerce_decimal_with_zero_default(value: object, expected: Decimal) -> None:
-    """With default=Decimal('0') the helper never returns None."""
-    result = coerce_decimal(value, default=_ZERO)
-    assert result is not None
-    assert result == expected
+    ):
+        result = coerce_decimal(value, default=_ZERO)
+        assert result is not None, repr(value)
+        assert result == expected, repr(value)
 
 
 # ---------------------------------------------------------------------------
@@ -140,9 +125,9 @@ def test_coerce_decimal_with_zero_default(value: object, expected: Decimal) -> N
 # ---------------------------------------------------------------------------
 
 
-@pytest.mark.parametrize(
-    ("value", "default", "expected"),
-    [
+def test_coerce_decimal_custom_default() -> None:
+    """Arbitrary non-None defaults are respected."""
+    for value, default, expected in (
         # Absent — use sentinel default
         (None, Decimal("-1"), Decimal("-1")),
         ("", Decimal("100"), Decimal("100")),
@@ -151,11 +136,8 @@ def test_coerce_decimal_with_zero_default(value: object, expected: Decimal) -> N
         # Valid — default ignored
         ("5.5", Decimal("99"), Decimal("5.5")),
         (Decimal("2"), Decimal("99"), Decimal("2")),
-    ],
-)
-def test_coerce_decimal_custom_default(value: object, default: Decimal, expected: Decimal) -> None:
-    """Arbitrary non-None defaults are respected."""
-    assert coerce_decimal(value, default=default) == expected
+    ):
+        assert coerce_decimal(value, default=default) == expected, repr(value)
 
 
 # ---------------------------------------------------------------------------
@@ -175,11 +157,8 @@ def test_coerce_decimal_passthrough_is_same_object() -> None:
 # ---------------------------------------------------------------------------
 
 
-@pytest.mark.parametrize(
-    "value",
-    ["Inf", "-Inf", "Infinity", "NaN"],
-)
-def test_coerce_decimal_special_tokens_parsed(value: str) -> None:
+def test_coerce_decimal_special_tokens_parsed() -> None:
     """Decimal's special tokens (Inf, NaN) are valid inputs and should parse."""
-    result = coerce_decimal(value)
-    assert isinstance(result, Decimal)
+    for value in ("Inf", "-Inf", "Infinity", "NaN"):
+        result = coerce_decimal(value)
+        assert isinstance(result, Decimal), value

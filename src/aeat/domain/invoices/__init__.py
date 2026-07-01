@@ -88,6 +88,8 @@ from ._repository import InvoiceCatalogueRepository
 from ._service import (
     LinkInconsistency,
     ReconciliationSuggestion,
+    find_invoice,
+    find_unmatched,
     link_transaction,
     suggest_reconciliations,
     verify_link_consistency,
@@ -114,6 +116,8 @@ __all__ = [
     "ReconciliationSuggestion",
     "classify_invoice_line_for_iva",
     "derive_invoice_id",
+    "find_invoice",
+    "find_unmatched",
     "invoice_line_to_iva_observation",
     "iva_rate_kind",
     "iva_rate_percentage",

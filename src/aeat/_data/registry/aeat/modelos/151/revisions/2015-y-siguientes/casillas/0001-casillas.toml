@@ -38,7 +38,8 @@ section = ["liquidacion", "base"]
 data_type = "money"
 semantic_role = "impatriado_base_liquidable_general"
 required = false
-input_kind = "manual"
+input_kind = "bound"
+binding = "modelo-151-impatriado-base-liquidable-general"
 legal_refs = ["ley-35-2006:art-93"]
 source_refs = ["aeat-modelo-151-procedure", "boe-modelo-151-layout"]
 

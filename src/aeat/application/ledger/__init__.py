@@ -136,6 +136,7 @@ from ._evidence import (
     PurchaseInvoiceEvidenceInputError,
     PurchaseInvoiceEvidenceNotFoundError,
     PurchaseInvoiceEvidencePatch,
+    PurchaseInvoiceEvidenceRepository,
     PurchaseInvoiceEvidenceService,
 )
 from ._id_resolution import (
@@ -299,6 +300,7 @@ __all__ = [
     "PurchaseInvoiceEvidenceInputError",
     "PurchaseInvoiceEvidenceNotFoundError",
     "PurchaseInvoiceEvidencePatch",
+    "PurchaseInvoiceEvidenceRepository",
     "PurchaseInvoiceEvidenceService",
     "RatiosCensoOverrideWarning",
     "RatiosValidationFinding",

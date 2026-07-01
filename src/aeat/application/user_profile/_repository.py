@@ -87,7 +87,7 @@ def _clear_output_language_cache() -> None:
     module.
     """
     try:
-        from ...core.i18n._render import clear_output_language_cache
+        from ...core.i18n import clear_output_language_cache
     except ImportError:  # pragma: no cover - cache invalidation must never block persistence
         _log.debug("user-profile output-language cache invalidation import failed", exc_info=True)
         return

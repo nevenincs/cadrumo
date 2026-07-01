@@ -128,7 +128,7 @@ def test_verification_report_view_exposes_finding_legal_and_source_refs() -> Non
     run_at = datetime(2026, 5, 27, 10, 0, 0, tzinfo=UTC)
     calc_id = "c" * 64
     legal = ("ley-37-1992:art-88", "rd-1624-1992:art-71")
-    sources = ("orden-eha-3786-2008:art-1",)
+    sources = ("aeat-modelo-303-instructions",)
     findings = (
         ModeloVerificationFinding(
             kind=ModeloVerificationFindingKind.BLOCKING_RULE,

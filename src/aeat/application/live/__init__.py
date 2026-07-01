@@ -82,7 +82,12 @@ from ._borrador_100 import (
     borrador_100_snapshot_object_key,
     derive_borrador_100_snapshot_id,
 )
-from ._censo import CensoSnapshotNotFoundError
+from ._censo import (
+    CensoSnapshot,
+    CensoSnapshotNotFoundError,
+    CensoSnapshotService,
+    censo_snapshot_object_key,
+)
 from ._errors import (
     LiveApplicationError,
     LiveApplicationInputError,
@@ -494,15 +499,26 @@ def __getattr__(name: str):
     services trigger their own heavy imports only on first
     access).
     """
-    if name in ("VerifyService", "VerifyVerdict", "VerifySurface"):
+    if name in (
+        "VerifyService",
+        "VerifyVerdict",
+        "VerifySurface",
+        "VerifyObservation",
+        "verify_observation_object_key",
+    ):
         from . import _verify as _impl_mod
 
         return getattr(_impl_mod, name)
-    if name == "NotificationsService":
+    if name in ("NotificationsService", "PersistedNotificationsSnapshot", "notifications_snapshot_object_key"):
         from . import _notifications as _impl_mod
 
         return getattr(_impl_mod, name)
-    if name in ("ExpedientesService", "ExpedientesCapture"):
+    if name in (
+        "ExpedientesService",
+        "ExpedientesCapture",
+        "PersistedExpedientesSnapshot",
+        "expedientes_snapshot_object_key",
+    ):
         from . import _expedientes as _impl_mod
 
         return getattr(_impl_mod, name)
@@ -519,7 +535,9 @@ __all__ = [
     "BorradorSnapshotNotFoundError",
     "BulkFiledDataCaptureReport",
     "BulkFiledDataListingReport",
+    "CensoSnapshot",
     "CensoSnapshotNotFoundError",
+    "CensoSnapshotService",
     "ExpedientesBulkCaptureFailureRow",
     "ExpedientesBulkCaptureReport",
     "ExpedientesCapture",
@@ -553,6 +571,8 @@ __all__ = [
     "LiveIvaReadSurface",
     "LiveIvaSurfaceTimeoutError",
     "NotificationsService",
+    "PersistedExpedientesSnapshot",
+    "PersistedNotificationsSnapshot",
     "SecureSnapshotRepository",
     "SnapshotLifecycleState",
     "SnapshotNotFoundError",
@@ -560,6 +580,7 @@ __all__ = [
     "SourceFiledDataCaptureReport",
     "StoredIvaRemoteStateAcquisitionRow",
     "StoredIvaWalletObservationRow",
+    "VerifyObservation",
     "VerifyService",
     "VerifySurface",
     "VerifyVerdict",
@@ -582,10 +603,12 @@ __all__ = [
     "capture_justificante_snapshot_outcome",
     "capture_notifications",
     "capture_source_filed_data",
+    "censo_snapshot_object_key",
     "classify_live_iva_acquisition_failure",
     "derive_borrador_100_snapshot_id",
     "derive_justificante_capture_snapshot_id",
     "enroll_filed_justificante_evidence",
+    "expedientes_snapshot_object_key",
     "filed_data_capture_failure_row",
     "filed_data_listing_row",
     "justificante_capture_snapshot_object_key",
@@ -595,6 +618,7 @@ __all__ = [
     "list_iva_remote_state_acquisition_manifests",
     "load_iva_remote_state",
     "load_iva_remote_state_acquisition_manifest",
+    "notifications_snapshot_object_key",
     "parse_capture_to_justificante",
     "persist_and_reconcile_iva_compensation_wallet",
     "persist_filed_calculation_observation",
@@ -606,4 +630,5 @@ __all__ = [
     "resolve_period_expediente",
     "select_declarations_for_capture",
     "stamp_capture_evidence_if_filed",
+    "verify_observation_object_key",
 ]

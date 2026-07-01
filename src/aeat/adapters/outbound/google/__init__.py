@@ -17,12 +17,23 @@ Major declarations:
 * :class:`OAuthClient`, :class:`OAuthToken`, and :class:`OAuthMetadata` —
   the typed OAuth credential records.
 * :class:`DriveAppProperties` — the typed Drive ``appProperties`` payload.
+* :class:`DriveConfig` — the typed per-profile Drive/Sheets config record.
 * :data:`REQUIRED_SCOPES`, with :data:`DRIVE_FILE_SCOPE` and
   :data:`SHEETS_SCOPE` — the requested OAuth scopes.
 * :func:`parse_drive_file_id` and :func:`resolve_document_link` — the
   minimal-scope Drive document-link helpers.
 * :class:`GoogleAuthError` and its subclasses — the Google auth failure
   taxonomy.
+* :func:`run_login_flow` — the interactive OAuth login flow.
+* :func:`save_client`, :func:`load_client`, :func:`save_token`,
+  :func:`load_token`, :func:`save_metadata`, :func:`load_metadata`,
+  :func:`save_drive_config`, :func:`load_drive_config`, and
+  :func:`delete_session` — the per-profile session-store primitives.
+* :func:`resolve_active_profile` — the active-profile resolver.
+* :class:`CalcSheetsApplyResult` and :func:`apply_export_plan` — the
+  export-plan-to-Sheets apply surface.
+* :class:`RowSetEdit`, :class:`PullResult`, :func:`pull_operator_edits`, and
+  :func:`compute_from_pull` — the operator-edit pull surface.
 
 See Also:
     - :mod:`aeat.adapters.outbound.storage` for the Google Drive storage mirror
@@ -31,6 +42,14 @@ See Also:
       consume resolved Drive document bytes.
 """
 
+from ._active_profile import resolve_active_profile
+from ._calc_sheets_apply import CalcSheetsApplyResult, apply_export_plan
+from ._calc_sheets_pull import (
+    PullResult,
+    RowSetEdit,
+    compute_from_pull,
+    pull_operator_edits,
+)
 from ._document_link_resolver import parse_drive_file_id, resolve_document_link
 from ._errors import (
     GoogleAuthBrowserOpenError,
@@ -48,21 +67,36 @@ from ._errors import (
     GoogleAuthUnsecuredModeRefusedError,
     GoogleAuthValidationError,
 )
+from ._oauth_flow import run_login_flow
 from ._records import (
     DRIVE_FILE_SCOPE,
     REQUIRED_SCOPES,
     SHEETS_SCOPE,
     DriveAppProperties,
+    DriveConfig,
     OAuthClient,
     OAuthMetadata,
     OAuthToken,
+)
+from ._session_store import (
+    delete_session,
+    load_client,
+    load_drive_config,
+    load_metadata,
+    load_token,
+    save_client,
+    save_drive_config,
+    save_metadata,
+    save_token,
 )
 
 __all__ = [
     "DRIVE_FILE_SCOPE",
     "REQUIRED_SCOPES",
     "SHEETS_SCOPE",
+    "CalcSheetsApplyResult",
     "DriveAppProperties",
+    "DriveConfig",
     "GoogleAuthBrowserOpenError",
     "GoogleAuthClientNotRegisteredError",
     "GoogleAuthClientRevokedError",
@@ -80,6 +114,22 @@ __all__ = [
     "OAuthClient",
     "OAuthMetadata",
     "OAuthToken",
+    "PullResult",
+    "RowSetEdit",
+    "apply_export_plan",
+    "compute_from_pull",
+    "delete_session",
+    "load_client",
+    "load_drive_config",
+    "load_metadata",
+    "load_token",
     "parse_drive_file_id",
+    "pull_operator_edits",
+    "resolve_active_profile",
     "resolve_document_link",
+    "run_login_flow",
+    "save_client",
+    "save_drive_config",
+    "save_metadata",
+    "save_token",
 ]
