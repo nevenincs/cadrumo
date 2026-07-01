@@ -34,9 +34,10 @@ non-registry member to its deliberately-absent registry definition.
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from enum import StrEnum
 
-__all__ = ["NON_REGISTRY_MODELOS", "Modelo"]
+__all__ = ["NON_REGISTRY_MODELOS", "UNMODELED_OBLIGATIONS", "Modelo"]
 
 
 class Modelo(StrEnum):
@@ -78,6 +79,7 @@ class Modelo(StrEnum):
     M200 = "200"
     M202 = "202"
     M210 = "210"
+    M216 = "216"
     M232 = "232"
     M303 = "303"
     M308 = "308"
@@ -95,6 +97,12 @@ class Modelo(StrEnum):
     M840 = "840"
 
 
+#: Recognized AEAT obligation modelos the registry does not yet model.
+UNMODELED_OBLIGATIONS: Mapping[Modelo, str] = {
+    Modelo.M216: "IRNR retenciones e ingresos a cuenta for non-resident income, not yet registry-modeled",
+}
+
+
 #: Known modelo identifiers that intentionally have **no registry definition**.
 #: These are real, code-referenced modelos for which
 #: :meth:`~aeat.domain.calculations.registry.ValidatedRegistryAuthority.validate_modelo`
@@ -104,4 +112,4 @@ class Modelo(StrEnum):
 #: compares the remaining members to
 #: :func:`aeat.application.modelo.registry_modelo_codes`, so the enum can carry
 #: retired-but-supported codes without implying the registry can load them.
-NON_REGISTRY_MODELOS: frozenset[Modelo] = frozenset({Modelo.M037})
+NON_REGISTRY_MODELOS: frozenset[Modelo] = frozenset({Modelo.M037}) | frozenset(UNMODELED_OBLIGATIONS)
