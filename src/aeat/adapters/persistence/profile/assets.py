@@ -2,9 +2,9 @@
 
 :class:`AssetRecord`, :class:`AssetsLedgerDocument`, and
 :class:`AmortizacionLedger` payloads are stored as
-:class:`~aeat.adapters.persistence.storage.SensitivityClass` ``FINANCIAL``
+``FINANCIAL`` :class:`~aeat.adapters.persistence.storage.SensitivityClass`
 secure objects in the primary database through
-:class:`~aeat.adapters.persistence.storage.sql.SecureObjectRepository`. The
+:class:`~aeat.adapters.persistence.storage.SecureObjectRepository`. The
 singleton namespace, default object key, schema version, and custody contracts
 come from
 :data:`aeat.adapters.persistence.storage.PROFILE_ASSETS_LEDGER_NAMESPACE` and
@@ -34,11 +34,11 @@ from ....domain.contribuyente.assets import (
 from ..storage import (
     PROFILE_ASSETS_AMORTIZATION_LEDGER_NAMESPACE,
     PROFILE_ASSETS_LEDGER_NAMESPACE,
+    SecureObjectRepository,
     SensitivityClass,
     secure_object_logical_path,
 )
 from ..storage.runtime_repository import secure_object_repository_for_active_bucket
-from ..storage.sql import SecureObjectRepository
 
 _log = get_logger(__name__)
 
@@ -126,7 +126,7 @@ class AssetsLedgerRepository:
     The singleton row is owned by
     :data:`aeat.adapters.persistence.storage.PROFILE_ASSETS_LEDGER_NAMESPACE`
     and persisted through
-    :class:`~aeat.adapters.persistence.storage.sql.SecureObjectRepository`.
+    :class:`~aeat.adapters.persistence.storage.SecureObjectRepository`.
     """
 
     def __init__(self, *, objects: SecureObjectRepository | None = None) -> None:
@@ -239,7 +239,7 @@ class AmortizacionLedgerRepository:
     payload type is :class:`AmortizacionLedger`. Its singleton row is owned by
     :data:`aeat.adapters.persistence.storage.PROFILE_ASSETS_AMORTIZATION_LEDGER_NAMESPACE`
     and persisted through
-    :class:`~aeat.adapters.persistence.storage.sql.SecureObjectRepository`.
+    :class:`~aeat.adapters.persistence.storage.SecureObjectRepository`.
     """
 
     def __init__(self, *, objects: SecureObjectRepository | None = None) -> None:

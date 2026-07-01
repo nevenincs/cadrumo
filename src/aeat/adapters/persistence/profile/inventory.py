@@ -2,9 +2,9 @@
 
 :class:`InventoryLedger` payloads are grouped in
 :class:`InventoryLedgerDocument` and stored as
-:class:`~aeat.adapters.persistence.storage.SensitivityClass` ``FINANCIAL``
+``FINANCIAL`` :class:`~aeat.adapters.persistence.storage.SensitivityClass`
 secure objects in the primary database through
-:class:`~aeat.adapters.persistence.storage.sql.SecureObjectRepository`. The
+:class:`~aeat.adapters.persistence.storage.SecureObjectRepository`. The
 singleton namespace, default object key, schema version, and custody contract
 come from
 :data:`aeat.adapters.persistence.storage.PROFILE_INVENTORY_LEDGER_NAMESPACE`.
@@ -32,9 +32,8 @@ from ....domain.contribuyente.inventory import (
     InventoryLedgerError,
     MovementRecord,
 )
-from ..storage import PROFILE_INVENTORY_LEDGER_NAMESPACE, secure_object_logical_path
+from ..storage import PROFILE_INVENTORY_LEDGER_NAMESPACE, SecureObjectRepository, secure_object_logical_path
 from ..storage.runtime_repository import secure_object_repository_for_active_bucket
-from ..storage.sql import SecureObjectRepository
 
 _log = get_logger(__name__)
 
@@ -116,7 +115,7 @@ class InventoryLedgerRepository:
     The singleton row is owned by
     :data:`aeat.adapters.persistence.storage.PROFILE_INVENTORY_LEDGER_NAMESPACE`
     and persisted through
-    :class:`~aeat.adapters.persistence.storage.sql.SecureObjectRepository`.
+    :class:`~aeat.adapters.persistence.storage.SecureObjectRepository`.
     """
 
     def __init__(self, *, objects: SecureObjectRepository | None = None) -> None:
@@ -125,7 +124,8 @@ class InventoryLedgerRepository:
         Args:
             objects: Optional injected secure-object repository. When
                 supplied, every encrypted-store read and write is routed
-                through it instead of a :class:`SecureObjectRepository`
+                through it instead of a
+                :class:`~aeat.adapters.persistence.storage.SecureObjectRepository`
                 resolved from the pydantic-settings :class:`Settings`
                 object. This is the dependency-injection seam
                 real-adapter tests use to bind a single explicit SQLite
