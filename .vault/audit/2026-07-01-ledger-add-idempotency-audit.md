@@ -47,18 +47,22 @@ The filing-record anti-tautology test seeded `revision_id` with an invalid-hex v
 
 Commit `f5bd349a5` (the P01.S01 provider-id lookup fix) also bundled unrelated Modelo 390 registry TOML plus a 253-line M390 fold-in test — a scope-bleed / peer-WIP capture into an atomic ledger commit. The M390 work is preserved in history; reverting would destroy it and is entangled with the ledger fix. Documented and surfaced for the M390 campaign to confirm rather than unwound.
 
-### s22-inline-notice-message | low | modelo-file no-op Notice uses an inline string, not a tr() key (acceptable; follow-up)
+### s22-inline-notice-message | low | modelo-file no-op Notice uses an inline string, not a tr() key (FIXED)
 
-The S22 modelo-file no-op Notice uses an inline message string rather than a `tr()` locale key — a deliberate choice to avoid concurrent locale-catalogue contention. It is still a properly typed `Notice` (info severity, code, context), does not violate `cli-notices-are-the-only-diagnostic-channel`, and mirrors the adjacent hardcoded `filing_disambiguation` line. Acceptable as committed; promote to a `tr` key once the locale surface settles, for parity with the localized ledger-add no-op.
+The S22 modelo-file no-op Notice used an inline message string rather than a `tr()` locale key. FIXED in `cd3531ed7`: promoted to the `cli.app.modelo.work.file_idempotent_noop` locale key, translated in all four catalogues, for parity with the localized ledger-add no-op. Because the four locale catalogues were under continuous concurrent multi-campaign rewrite (peer keys uncommitted in the working tree and ~10 peer files staged in the shared index), the commit was built via a temporary index (`GIT_INDEX_FILE` + `commit-tree`) so it carries only this one new key per catalogue and swept zero peer locale WIP — verified: each `.yml` in the commit shows exactly one added line and no peer line.
 
-### s16-roundtrip-strength | low | Transaction roundtrip is survives-reload, not strict-equality + on-disk-mutation (follow-up)
+### s16-roundtrip-strength | low | Transaction roundtrip is survives-reload, not strict-equality + on-disk-mutation (FIXED)
 
-P05.S16's "strict Transaction roundtrip + anti-tautology" is only partially satisfied: it is a survives-reload check rather than a strict `model_a == model_b` equality plus an on-disk-mutation anti-tautology proof. Strengthen in a follow-up.
+P05.S16's fingerprint roundtrip was a survives-reload presence check. FIXED in `3f4206d3d`: added strict full-model equality across a fresh repository over the same store (the non-default `import_fingerprint` roundtrips exactly, not re-defaults) plus a content-bound anti-tautology leg (a different movement yields a different fingerprint).
+
+### m714-peer-registry-regression | out-of-scope | 5 file-flow tests red from a peer M714 invalid verification expectation
+
+Five `test_file_flow_filing.py` tests fail at registry load with `modelo 714 revision 2021-y-siguientes: verification expectation references unknown casilla '29'/'39'`. The cause is an UNTRACKED peer directory `src/aeat/_data/registry/aeat/modelos/714/revisions/2021-y-siguientes/verification_expectations/` — the M714 campaign's in-flight invalid registry state — not this feature. Owner-attributed to the M714 campaign per `full-tree-gate-must-distinguish-owner`; surfaced for that campaign to fix.
 
 ## Recommendations
 
-- The two MEDIUM in-scope findings are FIXED and re-verified (idempotency suite 13 passed, filing roundtrip suite 15 passed). No further action.
+- All in-scope findings are now FIXED and re-verified (my feature surface: 35 passed — idempotency 13, filing roundtrip 15, locale 7): MEDIUM-2 `bdd141a59`, MEDIUM-1 `ce1f79e38`, LOW-S16 `3f4206d3d`, LOW-S22-tr `cd3531ed7`. No further action on the feature.
 - MEDIUM-3 (`f5bd349a5` scope bleed): confirm with the M390 campaign that the bundled registry work is intact and got its own review; do not revert.
-- Track the two LOW items as follow-ups: promote the S22 inline Notice to a `tr` key; strengthen the S16 Transaction roundtrip to strict equality + anti-tautology.
 - The `single-subject-mutation-is-idempotent-guarded` codification candidate remains flagged for post-cycle promotion only; do not promote this cycle.
-- Owner-attributed S19 non-feature failure: `test_no_parallel_work_unit_storage_namespace` trips on the custody campaign's `application/user_profile/_bundle.py` and `_custody_carry.py` referencing the work_units namespace — surface to that campaign; out of scope for this feature.
+- Two OWNER-ATTRIBUTED, out-of-scope peer failures observed during the sweep, surfaced to their campaigns: (1) `test_no_parallel_work_unit_storage_namespace` — the custody campaign's `application/user_profile/_bundle.py` / `_custody_carry.py` reference the work_units namespace; (2) the five `test_file_flow_filing.py` failures — the M714 campaign's untracked invalid verification expectation. Neither is this feature's surface.
+- Shared-worktree note: the locale surface was under continuous multi-campaign churn throughout close; the `tr` promotion was landed via a temporary-index `commit-tree` specifically to avoid sweeping peer locale WIP. No destructive git ran and no peer work was swept at any point.
