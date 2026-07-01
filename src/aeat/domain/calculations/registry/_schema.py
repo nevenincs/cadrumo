@@ -79,7 +79,7 @@ __all__ = [
     "CasillaFieldKind",
     "CasillaFieldKindValue",
     "ConstructDefinition",
-    "ConvenioRateRow",
+    "ConvenioAuthority",
     "DataBindingDefinition",
     "DateAxis",
     "DatedValue",
@@ -131,6 +131,7 @@ __all__ = [
     "WorkbookParityReference",
 ]
 
+from ._convenio import ConvenioAuthority
 from ._schema_base import (
     CalculationClass,
     DateAxis,
@@ -147,7 +148,6 @@ from ._schema_base import (
 )
 from ._schema_formula import (
     BracketEntry,
-    ConvenioRateRow,
     DatedValue,
     FormulaExpression,
     KeyedBracketEntry,
@@ -1346,6 +1346,7 @@ class RegistryCatalogues(RegistryModel):
     legal: Mapping[LegalRefId, LegalReference]
     sources: Mapping[SourceRefId, SourceReference]
     parameters: Mapping[str, LegalParameter] = Field(default_factory=dict)
+    convenio: ConvenioAuthority = Field(default_factory=ConvenioAuthority.empty)
 
 
 @dataclass(frozen=True, slots=True)
@@ -1392,6 +1393,7 @@ class RegistrySnapshot(RegistryModel):
     support_removal_decisions: Mapping[SupportRemovalDecisionId, SupportRemovalDecisionDefinition]
     constructs: Mapping[ConstructId, ConstructDefinition]
     dependency_classifications: Mapping[DependencyClassificationId, DependencyClassificationDefinition]
+    convenio: ConvenioAuthority = Field(default_factory=ConvenioAuthority.empty)
 
     @model_validator(mode="after")
     def _validate_filing_period_consistency(self) -> RegistrySnapshot:

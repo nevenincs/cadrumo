@@ -194,6 +194,13 @@ from ._censo_modelos import (
     resolve_censo_modelo_work_unit_foundation,
 )
 from ._constructs import ResolvedConstruct, ResolvedConstructMember, resolve_construct, resolve_revision_constructs
+from ._convenio import (
+    ConvenioAuthority,
+    ConvenioOverride,
+    ConvenioOverrideRow,
+    ConvenioTreaty,
+    load_convenio_authority,
+)
 from ._corpus_catalogue import verify_source_catalogue, verify_source_file
 from ._coverage import (
     EvidenceTierCoverageGate,
@@ -372,7 +379,6 @@ from ._schema import (
     CasillaFieldKind,
     CasillaFieldKindValue,
     ConstructDefinition,
-    ConvenioRateRow,
     DataBindingDefinition,
     DeadlineWindowDefinition,
     DecimalValue,
@@ -491,7 +497,10 @@ __all__ = [
     "CensoModeloRole",
     "ConstructDefinition",
     "ConstructId",
-    "ConvenioRateRow",
+    "ConvenioAuthority",
+    "ConvenioOverride",
+    "ConvenioOverrideRow",
+    "ConvenioTreaty",
     "CounterpartAggregationObservation",
     "CounterpartObservationRequirement",
     "CounterpartSourceKind",
@@ -715,6 +724,7 @@ __all__ = [
     "is_registry_id",
     "iter_modelo_applicability_rules",
     "load_catalogue_file",
+    "load_convenio_authority",
     "load_legal_parameters_only",
     "load_modelo_directory",
     "load_modelo_file",

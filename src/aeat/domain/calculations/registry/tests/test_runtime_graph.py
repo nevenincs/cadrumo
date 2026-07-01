@@ -15,8 +15,9 @@ from decimal import Decimal
 
 import pytest
 
-from .....core.resources import resources
+from .....core.resources import bundled_path
 from .._ids import CasillaId, validated_casilla_id
+from .._loader import load_registry_tree
 from .._runtime_graph import (
     enum_consumed_binding_ids,
     expression_binding_refs,
@@ -49,7 +50,10 @@ def _operator(op: str, *args: FormulaExpression) -> FormulaExpression:
 
 
 def _m210_2025_revision() -> ModeloRevision:
-    return resources().modelos.authority.snapshot("210", filing_year=2025, period="EVENT-1").revision
+    # Compile-only load (no full-registry validation) so the M210 formula-graph
+    # shape assertions are independent of unrelated peer modelo churn.
+    modelos, _catalogues = load_registry_tree(bundled_path("registry", "aeat"))
+    return next(modelo for modelo in modelos if modelo.id == "210").revisions["2025"]
 
 
 def test_expression_casilla_refs_returns_direct_leaf() -> None:
@@ -146,35 +150,37 @@ def test_expression_relation_refs_walks_nested_args() -> None:
     )
 
 
-def test_enum_consumed_binding_ids_reads_current_m210_resolve_rate_country_arg() -> None:
-    """The committed M210 2025 six-arg rate formula routes country as an enum binding."""
+def test_enum_consumed_binding_ids_reads_current_irnr_resolve_tipo_gravamen_country_arg() -> None:
+    """The committed M210 2025 five-arg rate formula routes country as an enum binding."""
 
     revision = _m210_2025_revision()
     formula = next(formula for formula in revision.formulas if formula.id == _M210_RATE_FORMULA_ID)
     expression = formula.expression
-    assert expression.op == "m210_resolve_rate"
-    assert len(expression.args) == 6
-    assert expression.args[3].parameter == "m210-convenio-rates"
-    assert expression.args[5].binding == _M210_COUNTRY_BINDING
+    assert expression.op == "irnr_resolve_tipo_gravamen"
+    assert len(expression.args) == 5
+    assert expression.args[2].parameter == "m210-tipo-gravamen-2025"
+    assert expression.args[4].binding == _M210_COUNTRY_BINDING
 
     enum_ids = enum_consumed_binding_ids(revision)
 
     assert _M210_COUNTRY_BINDING in enum_ids
-    assert "m210-convenio-rates" not in enum_ids
+    assert "m210-tipo-gravamen-2025" not in enum_ids
 
 
-def test_enum_consumed_binding_ids_ignores_retired_m210_four_arg_country_arg() -> None:
-    """The retired four-arg M210 rate formula is not a current enum-dispatch shape."""
+def test_enum_consumed_binding_ids_ignores_retired_irnr_six_arg_country_arg() -> None:
+    """The retired six-arg (convenio-parameter) rate formula is not a current enum-dispatch shape."""
 
     revision = _m210_2025_revision()
     formula = next(formula for formula in revision.formulas if formula.id == _M210_RATE_FORMULA_ID)
     retired_expression = FormulaExpression.model_validate(
         {
-            "op": "m210_resolve_rate",
+            "op": "irnr_resolve_tipo_gravamen",
             "args": (
                 {"casilla_id": "tipo_renta"},
+                {"casilla_id": "base_imponible"},
                 {"parameter": "m210-tipo-gravamen-2025"},
                 {"parameter": "m210-convenio-rates"},
+                {"parameter": "m210-pension-tarifa-2025"},
                 {"binding": _M210_COUNTRY_BINDING},
             ),
         }

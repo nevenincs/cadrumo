@@ -7,8 +7,9 @@ from decimal import Decimal
 
 import pytest
 
+from .....core import ConvenioOverrideKind, TipoRentaIrnr
 from .....core.resources import bundled_path
-from .. import ConvenioRateRow
+from .. import load_convenio_authority
 from .._errors import NoRevisionForPeriodError
 from .._legal import verify_legal_catalogue
 from .._schema import ModeloDefinition, RegistryCatalogues
@@ -55,23 +56,34 @@ def test_modelo_210_validator_accepts_committed_definition() -> None:
     RegistryValidator(catalogues, source_root=bundled_path()).validate_modelo(modelo)
 
 
-def test_modelo_210_convenio_rate_parameter_loads_through_real_validator() -> None:
-    modelo, catalogues = _load_modelo_210()
-    RegistryValidator(catalogues, source_root=bundled_path()).validate_modelo(modelo)
+def test_convenio_authority_loads_migrated_treaties_with_typed_override_kinds() -> None:
+    convenio = load_convenio_authority(bundled_path("registry", "aeat", "treaties"))
 
-    revision = modelo.revisions["2025"]
-    parameter = next(param for param in revision.parameters if param.id == "m210-convenio-rates")
+    assert {"GB", "MA", "AR", "DE"} <= set(convenio.treaties)
 
-    assert parameter.data_type == "convenio_rate_table"
-    assert parameter.values == ()
-    assert parameter.brackets == ()
-    assert parameter.keyed_brackets == ()
-    assert {(row.country_code, row.tipo_renta, row.rate) for row in parameter.convenio_rates} == {
-        ("AR", "pension", "DOMESTIC_TARIFF"),
-        ("GB", "general", "0.24"),
-        ("MA", "interest", "0.10"),
-    }
-    assert all(isinstance(row, ConvenioRateRow) for row in parameter.convenio_rates)
+    gb = convenio.resolve("GB", TipoRentaIrnr.GENERAL, 2025)
+    assert gb is not None
+    assert gb.kind is ConvenioOverrideKind.FLAT
+    assert gb.rate == Decimal("0.24")
+
+    ma = convenio.resolve("MA", TipoRentaIrnr.INTEREST, 2025)
+    assert ma is not None
+    assert ma.kind is ConvenioOverrideKind.CEILING
+    assert ma.rate == Decimal("0.10")
+
+    ar = convenio.resolve("AR", TipoRentaIrnr.PENSION, 2025)
+    assert ar is not None
+    assert ar.kind is ConvenioOverrideKind.ALLOCATION_DOMESTIC_TARIFF
+    assert ar.rate is None
+
+    de = convenio.resolve("DE", TipoRentaIrnr.INTEREST, 2025)
+    assert de is not None
+    assert de.kind is ConvenioOverrideKind.EXEMPT
+    assert de.rate is None
+
+    # A treaty country with no override row for the filed income type is a
+    # non-match; the runtime raises the missing-row BLOCKING sentinel.
+    assert convenio.resolve("GB", TipoRentaIrnr.INTEREST, 2025) is None
 
 
 def test_modelo_210_revision_2025_declares_constructs() -> None:
@@ -289,17 +301,17 @@ def test_modelo_210_imputed_real_estate_aeat_guidance_source_is_available() -> N
 def test_modelo_210_pension_tariff_and_convenio_row_are_grounded() -> None:
     modelo, catalogues = _load_modelo_210()
     revision = modelo.revisions["2025"]
-    convenio_param = next(param for param in revision.parameters if param.id == "m210-convenio-rates")
-    rows = {(row.country_code, row.tipo_renta): row for row in convenio_param.convenio_rates}
-    ar_pension = rows[("AR", "pension")]
+    convenio = load_convenio_authority(bundled_path("registry", "aeat", "treaties"))
+    ar_treaty_def = convenio.treaties["AR"]
+    ar_pension = next(row for row in ar_treaty_def.overrides if row.tipo_renta is TipoRentaIrnr.PENSION)
 
-    assert ar_pension.rate == "DOMESTIC_TARIFF"
+    assert ar_pension.kind is ConvenioOverrideKind.ALLOCATION_DOMESTIC_TARIFF
+    assert ar_pension.rate is None
     assert ar_pension.legal_ref_anchor == "convenio-es-ar-1992:art-19"
     assert ar_pension.legal_refs == (
         "convenio-es-ar-1992:art-19",
         "trlirnr-rdleg-5-2004:art-25.1.b",
     )
-    assert "BOE-CONVENIO-AR-NOT-FOUND" not in ar_pension.legal_ref_anchor
 
     tariff = next(param for param in revision.parameters if param.id == "m210-pension-tarifa-2025")
     assert tariff.data_type == "bracket_table"
