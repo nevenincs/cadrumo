@@ -12,7 +12,7 @@ from collections.abc import Iterable
 from datetime import date
 
 from ...core.errors import BaseSeverity
-from ...core.parsing._dates import _parse_iso8601_date
+from ...core.parsing import parse_iso8601_date as _parse_iso8601_date
 from ...domain.user_profile import (
     ProfileFieldDefinition,
     ProfileFieldType,

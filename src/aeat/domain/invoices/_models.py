@@ -25,7 +25,7 @@ from ...core import IntracomOperationType
 from ...core.decimal import coerce_decimal
 from ...core.hashing import content_hash_hex
 from ...core.identity import BucketId, validate_spanish_tax_id
-from ...core.parsing._dates import _parse_iso8601_date
+from ...core.parsing import parse_iso8601_date as _parse_iso8601_date
 from .._identifiers import canonical_decimal_string
 from ..iva import EUMemberState, InvoiceKind, IvaCategory, IvaRateKind, OssIossRegime, TransactionKind
 from ._enums import IvaRate, PaymentStatus, iva_rate_percentage
