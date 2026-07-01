@@ -14,10 +14,11 @@ catalogue is a :class:`PurchaseInvoiceEvidenceDocument` persisted through
 :class:`~aeat.adapters.persistence.storage.SecureBoundRepository` under
 :data:`aeat.adapters.persistence.storage.LEDGER_PURCHASE_INVOICE_EVIDENCE_NAMESPACE`.
 At ``add`` time the source file's bytes are copied into the encrypted
-:class:`AttachmentStore` (active bucket) and the resulting content-addressed
-``attachment_id`` is recorded on the evidence record; the bytes thereafter live
-only in secure storage. ``source_path`` is retained as a provenance breadcrumb
-and is never read for bytes (``sensitive-financial-data-secure-storage-only``).
+:class:`~aeat.adapters.persistence.storage.AttachmentStore` (active bucket) and
+the resulting content-addressed ``attachment_id`` is recorded on the evidence
+record; the bytes thereafter live only in secure storage. ``source_path`` is
+retained as a provenance breadcrumb and is never read for bytes
+(``sensitive-financial-data-secure-storage-only``).
 """
 
 from __future__ import annotations
@@ -31,10 +32,12 @@ from typing import override
 
 from pydantic import BaseModel, Field, field_serializer
 
-from ...adapters.persistence.storage import LEDGER_PURCHASE_INVOICE_EVIDENCE_NAMESPACE
-from ...adapters.persistence.storage.attachment import AttachmentStore
-from ...adapters.persistence.storage.envelope import SecureBoundRepository
-from ...adapters.persistence.storage.runtime_repository import secure_object_repository_for_bucket
+from ...adapters.persistence.storage import (
+    LEDGER_PURCHASE_INVOICE_EVIDENCE_NAMESPACE,
+    AttachmentStore,
+    SecureBoundRepository,
+    secure_object_repository_for_bucket,
+)
 from ...core import STRICT_FROZEN_CONFIG
 from ...core.config import Settings
 from ...core.errors import AeatError

@@ -24,8 +24,11 @@ from typing import ClassVar, override
 
 from pydantic import BaseModel
 
-from ...adapters.persistence.storage import LEDGER_CLASSIFICATION_RULES_NAMESPACE, SensitivityClass
-from ...adapters.persistence.storage.envelope import SecureBoundRepository
+from ...adapters.persistence.storage import (
+    LEDGER_CLASSIFICATION_RULES_NAMESPACE,
+    SecureBoundRepository,
+    SensitivityClass,
+)
 from ...domain.transactions._classification_rule import LedgerClassificationRule
 
 

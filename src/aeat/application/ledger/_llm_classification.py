@@ -50,8 +50,7 @@ from enum import StrEnum
 from pydantic import BaseModel, Field
 
 from ...adapters.outbound.llm import rasterise_pdf_pages_to_base64_png
-from ...adapters.persistence.storage.attachment import AttachmentStore
-from ...adapters.persistence.storage.runtime_repository import secure_object_repository_for_bucket
+from ...adapters.persistence.storage import AttachmentStore, secure_object_repository_for_bucket
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.config import Settings, load_settings
 from ...core.logging import get_logger

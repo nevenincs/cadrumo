@@ -129,7 +129,7 @@ def _bucket_event_repository(
     if repository is not None:
         assert isinstance(repository, BucketEventHistoryRepository)
         return repository
-    from ...adapters.persistence.storage.runtime_repository import secure_object_repository_for_bucket
+    from ...adapters.persistence.storage import secure_object_repository_for_bucket
 
     return BucketEventHistoryRepository(objects=secure_object_repository_for_bucket(bucket_id))
 
@@ -401,7 +401,7 @@ def _purchase_invoice_evidence_record_exists(bucket_id: str, evidence_id: str) -
     distinct from the rich :class:`InvoiceCatalogue` written by invoice-import flows.
     Local imports mirror this module's existing deferred-import style.
     """
-    from ...adapters.persistence.storage.runtime_repository import secure_object_repository_for_bucket
+    from ...adapters.persistence.storage import secure_object_repository_for_bucket
     from ...core.config import load_settings
     from ._evidence import PurchaseInvoiceEvidenceRepository
 
@@ -481,7 +481,7 @@ def _verify_attachment_references(
 ) -> None:
     """Verify every declared attachment manifest exists, lives in the bucket, and is link-compatible."""
     if attachment_store is None:
-        from ...adapters.persistence.storage.attachment import AttachmentStore
+        from ...adapters.persistence.storage import AttachmentStore
 
         store: _AttachmentStoreProtocol = AttachmentStore()
     else:
