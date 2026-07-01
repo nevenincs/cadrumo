@@ -130,6 +130,69 @@ def test_same_key_different_content_raises_conflict(secure_objects: SecureObject
     assert _created_event_count(events) == 1
 
 
+def test_same_key_differing_only_in_recargo_raises_conflict(secure_objects: SecureObjectRepository) -> None:
+    """A same-key add differing ONLY in recargo_amount is a conflict, never a silent no-op.
+
+    Guards against a silent under-declaration: the idempotency match must include
+    the recargo de equivalencia surcharge, or a retry that changes only the
+    recargo would no-op and drop the new surcharge value.
+    """
+    repo, events = _repositories(secure_objects)
+    base = {
+        "bucket_id": _BUCKET_ID,
+        "booked_date": _DEFAULT_BOOKED_DATE,
+        "amount": _DEFAULT_AMOUNT,
+        "direction": TransactionDirection.OUTGOING,
+        "description": "recargo sale",
+        "idempotency_key": "rec-1",
+    }
+    create_manual_transaction(
+        ManualLedgerTransactionCommand(**base, recargo_amount=Decimal("1.30")),
+        transaction_repository=repo,
+        bucket_event_repository=events,
+        occurred_at=_DEFAULT_OCCURRED_AT,
+    )
+    with pytest.raises(TransactionValidationError):
+        create_manual_transaction(
+            ManualLedgerTransactionCommand(**base, recargo_amount=Decimal("2.60")),
+            transaction_repository=repo,
+            bucket_event_repository=events,
+            occurred_at=datetime(2026, 5, 4, 10, 0, tzinfo=UTC),
+        )
+    assert len(repo.load().transactions) == 1
+    assert _created_event_count(events) == 1
+
+
+def test_same_key_differing_only_in_source_jurisdiction_raises_conflict(
+    secure_objects: SecureObjectRepository,
+) -> None:
+    """A same-key add differing ONLY in source_jurisdiction is a conflict, never a silent no-op."""
+    repo, events = _repositories(secure_objects)
+    base = {
+        "bucket_id": _BUCKET_ID,
+        "booked_date": _DEFAULT_BOOKED_DATE,
+        "amount": _DEFAULT_AMOUNT,
+        "direction": TransactionDirection.OUTGOING,
+        "description": "cross-border sale",
+        "idempotency_key": "jur-1",
+    }
+    create_manual_transaction(
+        ManualLedgerTransactionCommand(**base, source_jurisdiction="ES"),
+        transaction_repository=repo,
+        bucket_event_repository=events,
+        occurred_at=_DEFAULT_OCCURRED_AT,
+    )
+    with pytest.raises(TransactionValidationError):
+        create_manual_transaction(
+            ManualLedgerTransactionCommand(**base, source_jurisdiction="PT"),
+            transaction_repository=repo,
+            bucket_event_repository=events,
+            occurred_at=datetime(2026, 5, 4, 10, 0, tzinfo=UTC),
+        )
+    assert len(repo.load().transactions) == 1
+    assert _created_event_count(events) == 1
+
+
 def test_deliberate_duplicate_via_distinct_keys_two_rows(secure_objects: SecureObjectRepository) -> None:
     """Two genuinely-distinct movements with identical content but distinct keys both persist."""
     repo, events, first = _create_manual_row(secure_objects, description="retainer", idempotency_key="dup-A")
