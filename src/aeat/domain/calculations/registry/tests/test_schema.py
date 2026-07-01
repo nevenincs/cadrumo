@@ -10,7 +10,7 @@ from __future__ import annotations
 from typing import Literal, TypedDict
 
 import pytest
-from pydantic import ValidationError
+from pydantic import TypeAdapter, ValidationError
 
 from .._ids import CasillaId, LegalRefId, SourceRefId, validated_casilla_id
 from .._schema import (
@@ -35,6 +35,20 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 _SCHEMA_LEGAL_ID: LegalRefId = "ley-35-2006:art-test"
 _SCHEMA_SOURCE_ID: SourceRefId = "aeat-test-source-001"
 _SCHEMA_CASILLA_ID: CasillaId = validated_casilla_id("01", surface="_SCHEMA_CASILLA_ID")
+
+
+def test_source_ref_id_accepts_current_catalogue_key_shape() -> None:
+    adapter = TypeAdapter(SourceRefId)
+
+    assert adapter.validate_python("aeat-dr-303-2025-v2") == "aeat-dr-303-2025-v2"
+
+
+@pytest.mark.parametrize("source_ref", ["aeat.src.1", "ley-37-1992:art-1", "source"])
+def test_source_ref_id_rejects_generic_registry_and_legal_ref_shapes(source_ref: str) -> None:
+    adapter = TypeAdapter(SourceRefId)
+
+    with pytest.raises(ValidationError):
+        adapter.validate_python(source_ref)
 
 
 def _relation_payload(**overrides: object) -> dict[str, object]:
