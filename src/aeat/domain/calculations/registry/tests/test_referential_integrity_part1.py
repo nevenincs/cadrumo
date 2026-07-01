@@ -56,6 +56,7 @@ _MISSING_LEGAL_ID = "ley-35-2006:art-9999"
 _MISSING_SOURCE_ID = "aeat-missing-source"
 _EXTRA_LEGAL_ID = "ley-35-2006:art-9998"
 _EXTRA_SOURCE_ID = "aeat-extra-source"
+_PARITY_SOURCE_ID = "aeat-open-parity-source"
 
 
 def _modelo_validation_failures(modelo: ModeloDefinition) -> list[str]:
@@ -64,6 +65,19 @@ def _modelo_validation_failures(modelo: ModeloDefinition) -> list[str]:
     except RegistryValidationError as exc:
         return str(exc).splitlines()
     return []
+
+
+def _catalogues_with_executable_parity_source() -> RegistryCatalogues:
+    parity_source = minimal_source_ref().model_copy(
+        update={
+            "id": _PARITY_SOURCE_ID,
+            "evidence_tier": "executable_parity_evidence",
+        },
+    )
+    return RegistryCatalogues(
+        legal={REFERENCE_LEGAL_ID: minimal_legal_ref()},
+        sources={REFERENCE_SOURCE_ID: minimal_source_ref(), _PARITY_SOURCE_ID: parity_source},
+    )
 
 
 def _assert_missing_legal_ref_rejected(revision: ModeloRevision, expected_match: str) -> None:
@@ -210,6 +224,52 @@ def test_casilla_alias_and_constraints_refs_must_resolve_in_registry_validation(
     assert any(
         "casilla 01 constraints references unknown source id 'aeat-missing-source'" in failure for failure in failures
     ), f"constraint source_refs must be checked against the source catalogue; got: {failures}"
+
+
+def test_modelo_validation_rejects_casilla_sourced_only_by_executable_parity() -> None:
+    casilla = minimal_casilla(_NUMERIC_CASILLA_01).model_copy(update={"source_refs": (_PARITY_SOURCE_ID,)})
+    revision = minimal_revision(casillas=(casilla,))
+
+    with pytest.raises(
+        RegistryValidationError,
+        match=r"casilla 01 requires one of official_source_guidance, layout_authority source evidence",
+    ):
+        RegistryValidator(_catalogues_with_executable_parity_source()).validate_modelo(minimal_modelo(revision))
+
+
+def test_modelo_validation_rejects_casilla_constraints_sourced_only_by_executable_parity() -> None:
+    constraints = CasillaConstraints(
+        sign="non_negative",
+        legal_refs=(REFERENCE_LEGAL_ID,),
+        source_refs=(_PARITY_SOURCE_ID,),
+    )
+    casilla = minimal_casilla(_NUMERIC_CASILLA_01).model_copy(update={"constraints": constraints})
+    revision = minimal_revision(casillas=(casilla,))
+
+    with pytest.raises(
+        RegistryValidationError,
+        match=r"casilla 01 constraints requires one of official_source_guidance, layout_authority source evidence",
+    ):
+        RegistryValidator(_catalogues_with_executable_parity_source()).validate_modelo(minimal_modelo(revision))
+
+
+def test_modelo_validation_rejects_casilla_alias_sourced_only_by_executable_parity() -> None:
+    alias = CasillaAlias(
+        label="alternate",
+        legal_refs=(REFERENCE_LEGAL_ID,),
+        source_refs=(_PARITY_SOURCE_ID,),
+    )
+    casilla = minimal_casilla(_NUMERIC_CASILLA_01).model_copy(update={"aliases": (alias,)})
+    revision = minimal_revision(casillas=(casilla,))
+
+    with pytest.raises(
+        RegistryValidationError,
+        match=(
+            r"casilla 01 alias 'alternate' "
+            r"requires one of official_source_guidance, layout_authority source evidence"
+        ),
+    ):
+        RegistryValidator(_catalogues_with_executable_parity_source()).validate_modelo(minimal_modelo(revision))
 
 
 def test_snapshot_carries_casilla_alias_and_constraints_refs() -> None:

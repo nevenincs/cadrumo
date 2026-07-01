@@ -25,6 +25,8 @@ from ._validate_helpers import _missing_refs
 from ._validate_revision_identity import _duplicates
 from ._validate_revision_rules import validate_dated_values
 
+_CASILLA_METADATA_SOURCE_TIERS = ("official_source_guidance", "layout_authority")
+
 
 def validate_casilla_section(
     failures: list[str],
@@ -36,10 +38,15 @@ def validate_casilla_section(
     export_field_ids: set[str],
     legal_refs: Mapping[str, LegalReference],
     source_refs: Mapping[str, SourceReference],
+    evidence: EvidenceValidator,
 ) -> None:
     for casilla in revision.casillas:
-        failures.extend(_missing_refs(prefix, f"casilla {casilla.id}", casilla.legal_refs, legal_refs, "legal"))
-        failures.extend(_missing_refs(prefix, f"casilla {casilla.id}", casilla.source_refs, source_refs, "source"))
+        owner = f"casilla {casilla.id}"
+        failures.extend(_missing_refs(prefix, owner, casilla.legal_refs, legal_refs, "legal"))
+        failures.extend(_missing_refs(prefix, owner, casilla.source_refs, source_refs, "source"))
+        failures.extend(
+            evidence.require_any_source_tier(prefix, owner, casilla.source_refs, _CASILLA_METADATA_SOURCE_TIERS)
+        )
         if casilla.constraints is not None:
             constraint_owner = f"casilla {casilla.id} constraints"
             failures.extend(
@@ -48,10 +55,26 @@ def validate_casilla_section(
             failures.extend(
                 _missing_refs(prefix, constraint_owner, casilla.constraints.source_refs, source_refs, "source"),
             )
+            failures.extend(
+                evidence.require_any_source_tier(
+                    prefix,
+                    constraint_owner,
+                    casilla.constraints.source_refs,
+                    _CASILLA_METADATA_SOURCE_TIERS,
+                ),
+            )
         for alias in casilla.aliases:
             alias_owner = f"casilla {casilla.id} alias {alias.label!r}"
             failures.extend(_missing_refs(prefix, alias_owner, alias.legal_refs, legal_refs, "legal"))
             failures.extend(_missing_refs(prefix, alias_owner, alias.source_refs, source_refs, "source"))
+            failures.extend(
+                evidence.require_any_source_tier(
+                    prefix,
+                    alias_owner,
+                    alias.source_refs,
+                    _CASILLA_METADATA_SOURCE_TIERS,
+                ),
+            )
         if casilla.formula is not None and casilla.formula not in formulas:
             failures.append(f"{prefix}: casilla {casilla.id!r} references unknown formula {casilla.formula!r}")
         if (
