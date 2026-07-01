@@ -74,13 +74,17 @@ class TestModelo347ContraparteRow:
         )
         assert row.importe_total == Decimal("4005.06")
 
-    def test_pais_codigo_none_for_domestic(self) -> None:
-        row = Modelo347ContraparteRow(nif="12345678A", pais_codigo=None)
-        assert row.pais_codigo is None
-
-    def test_pais_codigo_uppercased(self) -> None:
-        row = Modelo347ContraparteRow(nif="12345678A", pais_codigo="de")
-        assert row.pais_codigo == "DE"
+    @pytest.mark.parametrize(
+        ("pais_codigo", "expected"),
+        [
+            (None, None),
+            ("de", "DE"),
+        ],
+        ids=("domestic", "foreign"),
+    )
+    def test_pais_codigo_normalized(self, pais_codigo: str | None, expected: str | None) -> None:
+        row = Modelo347ContraparteRow(nif="12345678A", pais_codigo=pais_codigo)
+        assert row.pais_codigo == expected
 
     @pytest.mark.parametrize("case", _M347_INVALID_CASES, ids=lambda case: case.case_id)
     def test_invalid_contraparte_rows_rejected(self, case: _ValidationErrorCase) -> None:
