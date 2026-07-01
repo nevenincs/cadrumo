@@ -536,37 +536,25 @@ class TestConvenioAplicable:
             iva_regime=IVARegime.GENERAL,
             fiscal_residency=FiscalResidency.NON_RESIDENT_IRNR,
             country_of_fiscal_residence=country,
-            # EU countries (FR, DE) don't need representante; non-EU (GB, US) do.
-            representante_fiscal_nif=("12345678Z" if country in {"GB", "US", "NL"} else None),
-            representante_fiscal_nombre=("Test Rep" if country in {"GB", "US", "NL"} else None),
+            # EU countries (DE, FR, NL) don't need representante; non-EU countries do.
+            representante_fiscal_nif=("12345678Z" if country in {"GB", "US", "MA"} else None),
+            representante_fiscal_nombre=("Test Rep" if country in {"GB", "US", "MA"} else None),
         )
 
-    def test_gb_maps_to_espana_uk_convenio(self) -> None:
-        assert self._profile("GB").convenio_aplicable == "BOE-A-2014-5171 España-UK"
-
-    def test_de_maps_to_espana_alemania_convenio(self) -> None:
-        assert self._profile("DE").convenio_aplicable == "BOE-A-2012-3669 España-Alemania"
-
-    def test_fr_maps_to_espana_francia_convenio(self) -> None:
-        assert self._profile("FR").convenio_aplicable == "BOE-A-1997-21331 España-Francia"
-
-    def test_us_maps_to_espana_eeuu_convenio(self) -> None:
-        assert self._profile("US").convenio_aplicable == "BOE-A-1990-28246 España-EE.UU."
-
-    def test_nl_maps_to_espana_paises_bajos_convenio(self) -> None:
-        assert self._profile("NL").convenio_aplicable == "BOE-A-1972-674 España-Países Bajos"
-
-    def test_ma_maps_to_espana_marruecos_convenio(self) -> None:
-        # BOE-A-1985-9280 is the Spain-Morocco double-taxation treaty.
-        profile = TaxpayerProfile(
-            tax_id="X1234567L",
-            iva_regime=IVARegime.GENERAL,
-            fiscal_residency=FiscalResidency.NON_RESIDENT_IRNR,
-            country_of_fiscal_residence="MA",
-            representante_fiscal_nif="12345678Z",
-            representante_fiscal_nombre="Rep Marroquí",
-        )
-        assert profile.convenio_aplicable == "BOE-A-1985-9280 España-Marruecos"
+    @pytest.mark.parametrize(
+        ("country", "expected"),
+        (
+            ("GB", "BOE-A-2014-5171 España-UK"),
+            ("DE", "BOE-A-2012-3669 España-Alemania"),
+            ("FR", "BOE-A-1997-21331 España-Francia"),
+            ("US", "BOE-A-1990-28246 España-EE.UU."),
+            ("NL", "BOE-A-1972-674 España-Países Bajos"),
+            ("MA", "BOE-A-1985-9280 España-Marruecos"),
+        ),
+        ids=("gb", "de", "fr", "us", "nl", "ma"),
+    )
+    def test_known_country_maps_to_convenio(self, country: str, expected: str) -> None:
+        assert self._profile(country).convenio_aplicable == expected
 
     def test_unknown_country_returns_none(self) -> None:
         # ZZ is not a real ISO code and has no convenio entry.
