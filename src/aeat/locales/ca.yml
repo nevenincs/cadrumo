@@ -1751,6 +1751,7 @@ cli:
       list:
         help: Llistar tots els models tributaris oficials registrats en el sistema.
         year_help: Filtrar el catàleg de models per un únic exercici fiscal
+        domain_help: 'Filtra el catàleg de models per família tributària (p. ex. iva, irpf, is)'
       m036:
         alta_help: Registra una declaració M036 d'alta (inscripció censal inicial)
           presentada a seu.
@@ -4515,6 +4516,7 @@ errors:
     modelo_calculate_relation_input: errors.refused.modelo_calculate_relation_input
     modelo_calculate_semantic_role: errors.refused.modelo_calculate_semantic_role
     modelo_calculate_shortcut_input: errors.refused.modelo_calculate_shortcut_input
+    modelo_calculate_text_input: errors.refused.modelo_calculate_text_input
     modelo_calculation_revision_selector_ambiguous: El selector de revisio de calcul
       coincideix amb mes d'una revisio; refineu el selector.
     modelo_calculation_revision_selector_state: La revisio de calcul seleccionada

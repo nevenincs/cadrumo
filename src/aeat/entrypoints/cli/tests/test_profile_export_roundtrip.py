@@ -35,13 +35,8 @@ import pytest
 from click.testing import Result
 from pydantic import ValidationError
 
-from ....domain.calculations.registry import (
-    CasillaId,
-    CasillaObservation,
-    LegalRefId,
-    SourceRefId,
-    validated_casilla_id,
-)
+from ....domain.calculations.registry._bindings import CasillaObservation
+from ....domain.calculations.registry._ids import CasillaId, LegalRefId, SourceRefId, validated_casilla_id
 from ....tests.cli_runner import invoke_cached_cli
 from ....tests.secure_sql import isolated_profile_storage_root
 from .envelope_helpers import unwrap_envelope_notices
@@ -301,7 +296,12 @@ def test_v3_bundle_export_import_roundtrip(tmp_path: Path) -> None:
         "custody_profile": "structured",
         "carried_namespaces": [],
         "excluded_namespaces": [
+            "aeat.application.user_profile.value",
             "aeat.domain.buckets.event_history",
+            "aeat.domain.modelos.calculation_revisions",
+            "aeat.domain.modelos.filing_records",
+            "aeat.domain.modelos.work_units",
+            "aeat.domain.transactions.bucket",
             "aeat.workflow",
         ],
         "row_counts_by_namespace": {

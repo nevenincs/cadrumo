@@ -149,12 +149,11 @@ def _natural_key_resolvers() -> dict[str, NaturalKeyResolver]:
     # --- Attachments (evidence bytes + manifests) ----------------------------
     resolvers["aeat.domain.attachments.blobs"] = _blob_resolver
 
-    def _attachment_manifest(record: SecureObjectRecord, _bucket_id: str) -> str:
-        from ...domain.attachments._models import Attachment
-
-        return _envelope_payload(record, Attachment).attachment_id  # type: ignore[attr-defined]
-
-    resolvers["aeat.domain.attachments.manifests"] = _attachment_manifest
+    # The manifest store strips ``attachment_id`` from the persisted payload (it is
+    # the object key, re-injected on load) so ``Envelope[Attachment]`` will not parse;
+    # the natural key is recoverable from the retained content-addressed ``sha256``,
+    # which the model enforces to equal ``attachment_id``.
+    resolvers["aeat.domain.attachments.manifests"] = _json_field_resolver("sha256")
 
     # --- Cross-period calculation inputs (SecureBoundRepository) --------------
     def _observations_repo() -> object:
@@ -335,6 +334,7 @@ def _natural_key_resolvers() -> dict[str, NaturalKeyResolver]:
 
     # --- Per-bucket single-document stores -----------------------------------
     resolvers["aeat.domain.usage_ratios"] = _bucket_template_resolver("profile:{bucket_id}")
+    resolvers["aeat.auth.apoderado"] = _bucket_template_resolver("{bucket_id}")
 
     # --- Live snapshot captures (SecureSnapshotRepository) --------------------
     def _borrador_payload() -> type:
@@ -485,10 +485,22 @@ def serialize_carried_objects(
             expected_class=definition.sensitivity,
             max_supported_version=definition.schema_version,
         ):
+            try:
+                object_key = resolver(record, bucket_id)
+            except Exception as exc:
+                # A resolver fault (e.g. an unexpected payload shape) must surface as
+                # a typed, attributable export error naming the namespace, not a bare
+                # pydantic/parse error bubbling out of the sealed-archive export.
+                from ...domain.user_profile._errors import ProfileExportError
+
+                raise ProfileExportError(
+                    "could not resolve the natural key for a carried secure-object row",
+                    context={"namespace": definition.namespace, "error": str(exc)},
+                ) from exc
             carried.append(
                 CarriedSecureObject(
                     namespace=record.namespace,
-                    object_key=resolver(record, bucket_id),
+                    object_key=object_key,
                     classification=record.classification,
                     schema_version=record.schema_version,
                     written_at=record.written_at,

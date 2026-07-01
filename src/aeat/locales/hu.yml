@@ -1693,6 +1693,7 @@ cli:
       list:
         help: A rendszerben regisztralt osszes hivatalos adobevallas (modelo) listazasa.
         year_help: A nyomtatványkatalógus szűrése egyetlen adóévre.
+        domain_help: 'Szűrje a modellkatalógust egyetlen adónemre (pl. iva, irpf, is)'
       m036:
         alta_help: Rögzítse az M036 alta nyilatkozatot (kezdeti adónyilvántartási
           regisztráció), amelyet a sede portálon nyújtottak be.
@@ -4416,6 +4417,7 @@ errors:
     modelo_calculate_relation_input: errors.refused.modelo_calculate_relation_input
     modelo_calculate_semantic_role: errors.refused.modelo_calculate_semantic_role
     modelo_calculate_shortcut_input: errors.refused.modelo_calculate_shortcut_input
+    modelo_calculate_text_input: errors.refused.modelo_calculate_text_input
     modelo_calculation_revision_selector_ambiguous: A számítási revízió választó több
       revízióra illeszkedik; pontosítsa a választót.
     modelo_calculation_revision_selector_state: A kiválasztott számítási revízió nincs
