@@ -11,7 +11,7 @@ related:
 
 ## Status
 
-Proposed
+accepted — `.github/workflows/ci.yml` verified present at HEAD; bumped via issue #367
 
 ## Context
 

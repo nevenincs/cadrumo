@@ -16,7 +16,7 @@ related:
 
 ## status
 
-Proposed — 2026-04-18. Sub-EPIC of [#202](https://github.com/wgergely/aeat/issues/202) (review umbrella) and direct fulfilment of [#232](https://github.com/wgergely/aeat/issues/232).
+accepted — `aeat review queue` CLI and `ReviewItem` subtypes verified in `src/aeat/application/review/` at HEAD; bumped via issue #367. Sub-EPIC of [#202](https://github.com/wgergely/aeat/issues/202) (review umbrella) and direct fulfilment of [#232](https://github.com/wgergely/aeat/issues/232).
 
 ## context
 
