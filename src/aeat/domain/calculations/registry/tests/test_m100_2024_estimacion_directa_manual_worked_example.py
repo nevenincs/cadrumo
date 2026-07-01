@@ -160,7 +160,7 @@ from decimal import Decimal
 import pytest
 
 from .....core.resources import bundled_path
-from .. import CasillaId, validated_casilla_id
+from .. import CasillaId, ValidatedRegistryAuthority, validated_casilla_id
 from .._scenarios import (
     RegistryCalculationScenario,
     RegistryScenarioExpectedOutput,
@@ -316,3 +316,36 @@ def test_0226_anti_tautology_modalidad_switch_changes_value() -> None:
     assert simplificada_report.calculation.values[_CASILLA_0226] != normal_report.calculation.values[_CASILLA_0226], (
         "0226 must differ between modalidad simplificada and modalidad normal"
     )
+
+
+def test_0226_manual_grounding_is_enrolled_and_raises_independently_grounded_fraction() -> None:
+    """W2.3: the manual-oracle grounding of 0226 is enrolled, not just computed.
+
+    A companion registry-honesty gate
+    (``test_external_oracle_grounding_enrolled.py``) already proves the
+    ``externally_grounded_casilla_ids = ["0226"]`` declaration on the
+    ``modelo-100-2024-reconcile-when-present`` verification expectation is
+    backed by the bundled
+    ``corpus/manual_oracles/modelo-100-2024-estimacion-directa-simplificada.json``
+    evidence. This test proves the OTHER end of the wire: that the declaration
+    actually reaches the live, VALIDATED :class:`RegistryVerificationPolicy`
+    fold (the exact projection ``verify_declaracion`` consumes), so 0226
+    raises ``independently_grounded_fraction`` above zero rather than sitting
+    inert in TOML. Not tautological: the grounded set and the fraction are
+    read from the registry's own declared+validated data, never hand-computed
+    or asserted from a synthetic fixture.
+    """
+    authority = ValidatedRegistryAuthority.load(_REGISTRY_ROOT, source_root=_SOURCE_ROOT)
+    snapshot = authority.snapshot("100", filing_year=2024, period="0A")
+    policy = snapshot.verification_policy()
+
+    assert _CASILLA_0226 in policy.externally_grounded_casilla_ids
+
+    reconciled_casilla_ids = policy.computed_casilla_ids | policy.reconcile_when_present_casilla_ids
+    externally_grounded = policy.externally_grounded_casilla_ids & reconciled_casilla_ids
+    independently_grounded_fraction = (
+        len(externally_grounded) / len(reconciled_casilla_ids) if reconciled_casilla_ids else 0.0
+    )
+
+    assert _CASILLA_0226 in externally_grounded
+    assert independently_grounded_fraction > 0.0
