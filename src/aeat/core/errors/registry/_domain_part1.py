@@ -96,6 +96,28 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
+        "aeat.domain.retention._errors.RetentionError",
+        ErrorCode(
+            code="ERROR_DOMAIN_RETENTION",
+            category=ErrorCategory.ERROR,
+            message_key="errors.error.error_retention",
+            default_suggestion=None,
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "aeat.domain.retention._errors.RetentionFloorError",
+        ErrorCode(
+            code="REFUSED_DOMAIN_RETENTION_FLOOR",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.refused_retention_floor",
+            default_suggestion="aeat config profile erase --help",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
         "aeat.domain.buckets._event_repository.BucketEventHistoryPersistenceError",
         ErrorCode(
             code="FAIL_DOMAIN_BUCKET_EVENT_HISTORY_PERSISTENCE",
