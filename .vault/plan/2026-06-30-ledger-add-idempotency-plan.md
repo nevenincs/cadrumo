@@ -3,13 +3,22 @@ tags:
   - '#plan'
   - '#ledger-add-idempotency'
 date: '2026-06-30'
-modified: '2026-06-30'
+modified: '2026-07-01'
 tier: L2
 related:
   - '[[2026-06-30-ledger-add-idempotency-adr]]'
   - '[[2026-06-30-ledger-add-idempotency-research]]'
 ---
 
+<!-- LINK RULES:
+     - [[wiki-links]] are ONLY for .vault/ documents in the
+       related: field above.
+     - The related: field carries the AUTHORISING documents
+       (ADR, research, reference, prior plan) for every Step in
+       this plan. Steps inherit this chain; per-row reference
+       footers do not exist.
+     - NEVER use [[wiki-links]] or markdown links in the
+       document body. -->
 
 # `ledger-add-idempotency` plan
 
@@ -77,7 +86,7 @@ Prove the retry-safety and genuine-duplicate-preservation contracts against real
 - [x] `P05.S16` - Add a strict Transaction save-load-equality roundtrip plus anti-tautology proof with the content fingerprint stamp populated non-default; `src/aeat/application/ledger/tests/`.
 - [x] `P05.S17` - Add a test proving two non-granting verify retries with identical findings collapse to one report while a changed-finding re-verify produces a distinct report; `src/aeat/application/modelo/tests/`.
 - [x] `P05.S18` - Add a strict VerificationReport save-load-equality roundtrip plus anti-tautology proof with run_at populated non-default and the outcome-pinned id enforced; `src/aeat/domain/modelos/tests/`.
-- [ ] `P05.S19` - Run the focused gates clean: pytest collect-only, the ledger and modelo-verify suites, JSON schema and notice conformance, documented-command and harness-surface conformance, plus lint and type checks; `src/aeat/`.
+- [x] `P05.S19` - Run the focused gates clean: pytest collect-only, the ledger and modelo-verify suites, JSON schema and notice conformance, documented-command and harness-surface conformance, plus lint and type checks; `src/aeat/`.
 
 ### Phase `P06` - Filing-record idempotent re-file
 
