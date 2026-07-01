@@ -34,7 +34,7 @@ from .errors import (
 from .errors import (
     storage_validation_error as _storage_validation_error,
 )
-from .master_key._active_session import _active_session
+from .master_key import current_active_bucket_session
 
 if TYPE_CHECKING:
     from .sql.secure_objects import SecureObjectRepository
@@ -133,7 +133,7 @@ class StorageRuntime(BaseModel):
         from .sql.engine import get_engine
         from .sql.secure_objects import SecureObjectRepository
 
-        active = _active_session.get()
+        active = current_active_bucket_session()
         assert active is not None
         settings = Settings(
             aeat_local_storage_root=self.storage_root,
@@ -149,7 +149,7 @@ class StorageRuntime(BaseModel):
 
     def _require_current_active_session(self) -> None:
         """Refuse repository construction when the live session drifted."""
-        active = _active_session.get()
+        active = current_active_bucket_session()
         if active is None:
             raise _runtime_not_ready_error(
                 "storage runtime is not ready for profile-bound storage: no active bucket session.",
@@ -241,7 +241,7 @@ def inspect_storage_runtime(
     resolved = settings or load_settings()
     route = classify_storage_route(resolved)
     checked_at = now or _utc_now()
-    active = _active_session.get()
+    active = current_active_bucket_session()
     session = None
     issues: list[StorageRuntimeReadinessIssue] = []
 
