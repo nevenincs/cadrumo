@@ -282,6 +282,22 @@ def test_pure_landlord_without_actividad_economica_owes_no_m130() -> None:
     assert derive_modelo_applicability(landlord, "131").verdict is ApplicabilityVerdict.NOT_APPLICABLE
 
 
+def _beckham_profile(
+    *,
+    start_date: date = date(2023, 1, 1),
+    bienes_extranjero_above_threshold: bool = False,
+) -> TaxpayerProfile:
+    return TaxpayerProfile(
+        tax_id="X1234567L",
+        entity_type=EntityType.NATURAL_PERSON,
+        irpf_income_categories=frozenset({IrpfIncomeCategory.TRABAJO}),
+        iva_regime=IVARegime.GENERAL,
+        irpf_special_regime=IrpfSpecialRegime.IMPATRIADO,
+        special_regime_start_date=start_date,
+        bienes_extranjero_above_threshold=bienes_extranjero_above_threshold,
+    )
+
+
 def test_impatriado_art93_exempts_modelo_720_even_with_bienes_declared() -> None:
     """LIRPF Art. 93 impatriado profile: M720 must be NOT_APPLICABLE.
 
@@ -292,16 +308,7 @@ def test_impatriado_art93_exempts_modelo_720_even_with_bienes_declared() -> None
     payer-fact gate is never reached.
     """
 
-    beckham_profile = TaxpayerProfile(
-        tax_id="X1234567L",
-        entity_type=EntityType.NATURAL_PERSON,
-        irpf_income_categories=frozenset({IrpfIncomeCategory.TRABAJO}),
-        iva_regime=IVARegime.GENERAL,
-        irpf_special_regime=IrpfSpecialRegime.IMPATRIADO,
-        special_regime_start_date=date(2023, 1, 1),
-        # bienes declared above threshold — exemption must still fire
-        bienes_extranjero_above_threshold=True,
-    )
+    beckham_profile = _beckham_profile(bienes_extranjero_above_threshold=True)
     # Pass today within the 6-year window (2023-2028) so the exemption fires.
     result = derive_modelo_applicability(beckham_profile, "720", today=date(2026, 5, 27))
     assert result.verdict is ApplicabilityVerdict.NOT_APPLICABLE
@@ -361,24 +368,63 @@ def test_modelo_721_uses_crypto_abroad_threshold_not_modelo_720_bienes_fact() ->
     assert derive_modelo_applicability(crypto_profile, "721").verdict is ApplicabilityVerdict.APPLICABLE
 
 
-def test_impatriado_exemption_does_not_affect_other_modelos() -> None:
-    """The impatriado pre-check is scoped strictly to M720.
+def test_impatriado_in_window_routes_annual_irpf_to_modelo_151() -> None:
+    """Within the Art. 93 window, M151 applies and M100 is suppressed."""
 
-    An impatriado with trabajo income is still APPLICABLE for M100;
-    the Art. 93 exemption must not bleed into unrelated modelos.
-    """
+    beckham_profile = _beckham_profile()
 
-    beckham_profile = TaxpayerProfile(
+    m100 = derive_modelo_applicability(beckham_profile, "100", today=date(2026, 5, 27))
+    m151 = derive_modelo_applicability(beckham_profile, "151", today=date(2026, 5, 27))
+
+    assert m100.verdict is ApplicabilityVerdict.NOT_APPLICABLE
+    assert m100.applicable is False
+    assert "Art. 93" in m100.reason
+    assert "Modelo 151" in m100.reason
+    assert "ley-35-2006:art-93" in m100.legal_refs
+    assert "orden-eha-2887-2008:modelo-151" in m100.legal_refs
+
+    assert m151.verdict is ApplicabilityVerdict.APPLICABLE
+    assert m151.applicable is True
+    assert "Modelo 151" in m151.reason
+    assert set(m151.legal_refs).issubset(resources().modelos.authority.catalogues.legal)
+
+
+def test_impatriado_year_seven_restores_m100_m720_and_suppresses_m151() -> None:
+    """After the six-year window, the profile returns to ordinary IRPF routing."""
+
+    expired_profile = _beckham_profile(bienes_extranjero_above_threshold=True)
+    year_seven = date(2029, 1, 1)
+
+    assert (
+        derive_modelo_applicability(expired_profile, "100", today=year_seven).verdict
+        is ApplicabilityVerdict.APPLICABLE
+    )
+    assert (
+        derive_modelo_applicability(expired_profile, "151", today=year_seven).verdict
+        is ApplicabilityVerdict.NOT_APPLICABLE
+    )
+    assert (
+        derive_modelo_applicability(expired_profile, "720", today=year_seven).verdict
+        is ApplicabilityVerdict.APPLICABLE
+    )
+
+
+@pytest.mark.parametrize("special_regime", (None, IrpfSpecialRegime.GENERAL))
+def test_non_impatriado_profile_does_not_route_to_modelo_151(
+    special_regime: IrpfSpecialRegime | None,
+) -> None:
+    """A general-regime natural person stays outside the M151 route."""
+
+    general_profile = TaxpayerProfile(
         tax_id="X1234567L",
         entity_type=EntityType.NATURAL_PERSON,
         irpf_income_categories=frozenset({IrpfIncomeCategory.TRABAJO}),
         iva_regime=IVARegime.GENERAL,
-        irpf_special_regime=IrpfSpecialRegime.IMPATRIADO,
-        special_regime_start_date=date(2023, 1, 1),
+        irpf_special_regime=special_regime,
     )
-    # Modelo 100 applies regardless of the special regime: the impatriado
-    # files Modelo 151, but Modelo 100 applicability is not gated here.
-    assert (
-        derive_modelo_applicability(beckham_profile, "100", today=date(2026, 5, 27)).verdict
-        is ApplicabilityVerdict.APPLICABLE
-    )
+
+    result = derive_modelo_applicability(general_profile, "151", today=date(2026, 5, 27))
+
+    assert result.verdict is ApplicabilityVerdict.NOT_APPLICABLE
+    assert result.applicable is False
+    assert "Art. 93" in result.reason
