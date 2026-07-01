@@ -25,6 +25,24 @@ declared here live in the persistence adapter
 (:mod:`aeat.adapters.persistence.profile.fincas`), not in this domain
 package — keeping the SQLAlchemy / mapper-row coupling out of the
 domain layer.
+
+Art. 85 imputation rates and the catastral-revision window enter through the
+registry legal-parameter catalogue before the aggregate functions run. The
+aggregate records are factual source material for registry-backed Modelo 100
+bindings; :class:`~aeat.domain.calculations.registry.RegistrySnapshot` and
+:class:`~aeat.domain.calculations.registry.CasillaObservation` remain the filing
+line and provenance authorities.
+
+See Also:
+    :mod:`aeat.adapters.persistence.profile.fincas`
+        Concrete SQLAlchemy repositories implementing the reader ports exported
+        by this domain facade.
+    :mod:`aeat.domain.calculations.registry`
+        Registry authority that turns finca-derived factual inputs into typed
+        modelo casilla observations.
+    :mod:`aeat.domain.manuals`
+        Bundled manual corpus that grounds the same LIRPF rental concepts
+        without storing operator finca records.
 """
 
 from __future__ import annotations
