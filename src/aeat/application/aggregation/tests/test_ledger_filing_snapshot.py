@@ -8,7 +8,7 @@ from pathlib import Path
 
 import pytest
 
-from ....domain.calculations.registry import CasillaId, validated_casilla_id
+from ....domain.calculations.registry import CasillaId, LegalRefId, SourceRefId, validated_casilla_id
 from ....domain.modelos._errors import ModeloValidationError
 from ....domain.modelos._ledger_filing_snapshot import LedgerFilingEvidence, LedgerFilingSnapshot, ManualFactBasisEntry
 from ....domain.transactions import (
@@ -45,8 +45,8 @@ def _casilla_id(value: object) -> CasillaId:
 _MANUAL_FACT_CASILLA: CasillaId = _casilla_id("00501")
 _SKIPPED_MANUAL_FACT_CASILLA: CasillaId = _casilla_id("00502")
 _EMPTY_MANUAL_FACT_CASILLA: CasillaId = _casilla_id("00503")
-_LEGAL_REFS = ("ley-37-1992:art-99",)
-_SOURCE_REFS = ("boe-modelo-303-2025-form",)
+_LEGAL_REFS: tuple[LegalRefId, ...] = ("ley-37-1992:art-99",)
+_SOURCE_REFS: tuple[SourceRefId, ...] = ("boe-modelo-303-2025-form",)
 
 
 def _tx(
@@ -249,6 +249,31 @@ def test_manual_fact_basis_projection_rejects_missing_grounding() -> None:
             legal_refs_by_casilla_id={},
             source_refs_by_casilla_id={_MANUAL_FACT_CASILLA: _SOURCE_REFS},
         )
+
+
+def test_evidence_capture_rejects_blank_or_malformed_grounding_refs() -> None:
+    tx = _tx("row-invalid-grounding")
+    catalogue = _catalogue(tx)
+    snapshot = compute_ledger_filing_snapshot(
+        source_transaction_ids=[tx.transaction_id],
+        catalogue=catalogue,
+        captured_at=_CAPTURED,
+    )
+
+    for legal_refs, source_refs, match in (
+        (("ley-37-1992:art-99", ""), _SOURCE_REFS, "non-empty legal_refs"),
+        (("LEY 37/1992",), _SOURCE_REFS, "invalid legal_refs"),
+        (_LEGAL_REFS, ("boe modelo 303",), "invalid source_refs"),
+    ):
+        with pytest.raises(ModeloValidationError, match=match):
+            compute_ledger_filing_evidence(
+                source_transaction_ids=[tx.transaction_id],
+                catalogue=catalogue,
+                snapshot_fingerprint=snapshot.snapshot_fingerprint,
+                captured_at=_CAPTURED,
+                legal_refs=legal_refs,
+                source_refs=source_refs,
+            )
 
 
 def test_evidence_coverage_guard_refuses_missing_contributor() -> None:
