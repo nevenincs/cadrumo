@@ -1,26 +1,33 @@
-"""Domain aggregate for modelo work units, revisions, and filing records.
+"""Public facade for modelo filing domain records and repository boundaries.
 
 The public surface exposes :class:`ModeloCode`, :class:`WorkUnit`,
-:class:`CalculationRevision`, :class:`ModeloRecord`, and
-:class:`VerificationReport` together with their encrypted catalogues and
-protocols. These records are the domain aggregate carried by
-:mod:`aeat.application.modelo`: a work unit fixes the bucket/modelo/year/period
-target, each calculation attempt creates an immutable calculation revision, a
-verification report records local validation evidence, and a filing record marks
-the current locally filed answer.
+:class:`CalculationRevision`, :class:`ModeloRecord`, :class:`VerificationReport`,
+their in-memory catalogues, encrypted repository boundaries, repository
+protocols, row DTOs, derivation and upsert helpers, :class:`ExternalEvidence`,
+and ``WorkUnitId``. :class:`ModeloCode` validates identifier shape only; filing
+availability and revision targeting are resolved through registry-aware flows
+anchored on :class:`ModeloRevision`.
+
+These records are the domain aggregate carried by :mod:`aeat.application.modelo`:
+a :class:`WorkUnit` fixes the bucket/modelo/year/period/registry-revision target
+and carries current/filed pointers, while a :class:`CalculationRevision` is
+content-addressed, stateful, source-transaction aware, and records
+:class:`CasillaObservation` values plus ``ModeloDetailRow`` rows. A
+:class:`ModeloRecord` is the local filing receipt; AEAT acceptance still requires
+external evidence.
 
 The package also owns the transaction participation index. A
 :class:`TransactionRevisionParticipationIndex` is a rebuildable read-side cache
-keyed by ledger transaction id; it is co-written with finalized revisions and
-points auditors from one transaction back to the verified or filed modelo
-revisions that consumed it. The calculation and filing catalogues remain the
-source of truth.
+keyed by ledger transaction id; verified and filed writes co-emit
+:class:`TransactionRevisionParticipation` entries, and the index can be rebuilt
+from the calculation-revision, work-unit, and filing-record catalogues. The live
+catalogues remain the source of truth.
 
 Informational-declaration row models also live here:
 :class:`Modelo184MemberRow`, :class:`Modelo232VinculadaRow`,
 :class:`Modelo347ContraparteRow`, :class:`Modelo349OperadorRow`,
 :class:`Modelo349RectificacionRow`, and ``ModeloDetailRow``, plus the
-Modelo 349 NIF and country-prefix validators.
+Modelo 349 NIF and country-prefix validators exposed by this root facade.
 Regulatory constants such as the Modelo 347 declarability threshold remain in
 :mod:`aeat.core.external_constants`.
 
