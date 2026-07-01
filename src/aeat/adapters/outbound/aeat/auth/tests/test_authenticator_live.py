@@ -23,6 +23,7 @@ from .. import (
     AeatSession,
     CertificateHealthSeverity,
     HandshakeResult,
+    extract_nif_from_subject,
 )
 
 pytestmark = [pytest.mark.aeat_live, pytest.mark.hex_outbound_adapter]
@@ -65,7 +66,7 @@ def test_aeat_authenticator_synchronous_surface_live() -> None:
     assert 200 <= handshake.status_code < 500
 
     cert = authenticator.load_certificate()
-    nif = authenticator.extract_nif_from_subject(cert)
+    nif = extract_nif_from_subject(cert)
     assert nif, "could not extract NIF from FNMT certificate subject"
     # DNI: 7-8 digits + letter; NIE: X/Y/Z + 7 digits + letter.
     assert len(nif) in {8, 9}, f"unexpected NIF shape: {nif!r}"
