@@ -15,7 +15,7 @@ from ....core.config import override_settings
 from ....tests.secure_sql import dev_test_database_password, isolated_runtime_profile
 from ._registry_cli_support import _BUCKET_ID, _clear_cli_env, _set_cli_env
 
-_SESSION_OPENED_AT = datetime(2026, 5, 28, 15, 55, tzinfo=UTC)
+_SESSION_OPENED_AT = datetime(2099, 5, 28, 15, 55, tzinfo=UTC)
 
 
 @pytest.fixture(scope="module", autouse=True)
