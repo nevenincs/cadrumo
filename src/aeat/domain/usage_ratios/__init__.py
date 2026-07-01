@@ -1,10 +1,24 @@
-"""The operator's persisted per-category usage-ratio overrides.
+"""Public facade for persisted per-category usage-ratio overrides.
 
-This subpackage owns the user-writable substrate for usage-ratio coefficients:
-a frozen pydantic profile (:class:`UsageRatioProfile`), an atomic encrypted
-round-trip via :func:`load_usage_ratios` / :func:`save_usage_ratios`, and the
-pure resolver :func:`resolve_user_ratio` consumed by the deductibility compute
-service in ``aeat.domain.deductibility``.
+This subpackage owns the user-writable substrate for proportional-deduction
+coefficients: a frozen :class:`UsageRatioProfile`, the
+:data:`ELIGIBLE_USAGE_RATIO_CATEGORIES` set derived from
+:mod:`aeat.domain.categories`, the pure resolver :func:`resolve_user_ratio`,
+and the ledger reference validator :func:`validate_usage_ratio_reference`.
+Usage-ratio identifiers are concrete
+:class:`~aeat.domain.categories.SpendingCategory` values, not aliases or
+parallel ids.
+
+Profile persistence is an encrypted ``FINANCIAL`` secure-object round trip via
+:func:`load_usage_ratios` / :func:`save_usage_ratios`, keyed by
+:func:`usage_ratios_object_key` and guarded during read-modify-write by
+:func:`usage_ratio_bucket_lock`. HOME_OFFICE category values can also be derived
+from the bound censo through :func:`derive_home_office_ratios_from_censo` and
+refused on drift by :func:`load_usage_ratios_with_censo_guard`.
+
+Usage ratios model business/personal proportional deduction for ledger and
+Renta paths. They are explicitly separate from IVA prorrata and do not decide
+modelo applicability or casilla routing.
 
 Callers must import from this package root rather than reaching into the
 private submodules; the public surface listed in :data:`__all__` is the only
