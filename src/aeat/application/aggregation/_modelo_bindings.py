@@ -42,11 +42,13 @@ from ...domain.calculations.registry import (
     CasillaId,
     IvaLedgerObservation,
     ModeloRevision,
+    resolve_ledger_impatriado_income_aggregation_binding_values,
     resolve_ledger_iva_aggregation_binding_values,
     resolve_ledger_renta_expense_aggregation_binding_values,
     resolve_ledger_renta_gasto_aggregation_binding_values,
     resolve_ledger_renta_income_aggregation_binding_values,
     resolve_retenciones_aggregation_binding_values,
+    unsupported_ledger_impatriado_income_observations,
     unsupported_ledger_iva_observations,
     unsupported_ledger_renta_expense_observations,
     unsupported_ledger_renta_gasto_observations,
@@ -64,6 +66,7 @@ from ...domain.renta import RentaDeductibleExpenseObservation
 from ...domain.transactions import TransactionCatalogueRepositoryProtocol, TransactionPersistenceError
 from ...domain.usage_ratios import UsageRatioPersistenceError, load_usage_ratios
 from ._errors import AggregationValidationError, t
+from ._impatriado_income_ledger import aggregate_impatriado_income_ledger_from_repositories
 from ._iva_ledger import IvaLedgerAggregationIssueReason, aggregate_iva_ledger_observations_from_repositories
 from ._renta_gasto_ledger import aggregate_renta_gasto_ledger_from_repositories
 from ._renta_income_ledger import (
@@ -421,6 +424,94 @@ def _m130_retenciones_backend_inputs(
     if value is None:
         return {}
     return {_M130_RETENCIONES_CASILLA: value}
+
+
+class LedgerImpatriadoIncomeAggregationSourceResolver:
+    """Resolve ``ledger_impatriado_income_aggregation`` Modelo 151 base bindings.
+
+    Owns :attr:`BindingSourceKind.LEDGER_IMPATRIADO_INCOME_AGGREGATION`. Modelo
+    151 (régimen especial de impatriados, Ley Beckham) folds only Spanish-source
+    (``source_jurisdiction == "ES"``) income into
+    ``impatriado.base-liquidable-general`` over the full ejercicio; every
+    foreign-source or jurisdiction-unresolved row is segregated by the classifier
+    into a typed ``BECKHAM_FOREIGN_SOURCE_SEGREGATED`` issue and surfaced as a
+    non-blocking source diagnostic rather than silently admitted or silently
+    dropped (art. 93.2 LIRPF / art. 25.1.f TRLIRNR).
+    """
+
+    resolver_id = "ledger_impatriado_income_aggregation"
+    owned_sources: tuple[BindingSourceKind, ...] = (BindingSourceKind.LEDGER_IMPATRIADO_INCOME_AGGREGATION,)
+
+    def __init__(self, *, transaction_repository: TransactionCatalogueRepositoryProtocol | None = None) -> None:
+        self._transaction_repository = transaction_repository
+
+    def resolve(self, context: CalculationSourceContext) -> CalculationSourceResolution:
+        if not _revision_has_binding_source(context.revision, "ledger_impatriado_income_aggregation"):
+            return _empty_source_resolution(self.resolver_id, self.owned_sources)
+
+        aggregation_period = aggregation_period_for_modelo(
+            filing_year=context.filing_year,
+            code=context.period.registry_token,
+        )
+        try:
+            aggregation = aggregate_impatriado_income_ledger_from_repositories(
+                bucket_id=context.bucket_id,
+                period=aggregation_period,
+                transaction_repository=self._transaction_repository,
+            )
+        except _STORAGE_DEGRADATION_ERRORS as exc:
+            return storage_degradation_resolution(
+                resolver_id=self.resolver_id,
+                owned_sources=self.owned_sources,
+                source_kinds=self.owned_sources,
+                error=exc,
+            )
+        binding_values = resolve_ledger_impatriado_income_aggregation_binding_values(
+            context.revision,
+            aggregation.observations,
+        )
+        # Fail-closed advisory: a non-zero ES-source income whose target casilla
+        # matches no ledger_impatriado_income_aggregation binding would otherwise
+        # be silently dropped from the base (no-silent-under-declaration).
+        unrouted = unsupported_ledger_impatriado_income_observations(context.revision, aggregation.observations)
+        return CalculationSourceResolution(
+            resolver_id=self.resolver_id,
+            owned_sources=self.owned_sources,
+            binding_values=binding_values,
+            source_transaction_ids=tuple(
+                sorted(observation.transaction_id for observation in aggregation.observations),
+            ),
+            diagnostics=tuple(
+                CalculationSourceDiagnostic(
+                    reason="source_issue",
+                    source_kind="ledger_impatriado_income_aggregation",
+                    resolver_id=self.resolver_id,
+                    message=issue.detail,
+                )
+                for issue in aggregation.issues
+            )
+            + tuple(
+                CalculationSourceDiagnostic(
+                    reason="unrouted_observation",
+                    source_kind="ledger_impatriado_income_aggregation",
+                    resolver_id=self.resolver_id,
+                    message=(
+                        f"declarable impatriado ES-source income observation (target_casilla_id="
+                        f"{observation.target_casilla_id!r}, gross_amount={observation.gross_amount}) "
+                        f"is not consumed by any ledger_impatriado_income_aggregation binding on revision "
+                        f"{context.revision.id!r}; its income is not declared on this calculation"
+                    ),
+                )
+                for observation in unrouted
+            ),
+            provenance=tuple(
+                CalculationSourceProvenance(
+                    source_kind="ledger_impatriado_income_aggregation",
+                    source_ref=f"transaction:{observation.transaction_id}",
+                )
+                for observation in aggregation.observations
+            ),
+        )
 
 
 class LedgerRentaGastoAggregationSourceResolver:

@@ -112,6 +112,7 @@ from ._iva_ledger import (
 )
 from ._ledger_filing_snapshot import stale_filed_revisions
 from ._modelo_bindings import (
+    LedgerImpatriadoIncomeAggregationSourceResolver,
     LedgerIvaAggregationSourceResolver,
     LedgerRentaExpenseAggregationSourceResolver,
     LedgerRentaGastoAggregationSourceResolver,
@@ -225,6 +226,7 @@ __all__ = [
     "IvaLedgerAggregationIssueReason",
     "IvaLedgerCandidate",
     "IvaLedgerInputKind",
+    "LedgerImpatriadoIncomeAggregationSourceResolver",
     "LedgerIvaAggregationSourceResolver",
     "LedgerRentaExpenseAggregationSourceResolver",
     "LedgerRentaGastoAggregationSourceResolver",
