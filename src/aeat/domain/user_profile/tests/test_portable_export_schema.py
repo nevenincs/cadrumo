@@ -92,27 +92,22 @@ def test_portable_export_schema_rejects_extra_fields_and_is_frozen() -> None:
         bundle.bundle_schema_version = 4
 
 
-@pytest.mark.parametrize(
-    ("object_key", "payload_b64", "expected_message"),
-    (
-        pytest.param(_OBJECT_KEY, "{not-base64", "payload_b64 must be canonical base64", id="invalid-base64"),
-        pytest.param("   ", _BINARY_PAYLOAD_B64, None, id="blank-object-key"),
-    ),
-)
-def test_carried_secure_object_rejects_invalid_fields(
-    object_key: str,
-    payload_b64: str,
-    expected_message: str | None,
-) -> None:
-    with pytest.raises(ValidationError, match=expected_message):
-        CarriedSecureObject(
-            namespace="aeat.domain.buckets.event_history",
-            object_key=object_key,
-            classification=SensitivityClass.FINANCIAL,
-            schema_version=1,
-            written_at=_INSTANT,
-            payload_b64=payload_b64,
-        )
+def test_carried_secure_object_rejects_invalid_fields() -> None:
+    cases = (
+        (_OBJECT_KEY, "{not-base64", "payload_b64 must be canonical base64"),
+        ("   ", _BINARY_PAYLOAD_B64, None),
+    )
+
+    for object_key, payload_b64, expected_message in cases:
+        with pytest.raises(ValidationError, match=expected_message):
+            CarriedSecureObject(
+                namespace="aeat.domain.buckets.event_history",
+                object_key=object_key,
+                classification=SensitivityClass.FINANCIAL,
+                schema_version=1,
+                written_at=_INSTANT,
+                payload_b64=payload_b64,
+            )
 
 
 def test_coverage_manifest_rejects_negative_row_counts() -> None:
@@ -123,19 +118,13 @@ def test_coverage_manifest_rejects_negative_row_counts() -> None:
         )
 
 
-@pytest.mark.parametrize(
-    "manifest",
-    (
-        pytest.param(CoverageManifest(), id="default"),
-        pytest.param(
-            CoverageManifest(row_counts_by_namespace={"aeat.domain.buckets.event_history": 1}),
-            id="validated",
-        ),
-    ),
-)
-def test_coverage_manifest_row_counts_are_immutable_after_default_and_validation(
-    manifest: CoverageManifest,
-) -> None:
-    assert isinstance(manifest.row_counts_by_namespace, MappingProxyType)
-    with pytest.raises(TypeError):
-        manifest.row_counts_by_namespace["aeat.domain.buckets.event_history"] = 2
+def test_coverage_manifest_row_counts_are_immutable_after_default_and_validation() -> None:
+    manifests = (
+        CoverageManifest(),
+        CoverageManifest(row_counts_by_namespace={"aeat.domain.buckets.event_history": 1}),
+    )
+
+    for manifest in manifests:
+        assert isinstance(manifest.row_counts_by_namespace, MappingProxyType)
+        with pytest.raises(TypeError):
+            manifest.row_counts_by_namespace["aeat.domain.buckets.event_history"] = 2
