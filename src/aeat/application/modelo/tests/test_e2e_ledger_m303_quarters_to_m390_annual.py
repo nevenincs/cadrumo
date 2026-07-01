@@ -83,6 +83,7 @@ from ...user_profile import UserProfileLifecycleRepository
 from .. import (
     ModeloCrossPeriodCleanStateError,
     ModeloExportCommand,
+    ModeloExportUnsupportedError,
     calculate_modelo_revision_from_bucket_aggregation,
     create_work_unit,
     export_modelo_revision,
@@ -420,9 +421,6 @@ def _store_irene_sl_profile(secure_objects: SecureObjectRepository) -> None:
                 UserProfileFact(path="iva.regime", value="GENERAL"),
                 UserProfileFact(path="taxpayer_type.entity_type", value="legal_entity"),
                 UserProfileFact(path="taxpayer_type.legal_entity_form", value="sl"),
-                UserProfileFact(path="taxpayer_type.incn_prior_12_months", value="500000"),
-                UserProfileFact(path="taxpayer_type.new_entity_first_two_profit_periods", value=True),
-                UserProfileFact(path="taxpayer_type.tributacion_estado_porcentaje", value="100"),
                 UserProfileFact(path="provenance.source", value="test_fixture"),
                 UserProfileFact(path="censo.activity_start_date", value=date(_IRENE_YEAR, 1, 1)),
             ),
@@ -455,9 +453,6 @@ def _irene_workflow_profile() -> TaxpayerProfile:
         does_intracomunitario=False,
         bienes_extranjero_above_threshold=False,
         activity_start_date=date(_IRENE_YEAR, 1, 1),
-        incn_prior_12_months=Decimal("500000"),
-        new_entity_first_two_profit_periods=True,
-        tributacion_estado_porcentaje=Decimal("100"),
     )
 
 
@@ -749,23 +744,25 @@ def test_irene_sl_2024_local_m303_files_support_m390_verify_export(
     assert _non_official_local_chain_advisory_periods(annual_report) == set(_QUARTER_ORDER), annual_report.findings
 
     annual_output = tmp_path / f"m390-{_IRENE_YEAR}.boe"
-    annual_export = export_modelo_revision(
-        ModeloExportCommand(
-            calculation_revision_id=annual.calculation_revision_id,
-            output_path=annual_output,
-            actor="irene",
-        ),
-        workflow_profile=workflow_profile,
-        work_unit_repository=wu_repo,
-        calculation_repository=cr_repo,
-        filing_repository=filing_repo,
-        verification_repository=verification_repo,
-        bucket_event_repository=event_repo,
-        calculation_observation_repository=observation_repo,
-        clock=_IRENE_FILE_AT,
-    )
-    assert annual_export.output_path == annual_output
-    assert annual_output.stat().st_size > 0
+    with pytest.raises(ModeloExportUnsupportedError) as exc_info:
+        export_modelo_revision(
+            ModeloExportCommand(
+                calculation_revision_id=annual.calculation_revision_id,
+                output_path=annual_output,
+                actor="irene",
+            ),
+            workflow_profile=workflow_profile,
+            work_unit_repository=wu_repo,
+            calculation_repository=cr_repo,
+            filing_repository=filing_repo,
+            verification_repository=verification_repo,
+            bucket_event_repository=event_repo,
+            calculation_observation_repository=observation_repo,
+            clock=_IRENE_FILE_AT,
+        )
+    assert exc_info.value.translated_message == "application.modelo.errors.export_unsupported"
+    assert "390" in str(exc_info.value.context)
+    assert not annual_output.exists()
 
 
 def test_ledger_drives_m303_quarters_and_folds_into_m390_annual(
