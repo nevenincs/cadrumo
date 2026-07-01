@@ -789,37 +789,31 @@ class TestResidencyBoundaryNear:
             days_in_spain=days_in_spain,
         )
 
-    def test_empty_days_returns_false(self) -> None:
-        # No data declared → cannot assert boundary proximity.
-        assert self._profile_with_days({}).residency_boundary_near is False
-
-    def test_149_days_returns_false(self) -> None:
-        # 149 days — one below the advisory lower bound (150).
-        assert self._profile_with_days({2024: 149}).residency_boundary_near is False
-
-    def test_150_days_returns_true(self) -> None:
-        # 150 days — at the advisory lower bound; boundary zone begins.
-        assert self._profile_with_days({2024: 150}).residency_boundary_near is True
-
-    def test_183_days_returns_true(self) -> None:
-        # 183 days — the statutory habitual-residence threshold (Art. 9 LIRPF).
-        assert self._profile_with_days({2024: 183}).residency_boundary_near is True
-
-    def test_215_days_returns_true(self) -> None:
-        # 215 days — at the advisory upper bound; boundary zone ends.
-        assert self._profile_with_days({2024: 215}).residency_boundary_near is True
-
-    def test_216_days_returns_false(self) -> None:
-        # 216 days — one above the advisory upper bound; residency clearly triggered.
-        assert self._profile_with_days({2024: 216}).residency_boundary_near is False
-
-    def test_multi_year_one_year_in_range_returns_true(self) -> None:
-        # 2023 safely above, 2024 safely below, 2025 in the boundary window.
-        assert self._profile_with_days({2023: 220, 2024: 100, 2025: 170}).residency_boundary_near is True
-
-    def test_multi_year_all_out_of_range_returns_false(self) -> None:
-        # Both years clearly below advisory lower bound.
-        assert self._profile_with_days({2023: 90, 2024: 120}).residency_boundary_near is False
+    @pytest.mark.parametrize(
+        ("days_in_spain", "expected"),
+        (
+            ({}, False),
+            ({2024: 149}, False),
+            ({2024: 150}, True),
+            ({2024: 183}, True),
+            ({2024: 215}, True),
+            ({2024: 216}, False),
+            ({2023: 220, 2024: 100, 2025: 170}, True),
+            ({2023: 90, 2024: 120}, False),
+        ),
+        ids=(
+            "empty",
+            "below-lower-bound",
+            "at-lower-bound",
+            "statutory-threshold",
+            "at-upper-bound",
+            "above-upper-bound",
+            "multi-year-one-in-range",
+            "multi-year-all-out",
+        ),
+    )
+    def test_residency_boundary_near_cases(self, days_in_spain: dict[int, int], expected: bool) -> None:
+        assert self._profile_with_days(days_in_spain).residency_boundary_near is expected
 
     def test_days_in_spain_roundtrip(self) -> None:
         # days_in_spain dict must survive a strict pydantic JSON roundtrip.
