@@ -9,10 +9,10 @@ default-visible trace, so an operator — or the autonomous agent the CLI target
 trusting the surface would under-file.
 
 This module reconciles the full :func:`~aeat.application.modelo.registry_modelo_codes`
-set against what the calendar actually surfaced and classifies every registry
+set against what the calendar positively resolved and classifies every registry
 modelo into exactly one disposition:
 
-* **surfaced** — it produced an obligation row (has a window and is applicable);
+* **surfaced** — it was resolved by a registry window and an applicable verdict;
 * **confidently excluded** — the taxpayer model positively answers "no" for it
   (``NOT_APPLICABLE`` / ``ATTRIBUTION_PASS_THROUGH``): an answered question, no
   advisory needed;
@@ -54,7 +54,7 @@ class CoverageAdviceReason(StrEnum):
         APPLICABLE_WINDOW_MISSING: The taxpayer model positively triggers
             the modelo (verdict ``APPLICABLE``) but the registry carries no
             deadline window for it, so the engine never placed it on the
-            calendar. This is the Modelo-190 shape — a genuine data gap.
+            calendar. This is the former Modelo-190 shape — a genuine data gap.
         APPLICABILITY_UNDETERMINED: The seed applicability table cannot yet
             decide the modelo for this profile (verdict ``INCOMPLETE`` — no
             seed rule, or a payer/enrolment fact left undeclared). The
@@ -89,7 +89,8 @@ class ObligationCoverageReport(BaseModel):
     filing obligation the operator must investigate.
 
     Attributes:
-        surfaced: Modelos that produced an obligation row on the surface.
+        surfaced: Modelos positively resolved by registry windows and
+            applicability for the queried schedule horizon.
         confidently_excluded: Modelos the taxpayer model positively answers
             "no" for — answered, so no advisory is raised.
         advised: Modelos the operator must investigate (window-missing or
@@ -138,8 +139,11 @@ def build_obligation_coverage(
 
     Args:
         profile: The operator's three-axis :class:`~aeat.domain.deadlines.TaxpayerProfile`.
-        surfaced_modelos: The modelo codes that produced an obligation row on
-            the calendar for the queried range.
+        surfaced_modelos: The modelo codes positively resolved by a registry
+            deadline window and an applicable verdict for the queried schedule
+            horizon. They need not have an entry inside the UI date range; an
+            annual row outside a two-week agenda is still resolved, not a
+            grounding gap.
         today: Reference date for applicability evaluation (the Modelo-720
             Beckham-window check is date-sensitive).
 
