@@ -6,10 +6,8 @@ from decimal import Decimal
 
 import pytest
 
-from ....domain.calculations.registry import (
-    CasillaId,
-    VerificationPredicateDefinition,
-)
+from ....domain.calculations.registry._ids import CasillaId
+from ....domain.calculations.registry._schema import VerificationPredicateDefinition
 from ....domain.modelos._errors import ModeloError
 from ....domain.modelos._verification_report import (
     ModeloVerificationFindingKind,
@@ -336,6 +334,100 @@ _IMPLIES_NONZERO_C01_C07 = 'implies_nonzero(["01", "07"])'
 def test_predicate_implies_nonzero_cases(values: dict[CasillaId, Decimal], expected: bool) -> None:
     """implies_nonzero engages only for strictly-positive antecedents and treats absent consequents as zero."""
     assert evaluate_predicate_expression(_IMPLIES_NONZERO_C01_C07, values, _workflow_profile()) is expected
+
+
+# ---------------------------------------------------------------------------
+# casilla_equals_implies_nonzero — categorical-conditional material
+# implication; the antecedent is a TEXT casilla's operator-entered raw
+# value (read from a separate text_values mapping), not the Decimal
+# casilla_values projection. ADVISORY-only (ADR
+# m210-categorical-conditional-predicate); authored for the M210 IRNR
+# inmobiliaria branch (tipo_renta == "inmobiliaria" implies a non-zero
+# base_imponible), the no-silent-under-declaration shape implies_nonzero
+# cannot express because its trigger is a categorical equality.
+# ---------------------------------------------------------------------------
+
+_CASILLA_EQUALS_IMPLIES_NONZERO = 'casilla_equals_implies_nonzero(["01", "literal-value", "07"])'
+
+
+@pytest.mark.parametrize(
+    ("casilla_values", "text_values", "expected"),
+    (
+        (
+            _casilla_values((_CASILLA_07, "0")),
+            {_CASILLA_01: "literal-value"},
+            True,
+        ),
+        (
+            _casilla_values((_CASILLA_07, "500")),
+            {_CASILLA_01: "literal-value"},
+            False,
+        ),
+        (
+            _casilla_values((_CASILLA_07, "0")),
+            {_CASILLA_01: "other-value"},
+            False,
+        ),
+        (
+            _casilla_values((_CASILLA_07, "0")),
+            {},
+            False,
+        ),
+    ),
+    ids=(
+        "antecedent-matches-consequent-zero-fires",
+        "antecedent-matches-consequent-nonzero-holds",
+        "antecedent-differs-holds",
+        "antecedent-absent-holds",
+    ),
+)
+def test_casilla_equals_implies_nonzero_fires_cases(
+    casilla_values: dict[CasillaId, Decimal],
+    text_values: dict[CasillaId, str],
+    expected: bool,
+) -> None:
+    """The advisory fires only when the antecedent text value equals the literal AND the consequent is zero."""
+    assert evaluate_advisory_predicate_fires(_CASILLA_EQUALS_IMPLIES_NONZERO, casilla_values, text_values) is expected
+
+
+def test_casilla_equals_implies_nonzero_defaults_text_values_to_empty() -> None:
+    """Callers that omit text_values (every pre-existing call site) never fire this operator."""
+    values: dict[CasillaId, Decimal] = {_CASILLA_07: Decimal("0")}
+    assert evaluate_advisory_predicate_fires(_CASILLA_EQUALS_IMPLIES_NONZERO, values) is False
+
+
+def test_casilla_equals_implies_nonzero_bad_arity_does_not_fire() -> None:
+    """A malformed arity reads as holding and never fires (ADVISORY-only, defensive default)."""
+    expr = 'casilla_equals_implies_nonzero(["01", "07"])'  # two tokens; needs three
+    values: dict[CasillaId, Decimal] = {_CASILLA_07: Decimal("0")}
+    text_values = {_CASILLA_01: "literal-value"}
+    assert evaluate_advisory_predicate_fires(expr, values, text_values) is False
+
+
+def test_casilla_equals_implies_nonzero_is_advisory_only_no_blocking_branch() -> None:
+    """The operator has no BLOCKING_RULE branch; it trivially holds via the unmatched-expression default."""
+    values: dict[CasillaId, Decimal] = {_CASILLA_07: Decimal("0")}
+    assert evaluate_predicate_expression(_CASILLA_EQUALS_IMPLIES_NONZERO, values, _workflow_profile()) is True
+
+
+def test_casilla_equals_implies_nonzero_emits_advisory_finding_via_evaluate_verification_predicates() -> None:
+    """The full evaluate_verification_predicates entry point threads text_values into the ADVISORY branch."""
+    predicate = VerificationPredicateDefinition(
+        predicate_id="test-categorical-conditional-invariant",
+        legal_refs=("ley-35-2006:art-99",),
+        expression=_CASILLA_EQUALS_IMPLIES_NONZERO,
+        finding_kind="ADVISORY",
+    )
+    values: dict[CasillaId, Decimal] = {_CASILLA_07: Decimal("0")}
+    text_values = {_CASILLA_01: "literal-value"}
+
+    findings = evaluate_verification_predicates((predicate,), values, _workflow_profile(), text_values)
+    assert len(findings) == 1
+    assert findings[0].kind is ModeloVerificationFindingKind.ADVISORY
+    assert "ley-35-2006:art-99" in findings[0].legal_refs
+
+    # When the antecedent text value does not match, no finding is produced.
+    assert evaluate_verification_predicates((predicate,), values, _workflow_profile(), {}) == []
 
 
 def test_evaluate_verification_predicates_empty_returns_no_findings() -> None:

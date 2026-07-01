@@ -45,7 +45,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 def _raw(provider_id: str, *, amount: Decimal) -> RawTransaction:
     return RawTransaction(
-        transaction_id=provider_id,
+        provider_transaction_id=provider_id,
         booked_date=date(2026, 4, 15),
         value_date=date(2026, 4, 15),
         amount=amount,

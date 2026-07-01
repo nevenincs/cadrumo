@@ -42,7 +42,7 @@ _BUCKET_ID = "33333333-3333-4333-8333-333333333333"
 
 def _raw(provider_id: str, amount: Decimal, description: str) -> RawTransaction:
     return RawTransaction(
-        transaction_id=provider_id,
+        provider_transaction_id=provider_id,
         booked_date=date(2024, 4, 10),
         value_date=date(2024, 4, 10),
         amount=amount,

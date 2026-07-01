@@ -195,7 +195,7 @@ _AEAT_LEDGER_EXPORT_REFUSAL = "AEAT ledger CSV exports cannot be imported throug
 class ParsedTabularTransactionRow:
     """Typed projection shared by CSV and spreadsheet bank-layout rows."""
 
-    transaction_id: str
+    provider_transaction_id: str
     booked_date: date
     value_date: date | None
     amount: Decimal
@@ -327,7 +327,7 @@ class CsvProvider(FinancialProvider):
                 path=path,
                 source_sha256=source_sha256,
                 source_row_index=source_row_index,
-                transaction_id=parsed.transaction_id,
+                provider_transaction_id=parsed.provider_transaction_id,
                 booked_date=parsed.booked_date,
                 value_date=parsed.value_date,
                 amount=parsed.amount,
@@ -527,7 +527,7 @@ def _parse_tabular_transaction_row(
     description = _required_value(raw_fields, lookup, layout.columns.description, "description")
     counterparty = _value_from_aliases(raw_fields, lookup, layout.columns.counterparty)
     return ParsedTabularTransactionRow(
-        transaction_id=transaction_id,
+        provider_transaction_id=transaction_id,
         booked_date=booked_date,
         value_date=value_date,
         amount=amount,

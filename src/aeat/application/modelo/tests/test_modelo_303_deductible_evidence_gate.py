@@ -149,7 +149,7 @@ def _wallet_decision() -> IvaCompensationReconciliationDecision:
 
 def _raw_transaction(provider_id: str, *, booked_date: date, amount: Decimal) -> RawTransaction:
     return RawTransaction(
-        transaction_id=provider_id,
+        provider_transaction_id=provider_id,
         booked_date=booked_date,
         value_date=booked_date,
         amount=amount,

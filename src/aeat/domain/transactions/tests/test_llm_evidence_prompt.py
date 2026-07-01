@@ -33,7 +33,7 @@ _EVIDENCE = "Factura Acme SL material de oficina base 100,00 IVA 21,00 total 121
 
 def _transaction() -> Transaction:
     raw = RawTransaction(
-        transaction_id="row-evidence",
+        provider_transaction_id="row-evidence",
         booked_date=date(2025, 3, 1),
         value_date=date(2025, 3, 1),
         amount=Decimal("121.00"),

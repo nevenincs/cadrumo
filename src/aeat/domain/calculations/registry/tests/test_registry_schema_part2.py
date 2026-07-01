@@ -481,6 +481,114 @@ def test_validator_accepts_committed_m210_casilla_equals_implies_nonzero_predica
     RegistryValidator(catalogues, source_root=bundled_path()).validate_modelo(modelo)
 
 
+def test_validator_rejects_deduccion_requires_adquisicion_before_wrong_arity() -> None:
+    """deduccion_requires_adquisicion_before must name exactly four tokens.
+
+    The runtime evaluator's bad-arity branch returns ``False`` (never fires,
+    ADVISORY-only), so a malformed eligibility predicate would silently do
+    nothing. The authoring-time validator rejects it at registry load. Uses
+    M130 so the failure is the arity, not an unknown-casilla reference.
+    """
+
+    modelo, catalogues = _committed_modelo("130")
+    revision = next(iter(modelo.revisions.values()))
+    bad_arity = VerificationPredicateDefinition(
+        predicate_id="modelo-130-bad-deduccion-requires-adquisicion-before",
+        legal_refs=("rd-439-2007:art-110",),
+        expression='deduccion_requires_adquisicion_before(["01", "07", "07"])',  # three tokens; needs four
+        finding_kind="ADVISORY",
+    )
+    mutated = revision.model_copy(
+        update={"verification_predicates": (*revision.verification_predicates, bad_arity)},
+    )
+
+    with pytest.raises(RegistryValidationError, match="must name exactly four tokens"):
+        RegistryValidator(catalogues, source_root=bundled_path()).validate_modelo(_with_revision(modelo, mutated))
+
+
+def test_validator_rejects_deduccion_requires_adquisicion_before_unknown_amount_casilla() -> None:
+    """The amount token must resolve against the revision's casilla set."""
+
+    modelo, catalogues = _committed_modelo("130")
+    revision = next(iter(modelo.revisions.values()))
+    predicate = VerificationPredicateDefinition(
+        predicate_id="modelo-130-deduccion-requires-adquisicion-before-unknown-amount",
+        legal_refs=("rd-439-2007:art-110",),
+        expression='deduccion_requires_adquisicion_before(["missing-casilla", "01", "07", "2013-01-01"])',
+        finding_kind="ADVISORY",
+    )
+    mutated = revision.model_copy(
+        update={"verification_predicates": (*revision.verification_predicates, predicate)},
+    )
+
+    with pytest.raises(RegistryValidationError, match="unknown amount casilla 'missing-casilla'"):
+        RegistryValidator(catalogues, source_root=bundled_path()).validate_modelo(_with_revision(modelo, mutated))
+
+
+def test_validator_rejects_deduccion_requires_adquisicion_before_non_text_date_casilla() -> None:
+    """The acquisition/construction date casillas must have data_type 'text'."""
+
+    modelo, catalogues = _committed_modelo("130")
+    revision = next(iter(modelo.revisions.values()))
+    predicate = VerificationPredicateDefinition(
+        predicate_id="modelo-130-deduccion-requires-adquisicion-before-non-text-date",
+        legal_refs=("rd-439-2007:art-110",),
+        expression='deduccion_requires_adquisicion_before(["01", "07", "07", "2013-01-01"])',
+        finding_kind="ADVISORY",
+    )
+    mutated = revision.model_copy(
+        update={"verification_predicates": (*revision.verification_predicates, predicate)},
+    )
+
+    with pytest.raises(
+        RegistryValidationError,
+        match=r"acquisition-date casilla '07' must have data_type 'text'",
+    ):
+        RegistryValidator(catalogues, source_root=bundled_path()).validate_modelo(_with_revision(modelo, mutated))
+
+
+def test_validator_rejects_deduccion_requires_adquisicion_before_bad_cutoff_literal() -> None:
+    """The cutoff token must be an ISO date literal (YYYY-MM-DD)."""
+
+    modelo, catalogues = _committed_modelo("130")
+    revision = next(iter(modelo.revisions.values()))
+    predicate = VerificationPredicateDefinition(
+        predicate_id="modelo-130-deduccion-requires-adquisicion-before-bad-cutoff",
+        legal_refs=("rd-439-2007:art-110",),
+        expression='deduccion_requires_adquisicion_before(["01", "07", "07", "not-a-date"])',
+        finding_kind="ADVISORY",
+    )
+    mutated = revision.model_copy(
+        update={"verification_predicates": (*revision.verification_predicates, predicate)},
+    )
+
+    with pytest.raises(RegistryValidationError, match="must be an ISO date literal"):
+        RegistryValidator(catalogues, source_root=bundled_path()).validate_modelo(_with_revision(modelo, mutated))
+
+
+def test_validator_accepts_committed_m100_deduccion_requires_adquisicion_before_predicate() -> None:
+    """The committed M100 vivienda-habitual eligibility predicate validates cleanly.
+
+    Pins that the registry-build validator accepts the operator's mixed
+    casilla-id/date-literal argument shape for the predicate shipped on the
+    2024 and 2025 M100 revisions (LIRPF DT 18ª eligibility advisory). A future
+    operator-set reduction that drops deduccion_requires_adquisicion_before
+    from the known set would surface here.
+    """
+
+    modelo, catalogues = _committed_modelo("100")
+    predicate = next(
+        p
+        for p in modelo.revisions["2024"].verification_predicates
+        if p.predicate_id == "modelo-100-2024-deduccion-vivienda-habitual-requiere-adquisicion-anterior-2013"
+    )
+    assert predicate.expression == 'deduccion_requires_adquisicion_before(["0547", "0708", "0690", "2013-01-01"])'
+    assert predicate.finding_kind == "ADVISORY"
+
+    # No mutation — committed M100 carries the predicate.
+    RegistryValidator(catalogues, source_root=bundled_path()).validate_modelo(modelo)
+
+
 def test_validator_rejects_non_145_communication_link_for_casillas() -> None:
     modelo, catalogues = _committed_modelo("036")
     revision = _as_communication_revision(next(iter(modelo.revisions.values())))
@@ -575,6 +683,22 @@ def test_validator_rejects_communication_link_with_filing_schedule() -> None:
         RegistryValidator(catalogues, source_root=bundled_path()).validate_modelo(_with_revision(modelo, mutated))
 
 
+def test_validator_rejects_application_link_legal_ref_without_legal_authority() -> None:
+    modelo, catalogues = _committed_registry()
+    revision = _revision(modelo)
+    link = next(item for item in revision.application_links if item.legal_refs)
+    legal = dict(catalogues.legal)
+    legal_ref = link.legal_refs[0]
+    legal[legal_ref] = legal[legal_ref].model_copy(update={"evidence_tier": "official_source_guidance"})
+    mutated_catalogues = catalogues.model_copy(update={"legal": legal})
+
+    with pytest.raises(
+        RegistryValidationError,
+        match=r"application link .* legal ref .* is not legal authority",
+    ):
+        RegistryValidator(mutated_catalogues, source_root=bundled_path()).validate_modelo(modelo)
+
+
 def test_validator_rejects_casilla_export_ref_without_export_field() -> None:
     modelo, catalogues = _committed_registry()
     revision = _revision(modelo)
@@ -610,6 +734,41 @@ def test_validator_rejects_export_field_not_declared_by_casilla() -> None:
     mutated = revision.model_copy(update={"casillas": casillas})
 
     with pytest.raises(RegistryValidationError, match="is not declared by casilla"):
+        RegistryValidator(catalogues, source_root=bundled_path()).validate_modelo(_with_revision(modelo, mutated))
+
+
+def test_validator_rejects_export_field_without_layout_authority_source() -> None:
+    modelo, catalogues = _committed_registry()
+    revision = _revision(modelo)
+    target_layout = next(
+        layout for layout in revision.export_layouts if any(record.fields for record in layout.records)
+    )
+    target_field = next(field for record in target_layout.records for field in record.fields)
+    export_layouts = tuple(
+        layout.model_copy(
+            update={
+                "records": tuple(
+                    record.model_copy(
+                        update={
+                            "fields": tuple(
+                                field.model_copy(update={"source_refs": ("aeat-modelo-130-instructions",)})
+                                if field.id == target_field.id
+                                else field
+                                for field in record.fields
+                            ),
+                        },
+                    )
+                    for record in layout.records
+                ),
+            },
+        )
+        if layout.id == target_layout.id
+        else layout
+        for layout in revision.export_layouts
+    )
+    mutated = revision.model_copy(update={"export_layouts": export_layouts})
+
+    with pytest.raises(RegistryValidationError, match="requires layout_authority source evidence"):
         RegistryValidator(catalogues, source_root=bundled_path()).validate_modelo(_with_revision(modelo, mutated))
 
 

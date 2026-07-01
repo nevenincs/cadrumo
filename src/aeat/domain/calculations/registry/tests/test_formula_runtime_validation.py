@@ -11,6 +11,7 @@ import pytest
 from .._authority import ValidatedRegistryAuthority
 from .._errors import RegistryValidationError
 from .._formula_runtime import calculate_registry_snapshot
+from .._formula_text_inputs import validated_text_input_casilla_ids
 from .._schema import RegistrySnapshot
 from ._formula_runtime_support import (
     _M130_AGRARIAN_VOLUME_CASILLA,
@@ -85,6 +86,19 @@ def test_registry_formula_runtime_rejects_noncanonical_text_input_keys_at_entry(
             text_inputs={"bad key": "general"},
             date_context={"filing_period": date(2026, 3, 31)},
         )
+
+
+def test_validated_text_inputs_strip_operator_whitespace_before_runtime_use() -> None:
+    """Direct service callers get the same stripped text-casilla semantics as CLI callers."""
+
+    assert validated_text_input_casilla_ids({"tipo_renta": " inmobiliaria "}) == {"tipo_renta": "inmobiliaria"}
+
+
+def test_validated_text_inputs_reject_blank_after_stripping() -> None:
+    """Whitespace-only text values cannot silently enter formula or verification channels."""
+
+    with pytest.raises(RegistryValidationError, match="must be a non-empty string"):
+        validated_text_input_casilla_ids({"tipo_renta": "   "})
 
 
 def test_registry_formula_runtime_rejects_binding_id_supplied_as_casilla_input(

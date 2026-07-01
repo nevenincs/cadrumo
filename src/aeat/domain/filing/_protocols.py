@@ -24,26 +24,6 @@ if TYPE_CHECKING:  # pragma: no cover — type-only import
 
 
 @runtime_checkable
-class ModeloIdentity(Protocol):
-    """The minimal modelo identity surface consumed by builders."""
-
-    @property
-    def id(self) -> str:
-        """Return the stable string ID of the modelo."""
-        ...
-
-    @property
-    def display_name(self) -> str:
-        """Return a short human-readable name for the modelo."""
-        ...
-
-    @property
-    def cadence(self) -> str:
-        """Return the filing cadence (e.g. ``"quarterly"``)."""
-        ...
-
-
-@runtime_checkable
 class CasillaSchema(Protocol):
     """The minimal casilla schema surface consumed by builders.
 

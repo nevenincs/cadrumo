@@ -127,7 +127,7 @@ def _invoice() -> Invoice:
 
 def _transaction() -> Transaction:
     raw = RawTransaction(
-        transaction_id="bank-row-1",
+        provider_transaction_id="bank-row-1",
         booked_date=date(2026, 4, 2),
         value_date=date(2026, 4, 2),
         amount=Decimal("121.00"),

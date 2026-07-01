@@ -147,7 +147,7 @@ aeat config auth status
 aeat config auth test
 ```
 
-`auth test` is a local probe - it checks your stored credentials without contacting AEAT. Check that the tool can reach the AEAT website (Sede Electrónica, the official online portal):
+`auth test` is a local probe - it checks your stored credentials without contacting AEAT. It also reports the certificate's expiry: an expired or soon-to-expire certificate blocks live reads. If the report warns about expiry, follow [Renew your certificate before it expires](authenticate-with-aeat.md#renew-your-certificate-before-it-expires). Check that the tool can reach the AEAT website (Sede Electrónica, the official online portal):
 
 ```bash
 aeat config repair connectivity

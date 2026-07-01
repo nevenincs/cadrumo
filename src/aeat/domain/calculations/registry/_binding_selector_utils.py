@@ -8,6 +8,7 @@ from typing import Literal, Protocol
 
 from pydantic import BaseModel, ConfigDict, Field
 
+from ....core.aggregation import BindingSourceKind
 from ._errors import RegistryValidationError
 from ._schema import DataBindingDefinition
 
@@ -17,8 +18,10 @@ __all__ = [
     "BindingFixedExportSelector",
     "BindingRowExportSelector",
     "BindingRowSetSelector",
+    "BooleanBindingEncodedValue",
     "binding_export_selector",
     "binding_row_set_selector",
+    "boolean_binding_encoded_values",
     "intracommunity_clave_validator",
     "invariant_diagnostics",
     "selector_against_model",
@@ -142,8 +145,7 @@ class _BindingRowSetProjection(BaseModel):
         if self.fact is None:
             if self.grouping is not None:
                 raise RegistryValidationError(
-                    f"binding {binding_id!r} row-set selector projection must declare fact 'row_field' "
-                    "with grouping",
+                    f"binding {binding_id!r} row-set selector projection must declare fact 'row_field' with grouping",
                 )
             return None
         if self.fact != "row_field":
@@ -170,6 +172,56 @@ def selector_as_dict(binding: DataBindingDefinition) -> dict[str, object]:
     if isinstance(selector, BaseModel):
         return selector.model_dump(exclude={"source"}, exclude_none=True, exclude_unset=True)
     return {key: value for key, value in selector.items() if key != "source"}
+
+
+class BooleanBindingEncodedValue(BaseModel):
+    """One accepted decimal encoding of a boolean-casilla ``manual_input`` binding.
+
+    A ``manual_input`` binding whose selector declares ``data_type = "boolean"``
+    (the Modelo 100 estimación-directa modality flag is the canonical case) is
+    consumed by the registry formulas as a numeric ``1`` / ``0`` operand. The
+    operator therefore supplies a decimal on the ``--binding`` channel, yet the
+    accepted values and their meaning are opaque from the raw
+    :class:`DataBindingDefinition`. This record makes one accepted value
+    explicit: ``encoded_value`` is the decimal the operator types,
+    ``boolean_meaning`` is the affirmative/negative sense it carries, and
+    ``registry_value`` is the underlying casilla token the boolean maps to (the
+    selector's declared ``true_value`` / ``false_value``).
+    """
+
+    model_config = ConfigDict(frozen=True)
+
+    encoded_value: str
+    boolean_meaning: bool
+    registry_value: str
+
+
+def boolean_binding_encoded_values(
+    binding: DataBindingDefinition,
+) -> tuple[BooleanBindingEncodedValue, ...]:
+    """Return the decimal encoding of a boolean-casilla ``manual_input`` binding.
+
+    The result is empty for every binding that is not a boolean-casilla
+    ``manual_input`` selector, so a caller can read a non-empty result as "this
+    binding is a decimal-encoded boolean flag". The encoding follows the
+    registry convention that a boolean operand is consumed as ``1`` (true) /
+    ``0`` (false); each sense is paired with the selector's declared
+    ``true_value`` / ``false_value`` casilla token, so the mapping is derived
+    from the binding definition, never hardcoded per modelo.
+    """
+    if binding.source is not BindingSourceKind.MANUAL_INPUT:
+        return ()
+    selector = selector_as_dict(binding)
+    if selector.get("data_type") != "boolean":
+        return ()
+    true_value = selector.get("true_value")
+    false_value = selector.get("false_value")
+    if not isinstance(true_value, str) or not isinstance(false_value, str):
+        return ()
+    return (
+        BooleanBindingEncodedValue(encoded_value="1", boolean_meaning=True, registry_value=true_value),
+        BooleanBindingEncodedValue(encoded_value="0", boolean_meaning=False, registry_value=false_value),
+    )
 
 
 def binding_export_selector(binding: DataBindingDefinition) -> BindingExportSelector | None:

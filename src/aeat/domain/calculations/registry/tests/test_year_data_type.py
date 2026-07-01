@@ -57,31 +57,35 @@ class TestModeloYearAccepts:
 class TestModeloYearRejects:
     """`ModeloYear` rejects out-of-range, malformed, and wrong-type inputs."""
 
-    @pytest.mark.parametrize("raw", [1999, 2100, "1999", "2100"])
-    def test_out_of_range_rejected(self, raw: object) -> None:
+    @pytest.mark.parametrize(
+        "raw",
+        (
+            pytest.param(1999, id="below-min-int"),
+            pytest.param(2100, id="above-max-int"),
+            pytest.param("1999", id="below-min-string"),
+            pytest.param("2100", id="above-max-string"),
+            pytest.param("", id="blank"),
+            pytest.param("   ", id="whitespace"),
+            pytest.param("twenty-twenty", id="words"),
+            pytest.param("20.25", id="decimal-string"),
+            pytest.param(True, id="boolean"),
+            pytest.param(2024.5, id="float"),
+        ),
+    )
+    def test_invalid_values_rejected(self, raw: object) -> None:
         with pytest.raises(ValidationError):
             _YEAR_ADAPTER.validate_python(raw)
 
-    @pytest.mark.parametrize("raw", ["", "   ", "twenty-twenty", "20.25"])
-    def test_non_integer_string_rejected(self, raw: str) -> None:
-        with pytest.raises(ValidationError):
-            _YEAR_ADAPTER.validate_python(raw)
-
-    def test_boolean_rejected(self) -> None:
-        with pytest.raises(ValidationError):
-            _YEAR_ADAPTER.validate_python(True)
-
-    def test_float_rejected(self) -> None:
-        with pytest.raises(ValidationError):
-            _YEAR_ADAPTER.validate_python(2024.5)
-
-    def test_blank_string_raises_registry_validation_error_at_validator(self) -> None:
+    @pytest.mark.parametrize(
+        "raw",
+        (
+            pytest.param("", id="blank"),
+            pytest.param(True, id="boolean"),
+        ),
+    )
+    def test_invalid_value_raises_registry_validation_error_at_validator(self, raw: object) -> None:
         with pytest.raises(RegistryValidationError):
-            _coerce_modelo_year("")
-
-    def test_boolean_raises_registry_validation_error_at_validator(self) -> None:
-        with pytest.raises(RegistryValidationError):
-            _coerce_modelo_year(True)
+            _coerce_modelo_year(raw)
 
 
 class TestCasillaDefinitionDataType:

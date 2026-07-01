@@ -28,7 +28,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 def _sample_raw(*, provider_id: str, amount: Decimal, description: str) -> RawTransaction:
     return RawTransaction(
-        transaction_id=provider_id,
+        provider_transaction_id=provider_id,
         booked_date=date(2026, 4, 10),
         value_date=date(2026, 4, 10),
         amount=amount,
@@ -278,7 +278,7 @@ def test_set_classification_skips_append_on_pure_timestamp_drift() -> None:
 def _bare_transaction() -> Transaction:
     """Return an unclassified transaction helper for the confidence tests."""
     raw = RawTransaction(
-        transaction_id="provider-row-1",
+        provider_transaction_id="provider-row-1",
         booked_date=date(2026, 4, 10),
         value_date=date(2026, 4, 10),
         amount=Decimal("12.00"),

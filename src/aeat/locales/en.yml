@@ -824,6 +824,7 @@ application:
         the work unit to bind it to the current revision.
       workflow_input_mismatch: Workflow input request does not match the calculation
         revision.
+      calculate_boolean_binding_encoding_invalid: 'Binding value for %{key} is a decimal-encoded boolean flag and must be one of: %{accepted}. Received %{value}. Accepted encoding: %{mapping}. Run ''aeat app modelo bindings list <MODELO>'' to see each binding''s decimal encoding.'
     findings:
       art20_reduccion_next_action: Verify whether your other non-work income excluding
         exempt income for the year does not exceed 6500 EUR; if it does not, declare

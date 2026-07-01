@@ -210,12 +210,10 @@ def test_atomic_create_roundtrip_duplicate_lands_through_provisioner(_cli_storag
 def test_atomic_create_roundtrip_export_import_preserves_label_and_facts(_cli_storage: Path, tmp_path: Path) -> None:
     """A profile exported then imported into a fresh root keeps its label and facts.
 
-    The import path routes through the atomic provisioner and mints a
-    fresh UUID identity for the imported profile (the bundle's stored
-    UUID was the originating machine's identity). The operator-facing
-    label and the profile facts must survive the round trip. The import
-    lands in a *fresh* storage root so the duplicate-label guard does
-    not (correctly) refuse it.
+    The import path routes through the atomic provisioner while preserving the
+    bundle's UUID identity. The operator-facing label and profile facts must
+    survive the round trip. The import lands in a *fresh* storage root so the
+    duplicate-label guard does not (correctly) refuse it.
     """
 
     _create("alice")
@@ -223,6 +221,7 @@ def test_atomic_create_roundtrip_export_import_preserves_label_and_facts(_cli_st
     export = _invoke(["--format", "json", "config", "profile", "export", "alice", "--to", str(bundle)])
     assert export.exit_code == 0, export.output
     assert bundle.is_file()
+    exported_id = json.loads(bundle.read_text(encoding="utf-8"))["profile"]["profile_id"]
 
     source_show = _invoke(["--format", "json", "config", "profile", "show", "alice"])
     source_facts = {row["path"]: row["value"] for row in _json(source_show)["facts"]}
@@ -246,3 +245,10 @@ def test_atomic_create_roundtrip_export_import_preserves_label_and_facts(_cli_st
         assert _json(imported_show)["profile_id"] == CLI_PROFILE_ID_PLACEHOLDER
         imported_facts = {row["path"]: row["value"] for row in _json(imported_show)["facts"]}
         assert imported_facts == source_facts
+        from ....application.user_profile._orchestration import profile_storage_session
+        from ....application.user_profile._profile_repository import ProfileRepository
+
+        with profile_storage_session(exported_id):
+            imported = ProfileRepository().load(exported_id)
+        assert imported.profile_id == exported_id
+        assert imported.label == "alice"

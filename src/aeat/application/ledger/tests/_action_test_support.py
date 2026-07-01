@@ -239,7 +239,7 @@ def _raw_import_transaction(
     description: str = "provider import row",
 ) -> RawTransaction:
     return RawTransaction(
-        transaction_id=transaction_id,
+        provider_transaction_id=transaction_id,
         booked_date=date(2026, 5, 1),
         value_date=date(2026, 5, 1),
         amount=amount,

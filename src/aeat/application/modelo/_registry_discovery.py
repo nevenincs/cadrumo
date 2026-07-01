@@ -135,6 +135,34 @@ def registry_casillas_for_registry_scope(
     )
 
 
+def registry_casilla(
+    modelo: str,
+    casilla: str,
+    *,
+    period: str | None = None,
+    as_of: date | None = None,
+):
+    """Return the single-casilla semantic detail report."""
+    return _service().casilla(modelo, casilla, period=period, as_of=as_of)
+
+
+def registry_casilla_for_registry_scope(
+    modelo: str,
+    casilla: str,
+    *,
+    filing_year: int,
+    period: str,
+    as_of: date | None = None,
+):
+    return _service().casilla_for_scope(
+        modelo,
+        casilla,
+        filing_year=filing_year,
+        period=period,
+        as_of=as_of,
+    )
+
+
 def registry_bindings(modelo: str, *, period: str | None = None, as_of: date | None = None):
     """Return the registry bindings report for a modelo and optional period."""
     return _service().bindings(modelo, period=period, as_of=as_of)
@@ -190,6 +218,8 @@ __all__ = [
     "registry_bindings",
     "registry_bindings_for_scope",
     "registry_bindings_for_year",
+    "registry_casilla",
+    "registry_casilla_for_registry_scope",
     "registry_casillas",
     "registry_casillas_for_registry_scope",
     "registry_casillas_for_scope",

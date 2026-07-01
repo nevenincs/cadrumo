@@ -85,6 +85,7 @@ _SALE_CUOTA = Decimal("168.00")
 _PURCHASE_BASE = Decimal("200.00")
 _PURCHASE_CUOTA = Decimal("42.00")
 
+
 # The official numbered boxes the sale/purchase fixtures populate via projection.
 def _casilla_id(value: object) -> CasillaId:
     try:
@@ -193,7 +194,7 @@ def _iva_transaction(
     return Transaction.model_validate(
         {
             "raw": RawTransaction(
-                transaction_id=provider_id,
+                provider_transaction_id=provider_id,
                 booked_date=date(2026, 2, 10),
                 value_date=date(2026, 2, 10),
                 amount=amount,

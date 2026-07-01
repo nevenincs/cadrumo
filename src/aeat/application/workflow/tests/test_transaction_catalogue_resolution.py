@@ -55,7 +55,7 @@ def _state(*, profile: str, bucket_id: str) -> WorkflowState:
 
 def _transaction(provider_id: str) -> Transaction:
     raw = RawTransaction(
-        transaction_id=provider_id,
+        provider_transaction_id=provider_id,
         booked_date=date(2026, 5, 1),
         value_date=date(2026, 5, 1),
         amount=Decimal("42.00"),

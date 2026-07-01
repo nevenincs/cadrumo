@@ -36,7 +36,7 @@ def test_raw_transaction_round_trip_uses_mapping_field() -> None:
     """RawTransaction should round-trip through JSON with immutable raw_fields."""
     original = RawTransaction.model_validate(
         {
-            "transaction_id": "csv-provider-deadbeef-2",
+            "provider_transaction_id": "csv-provider-deadbeef-2",
             "booked_date": date(2026, 4, 10),
             "value_date": date(2026, 4, 10),
             "amount": Decimal("123.45"),

@@ -98,7 +98,7 @@ def test_resolve_prefix_is_case_insensitive_on_input() -> None:
 # --- lineage-aware resolution -------------------------------------------------
 def _raw(*, provider_id: str, amount: str, description: str) -> RawTransaction:
     return RawTransaction(
-        transaction_id=provider_id,
+        provider_transaction_id=provider_id,
         booked_date=date(2026, 5, 1),
         value_date=date(2026, 5, 1),
         amount=Decimal(amount),

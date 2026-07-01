@@ -48,24 +48,18 @@ def _condition(field: str, op: str, value: bool | int | str, explanation: str = 
 # ---------------------------------------------------------------------------
 
 
-def test_profile_condition_matches_equals_true() -> None:
-    condition = _condition("residence_ccaa", "equals", "madrid")
-    assert profile_condition_matches(condition, {"residence_ccaa": "madrid"}) is True
-
-
-def test_profile_condition_matches_equals_false() -> None:
-    condition = _condition("residence_ccaa", "equals", "madrid")
-    assert profile_condition_matches(condition, {"residence_ccaa": "cataluna"}) is False
-
-
-def test_profile_condition_matches_not_equals_true() -> None:
-    condition = _condition("residence_ccaa", "not_equals", "madrid")
-    assert profile_condition_matches(condition, {"residence_ccaa": "cataluna"}) is True
-
-
-def test_profile_condition_matches_not_equals_false() -> None:
-    condition = _condition("residence_ccaa", "not_equals", "madrid")
-    assert profile_condition_matches(condition, {"residence_ccaa": "madrid"}) is False
+@pytest.mark.parametrize(
+    ("op", "actual", "expected"),
+    (
+        pytest.param("equals", "madrid", True, id="equals-match"),
+        pytest.param("equals", "cataluna", False, id="equals-mismatch"),
+        pytest.param("not_equals", "cataluna", True, id="not-equals-mismatch"),
+        pytest.param("not_equals", "madrid", False, id="not-equals-match"),
+    ),
+)
+def test_profile_condition_matches_operator_truth_table(op: str, actual: str, expected: bool) -> None:
+    condition = _condition("residence_ccaa", op, "madrid")
+    assert profile_condition_matches(condition, {"residence_ccaa": actual}) is expected
 
 
 def test_profile_condition_matches_unsupported_op_raises() -> None:

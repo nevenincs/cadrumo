@@ -300,7 +300,7 @@ def _workflow_state(label: str) -> WorkflowState:
 
 def _transaction(label: str) -> Transaction:
     raw = RawTransaction(
-        transaction_id=f"tx-{label}",
+        provider_transaction_id=f"tx-{label}",
         booked_date=date(2026, 4, 5),
         value_date=date(2026, 4, 5),
         amount=Decimal("121.00"),

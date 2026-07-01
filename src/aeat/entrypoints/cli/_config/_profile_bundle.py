@@ -263,9 +263,8 @@ def _register_profile_import_command(
         bundle_profile_id = record.profile_id
 
         explicit_label = label.strip() if label is not None and label.strip() else None
-        fresh_uuid_mode = explicit_label is not None
 
-        if not fresh_uuid_mode and read_profile_bucket_by_id(bundle_profile_id) is not None:
+        if read_profile_bucket_by_id(bundle_profile_id) is not None:
             raise _CliRefusedBoundaryError(
                 translated_message="cli.config.profile.import_uuid_collision",
                 context={"profile_id": bundle_profile_id},
@@ -282,7 +281,7 @@ def _register_profile_import_command(
             target_id = atomic_create_profile(
                 display_name=target_label,
                 facts=record.facts,
-                profile_id=None if fresh_uuid_mode else bundle_profile_id,
+                profile_id=bundle_profile_id,
             )
         except ProfileAlreadyRegisteredError as exc:
             raise _CliRefusedBoundaryError(
@@ -300,7 +299,6 @@ def _register_profile_import_command(
                     "display_name": target_label,
                     "source_path": str(path),
                     "schema_version": str(bundle.bundle_schema_version),
-                    "fresh_uuid_mode": str(fresh_uuid_mode).lower(),
                 },
             )
 
@@ -377,9 +375,7 @@ def _validate_imported_profile_tax_id(record: object) -> None:
     from ....core.identity import IdentityError, validate_spanish_tax_id
 
     tax_id_values = [
-        fact.value
-        for fact in getattr(record, "facts", ())
-        if getattr(fact, "path", None) == _PROFILE_TAX_ID_PATH
+        fact.value for fact in getattr(record, "facts", ()) if getattr(fact, "path", None) == _PROFILE_TAX_ID_PATH
     ]
     if len(tax_id_values) != 1:
         raise _invalid_import_tax_id(

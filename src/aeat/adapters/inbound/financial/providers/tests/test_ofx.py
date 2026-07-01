@@ -38,7 +38,7 @@ def test_ofx_provider_prefers_fitid_and_payee() -> None:
     assert len(parsed_rows) == 2
 
     credit = parsed_rows[0]
-    assert credit.raw.transaction_id == "FIT-001"
+    assert credit.raw.provider_transaction_id == "FIT-001"
     assert credit.raw.counterparty == "CLIENTE DOS"
     assert credit.raw.currency == "EUR"
     assert credit.raw.amount == Decimal("875.55")
@@ -49,7 +49,7 @@ def test_ofx_provider_prefers_fitid_and_payee() -> None:
     # The second source row is a debit: stored as a non-negative magnitude
     # with the sign lifted into the authoritative OUTGOING direction.
     debit = parsed_rows[1]
-    assert debit.raw.transaction_id == "FIT-002"
+    assert debit.raw.provider_transaction_id == "FIT-002"
     assert debit.raw.amount == Decimal("42.10")
     assert debit.raw.amount >= 0
     assert debit.direction is TransactionDirection.OUTGOING
@@ -155,7 +155,7 @@ NEWFILEUID:NONE
     assert "ACC-1" not in validation.detected_dialect
     assert "ACC-2" not in validation.detected_dialect
     parsed_rows = tuple(provider.ingest(source))
-    assert [parsed.raw.transaction_id for parsed in parsed_rows] == ["ONE", "TWO"]
+    assert [parsed.raw.provider_transaction_id for parsed in parsed_rows] == ["ONE", "TWO"]
     assert [parsed.raw.provenance.source_row_index for parsed in parsed_rows] == [1, 2]
     assert parsed_rows[1].raw.raw_fields["ACCTID"] == "ACC-2"
 

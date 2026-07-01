@@ -892,6 +892,7 @@ application:
         Torneu a crear la unitat de treball per vincular-la a la revisio actual.
       workflow_input_mismatch: La sol·licitud d'entrada del flux de treball no coincideix
         amb la revisió de càlcul.
+      calculate_boolean_binding_encoding_invalid: 'El valor del binding %{key} és un indicador booleà codificat com a decimal i ha de ser un de: %{accepted}. S''ha rebut %{value}. Codificació acceptada: %{mapping}. Executa ''aeat app modelo bindings list <MODELO>'' per veure la codificació decimal de cada binding.'
     findings:
       art20_reduccion_next_action: Verifiqueu si les vostres altres rendes diferents
         de les del treball excloses les exemptes de l'exercici no superen 6500 EUR;

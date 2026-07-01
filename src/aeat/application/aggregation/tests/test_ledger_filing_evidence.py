@@ -70,7 +70,7 @@ _SOURCE_REFS = ("boe-modelo-303-2025-form",)
 
 def _txn() -> Transaction:
     raw = RawTransaction(
-        transaction_id="provider-row-evidence",
+        provider_transaction_id="provider-row-evidence",
         booked_date=date(2025, 2, 10),
         value_date=date(2025, 2, 11),
         amount=Decimal("121.00"),

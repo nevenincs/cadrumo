@@ -37,7 +37,7 @@ def _tx(
     fx_rate: Decimal | None = None,
 ) -> Transaction:
     raw = RawTransaction(
-        transaction_id="row-x",
+        provider_transaction_id="row-x",
         booked_date=date(2026, 1, 15),
         value_date=date(2026, 1, 15),
         amount=Decimal("121.00"),

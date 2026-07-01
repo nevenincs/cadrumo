@@ -190,18 +190,18 @@ def test_profile_create_refuses_case_insensitive_duplicate_label(
     assert result.exit_code != 0, f"expected case-insensitive refusal, got: {result.output}"
 
 
-# --- profile import --label re-imports an exported profile ---
+# --- profile import --label preserves bundle identity ---
 
 
-def test_profile_import_label_lands_second_copy_under_new_name(
+def test_profile_import_label_refuses_duplicate_bundle_identity(
     _per_bucket_backend: Path,
 ) -> None:
-    """`profile import --label` imports an exported bundle under a fresh name.
+    """`profile import --label` cannot duplicate an already registered bundle.
 
-    Re-importing an exported profile into a storage root that already
-    carries it must not dead-end on a duplicate-label refusal. `--label`
-    lands the second copy under a new operator-facing name while still
-    minting its own immutable UUID identity.
+    The bundle's profile_id is the immutable identity across export/import.
+    ``--label`` only changes the display label when importing into a root
+    that does not already carry that UUID; it must not mint a second local
+    profile for the same bundle identity.
     """
     from ....adapters.persistence.storage.sql.engine import dispose_engine
     from ....application.workflow._profile_bucket_scan import read_profile_bucket
@@ -222,21 +222,17 @@ def test_profile_import_label_lands_second_copy_under_new_name(
     clash = _invoke(("config", "profile", "import", str(bundle_path)))
     assert clash.exit_code != 0, clash.output
 
-    # Re-importing with --label mints a fresh UUID and lands a second copy
-    # under the new operator-facing name.
+    # Re-importing with --label still hits the UUID collision guard; no second
+    # profile is created under the requested label.
     dispose_engine()
     relabelled = _invoke(
         ("config", "profile", "import", str(bundle_path), "--label", "operator-restored"),
     )
-    assert relabelled.exit_code == 0, relabelled.output
-    assert "display_name\toperator-restored" in relabelled.output
+    assert relabelled.exit_code != 0, relabelled.output
 
     original = read_profile_bucket("operator")
-    restored = read_profile_bucket("operator-restored")
     assert original is not None
-    assert restored is not None
-    # Distinct buckets, distinct minted UUID identities (--label path mints fresh UUID).
-    assert original.bucket_id != restored.bucket_id
+    assert read_profile_bucket("operator-restored") is None
 
 
 # --- profile-lifecycle navigation from a no-active-session state ---

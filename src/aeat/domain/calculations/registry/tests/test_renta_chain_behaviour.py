@@ -19,7 +19,7 @@ from .....core.resources import bundled_path
 
 # Importing the renta package registers the first-slice routing cross-domain
 # snapshot check required by Modelo 100 parity scenarios run via _scenarios.
-from .. import CasillaId, validated_casilla_id
+from .._ids import CasillaId, validated_casilla_id
 from .._scenarios import (
     RegistryCalculationScenario,
     RegistryScenarioExpectedOutput,
@@ -42,11 +42,13 @@ def _casilla_id(value: object) -> CasillaId:
 
 _C0003 = _casilla_id("0003")
 _C0426 = _casilla_id("0426")
+_C0427 = _casilla_id("0427")
 _C0429 = _casilla_id("0429")
 _C0432 = _casilla_id("0432")
 _C0433 = _casilla_id("0433")
 _C0435 = _casilla_id("0435")
 _C0461 = _casilla_id("0461")
+_C0463 = _casilla_id("0463")
 _C0467 = _casilla_id("0467")
 _C0468 = _casilla_id("0468")
 _C0500 = _casilla_id("0500")
@@ -95,6 +97,7 @@ _RELATION_ZERO_VALUES_2025 = {
     "renta-2025-rel-193-retenciones-anuales": Decimal("0"),
 }
 
+
 @lru_cache(maxsize=1)
 def _m100_2025_refs_by_target() -> dict[CasillaId, tuple[tuple[str, ...], tuple[str, ...]]]:
     modelo, _catalogues = _committed_modelo("100")
@@ -134,6 +137,7 @@ def _expected_output(
         legal_refs=legal_refs,
         source_refs=source_refs,
     )
+
 
 def _base_2025_inputs() -> dict[CasillaId, Decimal]:
     return {
@@ -379,6 +383,82 @@ def test_plan_de_empleo_reduccion_below_caps_full_amount() -> None:
             _expected_output(target_casilla_id=_C0467, value=Decimal("4200.00")),
             _expected_output(target_casilla_id=_C0468, value=Decimal("4200.00")),
             _expected_output(target_casilla_id=_C0500, value=Decimal("52300.00")),
+        ),
+    )
+    report = run_registry_calculation_scenario(scenario, registry_root=_REGISTRY_ROOT, source_root=bundled_path())
+    assert_registry_scenario_matches(report)
+
+
+def test_individual_aportaciones_prevision_social_reduce_base_general() -> None:
+    """Individual pension-plan contributions (casilla 0463) reduce the base imponible general.
+
+    Guards issue #574: an individual's own contributions to a personal
+    previsión-social system (plan de pensiones individual) give an Art. 51/52
+    LIRPF reducción to the base imponible general. Casilla 0463 ("Aportaciones
+    individuales y contribuciones empresariales ...", semantic_role
+    ``irpf_red_prevision_social_aportaciones_individuales``) is the individual
+    input box. The existing chain tests exercise the plan-de-empleo worker box
+    (0426) and the #545 employer box (0427); this locks the individual-side
+    (0463) path the issue names explicitly, flowing 0463 → 0467 → 0468 → base
+    liquidable general 0500.
+
+    Oracle derivation (Art. 52 LIRPF, AEAT Renta 2025 Manual Parte 1 —
+    "Reducciones por aportaciones a sistemas de previsión social"): an
+    individual aportación below the general €1.500 individual limit and below
+    the 30 % net-yield limit is fully reducible from the base general.
+      trabajo rendimientos (0003) = 30,000 → 0025 = 0432 = 30,000
+      30% cap = 0.30 * 30,000 = 9,000
+      individual aportación (0463) = 1,200 → 0467 = 1,200
+      1,200 < 1,500 (individual limit) and 1,200 < 9,000 (30% limit)
+      0468 = min(1200, 10000, 9000) = 1,200   (below every cap → full reducción)
+      0435 = 30,000 (no negative G/P balance); 0461 = 0; 0501 = 0
+      0500 = 30,000 - 1,200 - 0 - 0 = 28,800
+    """
+    scenario = _scenario_2025(
+        "individual-aportaciones-prevision-social-reduces-base",
+        overrides={
+            _C0003: Decimal("30000.00"),  # trabajo → 0432 = 30,000
+            _C0463: Decimal("1200.00"),  # individual aportación → 0467 = 1,200
+        },
+        expected=(
+            _expected_output(target_casilla_id=_C0467, value=Decimal("1200.00")),
+            _expected_output(target_casilla_id=_C0468, value=Decimal("1200.00")),
+            _expected_output(target_casilla_id=_C0500, value=Decimal("28800.00")),
+        ),
+    )
+    report = run_registry_calculation_scenario(scenario, registry_root=_REGISTRY_ROOT, source_root=bundled_path())
+    assert_registry_scenario_matches(report)
+
+
+def test_plan_de_empleo_employer_contribution_reduces_base_general() -> None:
+    """Employer plan-de-empleo contributions (casilla 0427) reduce the base imponible general.
+
+    Guards issue #545: the Art. 52 LIRPF reducción for employer pension-plan
+    (plan de empleo) contributions must flow through the previsión-social chain
+    and reduce the base liquidable general. Casilla 0427 ("Contribuciones
+    empresariales a sistemas de previsión social, excepto ... seguros colectivos
+    de dependencia") is the employer-side input box; the existing chain tests
+    exercise the worker-side box (0426), so this locks the 0427 path the issue
+    names explicitly.
+
+    Oracle derivation (Art. 51/52 LIRPF, AEAT Renta 2025 Manual Parte 1):
+      trabajo rendimientos (0003) = 40,000 → 0025 = 0432 = 40,000
+      30% cap = 0.30 * 40,000 = 12,000
+      employer contribution (0427) = 6,000 → 0467 = 6,000
+      0468 = min(6000, 10000, 12000) = 6,000   (below both caps)
+      0435 = 40,000 (no negative G/P balance); 0461 = 0; 0501 = 0
+      0500 = 40,000 - 6,000 - 0 - 0 = 34,000
+    """
+    scenario = _scenario_2025(
+        "plan-empleo-employer-contribution-reduces-base",
+        overrides={
+            _C0003: Decimal("40000.00"),  # trabajo → 0432 = 40,000
+            _C0427: Decimal("6000.00"),  # employer contribution → 0467 = 6,000
+        },
+        expected=(
+            _expected_output(target_casilla_id=_C0467, value=Decimal("6000.00")),
+            _expected_output(target_casilla_id=_C0468, value=Decimal("6000.00")),
+            _expected_output(target_casilla_id=_C0500, value=Decimal("34000.00")),
         ),
     )
     report = run_registry_calculation_scenario(scenario, registry_root=_REGISTRY_ROOT, source_root=bundled_path())

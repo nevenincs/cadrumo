@@ -116,7 +116,7 @@ def _income_transaction(
     return Transaction.model_validate(
         {
             "raw": RawTransaction(
-                transaction_id=provider_id,
+                provider_transaction_id=provider_id,
                 booked_date=value_date,
                 value_date=value_date,
                 amount=amount,

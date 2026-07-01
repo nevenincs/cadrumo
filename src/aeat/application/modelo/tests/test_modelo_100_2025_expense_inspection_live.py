@@ -127,7 +127,7 @@ def _seed_sofia_profile(objects: SecureObjectRepository) -> None:
 
 def _raw_transaction(provider_id: str, *, value_date: date, amount: Decimal) -> RawTransaction:
     return RawTransaction(
-        transaction_id=provider_id,
+        provider_transaction_id=provider_id,
         booked_date=value_date,
         value_date=value_date,
         amount=amount,

@@ -62,7 +62,7 @@ def _q(value: Decimal) -> Decimal:
 
 def _raw(provider_id: str, *, amount: Decimal, description: str, when: date = date(2025, 2, 10)) -> RawTransaction:
     return RawTransaction(
-        transaction_id=provider_id,
+        provider_transaction_id=provider_id,
         booked_date=when,
         value_date=when,
         amount=amount,

@@ -18,6 +18,7 @@ from .. import (
     InputKind,
     RegistrySnapshotError,
     RegistryValidationError,
+    RegistryValidator,
     RemoteOperation,
     assert_remote_operation_allowed,
     parse_export_payload,
@@ -81,12 +82,9 @@ def test_modelo_100_personal_family_construct_casillas_match_expected_set() -> N
 def test_modelo_100_dependent_modelos_construct_covers_every_previous_filing_binding() -> None:
     snapshot = _modelo_100_snapshot()
     dependencies = snapshot.constructs["renta-dependent-modelos"]
-    # The dependent-modelos construct covers every observation-backed slot: the
-    # direct same-modelo previous_filing carries (BIN N-1) AND the cross-modelo
-    # relation_prefill fold-in slots (130/131/111/115/123/180/184/190/193). The
-    # latter were re-stamped from previous_filing to relation_prefill when the
-    # relation became canonical for cross-modelo fold-ins (aggregation-taxonomy
-    # decision ruling 3).
+    # The dependent-modelos construct covers every current observation-backed slot:
+    # the direct same-modelo previous_filing carries (BIN N-1) and every registered
+    # cross-modelo relation_prefill fold-in slot.
     filed_dependency_bindings = {
         binding.id
         for binding in snapshot.revision.bindings
@@ -454,9 +452,14 @@ def test_modelo_100_renta_section_constructs_classify_registered_relation_source
 
     assert source_modelos_by_construct == {
         "renta-work-income": {"111", "190"},
-        "renta-real-estate-capital": {"115", "180"},
+        "renta-real-estate-capital": set(),
         "renta-movable-capital": {"123", "193"},
         "renta-economic-activities": {"130", "131", "184"},
+    }
+    real_estate = constructs["renta-real-estate-capital"]
+    assert "0598" in {member.id for member in real_estate.members_of_kind("casilla")}
+    assert "renta-2025-retenciones-arrendamientos-urbanos" in {
+        member.id for member in real_estate.members_of_kind("formula")
     }
 
 
@@ -714,6 +717,38 @@ def test_construct_reader_rejects_blank_grounding_refs_at_projection_boundary() 
 
         with pytest.raises(ValidationError, match=next(iter(update))):
             resolve_construct(mutated_revision, construct.id)
+
+
+def test_validator_rejects_construct_sources_without_official_guidance() -> None:
+    modelo, revision = _modelo_100_revision_2025()
+    _modelos_by_id, catalogues = _loaded_registry()
+    construct = next(item for item in revision.constructs if item.source_refs)
+    sources = dict(catalogues.sources)
+    for source_ref in construct.source_refs:
+        sources[source_ref] = sources[source_ref].model_copy(update={"evidence_tier": "layout_authority"})
+    mutated_catalogues = catalogues.model_copy(update={"sources": sources})
+
+    with pytest.raises(
+        RegistryValidationError,
+        match=r"construct .* requires official_source_guidance source evidence",
+    ):
+        RegistryValidator(mutated_catalogues, source_root=_source_root()).validate_modelo(modelo)
+
+
+def test_validator_rejects_construct_legal_refs_without_legal_authority() -> None:
+    modelo, revision = _modelo_100_revision_2025()
+    _modelos_by_id, catalogues = _loaded_registry()
+    construct = next(item for item in revision.constructs if item.legal_refs)
+    legal = dict(catalogues.legal)
+    legal_ref = construct.legal_refs[0]
+    legal[legal_ref] = legal[legal_ref].model_copy(update={"evidence_tier": "official_source_guidance"})
+    mutated_catalogues = catalogues.model_copy(update={"legal": legal})
+
+    with pytest.raises(
+        RegistryValidationError,
+        match=r"construct .* legal ref .* is not legal authority",
+    ):
+        RegistryValidator(mutated_catalogues, source_root=_source_root()).validate_modelo(modelo)
 
 
 def test_validator_rejects_construct_member_outside_revision() -> None:

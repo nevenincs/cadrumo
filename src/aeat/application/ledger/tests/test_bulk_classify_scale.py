@@ -61,7 +61,7 @@ class _CountingTxRepo(TransactionCatalogueRepository):
 
 def _raw(idx: int) -> RawTransaction:
     return RawTransaction(
-        transaction_id=f"provider-row-{idx:04d}",
+        provider_transaction_id=f"provider-row-{idx:04d}",
         booked_date=date(2026, 5, 1),
         value_date=date(2026, 5, 1),
         amount=Decimal("80.00"),

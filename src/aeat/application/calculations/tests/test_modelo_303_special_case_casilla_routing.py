@@ -137,7 +137,7 @@ def test_intracom_acquisition_self_assesses_and_deducts_the_same_cuota(tmp_path:
             inputs=inputs,
             binding_values=binding_values,
             date_context={"filing_period": date(_YEAR, 12, 31)},
-    )
+        )
 
     # The intracom cuota self-assesses as output IVA (devengada leg, art. 84)...
     assert result.values[_M303_AUTOREPERCUTIDO_INTRACOMUNITARIA_CASILLA] == intracom_cuota
@@ -182,7 +182,7 @@ def _recargo_purchase() -> Transaction:
     from ....domain.transactions._models import derive_transaction_id
 
     raw = RawTransaction(
-        transaction_id="recargo-purchase-001",
+        provider_transaction_id="recargo-purchase-001",
         booked_date=date(2025, 2, 1),
         value_date=date(2025, 2, 1),
         amount=Decimal("121.00"),

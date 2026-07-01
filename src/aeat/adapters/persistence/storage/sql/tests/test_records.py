@@ -45,6 +45,19 @@ def test_records_are_frozen() -> None:
         record.identifier = "MODELO_303"
 
 
+def test_records_forbid_extra_fields() -> None:
+    """The canonical strict-frozen config refuses unknown columns.
+
+    Locks the ``extra="forbid"`` strictness the SQL boundary records inherit
+    from :data:`~aeat.core.STRICT_FROZEN_CONFIG`; an unexpected field projected
+    from the ORM boundary must be rejected, never silently dropped.
+    """
+    with pytest.raises(ValidationError):
+        ModeloCatalogueRecord.model_validate(
+            {"identifier": "MODELO_130", "name": "Pagos fraccionados", "unexpected": True}
+        )
+
+
 def test_portal_record_requires_enum_auth_method() -> None:
     """PortalRecord.auth_method is a strict enum, not a bare string."""
     record = PortalRecord(

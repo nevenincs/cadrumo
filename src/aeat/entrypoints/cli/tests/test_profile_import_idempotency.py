@@ -289,6 +289,13 @@ def test_label_collision_different_uuid_refused_even_with_explicit_label(tmp_pat
         assert r_free.exit_code == 0, r_free.output
         free_payload = assert_public_profile_payload_redacted(r_free.output, exported_id)
         assert free_payload["display_name"] == "idempotency-test-imported"
+        from ....application.user_profile._orchestration import profile_storage_session
+        from ....application.user_profile._profile_repository import ProfileRepository
+
+        with profile_storage_session(exported_id):
+            imported = ProfileRepository().load(exported_id)
+        assert imported.profile_id == exported_id
+        assert imported.label == "idempotency-test-imported"
 
 
 # ---------------------------------------------------------------------------
@@ -307,8 +314,8 @@ def test_mutated_profile_id_creates_second_profile(tmp_path: Path) -> None:
     After importing the original bundle and a UUID-mutated clone:
     - Two distinct profiles exist in the destination root.
     - Their profile_ids differ.
-    - Their display names are the same (label deduplication is the
-      operator's responsibility; the second import can use --label).
+    - The second import may use --label to choose a distinct display name
+      without changing the mutated bundle UUID.
     """
 
     bundle_path = tmp_path / "original.json"
@@ -341,10 +348,9 @@ def test_mutated_profile_id_creates_second_profile(tmp_path: Path) -> None:
         assert mut_payload["display_name"] == "idempotency-test-mutated"
         from ....core import resolve_active_bucket_id
 
-        minted_label_import_id = resolve_active_bucket_id()
-        assert minted_label_import_id is not None
-        assert minted_label_import_id != mutated_id
-        assert_public_profile_id_not_leaked(r_mut.output, minted_label_import_id)
+        active_import_id = resolve_active_bucket_id()
+        assert active_import_id == mutated_id
+        assert_public_profile_id_not_leaked(r_mut.output, active_import_id)
 
         # Both labels must appear in the list output — two distinct profiles.
         r_list = _invoke(["config", "profile", "list"])
@@ -352,19 +358,18 @@ def test_mutated_profile_id_creates_second_profile(tmp_path: Path) -> None:
         assert "idempotency-test" in r_list.output
         assert "idempotency-test-mutated" in r_list.output
 
-        # Profile IDs are redacted at the CLI boundary; verify UUID
-        # round-trip by reading the encrypted manifest of the
-        # identity-preserving import (the first one, without --label).
-        # The --label path mints a fresh UUID by design (see
-        # ``config_profile_import``'s D5 two-tier collision guard), so
-        # the imported bucket's id does not equal ``mutated_id``; that
-        # path is asserted via the display-name + list-output surfaces.
+        # Profile IDs are redacted at the CLI boundary; verify UUID round-trip
+        # by reading both encrypted manifests through the persistence layer.
         from ....application.user_profile._orchestration import profile_storage_session
         from ....application.user_profile._profile_repository import ProfileRepository
 
         with profile_storage_session(exported_id):
             original_aggregate = ProfileRepository().load(exported_id)
         assert original_aggregate.profile_id == exported_id
+        with profile_storage_session(mutated_id):
+            mutated_aggregate = ProfileRepository().load(mutated_id)
+        assert mutated_aggregate.profile_id == mutated_id
+        assert mutated_aggregate.label == "idempotency-test-mutated"
 
         # Both display names must still be reachable via the operator surface.
         r_show = _invoke(["config", "profile", "show", "idempotency-test"])
@@ -372,7 +377,7 @@ def test_mutated_profile_id_creates_second_profile(tmp_path: Path) -> None:
         assert_public_profile_id_redacted(r_show.output, exported_id)
         r_show_mut = _invoke(["config", "profile", "show", "idempotency-test-mutated"])
         assert r_show_mut.exit_code == 0, r_show_mut.output
-        assert_public_profile_id_not_leaked(r_show_mut.output, mutated_id)
+        assert_public_profile_id_redacted(r_show_mut.output, mutated_id)
 
 
 # ---------------------------------------------------------------------------

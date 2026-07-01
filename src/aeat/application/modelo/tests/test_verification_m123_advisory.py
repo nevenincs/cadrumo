@@ -35,6 +35,7 @@ def test_m123_advisory_ships_with_legal_grounding() -> None:
     predicate = _m123_advisory_predicate()
     legal_refs = tuple(str(r) for r in predicate.legal_refs)
     assert "rd-439-2007:art-90" in legal_refs
+    assert "rd-439-2007:art-75" in legal_refs
     assert "ley-35-2006:art-101" in legal_refs
 
 
@@ -52,6 +53,7 @@ def test_m123_advisory_fires_when_base_total_positive_but_retenciones_total_zero
     assert findings[0].kind is ModeloVerificationFindingKind.ADVISORY
     assert findings[0].severity is ModeloVerificationFindingSeverity.WARNING
     assert "rd-439-2007:art-90" in findings[0].legal_refs
+    assert "rd-439-2007:art-75" in findings[0].legal_refs
 
 
 def test_m123_advisory_silent_when_retenciones_total_present() -> None:

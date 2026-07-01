@@ -16,19 +16,32 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
 
 @pytest.mark.parametrize(
-    "raw",
-    ["true", "True", "TRUE", "1", "yes", "YES", "y", "Y", "si", "sí", "SI", "SÍ"],
+    ("raw", "expected"),
+    (
+        pytest.param("true", True, id="true-lower"),
+        pytest.param("True", True, id="true-title"),
+        pytest.param("TRUE", True, id="true-upper"),
+        pytest.param("1", True, id="one"),
+        pytest.param("yes", True, id="yes-lower"),
+        pytest.param("YES", True, id="yes-upper"),
+        pytest.param("y", True, id="y-lower"),
+        pytest.param("Y", True, id="y-upper"),
+        pytest.param("si", True, id="si-lower"),
+        pytest.param("sí", True, id="si-accent-lower"),
+        pytest.param("SI", True, id="si-upper"),
+        pytest.param("SÍ", True, id="si-accent-upper"),
+        pytest.param("false", False, id="false-lower"),
+        pytest.param("False", False, id="false-title"),
+        pytest.param("FALSE", False, id="false-upper"),
+        pytest.param("0", False, id="zero"),
+        pytest.param("no", False, id="no-lower"),
+        pytest.param("NO", False, id="no-upper"),
+        pytest.param("n", False, id="n-lower"),
+        pytest.param("N", False, id="n-upper"),
+    ),
 )
-def test_parse_bool_truthy_tokens(raw: str) -> None:
-    assert _parse_bool(raw) is True
-
-
-@pytest.mark.parametrize(
-    "raw",
-    ["false", "False", "FALSE", "0", "no", "NO", "n", "N"],
-)
-def test_parse_bool_falsy_tokens(raw: str) -> None:
-    assert _parse_bool(raw) is False
+def test_parse_bool_recognized_tokens(raw: str, expected: bool) -> None:
+    assert _parse_bool(raw) is expected
 
 
 @pytest.mark.parametrize(

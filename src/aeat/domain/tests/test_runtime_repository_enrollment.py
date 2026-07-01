@@ -35,7 +35,7 @@ _NOW = datetime(2026, 5, 26, 10, 0, tzinfo=UTC)
 
 def _transaction(source_path: Path) -> Transaction:
     raw = RawTransaction(
-        transaction_id="runtime-row-1",
+        provider_transaction_id="runtime-row-1",
         booked_date=date(2026, 4, 5),
         value_date=date(2026, 4, 5),
         amount=Decimal("121.00"),

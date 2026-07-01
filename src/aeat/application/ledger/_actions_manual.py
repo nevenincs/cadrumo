@@ -126,12 +126,13 @@ def create_manual_transaction(
     if command.idempotency_key is not None:
         # The idempotency key is authoritative for row identity: a keyed row
         # carries the clock-free provider id `manual:{bucket}:{key}` on
-        # raw.transaction_id. Scan by that provider id (NOT the content-folding
-        # catalogue id from derive_transaction_id) so the same key always names
-        # the same logical add regardless of which content fields it carries.
+        # raw.provider_transaction_id. Scan by that provider id (NOT the
+        # content-folding catalogue id from derive_transaction_id) so the same
+        # key always names the same logical add regardless of which content
+        # fields it carries.
         provider_id = _provider_transaction_id(command, occurred_at=now)
         existing = next(
-            (row for row in catalogue.values() if row.raw.transaction_id == provider_id),
+            (row for row in catalogue.values() if row.raw.provider_transaction_id == provider_id),
             None,
         )
         if existing is not None:
@@ -538,7 +539,7 @@ def _prepare_manual_transaction_update(
     replacement = _transaction_from_command(
         command,
         occurred_at=now,
-        provider_transaction_id=current.raw.transaction_id if command.idempotency_key is None else None,
+        provider_transaction_id=current.raw.provider_transaction_id if command.idempotency_key is None else None,
         created_by=current.created_by,
         created_source_command=current.source_command,
         created_event_id=current.created_event_id,
@@ -582,7 +583,7 @@ def _prepare_manual_transaction_update(
     replacement = _transaction_from_command(
         command,
         occurred_at=now,
-        provider_transaction_id=current.raw.transaction_id if command.idempotency_key is None else None,
+        provider_transaction_id=current.raw.provider_transaction_id if command.idempotency_key is None else None,
         created_by=current.created_by,
         created_source_command=current.source_command,
         created_event_id=current.created_event_id,
@@ -970,7 +971,7 @@ def _transaction_from_command(
     modified_at: datetime | None = None,
 ) -> Transaction:
     raw = RawTransaction(
-        transaction_id=provider_transaction_id or _provider_transaction_id(command, occurred_at=occurred_at),
+        provider_transaction_id=provider_transaction_id or _provider_transaction_id(command, occurred_at=occurred_at),
         booked_date=command.booked_date,
         value_date=command.value_date,
         amount=command.amount,

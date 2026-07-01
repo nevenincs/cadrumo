@@ -194,6 +194,31 @@ required_text = [
     "se reducirá en un 60 por ciento",
 ]
 
+[legal."rd-439-2007:art-75"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "real_decreto"
+corpus_ref = "corpus/normatives/html/rd-439-2007-art-75.html#a75"
+document_id = "BOE-A-2007-6820"
+article = "75"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2007-6820#a75"
+published_at = 2007-03-31
+effective_from = 2007-04-01
+review_status = "reviewed"
+reviewed_at = 2026-07-01
+reviewed_by = "codex"
+notes = "RIRPF art 75: rentas sujetas a retención o ingreso a cuenta (apartados 1-2) y rentas exceptuadas de la obligación de retener o ingresar a cuenta por razón de su naturaleza (apartado 3), with carve-backs that restore withholding for some account, coupon, IIC, and art. 7.ñ payment-on-account cases. Grounding for the modelo-123-2024-base-total-implica-retenciones-total ADVISORY guard: Modelo 123 casillas 04/05 declare bases de retención for dividendos/participaciones and resto de rentas del capital mobiliario, so an amount entered as a positive M123 withholding base is not one of the art. 75.3 income classes for which no withholding obligation exists."
+required_text = [
+    "Rentas sujetas a retención o ingreso a cuenta",
+    "No existirá obligación de practicar retención o ingreso a cuenta sobre las rentas siguientes",
+    "los rendimientos de las Letras del Tesoro",
+    "Las primas de conversión de obligaciones en acciones",
+    "Los rendimientos de cuentas en el exterior",
+    "Los rendimientos derivados de la transmisión o reembolso de activos financieros con rendimiento explícito",
+    "Los rendimientos procedentes de la devolución de la prima de emisión de acciones o participaciones y de la reducción de capital con devolución de aportaciones",
+    "No obstante, existirá obligación de practicar retención o ingreso a cuenta sobre los rendimientos del capital mobiliario",
+]
+
 [legal."rd-439-2007:art-95"]
 evidence_tier = "legal_authority"
 authority = "boe"

@@ -547,11 +547,12 @@ nitpick_ignore_regex = [
     (
         r"py:.*",
         r"^(CasillaDelta|CasillaInputs|CounterpartSourceKind|FiledCaptureReport|"
-        r"FiledDeclaracionArtefactSink|IvaCompensationAuthority|"
+        r"FiledDeclaracionArtefactSink|IvaCompensationAuthority|JsonObject|"
         r"IvaCompensationAuthorityKind|IvaCompensationDivergence|LocaleNode|"
         r"ModeloAmendment|ModeloCalculationRevisionDefault|ModeloCode|"
         r"ModeloInputScalar|ModeloInputValue|ModeloInputs|ModeloWorkTarget|"
-        r"RegisteredSchema|SourceEvidenceFingerprint|UserProfileFactValue)$",
+        r"PlaywrightStorageState|ProviderSessionMetadata|RegisteredSchema|"
+        r"SourceEvidenceFingerprint|UserProfileFactValue)$",
     ),
     # References into private (single-underscore) modules or to private classes
     # (``pkg._mod.Thing``, ``pkg.mod._Private``), which are implementation

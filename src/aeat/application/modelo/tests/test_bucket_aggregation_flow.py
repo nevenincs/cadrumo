@@ -98,7 +98,7 @@ def _raw_transaction(
     amount: Decimal,
 ) -> RawTransaction:
     return RawTransaction(
-        transaction_id=provider_id,
+        provider_transaction_id=provider_id,
         booked_date=booked_date,
         value_date=booked_date,
         amount=amount,
@@ -380,6 +380,38 @@ def test_calculate_modelo_revision_from_bucket_aggregation_refuses_when_ledger_p
     assert "%{detail}" not in rendered
     assert "deductible-expense ledger transaction has no category_id" in rendered
 
+    assert len(cr_repo.load()) == 0
+
+
+def test_m303_still_blocks_base_only_rows_missing_iva_facts(
+    secure_objects: SecureObjectRepository,
+) -> None:
+    """IVA-owned modelos still require IVA amount/rate facts for equivalent base-only rows."""
+    _store_profile(secure_objects)
+    wu_repo, cr_repo, event_repo, tx_repo = _repositories(secure_objects)
+    work_unit = _seed_303_work_unit(wu_repo)
+    base_only = _transaction(
+        "purchase-base-only",
+        direction=TransactionDirection.OUTGOING,
+        amount=Decimal("121.00"),
+        taxable_base=Decimal("100.00"),
+        iva_amount=Decimal("21.00"),
+    ).model_copy(update={"iva_amount": None, "iva_rate": None})
+    tx_repo.save(TransactionCatalogue.from_transactions((base_only,)))
+
+    with pytest.raises(ModeloAggregationBindingError) as exc_info:
+        calculate_modelo_revision_from_bucket_aggregation(
+            work_unit.work_unit_id,
+            actor="operator-A",
+            work_unit_repository=wu_repo,
+            calculation_repository=cr_repo,
+            bucket_event_repository=event_repo,
+            transaction_repository=tx_repo,
+            clock=_T1,
+        )
+
+    assert exc_info.value.translated_message == "application.modelo.errors.ledger_preflight_blocked"
+    assert exc_info.value.context["reason"] == "missing_iva_amount"
     assert len(cr_repo.load()) == 0
 
 

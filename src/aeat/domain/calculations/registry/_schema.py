@@ -570,6 +570,7 @@ class WorkbookParityReference(RegistryModel):
 class VerificationExpectationDefinition(RegistryModel):
     id: VerificationExpectationId
     computed_casilla_ids: tuple[CasillaId, ...]
+    reconcile_when_present_casilla_ids: tuple[CasillaId, ...] = ()
     reconciliation_total_casilla_ids: Mapping[Literal["ingresar", "devolver"], CasillaId] = Field(
         default_factory=dict,
     )
@@ -589,6 +590,25 @@ class VerificationExpectationDefinition(RegistryModel):
         if len(set(value)) != len(value):
             raise RegistryValidationError("verification expectation computed_casilla_ids must be unique")
         return value
+
+    @field_validator("reconcile_when_present_casilla_ids")
+    @classmethod
+    def _reconcile_when_present_unique(cls, value: tuple[CasillaId, ...]) -> tuple[CasillaId, ...]:
+        if len(set(value)) != len(value):
+            raise RegistryValidationError(
+                "verification expectation reconcile_when_present_casilla_ids must be unique",
+            )
+        return value
+
+    @model_validator(mode="after")
+    def _reconcile_when_present_disjoint(self) -> VerificationExpectationDefinition:
+        overlap = set(self.reconcile_when_present_casilla_ids) & set(self.computed_casilla_ids)
+        if overlap:
+            raise RegistryValidationError(
+                "verification expectation reconcile_when_present_casilla_ids must be disjoint from "
+                f"computed_casilla_ids (overlap: {sorted(overlap)})",
+            )
+        return self
 
 
 class ApplicationLinkDefinition(RegistryModel):
@@ -1028,6 +1048,23 @@ KNOWN_VERIFICATION_PREDICATE_OPERATORS: frozenset[str] = frozenset(
         # _evaluate_advisory_predicate_fires and the
         # m210-categorical-conditional-predicate ADR.
         "casilla_equals_implies_nonzero",
+        # deduccion_requires_adquisicion_before(["amount_casilla_id",
+        # "acquisition_date_casilla_id", "construction_date_casilla_id",
+        # "cutoff_iso"]) — eligibility-conditional advisory: FIRES (ADVISORY
+        # shown) when the named amount (Decimal) casilla is strictly positive
+        # (a deducción is claimed) AND neither eligibility signal is present —
+        # the acquisition-date TEXT casilla holding a date strictly before the
+        # cutoff, nor the construction-date TEXT casilla being non-empty. The
+        # one no-silent-over-declaration shape the numeric/categorical operators
+        # cannot express because its trigger combines a claimed amount with a
+        # DATE-threshold eligibility test read from the operator-entered raw
+        # text. ADVISORY-only (no BLOCKING_RULE branch). Authored for the
+        # Modelo 100 deducción por inversión en vivienda habitual, whose
+        # transitional régimen (LIRPF DT 18ª) admits only dwellings acquired
+        # before 01-01-2013 (or pre-2013 construction). See the
+        # deduccion_requires_adquisicion_before branch in
+        # _evaluate_advisory_predicate_fires.
+        "deduccion_requires_adquisicion_before",
         # equals(["lhs_id", "rhs_id"]) — consistency invariant: the two named
         # casillas must hold the same value. Authored for the M303 official
         # Diseño box projections (Stage 2): each numbered box copies a semantic
@@ -1133,6 +1170,25 @@ class VerificationPredicateDefinition(RegistryModel):
       because its trigger is a categorical equality (``tipo_renta ==
       "inmobiliaria"``) rather than a numeric antecedent. See the
       m210-categorical-conditional-predicate ADR.
+    - ``deduccion_requires_adquisicion_before(["amount_casilla_id",
+      "acquisition_date_casilla_id", "construction_date_casilla_id",
+      "cutoff_iso"])`` — eligibility-conditional advisory: FIRES (ADVISORY
+      shown) iff the named amount (Decimal) casilla is strictly positive (a
+      deducción is claimed) AND no pre-cutoff eligibility signal is recorded,
+      i.e. the acquisition-date TEXT casilla does NOT hold a date strictly
+      before ``cutoff_iso`` AND the construction-date TEXT casilla is empty. A
+      claimed amount with a pre-cutoff acquisition date, a non-empty
+      construction date, or a zero/absent amount holds trivially (no advisory).
+      ADVISORY-only: no ``BLOCKING_RULE`` branch is implemented, mirroring the
+      ``casilla_equals_implies_nonzero`` / ``advisory_when_ratio_ge``
+      ADVISORY-only convention. Authored for the Modelo 100 deducción por
+      inversión en vivienda habitual, whose transitional régimen (LIRPF DT 18ª)
+      admits only dwellings acquired before 01-01-2013 (or pre-2013
+      construction); a post-2013 acquirer claiming the abolished deducción
+      would silently over-declare the deducción (under-declare tax), the
+      no-silent-under-declaration shape neither ``implies_nonzero`` (numeric
+      antecedent) nor ``casilla_equals_implies_nonzero`` (categorical text
+      equality) can express because its trigger is a DATE threshold.
     """
 
     predicate_id: str = Field(min_length=1, max_length=128)
@@ -1233,12 +1289,21 @@ class RegistryVerificationPolicy:
     """Folded verification policy across a snapshot's verification expectations.
 
     Owns the registry-grounded projection (union of computed casilla ids, the
-    strictest tolerance, the strictest coverage floor) so the application
-    verification surface consumes it rather than re-deriving the fold.
+    union of reconcile-when-present casilla ids, the strictest tolerance, the
+    strictest coverage floor) so the application verification surface consumes
+    it rather than re-deriving the fold.
+
+    ``computed_casilla_ids`` are the coverage-gated reconciliation targets: a
+    filing that fails to reconcile them below ``min_coverage`` is NEEDS_REVIEW.
+    ``reconcile_when_present_casilla_ids`` are value-reconciled when the filing
+    prints them (a filed-vs-computed divergence surfaces a discrepancy) but are
+    excluded from the coverage denominator, so enrolling a situational casilla
+    can never lower coverage and flip a legitimate filing's verdict.
     """
 
     expectation_ids: tuple[VerificationExpectationId, ...]
     computed_casilla_ids: frozenset[CasillaId]
+    reconcile_when_present_casilla_ids: frozenset[CasillaId]
     tolerance: Decimal
     min_coverage: Decimal
 
@@ -1291,6 +1356,11 @@ class RegistrySnapshot(RegistryModel):
             expectation_ids=tuple(expectation.id for expectation in expectations),
             computed_casilla_ids=frozenset(
                 casilla_id for expectation in expectations for casilla_id in expectation.computed_casilla_ids
+            ),
+            reconcile_when_present_casilla_ids=frozenset(
+                casilla_id
+                for expectation in expectations
+                for casilla_id in expectation.reconcile_when_present_casilla_ids
             ),
             tolerance=min(expectation.tolerance for expectation in expectations),
             min_coverage=max(expectation.min_coverage for expectation in expectations),

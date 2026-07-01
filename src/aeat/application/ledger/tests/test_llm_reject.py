@@ -62,7 +62,7 @@ def repositories(
 
 def _seed_parent(repository: TransactionCatalogueRepository, *, amount: Decimal = Decimal("121.00")) -> str:
     raw = RawTransaction(
-        transaction_id="row-reject",
+        provider_transaction_id="row-reject",
         booked_date=date(2026, 5, 1),
         value_date=date(2026, 5, 1),
         amount=amount,

@@ -284,10 +284,11 @@ def test_m123_2024_carries_base_total_implies_retenciones_total_advisory() -> No
     Casilla 06 (base total = [04] + [05]) and casilla 09 (retenciones total =
     [07] + [08]) are both formula-computed from independently manual leaf
     casillas. A positive base total with a zero retenciones total has no
-    legitimate cause under RD 439/2007 art. 90 (19 por ciento withholding on
-    rendimientos del capital mobiliario), so the ADVISORY `implies_nonzero`
-    predicate surfaces an operator-facing finding rather than silently
-    granting VERIFICADO_COMPLETO (`no-silent-under-declaration`).
+    legitimate cause under RD 439/2007 arts. 75 and 90: art. 75 identifies
+    capital-mobiliario rents subject to withholding and the type-based
+    exceptions, while art. 90 sets the positive rate for the withholding base.
+    The ADVISORY `implies_nonzero` predicate therefore surfaces a finding
+    rather than silently granting VERIFICADO_COMPLETO.
     """
     snapshot = _snapshot_2024()
 
@@ -299,5 +300,7 @@ def test_m123_2024_carries_base_total_implies_retenciones_total_advisory() -> No
         "must stay non-blocking: a category whose payer applied no withholding "
         "in one leaf while the other leaf covers it must not refuse the draft"
     )
-    assert "rd-439-2007:art-90" in tuple(str(r) for r in predicate.legal_refs)
-    assert "ley-35-2006:art-101" in tuple(str(r) for r in predicate.legal_refs)
+    legal_refs = tuple(str(r) for r in predicate.legal_refs)
+    assert "rd-439-2007:art-90" in legal_refs
+    assert "rd-439-2007:art-75" in legal_refs
+    assert "ley-35-2006:art-101" in legal_refs

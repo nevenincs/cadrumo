@@ -145,23 +145,22 @@ def _binding(
 # ---------------------------------------------------------------------------
 
 
-def test_export_fields_overlap_returns_false_when_left_offset_is_none() -> None:
-    left = _field(field_id="a", offset=None, length=5)
-    right = _field(field_id="b", offset=0, length=5)
-
-    assert _export_fields_overlap(left, right) is False
-
-
-def test_export_fields_overlap_returns_false_when_left_length_is_none() -> None:
-    left = _field(field_id="a", offset=0, length=None)
-    right = _field(field_id="b", offset=0, length=5)
-
-    assert _export_fields_overlap(left, right) is False
-
-
-def test_export_fields_overlap_returns_false_when_right_offset_is_none() -> None:
-    left = _field(field_id="a", offset=0, length=5)
-    right = _field(field_id="b", offset=None, length=5)
+@pytest.mark.parametrize(
+    ("left_offset", "left_length", "right_offset", "right_length"),
+    (
+        pytest.param(None, 5, 0, 5, id="left-offset"),
+        pytest.param(0, None, 0, 5, id="left-length"),
+        pytest.param(0, 5, None, 5, id="right-offset"),
+    ),
+)
+def test_export_fields_overlap_returns_false_when_position_is_incomplete(
+    left_offset: int | None,
+    left_length: int | None,
+    right_offset: int | None,
+    right_length: int | None,
+) -> None:
+    left = _field(field_id="a", offset=left_offset, length=left_length)
+    right = _field(field_id="b", offset=right_offset, length=right_length)
 
     assert _export_fields_overlap(left, right) is False
 

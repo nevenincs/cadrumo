@@ -32,21 +32,19 @@ from dataclasses import dataclass
 from decimal import Decimal, InvalidOperation
 from typing import Literal
 
-from ...core import Modelo
+from ...core._modelo import Modelo
 from ...core.errors import AeatError
 from ...core.external_constants import M347_THRESHOLD_EUR
 from ...core.resources import resources
-from ...domain.calculations.registry import (
-    BindingId,
-    CasillaId,
-    ModeloRevision,
-    RelationId,
+from ...domain.calculations.registry._binding_selector_utils import boolean_binding_encoded_values
+from ...domain.calculations.registry._casilla_membership import (
     casilla_noncanonical_reference_targets,
     casillas_by_id,
     declared_casilla_ids,
-    enum_consumed_binding_ids,
-    revision_date_binding_ids,
 )
+from ...domain.calculations.registry._ids import BindingId, CasillaId, RelationId
+from ...domain.calculations.registry._runtime_graph import enum_consumed_binding_ids, revision_date_binding_ids
+from ...domain.calculations.registry._schema import DataBindingDefinition, ModeloRevision
 from ...domain.contribuyente._deduccion_maternidad import compute_deduccion_maternidad_0611
 from ...domain.modelos._calculation_revision import CalculationRevision
 from ...domain.modelos._dt12_reduccion import compute_dt12_reduccion_plan_pensiones
@@ -63,7 +61,7 @@ from ...domain.modelos._row_models import (
 )
 from ...domain.modelos._sal_reserva_especial import compute_sal_reserva_especial_dotacion
 from ...domain.modelos._work_unit import WorkUnit
-from ..aggregation import CalculationSourceDiagnostic
+from ..aggregation._source_mesh import CalculationSourceDiagnostic
 from ._registry_helpers import validate_casilla_input_ids
 from ._semantic_role_resolution import (
     AmbiguousSemanticRoleCasillaError,
@@ -265,6 +263,7 @@ def calculate_modelo_work_revision(
         work_unit_id,
         actor=actor,
         casilla_inputs=inputs.casilla_inputs,
+        text_casilla_inputs=inputs.optional_text_casilla_inputs(),
         binding_values=inputs.optional_binding_values(),
         enum_binding_values=inputs.optional_enum_binding_values(),
         borrador_snapshot_id=inputs.borrador_snapshot_id,
@@ -337,7 +336,8 @@ def build_work_calculate_input_bundle(
     binding_values: dict[BindingId, Decimal] = {}
     enum_binding_values: dict[BindingId, str] = {}
     if binding_overrides:
-        known_binding_ids = {binding.id for binding in revision.bindings}
+        bindings_by_id = {binding.id: binding for binding in revision.bindings}
+        known_binding_ids = set(bindings_by_id)
         enum_channel_ids = enum_consumed_binding_ids(revision)
         date_channel_ids = revision_date_binding_ids(revision)
         for raw_key, raw_value in binding_overrides.items():
@@ -355,7 +355,7 @@ def build_work_calculate_input_bundle(
             if channel == "enum":
                 enum_binding_values[key] = raw_value
             else:
-                binding_values[key] = _decimal(raw_value, flag="--binding", key=key)
+                binding_values[key] = _decimal_binding_value(raw_value, bindings_by_id[key])
 
     casilla_inputs, binding_values = apply_calculation_shortcut_inputs(
         work_unit_id=work_unit_id,
@@ -418,6 +418,46 @@ def _decimal(raw_value: str, *, flag: str, key: str) -> Decimal:
         raise ModeloCalculateDecimalInputError(
             f"{flag} value for {key!r} is not a decimal: {raw_value!r}",
             context={"flag": flag, "key": key, "value": raw_value},
+            translated_message="application.modelo.errors.calculate_decimal_input_invalid",
+        ) from exc
+
+
+def _decimal_binding_value(raw_value: str, binding: DataBindingDefinition) -> Decimal:
+    """Parse a ``--binding`` decimal value, teaching the accepted encoding on failure.
+
+    For a boolean-typed decimal-channel binding (the Modelo 100 estimación-directa
+    modality flag), a non-numeric value such as ``false`` otherwise produces the
+    opaque "is not a decimal" error. This raises an instructive refusal that names
+    the accepted ``0`` / ``1`` encoding and what each value means, derived from the
+    binding's boolean selector rather than a per-form hardcoded table.
+    """
+    encoded_options = boolean_binding_encoded_values(binding)
+    try:
+        return Decimal(raw_value)
+    except (InvalidOperation, ValueError) as exc:
+        if encoded_options:
+            mapping = ", ".join(
+                f"{option.encoded_value} ({'true' if option.boolean_meaning else 'false'} = "
+                f"registry value {option.registry_value!r})"
+                for option in encoded_options
+            )
+            accepted = ", ".join(option.encoded_value for option in encoded_options)
+            raise ModeloCalculateDecimalInputError(
+                f"--binding value for {binding.id!r} is a decimal-encoded boolean flag and must "
+                f"be one of: {accepted}. Received {raw_value!r}. Accepted encoding: {mapping}. "
+                "Run `aeat app modelo bindings list <MODELO>` to see each binding's encoding.",
+                context={
+                    "flag": "--binding",
+                    "key": binding.id,
+                    "value": raw_value,
+                    "accepted": accepted,
+                    "mapping": mapping,
+                },
+                translated_message="application.modelo.errors.calculate_boolean_binding_encoding_invalid",
+            ) from exc
+        raise ModeloCalculateDecimalInputError(
+            f"--binding value for {binding.id!r} is not a decimal: {raw_value!r}",
+            context={"flag": "--binding", "key": binding.id, "value": raw_value},
             translated_message="application.modelo.errors.calculate_decimal_input_invalid",
         ) from exc
 
@@ -575,9 +615,9 @@ def modelo_202_modality_for_work_unit(work_unit: WorkUnit) -> Modelo202ModalityS
     if str(work_unit.modelo) != Modelo.M202:
         return None
 
-    from ...application.user_profile import projection_for_taxpayer
-    from ...application.workflow import workflow_state_repository
-    from ...domain.calculations.registry.applicability import derive_modelo_202_modality
+    from ...application.user_profile._projections import projection_for_taxpayer
+    from ...domain.calculations.registry._applicability_modelo202 import derive_modelo_202_modality
+    from ..workflow._persistence import workflow_state_repository
 
     state = workflow_state_repository().load()
     record = state.active_profile_record()

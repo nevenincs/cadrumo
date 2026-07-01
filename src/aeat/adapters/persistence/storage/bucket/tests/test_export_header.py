@@ -68,30 +68,18 @@ def test_rejects_missing_digest() -> None:
         )
 
 
-def test_rejects_non_hex_digest() -> None:
-    with pytest.raises(ValidationError):
-        _header(manifest_digest="z" * 64)
-
-
-def test_rejects_short_digest() -> None:
-    with pytest.raises(ValidationError):
-        _header(manifest_digest="a" * 63)
-
-
-def test_rejects_uppercase_digest() -> None:
-    with pytest.raises(ValidationError):
-        _header(manifest_digest=_digest().upper())
-
-
 @pytest.mark.parametrize(
     "manifest_digest",
     (
-        "+" + ("a" * 63),
-        " " + ("a" * 63),
-        ("a" * 63) + "\n",
+        pytest.param("z" * 64, id="non-hex"),
+        pytest.param("a" * 63, id="short"),
+        pytest.param(_digest().upper(), id="uppercase"),
+        pytest.param("+" + ("a" * 63), id="leading-sign"),
+        pytest.param(" " + ("a" * 63), id="leading-space"),
+        pytest.param(("a" * 63) + "\n", id="trailing-newline"),
     ),
 )
-def test_rejects_sign_or_whitespace_digest_spellings(manifest_digest: str) -> None:
+def test_rejects_invalid_digest_spellings(manifest_digest: str) -> None:
     with pytest.raises(ValidationError):
         _header(manifest_digest=manifest_digest)
 
@@ -101,14 +89,16 @@ def test_rejects_empty_bucket_id() -> None:
         _header(bucket_id="")
 
 
-def test_rejects_non_positive_archive_schema_version() -> None:
+@pytest.mark.parametrize(
+    "archive_schema_version",
+    (
+        pytest.param(0, id="non-positive"),
+        pytest.param("1", id="coerced"),
+    ),
+)
+def test_rejects_invalid_archive_schema_version(archive_schema_version: object) -> None:
     with pytest.raises(ValidationError):
-        _header(archive_schema_version=0)
-
-
-def test_rejects_coerced_archive_schema_version() -> None:
-    with pytest.raises(ValidationError):
-        _header(archive_schema_version="1")
+        _header(archive_schema_version=archive_schema_version)
 
 
 def test_rejects_coerced_recovery_wrap_flag() -> None:

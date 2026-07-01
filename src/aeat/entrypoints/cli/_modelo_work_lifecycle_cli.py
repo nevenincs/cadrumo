@@ -185,6 +185,19 @@ def _register_work_create_command(work_app: typer.Typer, deps: _LifecycleDeps) -
                 ),
             ),
         ] = False,
+        quiet: Annotated[
+            bool,
+            typer.Option(
+                "--quiet",
+                help=tr(
+                    "cli.app.modelo.work.create_quiet_help",
+                    default=(
+                        "Omitir la salida de confirmación legible; el envoltorio --format json, "
+                        "los avisos y el código de salida no se ven afectados."
+                    ),
+                ),
+            ),
+        ] = False,
         causante_ccaa_raw: Annotated[
             str | None,
             typer.Option(
@@ -270,6 +283,7 @@ def _register_work_create_command(work_app: typer.Typer, deps: _LifecycleDeps) -
             name=name,
             name_applied=ensure_result.name_applied,
             allow_not_applicable=allow_not_applicable,
+            quiet=quiet,
         )
 
 
@@ -303,6 +317,7 @@ def _emit_work_create_result(
     name: str | None,
     name_applied: str | None,
     allow_not_applicable: bool,
+    quiet: bool = False,
 ) -> None:
     status = "reused" if reused else "created"
     if reused:
@@ -321,14 +336,23 @@ def _emit_work_create_result(
             **work_unit_payload(unit).model_dump(mode="python"),
         },
     )
-    lines = [
-        f"operation\t{operation}",
-        f"status\t{status}",
-        *work_unit_lines(unit),
-        status_message,
-    ]
     obligation_notices, obligation_lines = _modelo_100_obligation_advisory_output(unit)
-    lines.extend(obligation_lines)
+    # ``--quiet`` trims the human success prose (operation/status header,
+    # work-unit summary, confirmation message) for text mode only. The
+    # notice channel is preserved verbatim — obligation advisories still
+    # print — and the JSON envelope (``result`` + ``notices``) is emitted
+    # unchanged regardless, since ``_emit_envelope`` ignores ``lines`` in
+    # JSON mode. Errors raise before reaching this emit path.
+    if quiet:
+        lines = list(obligation_lines)
+    else:
+        lines = [
+            f"operation\t{operation}",
+            f"status\t{status}",
+            *work_unit_lines(unit),
+            status_message,
+            *obligation_lines,
+        ]
     _emit_envelope(ctx, command="modelo.work.create", result=result, lines=lines, notices=obligation_notices)
 
 

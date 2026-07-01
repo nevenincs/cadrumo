@@ -77,7 +77,7 @@ def _build_work_unit(bucket_id: str) -> WorkUnit:
 def _blocking_transaction() -> Transaction:
     """Return an ACTIVE unclassified transaction in Q1-2026 (NOT_YET_PROCESSED → blocks preflight)."""
     raw = RawTransaction(
-        transaction_id="tx-block-001",
+        provider_transaction_id="tx-block-001",
         booked_date=date(2026, 2, 10),
         value_date=date(2026, 2, 10),
         amount=Decimal("121.00"),

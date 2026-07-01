@@ -145,7 +145,7 @@ def _seed_parent(
 ) -> str:
     """Persist one ACTIVE parent transaction and return its id."""
     raw = RawTransaction(
-        transaction_id="row-split-parent",
+        provider_transaction_id="row-split-parent",
         booked_date=date(2026, 5, 1),
         value_date=date(2026, 5, 1),
         amount=amount,

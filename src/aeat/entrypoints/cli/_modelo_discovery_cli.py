@@ -17,6 +17,8 @@ from ...application.modelo import (
     registry_bindings,
     registry_bindings_for_scope,
     registry_bindings_for_year,
+    registry_casilla,
+    registry_casilla_for_registry_scope,
     registry_casillas,
     registry_casillas_for_registry_scope,
     registry_describe_modelo,
@@ -44,11 +46,13 @@ from ._modelo_payloads import (
     FormulasResult,
     ModeloBindingsListResult,
     ModeloBindingsPreviewResult,
+    ModeloCasillaResult,
     ModeloCasillasResult,
     ModeloDescribeResult,
     ModeloListResult,
     ModeloRowPayload,
 )
+from ._modelo_rendering import binding_encoded_option_lines, binding_encoded_option_payloads
 
 
 @dataclass(frozen=True, slots=True)
@@ -90,6 +94,7 @@ def register_discovery_commands(
     _register_list_command(app, deps)
     _register_describe_command(app, deps)
     _register_casillas_command(app, deps)
+    _register_casilla_command(app, deps)
     _register_bindings_list_command(bindings_app, deps)
     _register_bindings_resolve_command(bindings_app, deps)
     _register_formulas_command(app, deps)
@@ -382,6 +387,94 @@ def _register_casillas_command(app: typer.Typer, deps: _DiscoveryDeps) -> None:
         _emit_envelope(ctx, command="modelo.casillas", result=result, lines=lines)
 
 
+def _register_casilla_command(app: typer.Typer, deps: _DiscoveryDeps) -> None:
+    @app.command(
+        "casilla",
+        help=tr(
+            "cli.app.modelo.casilla.help",
+            default=(
+                "Show the label, legal grounding, input kind, and formula for one "
+                "casilla on the resolved registry snapshot."
+            ),
+        ),
+    )
+    def casilla(
+        ctx: typer.Context,
+        modelo: Annotated[
+            str,
+            typer.Argument(help=tr("cli.app.modelo.casillas.modelo_help")),
+        ],
+        casilla_id: Annotated[
+            str,
+            typer.Argument(
+                help=tr(
+                    "cli.app.modelo.casilla.casilla_help",
+                    default="Casilla id or printed casilla number to describe (e.g. 0596).",
+                ),
+            ),
+        ],
+        year: Annotated[int | None, typer.Option("--year", help=tr("cli.app.modelo.list.year_help"))] = None,
+        period: Annotated[str | None, typer.Option("--period", help=tr("cli.app.modelo.casillas.period_help"))] = None,
+        as_of: Annotated[str | None, typer.Option("--as-of", help=tr("cli.app.modelo.casillas.as_of_help"))] = None,
+    ) -> None:
+        def _query():
+            resolved_scope = _resolve_discovery_year_period(modelo=modelo, year=year, period=period, deps=deps)
+            if resolved_scope is not None:
+                return registry_casilla_for_registry_scope(
+                    modelo,
+                    casilla_id,
+                    filing_year=resolved_scope.filing_year,
+                    period=resolved_scope.period,
+                    as_of=_as_of(as_of),
+                )
+            return registry_casilla(modelo, casilla_id, period=period, as_of=_as_of(as_of))
+
+        report = _run_query(_query, bad_parameter_from_error=deps.bad_parameter_from_error)
+        lang = output_language()
+        label = report.localized_labels.get(lang, report.label)
+        result = ModeloCasillaResult(
+            modelo=report.code,
+            revision=report.revision,
+            filing_year=report.filing_year,
+            period=report.period,
+            casilla_id=report.casilla_id,
+            number=report.number,
+            label=label,
+            localized_labels=dict(report.localized_labels),
+            localized_help=dict(report.localized_help),
+            section=tuple(report.section),
+            data_type=report.data_type,
+            input_kind=str(report.input_kind),
+            required=bool(report.required),
+            legal_refs=tuple(report.legal_refs),
+            source_refs=tuple(report.source_refs),
+            binding=report.binding,
+            formula_id=report.formula_id,
+            formula_expression=dict(report.formula_expression) if report.formula_expression is not None else None,
+        )
+        lines = [
+            f"modelo\t{report.code}",
+            f"revision\t{report.revision}",
+            f"casilla_id\t{report.casilla_id}",
+            f"number\t{report.number}",
+            f"input_kind\t{report.input_kind}",
+            f"required\t{str(bool(report.required)).lower()}",
+            f"data_type\t{report.data_type}",
+            f"label\t{label}",
+            f"section\t{' > '.join(report.section)}",
+            f"legal_refs\t{', '.join(report.legal_refs)}",
+            f"source_refs\t{', '.join(report.source_refs)}",
+            f"binding\t{report.binding or '-'}",
+            f"formula_id\t{report.formula_id or '-'}",
+        ]
+        help_text = report.localized_help.get(lang)
+        if help_text:
+            lines.append(f"help\t{help_text}")
+        if report.formula_expression is not None:
+            lines.append(f"formula_expression\t{report.formula_expression}")
+        _emit_envelope(ctx, command="modelo.casilla", result=result, lines=lines)
+
+
 _BINDING_SOURCE_TO_READINESS: dict[str, str] = {
     "constant_value": "casilla",
     "previous_filing": "prior filed revision",
@@ -512,6 +605,7 @@ def _binding_list_rows_for_report(report, *, missing: bool) -> tuple[list[Bindin
     text_rows: list[str] = []
     for row in rows:
         readiness = _readiness_for_source(row.source)
+        encoded_options = binding_encoded_option_payloads(row.encoded_options)
         merged_rows.append(
             BindingListRowPayload(
                 modelo=report.code,
@@ -527,6 +621,7 @@ def _binding_list_rows_for_report(report, *, missing: bool) -> tuple[list[Bindin
                 legal_refs=row.legal_refs,
                 source_refs=row.source_refs,
                 relation_inputs=row.relation_inputs,
+                encoded_options=encoded_options,
             ),
         )
         text_rows.append(
@@ -534,6 +629,7 @@ def _binding_list_rows_for_report(report, *, missing: bool) -> tuple[list[Bindin
             f"{row.binding_id}\t{row.source}\t{readiness}\t{row.typed_enum or '-'}\t"
             f"{row.input_channel}\t{row.borrador_capable}",
         )
+        text_rows.extend(binding_encoded_option_lines(row.binding_id, encoded_options))
     if missing:
         text_rows.extend(_relation_input_guidance_lines(rows))
     return merged_rows, text_rows
@@ -686,6 +782,7 @@ def _register_bindings_resolve_command(bindings_app: typer.Typer, deps: _Discove
                     legal_refs=row.legal_refs,
                     source_refs=row.source_refs,
                     relation_inputs=row.relation_inputs,
+                    encoded_options=binding_encoded_option_payloads(row.encoded_options),
                 )
                 for row in report.rows
             ],
@@ -700,17 +797,23 @@ def _register_bindings_resolve_command(bindings_app: typer.Typer, deps: _Discove
             f"binding_count\t{len(report.rows)}",
             "binding_id\tsource\treadiness\toverride",
         ]
-        lines.extend(
-            "\t".join(
-                (
-                    row.binding_id,
-                    row.source,
-                    _readiness_for_source(row.source),
-                    overrides.get(row.binding_id) or "-",
+        for row in report.rows:
+            lines.append(
+                "\t".join(
+                    (
+                        row.binding_id,
+                        row.source,
+                        _readiness_for_source(row.source),
+                        overrides.get(row.binding_id) or "-",
+                    ),
                 ),
             )
-            for row in report.rows
-        )
+            lines.extend(
+                binding_encoded_option_lines(
+                    row.binding_id,
+                    binding_encoded_option_payloads(row.encoded_options),
+                ),
+            )
         _emit_envelope(ctx, command="modelo.bindings.resolve", result=result, lines=lines)
 
 

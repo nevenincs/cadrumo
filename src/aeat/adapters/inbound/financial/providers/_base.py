@@ -615,7 +615,7 @@ def build_raw_transaction(
     path: Path,
     source_sha256: str,
     source_row_index: int,
-    transaction_id: str,
+    provider_transaction_id: str,
     booked_date: date,
     value_date: date | None,
     amount: Decimal,
@@ -643,7 +643,7 @@ def build_raw_transaction(
         )
     direction = direction_from_signed_amount(amount)
     raw = RawTransaction(
-        transaction_id=transaction_id,
+        provider_transaction_id=provider_transaction_id,
         booked_date=booked_date,
         value_date=value_date,
         amount=abs(amount),
