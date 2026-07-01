@@ -7,6 +7,8 @@ filing, ledger imports, profile lifecycle, etc.) emit immutable
 operator can reconstruct *how* current state was reached, not only
 *what* it is now. The history is audit context, not the source of
 relational truth for ledger, profile, modelo, or filing state.
+Those domains keep their current-state catalogues; bucket history preserves the
+structured transition record and object references that tie them together.
 
 Each :class:`BucketEvent` is content-addressed by bucket id,
 :class:`BucketEventType`, occurrence time, actor,
@@ -52,6 +54,16 @@ See Also:
     :mod:`~aeat.application.workflow`
         Active-profile state and bucket-pointer workflows that provide the
         current storage slice observed by bucket event consumers.
+    :mod:`aeat.application.modelo`
+        Work-unit calculation, verification, filing, import, export, and
+        reconciliation services that emit modelo events while persisting
+        modelo catalogues separately.
+    :mod:`aeat.application.ledger`
+        Ledger transaction lifecycle that emits bucket events for imports,
+        edits, classifications, evidence attachment, and removal.
+    :mod:`aeat.application.invoices`
+        Invoice import, reconciliation, and ledger-link workflows whose events
+        reference invoice and transaction objects without replacing catalogues.
 """
 
 from __future__ import annotations
