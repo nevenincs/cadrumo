@@ -27,8 +27,29 @@ Portable export composition follows the same split.
 :func:`~aeat.application.user_profile.deserialize_profile_bundle` live on
 this facade so CLI config and bucket-maintenance code compose through
 top-level re-exports, while the bundle payload remains the domain-layer
-:class:`~aeat.domain.user_profile.UserProfilePortableExport`. Projection
-and baseline helpers such as
+:class:`~aeat.domain.user_profile.UserProfilePortableExport`. The current
+v3 bundle is the only accepted import shape. Its default
+:class:`~aeat.adapters.persistence.storage.StorageCustodyProfile.STRUCTURED`
+scope carries the typed profile, work-unit, ledger, calculation, and
+filing categories plus registry-selected secure-object rows. Sealed
+bucket backup requests
+:class:`~aeat.adapters.persistence.storage.StorageCustodyProfile.FULL`,
+which asserts every populated secure-object namespace has a registry
+custody disposition before export. Generic carried rows use their natural
+object keys rather than stored HMAC lookup digests, so import can
+re-save them through the target bucket's secure-object substrate and
+re-encrypt under the recipient bucket DEK.
+
+Custody helpers exposed here are application commands over storage-owned
+secret-store primitives. :func:`~aeat.application.user_profile.mint_recovery_code`,
+:func:`~aeat.application.user_profile.verify_recovery_code`,
+:func:`~aeat.application.user_profile.rekey_secret_store`, and
+:func:`~aeat.application.user_profile.recover_secret_store` resolve
+runtime settings, update active-bucket recovery metadata when needed,
+and return typed result records while leaving key wrapping and recovery
+envelope persistence in :mod:`aeat.adapters.persistence.storage`.
+
+Projection and baseline helpers such as
 :func:`~aeat.application.user_profile.record_to_path_values`,
 :func:`~aeat.application.user_profile.projection_for_taxpayer`, and
 :func:`~aeat.application.user_profile.missing_filing_baseline_flags`
@@ -59,6 +80,10 @@ See Also:
     :mod:`aeat.application.bucket_maintenance`
         Bucket lifecycle facade that composes this package's portable-bundle
         serialiser and deserialiser for sealed export/import.
+    :mod:`aeat.adapters.persistence.storage`
+        Secure-object repository, namespace custody registry, and master-key
+        recovery primitives composed by this facade without owning storage
+        policy.
     :mod:`aeat.application.modelo`
         Filing-grade modelo workflows that consume profile preflight and
         projection helpers from this boundary.
