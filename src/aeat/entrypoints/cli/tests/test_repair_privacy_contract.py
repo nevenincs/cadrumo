@@ -25,6 +25,8 @@ from ....tests.secure_sql import isolated_profile_storage_root
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
 _UUID_PATTERN = re.compile(r"[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}")
+_SESSION_OPENED_AT = datetime(2099, 5, 28, 14, 50, 0, tzinfo=UTC)
+_ROW_WRITTEN_AT = datetime(2099, 5, 28, 14, 55, 0, tzinfo=UTC)
 
 
 @pytest.fixture(autouse=True)
@@ -71,7 +73,7 @@ def _write_row_with_wrong_bucket_key(
         kek=key,
         dek=key,
         idle_minutes=15,
-        opened_at=datetime.now(UTC),
+        opened_at=_SESSION_OPENED_AT,
     )
     with activate_session(session):
         secure_object_repository_for_active_bucket().save(
@@ -79,7 +81,7 @@ def _write_row_with_wrong_bucket_key(
             object_key=object_key,
             classification=SensitivityClass.FINANCIAL,
             schema_version=1,
-            written_at=datetime.now(UTC),
+            written_at=_ROW_WRITTEN_AT,
             payload=payload,
         )
 
