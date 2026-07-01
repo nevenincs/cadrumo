@@ -240,6 +240,17 @@ def _resolve_advisory_message_default(predicate_id: str) -> str | None:
             "rehabilitation amounts); the deducción was abolished for later acquisitions. "
             "Confirm the acquisition date qualifies before filing."
         )
+    if predicate_id in {
+        "modelo-100-2024-anualidades-alimentos-hijos-revisar-cuota-escala-separada",
+        "modelo-100-2025-anualidades-alimentos-hijos-revisar-cuota-escala-separada",
+    }:
+        return (
+            "Anualidades por alimentos a favor de los hijos are declared (casilla 0527 > 0). "
+            "These amounts receive a separate-escala treatment (LIRPF art. 64 for the state "
+            "scale and art. 75 for the autonomic scale) that is applied in the current cuota "
+            "chain without the statutory mínimo-por-descendientes gating, so the resulting "
+            "cuota may under-tax the payer. Review the cuota íntegra before filing."
+        )
     return None
 
 
@@ -248,6 +259,17 @@ def _resolve_advisory_message_default(predicate_id: str) -> str | None:
 # and denominator > 0. Used for Art. 109 RIRPF M130 high-retention exemption.
 _PREDICATE_ADVISORY_WHEN_RATIO_GE = _re.compile(
     r'^advisory_when_ratio_ge\(\["(?P<num>[^"]+)",\s*"(?P<den>[^"]+)",\s*"(?P<thr>[^"]+)"\]\)$',
+)
+# advisory_when_positive(["casilla_id"]) — single-casilla positive advisory:
+# fires (advisory shown) iff the one named casilla value is strictly > 0.
+# ADVISORY-only; see the advisory_when_positive branch in
+# _evaluate_advisory_predicate_fires. Authored for the M100 anualidades por
+# alimentos (casilla 0527), whose separate-escala treatment (LIRPF art. 64 /
+# art. 75) runs without the statutory mínimo-descendientes gating in the current
+# cuota chain — a payer declaring anualidades may be under-taxed, so the
+# populated box surfaces a non-blocking cuota-review prompt.
+_PREDICATE_ADVISORY_WHEN_POSITIVE = _re.compile(
+    r"^advisory_when_positive\(\[(?P<ids>[^\]]*)\]\)$",
 )
 # roll_forward_balances(["closing_id", "opening_id", "applied_id", "base_id"]) —
 # carry-forward stock continuity: closing == opening − applied + max(0, −base),
@@ -635,6 +657,18 @@ def _evaluate_advisory_predicate_fires(
         except _decimal.InvalidOperation:
             return False
         return (num / den) >= threshold
+    m = _PREDICATE_ADVISORY_WHEN_POSITIVE.match(expr)
+    if m:
+        # advisory_when_positive(["casilla_id"]) — fires (advisory shown) iff the
+        # single named casilla value is strictly > 0. A malformed arity (not
+        # exactly one id) does not fire (defensive, same convention as the other
+        # operators); the registry-build validator rejects a bad arity or an
+        # unknown casilla at load, so this branch only ever sees a well-formed,
+        # existing casilla in production.
+        ids = _parse_predicate_casilla_ids(m.group("ids"))
+        if len(ids) != 1:
+            return False
+        return casilla_values.get(ids[0], Decimal(0)) > Decimal(0)
     m = _PREDICATE_IMPLIES_NONZERO.match(expr)
     if m:
         ids = _parse_predicate_casilla_ids(m.group("ids"))

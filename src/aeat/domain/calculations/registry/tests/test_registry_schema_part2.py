@@ -605,6 +605,78 @@ def test_validator_accepts_committed_m100_deduccion_requires_adquisicion_before_
     RegistryValidator(catalogues, source_root=bundled_path()).validate_modelo(modelo)
 
 
+def test_validator_rejects_advisory_when_positive_wrong_arity() -> None:
+    """advisory_when_positive must name exactly one casilla id.
+
+    The single-casilla positive advisory routes through the generic
+    casilla-list validation with exact arity 1; a two-id expression is a
+    malformed authoring, rejected at registry load rather than silently never
+    firing (the runtime bad-arity branch returns False). Uses M130 so the
+    failure is the arity, not an unknown-casilla reference.
+    """
+
+    modelo, catalogues = _committed_modelo("130")
+    revision = next(iter(modelo.revisions.values()))
+    bad_arity = VerificationPredicateDefinition(
+        predicate_id="modelo-130-bad-advisory-when-positive-arity",
+        legal_refs=("rd-439-2007:art-110",),
+        expression='advisory_when_positive(["01", "07"])',  # two ids; needs exactly one
+        finding_kind="ADVISORY",
+    )
+    mutated = revision.model_copy(
+        update={"verification_predicates": (*revision.verification_predicates, bad_arity)},
+    )
+
+    with pytest.raises(RegistryValidationError, match="must name exactly 1 casilla ids"):
+        RegistryValidator(catalogues, source_root=bundled_path()).validate_modelo(_with_revision(modelo, mutated))
+
+
+def test_validator_rejects_advisory_when_positive_unknown_casilla() -> None:
+    """The single advisory_when_positive token must resolve against the casilla set."""
+
+    modelo, catalogues = _committed_modelo("130")
+    revision = next(iter(modelo.revisions.values()))
+    predicate = VerificationPredicateDefinition(
+        predicate_id="modelo-130-advisory-when-positive-unknown-casilla",
+        legal_refs=("rd-439-2007:art-110",),
+        expression='advisory_when_positive(["missing-casilla"])',
+        finding_kind="ADVISORY",
+    )
+    mutated = revision.model_copy(
+        update={"verification_predicates": (*revision.verification_predicates, predicate)},
+    )
+
+    with pytest.raises(RegistryValidationError, match="references unknown casilla 'missing-casilla'"):
+        RegistryValidator(catalogues, source_root=bundled_path()).validate_modelo(_with_revision(modelo, mutated))
+
+
+def test_validator_accepts_committed_m100_advisory_when_positive_predicate() -> None:
+    """The committed M100 anualidades cuota-review advisory validates cleanly.
+
+    Pins that the registry-build validator accepts the single-casilla
+    advisory_when_positive shape shipped on the 2024 and 2025 M100 revisions
+    (LIRPF art. 64 / art. 75 anualidades separate-escala review advisory,
+    interim to issue #532). A future operator-set reduction that drops
+    advisory_when_positive from the known set would surface here.
+    """
+
+    modelo, catalogues = _committed_modelo("100")
+    for year in ("2024", "2025"):
+        predicate = next(
+            p
+            for p in modelo.revisions[year].verification_predicates
+            if p.predicate_id == f"modelo-100-{year}-anualidades-alimentos-hijos-revisar-cuota-escala-separada"
+        )
+        assert predicate.expression == 'advisory_when_positive(["0527"])'
+        assert predicate.finding_kind == "ADVISORY"
+        legal_refs = tuple(str(r) for r in predicate.legal_refs)
+        assert "ley-35-2006:art-64" in legal_refs
+        assert "ley-35-2006:art-75" in legal_refs
+
+    # No mutation — committed M100 carries the predicate on both revisions.
+    RegistryValidator(catalogues, source_root=bundled_path()).validate_modelo(modelo)
+
+
 def test_validator_rejects_non_145_communication_link_for_casillas() -> None:
     modelo, catalogues = _committed_modelo("036")
     revision = _as_communication_revision(next(iter(modelo.revisions.values())))
