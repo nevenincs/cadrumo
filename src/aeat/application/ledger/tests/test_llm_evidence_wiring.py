@@ -70,7 +70,7 @@ def _text_pdf(tmp_path: Path, line: str) -> Path:
 
 def _transaction(evidence_id: str | None) -> Transaction:
     raw = RawTransaction(
-        transaction_id="row-ev",
+        provider_transaction_id="row-ev",
         booked_date=date(2025, 3, 1),
         value_date=date(2025, 3, 1),
         amount=Decimal("121.00"),

@@ -655,7 +655,7 @@ def test_ledger_import_persists_transactions_as_ciphertext_envelope(encrypted_us
         catalogue = TransactionCatalogueRepository(bucket_id="default").load()
         [stored] = list(catalogue.transactions.values())
         assert stored.raw.counterparty == canary
-        assert stored.raw.transaction_id == transaction_ref
+        assert stored.raw.provider_transaction_id == transaction_ref
         events = (
             BucketEventHistoryRepository()
             .load()

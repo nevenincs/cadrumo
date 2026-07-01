@@ -57,9 +57,7 @@ _CASILLA_BASE_BINDING: dict[CasillaId, BindingId] = {
     validated_casilla_id("59", surface="_CASILLA_BASE_BINDING.59"): (
         "modelo-303-casilla-59-entregas-intracomunitarias-base"
     ),
-    validated_casilla_id("60", surface="_CASILLA_BASE_BINDING.60"): (
-        "modelo-303-casilla-60-exportaciones-base"
-    ),
+    validated_casilla_id("60", surface="_CASILLA_BASE_BINDING.60"): ("modelo-303-casilla-60-exportaciones-base"),
 }
 
 
@@ -86,7 +84,7 @@ _XI = EUMemberState.XI
 
 def _raw(provider_id: str, *, amount: Decimal, direction: TransactionDirection) -> RawTransaction:
     return RawTransaction(
-        transaction_id=provider_id,
+        provider_transaction_id=provider_id,
         booked_date=date(2026, 4, 15),
         value_date=date(2026, 4, 15),
         amount=amount,

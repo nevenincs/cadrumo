@@ -143,7 +143,7 @@ def _recargo_sale(
     return Transaction.model_validate(
         {
             "raw": RawTransaction(
-                transaction_id=provider_id,
+                provider_transaction_id=provider_id,
                 booked_date=booked,
                 value_date=booked,
                 amount=(taxable_base + iva_amount),

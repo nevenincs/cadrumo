@@ -76,7 +76,7 @@ def repositories(tmp_path: Path) -> Iterator[tuple[TransactionCatalogueRepositor
 def _seed_unclassified(repository: TransactionCatalogueRepository, *, amount: Decimal = Decimal("121.00")) -> str:
     """Persist one ACTIVE, NOT_YET_PROCESSED transaction and return its id."""
     raw = RawTransaction(
-        transaction_id="row-saturate-1",
+        provider_transaction_id="row-saturate-1",
         booked_date=date(2026, 5, 1),
         value_date=date(2026, 5, 1),
         amount=amount,
@@ -108,7 +108,7 @@ def _seed_business(
 ) -> str:
     """Persist one ACTIVE BUSINESS transaction with no IVA substrate and return its id."""
     raw = RawTransaction(
-        transaction_id="row-derive-1",
+        provider_transaction_id="row-derive-1",
         booked_date=date(2026, 5, 1),
         value_date=date(2026, 5, 1),
         amount=amount,

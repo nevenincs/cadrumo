@@ -102,7 +102,7 @@ def _raw_transaction(
     amount: Decimal,
 ) -> RawTransaction:
     return RawTransaction(
-        transaction_id=provider_id,
+        provider_transaction_id=provider_id,
         booked_date=booked_date,
         value_date=booked_date,
         amount=amount,

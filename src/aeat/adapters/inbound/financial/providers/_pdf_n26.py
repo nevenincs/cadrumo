@@ -191,7 +191,7 @@ class PdfN26Provider(FinancialProvider):
                 path=path,
                 source_sha256=source_sha256,
                 source_row_index=source_row_index,
-                transaction_id=transaction_id,
+                provider_transaction_id=transaction_id,
                 booked_date=booked_date,
                 value_date=value_date,
                 amount=amount,

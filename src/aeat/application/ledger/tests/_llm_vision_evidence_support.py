@@ -67,7 +67,7 @@ def _png_image() -> bytes:
 
 def _transaction(evidence_id: str) -> Transaction:
     raw = RawTransaction(
-        transaction_id="row-vision",
+        provider_transaction_id="row-vision",
         booked_date=date(2025, 5, 1),
         value_date=date(2025, 5, 1),
         amount=Decimal("121.00"),

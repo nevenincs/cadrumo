@@ -348,7 +348,7 @@ def _build_split_child_transaction(
     parent_raw = parent.raw
     provider_transaction_id = f"split:{parent.transaction_id}:{index:04d}"
     raw_child = RawTransaction(
-        transaction_id=provider_transaction_id,
+        provider_transaction_id=provider_transaction_id,
         booked_date=child.booked_date or parent_raw.booked_date,
         value_date=child.value_date if child.value_date is not None else parent_raw.value_date,
         amount=child.amount,
@@ -568,7 +568,7 @@ def _build_merged_transaction(
     parent_raw = parent.raw
     merged_provider_id = f"merged:{split_group_id}"
     merged_raw = RawTransaction(
-        transaction_id=merged_provider_id,
+        provider_transaction_id=merged_provider_id,
         booked_date=parent_raw.booked_date,
         value_date=parent_raw.value_date,
         amount=parent_raw.amount,

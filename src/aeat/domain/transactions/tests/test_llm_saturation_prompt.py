@@ -48,7 +48,7 @@ _NOW = datetime(2026, 4, 6, 12, 0, tzinfo=UTC)
 
 def _transaction() -> Transaction:
     raw = RawTransaction(
-        transaction_id="row-saturate",
+        provider_transaction_id="row-saturate",
         booked_date=date(2025, 3, 1),
         value_date=date(2025, 3, 1),
         amount=Decimal("121.00"),

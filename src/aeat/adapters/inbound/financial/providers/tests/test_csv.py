@@ -57,7 +57,7 @@ def test_csv_provider_synthesizes_ids_when_source_has_none() -> None:
     provider = CsvProvider()
     parsed_rows = tuple(provider.ingest(_FIXTURES / "synthetic-transactions.csv"))
     assert len(parsed_rows) == 2
-    assert parsed_rows[0].raw.transaction_id.startswith("bbva-")
+    assert parsed_rows[0].raw.provider_transaction_id.startswith("bbva-")
     assert parsed_rows[0].raw.provenance.source_row_index == 2
 
 
@@ -118,8 +118,7 @@ def test_n26_csv_missing_currency_warning_keeps_provider_label(tmp_path: Path) -
     """N26-specific headers still receive the N26 warning copy."""
     source = tmp_path / "n26.csv"
     source.write_text(
-        "Date,Payee,Payment reference,Amount (EUR),Transaction ID\n"
-        "2026-04-15,Client SL,Invoice 1,121.00,n26-001\n",
+        "Date,Payee,Payment reference,Amount (EUR),Transaction ID\n2026-04-15,Client SL,Invoice 1,121.00,n26-001\n",
         encoding="utf-8",
     )
 

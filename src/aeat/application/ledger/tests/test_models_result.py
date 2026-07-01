@@ -26,7 +26,7 @@ _BUCKET_ID = "21212121-2121-4121-8121-212121212121"
 
 def test_manual_ledger_transaction_result_requires_matching_strict_shapes() -> None:
     raw = RawTransaction(
-        transaction_id="manual-row-1",
+        provider_transaction_id="manual-row-1",
         booked_date=date(2026, 5, 1),
         value_date=date(2026, 5, 1),
         amount=Decimal("121.00"),

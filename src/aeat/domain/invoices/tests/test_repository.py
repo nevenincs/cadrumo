@@ -75,7 +75,7 @@ def _invoice(invoice_number: str = "INV-001") -> Invoice:
 
 def _transaction(provider_id: str = "row-1") -> Transaction:
     raw = RawTransaction(
-        transaction_id=provider_id,
+        provider_transaction_id=provider_id,
         booked_date=date(2026, 4, 5),
         value_date=date(2026, 4, 5),
         amount=Decimal("121.00"),
