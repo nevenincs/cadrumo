@@ -410,6 +410,36 @@ def test_relation_target_bindings_preserve_relation_authority_basis() -> None:
         RegistryValidator(catalogues, source_root=bundled_path()).validate_modelo(mutated_modelo)
 
 
+def test_relation_sources_require_official_source_guidance() -> None:
+    modelos, catalogues = _registry_tree()
+    modelo, _revision, relation = _first_relation(modelos)
+    sources = dict(catalogues.sources)
+    for source_ref in relation.source_refs:
+        sources[source_ref] = sources[source_ref].model_copy(update={"evidence_tier": "layout_authority"})
+    mutated_catalogues = catalogues.model_copy(update={"sources": sources})
+
+    with pytest.raises(
+        RegistryValidationError,
+        match=r"relation .* requires official_source_guidance source evidence",
+    ):
+        RegistryValidator(mutated_catalogues, source_root=bundled_path()).validate_modelo(modelo)
+
+
+def test_relation_legal_refs_require_legal_authority() -> None:
+    modelos, catalogues = _registry_tree()
+    modelo, _revision, relation = _first_relation(modelos)
+    legal = dict(catalogues.legal)
+    legal_ref = relation.legal_refs[0]
+    legal[legal_ref] = legal[legal_ref].model_copy(update={"evidence_tier": "official_source_guidance"})
+    mutated_catalogues = catalogues.model_copy(update={"legal": legal})
+
+    with pytest.raises(
+        RegistryValidationError,
+        match=r"relation .* legal ref .* is not legal authority",
+    ):
+        RegistryValidator(mutated_catalogues, source_root=bundled_path()).validate_modelo(modelo)
+
+
 def _first_relation(
     modelos: tuple[ModeloDefinition, ...],
 ) -> tuple[ModeloDefinition, ModeloRevision, RelationDefinition]:
