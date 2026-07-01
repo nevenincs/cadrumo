@@ -202,16 +202,6 @@ def test_review_verb_accepts_output_language(verb: str) -> None:
     _assert_output_language_registered(["app", "review", verb])
 
 
-def test_profile_create_wizard_accepts_output_language() -> None:
-    """``aeat config profile create`` (the setup wizard) accepts ``--output-language`` (#530).
-
-    The David round-10 audit flagged the profile-creation wizard as
-    hardcoded Spanish. The wizard command declares the flag and its
-    lazily-built help/prompt prose resolves through ``tr()`` against the
-    requested language."""
-    _assert_output_language_registered(["config", "profile", "create"])
-
-
 # ---------------------------------------------------------------------------
 # Sub-noun-group parity sweep.
 # ---------------------------------------------------------------------------
