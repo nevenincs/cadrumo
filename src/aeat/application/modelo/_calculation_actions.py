@@ -51,10 +51,10 @@ from ...core.decimal import coerce_decimal_strict
 from ...core.time import now as _utc_now
 from ...domain.buckets._event_repository import BucketEventHistoryRepository
 from ...domain.buckets._protocols import BucketEventHistoryRepositoryProtocol
+from ...domain.calculations.registry import validated_text_input_casilla_ids
 from ...domain.calculations.registry._bindings import CasillaObservation, bound_casilla_binding_ids
 from ...domain.calculations.registry._casilla_membership import casillas_by_id
 from ...domain.calculations.registry._formula_runtime import calculate_registry_snapshot
-from ...domain.calculations.registry._formula_text_inputs import validated_text_input_casilla_ids
 from ...domain.calculations.registry._ids import BindingId, CasillaId, RelationId
 from ...domain.calculations.registry._relations import relation_source_requirements
 from ...domain.calculations.registry._schema import ModeloRevision
