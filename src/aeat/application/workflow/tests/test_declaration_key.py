@@ -48,17 +48,16 @@ def _production_def_count(name: str) -> dict[str, int]:
     return hits
 
 
-def test_declaration_key_has_exactly_one_definition() -> None:
-    hits = _production_def_count("declaration_key")
+@pytest.mark.parametrize(
+    "name",
+    ["declaration_key", "update_declaration_pointer"],
+    ids=("declaration-key", "update-declaration-pointer"),
+)
+def test_workflow_declaration_pointer_surface_has_exactly_one_definition(name: str) -> None:
+    """DB-05: declaration-pointer helpers live in exactly one production module."""
+    hits = _production_def_count(name)
     total = sum(hits.values())
-    assert total == 1, f"expected exactly one declaration_key definition, found {total}: {hits}"
-
-
-def test_update_declaration_pointer_has_exactly_one_definition() -> None:
-    """DB-05: the _engine duplicate was collapsed onto the _models canonical (contract)."""
-    hits = _production_def_count("update_declaration_pointer")
-    total = sum(hits.values())
-    assert total == 1, f"expected exactly one update_declaration_pointer definition, found {total}: {hits}"
+    assert total == 1, f"expected exactly one {name} definition, found {total}: {hits}"
 
 
 def test_declaration_key_uses_separated_period_identity() -> None:
