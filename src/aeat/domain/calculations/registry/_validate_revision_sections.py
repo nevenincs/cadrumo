@@ -122,6 +122,7 @@ def _validate_revision_surface_sections(
         revision=revision,
         legal_refs=legal_refs,
         source_refs=source_refs,
+        evidence=evidence,
     )
     validate_algorithm_provider_section(
         failures,
