@@ -340,9 +340,12 @@ from ._work_addressing import (
     work_address_for_modelo_target,
 )
 from ._work_create_policy import (
+    CEDED_AUTONOMIC_MODELO_LOCALE_KEYS,
+    CEDED_AUTONOMIC_MODELOS,
     STUB_MODELO_LOCALE_KEYS,
     STUB_ONLY_MODELOS,
     ModeloWorkCreateApplicabilityRefusal,
+    ceded_autonomic_modelo_locale_key,
     guard_active_profile_foral_ccaa,
     modelo_work_create_applicability_refusal,
     modelo_work_create_refusal_locale_key,
@@ -363,6 +366,8 @@ from ._workflow_gate import workflow_period_for_work_unit
 
 __all__ = [
     "APP_FILING_SOURCE_KIND",
+    "CEDED_AUTONOMIC_MODELOS",
+    "CEDED_AUTONOMIC_MODELO_LOCALE_KEYS",
     "OPERATOR_MANUAL_OBSERVATION_SOURCE_KIND",
     "STUB_MODELO_LOCALE_KEYS",
     "STUB_ONLY_MODELOS",
@@ -512,6 +517,7 @@ __all__ = [
     "calculate_modelo_revision_from_bucket_aggregation_with_diagnostics",
     "calculate_modelo_work_revision",
     "calculation_result_summary",
+    "ceded_autonomic_modelo_locale_key",
     "compare_modelo_years",
     "compare_taxation_for_work_address",
     "compare_taxation_for_work_unit",

@@ -12,6 +12,7 @@ import typer
 import typer._click.types as typer_click_types
 
 from ...application.modelo import (
+    ceded_autonomic_modelo_locale_key,
     modelo_work_create_refusal_locale_key,
     profile_resolvable_binding_ids,
     registry_bindings,
@@ -130,6 +131,26 @@ def _as_of(raw: str | None) -> date | None:
     return _parse_iso_date(raw, label="--as-of")
 
 
+def guard_ceded_autonomic_modelo(modelo: str) -> None:
+    """Refuse a discovery lookup for a ceded autonomic modelo with a redirect.
+
+    ITP-AJD (``600`` / ``620``) and ISD (``650`` / ``660``) are ceded autonomic
+    taxes managed by each Comunidad Autónoma, not AEAT modelos in the
+    calculation registry, so a bare registry lookup would surface a generic
+    not-present error. This guard raises the instructive autonomic-redirect
+    refusal instead, naming the ceded tax and its regional filing route, and is
+    a no-op for every registry-backed or genuinely unknown code.
+    """
+    from ._errors import CliRefusedBoundaryError
+
+    modelo_code = modelo.strip()
+    locale_key = ceded_autonomic_modelo_locale_key(modelo_code)
+    if locale_key is None:
+        return
+
+    raise CliRefusedBoundaryError(translated_message=locale_key, context={"modelo": modelo_code})
+
+
 def _run_query(call, *, bad_parameter_from_error: Callable[[BaseException], typer.BadParameter]):
     try:
         return call()
@@ -214,6 +235,7 @@ def _register_describe_command(app: typer.Typer, deps: _DiscoveryDeps) -> None:
         period: Annotated[str | None, typer.Option("--period", help=tr("cli.app.modelo.describe.period_help"))] = None,
         as_of: Annotated[str | None, typer.Option("--as-of", help=tr("cli.app.modelo.describe.as_of_help"))] = None,
     ) -> None:
+        guard_ceded_autonomic_modelo(modelo)
         try:
             resolved_scope = _resolve_discovery_year_period(modelo=modelo, year=year, period=period, deps=deps)
             if resolved_scope is not None:
@@ -303,6 +325,8 @@ def _register_casillas_command(app: typer.Typer, deps: _DiscoveryDeps) -> None:
             ),
         ] = False,
     ) -> None:
+        guard_ceded_autonomic_modelo(modelo)
+
         def _query():
             resolved_scope = _resolve_discovery_year_period(modelo=modelo, year=year, period=period, deps=deps)
             if resolved_scope is not None:
@@ -417,6 +441,8 @@ def _register_casilla_command(app: typer.Typer, deps: _DiscoveryDeps) -> None:
         period: Annotated[str | None, typer.Option("--period", help=tr("cli.app.modelo.casillas.period_help"))] = None,
         as_of: Annotated[str | None, typer.Option("--as-of", help=tr("cli.app.modelo.casillas.as_of_help"))] = None,
     ) -> None:
+        guard_ceded_autonomic_modelo(modelo)
+
         def _query():
             resolved_scope = _resolve_discovery_year_period(modelo=modelo, year=year, period=period, deps=deps)
             if resolved_scope is not None:
@@ -839,6 +865,8 @@ def _register_formulas_command(app: typer.Typer, deps: _DiscoveryDeps) -> None:
             ),
         ] = False,
     ) -> None:
+        guard_ceded_autonomic_modelo(modelo)
+
         def _query():
             resolved_scope = _resolve_discovery_year_period(modelo=modelo, year=year, period=period, deps=deps)
             if resolved_scope is not None:
