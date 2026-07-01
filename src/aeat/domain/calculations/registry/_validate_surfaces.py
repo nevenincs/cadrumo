@@ -107,6 +107,9 @@ def _predicate_operator_name(expression: str) -> str | None:
 
 _CASILLA_LIST_PREDICATE = _re.compile(r"^(?P<operator>[a-z_]+)\(\[(?P<ids>[^\]]*)\]\)$")
 _EXACT_CASILLA_LIST_ARITY: Mapping[str, int] = {
+    # advisory_when_positive names exactly one casilla id and routes through the
+    # generic single-casilla validation (exact arity 1 + unknown-casilla check).
+    "advisory_when_positive": 1,
     "cap_le_when_positive": 2,
     "equals": 2,
     "implies_nonzero": 2,

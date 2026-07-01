@@ -1030,6 +1030,21 @@ class FormulaDefinition(RegistryModel):
 
 KNOWN_VERIFICATION_PREDICATE_OPERATORS: frozenset[str] = frozenset(
     {
+        # advisory_when_positive(["casilla_id"]) — single-casilla positive
+        # advisory: FIRES (ADVISORY shown) iff the one named casilla resolves
+        # strictly > 0. The minimal "this box is populated, review the
+        # downstream treatment" prompt for a value the calculation chain does
+        # not yet fully model. ADVISORY-only (no BLOCKING_RULE branch). Authored
+        # for the Modelo 100 anualidades por alimentos a favor de los hijos
+        # (casilla 0527): the separate-escala treatment (LIRPF art. 64 / art. 75)
+        # is applied without the statutory mínimo-por-descendientes gating in the
+        # current cuota chain, so a payer declaring anualidades may be
+        # under-taxed — surfaced as a non-blocking prompt to review the cuota,
+        # per no-silent-under-declaration, pending the full separate-escala
+        # modelling. Single casilla id, so it routes through the generic
+        # _casilla_list_predicate_failures (arity 1) at registry build; see the
+        # advisory_when_positive branch in _evaluate_advisory_predicate_fires.
+        "advisory_when_positive",
         "advisory_when_ratio_ge",
         "all_nonzero",
         "any_nonzero",
@@ -1104,6 +1119,21 @@ class VerificationPredicateDefinition(RegistryModel):
 
     ``expression`` uses a minimal predicate DSL:
 
+    - ``advisory_when_positive(["casilla_id"])`` — single-casilla positive
+      advisory: FIRES (ADVISORY shown) iff the one named casilla value is
+      strictly ``> 0``. A zero or absent value holds trivially (no advisory).
+      ADVISORY-only: no ``BLOCKING_RULE`` branch is implemented (a positive box
+      is not itself an error — the advisory only prompts an operator review).
+      Authored for the Modelo 100 anualidades por alimentos a favor de los
+      hijos (casilla 0527), whose separate-escala treatment (LIRPF art. 64 for
+      the state scale, art. 75 for the autonomic scale) is applied in the
+      current cuota chain without the statutory mínimo-por-descendientes
+      gating, so a payer declaring anualidades may be under-taxed; the advisory
+      surfaces a non-blocking prompt to review the cuota pending the full
+      separate-escala modelling, per no-silent-under-declaration. Routes through
+      the generic single-casilla-list validation (exact arity 1) at registry
+      build. See the ``advisory_when_positive`` branch in
+      ``_evaluate_advisory_predicate_fires``.
     - ``all_nonzero(["id1", "id2", ...])`` — every listed casilla value must
       be non-zero (i.e. the filing invariant requires them all to be present
       and non-zero simultaneously).
