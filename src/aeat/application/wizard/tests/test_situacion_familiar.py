@@ -30,34 +30,51 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 # ---------------------------------------------------------------------------
 
 
-def test_conjunta_eligible_returns_true_for_casado() -> None:
-    assert SituacionFamiliar.CASADO.conjunta_eligible() is True
+@pytest.mark.parametrize(
+    ("situacion_familiar", "expected"),
+    (
+        pytest.param(SituacionFamiliar.CASADO, True, id="casado"),
+        pytest.param(
+            SituacionFamiliar.PAREJA_HECHO_REGISTRADA,
+            True,
+            id="pareja-registrada",
+        ),
+        pytest.param(
+            SituacionFamiliar.PAREJA_HECHO_NO_REGISTRADA,
+            False,
+            id="pareja-no-registrada",
+        ),
+    ),
+)
+def test_conjunta_eligible(
+    situacion_familiar: SituacionFamiliar,
+    expected: bool,
+) -> None:
+    assert situacion_familiar.conjunta_eligible() is expected
 
 
-def test_conjunta_eligible_returns_true_for_pareja_registrada() -> None:
-    assert SituacionFamiliar.PAREJA_HECHO_REGISTRADA.conjunta_eligible() is True
-
-
-def test_conjunta_eligible_returns_false_for_pareja_no_registrada() -> None:
-    # Pareja de hecho no registrada is the sole case explicitly blocked by
-    # Art. 82.1.2° LIRPF — the verifier uses this to emit an ERROR.
-    assert SituacionFamiliar.PAREJA_HECHO_NO_REGISTRADA.conjunta_eligible() is False
-
-
-def test_requires_spouse_returns_true_for_casado() -> None:
-    assert SituacionFamiliar.CASADO.requires_spouse_or_partner() is True
-
-
-def test_requires_spouse_returns_true_for_pareja_registrada() -> None:
-    assert SituacionFamiliar.PAREJA_HECHO_REGISTRADA.requires_spouse_or_partner() is True
-
-
-def test_requires_spouse_returns_false_for_soltero() -> None:
-    assert SituacionFamiliar.SOLTERO.requires_spouse_or_partner() is False
-
-
-def test_requires_spouse_returns_false_for_pareja_no_registrada() -> None:
-    assert SituacionFamiliar.PAREJA_HECHO_NO_REGISTRADA.requires_spouse_or_partner() is False
+@pytest.mark.parametrize(
+    ("situacion_familiar", "expected"),
+    (
+        pytest.param(SituacionFamiliar.CASADO, True, id="casado"),
+        pytest.param(
+            SituacionFamiliar.PAREJA_HECHO_REGISTRADA,
+            True,
+            id="pareja-registrada",
+        ),
+        pytest.param(SituacionFamiliar.SOLTERO, False, id="soltero"),
+        pytest.param(
+            SituacionFamiliar.PAREJA_HECHO_NO_REGISTRADA,
+            False,
+            id="pareja-no-registrada",
+        ),
+    ),
+)
+def test_requires_spouse_or_partner(
+    situacion_familiar: SituacionFamiliar,
+    expected: bool,
+) -> None:
+    assert situacion_familiar.requires_spouse_or_partner() is expected
 
 
 # ---------------------------------------------------------------------------
@@ -76,19 +93,24 @@ def _base_answers(**overrides: object) -> SetupAnswers:
     return SetupAnswers.model_validate(defaults)
 
 
-def test_situacion_familiar_blank_accepted() -> None:
-    answers = _base_answers(situacion_familiar="")
-    assert answers.situacion_familiar == ""
-
-
-def test_situacion_familiar_casado_string_accepted() -> None:
-    answers = _base_answers(situacion_familiar="casado")
-    assert answers.situacion_familiar == SituacionFamiliar.CASADO
-
-
-def test_situacion_familiar_enum_member_accepted() -> None:
-    answers = _base_answers(situacion_familiar=SituacionFamiliar.PAREJA_HECHO_REGISTRADA)
-    assert answers.situacion_familiar == SituacionFamiliar.PAREJA_HECHO_REGISTRADA
+@pytest.mark.parametrize(
+    ("raw_value", "expected"),
+    (
+        pytest.param("", "", id="blank"),
+        pytest.param("casado", SituacionFamiliar.CASADO, id="string-token"),
+        pytest.param(
+            SituacionFamiliar.PAREJA_HECHO_REGISTRADA,
+            SituacionFamiliar.PAREJA_HECHO_REGISTRADA,
+            id="enum-member",
+        ),
+    ),
+)
+def test_situacion_familiar_validation(
+    raw_value: object,
+    expected: object,
+) -> None:
+    answers = _base_answers(situacion_familiar=raw_value)
+    assert answers.situacion_familiar == expected
 
 
 def test_situacion_familiar_invalid_token_rejected() -> None:
@@ -96,19 +118,20 @@ def test_situacion_familiar_invalid_token_rejected() -> None:
         _base_answers(situacion_familiar="viudo")
 
 
-def test_unidad_familiar_descendientes_exclusivos_blank_accepted() -> None:
-    answers = _base_answers(unidad_familiar_descendientes_exclusivos="")
-    assert answers.unidad_familiar_descendientes_exclusivos == ""
-
-
-def test_unidad_familiar_descendientes_exclusivos_true_string_accepted() -> None:
-    answers = _base_answers(unidad_familiar_descendientes_exclusivos="true")
-    assert answers.unidad_familiar_descendientes_exclusivos is True
-
-
-def test_unidad_familiar_descendientes_exclusivos_bool_accepted() -> None:
-    answers = _base_answers(unidad_familiar_descendientes_exclusivos=False)
-    assert answers.unidad_familiar_descendientes_exclusivos is False
+@pytest.mark.parametrize(
+    ("raw_value", "expected"),
+    (
+        pytest.param("", "", id="blank"),
+        pytest.param("true", True, id="true-string"),
+        pytest.param(False, False, id="bool-false"),
+    ),
+)
+def test_unidad_familiar_descendientes_exclusivos_validation(
+    raw_value: object,
+    expected: object,
+) -> None:
+    answers = _base_answers(unidad_familiar_descendientes_exclusivos=raw_value)
+    assert answers.unidad_familiar_descendientes_exclusivos == expected
 
 
 # ---------------------------------------------------------------------------
@@ -121,69 +144,78 @@ def _finding(answers: SetupAnswers, name: str) -> WizardCheckFinding:
     return next(item for item in report.findings if item.name == name)
 
 
-def test_check_ok_when_individual_taxation_regardless_of_situation() -> None:
-    """Individual taxation never triggers the conjunta check."""
-    answers = _base_answers(
-        taxation_type="1",
-        situacion_familiar=SituacionFamiliar.PAREJA_HECHO_NO_REGISTRADA,
-    )
+@pytest.mark.parametrize(
+    ("overrides", "expected_severity", "expected_message_key"),
+    (
+        pytest.param(
+            {
+                "taxation_type": "1",
+                "situacion_familiar": SituacionFamiliar.PAREJA_HECHO_NO_REGISTRADA,
+            },
+            WizardCheckSeverity.OK,
+            "wizard.setup.verifier.joint_taxation_situacion_familiar_ok",
+            id="individual-taxation",
+        ),
+        pytest.param(
+            {
+                "taxation_type": "",
+                "situacion_familiar": SituacionFamiliar.PAREJA_HECHO_NO_REGISTRADA,
+            },
+            WizardCheckSeverity.OK,
+            "wizard.setup.verifier.joint_taxation_situacion_familiar_ok",
+            id="taxation-type-blank",
+        ),
+        pytest.param(
+            {
+                "taxation_type": "2",
+                "situacion_familiar": "",
+                "spouse_tax_id": "87654321B",
+            },
+            WizardCheckSeverity.OK,
+            "wizard.setup.verifier.joint_taxation_situacion_familiar_ok",
+            id="situacion-blank",
+        ),
+        pytest.param(
+            {
+                "taxation_type": "2",
+                "situacion_familiar": SituacionFamiliar.CASADO,
+                "spouse_tax_id": "87654321B",
+            },
+            WizardCheckSeverity.OK,
+            "wizard.setup.verifier.joint_taxation_situacion_familiar_ok",
+            id="casado-conjunta",
+        ),
+        pytest.param(
+            {
+                "taxation_type": "2",
+                "situacion_familiar": SituacionFamiliar.PAREJA_HECHO_REGISTRADA,
+                "spouse_tax_id": "87654321B",
+            },
+            WizardCheckSeverity.OK,
+            "wizard.setup.verifier.joint_taxation_situacion_familiar_ok",
+            id="pareja-registrada-conjunta",
+        ),
+        pytest.param(
+            {
+                "taxation_type": "2",
+                "situacion_familiar": SituacionFamiliar.PAREJA_HECHO_NO_REGISTRADA,
+                "spouse_tax_id": "87654321B",
+            },
+            WizardCheckSeverity.ERROR,
+            "wizard.setup.verifier.joint_taxation_situacion_familiar_refused",
+            id="pareja-no-registrada-conjunta",
+        ),
+    ),
+)
+def test_joint_taxation_situacion_familiar_cases(
+    overrides: dict[str, object],
+    expected_severity: WizardCheckSeverity,
+    expected_message_key: str,
+) -> None:
+    answers = _base_answers(**overrides)
     finding = _finding(answers, "joint_taxation_situacion_familiar")
-    assert finding.severity is WizardCheckSeverity.OK
-    assert finding.message_key == "wizard.setup.verifier.joint_taxation_situacion_familiar_ok"
-
-
-def test_check_ok_when_taxation_type_blank() -> None:
-    """Undeclared taxation type passes the check regardless of situation."""
-    answers = _base_answers(
-        taxation_type="",
-        situacion_familiar=SituacionFamiliar.PAREJA_HECHO_NO_REGISTRADA,
-    )
-    finding = _finding(answers, "joint_taxation_situacion_familiar")
-    assert finding.severity is WizardCheckSeverity.OK
-
-
-def test_check_ok_when_situacion_familiar_blank() -> None:
-    """Undeclared situacion_familiar passes even for conjunta."""
-    answers = _base_answers(
-        taxation_type="2",
-        situacion_familiar="",
-        spouse_tax_id="87654321B",
-    )
-    finding = _finding(answers, "joint_taxation_situacion_familiar")
-    assert finding.severity is WizardCheckSeverity.OK
-
-
-def test_check_ok_when_casado_requests_conjunta() -> None:
-    answers = _base_answers(
-        taxation_type="2",
-        situacion_familiar=SituacionFamiliar.CASADO,
-        spouse_tax_id="87654321B",
-    )
-    finding = _finding(answers, "joint_taxation_situacion_familiar")
-    assert finding.severity is WizardCheckSeverity.OK
-    assert finding.message_key == "wizard.setup.verifier.joint_taxation_situacion_familiar_ok"
-
-
-def test_check_ok_when_pareja_registrada_requests_conjunta() -> None:
-    answers = _base_answers(
-        taxation_type="2",
-        situacion_familiar=SituacionFamiliar.PAREJA_HECHO_REGISTRADA,
-        spouse_tax_id="87654321B",
-    )
-    finding = _finding(answers, "joint_taxation_situacion_familiar")
-    assert finding.severity is WizardCheckSeverity.OK
-
-
-def test_check_error_when_pareja_no_registrada_requests_conjunta() -> None:
-    """Art. 82.1.2° LIRPF: unregistered de-facto couple cannot file jointly."""
-    answers = _base_answers(
-        taxation_type="2",
-        situacion_familiar=SituacionFamiliar.PAREJA_HECHO_NO_REGISTRADA,
-        spouse_tax_id="87654321B",
-    )
-    finding = _finding(answers, "joint_taxation_situacion_familiar")
-    assert finding.severity is WizardCheckSeverity.ERROR
-    assert finding.message_key == "wizard.setup.verifier.joint_taxation_situacion_familiar_refused"
+    assert finding.severity is expected_severity
+    assert finding.message_key == expected_message_key
 
 
 # ---------------------------------------------------------------------------
