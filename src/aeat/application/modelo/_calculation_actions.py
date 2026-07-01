@@ -53,8 +53,7 @@ from ...core.money import round_to_cents
 from ...core.time import now as _utc_now
 from ...domain.buckets._event_repository import BucketEventHistoryRepository
 from ...domain.buckets._protocols import BucketEventHistoryRepositoryProtocol
-from ...domain.calculations.registry import validated_text_input_casilla_ids
-from ...domain.calculations.registry._binding_selector_utils import selector_as_dict
+from ...domain.calculations.registry import selector_as_dict, validated_text_input_casilla_ids
 from ...domain.calculations.registry._bindings import CasillaObservation, bound_casilla_binding_ids
 from ...domain.calculations.registry._casilla_membership import casillas_by_id
 from ...domain.calculations.registry._formula_runtime import calculate_registry_snapshot

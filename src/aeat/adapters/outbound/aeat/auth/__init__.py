@@ -25,10 +25,10 @@ Selected certificate public API is available through
 
 Live-read policy is owned by
 :class:`~aeat.core.access_gate.AeatAccessGate`: pytest live reads require
-literal ``AEAT_LIVE_TESTS_ENABLED="1"``, while operator-context reads continue
+the live-test opt-in enabled, while operator-context reads continue
 through auth, profile, and read-only guards. The associated
-:class:`~aeat.core.access_gate.AeatGateEnvSnapshot` records only
-``aeat_live_tests_enabled`` and ``pytest_current_test``. Live AEAT writes and
+:class:`~aeat.core.access_gate.AeatGateEnvSnapshot` records only the
+live-test opt-in flag and the current pytest test id. Live AEAT writes and
 live AEAT submissions are permanently refused by
 :exc:`~aeat.core.access_gate.LiveSubmitForbiddenError`; auth exposes no
 AEAT-side write verb.
@@ -76,6 +76,7 @@ from ._clave_movil import (
     ClaveMovilConfigurationError,
     ClaveMovilFailureMode,
 )
+from ._clave_movil_support import classify_identity
 from ._errors import (
     AeatLoginAssertionError,
     AeatSessionExpiredError,
@@ -166,6 +167,7 @@ __all__ = [
     "HandshakeResult",
     "LoadedCertificate",
     "build_client_certificates_kwarg",
+    "classify_identity",
     "describe_certificate_provider",
     "evaluate_loaded_certificate_health",
     "extract_nif_from_subject",
