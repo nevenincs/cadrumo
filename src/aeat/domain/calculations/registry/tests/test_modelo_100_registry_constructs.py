@@ -81,12 +81,9 @@ def test_modelo_100_personal_family_construct_casillas_match_expected_set() -> N
 def test_modelo_100_dependent_modelos_construct_covers_every_previous_filing_binding() -> None:
     snapshot = _modelo_100_snapshot()
     dependencies = snapshot.constructs["renta-dependent-modelos"]
-    # The dependent-modelos construct covers every observation-backed slot: the
-    # direct same-modelo previous_filing carries (BIN N-1) AND the cross-modelo
-    # relation_prefill fold-in slots (130/131/111/115/123/180/184/190/193). The
-    # latter were re-stamped from previous_filing to relation_prefill when the
-    # relation became canonical for cross-modelo fold-ins (aggregation-taxonomy
-    # decision ruling 3).
+    # The dependent-modelos construct covers every current observation-backed slot:
+    # the direct same-modelo previous_filing carries (BIN N-1) and every registered
+    # cross-modelo relation_prefill fold-in slot.
     filed_dependency_bindings = {
         binding.id
         for binding in snapshot.revision.bindings
@@ -454,9 +451,14 @@ def test_modelo_100_renta_section_constructs_classify_registered_relation_source
 
     assert source_modelos_by_construct == {
         "renta-work-income": {"111", "190"},
-        "renta-real-estate-capital": {"115", "180"},
+        "renta-real-estate-capital": set(),
         "renta-movable-capital": {"123", "193"},
         "renta-economic-activities": {"130", "131", "184"},
+    }
+    real_estate = constructs["renta-real-estate-capital"]
+    assert "0598" in {member.id for member in real_estate.members_of_kind("casilla")}
+    assert "renta-2025-retenciones-arrendamientos-urbanos" in {
+        member.id for member in real_estate.members_of_kind("formula")
     }
 
 
