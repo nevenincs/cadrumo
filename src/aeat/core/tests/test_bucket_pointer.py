@@ -16,27 +16,29 @@ def test_json_round_trip() -> None:
     assert revived == pointer
 
 
-def test_toml_round_trip() -> None:
-    pointer = BucketPointer(bucket_id="bucket-001", schema_version=1)
+@pytest.mark.parametrize(
+    ("bucket_id", "schema_version"),
+    (
+        pytest.param("bucket-001", 1, id="simple"),
+        pytest.param('bucket "weird" id', 2, id="quoted-bucket-id"),
+    ),
+)
+def test_toml_round_trip(bucket_id: str, schema_version: int) -> None:
+    pointer = BucketPointer(bucket_id=bucket_id, schema_version=schema_version)
     revived = BucketPointer.from_toml(pointer.to_toml())
     assert revived == pointer
 
 
-def test_toml_round_trip_quoted_bucket_id() -> None:
-    pointer = BucketPointer(bucket_id='bucket "weird" id', schema_version=2)
-    revived = BucketPointer.from_toml(pointer.to_toml())
-    assert revived == pointer
-
-
-def test_rejects_empty_bucket_id() -> None:
+@pytest.mark.parametrize(
+    "kwargs",
+    (
+        pytest.param({"bucket_id": "", "schema_version": 1}, id="empty-bucket-id"),
+        pytest.param({"bucket_id": "bucket-001", "schema_version": 0}, id="non-positive-schema-version"),
+    ),
+)
+def test_rejects_invalid_constructor_fields(kwargs: dict[str, object]) -> None:
     with pytest.raises(ValidationError):
-        BucketPointer(bucket_id="", schema_version=1)
-
-
-def test_rejects_non_positive_schema_version() -> None:
-    invalid_version: int = 0
-    with pytest.raises(ValidationError):
-        BucketPointer(bucket_id="bucket-001", schema_version=invalid_version)
+        BucketPointer(**kwargs)
 
 
 def test_rejects_unknown_keys() -> None:
@@ -50,12 +52,13 @@ def test_rejects_unknown_keys() -> None:
         )
 
 
-def test_from_toml_rejects_unknown_keys() -> None:
-    text = 'bucket_id = "bucket-001"\nschema_version = 1\nrogue = "x"\n'
+@pytest.mark.parametrize(
+    "text",
+    (
+        pytest.param('bucket_id = "bucket-001"\nschema_version = 1\nrogue = "x"\n', id="unknown-key"),
+        pytest.param("schema_version = 1\n", id="missing-bucket-id"),
+    ),
+)
+def test_from_toml_rejects_invalid_payloads(text: str) -> None:
     with pytest.raises(ValidationError):
         BucketPointer.from_toml(text)
-
-
-def test_from_toml_rejects_missing_bucket_id() -> None:
-    with pytest.raises(ValidationError):
-        BucketPointer.from_toml("schema_version = 1\n")

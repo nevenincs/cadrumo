@@ -17,12 +17,19 @@ at the column level without touching the cipher directly:
   :class:`EncryptedString`-shaped value without leaking the
   plaintext.
 
-All decorators consult :func:`get_master_key_provider` lazily on
-every bind and result conversion. Tests inject an
-:class:`EphemeralMasterKeyProvider` via the
-``override_master_key_provider`` test helper so the SQLite
-round-trip uses a deterministic key without touching the OS keychain
-or the file backend.
+:class:`EncryptedPayload` validates the decoded JSON result from
+:class:`EncryptedJSON`, while the secure-object helpers bind
+``namespace``, ``object_key`` digest, and ``schema_version`` into
+payload AEAD associated data so ciphertext copied across rows fails
+authentication.
+
+All decorators and helpers resolve key bytes through
+:func:`~aeat.adapters.persistence.storage.master_key._active_session.get_active_master_key`
+on the active
+:class:`~aeat.adapters.persistence.storage.master_key._bucket_session.BucketSession`.
+Tests use :class:`~aeat.adapters.persistence.storage.master_key.EphemeralMasterKeyProvider`,
+whose context manager enters a real session without touching the OS
+keychain or file backend.
 
 The AAD (associated authenticated data) per decorator binds the
 ciphertext to its purpose: a ciphertext minted for an

@@ -208,6 +208,9 @@ def boolean_binding_encoded_values(
     ``0`` (false); each sense is paired with the selector's declared
     ``true_value`` / ``false_value`` casilla token, so the mapping is derived
     from the binding definition, never hardcoded per modelo.
+
+    Returns:
+        Zero or two :class:`BooleanBindingEncodedValue` rows.
     """
     if binding.source is not BindingSourceKind.MANUAL_INPUT:
         return ()

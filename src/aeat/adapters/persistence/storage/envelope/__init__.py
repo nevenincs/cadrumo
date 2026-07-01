@@ -1,4 +1,4 @@
-"""Envelope substrate: file-backed JSON and cipher envelope I/O.
+"""Envelope substrate: JSON envelopes and secure-bound repositories.
 
 Public surface for the schema-versioned envelope contract used by
 file-backed persistence consumers. Re-exports the typed
@@ -14,6 +14,13 @@ plaintext / ciphertext save/load helpers
 :func:`~aeat.adapters.persistence.storage.reencrypt_envelope_file`), and the
 :class:`~aeat.adapters.persistence.storage.SecureBoundRepository` generic base
 that domain repositories subclass for encrypted-object persistence.
+
+The file helpers are the controlled plaintext/cipher envelope I/O
+surface. :class:`~aeat.adapters.persistence.storage.SecureBoundRepository`
+uses the encrypted SQL
+:class:`~aeat.adapters.persistence.storage.SecureObjectRepository`
+backend instead; its path-shaped methods are logical diagnostics, not
+authority to create plaintext sidecar files.
 """
 
 from __future__ import annotations

@@ -516,20 +516,25 @@ def test_non_sensitive_fields_pass_through_unchanged() -> None:
 # ---------------------------------------------------------------------------
 
 
-def test_scrub_value_str_overload_returns_str() -> None:
-    """str input must produce a str result (non-sensitive value passes through)."""
+@pytest.mark.parametrize(
+    ("value", "expected_type", "expected"),
+    (
+        pytest.param("hello world", str, "hello world", id="str"),
+        pytest.param(("safe-value", "also-safe"), tuple, ("safe-value", "also-safe"), id="tuple"),
+        pytest.param(["one", "two"], list, ["one", "two"], id="list"),
+        pytest.param({"alpha", "beta"}, set, {"alpha", "beta"}, id="set"),
+    ),
+)
+def test_scrub_value_non_sensitive_overloads_preserve_shape(
+    value: object,
+    expected_type: type[object],
+    expected: object,
+) -> None:
+    """Non-sensitive scalar/container inputs preserve their public shape."""
 
-    result = _scrub_value("hello world")
-    assert isinstance(result, str)
-    assert result == "hello world"
-
-
-def test_scrub_value_str_overload_redacts_sensitive_key() -> None:
-    """str input with a sensitive key must return a redacted str."""
-
-    result = _scrub_value("super-secret", key="token")
-    assert isinstance(result, str)
-    assert result == "<redacted>"
+    result = _scrub_value(value)
+    assert isinstance(result, expected_type)
+    assert result == expected
 
 
 def test_scrub_value_mapping_overload_returns_dict() -> None:
@@ -541,30 +546,6 @@ def test_scrub_value_mapping_overload_returns_dict() -> None:
     assert result["secret"] == "<redacted>"
 
 
-def test_scrub_value_tuple_overload_returns_tuple() -> None:
-    """tuple input must produce a tuple result with items recursively scrubbed."""
-
-    result = _scrub_value(("safe-value", "also-safe"))
-    assert isinstance(result, tuple)
-    assert result == ("safe-value", "also-safe")
-
-
-def test_scrub_value_list_overload_returns_list() -> None:
-    """list input must produce a list result with items recursively scrubbed."""
-
-    result = _scrub_value(["one", "two"])
-    assert isinstance(result, list)
-    assert result == ["one", "two"]
-
-
-def test_scrub_value_set_overload_returns_set() -> None:
-    """set input must produce a set result with items recursively scrubbed."""
-
-    result = _scrub_value({"alpha", "beta"})
-    assert isinstance(result, set)
-    assert result == {"alpha", "beta"}
-
-
 def test_scrub_value_object_overload_passes_through_non_sensitive() -> None:
     """An arbitrary object with a non-sensitive key passes through unchanged."""
 
@@ -573,10 +554,17 @@ def test_scrub_value_object_overload_passes_through_non_sensitive() -> None:
     assert result is obj
 
 
-def test_scrub_value_object_overload_redacts_sensitive_key() -> None:
-    """An arbitrary object with a sensitive key is redacted to a str marker."""
+@pytest.mark.parametrize(
+    "value",
+    (
+        pytest.param("super-secret", id="str"),
+        pytest.param(12345, id="object"),
+    ),
+)
+def test_scrub_value_sensitive_key_redacts_to_marker(value: object) -> None:
+    """Any input paired with a sensitive key is redacted to the public marker."""
 
-    result = _scrub_value(12345, key="token")
+    result = _scrub_value(value, key="token")
     assert isinstance(result, str)
     assert result == "<redacted>"
 

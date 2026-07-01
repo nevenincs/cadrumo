@@ -119,8 +119,20 @@ def replay_run(
     run_id: str,
     *,
     invoke: Callable[[list[str]], object] | None = None,
+    assert_envelope: bool = False,
+    assert_db_state: bool = False,
 ) -> RunTrace:
     """Replay a recorded run after gating on corpus drift.
+
+    When ``assert_envelope`` is set and ``invoke`` is provided, the
+    re-entered invocation's emitted ``--format json`` envelope is
+    captured and asserted byte-identical (after the declared narrow mask)
+    against the golden envelope persisted for the original run — closing
+    the research F1 gap so replay proves "the same JSON came out", not
+    only "the same argv re-runs". The capture/canonicalise/mask/compare
+    logic lives in the shared substrate primitive
+    (:mod:`aeat.core.observability._golden`); the operator golden gate
+    reuses the same primitive.
 
     Args:
         run_id: Identifier of the recorded run to replay.
@@ -128,14 +140,32 @@ def replay_run(
             argv.  When ``None`` the function loads and validates the trace
             but does not re-execute it, returning the original
             :class:`RunTrace` directly.
+        assert_envelope: When ``True`` (and ``invoke`` is provided), load
+            the original run's persisted ``envelope.json``, capture the
+            re-entered invocation's emitted envelope, and assert they match
+            after masking.
+        assert_db_state: When ``True`` (and ``invoke`` is provided), the
+            OPTIONAL post-state tier: recompute the ``var/`` fingerprint
+            after re-entry and assert it equals the recorded
+            ``db_sha256``. This proves state-transition determinism (a
+            retried write is a true no-op) and is meaningful only for a
+            scenario that runs against a hermetic synthetic ``var/`` root;
+            the shared ``var/`` would flap it, which is why it is opt-in
+            and never a hard gate for all replays.
 
     Returns:
         The loaded :class:`RunTrace` of the original run.
 
     Raises:
-        AeatObservabilityError: When the trace carries removed write-era flags.
+        AeatObservabilityError: When the trace carries removed write-era
+            flags, when ``assert_envelope`` is set but the re-entered
+            invocation emitted no envelope to compare, or when
+            ``assert_db_state`` is set and the post-state ``var/``
+            fingerprint drifts from the recorded one.
         AeatCorpusDriftError: When the current corpus hash differs
             from the recorded one.
+        GoldenReplayMismatchError: When ``assert_envelope`` is set and the
+            replayed envelope diverges from its captured expectation.
     """
     original = load_trace(run_id)
     for arg in original.arguments:
@@ -159,6 +189,16 @@ def replay_run(
     if invoke is None:
         return original
 
+    # Lazy imports keep the substrate seams out of the module-load graph
+    # (and preserve the canonical ``REPLAY_ACTIVE_ENV_VAR`` line above).
+    from ._capture import capture_envelopes
+
+    expected_envelope: dict[str, object] | None = None
+    if assert_envelope:
+        from ._store import load_envelope_document
+
+        expected_envelope = load_envelope_document(run_id)
+
     # Restore the prior value on exit so the process env is unchanged
     # for any caller that imports ``replay_run`` programmatically.
     #
@@ -175,14 +215,64 @@ def replay_run(
     # the source run. This lets ``aeat run show`` distinguish replay
     # traces from fresh runs and chain them back to their original.
     os.environ[REPLAY_ACTIVE_ENV_VAR] = run_id  # env-write: intentional — scoped context-manager
+    captured: list[dict[str, object]] = []
     try:
-        invoke(argv)
+        with capture_envelopes() as sink:
+            invoke(argv)
+        captured = sink
     finally:
         if previous is None:
             os.environ.pop(REPLAY_ACTIVE_ENV_VAR, None)
         else:
             os.environ[REPLAY_ACTIVE_ENV_VAR] = previous  # env-write: intentional — restore prior state
+
+    if expected_envelope is not None:
+        _assert_replayed_envelope(run_id, expected_envelope, captured)
+    if assert_db_state:
+        from ._fingerprint import compute_db_sha256
+
+        observed_db = compute_db_sha256(PROJECT_ROOT / "var")
+        _assert_db_state_unchanged(run_id, original.db_sha256, observed_db)
     return original
+
+
+def _assert_db_state_unchanged(run_id: str, recorded: str, observed: str) -> None:
+    """Assert the post-replay ``var/`` fingerprint matches the recorded one.
+
+    The optional post-state tier: for a hermetic synthetic ``var/``
+    scenario, a drift means the re-entered invocation was NOT the no-op
+    the recorded state asserts (e.g. a retried ledger add that was
+    expected to be idempotent mutated state).
+    """
+    if recorded != observed:
+        raise AeatObservabilityError(
+            f"db-state drift on replay of run {run_id!r}: "
+            f"recorded={recorded[:12]}... observed={observed[:12]}...; the "
+            "re-entered invocation was expected to be a no-op against a "
+            "hermetic synthetic var/ root",
+        )
+
+
+def _assert_replayed_envelope(
+    run_id: str,
+    expected: dict[str, object],
+    captured: list[dict[str, object]],
+) -> None:
+    """Assert the last captured re-entry envelope matches the golden expectation.
+
+    Delegates the canonicalise/mask/compare to the shared golden
+    primitive so this replay consumer and the operator golden gate never
+    diverge on masking. The lazy import keeps ``_golden`` (and its
+    ``json_contract`` dependency) off the module-load graph.
+    """
+    from ._golden import assert_golden_match
+
+    if not captured:
+        raise AeatObservabilityError(
+            f"refusing to assert envelope for replay of {run_id!r}: the "
+            "re-entered invocation emitted no --format json envelope to compare",
+        )
+    assert_golden_match(expected, captured[-1])
 
 
 __all__ = ["REPLAY_ACTIVE_ENV_VAR", "replay_run"]

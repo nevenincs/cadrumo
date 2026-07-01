@@ -31,6 +31,7 @@ _CONSTRUCT_MEMBER_ATTRS = {
     "support removal decision": "support_removal_decisions",
     "dependency classification": "dependency_classifications",
 }
+_SUPPORT_REMOVAL_SOURCE_TIERS = ("official_source_guidance", "layout_authority")
 
 
 def validate_construct_closure(
@@ -87,6 +88,7 @@ def validate_support_removal_decisions(
     deadline_window_ids: Iterable[str],
     legal_refs: Mapping[str, LegalReference],
     source_refs: Mapping[str, SourceReference],
+    evidence: EvidenceValidator,
     filing_schedule_ids: Iterable[str] = (),
 ) -> list[str]:
     failures: list[str] = []
@@ -111,6 +113,14 @@ def validate_support_removal_decisions(
                 decision.source_refs,
                 source_refs,
                 "source",
+            ),
+        )
+        failures.extend(
+            evidence.require_any_source_tier(
+                scope,
+                f"support removal decision {decision.id}",
+                decision.source_refs,
+                _SUPPORT_REMOVAL_SOURCE_TIERS,
             ),
         )
         active_ids = active_subjects.get(decision.subject_type)

@@ -1055,10 +1055,10 @@ def _is_record_design_path(lowered_relative_path: str) -> bool:
 def _evidence_for_workbook_kind(kind: WorkbookKind) -> tuple[EvidenceTier | None, tuple[EvidenceTier, ...]]:
     if kind == WorkbookKind.FORMULA_FORM:
         return "executable_parity_evidence", ("legal_authority", "layout_authority")
-    if kind in {WorkbookKind.RECORD_DESIGN_LAYOUT, WorkbookKind.UNSUPPORTED_BINARY_XLS}:
+    if kind in {WorkbookKind.RECORD_DESIGN_LAYOUT, WorkbookKind.UNSUPPORTED_BINARY_XLS, WorkbookKind.STATIC_LAYOUT}:
         return "layout_authority", ("legal_authority", "executable_parity_evidence")
-    if kind in {WorkbookKind.VALIDATION_HINTS, WorkbookKind.STATIC_LAYOUT}:
-        return "official_source_guidance", ("legal_authority", "executable_parity_evidence")
+    if kind == WorkbookKind.VALIDATION_HINTS:
+        return "official_source_guidance", ("legal_authority", "executable_parity_evidence", "layout_authority")
     return None, (
         "legal_authority",
         "official_source_guidance",

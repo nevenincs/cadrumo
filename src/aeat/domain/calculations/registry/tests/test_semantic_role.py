@@ -125,9 +125,33 @@ class TestSemanticRoleFieldShape:
         assert rebuilt.semantic_role == "taxpayer_nif"
         assert rebuilt == c
 
-    def test_empty_role_string_rejected(self) -> None:
+    @pytest.mark.parametrize(
+        "updates",
+        (
+            {"semantic_role": ""},
+            {
+                "semantic_role_cardinality": "intentional_singleton",
+                "semantic_role_cardinality_reason": "2025-only legal slot",
+            },
+            {
+                "semantic_role": "is_pf_mod_40_3_b2_base_tipo_3",
+                "semantic_role_cardinality": "intentional_singleton",
+            },
+            {
+                "semantic_role": "is_pf_mod_40_3_b2_base_tipo_3",
+                "semantic_role_cardinality_reason": "2025-only legal slot",
+            },
+        ),
+        ids=(
+            "empty-role",
+            "singleton-without-role",
+            "singleton-without-reason",
+            "reason-without-singleton",
+        ),
+    )
+    def test_invalid_semantic_role_shape_rejected(self, updates: dict[str, object]) -> None:
         with pytest.raises(ValidationError):
-            _casilla(semantic_role="")
+            _casilla(**updates)
 
     def test_blank_primary_label_rejected(self) -> None:
         with pytest.raises(ValidationError, match="official Spanish text"):
@@ -139,27 +163,6 @@ class TestSemanticRoleFieldShape:
                 label="   ",
                 legal_refs=("ley-58-2003:art-29",),
                 source_refs=("aeat-manual",),
-            )
-
-    def test_intentional_singleton_role_requires_semantic_role(self) -> None:
-        with pytest.raises(ValidationError):
-            _casilla(
-                semantic_role_cardinality="intentional_singleton",
-                semantic_role_cardinality_reason="2025-only legal slot",
-            )
-
-    def test_intentional_singleton_role_requires_reason(self) -> None:
-        with pytest.raises(ValidationError):
-            _casilla(
-                semantic_role="is_pf_mod_40_3_b2_base_tipo_3",
-                semantic_role_cardinality="intentional_singleton",
-            )
-
-    def test_singleton_reason_requires_intentional_singleton_cardinality(self) -> None:
-        with pytest.raises(ValidationError):
-            _casilla(
-                semantic_role="is_pf_mod_40_3_b2_base_tipo_3",
-                semantic_role_cardinality_reason="2025-only legal slot",
             )
 
     def test_intentional_singleton_cardinality_round_trips(self) -> None:
@@ -388,15 +391,6 @@ class TestTypoTwinWarning:
                 "00501",
                 "is_liquidacion_i_importe",
             ),
-            ("100", "2025", "DECFAL", "irpf_declarante_fecha_fallecimiento"),
-            ("100", "2025", "FNACDLG", "irpf_descendiente_fecha_nacimiento"),
-            ("100", "2025", "FALLDLG", "irpf_descendiente_fecha_fallecimiento"),
-            ("100", "2025", "ANOASDLG", "irpf_ascendiente_fecha_nacimiento"),
-            ("100", "2025", "FALLASDLG", "irpf_ascendiente_fecha_fallecimiento"),
-            ("100", "2025", "APENOMDLG", "irpf_descendiente_apellidos_nombre"),
-            ("100", "2025", "MINUSDLG", "irpf_descendiente_clave_discapacidad"),
-            ("100", "2025", "APENOMDLG_ASC", "irpf_ascendiente_apellidos_nombre"),
-            ("100", "2025", "PCTMINASDLG", "irpf_ascendiente_clave_discapacidad"),
             (
                 "100",
                 "2020",
@@ -604,6 +598,33 @@ class TestTypoTwinWarning:
             assert casilla.semantic_role_cardinality == "intentional_singleton"
             assert casilla.semantic_role_cardinality_reason is not None
 
+    def test_m100_2024_2025_family_profile_roles_are_shared(self) -> None:
+        modelo = _bundled_modelo("100")
+        casillas = {
+            (revision.id, casilla.id): casilla
+            for revision in modelo.revisions.values()
+            for casilla in revision.casillas
+        }
+        shared_roles = (
+            ("DECFAL", "irpf_declarante_fecha_fallecimiento"),
+            ("APENOMDLG", "irpf_descendiente_apellidos_nombre"),
+            ("FNACDLG", "irpf_descendiente_fecha_nacimiento"),
+            ("MINUSDLG", "irpf_descendiente_clave_discapacidad"),
+            ("FALLDLG", "irpf_descendiente_fecha_fallecimiento"),
+            ("APENOMDLG_ASC", "irpf_ascendiente_apellidos_nombre"),
+            ("ANOASDLG", "irpf_ascendiente_fecha_nacimiento"),
+            ("PCTMINASDLG", "irpf_ascendiente_clave_discapacidad"),
+            ("FALLASDLG", "irpf_ascendiente_fecha_fallecimiento"),
+        )
+
+        for casilla_id, role in shared_roles:
+            casilla_2024 = casillas[("2024", casilla_id)]
+            casilla_2025 = casillas[("2025", casilla_id)]
+            assert casilla_2024.semantic_role == role
+            assert casilla_2025.semantic_role == role
+            assert casilla_2024.semantic_role_cardinality == "shared"
+            assert casilla_2025.semantic_role_cardinality == "shared"
+
     def test_reviewed_singleton_markers_do_not_warn(self) -> None:
         reviewed_modelos = (
             _bundled_modelo("100"),
@@ -638,15 +659,6 @@ class TestTypoTwinWarning:
             "is_correccion_otras_correcciones_resultado_permanente_disminucion",
             "is_correccion_otras_correcciones_resultado_temporaria_ejercicio_disminucion",
             "is_liquidacion_i_importe",
-            "irpf_declarante_fecha_fallecimiento",
-            "irpf_descendiente_fecha_nacimiento",
-            "irpf_descendiente_fecha_fallecimiento",
-            "irpf_ascendiente_fecha_nacimiento",
-            "irpf_ascendiente_fecha_fallecimiento",
-            "irpf_descendiente_apellidos_nombre",
-            "irpf_descendiente_clave_discapacidad",
-            "irpf_ascendiente_apellidos_nombre",
-            "irpf_ascendiente_clave_discapacidad",
             "irpf_deduccion_c_valenciana_ayudas_publicas_generalitat_2020",
             "irpf_num_hijos_maternidad_2020",
             "irpf_incremento_maternidad_no_aplicado_2020",
@@ -946,34 +958,36 @@ class TestSemanticRoleTypoTwinHelpers:
     def _index(*known_roles: str) -> _SemanticRoleTypoIndex:
         return _build_semantic_role_typo_index(known_roles)
 
-    def test_identity_candidate_is_not_a_typo_twin(self) -> None:
-        role = "taxpayer_nif"
-        index = self._index(role)
-        assert _candidate_is_typo_twin(role, set(role), len(role), role, len(role), 1, index) is False
-
-    def test_single_char_substitution_is_a_typo_twin(self) -> None:
-        # taxpayer_niff vs taxpayer_nif: a near-duplicate that is not a sibling.
-        role = "taxpayer_niff"
-        known = "taxpayer_nif"
+    @pytest.mark.parametrize(
+        ("role", "known", "expected"),
+        (
+            ("taxpayer_nif", "taxpayer_nif", False),
+            ("taxpayer_niff", "taxpayer_nif", True),
+            ("irpf_ascendiente_fecha_nacimiento", "irpf_descendiente_fecha_nacimiento", True),
+        ),
+        ids=("identity", "single-char-substitution", "relationship-not-axis-exempt"),
+    )
+    def test_candidate_typo_twin_cases(self, role: str, known: str, expected: bool) -> None:
         index = self._index(known)
-        max_diff = int(0.08 * (len(role) + len(known)))
-        assert _candidate_is_typo_twin(role, set(role), len(role), known, len(known), max_diff, index) is True
+        max_diff = max(1, int(0.08 * (len(role) + len(known))))
+        assert _candidate_is_typo_twin(role, set(role), len(role), known, len(known), max_diff, index) is expected
 
-    def test_relationship_candidate_is_not_axis_exempt(self) -> None:
-        # ascendiente vs descendiente are source-visible relationship subjects.
-        role = "irpf_ascendiente_fecha_nacimiento"
-        known = "irpf_descendiente_fecha_nacimiento"
-        index = self._index(known)
-        max_diff = int(0.08 * (len(role) + len(known)))
-        assert _candidate_is_typo_twin(role, set(role), len(role), known, len(known), max_diff, index) is True
-
-    def test_scan_finds_near_duplicate_across_length_buckets(self) -> None:
-        index = self._index("taxpayer_nif", "unrelated_role_value")
-        assert _scan_length_buckets_for_typo_twin("taxpayer_niff", index) is True
-
-    def test_scan_returns_false_when_no_near_duplicate(self) -> None:
-        index = self._index("taxpayer_nif", "counterparty_amount")
-        assert _scan_length_buckets_for_typo_twin("completely_distinct_role", index) is False
+    @pytest.mark.parametrize(
+        ("candidate", "known_roles", "expected"),
+        (
+            ("taxpayer_niff", ("taxpayer_nif", "unrelated_role_value"), True),
+            ("completely_distinct_role", ("taxpayer_nif", "counterparty_amount"), False),
+        ),
+        ids=("near-duplicate", "distinct"),
+    )
+    def test_scan_length_buckets_for_typo_twin_cases(
+        self,
+        candidate: str,
+        known_roles: tuple[str, ...],
+        expected: bool,
+    ) -> None:
+        index = self._index(*known_roles)
+        assert _scan_length_buckets_for_typo_twin(candidate, index) is expected
 
 
 class TestSignedCuotaResultadoRoles:

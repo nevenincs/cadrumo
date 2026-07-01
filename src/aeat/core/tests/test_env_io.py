@@ -23,23 +23,22 @@ class TestReadEnvFile:
     def test_returns_empty_for_missing_file(self, tmp_path: Path) -> None:
         assert read_env_file(tmp_path / "missing.env") == {}
 
-    def test_parses_simple_key_value_pairs(self, tmp_path: Path) -> None:
+    @pytest.mark.parametrize(
+        ("text", "expected"),
+        (
+            pytest.param("FOO=bar\nBAZ=qux\n", {"FOO": "bar", "BAZ": "qux"}, id="simple-pairs"),
+            pytest.param(
+                "# header comment\n\nFOO=bar\n# inline comment\nBAZ=qux\n",
+                {"FOO": "bar", "BAZ": "qux"},
+                id="comments-and-blanks",
+            ),
+            pytest.param("FOO=\n", {"FOO": ""}, id="empty-value"),
+        ),
+    )
+    def test_parses_supported_env_lines(self, tmp_path: Path, text: str, expected: dict[str, str]) -> None:
         path = tmp_path / ".env"
-        path.write_text("FOO=bar\nBAZ=qux\n", encoding="utf-8")
-        assert read_env_file(path) == {"FOO": "bar", "BAZ": "qux"}
-
-    def test_skips_blank_lines_and_comments(self, tmp_path: Path) -> None:
-        path = tmp_path / ".env"
-        path.write_text(
-            "# header comment\n\nFOO=bar\n# inline comment\nBAZ=qux\n",
-            encoding="utf-8",
-        )
-        assert read_env_file(path) == {"FOO": "bar", "BAZ": "qux"}
-
-    def test_empty_value_yields_empty_string(self, tmp_path: Path) -> None:
-        path = tmp_path / ".env"
-        path.write_text("FOO=\n", encoding="utf-8")
-        assert read_env_file(path) == {"FOO": ""}
+        path.write_text(text, encoding="utf-8")
+        assert read_env_file(path) == expected
 
     def test_malformed_line_raises(self, tmp_path: Path) -> None:
         path = tmp_path / ".env"
@@ -53,22 +52,35 @@ class TestWriteEnvVars:
     :func:`aeat.core.env_io.write_env_vars`.
     """
 
-    def test_creates_file_when_missing(self, tmp_path: Path) -> None:
-        path = tmp_path / "subdir" / ".env"
-        write_env_var(path, "FOO", "bar")
-        assert path.read_text(encoding="utf-8") == "FOO=bar\n"
-
-    def test_appends_new_key(self, tmp_path: Path) -> None:
-        path = tmp_path / ".env"
-        path.write_text("FOO=bar\n", encoding="utf-8")
-        write_env_var(path, "BAZ", "qux")
-        assert path.read_text(encoding="utf-8") == "FOO=bar\nBAZ=qux\n"
-
-    def test_rewrites_existing_key_in_place(self, tmp_path: Path) -> None:
-        path = tmp_path / ".env"
-        path.write_text("FOO=old\nBAZ=qux\n", encoding="utf-8")
-        write_env_var(path, "FOO", "new")
-        assert path.read_text(encoding="utf-8") == "FOO=new\nBAZ=qux\n"
+    @pytest.mark.parametrize(
+        ("path_parts", "initial", "key", "value", "expected"),
+        (
+            pytest.param(("subdir", ".env"), None, "FOO", "bar", "FOO=bar\n", id="create-missing"),
+            pytest.param((".env",), "FOO=bar\n", "BAZ", "qux", "FOO=bar\nBAZ=qux\n", id="append-new-key"),
+            pytest.param(
+                (".env",),
+                "FOO=old\nBAZ=qux\n",
+                "FOO",
+                "new",
+                "FOO=new\nBAZ=qux\n",
+                id="rewrite-existing-key",
+            ),
+        ),
+    )
+    def test_write_env_var_materializes_and_updates_file(
+        self,
+        tmp_path: Path,
+        path_parts: tuple[str, ...],
+        initial: str | None,
+        key: str,
+        value: str,
+        expected: str,
+    ) -> None:
+        path = tmp_path.joinpath(*path_parts)
+        if initial is not None:
+            path.write_text(initial, encoding="utf-8")
+        write_env_var(path, key, value)
+        assert path.read_text(encoding="utf-8") == expected
 
     def test_preserves_comments_and_blank_lines(self, tmp_path: Path) -> None:
         path = tmp_path / ".env"
@@ -83,13 +95,27 @@ class TestWriteEnvVars:
         # blank lines preserved
         assert result.count("\n\n") >= 1
 
-    def test_multi_var_write_appends_in_order(self, tmp_path: Path) -> None:
+    @pytest.mark.parametrize(
+        ("initial", "updates", "expected"),
+        (
+            pytest.param(None, {"A": "1", "B": "2", "C": "3"}, "A=1\nB=2\nC=3\n", id="append-in-order"),
+            pytest.param(
+                "EXISTING=old\n",
+                {"EXISTING": "new", "FRESH": "value"},
+                "EXISTING=new\nFRESH=value\n",
+                id="update-and-append",
+            ),
+        ),
+    )
+    def test_multi_var_write_materializes_updates_in_order(
+        self,
+        tmp_path: Path,
+        initial: str | None,
+        updates: dict[str, str],
+        expected: str,
+    ) -> None:
         path = tmp_path / ".env"
-        write_env_vars(path, {"A": "1", "B": "2", "C": "3"})
-        assert path.read_text(encoding="utf-8") == "A=1\nB=2\nC=3\n"
-
-    def test_multi_var_write_mixes_update_and_append(self, tmp_path: Path) -> None:
-        path = tmp_path / ".env"
-        path.write_text("EXISTING=old\n", encoding="utf-8")
-        write_env_vars(path, {"EXISTING": "new", "FRESH": "value"})
-        assert path.read_text(encoding="utf-8") == "EXISTING=new\nFRESH=value\n"
+        if initial is not None:
+            path.write_text(initial, encoding="utf-8")
+        write_env_vars(path, updates)
+        assert path.read_text(encoding="utf-8") == expected

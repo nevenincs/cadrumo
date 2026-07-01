@@ -80,6 +80,9 @@ CalculationSourceDiagnosticReason = Literal[
     "prior_payment_not_deducted",
     "prior_payment_minoracion_not_captured",
     "settlement_not_computed",
+    "dt12_regime_window_closed",
+    "dt12_regime_window_unverified",
+    "dt12_parcial_rescate_guidance",
 ]
 
 
@@ -131,6 +134,10 @@ DEFERRED_SOURCE_KINDS: frozenset[BindingSourceKind] = frozenset(
         BindingSourceKind.RELATED_PARTY_OPERATION,  # M232 — Sheets-pull-only
         BindingSourceKind.FOREIGN_ASSET,  # M720 — Sheets-pull-only
         BindingSourceKind.REFUND_OPERATION,  # M360 — Sheets-pull-only
+        # LIVA arts. 107-110 capital-goods regularización — advisory-backed, no
+        # registry binding yet; the automatic casilla-43 feed is blocked on the
+        # deferred prorrata-definitiva source (ADR 2026-07-01).
+        BindingSourceKind.BIENES_INVERSION_REGULARIZACION,
     },
 )
 

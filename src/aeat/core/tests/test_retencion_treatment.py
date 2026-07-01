@@ -26,11 +26,21 @@ from ..aggregation import (
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
 
-def test_administrador_statutory_rates_match_art_101_2() -> None:
+@pytest.mark.parametrize(
+    ("actual", "expected"),
+    (
+        pytest.param(ADMINISTRADOR_RETENCION_RATE, Decimal("0.35"), id="general-rate"),
+        pytest.param(ADMINISTRADOR_RETENCION_REDUCED_RATE, Decimal("0.19"), id="reduced-rate"),
+        pytest.param(
+            ADMINISTRADOR_RETENCION_REDUCED_INCN_THRESHOLD_EUR,
+            Decimal("100000"),
+            id="reduced-incn-threshold",
+        ),
+    ),
+)
+def test_administrador_statutory_rates_match_art_101_2(actual: Decimal, expected: Decimal) -> None:
     """The fixed administrador rates equal the LIRPF art. 101.2 figures (35 % / 19 %, 100.000 €)."""
-    assert Decimal("0.35") == ADMINISTRADOR_RETENCION_RATE
-    assert Decimal("0.19") == ADMINISTRADOR_RETENCION_REDUCED_RATE
-    assert Decimal("100000") == ADMINISTRADOR_RETENCION_REDUCED_INCN_THRESHOLD_EUR
+    assert actual == expected
 
 
 def test_director_scheme_is_distinct_from_empleado_scheme() -> None:
@@ -40,36 +50,65 @@ def test_director_scheme_is_distinct_from_empleado_scheme() -> None:
     assert RetencionScheme.WORK_INCOME != RetencionScheme.WORK_INCOME_DIRECTOR
 
 
-def test_director_treatment_carries_fixed_art_101_2_rates() -> None:
-    """The administrador treatment is the fixed art. 101.2 rate, not the progressive escala."""
-    treatment = work_income_retencion_treatment(RetencionScheme.WORK_INCOME_DIRECTOR)
+@pytest.mark.parametrize(
+    (
+        "scheme",
+        "is_fixed_rate",
+        "fixed_rate",
+        "fixed_reduced_rate",
+        "fixed_reduced_incn_threshold_eur",
+        "legal_refs",
+    ),
+    (
+        pytest.param(
+            RetencionScheme.WORK_INCOME_DIRECTOR,
+            True,
+            Decimal("0.35"),
+            Decimal("0.19"),
+            Decimal("100000"),
+            ("ley-35-2006:art-101", "rd-439-2007:art-80"),
+            id="administrador-fixed-art-101-2",
+        ),
+        pytest.param(
+            RetencionScheme.WORK_INCOME,
+            False,
+            None,
+            None,
+            None,
+            ("ley-35-2006:art-101",),
+            id="empleado-progressive-art-101-1",
+        ),
+    ),
+)
+def test_work_income_treatment_matches_statutory_scheme(
+    scheme: RetencionScheme,
+    is_fixed_rate: bool,
+    fixed_rate: Decimal | None,
+    fixed_reduced_rate: Decimal | None,
+    fixed_reduced_incn_threshold_eur: Decimal | None,
+    legal_refs: tuple[str, ...],
+) -> None:
+    """Trabajo schemes preserve the art. 101.1 progressive and art. 101.2 fixed-rate split."""
+    treatment = work_income_retencion_treatment(scheme)
     assert isinstance(treatment, WorkIncomeRetencionTreatment)
-    assert treatment.is_fixed_rate is True
-    assert treatment.fixed_rate == Decimal("0.35")
-    assert treatment.fixed_reduced_rate == Decimal("0.19")
-    assert treatment.fixed_reduced_incn_threshold_eur == Decimal("100000")
-    assert "ley-35-2006:art-101" in treatment.legal_refs
-    assert "rd-439-2007:art-80" in treatment.legal_refs
+    assert treatment.is_fixed_rate is is_fixed_rate
+    assert treatment.fixed_rate == fixed_rate
+    assert treatment.fixed_reduced_rate == fixed_reduced_rate
+    assert treatment.fixed_reduced_incn_threshold_eur == fixed_reduced_incn_threshold_eur
+    for legal_ref in legal_refs:
+        assert legal_ref in treatment.legal_refs
 
 
-def test_empleado_treatment_is_progressive_with_no_fixed_rate() -> None:
-    """The ordinary empleado treatment is the personalised progressive procedure (art. 101.1)."""
-    treatment = work_income_retencion_treatment(RetencionScheme.WORK_INCOME)
-    assert isinstance(treatment, WorkIncomeRetencionTreatment)
-    assert treatment.is_fixed_rate is False
-    assert treatment.fixed_rate is None
-    assert treatment.fixed_reduced_rate is None
-    assert treatment.fixed_reduced_incn_threshold_eur is None
-    assert "ley-35-2006:art-101" in treatment.legal_refs
-
-
-def test_non_work_income_schemes_have_no_trabajo_treatment() -> None:
-    """Actividades, premios, capital, and arrendamiento are not art. 101.1/101.2 trabajo."""
-    for scheme in (
+@pytest.mark.parametrize(
+    "scheme",
+    (
         RetencionScheme.ECONOMIC_ACTIVITY,
         RetencionScheme.PROFESSIONAL,
         RetencionScheme.PRIZE,
         RetencionScheme.URBAN_RENTAL,
         RetencionScheme.CAPITAL_INTEREST,
-    ):
-        assert work_income_retencion_treatment(scheme) is None
+    ),
+)
+def test_non_work_income_schemes_have_no_trabajo_treatment(scheme: RetencionScheme) -> None:
+    """Actividades, premios, capital, and arrendamiento are not art. 101.1/101.2 trabajo."""
+    assert work_income_retencion_treatment(scheme) is None

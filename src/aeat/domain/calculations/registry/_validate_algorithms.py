@@ -10,6 +10,7 @@ from collections.abc import Mapping
 
 from ._ids import CasillaId
 from ._schema import AlgorithmProviderDefinition, LegalReference, ModeloRevision, SourceReference
+from ._validate_evidence import EvidenceValidator
 from ._validate_helpers import _missing_refs
 
 
@@ -24,11 +25,13 @@ def validate_algorithm_provider_section(
     revision: ModeloRevision,
     legal_refs: Mapping[str, LegalReference],
     source_refs: Mapping[str, SourceReference],
+    evidence: EvidenceValidator,
 ) -> None:
     for provider in revision.algorithm_providers:
         owner = f"algorithm provider {provider.id}"
         failures.extend(_missing_refs(prefix, owner, provider.legal_refs, legal_refs, "legal"))
         failures.extend(_missing_refs(prefix, owner, provider.source_refs, source_refs, "source"))
+        failures.extend(evidence.require_source_tier(prefix, owner, provider.source_refs, "official_source_guidance"))
 
 
 def validate_algorithm_binding_section(
@@ -42,11 +45,15 @@ def validate_algorithm_binding_section(
     parameters: set[str],
     legal_refs: Mapping[str, LegalReference],
     source_refs: Mapping[str, SourceReference],
+    evidence: EvidenceValidator,
 ) -> None:
     for alg_binding in revision.algorithm_bindings:
         owner = f"algorithm binding {alg_binding.id}"
         failures.extend(_missing_refs(prefix, owner, alg_binding.legal_refs, legal_refs, "legal"))
         failures.extend(_missing_refs(prefix, owner, alg_binding.source_refs, source_refs, "source"))
+        failures.extend(
+            evidence.require_source_tier(prefix, owner, alg_binding.source_refs, "official_source_guidance")
+        )
         provider = provider_by_id.get(alg_binding.provider)
         if provider is None:
             failures.append(f"{prefix}: {owner} references unknown provider {alg_binding.provider!r}")

@@ -41,7 +41,6 @@ from ._referential_integrity_support import (
     minimal_application_link,
     minimal_casilla,
     minimal_catalogues,
-    minimal_legal_ref,
     minimal_modelo,
     minimal_revision,
     minimal_source_ref,
@@ -53,6 +52,8 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 _NONEXISTENT_CASILLA: CasillaId = validated_casilla_id("nonexistent-casilla", surface="_NONEXISTENT_CASILLA")
 _NUMERIC_CASILLA_01: CasillaId = validated_casilla_id("01", surface="_NUMERIC_CASILLA_01")
 _MISSING_LEGAL_ID = "ley-35-2006:art-9999"
+_LAYOUT_SOURCE_ID = "aeat-layout-source-test"
+_PARITY_SOURCE_ID = "aeat-open-parity-source"
 
 
 def _modelo_validation_failures(modelo: ModeloDefinition) -> list[str]:
@@ -63,10 +64,63 @@ def _modelo_validation_failures(modelo: ModeloDefinition) -> list[str]:
     return []
 
 
+def _catalogues_with_layout_source() -> RegistryCatalogues:
+    layout_source = minimal_source_ref().model_copy(
+        update={
+            "id": _LAYOUT_SOURCE_ID,
+            "evidence_tier": "layout_authority",
+            "kind": "record_design",
+            "corpus_path": "registry/aeat/sources/aeat-layout-source-test.pdf",
+        },
+    )
+    catalogues = minimal_catalogues()
+    return RegistryCatalogues(
+        legal=catalogues.legal,
+        sources={**catalogues.sources, _LAYOUT_SOURCE_ID: layout_source},
+    )
+
+
+def _catalogues_with_executable_parity_source() -> RegistryCatalogues:
+    parity_source = minimal_source_ref().model_copy(
+        update={
+            "id": _PARITY_SOURCE_ID,
+            "evidence_tier": "executable_parity_evidence",
+        },
+    )
+    catalogues = minimal_catalogues()
+    return RegistryCatalogues(
+        legal=catalogues.legal,
+        sources={**catalogues.sources, _PARITY_SOURCE_ID: parity_source},
+    )
+
+
 def _assert_missing_legal_ref_rejected(revision: ModeloRevision, expected_match: str) -> None:
     snapshot = build_snapshot_with_missing_legal(revision, _MISSING_LEGAL_ID)
     with pytest.raises(RegistryValidationError, match=expected_match):
         check_all_id_references(snapshot)
+
+
+def test_modelo_validation_rejects_modelo_sourced_only_by_executable_parity() -> None:
+    modelo = minimal_modelo(minimal_revision()).model_copy(update={"source_refs": (_PARITY_SOURCE_ID,)})
+
+    with pytest.raises(
+        RegistryValidationError,
+        match=r"modelo: 130 requires one of official_source_guidance, layout_authority source evidence",
+    ):
+        RegistryValidator(_catalogues_with_executable_parity_source()).validate_modelo(modelo)
+
+
+def test_modelo_validation_rejects_revision_sourced_only_by_executable_parity() -> None:
+    revision = minimal_revision().model_copy(update={"source_refs": (_PARITY_SOURCE_ID,)})
+
+    with pytest.raises(
+        RegistryValidationError,
+        match=(
+            r"modelo 130 revision test-revision: revision "
+            r"requires one of official_source_guidance, layout_authority source evidence"
+        ),
+    ):
+        RegistryValidator(_catalogues_with_executable_parity_source()).validate_modelo(minimal_modelo(revision))
 
 
 def test_dangling_application_link_legal_refs() -> None:
@@ -117,6 +171,29 @@ def test_dangling_support_removal_decision_legal_refs() -> None:
     )
     revision = minimal_revision(support_removal_decisions=(decision,))
     _assert_missing_legal_ref_rejected(revision, r"support_removal_decision srd.test.legal_refs")
+
+
+def test_modelo_validation_rejects_support_removal_sourced_only_by_executable_parity() -> None:
+    decision = SupportRemovalDecisionDefinition(
+        id="srd.test",
+        subject_type="application_link",
+        subject_id="al.removed",
+        decision="remove_from_filing_grade",
+        reason="out_of_scope",
+        evidence_note="Removed filing-grade support must be grounded in official source evidence.",
+        legal_refs=(REFERENCE_LEGAL_ID,),
+        source_refs=(_PARITY_SOURCE_ID,),
+    )
+    revision = minimal_revision(support_removal_decisions=(decision,))
+
+    with pytest.raises(
+        RegistryValidationError,
+        match=(
+            r"support removal decision srd\.test "
+            r"requires one of official_source_guidance, layout_authority source evidence"
+        ),
+    ):
+        RegistryValidator(_catalogues_with_executable_parity_source()).validate_modelo(minimal_modelo(revision))
 
 
 def test_dangling_construct_casilla_ref() -> None:
@@ -280,6 +357,61 @@ def test_modelo_validation_checks_algorithm_binding_provider_outputs() -> None:
     assert any("maps output(s) 'other' not declared by provider 'provider.test'" in failure for failure in failures)
 
 
+def test_modelo_validation_rejects_algorithm_provider_without_official_source_guidance() -> None:
+    provider = AlgorithmProviderDefinition(
+        id="provider.test",
+        import_path="aeat.tests.provider",
+        callable_name="run",
+        deterministic=True,
+        side_effect_free=True,
+        allowed_input_schema={"value": "decimal"},
+        output_schema={"result": "decimal"},
+        trace_contract="test trace",
+        legal_refs=(REFERENCE_LEGAL_ID,),
+        source_refs=(_LAYOUT_SOURCE_ID,),
+    )
+    revision = minimal_revision().model_copy(update={"algorithm_providers": (provider,)})
+
+    with pytest.raises(
+        RegistryValidationError,
+        match=r"algorithm provider provider\.test requires official_source_guidance source evidence",
+    ):
+        RegistryValidator(_catalogues_with_layout_source()).validate_modelo(minimal_modelo(revision))
+
+
+def test_modelo_validation_rejects_algorithm_binding_without_official_source_guidance() -> None:
+    provider = AlgorithmProviderDefinition(
+        id="provider.test",
+        import_path="aeat.tests.provider",
+        callable_name="run",
+        deterministic=True,
+        side_effect_free=True,
+        allowed_input_schema={"value": "decimal"},
+        output_schema={"result": "decimal"},
+        trace_contract="test trace",
+        legal_refs=(REFERENCE_LEGAL_ID,),
+        source_refs=(REFERENCE_SOURCE_ID,),
+    )
+    binding = AlgorithmBindingDefinition(
+        id="algorithm-binding.test",
+        provider="provider.test",
+        target_casilla_id=_NUMERIC_CASILLA_01,
+        inputs={"value": _NUMERIC_CASILLA_01},
+        output_casilla_ids={"result": _NUMERIC_CASILLA_01},
+        legal_refs=(REFERENCE_LEGAL_ID,),
+        source_refs=(_LAYOUT_SOURCE_ID,),
+    )
+    revision = minimal_revision().model_copy(
+        update={"algorithm_providers": (provider,), "algorithm_bindings": (binding,)},
+    )
+
+    with pytest.raises(
+        RegistryValidationError,
+        match=r"algorithm binding algorithm-binding\.test requires official_source_guidance source evidence",
+    ):
+        RegistryValidator(_catalogues_with_layout_source()).validate_modelo(minimal_modelo(revision))
+
+
 def test_snapshot_integrity_checks_construct_filing_schedule_ref() -> None:
     """construct.filing_schedules must point at declared filing schedules."""
 
@@ -437,9 +569,10 @@ def test_dangling_modelo_source_refs() -> None:
     _extra = "aeat-dr-extra-v1"
     revision = minimal_revision()
     extra_source = minimal_source_ref().model_copy(update={"id": _extra})
+    catalogues = minimal_catalogues()
     augmented_catalogues = RegistryCatalogues(
-        legal={REFERENCE_LEGAL_ID: minimal_legal_ref()},
-        sources={REFERENCE_SOURCE_ID: minimal_source_ref(), _extra: extra_source},
+        legal=catalogues.legal,
+        sources={**catalogues.sources, _extra: extra_source},
     )
     modelo = minimal_modelo(revision).model_copy(update={"source_refs": (REFERENCE_SOURCE_ID, _extra)})
     snapshot = snapshot_for_revision(modelo, augmented_catalogues, revision)

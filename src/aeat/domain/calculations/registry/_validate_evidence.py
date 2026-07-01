@@ -111,6 +111,22 @@ class EvidenceValidator:
             return []
         return [f"{scope}: {owner} requires {required_tier} source evidence"]
 
+    def require_any_source_tier(
+        self,
+        scope: str,
+        owner: str,
+        refs: Iterable[str],
+        allowed_tiers: Iterable[str],
+    ) -> list[str]:
+        allowed = tuple(allowed_tiers)
+        if any((source := self._sources.get(ref)) is not None and source.evidence_tier in allowed for ref in refs):
+            return []
+        if len(allowed) == 1:
+            requirement = f"{allowed[0]} source evidence"
+        else:
+            requirement = f"one of {', '.join(allowed)} source evidence"
+        return [f"{scope}: {owner} requires {requirement}"]
+
     def validate_source_citations(
         self,
         scope: str,

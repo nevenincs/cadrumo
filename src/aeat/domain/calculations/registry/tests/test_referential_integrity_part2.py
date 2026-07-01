@@ -50,6 +50,7 @@ _MISSING_LEGAL_ID = "ley-35-2006:art-9999"
 _MISSING_SOURCE_ID = "aeat-missing-source"
 _EXTRA_LEGAL_ID = "ley-35-2006:art-9998"
 _EXTRA_SOURCE_ID = "aeat-extra-source"
+_PARITY_SOURCE_ID = "aeat-open-parity-source"
 
 
 def _modelo_validation_failures(modelo: ModeloDefinition) -> list[str]:
@@ -58,6 +59,20 @@ def _modelo_validation_failures(modelo: ModeloDefinition) -> list[str]:
     except RegistryValidationError as exc:
         return str(exc).splitlines()
     return []
+
+
+def _catalogues_with_executable_parity_source() -> RegistryCatalogues:
+    parity_source = minimal_source_ref().model_copy(
+        update={
+            "id": _PARITY_SOURCE_ID,
+            "evidence_tier": "executable_parity_evidence",
+        },
+    )
+    catalogues = minimal_catalogues()
+    return RegistryCatalogues(
+        legal=catalogues.legal,
+        sources={**catalogues.sources, _PARITY_SOURCE_ID: parity_source},
+    )
 
 
 def test_segment_qualified_reference_resolves_across_segments() -> None:
@@ -396,6 +411,26 @@ def test_completeness_manifest_refs_must_resolve_in_registry_validation() -> Non
     ), f"manifest source_refs must be checked against the source catalogue; got: {failures}"
 
 
+def test_modelo_validation_rejects_manifest_sourced_only_by_executable_parity() -> None:
+    manifest = completeness_manifest(
+        (CalculationCompletenessCasilla(casilla_id=_NUMERIC_CASILLA_01, number="01"),),
+    ).model_copy(
+        update={"source_ref": _PARITY_SOURCE_ID, "source_refs": (_PARITY_SOURCE_ID,)},
+    )
+    revision = minimal_revision(casillas=(minimal_casilla(_NUMERIC_CASILLA_01),)).model_copy(
+        update={"completeness_manifest": manifest},
+    )
+
+    with pytest.raises(
+        RegistryValidationError,
+        match=(
+            r"calculation-completeness manifest "
+            r"requires one of official_source_guidance, layout_authority source evidence"
+        ),
+    ):
+        RegistryValidator(_catalogues_with_executable_parity_source()).validate_modelo(minimal_modelo(revision))
+
+
 def test_casilla_continuidad_evolution_refs_must_resolve_in_registry_validation() -> None:
     """Continuity-evolution legal/source refs are load-blocking catalogue references."""
     evolution = CasillaContinuidadEvolutionDefinition(
@@ -425,6 +460,30 @@ def test_casilla_continuidad_evolution_refs_must_resolve_in_registry_validation(
     ), f"continuity evolution source_refs must be checked against the source catalogue; got: {failures}"
 
 
+def test_modelo_validation_rejects_continuity_evolution_sourced_only_by_executable_parity() -> None:
+    evolution = CasillaContinuidadEvolutionDefinition(
+        id="test-continuidad-2024-2025",
+        continuidad_id="test.continuidad",
+        from_revision="2024",
+        to_revision="2025",
+        evolution_kind="label_evolved",
+        legal_refs=(REFERENCE_LEGAL_ID,),
+        source_refs=(_PARITY_SOURCE_ID,),
+    )
+    revision = minimal_revision(casillas=(minimal_casilla(_NUMERIC_CASILLA_01),)).model_copy(
+        update={"casilla_continuidad_evolutions": (evolution,)},
+    )
+
+    with pytest.raises(
+        RegistryValidationError,
+        match=(
+            r"casilla continuidad evolution 'test-continuidad-2024-2025' "
+            r"requires one of official_source_guidance, layout_authority source evidence"
+        ),
+    ):
+        RegistryValidator(_catalogues_with_executable_parity_source()).validate_modelo(minimal_modelo(revision))
+
+
 def test_snapshot_carries_manifest_and_continuity_refs() -> None:
     """Slice snapshots retain manifest and continuity-evolution legal/source evidence."""
     manifest = completeness_manifest(
@@ -451,13 +510,14 @@ def test_snapshot_carries_manifest_and_continuity_refs() -> None:
             "casilla_continuidad_evolutions": (evolution,),
         },
     )
+    catalogues = minimal_catalogues()
     catalogues = RegistryCatalogues(
         legal={
-            REFERENCE_LEGAL_ID: minimal_legal_ref(),
+            **catalogues.legal,
             _EXTRA_LEGAL_ID: minimal_legal_ref().model_copy(update={"id": _EXTRA_LEGAL_ID}),
         },
         sources={
-            REFERENCE_SOURCE_ID: minimal_source_ref(),
+            **catalogues.sources,
             _EXTRA_SOURCE_ID: minimal_source_ref().model_copy(update={"id": _EXTRA_SOURCE_ID}),
         },
     )

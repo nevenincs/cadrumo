@@ -1,12 +1,17 @@
-"""Public API for AEAT justificante domain records and errors.
+"""Public facade for AEAT justificante receipt metadata.
 
-Callers outside :mod:`aeat.domain.justificante` must import exclusively from this
-module for domain records and errors. The parser pipeline lives in
-:mod:`aeat.adapters.inbound.justificante`.
+Callers outside :mod:`aeat.domain.justificante` must import receipt-domain
+types from this module. The facade re-exports the strict :class:`Justificante`
+record, :class:`JustificanteParserBackend` parser contract,
+:class:`JustificanteRepository` encrypted AUDIT store, and the
+:class:`PdfModeloImportError` / :class:`JustificanteError` hierarchy used by
+PDF filing-import flows.
 
-Live CSV verification lives in :mod:`aeat.adapters.outbound.aeat.verify`
-(Playwright/browser automation belongs in the outbound adapter layer, not
-the domain).
+The PDF parsing pipeline lives in :mod:`aeat.adapters.inbound.justificante`;
+this module intentionally does not re-export parser entry points. Live CSV
+verification lives in :mod:`aeat.adapters.outbound.aeat.verify`, because
+Playwright/browser automation belongs in the outbound adapter layer, not the
+domain.
 
 """
 

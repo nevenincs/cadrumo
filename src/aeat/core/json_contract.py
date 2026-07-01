@@ -33,9 +33,9 @@ from __future__ import annotations
 
 import json
 import sys
-from collections.abc import Callable, Sequence
+from collections.abc import Callable, Mapping, Sequence
 from enum import StrEnum
-from typing import IO, Any, Protocol, runtime_checkable
+from typing import IO, Any, Protocol, cast, runtime_checkable
 
 from pydantic import BaseModel, ConfigDict, Field, RootModel
 
@@ -360,12 +360,35 @@ def emit_json_success(
         },
         reveal_identifiers=reveal_cli_identifiers_opt_in(),
     )
+    _record_captured_envelope(envelope_payload)
     emit_json_document(
         envelope_payload,
         indent=indent,
         sort_keys=sort_keys,
         stream=stream,
     )
+
+
+def _record_captured_envelope(envelope_payload: object) -> None:
+    """Feed the emitted envelope to the observability capture sink, best-effort.
+
+    The deterministic-output substrate captures the verbatim emitted
+    envelope so a recorded run can be replayed and asserted byte-identical
+    after masking. Capture is off by default: when no
+    :func:`aeat.core.observability.capture_envelopes` scope is active the
+    recorder is a single ``ContextVar.get`` returning ``None``. The call
+    is fully best-effort — a capture failure must never disturb the emit
+    contract. The import is lazy so :mod:`aeat.core.json_contract` keeps
+    no module-load dependency on the observability layer.
+    """
+    if not isinstance(envelope_payload, Mapping):
+        return
+    try:
+        from .observability._capture import record_emitted_envelope
+
+        record_emitted_envelope(cast("Mapping[str, object]", envelope_payload))
+    except Exception:  # capture must never break emit
+        _log.debug("json_contract: envelope capture failed; continuing", exc_info=True)
 
 
 def register_schema[RegisteredSchemaT: OutputSchema | OutputRootSchema[Any]](

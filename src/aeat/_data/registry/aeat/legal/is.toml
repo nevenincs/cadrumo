@@ -797,7 +797,7 @@ source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_re
 review_status = "reviewed"
 
 [sources."boe-modelo-202-base-order"]
-evidence_tier = "legal_authority"
+evidence_tier = "layout_authority"
 authority = "boe"
 kind = "form_spec"
 corpus_path = "corpus/normatives/html/orden-hfp-227-2017.html"
@@ -810,7 +810,7 @@ source_url = "https://www.boe.es/buscar/act.php?id=BOE-A-2017-2778"
 review_status = "reviewed"
 
 [sources."boe-modelo-202-2018-amendment"]
-evidence_tier = "legal_authority"
+evidence_tier = "layout_authority"
 authority = "boe"
 kind = "form_spec"
 corpus_path = "corpus/normatives/html/orden-hac-941-2018.html"
@@ -823,7 +823,7 @@ source_url = "https://www.boe.es/buscar/doc.php?id=BOE-A-2018-12515"
 review_status = "reviewed"
 
 [sources."boe-modelo-202-2023-amendment"]
-evidence_tier = "legal_authority"
+evidence_tier = "layout_authority"
 authority = "boe"
 kind = "form_spec"
 corpus_path = "corpus/normatives/html/orden-hfp-312-2023.html"
@@ -836,7 +836,7 @@ source_url = "https://www.boe.es/buscar/doc.php?id=BOE-A-2023-8120"
 review_status = "reviewed"
 
 [sources."boe-modelo-202-2025-amendment"]
-evidence_tier = "legal_authority"
+evidence_tier = "layout_authority"
 authority = "boe"
 kind = "form_spec"
 corpus_path = "corpus/normatives/html/orden-hac-262-2025.html"

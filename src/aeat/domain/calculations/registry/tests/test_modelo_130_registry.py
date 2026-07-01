@@ -131,6 +131,7 @@ def test_modelo_130_casilla_15_grounding_uses_aeat_instruction_citation(
     assert "trimestres anteriores del mismo año" in art_110.required_text
     assert "resultados negativos" not in art_110_required_text
     assert "casilla 15" not in art_110_required_text
+    assert art_110.notes is not None
     assert "apartado 110.5 vigente" in art_110.notes
 
     revision = modelo.revisions["2019-y-siguientes"]
@@ -152,6 +153,7 @@ def test_modelo_130_casilla_15_grounding_uses_aeat_instruction_citation(
     assert carry_casilla.input_kind is InputKind.COMPUTED
     assert carry_casilla.formula == "modelo-130-resultados-negativos-anteriores-cap"
     assert carry_casilla.binding is None
+    assert carry_casilla.constraints is not None
     assert carry_casilla.constraints.source_refs == ("aeat-modelo-130-instructions",)
     assert instruction_source.evidence_tier == "official_source_guidance"
     assert instruction_source.kind == "instructions"
@@ -166,7 +168,7 @@ def test_modelo_130_casilla_15_grounding_uses_aeat_instruction_citation(
         assert normalise_corpus_text(required_text) in instruction_text
 
 
-def test_modelo_130_high_retention_exemption_cites_art_109_not_retired_art_110_3b(
+def test_modelo_130_art109_profile_advisory_is_not_a_casilla_17_formula_branch(
     modelo_130_registry: _ModeloFixture,
 ) -> None:
     modelo, _catalogues = modelo_130_registry
@@ -178,8 +180,15 @@ def test_modelo_130_high_retention_exemption_cites_art_109_not_retired_art_110_3
         if item.predicate_id == "modelo-130-art109-exencion-alta-retencion"
     )
 
-    assert "rd-439-2007:art-109" in formula.legal_refs
+    assert "rd-439-2007:art-109" not in formula.legal_refs
     assert "rd-439-2007:art-110-3-b" not in formula.legal_refs
+    expression = formula.expression
+    assert expression.op == "subtract"
+    assert len(expression.args) == 2
+    assert expression.args[0].op == "subtract"
+    assert tuple(arg.casilla_id for arg in expression.args[0].args) == ("14", "15")
+    assert expression.args[1].casilla_id == "16"
+    assert predicate.expression == 'profile_flag_enabled("professional_income_withholding_ge_70pct")'
     assert predicate.legal_refs == ("rd-439-2007:art-109",)
 
 
@@ -563,31 +572,25 @@ def test_modelo_130_second_period_carry_forward_picks_up_first_period_saldo(
 
 
 # ---------------------------------------------------------------------------
-# Art. 109 RIRPF: high-retention exemption formula (casilla 17)
+# Modelo 130 casilla 17 official form formula
 # ---------------------------------------------------------------------------
 
 
-def test_modelo_130_art109_casilla_17_is_zero_when_retention_ratio_meets_threshold(
+def test_modelo_130_high_casilla_06_amount_does_not_zero_casilla_17(
     modelo_130_registry: _ModeloFixture,
 ) -> None:
-    """Art. 109 RIRPF: casilla 17 = 0 when retenciones/rendimientos >= 70%.
+    """Casilla 06 is retenciones amount, so c06/c01 does not create an Art. 109 zero branch.
 
-    Oracle values: rendimientos íntegros (c01) = 15000, retenciones (c06) = 10500.
-    Ratio = 10500 / 15000 = 0.70 — exactly at the Art. 109 threshold.
-    The formula for casilla 17 (modelo-130-diferencia) must produce Decimal(0)
-    because the autónomo is exempt from the quarterly payment.
-
-    Expected value derivation: Art. 109 RD 439/2007 mandates zero payment
-    when the accumulated retention ratio >= 70% of gross income. This is not
-    derived from the formula under test; it is derived from the regulatory rule.
+    A positive apartado-II lane keeps the official casilla 17 result non-zero,
+    making the retired branch observable.
     """
     result = calculate_registry_snapshot(
         _snapshot_130(modelo_130_registry),
         inputs={
             _M130_INGRESOS_CASILLA: Decimal("15000"),
             _M130_GASTOS_CASILLA: Decimal("5000"),
-            _M130_RETENCIONES_CASILLA: Decimal("10500"),  # 10500/15000 = exactly 70%
-            _M130_AGRARIAN_VOLUME_CASILLA: Decimal("0"),
+            _M130_RETENCIONES_CASILLA: Decimal("10500"),
+            _M130_AGRARIAN_VOLUME_CASILLA: Decimal("1000000"),
             _M130_AGRARIAN_WITHHELD_CASILLA: Decimal("0"),
             _M130_HOME_DEDUCTION_CASILLA: Decimal("0"),
             _M130_PRIOR_RETURN_CASILLA: Decimal("0"),
@@ -600,29 +603,24 @@ def test_modelo_130_art109_casilla_17_is_zero_when_retention_ratio_meets_thresho
     )
 
     casilla_17 = next(obs for obs in result.observations if obs.casilla_id == _M130_DIFERENCIA_CASILLA)
-    assert casilla_17.value == Decimal("0"), (
-        f"Art. 109: casilla 17 must be zero when retention ratio >= 70%; got {casilla_17.value}"
-    )
+    casilla_14 = next(obs for obs in result.observations if obs.casilla_id == _M130_DIFERENCIA_PREVIA_CASILLA)
+    casilla_15 = next(obs for obs in result.observations if obs.casilla_id == _M130_CARRY_FORWARD_CASILLA)
+    casilla_16 = next(obs for obs in result.observations if obs.casilla_id == _M130_HOME_DEDUCTION_CASILLA)
+
+    expected = casilla_14.value - casilla_15.value - casilla_16.value
+    assert expected != Decimal("0")
+    assert casilla_17.value == expected
 
 
-def test_modelo_130_art109_casilla_17_computes_normally_when_retention_ratio_below_threshold(
+def test_modelo_130_casilla_17_uses_standard_subtraction_for_low_retention_amount(
     modelo_130_registry: _ModeloFixture,
 ) -> None:
-    """Anti-tautology: casilla 17 equals the standard subtraction when retenciones/rendimientos < 70%.
+    """Casilla 17 equals the standard subtraction when the retained amount is small too.
 
     Oracle values: ingresos (c01) = 50000, gastos (c02) = 10000,
     rendimiento neto (c03) = 40000, retenciones (c06) = 1000.
-    Ratio = 1000 / 50000 = 0.02 (2%) — well below the 70% threshold.
     Formula chain: c04=8000, c05=0, c07=7000, c12=7000, c13=0, c14=7000,
-    c15=0, c16=0 → c17 = 7000 (standard subtraction, NOT the exemption zero).
-
-    The ratio is deliberately far from 70% so this test is sensitive to any
-    accidental triggering of the exemption branch. A regression that applied
-    the exemption at 2% retention would produce c17=0, failing the assertion.
-
-    Expected value derivation: standard M130 formula chain — not the Art. 109
-    exemption rule under test. This is the anti-tautology proof that the formula
-    branch condition is real and the exemption only fires at >= 70%.
+    c15=0, c16=0 -> c17 = 7000.
     """
     result = calculate_registry_snapshot(
         _snapshot_130(modelo_130_registry),
@@ -634,7 +632,7 @@ def test_modelo_130_art109_casilla_17_computes_normally_when_retention_ratio_bel
             # supplying it as input would trip the computed-casilla gate.
             # c05 (pagos fraccionados anteriores) is a bound carry; at 1T the
             # expanding span is empty so it resolves to 0 absent-by-design.
-            _M130_RETENCIONES_CASILLA: Decimal("1000"),  # 1000/50000 = 2% — well below threshold; c04=8000 > c06
+            _M130_RETENCIONES_CASILLA: Decimal("1000"),
             _M130_AGRARIAN_VOLUME_CASILLA: Decimal("0"),
             _M130_AGRARIAN_WITHHELD_CASILLA: Decimal("0"),
             _M130_HOME_DEDUCTION_CASILLA: Decimal("0"),
@@ -657,10 +655,10 @@ def test_modelo_130_art109_casilla_17_computes_normally_when_retention_ratio_bel
     assert casilla_17.value == expected, (
         f"Below-threshold case: casilla 17 must equal (c14-c15)-c16 = {expected}; got {casilla_17.value}"
     )
-    # Anti-tautology: standard formula must yield a positive payment when income > costs
-    # and retenciones are small. If c17 = 0 here, the exemption branch fired incorrectly.
+    # Standard formula must yield a positive payment when income > costs and
+    # retenciones are small.
     assert casilla_17.value != Decimal("0"), (
-        "Below-threshold case: casilla 17 must not be zero when income=50000 and retenciones=1000 (2% ratio)"
+        "casilla 17 must not be zero when income=50000 and retenciones=1000"
     )
 
 
@@ -681,8 +679,8 @@ def test_modelo_130_retencion_casilla_is_reported_amount_not_a_rate_computation(
     The retención RATE on professional activities is set by the PAYER under
     art. 95 RIRPF (developing art. 101.5 LIRPF) and reported on Modelo 111;
     Modelo 130 never computes it. In M130 the suffered retención enters as a
-    manually-reported amount (casilla 06) whose only downstream use is the
-    art. 109 70%-exemption ratio. There is therefore no place in M130 to branch
+    manually-reported amount (casilla 06) subtracted by the official form
+    arithmetic. There is therefore no place in M130 to branch
     a retención treatment on the activity article, which is why issue #549's
     requested "Art. 101.6 sport/art" axis has no M130 calculation home: art. 95
     RIRPF grounds the reported amount's provenance, not a rate the form derives.

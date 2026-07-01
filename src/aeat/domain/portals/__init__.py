@@ -1,19 +1,25 @@
 """Public facade for the local AEAT portal metadata catalogue.
 
-The facade exposes :class:`Portal` identifiers, taxonomy enums
-:class:`PortalCategory`, :class:`AuthMethod`, :class:`PortalHost`, and
-:class:`UrlStability`, strict frozen :class:`PortalMetadata` records, and the
-frozen :data:`PORTAL_REGISTRY` mapping from :class:`Portal` keys to metadata.
+This package owns declarative AEAT portal identifiers and metadata used by
+registry, schema, and live-read planning surfaces. The facade exposes
+:class:`Portal` identifiers, taxonomy enums :class:`PortalCategory`,
+:class:`AuthMethod`, :class:`PortalHost`, and :class:`UrlStability`, plus lazy
+exports for strict frozen :class:`PortalMetadata` records and the frozen
+:data:`PORTAL_REGISTRY` mapping from :class:`Portal` keys to metadata.
 
-Use :func:`get_portal` for one portal, :func:`portals_by_category` to filter on
-the :class:`PortalCategory` axis carried by metadata, and
-:func:`portals_for_modelo` for modelo-linked filing and borrador portals
-derived from :mod:`aeat.domain.calculations.registry` application links.
+Registry assembly validates host names through the central external-constants
+catalogue, filing/censo path shape, anonymous-auth exclusivity, retired-portal
+replacement links, and complete coverage of every :class:`Portal` member. Use
+:func:`get_portal` for one entry, :func:`portals_by_category` for taxonomy
+views, and :func:`portals_for_modelo` for filing and borrador portals declared
+by validated :mod:`aeat.domain.calculations.registry` application links for a
+:class:`~aeat.domain.modelos.ModeloCode`.
 
 Consumers outside :mod:`aeat.domain.portals` import from this package root; the
-underscore-prefixed modules are internal. This package describes portal, filing,
-borrador, censo, and modelo metadata only; it does not open portals, submit
-returns, sign, pay, or perform live AEAT access.
+underscore-prefixed modules are internal. This package describes portal,
+filing, borrador, censo, auth, payment, and consultation metadata only. It does
+not open portals, submit returns, sign, pay, mark notifications read, or perform
+live AEAT access; those operations belong to application and adapter layers.
 """
 
 from __future__ import annotations

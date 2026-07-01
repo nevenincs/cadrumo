@@ -32,6 +32,7 @@ from dataclasses import dataclass
 from decimal import Decimal, InvalidOperation
 from typing import Literal
 
+from ...core import RescateType
 from ...core._modelo import Modelo
 from ...core.errors import AeatError
 from ...core.external_constants import M347_THRESHOLD_EUR
@@ -47,7 +48,11 @@ from ...domain.calculations.registry._runtime_graph import enum_consumed_binding
 from ...domain.calculations.registry._schema import DataBindingDefinition, ModeloRevision
 from ...domain.contribuyente._deduccion_maternidad import compute_deduccion_maternidad_0611
 from ...domain.modelos._calculation_revision import CalculationRevision
-from ...domain.modelos._dt12_reduccion import compute_dt12_reduccion_plan_pensiones
+from ...domain.modelos._dt12_reduccion import (
+    Dt12WindowEligibility,
+    compute_dt12_reduccion_plan_pensiones,
+    dt12_regime_window_eligibility,
+)
 from ...domain.modelos._errors import ModeloError
 from ...domain.modelos._repository import WorkUnitCatalogueRepository
 from ...domain.modelos._row_models import (
@@ -138,6 +143,15 @@ class WorkCalculateInputBundle:
     relation_values: Mapping[RelationId, Decimal]
     detail_rows: tuple[ModeloDetailRow, ...]
     borrador_snapshot_id: str | None
+    shortcut_diagnostics: tuple[CalculationSourceDiagnostic, ...] = ()
+    """Non-blocking advisories raised while resolving shortcut inputs.
+
+    Carries the DT 12ª apartado-4 window diagnostics
+    (:func:`apply_calculation_shortcut_inputs`) so the calculate service can fold
+    them into its ``source_diagnostics`` / ``source_advisories`` channel. The
+    shortcut path is the only site with the contingencia/rescate year facts, so
+    the advisory originates here and rides the bundle to the operator surface.
+    """
 
     @classmethod
     def build(
@@ -150,6 +164,7 @@ class WorkCalculateInputBundle:
         detail_rows: tuple[ModeloDetailRow, ...],
         borrador_snapshot_id: str | None,
         text_casilla_inputs: Mapping[CasillaId, str] | None = None,
+        shortcut_diagnostics: tuple[CalculationSourceDiagnostic, ...] = (),
     ) -> WorkCalculateInputBundle:
         """Freeze CLI-assembled mappings before crossing into calculation services.
 
@@ -164,6 +179,7 @@ class WorkCalculateInputBundle:
             relation_values=dict(relation_values),
             detail_rows=detail_rows,
             borrador_snapshot_id=borrador_snapshot_id.strip() if borrador_snapshot_id else None,
+            shortcut_diagnostics=shortcut_diagnostics,
         )
 
     def optional_binding_values(self) -> Mapping[BindingId, Decimal] | None:
@@ -277,7 +293,7 @@ def calculate_modelo_work_revision(
         work_unit=work_unit,
         modality=modelo_202_modality_for_work_unit(work_unit),
         authorization_advisory=authorization_advisory_for_modelo(str(work_unit.modelo)),
-        source_diagnostics=calculation.source_diagnostics,
+        source_diagnostics=(*inputs.shortcut_diagnostics, *calculation.source_diagnostics),
     )
 
 
@@ -294,6 +310,9 @@ def build_work_calculate_input_bundle(
     rescate_plan_pensiones_capital: Decimal | None = None,
     rescate_plan_pensiones_aportaciones_pre_2007: Decimal | None = None,
     rescate_plan_pensiones_aportaciones_totales: Decimal | None = None,
+    rescate_plan_pensiones_tipo: RescateType | None = None,
+    rescate_plan_pensiones_contingencia_year: int | None = None,
+    rescate_plan_pensiones_rescate_year: int | None = None,
     sal_beneficio_neto: Decimal | None = None,
     sal_reserva_dotada: Decimal | None = None,
     sal_capital_social: Decimal | None = None,
@@ -357,7 +376,7 @@ def build_work_calculate_input_bundle(
             else:
                 binding_values[key] = _decimal_binding_value(raw_value, bindings_by_id[key])
 
-    casilla_inputs, binding_values = apply_calculation_shortcut_inputs(
+    casilla_inputs, binding_values, shortcut_diagnostics = apply_calculation_shortcut_inputs(
         work_unit_id=work_unit_id,
         casilla_inputs=casilla_inputs,
         binding_values=binding_values,
@@ -366,6 +385,9 @@ def build_work_calculate_input_bundle(
         rescate_plan_pensiones_capital=rescate_plan_pensiones_capital,
         rescate_plan_pensiones_aportaciones_pre_2007=rescate_plan_pensiones_aportaciones_pre_2007,
         rescate_plan_pensiones_aportaciones_totales=rescate_plan_pensiones_aportaciones_totales,
+        rescate_plan_pensiones_tipo=rescate_plan_pensiones_tipo,
+        rescate_plan_pensiones_contingencia_year=rescate_plan_pensiones_contingencia_year,
+        rescate_plan_pensiones_rescate_year=rescate_plan_pensiones_rescate_year,
         sal_beneficio_neto=sal_beneficio_neto,
         sal_reserva_dotada=sal_reserva_dotada,
         sal_capital_social=sal_capital_social,
@@ -385,6 +407,7 @@ def build_work_calculate_input_bundle(
         relation_values=relation_values,
         detail_rows=detail_rows,
         borrador_snapshot_id=borrador_snapshot_id,
+        shortcut_diagnostics=shortcut_diagnostics,
     )
 
 
@@ -656,11 +679,14 @@ def apply_calculation_shortcut_inputs(
     rescate_plan_pensiones_capital: Decimal | None = None,
     rescate_plan_pensiones_aportaciones_pre_2007: Decimal | None = None,
     rescate_plan_pensiones_aportaciones_totales: Decimal | None = None,
+    rescate_plan_pensiones_tipo: RescateType | None = None,
+    rescate_plan_pensiones_contingencia_year: int | None = None,
+    rescate_plan_pensiones_rescate_year: int | None = None,
     sal_beneficio_neto: Decimal | None = None,
     sal_reserva_dotada: Decimal | None = None,
     sal_capital_social: Decimal | None = None,
     autoconsumo_promotor_base: Decimal | None = None,
-) -> tuple[dict[CasillaId, Decimal], dict[BindingId, Decimal]]:
+) -> tuple[dict[CasillaId, Decimal], dict[BindingId, Decimal], tuple[CalculationSourceDiagnostic, ...]]:
     """Apply backend-owned tax shortcut inputs for a calculation command.
 
     The CLI may parse option strings into typed values, but legal-rule
@@ -670,9 +696,23 @@ def apply_calculation_shortcut_inputs(
     unique semantic-role casillas. The Modelo 303 autoconsumo-promotor shortcut
     writes the backend-owned binding consumed by the registry engine.
 
+    The DT 12ª pension-rescate shortcut is fact-gated by the apartado-4 time
+    window (LIRPF DT 12ª.4, added by Ley 26/2014). When the operator declares the
+    contingencia year and the window predicate
+    (:func:`~aeat.domain.modelos.dt12_regime_window_eligibility`) proves the
+    window CLOSED, the 40% reducción injection is WITHHELD — the legally correct
+    no-régimen result, since applying an out-of-window reducción would be a silent
+    over-reduction (under-declaration of tax per ``no-silent-under-declaration``).
+    When the window is open the reducción injects as usual; when the contingencia
+    year is absent the reducción injects with an unverified-window advisory. Every
+    branch surfaces a non-blocking
+    :class:`~aeat.application.aggregation.CalculationSourceDiagnostic`; calculate
+    never aborts on the window verdict.
+
     Returns:
-        A pair of mutable dictionaries: resolved casilla inputs and resolved
-        decimal binding values.
+        A triple: resolved casilla inputs, resolved decimal binding values, and
+        the non-blocking DT 12ª window advisory diagnostics (empty when no
+        pension rescate was supplied).
 
     See Also:
         :func:`aeat.application.modelo._semantic_role_resolution.casilla_id_for_unique_semantic_role`:
@@ -680,6 +720,7 @@ def apply_calculation_shortcut_inputs(
     """
     resolved_casilla_values = dict(casilla_inputs)
     resolved_bindings = dict(binding_values)
+    advisories: list[CalculationSourceDiagnostic] = []
 
     if prestacion_inss_exenta is not None:
         resolved_casilla_values[_semantic_role_casilla_id(work_unit_id, _INSS_EXENTA_SEMANTIC_ROLE)] = (
@@ -707,13 +748,28 @@ def apply_calculation_shortcut_inputs(
         assert rescate_plan_pensiones_capital is not None
         assert rescate_plan_pensiones_aportaciones_pre_2007 is not None
         assert rescate_plan_pensiones_aportaciones_totales is not None
-        resolved_casilla_values[_semantic_role_casilla_id(work_unit_id, _REDUCCION_TRABAJO_SEMANTIC_ROLE)] = (
-            compute_dt12_reduccion_plan_pensiones(
-                gross_rescate=rescate_plan_pensiones_capital,
-                aportaciones_pre_2007=rescate_plan_pensiones_aportaciones_pre_2007,
-                aportaciones_totales=rescate_plan_pensiones_aportaciones_totales,
-            )
+        reduccion = compute_dt12_reduccion_plan_pensiones(
+            gross_rescate=rescate_plan_pensiones_capital,
+            aportaciones_pre_2007=rescate_plan_pensiones_aportaciones_pre_2007,
+            aportaciones_totales=rescate_plan_pensiones_aportaciones_totales,
         )
+        reduccion_casilla_id = _semantic_role_casilla_id(work_unit_id, _REDUCCION_TRABAJO_SEMANTIC_ROLE)
+        eligibility = _dt12_window_verdict(
+            work_unit_id=work_unit_id,
+            contingencia_year=rescate_plan_pensiones_contingencia_year,
+            rescate_year=rescate_plan_pensiones_rescate_year,
+        )
+        inject, window_advisory = _dt12_window_decision(
+            reduccion=reduccion,
+            eligibility=eligibility,
+            reduccion_casilla_id=reduccion_casilla_id,
+        )
+        if inject:
+            resolved_casilla_values[reduccion_casilla_id] = reduccion
+        if window_advisory is not None:
+            advisories.append(window_advisory)
+        if rescate_plan_pensiones_tipo is RescateType.PARCIAL:
+            advisories.append(_dt12_parcial_guidance_advisory(reduccion_casilla_id))
 
     sal_values = (sal_beneficio_neto, sal_reserva_dotada, sal_capital_social)
     if any(value is not None for value in sal_values):
@@ -736,7 +792,98 @@ def apply_calculation_shortcut_inputs(
     if autoconsumo_promotor_base is not None:
         resolved_bindings[_AUTOCONSUMO_PROMOTOR_BINDING] = autoconsumo_promotor_base
 
-    return resolved_casilla_values, resolved_bindings
+    return resolved_casilla_values, resolved_bindings, tuple(advisories)
+
+
+def _dt12_window_verdict(
+    *,
+    work_unit_id: str,
+    contingencia_year: int | None,
+    rescate_year: int | None,
+) -> Dt12WindowEligibility | None:
+    """Evaluate the DT 12ª apartado-4 window when the contingencia year is declared.
+
+    The contingencia year is the load-bearing fact: without it the window cannot
+    be evaluated and the caller emits the unverified-window advisory. The rescate
+    (percepción) year defaults to the work unit's filing year, the common case
+    (the prestación is percibida in the year being filed).
+    """
+    if contingencia_year is None:
+        return None
+    resolved_rescate_year = rescate_year if rescate_year is not None else _work_unit_filing_year(work_unit_id)
+    return dt12_regime_window_eligibility(
+        contingencia_year=contingencia_year,
+        rescate_year=resolved_rescate_year,
+    )
+
+
+def _dt12_window_decision(
+    *,
+    reduccion: Decimal,
+    eligibility: Dt12WindowEligibility | None,
+    reduccion_casilla_id: CasillaId,
+) -> tuple[bool, CalculationSourceDiagnostic | None]:
+    """Decide whether to inject the DT 12ª reducción and which advisory to raise.
+
+    Returns ``(inject, advisory)``. A proven-closed window WITHHOLDS the injection
+    (``inject = False``) and raises a ``dt12_regime_window_closed`` advisory naming
+    the closed window and eligible range; an open window injects with no advisory;
+    an absent contingencia year injects with a ``dt12_regime_window_unverified``
+    advisory.
+    """
+    if eligibility is None:
+        return True, CalculationSourceDiagnostic(
+            reason="dt12_regime_window_unverified",
+            source_kind="dt12_regime_window",
+            message=(
+                "DT 12ª: the 40% pension-rescate reducción was applied, but the apartado-4 time "
+                "window (LIRPF DT 12ª.4, Ley 26/2014) was not verified because no contingencia year "
+                "was declared. The régimen applies only to prestaciones percibidas within the window "
+                "measured from the contingencia year (the contingencia year plus the two following, "
+                "or through 2018 for contingencias in 2010 or earlier, or the eighth following "
+                "ejercicio for 2011–2014). Re-run with --contingencia-year to confirm the window."
+            ),
+            casilla_id=reduccion_casilla_id,
+        )
+    if eligibility.eligible:
+        return True, None
+    return False, CalculationSourceDiagnostic(
+        reason="dt12_regime_window_closed",
+        source_kind="dt12_regime_window",
+        message=(
+            "DT 12ª: the 40% pension-rescate reducción was WITHHELD. The apartado-4 time window "
+            "(LIRPF DT 12ª.4, Ley 26/2014) is CLOSED for this rescate: a contingencia in "
+            f"{eligibility.contingencia_year} was eligible only for prestaciones percibidas through "
+            f"{eligibility.eligible_through_year}, but the rescate is declared in "
+            f"{eligibility.rescate_year}. Applying the reducción would over-reduce the return "
+            "(under-declaration of tax); it is withheld as the legally correct result."
+        ),
+        casilla_id=reduccion_casilla_id,
+    )
+
+
+def _dt12_parcial_guidance_advisory(reduccion_casilla_id: CasillaId) -> CalculationSourceDiagnostic:
+    """Return the parcial-rescate guidance advisory (guidance signal, not a gate)."""
+    return CalculationSourceDiagnostic(
+        reason="dt12_parcial_rescate_guidance",
+        source_kind="dt12_regime_window",
+        message=(
+            "DT 12ª parcial rescate: every partial cobro of the same contingency shares ONE "
+            "apartado-4 time window, measured once from the contingencia year (it does not restart "
+            "per withdrawal). Confirm each cobro falls inside that window, and note that a mixed "
+            "capital/renta rescate may forfeit the transitional régimen (DGT criteria: the "
+            "prestación must be received en forma de capital)."
+        ),
+        casilla_id=reduccion_casilla_id,
+    )
+
+
+def _work_unit_filing_year(work_unit_id: str) -> int:
+    catalogue = WorkUnitCatalogueRepository().load()
+    work_unit = catalogue.get(work_unit_id)
+    if work_unit is None:
+        raise LookupError(f"work unit {work_unit_id!r} not found")
+    return work_unit.filing_year
 
 
 def _semantic_role_casilla_id(work_unit_id: str, semantic_role: str) -> CasillaId:

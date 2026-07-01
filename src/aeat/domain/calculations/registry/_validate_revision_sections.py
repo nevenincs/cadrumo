@@ -45,6 +45,8 @@ from ._validate_surfaces import (
     validate_workbook_parity_section,
 )
 
+_REVISION_SOURCE_TIERS = ("official_source_guidance", "layout_authority")
+
 
 def _validate_revision_surface_sections(
     failures: list[str],
@@ -67,6 +69,7 @@ def _validate_revision_surface_sections(
         export_field_ids=context.export_field_ids,
         legal_refs=legal_refs,
         source_refs=source_refs,
+        evidence=evidence,
     )
     validate_formula_section(
         failures,
@@ -130,6 +133,7 @@ def _validate_revision_surface_sections(
         revision=revision,
         legal_refs=legal_refs,
         source_refs=source_refs,
+        evidence=evidence,
     )
     validate_algorithm_binding_section(
         failures,
@@ -141,6 +145,7 @@ def _validate_revision_surface_sections(
         parameters=context.parameters,
         legal_refs=legal_refs,
         source_refs=source_refs,
+        evidence=evidence,
     )
     validate_export_layout_section(
         failures,
@@ -220,12 +225,14 @@ def validate_revision_definition(
     prefix = f"modelo {modelo.id} revision {revision.id}"
     failures.extend(_missing_refs(prefix, "revision", revision.legal_refs, legal_refs, "legal"))
     failures.extend(_missing_refs(prefix, "revision", revision.source_refs, source_refs, "source"))
+    failures.extend(evidence.require_any_source_tier(prefix, "revision", revision.source_refs, _REVISION_SOURCE_TIERS))
     _validate_revision_reference_surfaces(
         failures,
         prefix=prefix,
         revision=revision,
         legal_refs=legal_refs,
         source_refs=source_refs,
+        evidence=evidence,
     )
     context = build_revision_validation_context(revision)
     if not context.ids_by_kind["workbook parity reference"]:

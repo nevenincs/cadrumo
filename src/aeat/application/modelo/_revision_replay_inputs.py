@@ -30,6 +30,7 @@ from ...domain.calculations.registry import (
     ApplicabilityVerdict,
     BindingId,
     CasillaDefinition,
+    CasillaId,
     DataBindingDefinition,
     InputKind,
     RegistrySnapshot,
@@ -147,7 +148,7 @@ def _observation_backed_bound_binding_replay_inputs(
     for casilla in snapshot.revision.casillas:
         if casilla.input_kind != InputKind.BOUND:
             continue
-        raw_value = revision.input_values_by_casilla_id.get(casilla.id)
+        raw_value = _bound_casilla_replay_value(revision, casilla.id)
         if raw_value is None:
             continue
         binding_ids = bound_casilla_binding_ids(casilla)
@@ -160,6 +161,16 @@ def _observation_backed_bound_binding_replay_inputs(
             continue
         recovered[replay_binding_id] = raw_value
     return dict(sorted(recovered.items()))
+
+
+def _bound_casilla_replay_value(revision: CalculationRevision, casilla_id: CasillaId) -> str | None:
+    raw_input = revision.input_values_by_casilla_id.get(casilla_id)
+    if raw_input is not None:
+        return raw_input
+    verified_value = revision.casilla_values.get(casilla_id)
+    if verified_value is None:
+        return None
+    return canonical_decimal_string(verified_value)
 
 
 def _observation_backed_bound_casillas_with_replay_binding(

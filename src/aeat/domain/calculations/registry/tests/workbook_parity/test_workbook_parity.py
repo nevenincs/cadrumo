@@ -53,6 +53,19 @@ def _write_formula_workbook(path: Path) -> None:
     workbook.save(path)
 
 
+def _write_static_workbook(path: Path) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    workbook = Workbook()
+    worksheet = workbook.active
+    assert worksheet is not None
+    worksheet.title = "Modelo"
+    worksheet["A1"] = "Casilla"
+    worksheet["B1"] = "Descripcion"
+    worksheet["A2"] = "001"
+    worksheet["B2"] = "Importe"
+    workbook.save(path)
+
+
 def _committed_modelo_130_snapshot() -> RegistrySnapshot:
     modelo, catalogues = _committed_modelo("130")
     return build_snapshot(
@@ -80,6 +93,20 @@ def test_scan_workbook_discovers_xlsx_formula_cells(tmp_path: Path) -> None:
     assert report.formula_cells == 2
     assert {cell.coordinate for cell in report.output_candidates} == {"B1", "B2"}
     assert {cell.coordinate for cell in report.input_candidates} >= {"A1", "A2"}
+
+
+def test_scan_workbook_classifies_static_layout_as_layout_authority(tmp_path: Path) -> None:
+    workbook_path = tmp_path / "modelo_151" / "files" / "151-static-layout.xlsx"
+    _write_static_workbook(workbook_path)
+
+    report = scan_workbook(workbook_path, root=tmp_path, options=WorkbookScanOptions(per_file_timeout_seconds=5))
+
+    assert report.path == "modelo_151/files/151-static-layout.xlsx"
+    assert report.modelo == "151"
+    assert report.workbook_kind == "static_layout"
+    assert report.evidence_tier == "layout_authority"
+    assert report.formula_cells == 0
+    assert "executable_parity_evidence" in report.not_evidence_for
 
 
 def test_committed_record_design_xlsx_is_not_tax_formula_parity_oracle() -> None:

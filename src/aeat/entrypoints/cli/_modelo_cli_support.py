@@ -42,7 +42,7 @@ from ...application.modelo import (
     validate_m349_country_prefix_context,
     validate_m349_nif_format,
 )
-from ...core import Modelo
+from ...core import Modelo, RescateType
 from ...core.errors import AeatError, build_error_envelope, resolve_error_message
 from ...core.external_constants import OutputLanguage
 from ...core.i18n import tr
@@ -463,6 +463,9 @@ def work_calculate_input_bundle_from_cli(
     rescate_plan_pensiones_capital: str | None,
     rescate_plan_pensiones_aportaciones_pre_2007: str | None,
     rescate_plan_pensiones_aportaciones_totales: str | None,
+    rescate_type: RescateType | None = None,
+    contingencia_year: int | None = None,
+    rescate_year: int | None = None,
     sal_beneficio_neto: str | None,
     sal_reserva_dotada: str | None,
     sal_capital_social: str | None,
@@ -506,6 +509,9 @@ def work_calculate_input_bundle_from_cli(
                 translation_key="cli.app.modelo.work.rescate_plan_pensiones_not_decimal",
                 default="--rescate-plan-pensiones-* values must be decimals.",
             ),
+            rescate_plan_pensiones_tipo=rescate_type,
+            rescate_plan_pensiones_contingencia_year=contingencia_year,
+            rescate_plan_pensiones_rescate_year=rescate_year,
             sal_beneficio_neto=optional_decimal_option(
                 sal_beneficio_neto,
                 translation_key="cli.app.modelo.work.sal_reserva_not_decimal",

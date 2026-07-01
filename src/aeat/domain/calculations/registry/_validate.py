@@ -32,6 +32,8 @@ from ._validate_revision_sections import validate_revision_definition
 if TYPE_CHECKING:
     from ...user_profile._schema import ProfileSchemaDefinition
 
+_MODELO_SOURCE_TIERS = ("official_source_guidance", "layout_authority")
+
 
 class RegistryValidator:
     """Validate legal/source closure and calculability for modelos."""
@@ -148,6 +150,9 @@ class RegistryValidator:
             failures.extend(self._validate_catalogues())
         failures.extend(_missing_refs("modelo", modelo.id, modelo.legal_refs, self._legal, "legal"))
         failures.extend(_missing_refs("modelo", modelo.id, modelo.source_refs, self._sources, "source"))
+        failures.extend(
+            self._evidence.require_any_source_tier("modelo", modelo.id, modelo.source_refs, _MODELO_SOURCE_TIERS)
+        )
         for revision in modelo.revisions.values():
             failures.extend(self._validate_revision(modelo, revision))
         failures.extend(self._validate_user_profile_contract((modelo,)))

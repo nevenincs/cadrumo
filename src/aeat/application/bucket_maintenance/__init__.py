@@ -28,6 +28,14 @@ payloads based on
 :class:`~aeat.domain.user_profile.UserProfilePortableExport`, and a
 manifest digest from
 :func:`~aeat.application.bucket_maintenance.compute_manifest_digest`.
+Sealed exports use
+:class:`~aeat.adapters.persistence.storage.StorageCustodyProfile.FULL`:
+the portable payload carries the typed profile/work/ledger/calculation/filing
+categories plus the registry-derived carried secure-object namespaces. Carried
+rows are addressed by their natural object keys, not the stored HMAC lookup
+digests, so import re-saves them through the recipient bucket's
+:class:`~aeat.adapters.persistence.storage.SecureObjectRepository` and
+re-encrypts under that bucket's DEK.
 This package exposes the lifecycle composition verbs ``browse``,
 ``delete``, ``export``, ``import``, and ``rename``. The ``search`` verb is
 deferred behind its own ADR because it must route through domain

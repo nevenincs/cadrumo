@@ -15,11 +15,17 @@ The :func:`~aeat.adapters.persistence.storage.save_envelope` and
 :func:`~aeat.adapters.persistence.storage.load_envelope` helpers atomically
 write and read the envelope JSON via the project's standard
 ``tempfile.NamedTemporaryFile + os.replace`` pattern. Encrypted envelopes
-derive their key from the active
-:class:`~aeat.adapters.persistence.storage.MasterKeyProvider` via HKDF-SHA256.
+require an explicit
+:class:`~aeat.adapters.persistence.storage.MasterKeyProvider` and HKDF context;
+the helpers derive a per-consumer key via HKDF-SHA256 and do not resolve an
+ambient provider themselves.
 
 The substrate refuses any payload whose ``schema_version`` differs from
 the consumer's expected version, or which fails classification validation.
+Migrated sensitive repositories should use
+:class:`~aeat.adapters.persistence.storage.SecureBoundRepository`, which stores
+the same envelope payload shape in encrypted SQL secure objects rather than
+plain files.
 """
 
 from __future__ import annotations
@@ -368,10 +374,11 @@ def save_encrypted_envelope[T: BaseModel](
     classification and HKDF context are bound to the ciphertext via AAD so an
     attacker cannot relabel or cross-consumer-graft.
 
-    The same master-key provider that the test substrate already
-    overrides via ``override_master_key_provider`` is honoured here;
-    callers can therefore exercise this code path against ephemeral
-    keys in tests.
+    The caller supplies ``master_key_provider`` explicitly. Tests can
+    pass :class:`~aeat.adapters.persistence.storage.EphemeralMasterKeyProvider`;
+    production callers pass the provider selected by the custody flow.
+    This helper does not resolve settings, active sessions, or default
+    key providers on its own.
 
     Args:
         envelope: The plaintext envelope to encrypt and persist.

@@ -71,6 +71,21 @@ def test_modelo_151_form_order_is_boe_corpus_backed() -> None:
     assert reference.article == "modelo 151"
 
 
+def test_modelo_151_workbook_parity_uses_layout_authority_source() -> None:
+    modelo, catalogues = _load_modelo_151()
+    revision = modelo.revisions["2015-y-siguientes"]
+    workbook = revision.workbook_parity_refs[0]
+
+    assert workbook.id == "modelo-151-cuota-escala"
+    assert workbook.formula_coverage == "static_layout"
+    assert workbook.workbook_source == "boe-modelo-151-layout"
+    assert workbook.source_refs == ("boe-modelo-151-layout",)
+
+    source = catalogues.sources[workbook.workbook_source]
+    assert source.evidence_tier == "layout_authority"
+    assert source.kind == "form_spec"
+
+
 def test_modelo_151_carries_base_liquidable_under_declaration_advisory() -> None:
     """M151 guards the base-liquidable -> cuota-integra handoff (no-silent-under-declaration).
 

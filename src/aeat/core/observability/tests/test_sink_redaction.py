@@ -36,6 +36,7 @@ from .._sink import JsonlRunSink
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
+_RUN_ID = "0123456789abcdef"
 _NIF_CANARY = "12345678Z"
 _BEARER_TAIL = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
 _BEARER_CANARY = f"Bearer {_BEARER_TAIL}"
@@ -67,7 +68,7 @@ def _emit(sink: JsonlRunSink, event: RunEvent) -> None:
 
 def _build_form_fill_event(value: str) -> RunEvent:
     return RunEvent(
-        run_id="0123456789abcdef",
+        run_id=_RUN_ID,
         step_id="step-1",
         kind=RunEventKind.FORM_FILL,
         payload=RunEventPayload(
@@ -80,7 +81,7 @@ def _build_form_fill_event(value: str) -> RunEvent:
 
 def _build_navigation_event(url: str) -> RunEvent:
     return RunEvent(
-        run_id="0123456789abcdef",
+        run_id=_RUN_ID,
         step_id="step-2",
         kind=RunEventKind.NAVIGATION,
         payload=RunEventPayload(navigation=NavigationPayload(url=url)),
@@ -91,7 +92,7 @@ def _build_navigation_event(url: str) -> RunEvent:
 
 def _build_error_event(message: str) -> RunEvent:
     return RunEvent(
-        run_id="0123456789abcdef",
+        run_id=_RUN_ID,
         step_id="step-3",
         kind=RunEventKind.ERROR,
         payload=RunEventPayload(
@@ -102,39 +103,39 @@ def _build_error_event(message: str) -> RunEvent:
     )
 
 
-def test_form_fill_nif_does_not_land_plaintext_on_disk(tmp_path: Path) -> None:
+@pytest.mark.parametrize(
+    ("event", "forbidden_fragments"),
+    (
+        pytest.param(_build_form_fill_event(value=_NIF_CANARY), (_NIF_CANARY,), id="form-fill-nif"),
+        pytest.param(
+            _build_navigation_event(url=_AEAT_URL),
+            (_URL_PATH_CANARY, "session=ABCDEFGHIJ"),
+            id="navigation-url-path",
+        ),
+        pytest.param(
+            _build_error_event(message=f"failed to authenticate: {_BEARER_CANARY}"),
+            (_BEARER_TAIL,),
+            id="error-bearer-token",
+        ),
+    ),
+)
+def test_sensitive_event_values_do_not_land_plaintext_on_disk(
+    tmp_path: Path,
+    event: RunEvent,
+    forbidden_fragments: tuple[str, ...],
+) -> None:
     target = tmp_path / "events.jsonl"
-    sink = JsonlRunSink(target, run_id="0123456789abcdef")
-    _emit(sink, _build_form_fill_event(value=_NIF_CANARY))
+    sink = JsonlRunSink(target, run_id=_RUN_ID)
+    _emit(sink, event)
     text = target.read_text(encoding="utf-8")
-    assert _NIF_CANARY not in text
-
-
-def test_navigation_url_path_does_not_land_on_disk(tmp_path: Path) -> None:
-    target = tmp_path / "events.jsonl"
-    sink = JsonlRunSink(target, run_id="0123456789abcdef")
-    _emit(sink, _build_navigation_event(url=_AEAT_URL))
-    text = target.read_text(encoding="utf-8")
-    assert _URL_PATH_CANARY not in text
-    assert "session=ABCDEFGHIJ" not in text
-
-
-def test_error_message_bearer_token_redacted(tmp_path: Path) -> None:
-    target = tmp_path / "events.jsonl"
-    sink = JsonlRunSink(target, run_id="0123456789abcdef")
-    _emit(
-        sink,
-        _build_error_event(message=f"failed to authenticate: {_BEARER_CANARY}"),
-    )
-    text = target.read_text(encoding="utf-8")
-    # The opaque token tail must not appear verbatim in the JSONL.
-    assert _BEARER_TAIL not in text
+    for forbidden in forbidden_fragments:
+        assert forbidden not in text
 
 
 def test_redacted_jsonl_remains_parseable(tmp_path: Path) -> None:
     """Even after redaction, each line remains a valid JSON object."""
     target = tmp_path / "events.jsonl"
-    sink = JsonlRunSink(target, run_id="0123456789abcdef")
+    sink = JsonlRunSink(target, run_id=_RUN_ID)
     _emit(sink, _build_form_fill_event(value="not sensitive"))
     line = target.read_text(encoding="utf-8").strip()
     assert line
@@ -147,7 +148,7 @@ def test_redacted_jsonl_remains_parseable(tmp_path: Path) -> None:
 def test_timestamp_not_redacted_away(tmp_path: Path) -> None:
     """Timestamp ISO string must not match any redaction pattern."""
     target = tmp_path / "events.jsonl"
-    sink = JsonlRunSink(target, run_id="0123456789abcdef")
+    sink = JsonlRunSink(target, run_id=_RUN_ID)
     _emit(sink, _build_form_fill_event(value="anything"))
     line = target.read_text(encoding="utf-8").strip()
     decoded = json.loads(line)
@@ -169,7 +170,6 @@ def test_run_scoped_records_scrubbed_before_reaching_jsonl_via_attach_run_sink(
 
     from ...logging import SecretScrubbingFilter, attach_run_sink
 
-    _RUN_ID = "0123456789abcdef"
     target = tmp_path / "run_events.jsonl"
     sink = JsonlRunSink(target, run_id=_RUN_ID)
 

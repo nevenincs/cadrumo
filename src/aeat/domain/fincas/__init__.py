@@ -1,9 +1,19 @@
-"""Rental register subpackage.
+"""Public facade for the LIRPF fincas register.
 
-Per-finca and per-contract register backing LIRPF rental aggregates
-(arts. 22-24 and 85), the LIRPF art. 23.2 four-tier auto-resolver
-introduced by Ley 12/2023, and the LIRPF art. 23.1.f amortización
-multi-year ledger with a per-finca cost-basis cap.
+Per-:class:`Finca` and per-:class:`Arrendamiento` register backing factual LIRPF
+rental aggregates (arts. 22-24 and 85), the LIRPF art. 23.2 four-tier
+auto-resolver introduced by Ley 12/2023, and the LIRPF art. 23.1.f
+:class:`FincaAmortizacionLedgerEntry` multi-year ledger with a per-finca
+cost-basis cap. The ``fincas`` stem is intentional: this package models the
+registral / cadastral unit, while filing targets remain registry-owned.
+
+The main public calculations are :func:`compute_finca_aggregates`,
+:func:`compute_amortization_for_year`, :func:`compute_gastos_for_year`, and
+:func:`resolve_reduccion`. They return typed audit records such as
+:class:`FincaAggregates`, :class:`FincaAttribution`,
+:class:`ContractTierAttribution`, :class:`AmortizationComputation`,
+:class:`GastosForYear`, and :class:`TierResolution`; no function here encodes a
+Modelo 100 casilla id or filing-line authority.
 
 Callers outside :mod:`aeat.domain.fincas` import only from this module.
 Internal modules (``_models``, ``_enums``, ``_errors``,

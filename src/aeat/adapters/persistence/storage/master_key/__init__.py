@@ -1,18 +1,37 @@
-"""Master-key substrate: providers and BIP-39 recovery.
+"""Master-key substrate: providers, sessions, and BIP-39 recovery.
 
-Public surface for the at-rest master-key plumbing. Re-exports the
-provider hierarchy (:class:`MasterKeyProvider`,
-:class:`KeyringMasterKeyProvider`, :class:`FileFallbackMasterKeyProvider`,
-:class:`UnsecuredMasterKeyProvider`, :class:`EphemeralMasterKeyProvider`),
-the :func:`get_master_key_provider` resolver, the unsecured-provider safety guard
-(:func:`refuse_unsecured_with_real_nif`,
-:func:`looks_like_real_tax_id`), the :func:`atomic_write_secure_bytes`
-helper, and the BIP-39 recovery primitives
+Public surface for at-rest key custody. Re-exports the provider family
+(:class:`MasterKeyProvider`, :class:`KeyringMasterKeyProvider`,
+:class:`FileFallbackMasterKeyProvider`,
+:class:`UnsecuredMasterKeyProvider`, and
+:class:`EphemeralMasterKeyProvider`), the
+:func:`get_master_key_provider` resolver, and the
+:func:`activate_master_key_provider` / :func:`activate_session`
+context managers that bind unlocked key material to the active bucket
+session. :class:`NoActiveBucketSessionError` and
+:func:`suspend_active_session` expose the same session boundary to
+tests and bootstrap flows.
+
+KDF and file-custody helpers are exported through :class:`KdfParams`,
+:func:`derive_kek_with_params`, the Argon2id cost constants, the
+unsecured-provider safety guard
+(:func:`refuse_unsecured_with_real_nif` and
+:func:`looks_like_real_tax_id`), and
+:func:`atomic_write_secure_bytes`.
+
+Recovery exports include the low-level BIP-39 primitives
 (:class:`RecoveryKey`, :class:`WrappedMasterKey`,
 :func:`generate_recovery_key`, :func:`encode_mnemonic`,
 :func:`decode_mnemonic`, :func:`wrap_master_key`,
-:func:`unwrap_master_key`, :func:`save_wrapped_master_key`,
-:func:`load_wrapped_master_key`).
+:func:`unwrap_master_key`, :func:`save_wrapped_master_key`, and
+:func:`load_wrapped_master_key`) plus the typed recovery-envelope
+facade (:class:`MintedRecovery`, :class:`RecoveryRecord`,
+:func:`mint_recovery_envelope`, :func:`load_recovery_envelope`,
+:func:`save_recovery_envelope`, :func:`unwrap_recovery_envelope`,
+:func:`verify_recovery_mnemonic`, and
+:func:`open_session_from_recovery`). Importing this package does not
+resolve providers, acquire keys, unwrap recovery material, or write
+custody files; callers must invoke the exported operations explicitly.
 """
 
 from __future__ import annotations

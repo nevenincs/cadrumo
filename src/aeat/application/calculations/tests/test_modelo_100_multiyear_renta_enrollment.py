@@ -179,6 +179,8 @@ def _seed_taxpayer_unit_profile() -> None:
             UserProfileFact(path="renta_family.cotizaciones_ss_madre_2024", value=Decimal("0")),
             UserProfileFact(path="renta_family.descendientes_menores_3_2024", value=Decimal("0")),
             UserProfileFact(path="renta_family.descendants_eu_eea_deduction", value=Decimal("0")),
+            UserProfileFact(path="renta_family.unidad_familiar_otros_miembros_base", value=Decimal("0")),
+            UserProfileFact(path="renta_family.madrid_nacimiento_adopcion_eligible_count", value=Decimal("0")),
         ),
         created_at=_CLOCK,
         updated_at=_CLOCK,

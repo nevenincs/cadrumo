@@ -270,6 +270,15 @@ class BindingSourceKind(StrEnum):
     # the FIFO carry projection. This is a registry-declared source because the
     # two annual boxes are not independent relation copy/sum folds.
     IVA_COMPENSATION_ANNUAL_PARTITION = "iva_compensation_annual_partition"
+    # Capital-goods IVA deduction regularización (LIVA arts. 107-110): the source
+    # that would materialise Modelo 303 casilla 43 / the Modelo 390 regularización
+    # field from the profile-scoped bienes-de-inversión register plus the
+    # definitive prorrata percentages. Registered in ``DEFERRED_SOURCE_KINDS`` for
+    # the first slice — the automatic feed is blocked on the separately-deferred
+    # prorrata-definitiva source (2026-06-19-silent-zero-base-aggregation-adr), so
+    # it carries no registry binding yet and surfaces an advisory rather than a
+    # hard binding (ADR 2026-07-01-iva-bienes-inversion-regularizacion).
+    BIENES_INVERSION_REGULARIZACION = "bienes_inversion_regularizacion"
     # Mesh-only sourcing decisions with NO registry binding declaration. Both are
     # resolved by a pre-mesh gate, not a registry `DataBindingDefinition.source`:
     # `borrador` materialises the Modelo 100 borrador prefill

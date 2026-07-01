@@ -234,6 +234,7 @@ from ._formula_runtime import (
     calculate_registry_snapshot,
     read_parameter,
 )
+from ._formula_text_inputs import validate_text_input_targets, validated_text_input_casilla_ids
 from ._groi_oracle import (
     GROI_ORACLE_ID,
     GroiDriver,
@@ -792,8 +793,10 @@ __all__ = [
     "validate_renta_web_open_expected_casilla_ids",
     "validate_renta_web_open_expected_casilla_values",
     "validate_retenciones_aggregation_binding",
+    "validate_text_input_targets",
     "validated_casilla_id",
     "validated_casilla_id_map",
+    "validated_text_input_casilla_ids",
     "verify_legal_catalogue",
     "verify_legal_reference",
     "verify_source_catalogue",
