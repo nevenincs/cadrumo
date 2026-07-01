@@ -130,6 +130,7 @@ def _validate_revision_surface_sections(
         revision=revision,
         legal_refs=legal_refs,
         source_refs=source_refs,
+        evidence=evidence,
     )
     validate_algorithm_binding_section(
         failures,
@@ -141,6 +142,7 @@ def _validate_revision_surface_sections(
         parameters=context.parameters,
         legal_refs=legal_refs,
         source_refs=source_refs,
+        evidence=evidence,
     )
     validate_export_layout_section(
         failures,
