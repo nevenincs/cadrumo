@@ -354,7 +354,7 @@ def test_export_writes_modelo_130_registry_layout(tmp_path: Path) -> None:
 def _approved_modelo_100_xml_dictionary_draft() -> ModeloDraft:
     provider = _schema_provider(filing_year=2024, period="0A", modelos=("100",))
     collection = provider.get_collection("100")
-    now = datetime.now(UTC).replace(microsecond=0)
+    draft_timestamp = datetime(2026, 5, 3, 12, 0, tzinfo=UTC)
     values = (
         ModeloValue(
             casilla_id="0003",
@@ -419,8 +419,8 @@ def _approved_modelo_100_xml_dictionary_draft() -> ModeloDraft:
         binding_values=(),
         casilla_provenance=tuple(provenance_by_id[value.casilla_id] for value in values),
         findings=(),
-        created_at=now,
-        updated_at=now,
+        created_at=draft_timestamp,
+        updated_at=draft_timestamp,
         schema_version=collection.schema_version,
     )
 
