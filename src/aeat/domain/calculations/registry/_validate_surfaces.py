@@ -117,6 +117,7 @@ _EXACT_CASILLA_LIST_ARITY: Mapping[str, int] = {
 }
 _MIN_CASILLA_LIST_ARITY: Mapping[str, int] = {
     "all_nonzero": 1,
+    "at_most_one_positive": 2,
     "any_nonzero": 1,
     "implies_any_nonzero": 2,
 }
@@ -455,12 +456,22 @@ def validate_deadline_window_section(
     revision: ModeloRevision,
     legal_refs: Mapping[str, LegalReference],
     source_refs: Mapping[str, SourceReference],
+    evidence: EvidenceValidator,
 ) -> None:
     for window in revision.deadline_windows:
         owner = f"deadline window {window.id}"
         failures.extend(_missing_refs(prefix, owner, window.legal_refs, legal_refs, "legal"))
         failures.extend(_missing_refs(prefix, owner, window.source_refs, source_refs, "source"))
+        failures.extend(evidence.require_source_tier(prefix, owner, window.source_refs, "official_source_guidance"))
         for condition in window.applicability_conditions:
             condition_owner = f"deadline condition for {window.id}"
             failures.extend(_missing_refs(prefix, condition_owner, condition.legal_refs, legal_refs, "legal"))
             failures.extend(_missing_refs(prefix, condition_owner, condition.source_refs, source_refs, "source"))
+            failures.extend(
+                evidence.require_source_tier(
+                    prefix,
+                    condition_owner,
+                    condition.source_refs,
+                    "official_source_guidance",
+                ),
+            )
