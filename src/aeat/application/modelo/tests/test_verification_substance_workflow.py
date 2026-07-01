@@ -174,7 +174,7 @@ def test_runtime_evaluator_recognises_every_known_predicate_operator() -> None:
     removes that regex without updating the canonical set, this
     test fires.
     """
-    from .. import _verification_actions as _verification_actions
+    from .. import _verification_actions
 
     probe_expressions: dict[str, str] = {
         "all_nonzero": 'all_nonzero(["01", "02"])',

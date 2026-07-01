@@ -17,7 +17,7 @@ from typing import Literal, cast
 
 from pydantic import BaseModel, ConfigDict, Field
 
-from ....core import Period
+from ....core import Period, TaxDomain
 from ._authority import ValidatedRegistryAuthority
 from ._errors import AmbiguousRevisionSelectionError, RegistryValidationError
 from ._ids import BindingId, CasillaId, FormulaId, LegalRefId, ParameterId, RelationId, SourceRefId
@@ -443,7 +443,12 @@ class RegistryQueryService:
     def __init__(self, authority: ValidatedRegistryAuthority) -> None:
         self._authority = authority
 
-    def list_modelos(self, *, year: int | None = None) -> ModeloListReport:
+    def list_modelos(
+        self,
+        *,
+        year: int | None = None,
+        domain: TaxDomain | None = None,
+    ) -> ModeloListReport:
         """Return a catalogue listing of all registered modelos.
 
         Each entry is a lightweight ``ModeloListRow`` carrying only summary
@@ -454,6 +459,11 @@ class RegistryQueryService:
             year: When supplied, restricts the listing to modelos that have
                 at least one revision whose ``period_selector`` covers the
                 given filing year. ``None`` returns all registered modelos.
+            domain: When supplied, restricts the listing to modelos whose
+                registry :class:`~aeat.core.TaxDomain` equals the requested
+                tax family (e.g. ``TaxDomain.IVA``). ``None`` returns every
+                family. The ``year`` and ``domain`` filters compose: passing
+                both narrows to modelos that satisfy each.
 
         Returns:
             A :class:`ModeloListReport` containing the matching rows.
@@ -467,7 +477,8 @@ class RegistryQueryService:
                 revision_count=len(modelo.revisions),
             )
             for modelo in self._authority.modelos
-            if year is None or _modelo_covers_year(modelo, year)
+            if (year is None or _modelo_covers_year(modelo, year))
+            and (domain is None or modelo.tax_domain == domain)
         ]
         return ModeloListReport(modelos=tuple(sorted(rows, key=lambda row: row.code)))
 

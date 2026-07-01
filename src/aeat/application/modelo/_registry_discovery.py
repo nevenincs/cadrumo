@@ -14,7 +14,7 @@ from __future__ import annotations
 
 from datetime import date
 
-from ...core import Period
+from ...core import Period, TaxDomain
 from ...core.resources import resources
 from ...domain.calculations.registry import InputKind, RegistryQueryService
 
@@ -38,9 +38,9 @@ def registry_modelo_codes() -> tuple[str, ...]:
     return tuple(str(modelo.id) for modelo in _service()._authority.modelos)
 
 
-def registry_list_modelos(*, year: int | None = None):
-    """Return the registry modelo list report."""
-    return _service().list_modelos(year=year)
+def registry_list_modelos(*, year: int | None = None, domain: TaxDomain | None = None):
+    """Return the registry modelo list report, optionally filtered by tax family."""
+    return _service().list_modelos(year=year, domain=domain)
 
 
 def registry_describe_modelo(modelo: str, *, period: str | None = None, as_of: date | None = None):

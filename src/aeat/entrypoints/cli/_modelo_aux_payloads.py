@@ -179,6 +179,7 @@ class ModeloListResult(OutputSchema):
 
     operation: str = "modelo.list"
     year_filter: int | None = None
+    domain_filter: str | None = None
     modelo_count: int
     modelos: list[ModeloRowPayload]
 
