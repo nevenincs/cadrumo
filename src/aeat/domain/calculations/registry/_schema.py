@@ -23,7 +23,8 @@ from pydantic import (
     model_validator,
 )
 
-from ....core import Period, TaxDomain
+from ....core._period import Period
+from ....core._tax_domain import TaxDomain
 from ....core.aggregation import BindingAggregation, BindingSourceKind, BindingTypedEnumKind
 from ....core.classification import SensitivityClass
 from .._export_field_kind import CasillaFieldKind, CasillaFieldKindValue
@@ -910,8 +911,7 @@ class DataBindingDefinition(RegistryModel):
             selector = {str(key): item for key, item in value.items()} if isinstance(value, Mapping) else {}
             hint = _canonical_selector_key_hint(selector, selector_model)
             raise RegistryValidationError(
-                f"binding {binding_id!r} (source={source!r}) selector violates "
-                f"{selector_model.__name__}: {exc}{hint}",
+                f"binding {binding_id!r} (source={source!r}) selector violates {selector_model.__name__}: {exc}{hint}",
             ) from exc
 
     @field_serializer("selector")
@@ -1014,6 +1014,20 @@ KNOWN_VERIFICATION_PREDICATE_OPERATORS: frozenset[str] = frozenset(
         "all_nonzero",
         "any_nonzero",
         "cap_le_when_positive",
+        # casilla_equals_implies_nonzero(["antecedent_casilla_id", "literal",
+        # "consequent_casilla_id"]) — categorical-conditional material
+        # implication: when the operator-entered raw text value of the named
+        # TEXT antecedent casilla equals the literal, the named consequent
+        # (Decimal) casilla must be non-zero. ADVISORY-only (no BLOCKING_RULE
+        # branch is implemented), mirroring the existing equals (BLOCKING-only)
+        # / advisory_when_ratio_ge (ADVISORY-only) asymmetry. Authored for the
+        # M210 IRNR inmobiliaria branch (tipo_renta == "inmobiliaria" implies a
+        # non-zero base_imponible), the one shape implies_nonzero cannot
+        # express because its trigger is a categorical equality, not a
+        # numeric antecedent. See the casilla_equals_implies_nonzero branch in
+        # _evaluate_advisory_predicate_fires and the
+        # m210-categorical-conditional-predicate ADR.
+        "casilla_equals_implies_nonzero",
         # equals(["lhs_id", "rhs_id"]) — consistency invariant: the two named
         # casillas must hold the same value. Authored for the M303 official
         # Diseño box projections (Stage 2): each numbered box copies a semantic
@@ -1105,6 +1119,20 @@ class VerificationPredicateDefinition(RegistryModel):
       ue_eee_status) rather than another casilla value. First use site:
       M210 representante-fiscal gate per m210-irnr-full-engine ADR
       §D2.5 (TRLIRNR Art 10).
+    - ``casilla_equals_implies_nonzero(["antecedent_casilla_id", "literal",
+      "consequent_casilla_id"])`` — categorical-conditional material
+      implication: predicate FIRES (ADVISORY shown) iff the operator-entered
+      raw text value of the named antecedent (TEXT) casilla equals the
+      literal AND the named consequent (Decimal) casilla is zero. A missing
+      or differing antecedent value holds trivially (no advisory), same
+      convention as the numeric-antecedent operators. ADVISORY-only: no
+      ``BLOCKING_RULE`` branch is implemented, mirroring the existing
+      ``equals`` (BLOCKING-only) / ``advisory_when_ratio_ge`` (ADVISORY-only)
+      asymmetry. Authored for the M210 IRNR inmobiliaria branch, the one
+      no-silent-under-declaration shape ``implies_nonzero`` cannot express
+      because its trigger is a categorical equality (``tipo_renta ==
+      "inmobiliaria"``) rather than a numeric antecedent. See the
+      m210-categorical-conditional-predicate ADR.
     """
 
     predicate_id: str = Field(min_length=1, max_length=128)
