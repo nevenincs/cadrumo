@@ -77,6 +77,14 @@ requires_snapshot = true
 legal_refs = ["orden-hap-2368-2013:art-1"]
 source_refs = ["enrolled-modelo-270-procedure"]
 
+[[revisions."2019-y-siguientes".application_links]]
+id = "modelo-270-2019-y-siguientes-verification"
+surface = "verification"
+consumer = "aeat.application.verification"
+requires_snapshot = true
+legal_refs = ["orden-hap-2368-2013:art-3", "orden-hap-2368-2013:art-1"]
+source_refs = ["enrolled-modelo-270-procedure", "enrolled-modelo-270-layout"]
+
 [[revisions."2019-y-siguientes".deadline_windows]]
 id = "modelo-270-2024-0a"
 filing_year = 2024

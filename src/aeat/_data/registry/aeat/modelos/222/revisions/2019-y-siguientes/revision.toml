@@ -76,3 +76,11 @@ consumer = "aeat.application.filing"
 requires_snapshot = true
 legal_refs = ["orden-hfp-227-2017:art-2"]
 source_refs = ["enrolled-modelo-222-procedure"]
+
+[[revisions."2019-y-siguientes".application_links]]
+id = "modelo-222-2019-y-siguientes-verification"
+surface = "verification"
+consumer = "aeat.application.verification"
+requires_snapshot = true
+legal_refs = ["orden-hfp-227-2017:art-5", "orden-hfp-227-2017:art-2"]
+source_refs = ["enrolled-modelo-222-procedure", "enrolled-modelo-222-layout"]

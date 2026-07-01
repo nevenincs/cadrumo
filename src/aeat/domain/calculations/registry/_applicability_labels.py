@@ -66,8 +66,7 @@ PAYER_FACT_INCOMPLETE_LABELS: dict[PayerFact, str] = {
         "sujeto a declaración (DAC6)"
     ),
     PayerFact.FILES_PUBLIC_REGISTRY_OPERATIONS: (
-        "es titular de un registro público que autoriza inscripciones de entidades sujetas al Impuesto sobre "
-        "Sociedades"
+        "es titular de un registro público que autoriza inscripciones de entidades sujetas al Impuesto sobre Sociedades"
     ),
     PayerFact.OPTS_MATERNITY_DEDUCTION_ADVANCE_PAYMENT: (
         "tiene derecho a la deducción por maternidad del IRPF y opta por su abono anticipado"

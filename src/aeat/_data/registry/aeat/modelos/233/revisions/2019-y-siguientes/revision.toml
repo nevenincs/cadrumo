@@ -77,6 +77,14 @@ requires_snapshot = true
 legal_refs = ["orden-hac-1400-2018:art-1"]
 source_refs = ["enrolled-modelo-233-procedure"]
 
+[[revisions."2019-y-siguientes".application_links]]
+id = "modelo-233-2019-y-siguientes-verification"
+surface = "verification"
+consumer = "aeat.application.verification"
+requires_snapshot = true
+legal_refs = ["orden-hac-1400-2018:art-4", "orden-hac-1400-2018:art-1"]
+source_refs = ["enrolled-modelo-233-procedure", "enrolled-modelo-233-layout"]
+
 [[revisions."2019-y-siguientes".deadline_windows]]
 id = "modelo-233-2024-0a"
 filing_year = 2024

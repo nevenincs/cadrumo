@@ -10,7 +10,7 @@ from __future__ import annotations
 
 import pytest
 
-from aeat.core import (
+from .. import (
     ACTIONABLE_POST_FILING_EVENT_KINDS,
     PostFilingEventKind,
     classify_post_filing_event_kind,
