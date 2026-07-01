@@ -11,6 +11,7 @@ the on-disk payload and assert the drift surfaces.
 from __future__ import annotations
 
 import json
+from datetime import date
 from decimal import Decimal
 
 import pytest
@@ -311,8 +312,6 @@ class TestBeckhamWindow:
     """
 
     def _impatriado(self) -> TaxpayerProfile:
-        from datetime import date
-
         return TaxpayerProfile(
             tax_id="X1234567L",
             entity_type=EntityType.NATURAL_PERSON,
@@ -321,30 +320,25 @@ class TestBeckhamWindow:
             special_regime_start_date=date(2023, 1, 15),
         )
 
-    def test_election_year_is_within_window(self) -> None:
-        from datetime import date
-
-        assert self._impatriado().beckham_window_active(date(2023, 6, 1)) is True
-
-    def test_year_five_is_within_window(self) -> None:
-        from datetime import date
-
-        assert self._impatriado().beckham_window_active(date(2027, 12, 31)) is True
-
-    def test_year_six_is_within_window(self) -> None:
-        from datetime import date
-
-        assert self._impatriado().beckham_window_active(date(2028, 12, 31)) is True
-
-    def test_year_seven_is_outside_window(self) -> None:
-        from datetime import date
-
-        assert self._impatriado().beckham_window_active(date(2029, 1, 1)) is False
-
-    def test_year_before_election_is_outside_window(self) -> None:
-        from datetime import date
-
-        assert self._impatriado().beckham_window_active(date(2022, 12, 31)) is False
+    @pytest.mark.parametrize(
+        ("today", "expected"),
+        (
+            (date(2023, 6, 1), True),
+            (date(2027, 12, 31), True),
+            (date(2028, 12, 31), True),
+            (date(2029, 1, 1), False),
+            (date(2022, 12, 31), False),
+        ),
+        ids=(
+            "election-year",
+            "year-five",
+            "year-six",
+            "year-seven-expired",
+            "before-election",
+        ),
+    )
+    def test_impatriado_window_boundaries(self, today: date, expected: bool) -> None:
+        assert self._impatriado().beckham_window_active(today) is expected
 
     def test_general_regime_profile_is_always_outside_window(self) -> None:
         from datetime import date
