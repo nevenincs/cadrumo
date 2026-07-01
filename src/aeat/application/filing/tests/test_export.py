@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from datetime import UTC, datetime
 from decimal import Decimal
 from pathlib import Path
@@ -16,6 +17,7 @@ from ....core.resources import bundled_path
 from ....domain.calculations.registry import (
     CasillaFieldKind,
     CasillaId,
+    ExportLayoutDefinition,
     RegistrySnapshotRef,
     RegistryValidationError,
     parse_export_payload,
@@ -39,6 +41,7 @@ from .. import (
     export_draft,
     verify_export,
 )
+from ..runtime import RegistrySchemaAccessor
 from ._export_support import (
     _EXPORT_PATH,
     _EXPORT_VERIFY_MATCH_CASES,
@@ -127,6 +130,27 @@ _M200_GRUPO_FISCAL_CASILLA: CasillaId = validated_casilla_id(
     "00040",
     surface="_M200_GRUPO_FISCAL_CASILLA",
 )
+_ParsedCasillaValues = dict[CasillaId | None, Decimal | str | bool | None]
+
+
+def _export_and_parse_registry_layout(
+    draft: ModeloDraft,
+    output_path: Path,
+    *,
+    headers: Mapping[str, str],
+    schema_provider: RegistrySchemaAccessor,
+) -> tuple[DeclaracionExportResult, bytes, ExportLayoutDefinition, _ParsedCasillaValues]:
+    receipt = export_draft(
+        draft,
+        output_path=output_path,
+        headers=headers,
+        schema_provider=schema_provider,
+    )
+    payload = output_path.read_bytes()
+    layout = schema_provider.get_subview(draft.modelo).export_layouts[0]
+    parsed = parse_export_payload(layout, payload)
+    exported_values = {entry.casilla_id: entry.value for entry in parsed.casillas}
+    return receipt, payload, layout, exported_values
 
 
 def test_build_draft_populates_registry_casilla_provenance() -> None:
@@ -711,7 +735,7 @@ def test_export_writes_modelo_200_negative_cuota_diferencial_as_signed_money(tmp
             display_name="Emilio Export Test SL",
         ),
         inputs={
-            _M200_GRUPO_FISCAL_CASILLA: Decimal("0"),
+            _M200_GRUPO_FISCAL_CASILLA: "0",
             _M200_RESULTADO_CONTABLE_CASILLA: Decimal("200.00"),
             _M200_CORRECCIONES_AUMENTO_CASILLA: Decimal("0.00"),
             _M200_CORRECCIONES_DISMINUCION_CASILLA: Decimal("0.00"),
@@ -760,18 +784,13 @@ def test_export_writes_modelo_111_registry_layout(tmp_path: Path) -> None:
     draft = _approved_modelo_111_registry_draft()
     output = tmp_path / "modelo-111.txt"
     provider = _schema_provider(modelos=("111",))
-
-    receipt = export_draft(
+    receipt, payload, layout, exported_values = _export_and_parse_registry_layout(
         draft,
         output_path=output,
         headers=_modelo_111_export_headers(),
         schema_provider=provider,
     )
 
-    payload = output.read_bytes()
-    parsed = parse_export_payload(provider.get_subview(draft.modelo).export_layouts[0], payload)
-    exported_values = {entry.casilla_id: entry.value for entry in parsed.casillas}
-    layout = provider.get_subview(draft.modelo).export_layouts[0]
     record_28 = next(
         record for record in layout.records if any(field.id == "modelo-111-casilla-28" for field in record.fields)
     )
@@ -795,17 +814,12 @@ def test_export_writes_modelo_115_registry_layout(tmp_path: Path) -> None:
     draft = _approved_modelo_115_registry_draft()
     output = tmp_path / "modelo-115.txt"
     provider = _schema_provider(modelos=("115",))
-
-    receipt = export_draft(
+    receipt, payload, _layout, exported_values = _export_and_parse_registry_layout(
         draft,
         output_path=output,
         headers=_modelo_115_export_headers(),
         schema_provider=provider,
     )
-
-    payload = output.read_bytes()
-    parsed = parse_export_payload(provider.get_subview(draft.modelo).export_layouts[0], payload)
-    exported_values = {entry.casilla_id: entry.value for entry in parsed.casillas}
 
     assert receipt.modelo == "115"
     assert receipt.byte_size == len(payload)
@@ -822,17 +836,12 @@ def test_export_writes_modelo_123_registry_layout(tmp_path: Path) -> None:
     draft = _approved_modelo_123_registry_draft()
     output = tmp_path / "modelo-123.txt"
     provider = _schema_provider(modelos=("123",))
-
-    receipt = export_draft(
+    receipt, payload, _layout, exported_values = _export_and_parse_registry_layout(
         draft,
         output_path=output,
         headers=_modelo_123_export_headers(),
         schema_provider=provider,
     )
-
-    payload = output.read_bytes()
-    parsed = parse_export_payload(provider.get_subview(draft.modelo).export_layouts[0], payload)
-    exported_values = {entry.casilla_id: entry.value for entry in parsed.casillas}
 
     assert receipt.modelo == "123"
     assert receipt.byte_size == len(payload)
@@ -847,17 +856,12 @@ def test_export_writes_modelo_123_2019_registry_layout(tmp_path: Path) -> None:
     draft = _approved_modelo_123_2019_registry_draft()
     output = tmp_path / "modelo-123-2023.txt"
     provider = _schema_provider(filing_year=2023, period="4T", modelos=("123",))
-
-    receipt = export_draft(
+    receipt, payload, _layout, exported_values = _export_and_parse_registry_layout(
         draft,
         output_path=output,
         headers=_modelo_123_2019_export_headers(),
         schema_provider=provider,
     )
-
-    payload = output.read_bytes()
-    parsed = parse_export_payload(provider.get_subview(draft.modelo).export_layouts[0], payload)
-    exported_values = {entry.casilla_id: entry.value for entry in parsed.casillas}
 
     assert receipt.modelo == "123"
     assert receipt.byte_size == len(payload)
