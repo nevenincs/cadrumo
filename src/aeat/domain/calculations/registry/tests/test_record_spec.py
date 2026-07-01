@@ -21,44 +21,23 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 # ---------------------------------------------------------------------------
 
 
-def test_latin_1_normalises_to_iso_8859_1() -> None:
-    """``latin-1`` is the most common AEAT-declared alias; it must map to
-    ``iso-8859-1`` per the wire-encoding contract."""
-    assert ENCODING_ALIAS_MAP["latin-1"] == "iso-8859-1"
-
-
-def test_latin_1_underscore_normalises_to_iso_8859_1() -> None:
-    """Python codec name ``latin_1`` (underscore variant) must also map."""
-    assert ENCODING_ALIAS_MAP["latin_1"] == "iso-8859-1"
-
-
-def test_iso_8859_1_is_its_own_canonical_form() -> None:
-    """The canonical form maps to itself (idempotent normalisation)."""
-    assert ENCODING_ALIAS_MAP["iso-8859-1"] == "iso-8859-1"
-
-
-def test_iso_8859_1_underscore_normalises() -> None:
-    assert ENCODING_ALIAS_MAP["iso_8859_1"] == "iso-8859-1"
-
-
-def test_windows_1252_normalises_to_cp1252() -> None:
-    assert ENCODING_ALIAS_MAP["windows-1252"] == "cp1252"
-
-
-def test_cp1252_is_its_own_canonical_form() -> None:
-    assert ENCODING_ALIAS_MAP["cp1252"] == "cp1252"
-
-
-def test_latin_9_normalises_to_iso_8859_15() -> None:
-    assert ENCODING_ALIAS_MAP["latin-9"] == "iso-8859-15"
-
-
-def test_iso_8859_15_is_its_own_canonical_form() -> None:
-    assert ENCODING_ALIAS_MAP["iso-8859-15"] == "iso-8859-15"
-
-
-def test_iso_8859_15_underscore_normalises() -> None:
-    assert ENCODING_ALIAS_MAP["iso_8859_15"] == "iso-8859-15"
+@pytest.mark.parametrize(
+    ("alias", "canonical"),
+    (
+        pytest.param("latin-1", "iso-8859-1", id="latin-1"),
+        pytest.param("latin_1", "iso-8859-1", id="latin-1-underscore"),
+        pytest.param("iso-8859-1", "iso-8859-1", id="iso-8859-1"),
+        pytest.param("iso_8859_1", "iso-8859-1", id="iso-8859-1-underscore"),
+        pytest.param("windows-1252", "cp1252", id="windows-1252"),
+        pytest.param("cp1252", "cp1252", id="cp1252"),
+        pytest.param("latin-9", "iso-8859-15", id="latin-9"),
+        pytest.param("iso-8859-15", "iso-8859-15", id="iso-8859-15"),
+        pytest.param("iso_8859_15", "iso-8859-15", id="iso-8859-15-underscore"),
+    ),
+)
+def test_encoding_alias_map_normalises_known_aliases(alias: str, canonical: str) -> None:
+    """Known AEAT/Python codec aliases map to their canonical wire encodings."""
+    assert ENCODING_ALIAS_MAP[alias] == canonical
 
 
 def test_alias_map_unknown_encoding_falls_through_unchanged() -> None:
