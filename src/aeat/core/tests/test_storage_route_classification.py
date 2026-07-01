@@ -18,8 +18,16 @@ from ..errors import ActiveProfilePointerError, CoreValidationError
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
 
-def test_constructor_database_url_classifies_as_explicit(tmp_path: Path) -> None:
-    db_path = tmp_path / "explicit.db"
+@pytest.mark.parametrize(
+    "db_path_parts",
+    (
+        pytest.param(("explicit.db",), id="arbitrary-path"),
+        pytest.param(("state", "buckets", "bucket-a", "db", "aeat.db"), id="bucket-layout-shape"),
+        pytest.param(("state", "aeat.db"), id="root-fallback-shape"),
+    ),
+)
+def test_constructor_database_url_classifies_as_explicit(tmp_path: Path, db_path_parts: tuple[str, ...]) -> None:
+    db_path = tmp_path.joinpath(*db_path_parts)
     settings = Settings(
         aeat_local_storage_root=tmp_path / "state",
         aeat_database_url=f"sqlite:///{db_path.as_posix()}",
@@ -30,33 +38,6 @@ def test_constructor_database_url_classifies_as_explicit(tmp_path: Path) -> None
     assert route.kind is StorageRouteKind.EXPLICIT_DATABASE_URL
     assert route.database_path == db_path
     assert route.bucket_id == ""
-
-
-def test_explicit_url_inside_bucket_layout_still_classifies_as_explicit(tmp_path: Path) -> None:
-    db_path = tmp_path / "state" / "buckets" / "bucket-a" / "db" / "aeat.db"
-    settings = Settings(
-        aeat_local_storage_root=tmp_path / "state",
-        aeat_database_url=f"sqlite:///{db_path.as_posix()}",
-    )
-
-    route = classify_storage_route(settings)
-
-    assert route.kind is StorageRouteKind.EXPLICIT_DATABASE_URL
-    assert route.database_path == db_path
-    assert route.bucket_id == ""
-
-
-def test_explicit_url_inside_root_fallback_shape_still_classifies_as_explicit(tmp_path: Path) -> None:
-    db_path = tmp_path / "state" / "aeat.db"
-    settings = Settings(
-        aeat_local_storage_root=tmp_path / "state",
-        aeat_database_url=f"sqlite:///{db_path.as_posix()}",
-    )
-
-    route = classify_storage_route(settings)
-
-    assert route.kind is StorageRouteKind.EXPLICIT_DATABASE_URL
-    assert route.database_path == db_path
 
 
 def test_active_bucket_database_route_is_detected(tmp_path: Path) -> None:
