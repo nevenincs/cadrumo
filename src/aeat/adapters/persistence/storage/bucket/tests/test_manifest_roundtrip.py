@@ -20,11 +20,13 @@ from pathlib import Path
 import pytest
 
 from ......core.external_constants import UTF_8_ENCODING
-from .._layout import bucket_paths
+from .._layout import BucketPaths, bucket_paths
 from .._manifest import BucketLifecycleStatus, BucketManifest, ManifestKdfParams
 from .._manifest_io import manifest_path, read_manifest, write_manifest
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
+
+_POPULATED_TIMESTAMP = datetime(2026, 5, 14, 12, 0, 0, tzinfo=UTC)
 
 
 def _populated_manifest(bucket_id: str) -> BucketManifest:
@@ -38,12 +40,11 @@ def _populated_manifest(bucket_id: str) -> BucketManifest:
     load-re-defaults regression on the lifecycle marker surfaces.
     """
 
-    now = datetime.now(UTC).replace(microsecond=0)
     return BucketManifest(
         bucket_id=bucket_id,
         label="Test Operator Bucket",
-        created_at=now,
-        last_unlocked_at=now,
+        created_at=_POPULATED_TIMESTAMP,
+        last_unlocked_at=_POPULATED_TIMESTAMP,
         kdf_params=ManifestKdfParams(
             algorithm="argon2id",
             version=2,
@@ -59,6 +60,12 @@ def _populated_manifest(bucket_id: str) -> BucketManifest:
     )
 
 
+def _prepared_paths(tmp_path: Path, bucket_id: str) -> BucketPaths:
+    paths = bucket_paths(tmp_path, bucket_id)
+    paths.bucket_dir.mkdir(parents=True, exist_ok=True)
+    return paths
+
+
 def test_bucket_manifest_round_trips_strictly_via_toml(tmp_path: Path) -> None:
     """write_manifest -> disk -> read_manifest yields the original manifest unchanged.
 
@@ -69,9 +76,7 @@ def test_bucket_manifest_round_trips_strictly_via_toml(tmp_path: Path) -> None:
     field is a one-line failure that names the offender.
     """
 
-    paths = bucket_paths(tmp_path, "test-bucket-roundtrip")
-    paths.bucket_dir.mkdir(parents=True, exist_ok=True)
-
+    paths = _prepared_paths(tmp_path, "test-bucket-roundtrip")
     original = _populated_manifest(paths.bucket_id)
     write_manifest(paths, original)
     loaded = read_manifest(paths)
@@ -103,9 +108,7 @@ def test_bucket_manifest_round_trips_with_last_unlocked_at_unset(
     key in the on-disk TOML.
     """
 
-    paths = bucket_paths(tmp_path, "test-bucket-never-unlocked")
-    paths.bucket_dir.mkdir(parents=True, exist_ok=True)
-
+    paths = _prepared_paths(tmp_path, "test-bucket-never-unlocked")
     original = _populated_manifest(paths.bucket_id).model_copy(
         update={"last_unlocked_at": None},
     )
@@ -116,8 +119,6 @@ def test_bucket_manifest_round_trips_with_last_unlocked_at_unset(
     # should be absent. This guards against a future write
     # implementation that emits ``last_unlocked_at = ""`` or a
     # quoted "None" string.
-    from .._manifest_io import manifest_path
-
     on_disk = manifest_path(paths).read_text(encoding=UTF_8_ENCODING)
     assert "last_unlocked_at" not in on_disk
 
@@ -138,9 +139,7 @@ def test_manifest_status_mutation_surfaces_as_strict_inequality(
     roundtrip is tautological and the tombstone leak could recur.
     """
 
-    paths = bucket_paths(tmp_path, "test-bucket-status-antitautology")
-    paths.bucket_dir.mkdir(parents=True, exist_ok=True)
-
+    paths = _prepared_paths(tmp_path, "test-bucket-status-antitautology")
     original = _populated_manifest(paths.bucket_id)
     assert original.status is BucketLifecycleStatus.TOMBSTONED
     write_manifest(paths, original)
