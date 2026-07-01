@@ -15,10 +15,10 @@ from their semantic sources and retired the Stage-1 ADVISORY predicates, so this
 collector normally emits no M303 official-box diagnostics for that revision.
 
 See Also:
-    :mod:`aeat.application.modelo._calculation_diagnostics`
+    :mod:`~aeat.application.modelo._calculation_diagnostics`
         Post-calculation coordinator that calls this collector with the engine
         casilla values.
-    :mod:`aeat.application.modelo._verification_actions`
+    :mod:`~aeat.application.modelo._verification_actions`
         Verification predicate parser/evaluator whose ``implies_any_nonzero``
         shape this collector mirrors.
 """
@@ -58,7 +58,7 @@ def collect_official_box_unpopulated_diagnostics(
             (e.g. ``09``) resolve.
 
     See Also:
-        :func:`aeat.application.modelo._verification_actions._evaluate_predicate_expression`:
+        :func:`~aeat.application.modelo._verification_actions._evaluate_predicate_expression`:
             Verification-side evaluator for the same predicate DSL.
     """
     # Lazy import to avoid a module-load cycle: _verification_actions imports from

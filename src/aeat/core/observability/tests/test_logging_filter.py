@@ -99,22 +99,17 @@ class TestStderrRunEventFilter:
     ``run_event`` extra; plain log lines still reach stderr.
     """
 
-    @pytest.mark.parametrize(
-        ("record", "expected"),
-        (
-            pytest.param(_record_with_optional_run_event(message="plain"), True, id="plain-record"),
-            pytest.param(
-                _record_with_optional_run_event(message="run event", run_event=object()),
-                False,
-                id="run-event-record",
-            ),
-        ),
-    )
-    def test_filter_drops_run_event_records(self, record: logging.LogRecord, expected: bool) -> None:
+    def test_filter_drops_run_event_records(self) -> None:
         from ...logging import _DropRunEventFilter
 
         filt = _DropRunEventFilter()
-        assert filt.filter(record) is expected
+        cases = (
+            (_record_with_optional_run_event(message="plain"), True),
+            (_record_with_optional_run_event(message="run event", run_event=object()), False),
+        )
+
+        for record, expected in cases:
+            assert filt.filter(record) is expected
 
     def test_events_still_reach_jsonl_sink_end_to_end(
         self,

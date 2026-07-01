@@ -88,17 +88,14 @@ def _make_trace(
 
 
 _PAYLOAD_VARIANTS = (
-    pytest.param(RunEventPayload(navigation=NavigationPayload(url="https://example.test")), id="navigation"),
-    pytest.param(
-        RunEventPayload(form_fill=FormFillPayload(form_id="f1", display_number="03", value="1.50")),
-        id="form-fill",
-    ),
-    pytest.param(RunEventPayload(assertion=AssertionPayload(expectation="open", passed=True)), id="assertion"),
-    pytest.param(RunEventPayload(cache_hit=CacheHitPayload(cache_name="iva", key="2025")), id="cache-hit"),
-    pytest.param(RunEventPayload(error=ErrorPayload(error_type="X", message="boom")), id="error"),
-    pytest.param(RunEventPayload(step=StepBoundaryPayload(step_id="s1", label="t")), id="step"),
-    pytest.param(RunEventPayload(workflow_link=WorkflowLinkPayload(workflow_run_id="abc")), id="workflow-link"),
-    pytest.param(RunEventPayload(generic=GenericPayload(fields=(("k", "v"),))), id="generic"),
+    RunEventPayload(navigation=NavigationPayload(url="https://example.test")),
+    RunEventPayload(form_fill=FormFillPayload(form_id="f1", display_number="03", value="1.50")),
+    RunEventPayload(assertion=AssertionPayload(expectation="open", passed=True)),
+    RunEventPayload(cache_hit=CacheHitPayload(cache_name="iva", key="2025")),
+    RunEventPayload(error=ErrorPayload(error_type="X", message="boom")),
+    RunEventPayload(step=StepBoundaryPayload(step_id="s1", label="t")),
+    RunEventPayload(workflow_link=WorkflowLinkPayload(workflow_run_id="abc")),
+    RunEventPayload(generic=GenericPayload(fields=(("k", "v"),))),
 )
 
 
@@ -116,49 +113,41 @@ class TestArgumentRecord:
 
 
 class TestRunEventPayload:
-    @pytest.mark.parametrize("payload", _PAYLOAD_VARIANTS)
-    def test_each_variant_round_trips(self, payload: RunEventPayload) -> None:
-        rebuilt = RunEventPayload.model_validate_json(payload.model_dump_json())
-        assert rebuilt == payload
+    def test_each_variant_round_trips(self) -> None:
+        for payload in _PAYLOAD_VARIANTS:
+            rebuilt = RunEventPayload.model_validate_json(payload.model_dump_json())
+            assert rebuilt == payload
 
-    @pytest.mark.parametrize(
-        "payload_kwargs",
-        (
-            pytest.param({}, id="zero-variants"),
-            pytest.param(
-                {
-                    "navigation": NavigationPayload(url="https://x"),
-                    "error": ErrorPayload(error_type="E", message="m"),
-                },
-                id="two-variants",
-            ),
-        ),
-    )
-    def test_variant_cardinality_rejected(self, payload_kwargs: dict[str, object]) -> None:
-        with pytest.raises(ValidationError, match=r"must set exactly one variant"):
-            RunEventPayload(**payload_kwargs)
+    def test_variant_cardinality_rejected(self) -> None:
+        cases = (
+            {},
+            {
+                "navigation": NavigationPayload(url="https://x"),
+                "error": ErrorPayload(error_type="E", message="m"),
+            },
+        )
+
+        for payload_kwargs in cases:
+            with pytest.raises(ValidationError, match=r"must set exactly one variant"):
+                RunEventPayload(**payload_kwargs)
 
 
 class TestTimezoneAwareness:
     """Naive datetimes must be rejected at the pydantic boundary."""
 
-    @pytest.mark.parametrize(
-        "build_model",
-        (
-            pytest.param(
-                lambda: _make_event(
-                    RunEventPayload(navigation=NavigationPayload(url="https://x")),
-                    timestamp=_NAIVE_STARTED_AT,
-                ),
-                id="run-event-timestamp",
+    def test_rejects_naive_datetimes(self) -> None:
+        cases: tuple[Callable[[], object], ...] = (
+            lambda: _make_event(
+                RunEventPayload(navigation=NavigationPayload(url="https://x")),
+                timestamp=_NAIVE_STARTED_AT,
             ),
-            pytest.param(lambda: _make_trace(started_at=_NAIVE_STARTED_AT), id="run-trace-started-at"),
-            pytest.param(lambda: _make_trace(finished_at=_NAIVE_FINISHED_AT), id="run-trace-finished-at"),
-        ),
-    )
-    def test_rejects_naive_datetimes(self, build_model: Callable[[], object]) -> None:
-        with pytest.raises(ValidationError, match="timezone-aware"):
-            build_model()
+            lambda: _make_trace(started_at=_NAIVE_STARTED_AT),
+            lambda: _make_trace(finished_at=_NAIVE_FINISHED_AT),
+        )
+
+        for build_model in cases:
+            with pytest.raises(ValidationError, match="timezone-aware"):
+                build_model()
 
 
 class TestReplayOfField:

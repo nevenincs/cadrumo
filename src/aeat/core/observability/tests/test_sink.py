@@ -167,34 +167,29 @@ class TestJsonlRunSinkRunIdFilter:
 
 
 class TestStoreRunIdValidation:
-    @pytest.mark.parametrize(
-        "bad_run_id",
-        (
-            pytest.param("../escape", id="parent-traversal"),
-            pytest.param("../../etc/passwd", id="multi-parent-traversal"),
-            pytest.param("/absolute/path", id="absolute-path"),
-            pytest.param("00000000000000001", id="too-long"),
-            pytest.param("0123456789ABCDEF", id="uppercase"),
-            pytest.param("contains/slash", id="slash"),
-            pytest.param("", id="empty"),
-            pytest.param("..", id="parent-dotdot"),
-        ),
-    )
-    def test_load_trace_rejects_path_traversal(
-        self,
-        tmp_path: Path,
-        bad_run_id: str,
-    ) -> None:
+    def test_load_trace_rejects_path_traversal(self, tmp_path: Path) -> None:
         from .. import load_events, load_trace
         from .._store import _validate_run_id
 
+        bad_run_ids = (
+            "../escape",
+            "../../etc/passwd",
+            "/absolute/path",
+            "00000000000000001",
+            "0123456789ABCDEF",
+            "contains/slash",
+            "",
+            "..",
+        )
+
         with override_settings(aeat_runs_dir=str(tmp_path)):
-            with pytest.raises(RunTraceValidationError, match=r"invalid run_id"):
-                _validate_run_id(bad_run_id)
-            with pytest.raises(RunTraceValidationError, match=r"invalid run_id"):
-                load_trace(bad_run_id)
-            with pytest.raises(RunTraceValidationError, match=r"invalid run_id"):
-                load_events(bad_run_id)
+            for bad_run_id in bad_run_ids:
+                with pytest.raises(RunTraceValidationError, match=r"invalid run_id"):
+                    _validate_run_id(bad_run_id)
+                with pytest.raises(RunTraceValidationError, match=r"invalid run_id"):
+                    load_trace(bad_run_id)
+                with pytest.raises(RunTraceValidationError, match=r"invalid run_id"):
+                    load_events(bad_run_id)
 
     def test_load_trace_rejects_run_id_shape_without_creating_dir(
         self,

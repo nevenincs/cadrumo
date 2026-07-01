@@ -1,6 +1,6 @@
 """Filing-record actions for modelo calculation revisions.
 
-``file_modelo_revision`` promotes a verified
+:func:`~aeat.application.modelo.file_modelo_revision` promotes a verified
 :class:`~aeat.domain.modelos.CalculationRevision` into a current
 :class:`~aeat.domain.modelos.ModeloRecord` after the
 :class:`~aeat.application.workflow.WorkflowEngine` preflight gate passes. Filing
@@ -18,19 +18,19 @@ delegates cross-period carry projection to
 which stamps locally-filed observations as non-official ``app_filing`` evidence.
 
 See Also:
-    :func:`aeat.application.modelo.import_external_filing_evidence`:
+    :func:`~aeat.application.modelo.import_external_filing_evidence`:
         Separate AEAT-attested import path that creates
         :class:`~aeat.domain.modelos.ExternalEvidence` baselines; this local
         filing action deliberately does not.
     :func:`~aeat.application.modelo._revision_persistence.persist_filed_revision`:
         Persists the filing catalogue, revision state, work-unit pointers,
         bucket events, participation index rows, and optional carry observation.
-    :func:`aeat.application.modelo._filed_revision_observation.persist_filed_revision_observation`:
+    :func:`~aeat.application.modelo._filed_revision_observation.persist_filed_revision_observation`:
         Projects filed casillas into non-official cross-period observations.
-    :func:`aeat.application.modelo._result_disposition_resolution.resolve_modelo_result_disposition`:
+    :func:`~aeat.application.modelo._result_disposition_resolution.resolve_modelo_result_disposition`:
         Resolves the shared Modelo 303 refund/carry disposition before the file
         transition persists.
-    :func:`aeat.application.modelo._verification_actions._require_cross_period_clean_state`:
+    :func:`~aeat.application.modelo._verification_actions._require_cross_period_clean_state`:
         Rechecks cross-period dependencies before local filing state is written.
 """
 
@@ -104,10 +104,10 @@ def _existing_vigente_filing_record(
     """Return the current (VIGENTE) filing record for a filed revision, if any.
 
     Used by the idempotent re-file no-op: a revision already in ``PRESENTADO``
-    state is the current filed answer, so its VIGENTE :class:`ModeloRecord` is
-    returned unchanged. A ``PRESENTADO`` revision must have exactly one VIGENTE
-    record; ``None`` signals an inconsistent state the caller refuses rather than
-    masking.
+    state is the current filed answer, so its VIGENTE
+    :class:`~aeat.domain.modelos.ModeloRecord` is returned unchanged. A
+    ``PRESENTADO`` revision must have exactly one VIGENTE record; ``None``
+    signals an inconsistent state the caller refuses rather than masking.
     """
     for record in catalogue.values():
         if record.calculation_revision_id == calculation_revision_id and record.status is ModeloRecordStatus.VIGENTE:
@@ -217,14 +217,14 @@ def file_modelo_revision(
     See Also:
         :func:`~aeat.application.modelo._revision_persistence.persist_filed_revision`:
             Performs the repository writes once all gates pass.
-        :func:`aeat.application.modelo.import_external_filing_evidence`:
+        :func:`~aeat.application.modelo.import_external_filing_evidence`:
             Creates official-evidence baselines for imported filings; use that
             path when a :class:`~aeat.domain.modelos.ExternalEvidence` reference
             must be carried.
-        :func:`aeat.application.modelo._filed_revision_observation.persist_filed_revision_observation`:
+        :func:`~aeat.application.modelo._filed_revision_observation.persist_filed_revision_observation`:
             Saves the non-official ``app_filing`` observation used by later
             ``previous_filing`` calculations.
-        :func:`aeat.application.modelo._export.export_modelo_revision`:
+        :func:`~aeat.application.modelo.export_modelo_revision`:
             Sibling local finish line that writes the fichero-BOE artefact
             without requiring this internal file marker.
     """

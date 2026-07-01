@@ -159,18 +159,12 @@ def test_render_command_output_does_not_corrupt_tabular_header_in_text() -> None
     assert CLI_BUCKET_ID_PLACEHOLDER not in rendered.text
 
 
-@pytest.mark.parametrize(
-    (
-        "error_type",
-        "format_name",
-        "payload",
-        "lines",
-        "registered_code",
-        "expected_context",
-        "english_prefix",
-    ),
-    (
-        pytest.param(
+def test_render_command_output_errors_use_registered_error_contract() -> None:
+    cases: tuple[
+        tuple[type[BaseException], str, object, tuple[str, ...], str, dict[str, str], str],
+        ...,
+    ] = (
+        (
             OutputRenderingError,
             "json",
             object(),
@@ -178,9 +172,8 @@ def test_render_command_output_does_not_corrupt_tabular_header_in_text() -> None
             "INTERNAL_OUTPUT_RENDERING",
             {"type_name": "object"},
             "Internal. Internal error:",
-            id="unencodable-payload",
         ),
-        pytest.param(
+        (
             OutputFormatRefusedError,
             "xml",
             {"ignored": True},
@@ -188,25 +181,16 @@ def test_render_command_output_does_not_corrupt_tabular_header_in_text() -> None
             "REFUSED_OUTPUT_FORMAT",
             {"format_name": "xml", "expected": "text,json"},
             "Refused. The requested output format is not supported.",
-            id="unsupported-format",
         ),
-    ),
-)
-def test_render_command_output_errors_use_registered_error_contract(
-    error_type: type[BaseException],
-    format_name: str,
-    payload: object,
-    lines: tuple[str, ...],
-    registered_code: str,
-    expected_context: dict[str, str],
-    english_prefix: str,
-) -> None:
-    assert get_registered_error_code(error_type).code == registered_code
+    )
 
-    with pytest.raises(error_type) as excinfo:
-        render_command_output(format_name=format_name, payload=payload, lines=lines)
-    error = excinfo.value
-    assert error.args == ()
-    assert error.context == expected_context
-    with override_settings(aeat_output_language="en"):
-        assert render_error_text(error).startswith(english_prefix)
+    for error_type, format_name, payload, lines, registered_code, expected_context, english_prefix in cases:
+        assert get_registered_error_code(error_type).code == registered_code
+
+        with pytest.raises(error_type) as excinfo:
+            render_command_output(format_name=format_name, payload=payload, lines=lines)
+        error = excinfo.value
+        assert error.args == ()
+        assert error.context == expected_context
+        with override_settings(aeat_output_language="en"):
+            assert render_error_text(error).startswith(english_prefix)

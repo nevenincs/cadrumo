@@ -226,29 +226,24 @@ def test_resume_refuses_done_run(tmp_path: Path) -> None:
     assert raised.value.translated_message == "application.workflow.errors.resume_refused_not_aborted"
 
 
-@pytest.mark.parametrize(
-    "reason",
-    [
-        WorkflowAbortReason.NO_PENDING_OBLIGATION,
-        WorkflowAbortReason.ALREADY_FILED,
-        WorkflowAbortReason.USER_CANCELLED,
-    ],
-)
-def test_resume_refuses_non_resumable_reasons(
-    tmp_path: Path,
-    reason: WorkflowAbortReason,
-) -> None:
-    run_id = "c" * 16
-    save_run(
-        _aborted_result(
-            run_id=run_id,
-            reason=reason,
-            obligation=_obligation() if reason is not WorkflowAbortReason.NO_PENDING_OBLIGATION else None,
-        ),
+def test_resume_refuses_non_resumable_reasons() -> None:
+    cases = (
+        ("c" * 16, WorkflowAbortReason.NO_PENDING_OBLIGATION),
+        ("d" * 16, WorkflowAbortReason.ALREADY_FILED),
+        ("e" * 16, WorkflowAbortReason.USER_CANCELLED),
     )
-    with pytest.raises(WorkflowResumeRefusedError) as raised:
-        resume_modelo_workflow(run_id)
-    assert raised.value.translated_message == "application.workflow.errors.resume_refused_terminal_reason"
+
+    for run_id, reason in cases:
+        save_run(
+            _aborted_result(
+                run_id=run_id,
+                reason=reason,
+                obligation=_obligation() if reason is not WorkflowAbortReason.NO_PENDING_OBLIGATION else None,
+            ),
+        )
+        with pytest.raises(WorkflowResumeRefusedError) as raised:
+            resume_modelo_workflow(run_id)
+        assert raised.value.translated_message == "application.workflow.errors.resume_refused_terminal_reason"
 
 
 def test_resume_refuses_run_without_obligation(tmp_path: Path) -> None:

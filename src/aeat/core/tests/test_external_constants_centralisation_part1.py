@@ -35,33 +35,33 @@ _STRING_TYPE_CONSTANT_NAMES = tuple(name for name, _ in _STRING_CONSTANT_CASES i
 _STRING_TYPE_CONSTANT_IDS = tuple(name.lower() for name in _STRING_TYPE_CONSTANT_NAMES)
 
 
-@pytest.mark.parametrize(("constant_name", "expected"), _STRING_CONSTANT_CASES, ids=_STRING_CONSTANT_IDS)
-def test_string_external_constant_values(constant_name: str, expected: str) -> None:
+def test_string_external_constant_values() -> None:
     """String external constants carry their authoritative literal values."""
 
     from .. import external_constants
 
-    assert getattr(external_constants, constant_name) == expected
+    for case_id, (constant_name, expected) in zip(_STRING_CONSTANT_IDS, _STRING_CONSTANT_CASES, strict=True):
+        assert getattr(external_constants, constant_name) == expected, case_id
 
 
-@pytest.mark.parametrize("constant_name", _STRING_TYPE_CONSTANT_NAMES, ids=_STRING_TYPE_CONSTANT_IDS)
-def test_string_external_constants_are_str(constant_name: str) -> None:
+def test_string_external_constants_are_str() -> None:
     """String external constants remain plain ``str`` instances."""
 
     from .. import external_constants
 
-    assert isinstance(getattr(external_constants, constant_name), str)
+    for case_id, constant_name in zip(_STRING_TYPE_CONSTANT_IDS, _STRING_TYPE_CONSTANT_NAMES, strict=True):
+        assert isinstance(getattr(external_constants, constant_name), str), case_id
 
 
-@pytest.mark.parametrize(("constant_name", "expected"), _DECIMAL_CONSTANT_CASES, ids=_DECIMAL_CONSTANT_IDS)
-def test_decimal_external_constant_values_and_types(constant_name: str, expected: str) -> None:
+def test_decimal_external_constant_values_and_types() -> None:
     """Decimal external constants carry their legal scalar values as ``Decimal`` instances."""
 
     from .. import external_constants
 
-    value = getattr(external_constants, constant_name)
-    assert Decimal(expected) == value
-    assert isinstance(value, Decimal)
+    for case_id, (constant_name, expected) in zip(_DECIMAL_CONSTANT_IDS, _DECIMAL_CONSTANT_CASES, strict=True):
+        value = getattr(external_constants, constant_name)
+        assert Decimal(expected) == value, case_id
+        assert isinstance(value, Decimal), case_id
 
 
 # ---------------------------------------------------------------------------

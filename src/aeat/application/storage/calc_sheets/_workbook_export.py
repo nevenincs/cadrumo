@@ -1,4 +1,4 @@
-"""Offline XLSX materializer for :class:`SheetExportPlan` records.
+"""Offline XLSX materializer for :class:`~aeat.application.storage.calc_sheets.SheetExportPlan` records.
 
 This module serializes the shared workbook plan into operator-directed
 plaintext export bytes: an XLSX workbook and an adjacent machine-readable JSON
@@ -6,9 +6,9 @@ evidence sidecar. It returns bytes and digests to the caller; it does not choose
 paths, persist secure-object state, or make the export file canonical.
 
 See Also:
-    :class:`aeat.application.storage.calc_sheets.SheetExportPlan`
+    :class:`~aeat.application.storage.calc_sheets.SheetExportPlan`
         Renderer-neutral workbook contract emitted by the calc-sheets engine.
-    :class:`aeat.application.storage.calc_sheets.SheetEvidenceFacet`
+    :class:`~aeat.application.storage.calc_sheets.SheetEvidenceFacet`
         Evidence facet rendered into the Evidencia tab and JSON sidecar.
 """
 
@@ -81,9 +81,11 @@ _EVIDENCE_HEADERS: tuple[str, ...] = (
 class OfflineWorkbookEvidenceSidecar(BaseModel):
     """Machine-readable evidence sidecar emitted beside an offline workbook.
 
-    The sidecar binds :class:`SheetExportMetadata`, the workbook SHA-256, and
-    :class:`SheetEvidenceFacet` so external review can inspect the fact basis
-    without parsing XLSX cells.
+    The sidecar binds
+    :class:`~aeat.application.storage.calc_sheets.SheetExportMetadata`, the
+    workbook SHA-256, and
+    :class:`~aeat.application.storage.calc_sheets.SheetEvidenceFacet` so
+    external review can inspect the fact basis without parsing XLSX cells.
     """
 
     model_config = _STRICT_FROZEN
@@ -130,7 +132,7 @@ def evidence_table(plan: SheetExportPlan) -> tuple[str, tuple[str, ...], tuple[t
 
 
 def build_offline_workbook(plan: SheetExportPlan) -> Workbook:
-    """Materialise a :class:`SheetExportPlan` as an offline openpyxl workbook."""
+    """Materialise a :class:`~aeat.application.storage.calc_sheets.SheetExportPlan` as an offline openpyxl workbook."""
     workbook = Workbook()
     default = workbook.active
     assert default is not None
@@ -151,14 +153,16 @@ def build_offline_workbook(plan: SheetExportPlan) -> Workbook:
 def _apply_styling(workbook: Workbook, plan: SheetExportPlan) -> None:
     """Apply the design system — font, role fills, widths, freezes, filters.
 
-    The single offline materialisation of the shared ``_theme`` palette: it sets
-    the monospace family on every populated cell, tints each styled range by its
-    role (header band, section banner, pale-yellow inputs, grey computed, green
+    The single offline materialisation of the shared
+    :mod:`~aeat.application.storage.calc_sheets._theme` palette: it sets the
+    monospace family on every populated cell, tints each styled range by its role
+    (header band, section banner, pale-yellow inputs, grey computed, green
     result), wraps the body columns, sizes the columns, freezes the header rows,
     and installs the basic filters — mirroring exactly what the online apply
-    adapter emits from the same ``SheetExportPlan`` facets. The phases run in the
-    same order as before: base font first, then styled overrides, widths, freezes,
-    filters, and finally print setup.
+    adapter emits from the same
+    :class:`~aeat.application.storage.calc_sheets.SheetExportPlan` facets. The
+    phases run in the same order as before: base font first, then styled
+    overrides, widths, freezes, filters, and finally print setup.
     """
     family = plan.font_family or WORKBOOK_FONT_FAMILY
     _apply_base_font(workbook, family)
@@ -251,10 +255,11 @@ def build_evidence_sidecar(
 
     The sidecar is keyed to the workbook payload digest, so a reviewer can pair
     the JSON evidence with the exact XLSX bytes produced by
-    :func:`serialize_offline_workbook`.
+    :func:`~aeat.application.storage.calc_sheets.serialize_offline_workbook`.
 
     Returns:
-        :class:`OfflineWorkbookEvidenceSidecar`: The evidence sidecar.
+        :class:`~aeat.application.storage.calc_sheets.OfflineWorkbookEvidenceSidecar`:
+            The evidence sidecar.
     """
     return OfflineWorkbookEvidenceSidecar(
         metadata=plan.metadata,
@@ -286,7 +291,8 @@ def serialize_offline_export(plan: SheetExportPlan) -> OfflineWorkbookExportResu
     explicit output path boundary.
 
     Returns:
-        :class:`OfflineWorkbookExportResult`: The export result.
+        :class:`~aeat.application.storage.calc_sheets.OfflineWorkbookExportResult`:
+            The export result.
     """
     workbook_payload = serialize_offline_workbook(plan)
     workbook_sha256 = sha256_hex(workbook_payload)

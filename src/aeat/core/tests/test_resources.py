@@ -12,26 +12,26 @@ from ..resources import as_path, packaged_data
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
 
-@pytest.mark.parametrize(
-    "parts",
-    (
-        pytest.param((), id="packaged-root"),
-        pytest.param(("corpus",), id="corpus-root"),
-        pytest.param(("registry",), id="registry-root"),
-    ),
-)
-def test_packaged_data_directories_exist(parts: tuple[str, ...]) -> None:
+def test_packaged_data_directories_exist() -> None:
     """The bundled root and top-level subtrees resolve to directories."""
 
-    root = packaged_data(*parts)
+    cases: tuple[tuple[str, tuple[str, ...]], ...] = (
+        ("packaged-root", ()),
+        ("corpus-root", ("corpus",)),
+        ("registry-root", ("registry",)),
+    )
 
-    assert isinstance(root, Traversable)
-    assert root.is_dir()
+    for case_id, parts in cases:
+        root = packaged_data(*parts)
+
+        assert isinstance(root, Traversable), case_id
+        assert root.is_dir(), case_id
 
 
-@pytest.mark.parametrize(
-    "parts",
-    [
+def test_representative_leaves_are_files() -> None:
+    """Every representative leaf across every top-level subtree resolves to a real file."""
+
+    cases: tuple[tuple[str, ...], ...] = (
         ("corpus", "manuals", "iva", "2025", "manifest.json"),
         ("corpus", "manuals", "renta", "2025", "part1", "source.pdf"),
         ("corpus", "aeat_official", "disenos_registro", "modelo_100", "manifest.json"),
@@ -42,29 +42,26 @@ def test_packaged_data_directories_exist(parts: tuple[str, ...]) -> None:
         ("registry", "aeat", "iva", "rates.toml"),
         ("registry", "aeat", "calendars", "festivos-2025.toml"),
         ("registry", "aeat", "user_profile", "schema.toml"),
-    ],
-)
-def test_representative_leaves_are_files(parts: tuple[str, ...]) -> None:
-    """Every representative leaf across every top-level subtree resolves to a real file."""
+    )
 
-    node = packaged_data(*parts)
+    for parts in cases:
+        node = packaged_data(*parts)
 
-    assert node.is_file(), f"missing bundled file: {'/'.join(parts)}"
+        assert node.is_file(), f"missing bundled file: {'/'.join(parts)}"
 
 
-@pytest.mark.parametrize(
-    "parts",
-    [
-        ("corpus", "parity_replays", "renta_web_open"),
-        ("registry", "aeat", "topics"),
-    ],
-)
-def test_representative_subtrees_are_directories(parts: tuple[str, ...]) -> None:
+def test_representative_subtrees_are_directories() -> None:
     """Top-level subtree containers resolve to real directories."""
 
-    node = packaged_data(*parts)
+    cases: tuple[tuple[str, ...], ...] = (
+        ("corpus", "parity_replays", "renta_web_open"),
+        ("registry", "aeat", "topics"),
+    )
 
-    assert node.is_dir(), f"missing bundled directory: {'/'.join(parts)}"
+    for parts in cases:
+        node = packaged_data(*parts)
+
+        assert node.is_dir(), f"missing bundled directory: {'/'.join(parts)}"
 
 
 def test_joinpath_composition_matches_variadic_call() -> None:

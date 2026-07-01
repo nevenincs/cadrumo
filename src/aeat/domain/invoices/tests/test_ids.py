@@ -20,16 +20,17 @@ def test_accepts_canonical_sha256_hex_digest() -> None:
     assert _Holder(invoice_id=digest).invoice_id == digest
 
 
-@pytest.mark.parametrize(
-    "raw_id",
-    [
-        hashlib.sha256(b"invoice-payload").hexdigest().upper(),
-        "a" * 63,
-        "a" * 65,
-        "g" * 64,
-    ],
-    ids=("uppercase-hex", "too-short", "too-long", "non-hex"),
-)
-def test_rejects_noncanonical_digest_shapes(raw_id: str) -> None:
-    with pytest.raises(ValidationError):
-        _Holder(invoice_id=raw_id)
+def test_rejects_noncanonical_digest_shapes() -> None:
+    cases: tuple[tuple[str, str], ...] = (
+        ("uppercase-hex", hashlib.sha256(b"invoice-payload").hexdigest().upper()),
+        ("too-short", "a" * 63),
+        ("too-long", "a" * 65),
+        ("non-hex", "g" * 64),
+    )
+
+    for case_id, raw_id in cases:
+        try:
+            _Holder(invoice_id=raw_id)
+        except ValidationError:
+            continue
+        pytest.fail(f"{case_id}: expected ValidationError")

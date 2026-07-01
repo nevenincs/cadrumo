@@ -39,32 +39,31 @@ application services decide how that evidence participates in a work-unit
 workflow.
 
 Work-unit filing records for calculation revisions live in
-:mod:`aeat.application.modelo` and :mod:`aeat.domain.modelos`. This package owns
+:mod:`~aeat.application.modelo` and :mod:`~aeat.domain.modelos`. This package owns
 draft-level construction, review, export, verification, justificante import,
 local amendment construction, and lightweight local history; it does not create
-:class:`~aeat.domain.modelos.ModeloRecord` entries or stamp
-:class:`~aeat.domain.modelos.ExternalEvidence`.
+:class:`ModeloRecord` entries or stamp :class:`ExternalEvidence`.
 
 See Also:
-    :mod:`aeat.application.modelo`
+    :mod:`~aeat.application.modelo`
         Operator-facing modelo facade that carries calculation revisions into
         this filing surface.
-    :func:`aeat.application.modelo.file_modelo_revision`
+    :func:`~aeat.application.modelo.file_modelo_revision`
         Work-unit action that records a verified calculation revision as a
-        current local :class:`~aeat.domain.modelos.ModeloRecord`.
-    :func:`aeat.application.modelo.import_external_filing_evidence`
+        current local :class:`ModeloRecord`.
+    :func:`~aeat.application.modelo.import_external_filing_evidence`
         External-evidence import path that creates an evidenced
-        :class:`~aeat.domain.modelos.ModeloRecord` baseline for amendments.
-    :mod:`aeat.domain.justificante`
+        :class:`ModeloRecord` baseline for amendments.
+    :mod:`~aeat.domain.justificante`
         Receipt-metadata domain used by justificante PDF imports and
         receipt-bound external evidence.
-    :mod:`aeat.domain.filing`
+    :mod:`~aeat.domain.filing`
         Canonical draft records, values, provenance, validation findings, and
         review helpers.
-    :mod:`aeat.domain.submission`
+    :mod:`~aeat.domain.submission`
         Local-only submission audit records populated by justificante import;
         this is not an AEAT live-submit path.
-    :mod:`aeat.domain.calculations.registry`
+    :mod:`~aeat.domain.calculations.registry`
         Registry authority, snapshots, export layouts, and formula execution
         used by this application facade.
 """

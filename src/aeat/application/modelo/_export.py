@@ -1,6 +1,6 @@
 """Modelo declaration export: write a verified-complete or filed calculation revision to a local AEAT-compatible file.
 
-``export_modelo_revision`` accepts a
+:func:`~aeat.application.modelo.export_modelo_revision` accepts a
 :class:`~aeat.domain.modelos.CalculationRevision` id, rebuilds and approves a
 :class:`~aeat.application.filing.ModeloDraft` from the revision replay inputs,
 then writes a fichero-BOE-formatted artefact to the operator-supplied output
@@ -24,15 +24,15 @@ The CLI verb ``aeat app modelo export`` is a thin delegate over this
 service.
 
 See Also:
-    :func:`aeat.application.modelo._revision_replay_inputs.revision_filing_replay_inputs`:
+    :func:`~aeat.application.modelo._revision_replay_inputs.revision_filing_replay_inputs`:
         Reconstructs the filing inputs from the persisted revision.
-    :func:`aeat.application.filing.build_draft`:
+    :func:`~aeat.application.filing.build_draft`:
         Builds the transient registry-backed draft that is exported.
-    :func:`aeat.application.filing.export_draft`:
+    :func:`~aeat.application.filing.export_draft`:
         Serializes the approved draft through registry export layouts.
-    :func:`aeat.application.modelo._verification_actions.require_cross_period_clean_state`:
+    :func:`~aeat.application.modelo._verification_actions.require_cross_period_clean_state`:
         Rechecks cross-period filing prerequisites before writing the export.
-    :func:`aeat.application.modelo._result_disposition_resolution.resolve_modelo_result_disposition`:
+    :func:`~aeat.application.modelo._result_disposition_resolution.resolve_modelo_result_disposition`:
         Determines the fichero declaration type and refund disposition.
 """
 
@@ -217,7 +217,7 @@ class ModeloExportOutputPathError(ModeloExportError):
 
 
 class ModeloExportCommand(BaseModel):
-    """Strict input contract for ``export_modelo_revision``.
+    """Strict input contract for :func:`~aeat.application.modelo.export_modelo_revision`.
 
     Attributes:
         calculation_revision_id: SHA-256 hex id of the calculation
@@ -246,7 +246,7 @@ class ModeloExportCommand(BaseModel):
 
 
 class ModeloExportResult(BaseModel):
-    """Receipt produced by ``export_modelo_revision``.
+    """Receipt produced by :func:`~aeat.application.modelo.export_modelo_revision`.
 
     Composes the lower-level
     :class:`~aeat.application.filing.DeclaracionExportResult` (already a
@@ -959,7 +959,7 @@ def export_modelo_revision(
     decision provenance, and cross-period clean state. It then rebuilds and
     approves a transient :class:`~aeat.application.filing.ModeloDraft`, composes
     the fichero headers, serializes through
-    :func:`aeat.application.filing.export_draft`, appends ``MODELO_EXPORTED`` to
+    :func:`~aeat.application.filing.export_draft`, appends ``MODELO_EXPORTED`` to
     the bucket-event-history catalogue, and finally atomically renames the
     sibling ``.tmp`` file into place. Any write, event, or rename failure removes
     the temporary cleartext artefact before raising.
@@ -973,10 +973,10 @@ def export_modelo_revision(
         :class:`~aeat.application.modelo.ModeloExportCommand`:
             Strict input envelope for the revision id, output path, actor, and
             refund election.
-        :func:`_compose_export_headers`:
+        :func:`~aeat.application.modelo._export._compose_export_headers`:
             Builds required fichero-BOE header keys from the work unit, profile,
             revision, period, amendment marker, and refund election.
-        :func:`_validate_output_path`:
+        :func:`~aeat.application.modelo._export._validate_output_path`:
             Refuses unsafe destinations before fichero bytes are written.
     """
     from ...core import resolve_active_bucket_id

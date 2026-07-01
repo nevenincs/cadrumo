@@ -1,10 +1,11 @@
 """Public re-exports for Google outbound adapter primitives.
 
 This package boundary exposes OAuth records and scope constants from
-:mod:`aeat.adapters.outbound.google._records`, the Google auth error taxonomy
-from :mod:`aeat.adapters.outbound.google._errors`, and scoped document-link
-helpers from :mod:`aeat.adapters.outbound.google._document_link_resolver`.
-Google Sheets remains a one-way export mirror here, never an authority.
+:mod:`~aeat.adapters.outbound.google._records`, the Google auth error taxonomy
+from :mod:`~aeat.adapters.outbound.google._errors`, and scoped document-link
+helpers from
+:mod:`~aeat.adapters.outbound.google._document_link_resolver`. Google Sheets
+remains a one-way export mirror here, never an authority.
 
 The Drive document-link helper follows the integration's minimal-scope posture:
 ``drive.file`` links the app can reach are fetched as bytes for callers to store
@@ -14,31 +15,50 @@ evidence.
 
 Major declarations:
 
-* :class:`OAuthClient`, :class:`OAuthToken`, and :class:`OAuthMetadata` —
-  the typed OAuth credential records.
-* :class:`DriveAppProperties` — the typed Drive ``appProperties`` payload.
-* :class:`DriveConfig` — the typed per-profile Drive/Sheets config record.
-* :data:`REQUIRED_SCOPES`, with :data:`DRIVE_FILE_SCOPE` and
-  :data:`SHEETS_SCOPE` — the requested OAuth scopes.
-* :func:`parse_drive_file_id` and :func:`resolve_document_link` — the
+* :class:`~aeat.adapters.outbound.google.OAuthClient`,
+  :class:`~aeat.adapters.outbound.google.OAuthToken`, and
+  :class:`~aeat.adapters.outbound.google.OAuthMetadata` — the typed OAuth
+  credential records.
+* :class:`~aeat.adapters.outbound.google.DriveAppProperties` — the typed Drive
+  ``appProperties`` payload.
+* :class:`~aeat.adapters.outbound.google.DriveConfig` — the typed per-profile
+  Drive/Sheets config record.
+* :data:`~aeat.adapters.outbound.google.REQUIRED_SCOPES`, with
+  :data:`~aeat.adapters.outbound.google.DRIVE_FILE_SCOPE` and
+  :data:`~aeat.adapters.outbound.google.SHEETS_SCOPE` — the requested OAuth
+  scopes.
+* :func:`~aeat.adapters.outbound.google.parse_drive_file_id` and
+  :func:`~aeat.adapters.outbound.google.resolve_document_link` — the
   minimal-scope Drive document-link helpers.
-* :class:`GoogleAuthError` and its subclasses — the Google auth failure
-  taxonomy.
-* :func:`run_login_flow` — the interactive OAuth login flow.
-* :func:`save_client`, :func:`load_client`, :func:`save_token`,
-  :func:`load_token`, :func:`save_metadata`, :func:`load_metadata`,
-  :func:`save_drive_config`, :func:`load_drive_config`, and
-  :func:`delete_session` — the per-profile session-store primitives.
-* :func:`resolve_active_profile` — the active-profile resolver.
-* :class:`CalcSheetsApplyResult` and :func:`apply_export_plan` — the
+* :exc:`~aeat.adapters.outbound.google.GoogleAuthError` and its subclasses —
+  the Google auth failure taxonomy.
+* :func:`~aeat.adapters.outbound.google.run_login_flow` — the interactive OAuth
+  login flow.
+* :func:`~aeat.adapters.outbound.google.save_client`,
+  :func:`~aeat.adapters.outbound.google.load_client`,
+  :func:`~aeat.adapters.outbound.google.save_token`,
+  :func:`~aeat.adapters.outbound.google.load_token`,
+  :func:`~aeat.adapters.outbound.google.save_metadata`,
+  :func:`~aeat.adapters.outbound.google.load_metadata`,
+  :func:`~aeat.adapters.outbound.google.save_drive_config`,
+  :func:`~aeat.adapters.outbound.google.load_drive_config`, and
+  :func:`~aeat.adapters.outbound.google.delete_session` — the per-profile
+  session-store primitives.
+* :func:`~aeat.adapters.outbound.google.resolve_active_profile` — the
+  active-profile resolver.
+* :class:`~aeat.adapters.outbound.google.CalcSheetsApplyResult` and
+  :func:`~aeat.adapters.outbound.google.apply_export_plan` — the
   export-plan-to-Sheets apply surface.
-* :class:`RowSetEdit`, :class:`PullResult`, :func:`pull_operator_edits`, and
-  :func:`compute_from_pull` — the operator-edit pull surface.
+* :class:`~aeat.adapters.outbound.google.RowSetEdit`,
+  :class:`~aeat.adapters.outbound.google.PullResult`,
+  :func:`~aeat.adapters.outbound.google.pull_operator_edits`, and
+  :func:`~aeat.adapters.outbound.google.compute_from_pull` — the operator-edit
+  pull surface.
 
 See Also:
-    - :mod:`aeat.adapters.outbound.storage` for the Google Drive storage mirror
-      that owns remote ciphertext synchronisation.
-    - :mod:`aeat.domain.attachments` for byte-bearing attachment records that
+    - :mod:`~aeat.adapters.outbound.storage` for the Google Drive storage
+      mirror that owns remote ciphertext synchronisation.
+    - :mod:`~aeat.domain.attachments` for byte-bearing attachment records that
       consume resolved Drive document bytes.
 """
 

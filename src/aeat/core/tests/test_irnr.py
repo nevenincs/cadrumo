@@ -27,18 +27,15 @@ def test_tipo_renta_irnr_tokens_match_registry_vocabulary() -> None:
     }
 
 
-@pytest.mark.parametrize(
-    ("token", "member"),
-    (
-        pytest.param("pension", TipoRentaIrnr.PENSION, id="pension"),
-        pytest.param("interest", TipoRentaIrnr.INTEREST, id="interest"),
-    ),
-)
-def test_tipo_renta_irnr_is_str_and_hydrates_from_token(token: str, member: TipoRentaIrnr) -> None:
+def test_tipo_renta_irnr_is_str_and_hydrates_from_token() -> None:
     """A StrEnum member equals its token and hydrates from the stored string."""
-    assert TipoRentaIrnr(token) is member
-    assert member == token
-    assert str(member) == token
+    for token, member in (
+        ("pension", TipoRentaIrnr.PENSION),
+        ("interest", TipoRentaIrnr.INTEREST),
+    ):
+        assert TipoRentaIrnr(token) is member
+        assert member == token
+        assert str(member) == token
 
 
 def test_convenio_override_kind_tokens() -> None:
@@ -51,18 +48,15 @@ def test_convenio_override_kind_tokens() -> None:
     }
 
 
-@pytest.mark.parametrize(
-    ("kind", "carries_rate"),
-    (
-        pytest.param(ConvenioOverrideKind.FLAT, True, id="flat"),
-        pytest.param(ConvenioOverrideKind.CEILING, True, id="ceiling"),
-        pytest.param(ConvenioOverrideKind.ALLOCATION_DOMESTIC_TARIFF, False, id="allocation-domestic-tariff"),
-        pytest.param(ConvenioOverrideKind.EXEMPT, False, id="exempt"),
-    ),
-)
-def test_convenio_override_kind_rate_bearing_partition(kind: ConvenioOverrideKind, carries_rate: bool) -> None:
+def test_convenio_override_kind_rate_bearing_partition() -> None:
     """flat/ceiling carry a rate; allocation/exempt do not."""
-    assert kind.carries_rate is carries_rate
+    for kind, carries_rate in (
+        (ConvenioOverrideKind.FLAT, True),
+        (ConvenioOverrideKind.CEILING, True),
+        (ConvenioOverrideKind.ALLOCATION_DOMESTIC_TARIFF, False),
+        (ConvenioOverrideKind.EXEMPT, False),
+    ):
+        assert kind.carries_rate is carries_rate
 
 
 def test_convenio_override_kind_rejects_unknown_token() -> None:

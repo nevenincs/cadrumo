@@ -29,62 +29,49 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 class TestValidateSpanishTaxIdNie:
     """NIE acceptance and rejection on the canonical-string validator."""
 
-    @pytest.mark.parametrize(
-        ("candidate", "substituted"),
-        [
+    def test_valid_nie_accepted_and_returned_canonical(self) -> None:
+        cases = (
             # X -> 0: 01234567 % 23 = 19 -> L
-            pytest.param("X1234567L", 1234567, id="x-prefix"),
+            ("X1234567L", 1234567),
             # Y -> 1: 10000000 % 23 = 14 -> Z
-            pytest.param("Y0000000Z", 10000000, id="y-prefix"),
+            ("Y0000000Z", 10000000),
             # Z -> 2: 20000000 % 23 = 5 -> M
-            pytest.param("Z0000000M", 20000000, id="z-prefix"),
+            ("Z0000000M", 20000000),
             # Y -> 1: 15678901 % 23 = 8 -> P
-            pytest.param("Y5678901P", 15678901, id="y-prefix-nonzero"),
+            ("Y5678901P", 15678901),
             # Z -> 2: 22345678 % 23 = 5 -> M
-            pytest.param("Z2345678M", 22345678, id="z-prefix-nonzero"),
-        ],
-    )
-    def test_valid_nie_accepted_and_returned_canonical(self, candidate: str, substituted: int) -> None:
-        # The asserted check letter is derived from the AEAT table, not the
-        # validator: prove the fixture's check letter is the algorithm's answer.
-        assert candidate[-1] == nif_check_letter(substituted)
-        assert validate_spanish_tax_id(candidate) == candidate
+            ("Z2345678M", 22345678),
+        )
 
-    def test_lowercase_prefix_normalised(self) -> None:
-        assert validate_spanish_tax_id("x1234567l") == "X1234567L"
+        for candidate, substituted in cases:
+            # The asserted check letter is derived from the AEAT table, not the
+            # validator: prove the fixture's check letter is the algorithm's answer.
+            assert candidate[-1] == nif_check_letter(substituted)
+            assert validate_spanish_tax_id(candidate) == candidate
 
-    def test_surrounding_whitespace_and_dashes_tolerated(self) -> None:
-        assert validate_spanish_tax_id("  X-1234567-L  ") == "X1234567L"
+    def test_valid_nie_input_forms_are_normalised(self) -> None:
+        cases = (
+            ("x1234567l", "X1234567L"),
+            ("  X-1234567-L  ", "X1234567L"),
+            # The foreign-facing VAT form ``ES`` + NIE is accepted and stripped.
+            ("ESX1234567L", "X1234567L"),
+        )
 
-    def test_es_prefixed_nie_stripped(self) -> None:
-        # The foreign-facing VAT form ``ES`` + NIE is accepted and the ES
-        # prefix stripped to the canonical 9-character identifier.
-        assert validate_spanish_tax_id("ESX1234567L") == "X1234567L"
+        for raw, expected in cases:
+            assert validate_spanish_tax_id(raw) == expected
 
-    def test_wrong_check_letter_rejected(self) -> None:
-        # X1234567 has check letter L (01234567 % 23 = 19); Z is wrong.
-        with pytest.raises(IdentityError, match="NIE checksum letter is invalid"):
-            validate_spanish_tax_id("X1234567Z")
+    def test_invalid_nie_inputs_are_rejected_with_instructive_messages(self) -> None:
+        shape_message = "NIE must be a leading X/Y/Z plus 7 digits and a checksum letter"
+        cases = (
+            # X1234567 has check letter L (01234567 % 23 = 19); Z is wrong.
+            ("X1234567Z", "NIE checksum letter is invalid"),
+            ("X123A567L", shape_message),
+            # A NIE control character must be a letter, never a digit.
+            ("X12345678", shape_message),
+            ("X123456L", "9 characters long"),
+            ("   ", "must not be blank"),
+        )
 
-    def test_non_digit_body_rejected_with_instructive_message(self) -> None:
-        with pytest.raises(
-            IdentityError,
-            match="NIE must be a leading X/Y/Z plus 7 digits and a checksum letter",
-        ):
-            validate_spanish_tax_id("X123A567L")
-
-    def test_digit_control_rejected_with_instructive_message(self) -> None:
-        # A NIE control character must be a letter, never a digit.
-        with pytest.raises(
-            IdentityError,
-            match="NIE must be a leading X/Y/Z plus 7 digits and a checksum letter",
-        ):
-            validate_spanish_tax_id("X12345678")
-
-    def test_too_short_nie_rejected(self) -> None:
-        with pytest.raises(IdentityError, match="9 characters long"):
-            validate_spanish_tax_id("X123456L")
-
-    def test_blank_rejected(self) -> None:
-        with pytest.raises(IdentityError, match="must not be blank"):
-            validate_spanish_tax_id("   ")
+        for candidate, expected_message in cases:
+            with pytest.raises(IdentityError, match=expected_message):
+                validate_spanish_tax_id(candidate)

@@ -23,22 +23,19 @@ class TestReadEnvFile:
     def test_returns_empty_for_missing_file(self, tmp_path: Path) -> None:
         assert read_env_file(tmp_path / "missing.env") == {}
 
-    @pytest.mark.parametrize(
-        ("text", "expected"),
-        (
-            pytest.param("FOO=bar\nBAZ=qux\n", {"FOO": "bar", "BAZ": "qux"}, id="simple-pairs"),
-            pytest.param(
+    def test_parses_supported_env_lines(self, tmp_path: Path) -> None:
+        for case_name, text, expected in (
+            ("simple-pairs", "FOO=bar\nBAZ=qux\n", {"FOO": "bar", "BAZ": "qux"}),
+            (
+                "comments-and-blanks",
                 "# header comment\n\nFOO=bar\n# inline comment\nBAZ=qux\n",
                 {"FOO": "bar", "BAZ": "qux"},
-                id="comments-and-blanks",
             ),
-            pytest.param("FOO=\n", {"FOO": ""}, id="empty-value"),
-        ),
-    )
-    def test_parses_supported_env_lines(self, tmp_path: Path, text: str, expected: dict[str, str]) -> None:
-        path = tmp_path / ".env"
-        path.write_text(text, encoding="utf-8")
-        assert read_env_file(path) == expected
+            ("empty-value", "FOO=\n", {"FOO": ""}),
+        ):
+            path = tmp_path / f"{case_name}.env"
+            path.write_text(text, encoding="utf-8")
+            assert read_env_file(path) == expected
 
     def test_malformed_line_raises(self, tmp_path: Path) -> None:
         path = tmp_path / ".env"
@@ -52,35 +49,25 @@ class TestWriteEnvVars:
     :func:`aeat.core.env_io.write_env_vars`.
     """
 
-    @pytest.mark.parametrize(
-        ("path_parts", "initial", "key", "value", "expected"),
-        (
-            pytest.param(("subdir", ".env"), None, "FOO", "bar", "FOO=bar\n", id="create-missing"),
-            pytest.param((".env",), "FOO=bar\n", "BAZ", "qux", "FOO=bar\nBAZ=qux\n", id="append-new-key"),
-            pytest.param(
+    def test_write_env_var_materializes_and_updates_file(self, tmp_path: Path) -> None:
+        for case_name, path_parts, initial, key, value, expected in (
+            ("create-missing", ("subdir", ".env"), None, "FOO", "bar", "FOO=bar\n"),
+            ("append-new-key", (".env",), "FOO=bar\n", "BAZ", "qux", "FOO=bar\nBAZ=qux\n"),
+            (
+                "rewrite-existing-key",
                 (".env",),
                 "FOO=old\nBAZ=qux\n",
                 "FOO",
                 "new",
                 "FOO=new\nBAZ=qux\n",
-                id="rewrite-existing-key",
             ),
-        ),
-    )
-    def test_write_env_var_materializes_and_updates_file(
-        self,
-        tmp_path: Path,
-        path_parts: tuple[str, ...],
-        initial: str | None,
-        key: str,
-        value: str,
-        expected: str,
-    ) -> None:
-        path = tmp_path.joinpath(*path_parts)
-        if initial is not None:
-            path.write_text(initial, encoding="utf-8")
-        write_env_var(path, key, value)
-        assert path.read_text(encoding="utf-8") == expected
+        ):
+            path = tmp_path.joinpath(case_name, *path_parts)
+            if initial is not None:
+                path.parent.mkdir(parents=True, exist_ok=True)
+                path.write_text(initial, encoding="utf-8")
+            write_env_var(path, key, value)
+            assert path.read_text(encoding="utf-8") == expected
 
     def test_preserves_comments_and_blank_lines(self, tmp_path: Path) -> None:
         path = tmp_path / ".env"
@@ -95,27 +82,18 @@ class TestWriteEnvVars:
         # blank lines preserved
         assert result.count("\n\n") >= 1
 
-    @pytest.mark.parametrize(
-        ("initial", "updates", "expected"),
-        (
-            pytest.param(None, {"A": "1", "B": "2", "C": "3"}, "A=1\nB=2\nC=3\n", id="append-in-order"),
-            pytest.param(
+    def test_multi_var_write_materializes_updates_in_order(self, tmp_path: Path) -> None:
+        for case_name, initial, updates, expected in (
+            ("append-in-order", None, {"A": "1", "B": "2", "C": "3"}, "A=1\nB=2\nC=3\n"),
+            (
+                "update-and-append",
                 "EXISTING=old\n",
                 {"EXISTING": "new", "FRESH": "value"},
                 "EXISTING=new\nFRESH=value\n",
-                id="update-and-append",
             ),
-        ),
-    )
-    def test_multi_var_write_materializes_updates_in_order(
-        self,
-        tmp_path: Path,
-        initial: str | None,
-        updates: dict[str, str],
-        expected: str,
-    ) -> None:
-        path = tmp_path / ".env"
-        if initial is not None:
-            path.write_text(initial, encoding="utf-8")
-        write_env_vars(path, updates)
-        assert path.read_text(encoding="utf-8") == expected
+        ):
+            path = tmp_path / f"{case_name}.env"
+            if initial is not None:
+                path.write_text(initial, encoding="utf-8")
+            write_env_vars(path, updates)
+            assert path.read_text(encoding="utf-8") == expected

@@ -1,10 +1,10 @@
 """Persist a locally-filed calculation revision as a cross-period observation.
 
 This is the local-filing sibling of the live-AEAT-capture persistence path
-(:func:`aeat.application.live.persist_filed_calculation_observation`). It does
+(:func:`~aeat.application.live.persist_filed_calculation_observation`). It does
 NOT introduce a parallel write path: it is an additional projection of the
 single-writer filing transition
-(:func:`aeat.application.modelo._revision_persistence.persist_filed_revision`),
+(:func:`~aeat.application.modelo._revision_persistence.persist_filed_revision`),
 co-emitted with ``MODELO_FILED``, that records the filed
 :class:`~aeat.domain.modelos.CalculationRevision` outputs into the
 cross-period observation store so a later period's ``calculate`` can carry them
@@ -13,7 +13,7 @@ forward automatically via the ``previous_filing`` resolver.
 The persisted observation is stamped with a NON-official ``source_kind``
 (``app_filing``): a value an operator filed through the app is not external AEAT
 evidence. The cross-period clean-state guard
-(:mod:`aeat.application.calculations._cross_period_clean_state`) treats any
+(:mod:`~aeat.application.calculations._cross_period_clean_state`) treats any
 ``source_kind`` outside its official set as the
 ``LOCAL_FILING_MISSING_EXTERNAL_EVIDENCE`` blocker, so this carry feeds
 calculate/draft but never satisfies the filing gate for a dependent period —
@@ -34,17 +34,17 @@ Modelo 303 filings, and persists a
 :class:`~aeat.domain.calculations.registry.RegistryModeloObservation` record.
 
 See Also:
-    :func:`aeat.application.modelo._revision_persistence.persist_filed_revision`:
+    :func:`~aeat.application.modelo._revision_persistence.persist_filed_revision`:
         Calls this projection after the filing catalogue write and
         ``MODELO_FILED`` event succeed.
-    :func:`aeat.domain.calculations.registry.resolve_previous_filing_binding_values`:
+    :func:`~aeat.domain.calculations.registry.resolve_previous_filing_binding_values`:
         Consumes stored
         :class:`~aeat.domain.calculations.registry.RegistryModeloObservation`
         rows for ``previous_filing`` bindings during calculation.
-    :mod:`aeat.application.calculations._cross_period_clean_state`:
+    :mod:`~aeat.application.calculations._cross_period_clean_state`:
         Classifies ``app_filing`` as non-official evidence for filing-grade
         readiness.
-    :func:`aeat.application.calculations.iva_compensation_state_from_registry_observation`:
+    :func:`~aeat.application.calculations.iva_compensation_state_from_registry_observation`:
         Projects local Modelo 303 observations into the IVA compensation history.
 """
 
@@ -218,7 +218,7 @@ def persist_filed_revision_observation(
             Stores the non-official cross-period observation envelope.
         :class:`~aeat.application.calculations.IvaCompensationHistoryRepository`:
             Stores the profile-local Modelo 303 compensation period state.
-        :func:`aeat.application.calculations.extract_modelo_303_local_iva_compensation_recurrence`:
+        :func:`~aeat.application.calculations.extract_modelo_303_local_iva_compensation_recurrence`:
             Reads the local IVA history for wallet reconciliation.
     """
     observations = revision.observations

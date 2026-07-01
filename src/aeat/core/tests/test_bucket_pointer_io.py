@@ -21,19 +21,16 @@ def _pointer(bucket_id: str) -> BucketPointer:
     return BucketPointer(bucket_id=bucket_id, schema_version=1)
 
 
-@pytest.mark.parametrize(
-    ("root_parts", "pointer"),
-    (
-        pytest.param((), _pointer("alpha"), id="root"),
-        pytest.param(("nested", "root"), _pointer("alpha"), id="lazy-parent"),
-    ),
-)
-def test_round_trip_preserves_pointer(tmp_path: Path, root_parts: tuple[str, ...], pointer: BucketPointer) -> None:
-    root = tmp_path.joinpath(*root_parts)
+def test_round_trip_preserves_pointer(tmp_path: Path) -> None:
+    for root_parts, pointer in (
+        ((), _pointer("alpha")),
+        (("nested", "root"), _pointer("alpha")),
+    ):
+        root = tmp_path.joinpath(*root_parts)
 
-    write_pointer(root, pointer)
+        write_pointer(root, pointer)
 
-    assert read_pointer(root) == pointer
+        assert read_pointer(root) == pointer
 
 
 def test_absent_pointer_returns_none(tmp_path: Path) -> None:

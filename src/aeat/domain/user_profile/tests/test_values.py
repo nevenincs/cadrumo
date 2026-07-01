@@ -39,32 +39,29 @@ def test_profile_record_is_strict_frozen_and_tombstones_live_root() -> None:
         profile.display_name = "Changed"
 
 
-@pytest.mark.parametrize(
-    ("payload", "expected_message"),
-    (
-        pytest.param(
+def test_profile_record_rejects_invalid_lifecycle_state() -> None:
+    cases: tuple[tuple[dict[str, object], str], ...] = (
+        (
             {
                 "profile_id": _REMOVED_PROFILE_ID,
                 "display_name": "Removed",
                 "status": "tombstoned",
             },
             "tombstoned profiles must carry removed_at",
-            id="tombstoned-without-removed-at",
         ),
-        pytest.param(
+        (
             {
                 "profile_id": _ACTIVE_PROFILE_ID,
                 "display_name": "Active",
                 "removed_at": datetime(2026, 5, 7, tzinfo=UTC),
             },
             "active profiles must not carry removed_at",
-            id="active-with-removed-at",
         ),
-    ),
-)
-def test_profile_record_rejects_invalid_lifecycle_state(payload: dict[str, object], expected_message: str) -> None:
-    with pytest.raises(ValidationError, match=expected_message):
-        UserProfileRecord.model_validate(payload)
+    )
+
+    for payload, expected_message in cases:
+        with pytest.raises(ValidationError, match=expected_message):
+            UserProfileRecord.model_validate(payload)
 
 
 def test_profile_fact_rejects_invalid_effective_window() -> None:
@@ -98,25 +95,7 @@ def test_leading_zero_identifier_stays_a_string() -> None:
     assert reloaded == fact
 
 
-@pytest.mark.parametrize(
-    ("payload_json", "expected"),
-    (
-        pytest.param(
-            UserProfileFact(path="usage_ratios.business_ratio", value=Decimal("0.50")).model_dump_json(),
-            Decimal("0.50"),
-            id="decimal",
-        ),
-        pytest.param(
-            '{"path": "usage_ratios.business_ratio", "value": "0"}',
-            Decimal("0"),
-            id="zero",
-        ),
-    ),
-)
-def test_json_restoration_still_recovers_canonical_decimal_and_zero(
-    payload_json: str,
-    expected: Decimal,
-) -> None:
+def test_json_restoration_still_recovers_canonical_decimal_and_zero() -> None:
     """A genuine round-tripped Decimal (and a lone ``0``) is still restored.
 
     The leading-zero exclusion must not regress the original purpose of the
@@ -125,9 +104,21 @@ def test_json_restoration_still_recovers_canonical_decimal_and_zero(
     is a legitimate Decimal shape.
     """
 
-    reloaded = UserProfileFact.model_validate_json(payload_json)
-    assert reloaded.value == expected
-    assert isinstance(reloaded.value, Decimal)
+    cases = (
+        (
+            UserProfileFact(path="usage_ratios.business_ratio", value=Decimal("0.50")).model_dump_json(),
+            Decimal("0.50"),
+        ),
+        (
+            '{"path": "usage_ratios.business_ratio", "value": "0"}',
+            Decimal("0"),
+        ),
+    )
+
+    for payload_json, expected in cases:
+        reloaded = UserProfileFact.model_validate_json(payload_json)
+        assert reloaded.value == expected
+        assert isinstance(reloaded.value, Decimal)
 
 
 def test_snapshot_is_canonical_and_rejects_tombstoned_profiles() -> None:

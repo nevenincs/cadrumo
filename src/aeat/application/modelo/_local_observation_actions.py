@@ -2,7 +2,7 @@
 
 This module records local, non-official observations in the existing
 cross-period calculation observation store. It deliberately does not create a
-``ModeloRecord`` and does not stamp ``ExternalEvidence``: the values are
+:class:`ModeloRecord` and does not stamp :class:`ExternalEvidence`: the values are
 operator-supplied scratch/local inputs that can feed relation and
 ``previous_filing`` calculation prefill, but they must never satisfy the
 filing-grade clean-state proof that requires AEAT-backed evidence.
@@ -11,6 +11,13 @@ Each persisted observation is grounded against the law-determined
 :class:`RegistrySnapshot` and stored as provenance-bearing
 :class:`CasillaObservation` rows, while the source kind stays explicitly
 non-official.
+
+See Also:
+    :func:`~aeat.application.modelo._filed_revision_observation.persist_filed_revision_observation`:
+        Local-filing projection that uses ``app_filing`` rather than
+        operator-manual source.
+    :mod:`~aeat.application.calculations._cross_period_clean_state`:
+        Classifies local observations as non-official for filing-grade readiness.
 """
 
 from __future__ import annotations

@@ -40,26 +40,25 @@ def _without_token_dir_env():
     return scoped_env_var("AEAT_TOKEN_DIR", None)
 
 
-@pytest.mark.parametrize(
-    "storage_root_parts",
-    (
-        pytest.param(("state-root",), id="simple-root"),
-        pytest.param(("another", "root"), id="nested-root"),
-    ),
-)
-def test_token_dir_defaults_under_storage_root(tmp_path: Path, storage_root_parts: tuple[str, ...]) -> None:
+def test_token_dir_defaults_under_storage_root(tmp_path: Path) -> None:
     """With no explicit `AEAT_TOKEN_DIR`, the token directory resolves
     to `<aeat_local_storage_root>/tokens` for any storage-root shape.
     """
 
-    storage_root = tmp_path.joinpath(*storage_root_parts)
-    with _without_token_dir_env():
-        settings = Settings(aeat_local_storage_root=storage_root)
+    cases: tuple[tuple[str, tuple[str, ...]], ...] = (
+        ("simple-root", ("state-root",)),
+        ("nested-root", ("another", "root")),
+    )
 
-    assert settings.aeat_token_dir == storage_root / "tokens"
-    # The token directory is genuinely nested under the storage root,
-    # not merely a sibling that happens to share a prefix.
-    assert settings.aeat_local_storage_root in settings.aeat_token_dir.parents
+    for case_id, storage_root_parts in cases:
+        storage_root = tmp_path.joinpath(*storage_root_parts)
+        with _without_token_dir_env():
+            settings = Settings(aeat_local_storage_root=storage_root)
+
+        assert settings.aeat_token_dir == storage_root / "tokens", case_id
+        # The token directory is genuinely nested under the storage root,
+        # not merely a sibling that happens to share a prefix.
+        assert settings.aeat_local_storage_root in settings.aeat_token_dir.parents, case_id
 
 
 def test_explicit_token_dir_constructor_override_wins(tmp_path: Path) -> None:

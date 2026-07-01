@@ -17,22 +17,21 @@ def test_cent_constant_is_two_decimal_places() -> None:
     assert CENT.as_tuple().exponent == -2
 
 
-@pytest.mark.parametrize(
-    ("raw", "expected"),
-    (
-        pytest.param("1.234", "1.23", id="below-half-down"),
-        pytest.param("0.004", "0.00", id="below-half-to-zero"),
-        pytest.param("1.005", "1.01", id="half-up-1005"),
-        pytest.param("1.015", "1.02", id="half-up-1015"),
-        pytest.param("2.345", "2.35", id="half-up-2345"),
-        pytest.param("-1.005", "-1.01", id="negative-half-away-from-zero"),
-        pytest.param("-1.234", "-1.23", id="negative-below-half"),
-        pytest.param("3.14159265", "3.14", id="high-precision-down"),
-        pytest.param("3.14999", "3.15", id="high-precision-up"),
-    ),
-)
-def test_round_to_cents_quantizes_examples(raw: str, expected: str) -> None:
-    assert round_to_cents(Decimal(raw)) == Decimal(expected)
+def test_round_to_cents_quantizes_examples() -> None:
+    cases = (
+        ("1.234", "1.23"),
+        ("0.004", "0.00"),
+        ("1.005", "1.01"),
+        ("1.015", "1.02"),
+        ("2.345", "2.35"),
+        ("-1.005", "-1.01"),
+        ("-1.234", "-1.23"),
+        ("3.14159265", "3.14"),
+        ("3.14999", "3.15"),
+    )
+
+    for raw, expected in cases:
+        assert round_to_cents(Decimal(raw)) == Decimal(expected)
 
 
 def test_round_to_cents_returns_decimal_with_two_digit_exponent() -> None:

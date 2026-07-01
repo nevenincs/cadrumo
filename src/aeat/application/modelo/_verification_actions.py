@@ -1,6 +1,6 @@
 """Verification actions and predicates for modelo filings.
 
-``verify_modelo_revision`` evaluates a draft
+:func:`verify_modelo_revision` evaluates a draft
 :class:`CalculationRevision` against its :class:`RegistrySnapshot`, workflow
 :class:`TaxpayerProfile`, ledger diagnostics, registry verification predicates,
 and cross-period clean-state verdicts before persisting a
@@ -23,9 +23,9 @@ transactions.
 See Also:
     :func:`~aeat.application.calculations.evaluate_cross_period_clean_state`:
         Shared cross-period gate used by verify, file, and export.
-    :mod:`aeat.application.modelo._calculation_diagnostics`:
+    :mod:`~aeat.application.modelo._calculation_diagnostics`:
         Calculate-path diagnostics that feed advisory observations before verify.
-    :mod:`aeat.domain.modelos`:
+    :mod:`~aeat.domain.modelos`:
         Finding kind, severity, and completeness-status authority.
 """
 
@@ -429,7 +429,7 @@ def _evaluate_predicate_expression(
     """Return True when the predicate holds, False when it is violated.
 
     Supports the DSL operators registered in
-    :data:`aeat.domain.calculations.registry._schema.KNOWN_VERIFICATION_PREDICATE_OPERATORS`:
+    :data:`~aeat.domain.calculations.registry._schema.KNOWN_VERIFICATION_PREDICATE_OPERATORS`:
 
     - ``all_nonzero(["id1", "id2", ...])`` — all ids must have a non-zero value.
     - ``any_nonzero(["id1", "id2", ...])`` — at least one id must have a non-zero value.
@@ -453,7 +453,7 @@ def _evaluate_predicate_expression(
     An expression that does not match any registered pattern is treated as
     holding (i.e. unknown predicates do not block the operator). The
     authoring-time validator in
-    :mod:`aeat.domain.calculations.registry._validate_surfaces` is the gate
+    :mod:`~aeat.domain.calculations.registry._validate_surfaces` is the gate
     against typos reaching this branch.
     """
     expr = expression.strip()
@@ -1107,7 +1107,7 @@ def verify_modelo_revision(
 
     The verifier loads the draft
     :class:`CalculationRevision`,
-    resolves its work unit and registry snapshot, builds verify-time findings,
+    resolves its work unit and :class:`RegistrySnapshot`, builds verify-time findings,
     classifies the outcome, persists a :class:`VerificationReport`, records
     bucket history, and updates the :class:`CalculationRevision` only when the
     verified-complete transition is granted.

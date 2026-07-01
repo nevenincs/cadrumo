@@ -5,6 +5,14 @@ This module prepares calculation input channels against the registry
 :class:`RegistrySnapshot`, applies the Modelo 303 IVA wallet gate, and runs
 ledger preflight through a :class:`TransactionCatalogueRepository` before
 calculation proceeds.
+
+See Also:
+    :func:`~aeat.application.modelo._calculation_actions.calculate_modelo_revision`:
+        Consumes the prepared bundle before persisting a draft revision.
+    :func:`~aeat.application.modelo._calculation_resolution.resolve_calculation_binding_channels`:
+        Merges caller, backend, borrador, enum, and date binding channels.
+    :mod:`~aeat.application.modelo._iva_wallet_gate`:
+        Applies the persisted Modelo 303 IVA-wallet authority during preparation.
 """
 
 from __future__ import annotations

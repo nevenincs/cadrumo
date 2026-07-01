@@ -5,11 +5,11 @@ records — ``(modelo, filing_year, period, casilla_values)`` — as encrypted a
 envelopes in the
 :class:`~aeat.adapters.persistence.storage.SecureObjectRepository`.
 Past-filing value rows are bound to
-:data:`aeat.adapters.persistence.storage.CALCULATION_OBSERVATIONS_NAMESPACE`;
+:data:`~aeat.adapters.persistence.storage.CALCULATION_OBSERVATIONS_NAMESPACE`;
 IVA wallet decisions are split between the latest-state
-:data:`aeat.adapters.persistence.storage.IVA_WALLET_RECONCILIATION_DECISIONS_NAMESPACE`
+:data:`~aeat.adapters.persistence.storage.IVA_WALLET_RECONCILIATION_DECISIONS_NAMESPACE`
 and immutable
-:data:`aeat.adapters.persistence.storage.IVA_WALLET_RECONCILIATION_DECISION_EVENTS_NAMESPACE`
+:data:`~aeat.adapters.persistence.storage.IVA_WALLET_RECONCILIATION_DECISION_EVENTS_NAMESPACE`
 namespaces.
 The records are the substrate read by
 :class:`~._multi_year.PreviousFilingSourceResolver` and
@@ -288,7 +288,7 @@ class CalculationObservationRepository(SecureBoundRepository[_ObservationEnvelop
 
     The repository binds each
     :class:`~aeat.adapters.persistence.storage.Envelope` payload to
-    :data:`aeat.adapters.persistence.storage.CALCULATION_OBSERVATIONS_NAMESPACE`
+    :data:`~aeat.adapters.persistence.storage.CALCULATION_OBSERVATIONS_NAMESPACE`
     through
     :class:`~aeat.adapters.persistence.storage.SecureBoundRepository`.
     """
@@ -391,9 +391,9 @@ class IvaWalletDecisionRepository(SecureBoundRepository[IvaWalletDecisionEnvelop
     :class:`~._iva_wallet_reconciliation.IvaWalletDecisionSourceResolver`.
 
     Latest-state rows use
-    :data:`aeat.adapters.persistence.storage.IVA_WALLET_RECONCILIATION_DECISIONS_NAMESPACE`;
+    :data:`~aeat.adapters.persistence.storage.IVA_WALLET_RECONCILIATION_DECISIONS_NAMESPACE`;
     immutable audit events use
-    :data:`aeat.adapters.persistence.storage.IVA_WALLET_RECONCILIATION_DECISION_EVENTS_NAMESPACE`.
+    :data:`~aeat.adapters.persistence.storage.IVA_WALLET_RECONCILIATION_DECISION_EVENTS_NAMESPACE`.
     Both store :class:`IvaCompensationReconciliationDecision` payloads in
     :class:`~aeat.adapters.persistence.storage.Envelope` records through
     :class:`~aeat.adapters.persistence.storage.SecureBoundRepository`.

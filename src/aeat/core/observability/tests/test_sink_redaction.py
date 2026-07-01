@@ -103,33 +103,20 @@ def _build_error_event(message: str) -> RunEvent:
     )
 
 
-@pytest.mark.parametrize(
-    ("event", "forbidden_fragments"),
-    (
-        pytest.param(_build_form_fill_event(value=_NIF_CANARY), (_NIF_CANARY,), id="form-fill-nif"),
-        pytest.param(
-            _build_navigation_event(url=_AEAT_URL),
-            (_URL_PATH_CANARY, "session=ABCDEFGHIJ"),
-            id="navigation-url-path",
-        ),
-        pytest.param(
-            _build_error_event(message=f"failed to authenticate: {_BEARER_CANARY}"),
-            (_BEARER_TAIL,),
-            id="error-bearer-token",
-        ),
-    ),
-)
-def test_sensitive_event_values_do_not_land_plaintext_on_disk(
-    tmp_path: Path,
-    event: RunEvent,
-    forbidden_fragments: tuple[str, ...],
-) -> None:
-    target = tmp_path / "events.jsonl"
-    sink = JsonlRunSink(target, run_id=_RUN_ID)
-    _emit(sink, event)
-    text = target.read_text(encoding="utf-8")
-    for forbidden in forbidden_fragments:
-        assert forbidden not in text
+def test_sensitive_event_values_do_not_land_plaintext_on_disk(tmp_path: Path) -> None:
+    cases = (
+        (_build_form_fill_event(value=_NIF_CANARY), (_NIF_CANARY,)),
+        (_build_navigation_event(url=_AEAT_URL), (_URL_PATH_CANARY, "session=ABCDEFGHIJ")),
+        (_build_error_event(message=f"failed to authenticate: {_BEARER_CANARY}"), (_BEARER_TAIL,)),
+    )
+
+    for index, (event, forbidden_fragments) in enumerate(cases):
+        target = tmp_path / f"events-{index}.jsonl"
+        sink = JsonlRunSink(target, run_id=_RUN_ID)
+        _emit(sink, event)
+        text = target.read_text(encoding="utf-8")
+        for forbidden in forbidden_fragments:
+            assert forbidden not in text
 
 
 def test_redacted_jsonl_remains_parseable(tmp_path: Path) -> None:

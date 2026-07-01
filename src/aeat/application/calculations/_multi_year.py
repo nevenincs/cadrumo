@@ -14,7 +14,7 @@ returns a :class:`~aeat.application.aggregation.CalculationSourceResolution`
 for the aggregation mesh.
 
 The direct value-resolution contract lives in
-:mod:`aeat.application.calculations._binding_prefill`; this module records
+:mod:`~aeat.application.calculations._binding_prefill`; this module records
 enrollment proof and adapts its :class:`~._binding_prefill.BindingPrefillReport`
 into source-mesh output.
 """

@@ -6,7 +6,7 @@ Each command result is a strict
 and wrapped at emit time in
 :class:`~aeat.entrypoints.cli._schemas.SchemaEnvelope` through
 :func:`~aeat.entrypoints.cli._common._emit_envelope`. This file is the CLI-side
-projection boundary for :mod:`aeat.application.modelo`: application and domain
+projection boundary for :mod:`~aeat.application.modelo`: application and domain
 results stay authoritative while these classes expose JSON-safe
 :class:`~aeat.domain.modelos.WorkUnit`,
 :class:`~aeat.domain.modelos.CalculationRevision`,
@@ -263,7 +263,7 @@ class ExternalEvidencePayload(OutputSchema):
     """JSON projection of :class:`~aeat.domain.modelos.ExternalEvidence`.
 
     The evidence reference records the official AEAT source consumed by
-    :func:`aeat.application.modelo.import_external_filing_evidence`; it is data
+    :func:`~aeat.application.modelo.import_external_filing_evidence`; it is data
     observed outside the application, not proof that this CLI submitted the return.
     """
 
@@ -532,7 +532,7 @@ class WorkVerifyResult(OutputSchema):
     """Verification report returned by ``aeat app modelo work verify``.
 
     The command delegates to
-    :func:`aeat.application.modelo.verify_modelo_revision` and returns the
+    :func:`~aeat.application.modelo.verify_modelo_revision` and returns the
     resulting
     :class:`~aeat.entrypoints.cli._modelo_payloads.VerificationReportPayload`.
     On a successful
@@ -574,7 +574,7 @@ class WorkFileResult(OutputSchema):
     """Internal-filing confirmation returned by ``aeat app modelo work file``.
 
     The command delegates to
-    :func:`aeat.application.modelo.file_modelo_revision` and returns the
+    :func:`~aeat.application.modelo.file_modelo_revision` and returns the
     resulting :class:`ModeloRecordPayload`. It records that the verified
     revision was marked as internally filed. It does not attach
     :class:`ExternalEvidencePayload`; ``live_submission`` is always ``False``.
@@ -606,7 +606,7 @@ class WorkAmendResult(OutputSchema):
     """Amendment filing confirmation returned by ``aeat app modelo work amend``.
 
     The command delegates to
-    :func:`aeat.application.modelo.amend_modelo_revision` and returns the
+    :func:`~aeat.application.modelo.amend_modelo_revision` and returns the
     resulting :class:`ModeloRecordPayload` with the amendment-specific pair
     (``amendment_kind``, ``amends_filing_record_id``). The source filing record
     must carry :class:`~aeat.domain.modelos.ExternalEvidence`; the new filing
@@ -730,11 +730,11 @@ class FilingRecordImportResult(OutputSchema):
     """Result emitted by ``aeat app modelo filing-record import``.
 
     The command delegates to
-    :func:`aeat.application.modelo.import_external_filing_evidence` and returns
+    :func:`~aeat.application.modelo.import_external_filing_evidence` and returns
     the resulting evidence-bearing :class:`ModeloRecordPayload` with
     :class:`ExternalEvidencePayload` data. Imported records are the
     :class:`~aeat.domain.modelos.ModeloRecord` baseline consumed by
-    :func:`aeat.application.modelo.amend_modelo_revision`, not live submission.
+    :func:`~aeat.application.modelo.amend_modelo_revision`, not live submission.
     """
 
     operation: str = "modelo.filing_record.import"
@@ -765,7 +765,7 @@ class FilingRecordLocalObservationResult(OutputSchema):
     """Result emitted by ``aeat app modelo filing-record observe-local``.
 
     The payload mirrors
-    :class:`aeat.application.modelo._local_observation_actions.ModeloLocalObservationResult`:
+    :class:`~aeat.application.modelo._local_observation_actions.ModeloLocalObservationResult`:
     values are stored in the calculation-observation repository for prefill, while
     ``official_evidence``, ``filing_record_created``, and ``aeat_accepted`` remain
     false so consumers cannot mistake operator-entered values for AEAT evidence.
@@ -1248,11 +1248,11 @@ class WorkResumeResult(OutputSchema):
     """Workflow resume precondition and context result.
 
     Combines the resumable
-    :class:`aeat.application.workflow.WorkflowResumeContext` with selector
+    :class:`~aeat.application.workflow.WorkflowResumeContext` with selector
     metadata from
-    :class:`aeat.application.workflow.WorkflowResumeTargetResolution`. The
+    :class:`~aeat.application.workflow.WorkflowResumeTargetResolution`. The
     ``obligation`` payload is the serialized
-    :class:`aeat.domain.deadlines.ModeloDeadline` the workflow engine would use
+    :class:`~aeat.domain.deadlines.ModeloDeadline` the workflow engine would use
     for a fresh attempt.
     """
 
