@@ -31,6 +31,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 _P_Q1 = Period.from_year_and_code(2026, "1T")
 _P_Q2 = Period.from_year_and_code(2026, "2T")
 _DRAFT_INPUT_CASILLA: CasillaId = validated_casilla_id("01", surface="_DRAFT_INPUT_CASILLA")
+_FOREIGN_CLASS_WRITTEN_AT = datetime(2026, 5, 26, 16, 30, 0, tzinfo=UTC)
 
 
 def _snapshot_ref(*, modelo: str, period: Period, schema_version: str) -> RegistrySnapshotRef:
@@ -165,7 +166,7 @@ class TestClassificationGate:
         draft = _make_draft()
         bad = Envelope[ModeloDraft](
             schema_version=1,
-            written_at=datetime.now(UTC),
+            written_at=_FOREIGN_CLASS_WRITTEN_AT,
             classification=SensitivityClass.OPERATIONAL,
             payload=draft,
         )
