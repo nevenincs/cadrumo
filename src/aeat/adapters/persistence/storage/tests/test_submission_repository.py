@@ -61,6 +61,14 @@ def _make_filing(
     )
 
 
+def _save_two_filings(repo: SubmissionRepository) -> tuple[ModeloPresentado, ModeloPresentado]:
+    f1 = _make_filing(draft_id="d-1", attempt_ordinal=1)
+    f2 = _make_filing(draft_id="d-2", attempt_ordinal=1)
+    repo.save(f1)
+    repo.save(f2)
+    return f1, f2
+
+
 @pytest.fixture(autouse=True)
 def _runtime_profile(tmp_path: Path) -> Iterator[TestRuntimeProfile]:
     with isolated_runtime_profile(tmp_path=tmp_path) as profile:
@@ -107,19 +115,13 @@ class TestSaveLoad:
 
 class TestListAndIter:
     def test_list_returns_persisted_ids_sorted(self, repo: SubmissionRepository) -> None:
-        f1 = _make_filing(draft_id="d-1", attempt_ordinal=1)
-        f2 = _make_filing(draft_id="d-2", attempt_ordinal=1)
-        repo.save(f1)
-        repo.save(f2)
+        f1, f2 = _save_two_filings(repo)
         ids = repo.list_submission_ids()
         assert set(ids) == {f1.submission_id, f2.submission_id}
         assert ids == tuple(sorted(ids))
 
     def test_iter_submissions_yields_payloads(self, repo: SubmissionRepository) -> None:
-        f1 = _make_filing(draft_id="d-1", attempt_ordinal=1)
-        f2 = _make_filing(draft_id="d-2", attempt_ordinal=1)
-        repo.save(f1)
-        repo.save(f2)
+        f1, f2 = _save_two_filings(repo)
         loaded = {payload.submission_id: payload for payload in repo.iter_submissions()}
         assert loaded[f1.submission_id] == f1
         assert loaded[f2.submission_id] == f2
