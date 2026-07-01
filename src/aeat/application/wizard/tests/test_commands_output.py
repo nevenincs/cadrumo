@@ -8,11 +8,14 @@ from collections.abc import Iterator
 import click
 import pytest
 
+from ....core.i18n import tr
 from ....core.redaction import CLI_PROFILE_ID_PLACEHOLDER
 from .._commands import _emit_wizard_success
 from .._persistence import WizardPersistMode
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+
+_NEXT_LABEL = tr("application.wizard.output_labels.next")
 
 
 @pytest.fixture
@@ -39,15 +42,15 @@ def test_wizard_success_text_uses_central_output_redaction(capsys: pytest.Captur
     output = capsys.readouterr().out
     assert profile_id_like_label not in output
     assert CLI_PROFILE_ID_PLACEHOLDER in output
-    assert "next\taeat app modelo work create" in output
+    assert f"{_NEXT_LABEL}\taeat app modelo work create" in output
 
 
 def test_wizard_success_text_accepts_non_resident_next_step(capsys: pytest.CaptureFixture[str]) -> None:
     _emit_wizard_success("create", "marta-irnr", next_command="aeat app modelo describe 210")
 
     output = capsys.readouterr().out
-    assert "next\taeat app modelo describe 210" in output
-    assert "next\taeat app modelo work create" not in output
+    assert f"{_NEXT_LABEL}\taeat app modelo describe 210" in output
+    assert f"{_NEXT_LABEL}\taeat app modelo work create" not in output
 
 
 def test_wizard_success_json_emits_shared_spine_and_next_step_notice(
