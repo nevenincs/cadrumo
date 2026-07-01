@@ -191,7 +191,7 @@ _UNMODELED_OUT_OF_SCOPE_OBLIGATIONS: Mapping[Modelo, str] = {
     Modelo.M368: "MOSS del IVA sustituido por la ventanilla unica OSS/IOSS (Modelo 369); sin periodos vigentes",
     Modelo.M030: "declaracion censal de personas fisicas (alta, domicilio, datos); no es autoliquidacion periodica",
     Modelo.M035: "registro censal de la ventanilla unica OSS/IOSS del IVA; no es autoliquidacion periodica",
-    Modelo.M362: "reembolso de IVA diplomatico/consular/organismos internacionales; no aplica a contribuyentes generales",
+    Modelo.M362: "reembolso de IVA diplomatico/consular/OOII; no aplica a contribuyentes generales",
     Modelo.M363: "reconocimiento previo de exencion de IVA diplomatica/consular; no aplica a contribuyentes generales",
     Modelo.M198: "operaciones con activos financieros y otros valores mobiliarios (anual)",
     Modelo.M290: "cuentas de personas estadounidenses (FATCA, instituciones financieras)",
