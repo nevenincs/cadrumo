@@ -39,6 +39,7 @@ See Also:
 
 from __future__ import annotations
 
+import re
 from collections.abc import Mapping
 from dataclasses import dataclass
 from datetime import date, datetime
@@ -48,10 +49,12 @@ from typing import TYPE_CHECKING
 from ...core._modelo import Modelo
 from ...core.aggregation import BindingSourceKind
 from ...core.decimal import coerce_decimal_strict
+from ...core.money import round_to_cents
 from ...core.time import now as _utc_now
 from ...domain.buckets._event_repository import BucketEventHistoryRepository
 from ...domain.buckets._protocols import BucketEventHistoryRepositoryProtocol
 from ...domain.calculations.registry import validated_text_input_casilla_ids
+from ...domain.calculations.registry._binding_selector_utils import selector_as_dict
 from ...domain.calculations.registry._bindings import CasillaObservation, bound_casilla_binding_ids
 from ...domain.calculations.registry._casilla_membership import casillas_by_id
 from ...domain.calculations.registry._formula_runtime import calculate_registry_snapshot
@@ -157,11 +160,92 @@ _M349_IMPORTE_RECTIFICACIONES_BINDING: BindingId = "iva-349-declarante-importe-r
 _BUCKET_AGGREGATION_OWNED_SOURCES = BUCKET_AGGREGATION_OWNED_SOURCES
 _ZERO = Decimal("0")
 _M390_ANNUAL_PERIOD_CODE = "0A"
+_M131_DATA_BASE_RENDIMIENTO_CASILLA: CasillaId = "01"
+_M131_DATA_BASE_PAGO_PREVIO_CASILLA: CasillaId = "02"
+_M131_PAGE1_ACTIVITY_FIELD_RE = re.compile(
+    r"^actividad-(?P<index>[1-5])-(?P<kind>rendimiento-neto|porcentaje|resultado)$",
+)
+_M131_DPA_MODULE_RENDIMIENTO_RE = re.compile(r"^modulo-(?P<index>[1-7])-rendimiento-neto$")
 _M390_303_RECONCILIATION_ANNUAL_CASILLA_BY_SOURCE: Mapping[CasillaId, CasillaId] = {
     "iva.cuota-devengada-total": "iva.anual.cuota-devengada-total",
     "iva.cuota-deducible-total": "iva.anual.cuota-deducible-total",
     "iva.resultado-regimen-general": "iva.anual.resultado-regimen-general",
 }
+
+
+@dataclass(frozen=True, slots=True)
+class _M131ActivityInputs:
+    rendimiento: Decimal | None = None
+    porcentaje: Decimal | None = None
+    resultado: Decimal | None = None
+
+
+def _m131_objective_estimation_data_base_inputs(
+    *,
+    work_unit: WorkUnit,
+    revision: ModeloRevision,
+    binding_values: Mapping[BindingId, Decimal],
+) -> dict[CasillaId, Decimal]:
+    """Project M131 page-1/DPA datos-base fixed-record bindings into liquidation inputs."""
+    if str(work_unit.modelo) != Modelo.M131.value:
+        return {}
+
+    page1_rows: dict[str, _M131ActivityInputs] = {}
+    dpa_rendimientos: list[Decimal] = []
+    for binding in revision.bindings:
+        if binding.source is not BindingSourceKind.MANUAL_INPUT or binding.id not in binding_values:
+            continue
+        selector = selector_as_dict(binding)
+        record = selector.get("record")
+        field = selector.get("field")
+        if not isinstance(record, str) or not isinstance(field, str):
+            continue
+        value = binding_values[binding.id]
+        if record == "page_1":
+            match = _M131_PAGE1_ACTIVITY_FIELD_RE.match(field)
+            if match is None:
+                continue
+            index = match.group("index")
+            current = page1_rows.get(index, _M131ActivityInputs())
+            match match.group("kind"):
+                case "rendimiento-neto":
+                    page1_rows[index] = _M131ActivityInputs(
+                        rendimiento=value,
+                        porcentaje=current.porcentaje,
+                        resultado=current.resultado,
+                    )
+                case "porcentaje":
+                    page1_rows[index] = _M131ActivityInputs(
+                        rendimiento=current.rendimiento,
+                        porcentaje=value,
+                        resultado=current.resultado,
+                    )
+                case "resultado":
+                    page1_rows[index] = _M131ActivityInputs(
+                        rendimiento=current.rendimiento,
+                        porcentaje=current.porcentaje,
+                        resultado=value,
+                    )
+            continue
+        if record == "DPA" and _M131_DPA_MODULE_RENDIMIENTO_RE.match(field) is not None:
+            dpa_rendimientos.append(value)
+
+    projected: dict[CasillaId, Decimal] = {}
+    page1_rendimientos = [row.rendimiento for row in page1_rows.values() if row.rendimiento is not None]
+    if page1_rendimientos:
+        projected[_M131_DATA_BASE_RENDIMIENTO_CASILLA] = sum(page1_rendimientos, Decimal("0"))
+    elif dpa_rendimientos:
+        projected[_M131_DATA_BASE_RENDIMIENTO_CASILLA] = sum(dpa_rendimientos, Decimal("0"))
+
+    page1_results: list[Decimal] = []
+    for row in page1_rows.values():
+        if row.resultado is not None:
+            page1_results.append(row.resultado)
+        elif row.rendimiento is not None and row.porcentaje is not None:
+            page1_results.append(round_to_cents(row.rendimiento * row.porcentaje / Decimal("100")))
+    if page1_results:
+        projected[_M131_DATA_BASE_PAGO_PREVIO_CASILLA] = sum(page1_results, Decimal("0"))
+    return projected
 
 
 def _m349_row_field_template_casilla_ids(revision: ModeloRevision) -> frozenset[CasillaId]:
@@ -371,11 +455,19 @@ def calculate_modelo_revision(
     work_unit = prepared.work_unit
     snapshot = prepared.snapshot
     resolved_relations = dict(relation_values or {})
+    backend_casilla_inputs = {
+        **_m131_objective_estimation_data_base_inputs(
+            work_unit=work_unit,
+            revision=snapshot.revision,
+            binding_values=prepared.channels.bindings,
+        ),
+        **dict(prepared.backend_casilla_inputs or {}),
+    }
     resolved_inputs = _resolve_calculation_inputs(
         revision=snapshot.revision,
         filing_year=work_unit.filing_year,
         period=work_unit.period,
-        backend_casilla_inputs=prepared.backend_casilla_inputs,
+        backend_casilla_inputs=backend_casilla_inputs,
         resolved_bindings=prepared.channels.bindings,
         casilla_inputs=prepared.casilla_inputs,
     )

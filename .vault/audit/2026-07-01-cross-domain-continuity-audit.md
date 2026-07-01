@@ -21,6 +21,9 @@ related:
 - Reviewed W04.P19.S398 changes to `src/aeat/domain/calculations/registry/tests/test_modelo_131_regulatory_floor_predicate.py`.
 - Checked that S398 closes on the shipped M131 `C01 -> C02` advisory predicate across all revisions, not on the rolled-back `C01 -> C07` predicate shape.
 - Checked validation evidence from focused Modelo 131 registry tests, authority-backed application advisory tests, touched-file ruff, reviewer output, and RAG grounding.
+- Reviewed W09.P41.S297 changes to `src/aeat/application/modelo/_calculation_actions.py` and `src/aeat/application/modelo/tests/test_modelo_131_data_base_binding_projection.py`.
+- Checked that S297 projects only M131 datos-base fixed-record bindings into liquidation casillas `01` and `02`, preserves the official no-datos-base casilla `04` branch, and does not globally project arbitrary manual fixed-record bindings.
+- Checked validation evidence from focused Modelo 131 registry/advisory/application tests, touched-file ruff, reviewer output, and RAG/reference grounding.
 
 ## Findings
 
@@ -36,6 +39,10 @@ Initial review found that the corrected Modelo 202 2025 `3P` direct-debit cutoff
 
 No findings for the M131 regulatory-floor predicate regression. The current registry predicate is advisory-only, cites `rd-439-2007:art-110`, uses `implies_nonzero(["01", "02"])`, and keeps the rolled-back `implies_nonzero(["01", "07"])` shape absent. The new test does not overclaim predicate-local `source_refs`; it proves source grounding through revision and verification expectation source refs plus bundled corpus evidence.
 
+### w09-p41-s297 | low | no findings
+
+No findings for the M131 datos-base binding projection bridge. The change is scoped to Modelo 131, keeps explicit casilla inputs authoritative over projected backend values, leaves unrelated fixed-record bindings inert, and preserves liquidation casilla `04` as the no-datos-base computation from casilla `03`.
+
 ## Recommendations
 
-No open code changes recommended from these reviews. Keep W09.P41.S307 and W09.P41.S324 as separate implementation steps. Keep the full M131 módulos calculation oracle as future work outside S398; S398 closes only the advisory regulatory-floor predicate and evidence guard.
+No open code changes recommended from these reviews. Keep W09.P41.S307 and W09.P41.S324 as separate implementation steps. Keep the full M131 módulos coefficient-table oracle as future work outside S297 and S398; S297 closes the grounded datos-base binding projection, and S398 closes only the advisory regulatory-floor predicate and evidence guard.
