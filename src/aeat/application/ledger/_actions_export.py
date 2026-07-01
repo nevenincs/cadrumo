@@ -1,6 +1,7 @@
 """Application export service for bucket-scoped manual ledger snapshots.
 
-The export action reads a loaded :class:`TransactionCatalogue`, projects
+The export action reads a loaded
+:class:`~aeat.domain.transactions.TransactionCatalogue`, projects
 :class:`~aeat.application.ledger.LedgerExportRow` instances, serializes them
 with :func:`~aeat.application.export.serialize_tabular_rows`, emits a
 ``LEDGER_TRANSACTION_EXPORTED`` bucket event, and returns
