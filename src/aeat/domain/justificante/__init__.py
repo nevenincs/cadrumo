@@ -23,6 +23,21 @@ verification lives in :mod:`aeat.adapters.outbound.aeat.verify`, because
 Playwright/browser automation belongs in the outbound adapter layer, not the
 domain.
 
+See Also:
+    :func:`aeat.application.filing.import_filing_from_justificante`
+        Application import path that composes receipt metadata into local draft
+        and submission-audit records without treating it as casilla authority.
+    :mod:`aeat.application.live`
+        Read-only live-capture surface that can persist and verify justificante
+        evidence against existing filing records.
+    :mod:`aeat.domain.submission`
+        Local-only :class:`aeat.domain.submission.ModeloPresentado` audit trail
+        populated by imported or historical receipt evidence.
+    :class:`aeat.domain.modelos.ExternalEvidence`
+        Work-unit filing-record evidence reference that may point at a persisted
+        justificante without embedding receipt bytes in the model record.
+    :mod:`aeat.adapters.inbound.justificante`
+        PDF parser implementation kept outside the domain facade.
 """
 
 from __future__ import annotations
