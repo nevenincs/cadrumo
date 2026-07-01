@@ -24,6 +24,7 @@ source_refs = [
     "aeat-modelo-100-procedure",
     "aeat-renta-2024-manual-parte1",
     "boe-modelo-100-2024-form",
+    "aeat-modelo-193-296-note-2025",
     "boe-modelo-193-2011-form",
 ]
 bindings = [

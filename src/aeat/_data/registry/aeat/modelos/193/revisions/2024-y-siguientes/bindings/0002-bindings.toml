@@ -9,7 +9,7 @@ source = "withholding"
 selector = { fact = "row_field", row_field = "perceptor_tax_id", grouping = "per_perceptor_clave", record = "perceptor" }
 aggregation = { op = "rows" }
 legal_refs = ["orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-193-2024", "aeat-modelo-193-procedure"]
+source_refs = ["aeat-dr-193-2025", "aeat-modelo-193-procedure"]
 
 [[revisions."2024-y-siguientes".bindings.source_citations]]
 source_ref = "aeat-modelo-193-procedure"
@@ -21,7 +21,7 @@ source = "withholding"
 selector = { fact = "row_field", row_field = "perceptor_legal_name", grouping = "per_perceptor_clave", record = "perceptor" }
 aggregation = { op = "rows" }
 legal_refs = ["orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-193-2024", "aeat-modelo-193-procedure"]
+source_refs = ["aeat-dr-193-2025", "aeat-modelo-193-procedure"]
 
 [[revisions."2024-y-siguientes".bindings.source_citations]]
 source_ref = "aeat-modelo-193-procedure"
@@ -33,7 +33,7 @@ source = "withholding"
 selector = { fact = "row_field", row_field = "clave", grouping = "per_perceptor_clave", record = "perceptor" }
 aggregation = { op = "rows" }
 legal_refs = ["orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-193-2024", "aeat-modelo-193-procedure"]
+source_refs = ["aeat-dr-193-2025", "aeat-modelo-193-procedure"]
 
 [[revisions."2024-y-siguientes".bindings.source_citations]]
 source_ref = "aeat-modelo-193-procedure"
@@ -45,7 +45,7 @@ source = "withholding"
 selector = { fact = "row_field", row_field = "percibido_dinerario", grouping = "per_perceptor_clave", record = "perceptor" }
 aggregation = { op = "rows" }
 legal_refs = ["orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-193-2024", "aeat-modelo-193-procedure"]
+source_refs = ["aeat-dr-193-2025", "aeat-modelo-193-procedure"]
 
 [[revisions."2024-y-siguientes".bindings.source_citations]]
 source_ref = "aeat-modelo-193-procedure"
@@ -57,9 +57,8 @@ source = "withholding"
 selector = { fact = "row_field", row_field = "retencion_practicada", grouping = "per_perceptor_clave", record = "perceptor" }
 aggregation = { op = "rows" }
 legal_refs = ["orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-193-2024", "aeat-modelo-193-procedure"]
+source_refs = ["aeat-dr-193-2025", "aeat-modelo-193-procedure"]
 
 [[revisions."2024-y-siguientes".bindings.source_citations]]
 source_ref = "aeat-modelo-193-procedure"
 required_text = ["modelo 193"]
-

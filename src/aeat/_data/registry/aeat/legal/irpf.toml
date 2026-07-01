@@ -1415,17 +1415,17 @@ applies_from = 2024-02-01
 source_url = "https://www.boe.es/buscar/doc.php?id=BOE-A-2024-1772"
 review_status = "reviewed"
 
-[sources."aeat-dr-193-2024"]
+[sources."aeat-dr-193-2025"]
 evidence_tier = "layout_authority"
 authority = "aeat"
 kind = "record_design"
-corpus_path = "corpus/aeat_official/disenos_registro/modelo_193/files/02-193-orden-eha-3377-2011-actualizado-por-orden-hac-1504-2024-de-26-de-diciembre-352-kb-pdf.pdf"
-sha256 = "36184283123fec6827bf830a0b7d1b3e84a45937d7d85d9504d807f334caff8e"
-bytes = 359614
-retrieved_at = 2026-05-05
-published_at = 2024-01-01
-applies_from = 2024-01-01
-source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_100_199/DR_Modelo_193_2024.pdf"
+corpus_path = "corpus/aeat_official/disenos_registro/modelo_193/files/01-193-orden-eha-3377-2011-actualizado-por-orden-hac-1430-2025-de-3-de-diciembre-357-kb-pdf.pdf"
+sha256 = "25ab19076ecc1116c660f8d4b0c47523e6cd271d89869895699c91843f562489"
+bytes = 365226
+retrieved_at = 2026-05-03
+published_at = 2025-12-12
+applies_from = 2025-01-01
+source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_100_199/DR_Modelo_193_2025.pdf"
 review_status = "reviewed"
 
 [sources."aeat-dr-190-2025"]
@@ -1503,8 +1503,20 @@ applies_from = 2024-01-01
 source_url = "https://sede.agenciatributaria.gob.es/Sede/procedimientoini/GI12.shtml"
 review_status = "reviewed"
 
-[sources."boe-modelo-193-2011-form"]
+[sources."aeat-modelo-193-296-note-2025"]
 evidence_tier = "official_source_guidance"
+authority = "aeat"
+kind = "manual_pdf"
+corpus_path = "corpus/aeat_official/instructions/modelo_193/files/modelo-193-296-nota-informativa-2025.pdf"
+sha256 = "d71fcd7ccd03d7f4ca205b418d4415a2bd74093ca95269b0aaa4fab05e02cf17"
+bytes = 857905
+retrieved_at = 2026-07-01
+applies_from = 2024-01-01
+source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Tema/Declaraciones_informativas/2024/Notas_informartivas/Nota_informativa_193-296.pdf"
+review_status = "reviewed"
+
+[sources."boe-modelo-193-2011-form"]
+evidence_tier = "layout_authority"
 authority = "boe"
 kind = "form_spec"
 corpus_path = "corpus/normatives/html/orden-eha-3377-2011.html"

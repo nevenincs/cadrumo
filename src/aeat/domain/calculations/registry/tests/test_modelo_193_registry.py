@@ -22,6 +22,31 @@ from ._registry_schema_support import _committed_modelo
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
+
+def test_modelo_193_guidance_and_layout_sources_are_separated() -> None:
+    modelo, catalogues = _committed_modelo("193")
+    note = catalogues.sources["aeat-modelo-193-296-note-2025"]
+
+    assert "aeat-modelo-193-296-note-2025" in modelo.source_refs
+    assert note.evidence_tier == "official_source_guidance"
+    assert note.authority == "aeat"
+    assert note.kind == "manual_pdf"
+    assert (bundled_path() / note.corpus_path).is_file()
+    record_design = catalogues.sources["aeat-dr-193-2025"]
+    assert record_design.evidence_tier == "layout_authority"
+    assert "2025" in record_design.source_url
+    assert catalogues.sources["boe-modelo-193-2011-form"].evidence_tier == "layout_authority"
+    revision = modelo.revisions["2024-y-siguientes"]
+    assert revision.workbook_parity_refs[0].id == "modelo-193-dr-pdf-2025"
+    assert revision.workbook_parity_refs[0].workbook_source == "aeat-dr-193-2025"
+    for formula in revision.formulas:
+        for citation in formula.source_citations:
+            assert catalogues.sources[citation.source_ref].evidence_tier == "official_source_guidance"
+    for binding in revision.bindings:
+        for citation in binding.source_citations:
+            assert catalogues.sources[citation.source_ref].evidence_tier == "official_source_guidance"
+
+
 def test_modelo_193_validates_and_gates_workflow_surfaces_through_snapshot() -> None:
     modelo, catalogues = _committed_modelo("193")
 
