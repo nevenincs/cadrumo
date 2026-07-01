@@ -39,8 +39,10 @@ from ...core.resources import resources
 from ...domain.calculations.registry import (
     BindingId,
     CasillaId,
+    DataBindingDefinition,
     ModeloRevision,
     RelationId,
+    boolean_binding_encoded_values,
     casilla_noncanonical_reference_targets,
     casillas_by_id,
     declared_casilla_ids,
@@ -337,7 +339,8 @@ def build_work_calculate_input_bundle(
     binding_values: dict[BindingId, Decimal] = {}
     enum_binding_values: dict[BindingId, str] = {}
     if binding_overrides:
-        known_binding_ids = {binding.id for binding in revision.bindings}
+        bindings_by_id = {binding.id: binding for binding in revision.bindings}
+        known_binding_ids = set(bindings_by_id)
         enum_channel_ids = enum_consumed_binding_ids(revision)
         date_channel_ids = revision_date_binding_ids(revision)
         for raw_key, raw_value in binding_overrides.items():
@@ -355,7 +358,7 @@ def build_work_calculate_input_bundle(
             if channel == "enum":
                 enum_binding_values[key] = raw_value
             else:
-                binding_values[key] = _decimal(raw_value, flag="--binding", key=key)
+                binding_values[key] = _decimal_binding_value(raw_value, bindings_by_id[key])
 
     casilla_inputs, binding_values = apply_calculation_shortcut_inputs(
         work_unit_id=work_unit_id,
@@ -418,6 +421,46 @@ def _decimal(raw_value: str, *, flag: str, key: str) -> Decimal:
         raise ModeloCalculateDecimalInputError(
             f"{flag} value for {key!r} is not a decimal: {raw_value!r}",
             context={"flag": flag, "key": key, "value": raw_value},
+            translated_message="application.modelo.errors.calculate_decimal_input_invalid",
+        ) from exc
+
+
+def _decimal_binding_value(raw_value: str, binding: DataBindingDefinition) -> Decimal:
+    """Parse a ``--binding`` decimal value, teaching the accepted encoding on failure.
+
+    For a boolean-typed decimal-channel binding (the Modelo 100 estimación-directa
+    modality flag), a non-numeric value such as ``false`` otherwise produces the
+    opaque "is not a decimal" error. This raises an instructive refusal that names
+    the accepted ``0`` / ``1`` encoding and what each value means, derived from the
+    binding's boolean selector rather than a per-form hardcoded table.
+    """
+    encoded_options = boolean_binding_encoded_values(binding)
+    try:
+        return Decimal(raw_value)
+    except (InvalidOperation, ValueError) as exc:
+        if encoded_options:
+            mapping = ", ".join(
+                f"{option.encoded_value} ({'true' if option.boolean_meaning else 'false'} = "
+                f"registry value {option.registry_value!r})"
+                for option in encoded_options
+            )
+            accepted = ", ".join(option.encoded_value for option in encoded_options)
+            raise ModeloCalculateDecimalInputError(
+                f"--binding value for {binding.id!r} is a decimal-encoded boolean flag and must "
+                f"be one of: {accepted}. Received {raw_value!r}. Accepted encoding: {mapping}. "
+                "Run `aeat app modelo bindings list <MODELO>` to see each binding's encoding.",
+                context={
+                    "flag": "--binding",
+                    "key": binding.id,
+                    "value": raw_value,
+                    "accepted": accepted,
+                    "mapping": mapping,
+                },
+                translated_message="application.modelo.errors.calculate_boolean_binding_encoding_invalid",
+            ) from exc
+        raise ModeloCalculateDecimalInputError(
+            f"--binding value for {binding.id!r} is not a decimal: {raw_value!r}",
+            context={"flag": "--binding", "key": binding.id, "value": raw_value},
             translated_message="application.modelo.errors.calculate_decimal_input_invalid",
         ) from exc
 

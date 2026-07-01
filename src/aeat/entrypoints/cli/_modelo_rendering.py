@@ -20,8 +20,10 @@ from __future__ import annotations
 from ...application.modelo import ModeloWorkPlazoSummary, calculation_result_summary, modelo_work_plazo_summary
 from ...core.i18n import tr
 from ...core.json_contract import Notice, NoticeSeverity
+from ...domain.calculations.registry import BooleanBindingEncodedValue
 from ...domain.modelos import CalculationRevisionState
 from ._modelo_payloads import (
+    BindingEncodedOptionPayload,
     CalculationRevisionPayload,
     ExternalEvidencePayload,
     FindingPayload,
@@ -36,6 +38,40 @@ from ._modelo_payloads import (
 
 _EXTEMPORANEOUS_RECARGO_LEGAL_REF = "ley-58-2003:art-27.2"
 _M349_ROW_FIELD_TEMPLATE_PREFIXES = ("op.", "rect.")
+
+
+def binding_encoded_option_payloads(
+    options: tuple[BooleanBindingEncodedValue, ...],
+) -> tuple[BindingEncodedOptionPayload, ...]:
+    """Project the registry boolean-encoding rows onto the CLI payload shape."""
+    return tuple(
+        BindingEncodedOptionPayload(
+            encoded_value=option.encoded_value,
+            boolean_meaning=option.boolean_meaning,
+            registry_value=option.registry_value,
+        )
+        for option in options
+    )
+
+
+def binding_encoded_option_lines(
+    binding_id: str,
+    options: tuple[BindingEncodedOptionPayload, ...],
+) -> list[str]:
+    """Render one data-derived text hint enumerating a boolean binding's 0/1 encoding.
+
+    Emitted only for a decimal-channel boolean binding, so the operator can read
+    the ``--binding`` decimal-to-meaning mapping (e.g. ``1=true(N)  0=false(S)``)
+    straight from the ``bindings list`` / ``bindings resolve`` output. The mapping
+    is derived from the binding definition, so no prose is localised here.
+    """
+    if not options:
+        return []
+    mapping = "  ".join(
+        f"{option.encoded_value}={'true' if option.boolean_meaning else 'false'}({option.registry_value})"
+        for option in options
+    )
+    return [f"encoded_option\t{binding_id}\t{mapping}"]
 
 
 def advisory_notice(
