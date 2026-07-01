@@ -2155,6 +2155,7 @@ cli:
         year_help: Exercici fiscal de la unitat de treball (p. ex. 2026)
         year_out_of_range: L'exercici fiscal %{year} està fora de rang; indiqueu un
           any entre %{minimum} i %{maximum}.
+        file_idempotent_noop: 'Operació idempotent sense efecte: la revisió de càlcul %{calculation_revision_id} ja està presentada; s''ha retornat el registre de presentació existent sense canvis.'
   common:
     errors:
       draft_id_not_found: ID d'esborrany %{draft_id} no trobat
