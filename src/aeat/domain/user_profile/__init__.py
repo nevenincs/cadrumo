@@ -1,18 +1,22 @@
-"""Central user-profile schema contract.
+"""Public facade for the central user-profile schema contract.
 
-The package exposes the strict Pydantic records and loader for the
-schema-oriented user profile backend. The primary runtime record is
-:class:`UserProfileRecord`. The TOML file owns schema metadata;
-runtime values are stored by the persistence layer.
+The package exposes strict Pydantic schema records, live value records, the
+schema loader, and the registry-selector coverage report for the schema-driven
+user-profile backend. The primary runtime aggregate is
+:class:`UserProfileRecord`: TOML owns schema metadata and selector namespaces,
+while live profile facts and immutable snapshots are stored by the persistence
+layer.
 
 The :class:`UserProfilePortableExport` re-export is resolved on demand
 through a module-level ``__getattr__`` (PEP 562). The portable-export
-bundle composes four heavy domain types (:class:`CalculationRevision`,
-``WorkUnit``, ``Transaction``, :class:`ModeloRecord`) whose imports
-cascade into the calculation registry; eagerly re-exporting it at this
-boundary would drag the full ~69-submodule registry into every
-consumer that touches the package surface, including the state-free
-CLI surfaces enforced by
+bundle composes four heavy domain types
+(:class:`~aeat.domain.modelos.CalculationRevision`,
+:class:`~aeat.domain.modelos.WorkUnit`,
+:class:`~aeat.domain.transactions.Transaction`, and
+:class:`~aeat.domain.modelos.ModeloRecord`) whose imports cascade into the
+calculation registry; eagerly re-exporting it at this boundary would drag the
+full registry into every consumer that touches the package surface, including
+the state-free CLI surfaces enforced by
 :mod:`aeat.entrypoints.cli.test_lazy_command_tree`. Every other
 re-export (errors, value records, schema records, loader,
 registry-contract) stays eager because each is genuinely lightweight
