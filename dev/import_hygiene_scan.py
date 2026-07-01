@@ -117,10 +117,27 @@ class FacadeInfo:
     is_pure_reexport_shape: bool = False
 
 
+def _dunder_all_assignment_value(node: ast.stmt) -> ast.expr | None:
+    """Return the assigned value expression if ``node`` assigns ``__all__``.
+
+    Handles both the plain form (``__all__ = [...]``, :class:`ast.Assign`) and
+    the annotated form (``__all__: list[str] = [...]``, :class:`ast.AnnAssign`).
+    An annotated declaration with no value (``__all__: list[str]``) yields
+    ``None``, same as any other statement that is not an ``__all__`` binding.
+    """
+    if isinstance(node, ast.Assign) and any(isinstance(t, ast.Name) and t.id == "__all__" for t in node.targets):
+        return node.value
+    if isinstance(node, ast.AnnAssign) and isinstance(node.target, ast.Name) and node.target.id == "__all__":
+        return node.value
+    return None
+
+
 def discover_facades() -> dict[str, FacadeInfo]:
     """Enumerate every __init__.py carrying a real ``__all__`` literal.
 
-    A "real" ``__all__`` is a non-empty list/tuple/set of string constants.
+    A "real" ``__all__`` is a non-empty list/tuple/set of string constants,
+    assigned via either the plain (``__all__ = [...]``) or annotated
+    (``__all__: list[str] = [...]``) form.
     """
     facades: dict[str, FacadeInfo] = {}
     for init_path in PKG_ROOT.rglob("__init__.py"):
@@ -133,17 +150,13 @@ def discover_facades() -> dict[str, FacadeInfo]:
         all_names: list[str] = []
         has_real_all = False
         for node in ast.walk(tree):
-            if (
-                isinstance(node, ast.Assign)
-                and any(isinstance(t, ast.Name) and t.id == "__all__" for t in node.targets)
-                and isinstance(node.value, (ast.List, ast.Tuple, ast.Set))
-            ):
-                names = [
-                    elt.value for elt in node.value.elts if isinstance(elt, ast.Constant) and isinstance(elt.value, str)
-                ]
-                if names:
-                    all_names.extend(names)
-                    has_real_all = True
+            value = _dunder_all_assignment_value(node)
+            if value is None or not isinstance(value, (ast.List, ast.Tuple, ast.Set)):
+                continue
+            names = [elt.value for elt in value.elts if isinstance(elt, ast.Constant) and isinstance(elt.value, str)]
+            if names:
+                all_names.extend(names)
+                has_real_all = True
         facades[mod] = FacadeInfo(package=mod, path=init_path, all_names=all_names, has_real_all=has_real_all)
     return facades
 
