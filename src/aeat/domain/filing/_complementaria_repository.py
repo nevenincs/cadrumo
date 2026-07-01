@@ -98,8 +98,13 @@ class ModeloAmendmentRepository:
 
     def load(self, amendment_id: str) -> ModeloAmendment | None:
         """Return the persisted amendment or ``None`` if absent."""
-        from ...adapters.persistence.storage import Envelope, SensitivityClass, safe_repository_id
-        from ...adapters.persistence.storage.errors import ClassificationError, EnvelopeVersionError
+        from ...adapters.persistence.storage import (
+            ClassificationError,
+            Envelope,
+            EnvelopeVersionError,
+            SensitivityClass,
+            safe_repository_id,
+        )
 
         safe_repository_id(amendment_id, context="amendment_id")
         record = self._objects.load(
