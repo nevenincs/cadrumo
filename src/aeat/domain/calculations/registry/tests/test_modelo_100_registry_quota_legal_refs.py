@@ -124,11 +124,31 @@ def test_modelo_100_2025_cuota_chain_casillas_do_not_cite_fractional_payment_art
     assert not offenders
 
 
+# LIRPF art. 75 (anualidades por alimentos, autonomic separate escala, #532) is
+# a legitimate legal_ref on the autonomic escala/cuota formulas ONLY for the
+# revisions where the separate-escala régimen is modelled. It stays absent on
+# the tipo-medio and cuota-íntegra formulas, which do not carry the régimen.
+_SEPARATE_ESCALA_MODELLED_YEARS = frozenset({2024})
+
+
+def _autonomic_separate_escala_formula_ids(filing_year: int) -> frozenset[str]:
+    return frozenset(
+        {
+            f"renta-{filing_year}-cuota-escala-autonomica-sobre-base-liquidable-general",
+            f"renta-{filing_year}-cuota-escala-autonomica-sobre-minimo-personal-familiar",
+            f"renta-{filing_year}-cuota-base-liquidable-general-autonomica",
+        },
+    )
+
+
 @pytest.mark.parametrize("filing_year", range(2020, 2026))
 def test_modelo_100_autonomic_quota_formula_refs_match_lirpf_articles(filing_year: int) -> None:
     revision = _modelo_100_snapshot(filing_year).revision
     formulas_by_id = {formula.id: formula for formula in revision.formulas}
     form_order_refs = {_MODELO_100_2025_FORM_ORDER_REF} if filing_year == 2025 else set()
+    separate_escala_ids = _autonomic_separate_escala_formula_ids(filing_year)
+    regime_modelled = filing_year in _SEPARATE_ESCALA_MODELLED_YEARS
+    regime_refs = {_AUTONOMIC_CHILD_SUPPORT_ANNUITIES_ART_75_REF} if regime_modelled else set()
     expected_refs_by_formula = {
         f"renta-{filing_year}-tipo-medio-gravamen-autonomico-base-liquidable-general": {
             _AUTONOMIC_GENERAL_SCALE_ART_74_REF,
@@ -144,16 +164,19 @@ def test_modelo_100_autonomic_quota_formula_refs_match_lirpf_articles(filing_yea
         f"renta-{filing_year}-cuota-escala-autonomica-sobre-base-liquidable-general": {
             _AUTONOMIC_INTEGRAL_QUOTA_ART_73_REF,
             _AUTONOMIC_GENERAL_SCALE_ART_74_REF,
+            *regime_refs,
             *form_order_refs,
         },
         f"renta-{filing_year}-cuota-escala-autonomica-sobre-minimo-personal-familiar": {
             _AUTONOMIC_INTEGRAL_QUOTA_ART_73_REF,
             _AUTONOMIC_GENERAL_SCALE_ART_74_REF,
+            *regime_refs,
             *form_order_refs,
         },
         f"renta-{filing_year}-cuota-base-liquidable-general-autonomica": {
             _AUTONOMIC_INTEGRAL_QUOTA_ART_73_REF,
             _AUTONOMIC_GENERAL_SCALE_ART_74_REF,
+            *regime_refs,
             *form_order_refs,
         },
         f"renta-{filing_year}-cuota-integra-autonomica": {
@@ -172,7 +195,9 @@ def test_modelo_100_autonomic_quota_formula_refs_match_lirpf_articles(filing_yea
             offenders[formula_id] = legal_refs
         assert _STATE_INTEGRAL_QUOTA_ART_62_REF not in legal_refs, formula_id
         assert _STATE_DEDUCTION_ART_67_REF not in legal_refs, formula_id
-        assert _AUTONOMIC_CHILD_SUPPORT_ANNUITIES_ART_75_REF not in legal_refs, formula_id
+        # art-75 is permitted only on the separate-escala formulas in modelled years.
+        if not (regime_modelled and formula_id in separate_escala_ids):
+            assert _AUTONOMIC_CHILD_SUPPORT_ANNUITIES_ART_75_REF not in legal_refs, formula_id
 
     assert not offenders
 
