@@ -22,6 +22,10 @@ See Also:
     :func:`aeat.application.modelo.file_modelo_revision`:
         Orchestrates preconditions and result-disposition resolution before
         delegating successful mutations here.
+    :func:`aeat.application.modelo.import_external_filing_evidence`:
+        Separate import boundary that creates current records with
+        :class:`~aeat.domain.modelos.ExternalEvidence`; this persistence helper
+        deliberately creates local records without that payload.
     :func:`aeat.application.modelo._filed_revision_observation.persist_filed_revision_observation`:
         Projects filed casilla observations into non-official cross-period
         carry evidence.
@@ -310,24 +314,20 @@ def persist_filed_revision(
     The parent :class:`aeat.domain.modelos.WorkUnit` is advanced to the new
     current filing record after the calculation and filing catalogues are saved.
 
-    When ``calculation_observation_repository`` is supplied the filed revision's
-    casilla observations are additionally persisted into the
-    :class:`aeat.application.calculations.CalculationObservationRepository` via
-    :func:`persist_filed_revision_observation`, co-emitted with the
-    ``MODELO_FILED`` event. A later period's ``calculate`` can then carry the
-    filed values forward automatically through the ``previous_filing`` resolver.
-    The record is stamped with the NON-official ``app_filing`` source_kind and
-    therefore never satisfies the cross-period clean-state filing gate. This is
-    a second projection of the single-writer filing transition, not a parallel
-    write path.
+    When ``calculation_observation_repository`` is supplied, the filed revision's
+    observations are co-emitted with ``MODELO_FILED`` through
+    :func:`persist_filed_revision_observation`, so later calculations can carry
+    them through the ``previous_filing`` resolver. The record is stamped with
+    NON-official ``app_filing`` and never satisfies the cross-period clean-state
+    filing gate; use :func:`aeat.application.modelo.import_external_filing_evidence`
+    when the current record must carry
+    :class:`~aeat.domain.modelos.ExternalEvidence`.
 
-    ``refunded`` is the disposition-determined fact (resolved once at the
-    calculate/file boundary by ``resolve_modelo_result_disposition``): when the
-    Modelo 303 period is filed as a refund request (devolución, Tipo de
-    declaración ``D``) the generated credit is excluded from compensación carry, so
-    the persisted cross-period carry generates ZERO compensación. It is forwarded
-    verbatim to :func:`persist_filed_revision_observation`; the default ``False``
-    preserves the standard compensación carry (RD 1624/1992 art. 30 / Ley 37/1992 art. 116).
+    ``refunded`` is resolved once at the calculate/file boundary by
+    ``resolve_modelo_result_disposition``. For refunded Modelo 303 filings
+    (devolución, Tipo de declaración ``D``), it tells
+    :func:`persist_filed_revision_observation` to persist ZERO compensación carry;
+    the default ``False`` preserves standard carry (RD 1624/1992 art. 30 / Ley 37/1992 art. 116).
     """
     calculation_revision_id = target.calculation_revision_id
     new_filing_id = derive_filing_record_id(
