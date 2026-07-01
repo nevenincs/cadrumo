@@ -17,6 +17,8 @@ from .. import LLMProvider, LLMRequest, LLMResponse, Translation
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 
+_CREATED_AT = datetime(2026, 5, 28, 12, 30, 0, tzinfo=UTC)
+
 
 def test_llm_request_round_trip() -> None:
     """LLMRequest should round-trip through JSON."""
@@ -45,7 +47,7 @@ def test_llm_response_round_trip() -> None:
         output_tokens=4,
         cost_estimate_usd=Decimal("0.000090"),
         cache_hit=False,
-        created_at=datetime.now(UTC),
+        created_at=_CREATED_AT,
         request_id="abc123",
     )
     assert LLMResponse.model_validate_json(response.model_dump_json()) == response
@@ -62,6 +64,6 @@ def test_translation_round_trip() -> None:
         model="claude-sonnet-4-6",
         input_tokens=8,
         output_tokens=3,
-        created_at=datetime.now(UTC),
+        created_at=_CREATED_AT,
     )
     assert Translation.model_validate_json(translation.model_dump_json()) == translation
