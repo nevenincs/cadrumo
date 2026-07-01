@@ -845,11 +845,8 @@ legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-7"]
 source_refs = ["boe-modelo-303-2008-form"]
 
 # Monthly deadline windows for SII-enrolled taxpayers (Art. 62.6 RD 1624/1992,
-# Orden HFP/187/2017). Period closes on the 30th of the following month, with
-# AEAT annual-calendar shifts when the statutory date falls on a non-working day.
-# Representative anchors registered here keep the registry minimal; months 02-05,
-# 07-11 follow the same legal pattern and must be checked against the annual AEAT
-# calendar before materialising a concrete date.
+# Orden HFP/187/2017). The 2026 calendar materialises periods 01 through 11;
+# period 12 belongs to the next calendar cycle.
 [[revisions.2023-y-siguientes.deadline_windows]]
 id = "modelo-303-2025-01-mensual"
 filing_year = 2025
@@ -892,6 +889,146 @@ legal_refs = ["rd-1624-1992:art-71"]
 source_refs = [
     "boe-modelo-303-2008-form",
     "aeat-calendario-contribuyente-2026-hasta-2-marzo",
+    "aeat-calendario-contribuyente-2026-domiciliacion",
+]
+
+[[revisions.2023-y-siguientes.deadline_windows]]
+id = "modelo-303-2026-02-mensual"
+filing_year = 2026
+period = "2026 02"
+period_kind = "monthly"
+opens_on = 2026-03-01
+closes_on = 2026-03-30
+payment_cutoff_on = 2026-03-25
+legal_refs = ["rd-1624-1992:art-71"]
+source_refs = [
+    "boe-modelo-303-2008-form",
+    "aeat-calendario-contribuyente-2026-domiciliacion",
+]
+
+[[revisions.2023-y-siguientes.deadline_windows]]
+id = "modelo-303-2026-03-mensual"
+filing_year = 2026
+period = "2026 03"
+period_kind = "monthly"
+opens_on = 2026-04-01
+closes_on = 2026-04-30
+payment_cutoff_on = 2026-04-27
+legal_refs = ["rd-1624-1992:art-71"]
+source_refs = [
+    "boe-modelo-303-2008-form",
+    "aeat-calendario-contribuyente-2026-domiciliacion",
+]
+
+[[revisions.2023-y-siguientes.deadline_windows]]
+id = "modelo-303-2026-04-mensual"
+filing_year = 2026
+period = "2026 04"
+period_kind = "monthly"
+opens_on = 2026-05-01
+closes_on = 2026-06-01
+payment_cutoff_on = 2026-05-27
+legal_refs = ["rd-1624-1992:art-71"]
+source_refs = [
+    "boe-modelo-303-2008-form",
+    "aeat-calendario-contribuyente-2026-domiciliacion",
+]
+
+[[revisions.2023-y-siguientes.deadline_windows]]
+id = "modelo-303-2026-05-mensual"
+filing_year = 2026
+period = "2026 05"
+period_kind = "monthly"
+opens_on = 2026-06-01
+closes_on = 2026-06-30
+payment_cutoff_on = 2026-06-25
+legal_refs = ["rd-1624-1992:art-71"]
+source_refs = [
+    "boe-modelo-303-2008-form",
+    "aeat-calendario-contribuyente-2026-domiciliacion",
+]
+
+[[revisions.2023-y-siguientes.deadline_windows]]
+id = "modelo-303-2026-06-mensual"
+filing_year = 2026
+period = "2026 06"
+period_kind = "monthly"
+opens_on = 2026-07-01
+closes_on = 2026-07-30
+payment_cutoff_on = 2026-07-27
+legal_refs = ["rd-1624-1992:art-71"]
+source_refs = [
+    "boe-modelo-303-2008-form",
+    "aeat-calendario-contribuyente-2026-domiciliacion",
+]
+
+[[revisions.2023-y-siguientes.deadline_windows]]
+id = "modelo-303-2026-07-mensual"
+filing_year = 2026
+period = "2026 07"
+period_kind = "monthly"
+opens_on = 2026-08-01
+closes_on = 2026-08-31
+payment_cutoff_on = 2026-08-26
+legal_refs = ["rd-1624-1992:art-71"]
+source_refs = [
+    "boe-modelo-303-2008-form",
+    "aeat-calendario-contribuyente-2026-domiciliacion",
+]
+
+[[revisions.2023-y-siguientes.deadline_windows]]
+id = "modelo-303-2026-08-mensual"
+filing_year = 2026
+period = "2026 08"
+period_kind = "monthly"
+opens_on = 2026-09-01
+closes_on = 2026-09-30
+payment_cutoff_on = 2026-09-25
+legal_refs = ["rd-1624-1992:art-71"]
+source_refs = [
+    "boe-modelo-303-2008-form",
+    "aeat-calendario-contribuyente-2026-domiciliacion",
+]
+
+[[revisions.2023-y-siguientes.deadline_windows]]
+id = "modelo-303-2026-09-mensual"
+filing_year = 2026
+period = "2026 09"
+period_kind = "monthly"
+opens_on = 2026-10-01
+closes_on = 2026-10-30
+payment_cutoff_on = 2026-10-27
+legal_refs = ["rd-1624-1992:art-71"]
+source_refs = [
+    "boe-modelo-303-2008-form",
+    "aeat-calendario-contribuyente-2026-domiciliacion",
+]
+
+[[revisions.2023-y-siguientes.deadline_windows]]
+id = "modelo-303-2026-10-mensual"
+filing_year = 2026
+period = "2026 10"
+period_kind = "monthly"
+opens_on = 2026-11-01
+closes_on = 2026-11-30
+payment_cutoff_on = 2026-11-25
+legal_refs = ["rd-1624-1992:art-71"]
+source_refs = [
+    "boe-modelo-303-2008-form",
+    "aeat-calendario-contribuyente-2026-domiciliacion",
+]
+
+[[revisions.2023-y-siguientes.deadline_windows]]
+id = "modelo-303-2026-11-mensual"
+filing_year = 2026
+period = "2026 11"
+period_kind = "monthly"
+opens_on = 2026-12-01
+closes_on = 2026-12-30
+payment_cutoff_on = 2026-12-24
+legal_refs = ["rd-1624-1992:art-71"]
+source_refs = [
+    "boe-modelo-303-2008-form",
     "aeat-calendario-contribuyente-2026-domiciliacion",
 ]
 
@@ -1037,7 +1174,30 @@ extraction_profiles = ["modelo-303-declaracion-pdf"]
 live_cross_references = ["modelo-303-static-documentation", "modelo-303-filed-declarations-read"]
 application_links = ["modelo-303-portal", "modelo-303-filing", "modelo-303-extractor", "modelo-303-verification", "modelo-303-review", "modelo-303-approval", "modelo-303-reconciliation", "modelo-303-workflow", "modelo-303-deadline", "modelo-303-calculation"]
 filing_schedules = ["modelo-303-trimestral", "modelo-303-mensual-sii"]
-deadline_windows = ["modelo-303-2025-1t", "modelo-303-2025-2t", "modelo-303-2025-3t", "modelo-303-2025-4t", "modelo-303-2026-1t", "modelo-303-2026-2t", "modelo-303-2026-3t", "modelo-303-2026-4t", "modelo-303-2025-01-mensual", "modelo-303-2025-06-mensual", "modelo-303-2025-12-mensual", "modelo-303-2026-01-mensual"]
+deadline_windows = [
+    "modelo-303-2025-1t",
+    "modelo-303-2025-2t",
+    "modelo-303-2025-3t",
+    "modelo-303-2025-4t",
+    "modelo-303-2026-1t",
+    "modelo-303-2026-2t",
+    "modelo-303-2026-3t",
+    "modelo-303-2026-4t",
+    "modelo-303-2025-01-mensual",
+    "modelo-303-2025-06-mensual",
+    "modelo-303-2025-12-mensual",
+    "modelo-303-2026-01-mensual",
+    "modelo-303-2026-02-mensual",
+    "modelo-303-2026-03-mensual",
+    "modelo-303-2026-04-mensual",
+    "modelo-303-2026-05-mensual",
+    "modelo-303-2026-06-mensual",
+    "modelo-303-2026-07-mensual",
+    "modelo-303-2026-08-mensual",
+    "modelo-303-2026-09-mensual",
+    "modelo-303-2026-10-mensual",
+    "modelo-303-2026-11-mensual",
+]
 
 # The completeness_manifest section lives in the completeness_manifest/ fragment
 # directory (completeness_manifest/0001-completeness_manifest.toml) to keep this
