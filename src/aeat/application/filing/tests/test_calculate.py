@@ -108,28 +108,23 @@ def test_summary_carries_typed_period_not_combined_string() -> None:
     assert summary.model_dump(mode="json")["period"] == {"filing_year": 2026, "code": "1T"}
 
 
-def test_ready_to_submit_clean_draft_routes_to_approve() -> None:
-    draft = _make_draft(status=ModeloDraftStatus.LISTO_PARA_PRESENTAR)
+@pytest.mark.parametrize(
+    ("status", "expected_action"),
+    [
+        (ModeloDraftStatus.LISTO_PARA_PRESENTAR, DeclaracionCalculateNextAction.APPROVE),
+        (ModeloDraftStatus.APROBADO, DeclaracionCalculateNextAction.EXPORT),
+        (ModeloDraftStatus.APROBACION_CADUCADA, DeclaracionCalculateNextAction.REFRESH_APPROVAL),
+        (ModeloDraftStatus.PRESENTADA, DeclaracionCalculateNextAction.AMEND),
+    ],
+    ids=("ready-to-submit", "approved", "approval-stale", "submitted"),
+)
+def test_clean_draft_routes_by_status(
+    status: ModeloDraftStatus,
+    expected_action: DeclaracionCalculateNextAction,
+) -> None:
+    draft = _make_draft(status=status)
     summary = summarise_calculation(draft)
-    assert summary.next_action is DeclaracionCalculateNextAction.APPROVE
-
-
-def test_approved_draft_routes_to_export() -> None:
-    draft = _make_draft(status=ModeloDraftStatus.APROBADO)
-    summary = summarise_calculation(draft)
-    assert summary.next_action is DeclaracionCalculateNextAction.EXPORT
-
-
-def test_approval_stale_routes_to_refresh_approval() -> None:
-    draft = _make_draft(status=ModeloDraftStatus.APROBACION_CADUCADA)
-    summary = summarise_calculation(draft)
-    assert summary.next_action is DeclaracionCalculateNextAction.REFRESH_APPROVAL
-
-
-def test_submitted_status_routes_to_amend() -> None:
-    draft = _make_draft(status=ModeloDraftStatus.PRESENTADA)
-    summary = summarise_calculation(draft)
-    assert summary.next_action is DeclaracionCalculateNextAction.AMEND
+    assert summary.next_action is expected_action
 
 
 def test_any_status_with_error_routes_to_resolve_blockers() -> None:
@@ -159,19 +154,21 @@ def test_summary_counts_findings_by_severity() -> None:
     assert summary.next_action is DeclaracionCalculateNextAction.REVIEW
 
 
-def test_repair_hints_required_for_resolve_blockers() -> None:
-    draft = _make_draft(
-        status=ModeloDraftStatus.VALIDADO,
-        findings=(_finding(BaseSeverity.ERROR, "blocker"),),
-    )
+@pytest.mark.parametrize(
+    ("findings", "repair_hints"),
+    [
+        ((_finding(BaseSeverity.ERROR, "blocker"),), ()),
+        ((), (_hint(),)),
+    ],
+    ids=("required-for-blockers", "rejected-outside-blockers"),
+)
+def test_repair_hints_must_match_resolve_blockers_state(
+    findings: tuple[ModeloValidationFinding, ...],
+    repair_hints: tuple[str, ...],
+) -> None:
+    draft = _make_draft(status=ModeloDraftStatus.VALIDADO, findings=findings)
     with pytest.raises(ValueError, match=r"repair_hints"):
-        summarise_calculation(draft, repair_hints=())
-
-
-def test_repair_hints_rejected_outside_resolve_blockers() -> None:
-    draft = _make_draft(status=ModeloDraftStatus.VALIDADO)
-    with pytest.raises(ValueError, match=r"repair_hints"):
-        summarise_calculation(draft, repair_hints=(_hint(),))
+        summarise_calculation(draft, repair_hints=repair_hints)
 
 
 def test_summary_is_frozen() -> None:
