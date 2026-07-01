@@ -21,6 +21,8 @@ from ....core import Period
 from ....core.resources import bundled_path, resources
 from ....domain.calculations.registry import (
     CasillaId,
+    LegalRefId,
+    SourceRefId,
     validated_casilla_id,
     verify_legal_catalogue,
 )
@@ -45,15 +47,15 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 _APPLICATION_ROOT = Path(__file__).resolve().parents[2]
 _LEGAL_REF_CONSTANT_RE = re.compile(r"LEGAL_REFS?$")
 _M303_SOURCE_CASILLA_01: CasillaId = validated_casilla_id("01", surface="_M303_SOURCE_CASILLA_01")
-_DEFAULT_DEPENDENCY_LEGAL_REFS = ("ley-58-2003:art-119",)
-_DEFAULT_DEPENDENCY_SOURCE_REFS = ("aeat-modelo-303-procedure",)
+_DEFAULT_DEPENDENCY_LEGAL_REFS: tuple[LegalRefId, ...] = ("ley-58-2003:art-119",)
+_DEFAULT_DEPENDENCY_SOURCE_REFS: tuple[SourceRefId, ...] = ("aeat-modelo-303-procedure",)
 
 
 def _unclean_evidence(
     *,
     origin_ids: tuple[str, ...],
-    legal_refs: tuple[str, ...] = _DEFAULT_DEPENDENCY_LEGAL_REFS,
-    source_refs: tuple[str, ...] = _DEFAULT_DEPENDENCY_SOURCE_REFS,
+    legal_refs: tuple[LegalRefId, ...] = _DEFAULT_DEPENDENCY_LEGAL_REFS,
+    source_refs: tuple[SourceRefId, ...] = _DEFAULT_DEPENDENCY_SOURCE_REFS,
 ) -> CrossPeriodDependencyEvidence:
     return CrossPeriodDependencyEvidence(
         requirement=CrossPeriodDependencyRequirement(
