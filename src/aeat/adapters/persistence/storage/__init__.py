@@ -285,7 +285,7 @@ from .runtime import (
     inspect_bucket_storage_runtime,
     inspect_storage_runtime,
 )
-from .runtime_repository import secure_object_repository_for_bucket
+from .runtime_repository import secure_object_repository_for_active_bucket, secure_object_repository_for_bucket
 from .secret_store._secret_store import SecretRecord, SecretStore
 from .sql import (
     SecureObjectDeletion,
@@ -524,6 +524,7 @@ __all__ = [
     "save_wrapped_master_key",
     "secure_object_logical_path",
     "secure_object_namespace_logical_path",
+    "secure_object_repository_for_active_bucket",
     "secure_object_repository_for_bucket",
     "session_scope",
     "suspend_active_session",
