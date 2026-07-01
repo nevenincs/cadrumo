@@ -16,29 +16,23 @@ def test_json_round_trip() -> None:
     assert revived == pointer
 
 
-@pytest.mark.parametrize(
-    ("bucket_id", "schema_version"),
-    (
-        pytest.param("bucket-001", 1, id="simple"),
-        pytest.param('bucket "weird" id', 2, id="quoted-bucket-id"),
-    ),
-)
-def test_toml_round_trip(bucket_id: str, schema_version: int) -> None:
-    pointer = BucketPointer(bucket_id=bucket_id, schema_version=schema_version)
-    revived = BucketPointer.from_toml(pointer.to_toml())
-    assert revived == pointer
+def test_toml_round_trip() -> None:
+    for bucket_id, schema_version in (
+        ("bucket-001", 1),
+        ('bucket "weird" id', 2),
+    ):
+        pointer = BucketPointer(bucket_id=bucket_id, schema_version=schema_version)
+        revived = BucketPointer.from_toml(pointer.to_toml())
+        assert revived == pointer
 
 
-@pytest.mark.parametrize(
-    "kwargs",
-    (
-        pytest.param({"bucket_id": "", "schema_version": 1}, id="empty-bucket-id"),
-        pytest.param({"bucket_id": "bucket-001", "schema_version": 0}, id="non-positive-schema-version"),
-    ),
-)
-def test_rejects_invalid_constructor_fields(kwargs: dict[str, object]) -> None:
-    with pytest.raises(ValidationError):
-        BucketPointer(**kwargs)
+def test_rejects_invalid_constructor_fields() -> None:
+    for kwargs in (
+        {"bucket_id": "", "schema_version": 1},
+        {"bucket_id": "bucket-001", "schema_version": 0},
+    ):
+        with pytest.raises(ValidationError):
+            BucketPointer(**kwargs)
 
 
 def test_rejects_unknown_keys() -> None:
@@ -52,13 +46,10 @@ def test_rejects_unknown_keys() -> None:
         )
 
 
-@pytest.mark.parametrize(
-    "text",
-    (
-        pytest.param('bucket_id = "bucket-001"\nschema_version = 1\nrogue = "x"\n', id="unknown-key"),
-        pytest.param("schema_version = 1\n", id="missing-bucket-id"),
-    ),
-)
-def test_from_toml_rejects_invalid_payloads(text: str) -> None:
-    with pytest.raises(ValidationError):
-        BucketPointer.from_toml(text)
+def test_from_toml_rejects_invalid_payloads() -> None:
+    for text in (
+        'bucket_id = "bucket-001"\nschema_version = 1\nrogue = "x"\n',
+        "schema_version = 1\n",
+    ):
+        with pytest.raises(ValidationError):
+            BucketPointer.from_toml(text)
