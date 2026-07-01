@@ -52,18 +52,28 @@ def test_runtime_schema_provider_exposes_imported_modelo_schema(schema_provider:
     assert casilla_19.casilla_id == _M130_RESULTADO_FINAL_CASILLA
 
 
+@pytest.mark.parametrize(
+    ("modelo", "ejercicio", "expected"),
+    [
+        ("130", "2026", Period.from_year_and_code(2026, "1T")),
+        ("390", "2021", Period.from_year_and_code(2021, "0A")),
+    ],
+    ids=("quarterly", "annual"),
+)
 def test_normalise_period_returns_supported_typed_period(
     schema_provider: RegistrySchemaAccessor,
+    modelo: str,
+    ejercicio: str,
+    expected: Period,
 ) -> None:
-    expected = Period.from_year_and_code(2026, "1T")
     period = _normalise_period(
-        modelo="130",
-        ejercicio="2026",
+        modelo=modelo,
+        ejercicio=ejercicio,
         raw_period=expected,
         schema_provider=cast(RegistryImportSchemaProvider, schema_provider),
     )
     assert period == expected
-    assert period.model_dump() == {"filing_year": 2026, "code": "1T"}
+    assert period.model_dump() == {"filing_year": expected.year, "code": expected.code}
 
 
 def test_normalise_period_rejects_typed_period_year_mismatch(
@@ -88,19 +98,6 @@ def test_normalise_period_rejects_period_not_declared_by_registry(
             raw_period=Period.from_year_and_code(2021, "1T"),
             schema_provider=cast(RegistryImportSchemaProvider, schema_provider),
         )
-
-
-def test_normalise_period_accepts_supported_annual_typed_period(
-    schema_provider: RegistrySchemaAccessor,
-) -> None:
-    expected = Period.from_year_and_code(2021, "0A")
-    period = _normalise_period(
-        modelo="390",
-        ejercicio="2021",
-        raw_period=expected,
-        schema_provider=cast(RegistryImportSchemaProvider, schema_provider),
-    )
-    assert period == expected
 
 
 def test_submission_record_preserves_typed_draft_period(
