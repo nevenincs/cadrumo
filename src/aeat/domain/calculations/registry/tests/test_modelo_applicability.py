@@ -148,6 +148,69 @@ def test_registry_rules_derive_per_entity_and_per_regime_verdicts() -> None:
     assert derive_modelo_applicability(sociedad_limitada, "100").verdict is (ApplicabilityVerdict.NOT_APPLICABLE)
 
 
+def _attribution_entity_profile(
+    *,
+    iva_regime: IVARegime = IVARegime.GENERAL,
+    has_employees: bool = False,
+    pays_professionals_with_retencion: bool = False,
+) -> TaxpayerProfile:
+    return TaxpayerProfile(
+        tax_id="E12345678",
+        entity_type=EntityType.ATTRIBUTION_ENTITY,
+        iva_regime=iva_regime,
+        has_employees=has_employees,
+        pays_professionals_with_retencion=pays_professionals_with_retencion,
+    )
+
+
+@pytest.mark.parametrize("modelo", ("303", "390"))
+def test_attribution_entity_with_general_iva_is_applicable_for_iva_modelos(modelo: str) -> None:
+    """An attribution entity can be IVA-taxable even though income passes through."""
+
+    result = derive_modelo_applicability(_attribution_entity_profile(), modelo)
+
+    assert result.verdict is ApplicabilityVerdict.APPLICABLE
+    assert result.applicable is True
+
+
+@pytest.mark.parametrize(
+    "iva_regime",
+    (IVARegime.EXENTO, IVARegime.RECARGO_EQUIVALENCIA),
+    ids=("exempt", "recargo-equivalencia"),
+)
+def test_attribution_entity_without_periodic_iva_regime_owes_no_m303_or_m390(
+    iva_regime: IVARegime,
+) -> None:
+    """A non-periodic IVA regime must not make M303/M390 applicable."""
+
+    profile = _attribution_entity_profile(iva_regime=iva_regime)
+
+    for modelo in ("303", "390"):
+        result = derive_modelo_applicability(profile, modelo)
+        assert result.verdict is ApplicabilityVerdict.NOT_APPLICABLE, modelo
+        assert result.applicable is False, modelo
+
+
+def test_attribution_entity_with_employees_is_applicable_for_modelo_111_and_190() -> None:
+    """An attribution entity with withheld salary payments owes M111 and its summary."""
+
+    profile = _attribution_entity_profile(has_employees=True)
+
+    for modelo in ("111", "190"):
+        result = derive_modelo_applicability(profile, modelo)
+        assert result.verdict is ApplicabilityVerdict.APPLICABLE, modelo
+        assert result.applicable is True, modelo
+
+
+def test_attribution_entity_without_withheld_income_fact_is_incomplete_for_modelo_111() -> None:
+    """Without an employee/professional payer fact, M111 is undecided, not applicable."""
+
+    result = derive_modelo_applicability(_attribution_entity_profile(), "111")
+
+    assert result.verdict is ApplicabilityVerdict.INCOMPLETE
+    assert result.applicable is False
+
+
 def test_actividad_economica_without_declared_regime_defaults_to_directa_m130() -> None:
     """An actividad-económica autónomo with no declared estimation regime owes M130.
 

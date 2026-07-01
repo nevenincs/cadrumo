@@ -40,12 +40,15 @@ Four verdicts are possible:
   obligation, and it never runs an IRPF cuota for a company or an IS
   cuota for an attribution entity.
 
-The entity-type axis selects the *tax*, and the tax selects the
-modelos: a legal entity routes to the IS path (Modelo 200 / 202), a
-natural person to the IRPF path (Modelo 100 / 130 / 303), and an
-attribution entity to the member pass-through (its own obligation is
-the informational Modelo 184). This is the corporate-entity ADR §4
-engine routing contract.
+The entity-type axis selects the *income-tax* route: a legal entity
+routes to the IS path (Modelo 200 / 202), a natural person to the IRPF
+path (Modelo 100 / 130), and an attribution entity to member
+pass-through for cuota self-assessments. IVA and payer-fact modelos are
+then decided by their own declared profile facts (IVA regime,
+withholding-payer facts, trade thresholds). This is the
+corporate-entity ADR §4 engine routing contract without treating
+pass-through income taxation as an exemption from non-income-tax
+obligations.
 
 **Canonical applicability authority — modelo level.**
 :data:`_MODELO_APPLICABILITY_RULES` is the single canonical source for
@@ -94,7 +97,7 @@ from pydantic import BaseModel, Field, StringConstraints
 
 from ....core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ....core import Modelo
-from ...deadlines import FiscalResidency
+from ...deadlines import FiscalResidency, IVARegime
 from ...deadlines.taxpayer_model import (
     EntityType,
     IrpfEstimationRegime,
@@ -241,6 +244,13 @@ class ModeloApplicabilityRule(BaseModel):
             resident-IRPF default path described by ``TaxpayerProfile``;
             a declared residency outside this set is a positive
             exclusion.
+        applicable_iva_regimes: The IVA regimes that positively keep a
+            modelo in scope. Empty means the modelo does not gate on IVA
+            regime. Non-empty means a profile outside those regimes gets
+            ``NOT_APPLICABLE``. This lets Modelo 303 / 390 be driven by
+            the declared IVA obligation instead of borrowing the natural
+            person's IRPF income-category axis for legal and attribution
+            entities.
         required_payer_fact: The :class:`PayerFact` the modelo's
             applicability depends on, or ``None`` when the modelo does
             not gate on a payer fact. When set, a profile that
@@ -274,6 +284,7 @@ class ModeloApplicabilityRule(BaseModel):
     required_income_categories: frozenset[IrpfIncomeCategory] = frozenset()
     required_estimation_regimes: frozenset[IrpfEstimationRegime] = frozenset()
     applicable_fiscal_residencies: frozenset[FiscalResidency] = frozenset()
+    applicable_iva_regimes: frozenset[IVARegime] = frozenset()
     required_payer_fact: PayerFact | None = None
     applicable_reason: _OperatorReason
     not_applicable_reason: _OperatorReason
@@ -317,13 +328,14 @@ class ModeloApplicabilityRule(BaseModel):
             and profile.fiscal_residency not in self.applicable_fiscal_residencies
         ):
             return self._not_applicable()
+        if self.applicable_iva_regimes and profile.iva_regime not in self.applicable_iva_regimes:
+            return self._not_applicable()
         # The income-category and estimation-regime axes are
         # natural-person facts: a legal entity carries neither (income
         # categories and the IRPF estimation regime only describe a
-        # persona física). A legal entity that matched the entity-type
-        # gate of a modelo applicable to it (e.g. Modelo 303 / 390) is
-        # not re-gated on those axes — its applicability is settled by
-        # the entity type.
+        # persona física). A legal or attribution entity that matched
+        # the entity-type and IVA-regime gates of a modelo applicable to
+        # it (e.g. Modelo 303 / 390) is not re-gated on those axes.
         if profile.entity_type is EntityType.NATURAL_PERSON:
             # A natural-person modelo that gates on income category needs
             # at least one declared category to match.
@@ -602,6 +614,15 @@ def _undetermined_applicability(
 _NATURAL_PERSON: frozenset[EntityType] = frozenset({EntityType.NATURAL_PERSON})
 _LEGAL_ENTITY: frozenset[EntityType] = frozenset({EntityType.LEGAL_ENTITY})
 _ATTRIBUTION_ENTITY: frozenset[EntityType] = frozenset({EntityType.ATTRIBUTION_ENTITY})
+_IVA_OBLIGED_ENTITY_TYPES: frozenset[EntityType] = frozenset(
+    {EntityType.NATURAL_PERSON, EntityType.LEGAL_ENTITY, EntityType.ATTRIBUTION_ENTITY},
+)
+_IVA_SELF_ASSESSMENT_REGIMES: frozenset[IVARegime] = frozenset(
+    {IVARegime.GENERAL, IVARegime.SIMPLIFICADO},
+)
+_WITHHELD_INCOME_PAYER_ENTITY_TYPES: frozenset[EntityType] = frozenset(
+    {EntityType.NATURAL_PERSON, EntityType.LEGAL_ENTITY, EntityType.ATTRIBUTION_ENTITY},
+)
 
 _MODELO_APPLICABILITY_RULES: dict[str, ModeloApplicabilityRule] = {
     # Modelo 100 — declaración anual de la Renta (IRPF). Applies to every
@@ -727,14 +748,15 @@ _MODELO_APPLICABILITY_RULES: dict[str, ModeloApplicabilityRule] = {
     # Modelo 111 — autoliquidación de retenciones e ingresos a cuenta del
     # IRPF (rendimientos del trabajo / actividades profesionales). It is
     # the PAYER's obligation: a taxpayer — a natural person with actividad
-    # económica or a legal entity — who pays salaries or withholding-
-    # subject professional fees. Whether the taxpayer pays such income is
-    # a payer fact the three-axis model cannot decide on its own; a
-    # profile that does not positively declare it yields INCOMPLETE rather
-    # than a guessed NOT_APPLICABLE. Research §1.1.
+    # económica, a legal entity, or an attribution entity — who pays
+    # salaries or withholding-subject professional fees. Whether the
+    # taxpayer pays such income is a payer fact the three-axis model
+    # cannot decide on its own; a profile that does not positively
+    # declare it yields INCOMPLETE rather than a guessed NOT_APPLICABLE.
+    # Research §1.1.
     Modelo.M111: ModeloApplicabilityRule(
         modelo=Modelo.M111,
-        applicable_entity_types=frozenset({EntityType.NATURAL_PERSON, EntityType.LEGAL_ENTITY}),
+        applicable_entity_types=_WITHHELD_INCOME_PAYER_ENTITY_TYPES,
         required_payer_fact=PayerFact.PAYS_WITHHELD_INCOME,
         applicable_reason=(
             "Modelo 111 (retenciones e ingresos a cuenta del IRPF): el "
@@ -792,7 +814,7 @@ _MODELO_APPLICABILITY_RULES: dict[str, ModeloApplicabilityRule] = {
     # files Modelo 190. Gated on the same payer fact as Modelo 111.
     Modelo.M190: ModeloApplicabilityRule(
         modelo=Modelo.M190,
-        applicable_entity_types=frozenset({EntityType.NATURAL_PERSON, EntityType.LEGAL_ENTITY}),
+        applicable_entity_types=_WITHHELD_INCOME_PAYER_ENTITY_TYPES,
         required_payer_fact=PayerFact.PAYS_WITHHELD_INCOME,
         applicable_reason=(
             "Modelo 190 (resumen anual de retenciones del IRPF): el "
@@ -900,15 +922,18 @@ _MODELO_APPLICABILITY_RULES: dict[str, ModeloApplicabilityRule] = {
         ),
     ),
     # Modelo 390 — declaración-resumen anual del IVA. The annual companion
-    # to Modelo 303: a taxpayer carrying on an IVA-subject actividad
-    # económica — a natural person with actividad económica or a legal
-    # entity — files it. Same applicability gate as Modelo 303. (SII
-    # filers are exempt from Modelo 390; that suppression is a deferred
-    # expansion gated on the SII enrolment axis — research §3.1.)
+    # to Modelo 303: a taxpayer in a periodic IVA self-assessment regime
+    # files it. A natural person must also declare actividad económica;
+    # legal and attribution entities do not carry the IRPF income-category
+    # axis, so their gate is entity type plus IVA regime. Same
+    # applicability gate as Modelo 303. (SII filers are exempt from Modelo
+    # 390; that suppression is a deferred expansion gated on the SII
+    # enrolment axis — research §3.1.)
     Modelo.M390: ModeloApplicabilityRule(
         modelo=Modelo.M390,
-        applicable_entity_types=frozenset({EntityType.NATURAL_PERSON, EntityType.LEGAL_ENTITY}),
+        applicable_entity_types=_IVA_OBLIGED_ENTITY_TYPES,
         required_income_categories=frozenset({IrpfIncomeCategory.ACTIVIDAD_ECONOMICA}),
+        applicable_iva_regimes=_IVA_SELF_ASSESSMENT_REGIMES,
         applicable_reason=(
             "Modelo 390 (resumen anual del IVA): el contribuyente realiza "
             "una actividad económica sujeta al IVA y presenta la "
@@ -928,16 +953,18 @@ _MODELO_APPLICABILITY_RULES: dict[str, ModeloApplicabilityRule] = {
     ),
     # Modelo 303 — autoliquidación periódica del IVA. Triggered by carrying
     # on an actividad económica subject to IVA: a natural person with
-    # rendimientos de actividades económicas, or a legal entity. A pure
-    # landlord of residential property, a salaried-only taxpayer, and a
-    # pensioner carry on no IVA-subject activity. (Commercial rental can be
-    # IVA-subject; the seed gates on the actividad-económica category,
-    # which a pure landlord does not declare. Finer rental-IVA nuance is
-    # a deferred expansion.)
+    # rendimientos de actividades económicas, or a legal / attribution
+    # entity in a periodic IVA self-assessment regime. A pure landlord of
+    # residential property, a salaried-only taxpayer, and a pensioner carry
+    # on no IVA-subject activity. (Commercial rental can be IVA-subject;
+    # the seed gates natural persons on the actividad-económica category,
+    # which a pure landlord does not declare. Finer rental-IVA nuance is a
+    # deferred expansion.)
     Modelo.M303: ModeloApplicabilityRule(
         modelo=Modelo.M303,
-        applicable_entity_types=frozenset({EntityType.NATURAL_PERSON, EntityType.LEGAL_ENTITY}),
+        applicable_entity_types=_IVA_OBLIGED_ENTITY_TYPES,
         required_income_categories=frozenset({IrpfIncomeCategory.ACTIVIDAD_ECONOMICA}),
+        applicable_iva_regimes=_IVA_SELF_ASSESSMENT_REGIMES,
         applicable_reason=(
             "Modelo 303 (autoliquidación del IVA): el contribuyente "
             "realiza una actividad económica sujeta al IVA y presenta la "
