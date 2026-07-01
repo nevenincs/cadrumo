@@ -98,7 +98,7 @@ def test_modelo_303_registry_validator_accepts_committed_definition() -> None:
 
 
 def test_modelo_303_metadata_matches_orden_eha_3786_2008() -> None:
-    modelo, _ = _load_modelo_303()
+    modelo, catalogues = _load_modelo_303()
 
     assert modelo.title == "IVA. Autoliquidación (trimestral)"
     assert modelo.tax_domain == "iva"
@@ -108,6 +108,8 @@ def test_modelo_303_metadata_matches_orden_eha_3786_2008() -> None:
     assert "orden-eha-3786-2008:art-7" in modelo.legal_refs
     assert "aeat-dr-303-2025" in modelo.source_refs
     assert "aeat-modelo-303-procedure" in modelo.source_refs
+    assert catalogues.sources["aeat-modelo-303-procedure"].evidence_tier == "official_source_guidance"
+    assert catalogues.sources["boe-modelo-303-2008-form"].evidence_tier == "layout_authority"
 
 
 def test_modelo_303_revision_period_selectors_cover_2009_to_present() -> None:

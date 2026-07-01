@@ -517,7 +517,7 @@ source_url = "https://sede.agenciatributaria.gob.es/Sede/procedimientoini/G414.s
 review_status = "reviewed"
 
 [sources."boe-modelo-303-2008-form"]
-evidence_tier = "official_source_guidance"
+evidence_tier = "layout_authority"
 authority = "boe"
 kind = "form_spec"
 corpus_path = "corpus/normatives/html/orden-eha-3786-2008.html"
