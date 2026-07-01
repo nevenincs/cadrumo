@@ -472,7 +472,7 @@ def restore_active_profile_pointer(prior_text: str | None) -> None:
     target.write_text(prior_text, encoding=_UTF_8_ENCODING)
 
 
-def _refuse_duplicate_label(
+def refuse_duplicate_label(
     display_name: str,
 ) -> None:
     """Refuse a ``profile create`` when a live profile carries the label.
@@ -494,10 +494,10 @@ def _refuse_duplicate_label(
     )
 
 
-def _require_registered_label(display_name: str) -> None:
+def require_registered_label(display_name: str) -> None:
     """Refuse a ``profile edit`` when no live profile carries the label.
 
-    Symmetric to :func:`_refuse_duplicate_label`: ``profile edit``
+    Symmetric to :func:`refuse_duplicate_label`: ``profile edit``
     re-runs the wizard against an *existing* profile, so an unknown
     label is an operator error, not an implicit create. The registered
     label authority is
