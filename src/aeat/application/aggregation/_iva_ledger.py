@@ -370,6 +370,12 @@ def aggregate_iva_ledger_observations(
     for transaction in transactions.values():
         if transaction.lifecycle_state is not TransactionLifecycleState.ACTIVE:
             continue
+        if transaction.business_classification is BusinessClassification.REVIEWED_EXCLUDED:
+            # Operator reviewed and deliberately excluded this row from filing
+            # (a final disposition): omit it silently — no observation, no gate
+            # issue. The exclusion is an explicit, recorded operator decision,
+            # not an unclassified row that should nag with a "classify me" advisory.
+            continue
         outcome = _classify_iva_transaction(transaction, resolved_period=resolved_period)
         if outcome.gate_issue is not None:
             issues.append(outcome.gate_issue)

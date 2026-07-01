@@ -380,6 +380,16 @@ class LedgerRestoreResult(_LedgerMutationResult):
     """JSON envelope for ``aeat app ledger restore``."""
 
 
+@register_schema("ledger.exclude")
+class LedgerExcludeResult(_LedgerMutationResult):
+    """JSON envelope for ``aeat app ledger exclude``.
+
+    Marks a reviewed transaction as deliberately excluded from filing; the
+    ``review_status`` field carries ``excluded`` and the row stays in the
+    uniform mutation quintet.
+    """
+
+
 @register_schema("ledger.remove")
 class LedgerRemoveResult(OutputSchema):
     """JSON envelope for ``aeat app ledger remove``.

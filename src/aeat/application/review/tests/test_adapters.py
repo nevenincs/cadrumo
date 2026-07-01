@@ -243,6 +243,34 @@ def test_transactions_pending_skips_skipped_by_rule(tmp_path: Path) -> None:
         assert transactions_pending(settings, bucket_id=_PROFILE_ID) == ()
 
 
+def test_transactions_pending_skips_reviewed_excluded(tmp_path: Path) -> None:
+    """``REVIEWED_EXCLUDED`` rows are a final disposition and must not resurface.
+
+    The operator reviewed the row and deliberately excluded it from filing
+    (issue #224 — "I saw this, it is not relevant, stop asking me"), so the
+    review queue must drop it.
+    """
+    settings = _build_settings(tmp_path)
+    catalogue = TransactionCatalogue.from_transactions(
+        (
+            _transaction(
+                source_row_index=1,
+                classification=BusinessClassification.REVIEWED_EXCLUDED,
+            ),
+            _transaction(
+                source_row_index=2,
+                classification=BusinessClassification.NOT_YET_PROCESSED,
+            ),
+        ),
+    )
+    with profile_create_storage_span(_PROFILE_ID):
+        TransactionCatalogueRepository(bucket_id=_PROFILE_ID).save(catalogue)
+        pending = transactions_pending(settings, bucket_id=_PROFILE_ID)
+    assert [item.source.business_classification for item in pending] == [
+        BusinessClassification.NOT_YET_PROCESSED,
+    ]
+
+
 # ── invoices adapter ──────────────────────────────────────────────
 
 

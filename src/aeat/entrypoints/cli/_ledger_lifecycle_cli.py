@@ -24,6 +24,7 @@ from ...application.ledger import (
     is_llm_provider_available,
     ledger_transaction_payload,
     ledger_transaction_review_status,
+    mark_transaction_reviewed_excluded,
     merge_transactions,
     remove_manual_transaction,
     reset_ledger_catalogue,
@@ -65,6 +66,13 @@ def register_lifecycle_commands(app: typer.Typer) -> None:
     )(ledger_doclink)
     app.command("archive", help=tr("cli.ledger.archive.help"))(ledger_archive)
     app.command("stash", help=tr("cli.ledger.stash.help"))(ledger_stash)
+    app.command(
+        "exclude",
+        help=tr(
+            "cli.ledger.exclude.help",
+            default="Mark one reviewed ledger transaction as deliberately excluded from filing.",
+        ),
+    )(ledger_exclude)
     app.command("restore", help=tr("cli.ledger.restore.help"))(ledger_restore)
     app.command("remove", help=tr("cli.ledger.remove.help"))(ledger_remove)
     app.command("reset", help=tr("cli.ledger.reset.help"))(ledger_reset)
@@ -346,6 +354,54 @@ def ledger_stash(
         result.bucket_event_ids,
         command="ledger.stash",
         result_cls=LedgerStashResult,
+    )
+
+
+def ledger_exclude(
+    ctx: typer.Context,
+    transaction_id: str = typer.Argument(
+        ...,
+        help=tr("cli.ledger.exclude.id_help", default="Ledger transaction id."),
+    ),
+    reason: str = typer.Option(
+        "",
+        "--reason",
+        help=tr("cli.ledger.exclude.reason_help", default="Optional note recording why the row is excluded."),
+    ),
+    yes: bool = typer.Option(
+        False,
+        "--yes",
+        help=tr("cli.ledger.exclude.yes_help", default="Confirm the reviewed-excluded decision."),
+    ),
+    actor: str | None = typer.Option(
+        None,
+        "--actor",
+        help=tr("cli.ledger.exclude.actor_help", default="Operator label."),
+    ),
+) -> None:
+    """Mark one active ledger transaction as reviewed and excluded from filing."""
+    if not yes:
+        raise _bad(tr("cli.ledger.errors.confirm_required"))
+    state = _state()
+    transaction_repository = _tx_repo(state)
+    resolved_id = _resolve_id(transaction_repository, transaction_id)
+    result = mark_transaction_reviewed_excluded(
+        bucket_id=transaction_repository.bucket_id,
+        transaction_id=resolved_id,
+        actor=actor or resolve_active_bucket_id() or "operator",
+        reason=reason,
+        source_command="aeat app ledger exclude",
+        transaction_repository=transaction_repository,
+    )
+    from ._ledger_payloads import LedgerExcludeResult
+
+    _emit_update_result(
+        ctx,
+        result.transaction,
+        result.ref.bucket_id,
+        result.bucket_event_ids,
+        command="ledger.exclude",
+        result_cls=LedgerExcludeResult,
     )
 
 
@@ -839,6 +895,7 @@ __all__ = [
     "ledger_archive",
     "ledger_attach",
     "ledger_doclink",
+    "ledger_exclude",
     "ledger_merge",
     "ledger_remove",
     "ledger_reset",

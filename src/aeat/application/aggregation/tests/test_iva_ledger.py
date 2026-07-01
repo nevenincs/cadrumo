@@ -188,6 +188,31 @@ def test_archived_and_stashed_transactions_do_not_feed_iva_projection() -> None:
     assert result.observations[0].iva_amount == active.iva_amount
 
 
+def test_reviewed_excluded_transaction_omitted_from_iva_projection_without_issue() -> None:
+    """A reviewed-excluded row is silently omitted: no observation and no gate issue.
+
+    The operator reviewed the row and deliberately excluded it from filing (a
+    final disposition). It must not feed the aggregation, and — unlike an
+    unclassified row — it must not surface an ``UNCLASSIFIED_BUSINESS_STATE``
+    "classify me" advisory, since the exclusion is an explicit recorded decision.
+    """
+    active = _transaction("row-active")
+    excluded = _transaction(
+        "row-reviewed-excluded",
+        taxable_base=Decimal("900.00"),
+        iva_amount=Decimal("189.00"),
+        business_classification=BusinessClassification.REVIEWED_EXCLUDED,
+    )
+
+    result = aggregate_iva_ledger_observations(
+        TransactionCatalogue.from_transactions((active, excluded)),
+        period=_Q2_2026,
+    )
+
+    assert result.issues == ()
+    assert [observation.ledger_id for observation in result.observations] == [active.transaction_id]
+
+
 def test_incoming_business_transaction_projects_to_repercutido_iva_observation() -> None:
     transaction = _transaction(
         "row-income",

@@ -127,6 +127,7 @@ PROFILE_BOUND_WRITE_VERB_PATHS: tuple[str, ...] = (
     "app ledger attach",
     "app ledger archive",
     "app ledger stash",
+    "app ledger exclude",
     "app ledger remove",
     "app ledger reset",
     "app ledger split",

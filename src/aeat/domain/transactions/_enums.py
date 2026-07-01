@@ -28,9 +28,9 @@ class BusinessClassification(StrEnum):
     """Supported business-classification states.
 
     The three *classified* outcomes are :attr:`BUSINESS`,
-    :attr:`PERSONAL`, and :attr:`MIXED`. The remaining four members
-    each capture a distinct pipeline state so a downstream consumer
-    can answer "did the pipeline look at this, and what did it
+    :attr:`PERSONAL`, and :attr:`MIXED`. The remaining members each
+    capture a distinct pipeline or review disposition so a downstream
+    consumer can answer "did the pipeline look at this, and what did it
     decide?" without ambiguous catch-all values.
 
     Attributes:
@@ -44,6 +44,14 @@ class BusinessClassification(StrEnum):
         SKIPPED_BY_RULE: A rule explicitly skipped this transaction.
         FAILED_VALIDATION: Classifier output failed validation; the
             pipeline preserves the prior decision.
+        REVIEWED_EXCLUDED: The operator reviewed this transaction and
+            deliberately excluded it from filing. A final disposition
+            distinct from ``NOT_YET_PROCESSED`` (never looked at) and
+            from a classified outcome (business/personal/mixed): the
+            operator asserted "I saw this, it is not filing-relevant,
+            stop surfacing it." Excluded from every tax aggregation and
+            dropped from the review queue; the row stays visible in the
+            ledger with review status ``excluded``.
     """
 
     BUSINESS = "BUSINESS"
@@ -53,6 +61,7 @@ class BusinessClassification(StrEnum):
     PROCESSED_UNCLASSIFIED = "PROCESSED_UNCLASSIFIED"
     SKIPPED_BY_RULE = "SKIPPED_BY_RULE"
     FAILED_VALIDATION = "FAILED_VALIDATION"
+    REVIEWED_EXCLUDED = "REVIEWED_EXCLUDED"
 
 
 class TransactionLifecycleState(StrEnum):
