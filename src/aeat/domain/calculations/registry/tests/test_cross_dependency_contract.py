@@ -393,6 +393,36 @@ def test_dependency_classifications_preserve_relation_authority_basis() -> None:
         RegistryValidator(catalogues, source_root=bundled_path()).validate_modelo(mutated_modelo)
 
 
+def test_dependency_classification_sources_require_official_source_guidance() -> None:
+    modelos, catalogues = _registry_tree()
+    modelo, _revision, classification, _relation = _first_classified_relation(modelos)
+    sources = dict(catalogues.sources)
+    for source_ref in classification.source_refs:
+        sources[source_ref] = sources[source_ref].model_copy(update={"evidence_tier": "layout_authority"})
+    mutated_catalogues = catalogues.model_copy(update={"sources": sources})
+
+    with pytest.raises(
+        RegistryValidationError,
+        match=r"dependency classification .* requires official_source_guidance source evidence",
+    ):
+        RegistryValidator(mutated_catalogues, source_root=bundled_path()).validate_modelo(modelo)
+
+
+def test_dependency_classification_legal_refs_require_legal_authority() -> None:
+    modelos, catalogues = _registry_tree()
+    modelo, _revision, classification, _relation = _first_classified_relation(modelos)
+    legal = dict(catalogues.legal)
+    legal_ref = classification.legal_refs[0]
+    legal[legal_ref] = legal[legal_ref].model_copy(update={"evidence_tier": "official_source_guidance"})
+    mutated_catalogues = catalogues.model_copy(update={"legal": legal})
+
+    with pytest.raises(
+        RegistryValidationError,
+        match=r"dependency classification .* legal ref .* is not legal authority",
+    ):
+        RegistryValidator(mutated_catalogues, source_root=bundled_path()).validate_modelo(modelo)
+
+
 def test_relation_target_bindings_preserve_relation_authority_basis() -> None:
     modelos, catalogues = _registry_tree()
     modelo, revision, relation = _first_relation(modelos)
