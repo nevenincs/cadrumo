@@ -17,7 +17,10 @@ because the formula is ``op = "copy"``.  The oracle is the TOML formula
 declaration itself, verified against the AEAT 2024 form (boe-modelo-100-2024-form)
 which shows 1812 pre-populated from 1811 for the standard single-year case.
 
-Both 2024 and 2025 revisions are covered; the same gap existed in both.
+All four live revisions are covered (2022, 2023, 2024, 2025); the same gap
+existed in every one — 1811 was computed, 1812 stayed manual, and the
+aggregator 1814 (``suma de las casillas [1812]``) silently received zero, so
+the crypto gain never reached base imponible del ahorro.
 """
 
 from __future__ import annotations
@@ -43,6 +46,10 @@ _M100_CRIPTO_GANANCIA_NO_EXENTA_CASILLA: CasillaId = validated_casilla_id(
 _M100_CRIPTO_GANANCIA_IMPUTABLE_CASILLA: CasillaId = validated_casilla_id(
     "1812",
     surface="_M100_CRIPTO_GANANCIA_IMPUTABLE_CASILLA",
+)
+_M100_CRIPTO_GANANCIA_SUMA_CASILLA: CasillaId = validated_casilla_id(
+    "1814",
+    surface="_M100_CRIPTO_GANANCIA_SUMA_CASILLA",
 )
 
 
@@ -133,8 +140,7 @@ def test_2024_1812_identity_copy_standard_gain(m100_2024_snapshot: RegistrySnaps
         "1811 = 1804 - 1806 - 1810 = 8500 - 0 - 0."
     )
     assert (
-        result.values[_M100_CRIPTO_GANANCIA_IMPUTABLE_CASILLA]
-        == result.values[_M100_CRIPTO_GANANCIA_NO_EXENTA_CASILLA]
+        result.values[_M100_CRIPTO_GANANCIA_IMPUTABLE_CASILLA] == result.values[_M100_CRIPTO_GANANCIA_NO_EXENTA_CASILLA]
     ), (
         f"casilla 1812 = {result.values[_M100_CRIPTO_GANANCIA_IMPUTABLE_CASILLA]!r}; "
         f"expected {result.values[_M100_CRIPTO_GANANCIA_NO_EXENTA_CASILLA]!r}. "
@@ -152,8 +158,7 @@ def test_2024_1812_zero_when_no_crypto_gain(m100_2024_snapshot: RegistrySnapshot
     result = _run_2024(m100_2024_snapshot, Decimal("0"))
 
     assert result.values[_M100_CRIPTO_GANANCIA_NO_EXENTA_CASILLA] == Decimal("0.00"), (
-        f"casilla 1811 = {result.values[_M100_CRIPTO_GANANCIA_NO_EXENTA_CASILLA]!r}; "
-        "expected 0.00 when no crypto gain."
+        f"casilla 1811 = {result.values[_M100_CRIPTO_GANANCIA_NO_EXENTA_CASILLA]!r}; expected 0.00 when no crypto gain."
     )
     assert result.values[_M100_CRIPTO_GANANCIA_IMPUTABLE_CASILLA] == Decimal("0.00"), (
         f"casilla 1812 = {result.values[_M100_CRIPTO_GANANCIA_IMPUTABLE_CASILLA]!r}; "
@@ -177,8 +182,7 @@ def test_2024_1812_anti_tautology_different_gain(m100_2024_snapshot: RegistrySna
         "Formula must propagate the actual 1811 value, not a cached constant."
     )
     assert (
-        result.values[_M100_CRIPTO_GANANCIA_IMPUTABLE_CASILLA]
-        == result.values[_M100_CRIPTO_GANANCIA_NO_EXENTA_CASILLA]
+        result.values[_M100_CRIPTO_GANANCIA_IMPUTABLE_CASILLA] == result.values[_M100_CRIPTO_GANANCIA_NO_EXENTA_CASILLA]
     ), (
         f"1812 ({result.values[_M100_CRIPTO_GANANCIA_IMPUTABLE_CASILLA]!r}) != "
         f"1811 ({result.values[_M100_CRIPTO_GANANCIA_NO_EXENTA_CASILLA]!r}). "
@@ -248,8 +252,7 @@ def test_2025_1812_identity_copy_standard_gain(m100_2025_snapshot: RegistrySnaps
     result = _run_2025(m100_2025_snapshot, Decimal("8500"))
 
     assert (
-        result.values[_M100_CRIPTO_GANANCIA_IMPUTABLE_CASILLA]
-        == result.values[_M100_CRIPTO_GANANCIA_NO_EXENTA_CASILLA]
+        result.values[_M100_CRIPTO_GANANCIA_IMPUTABLE_CASILLA] == result.values[_M100_CRIPTO_GANANCIA_NO_EXENTA_CASILLA]
     ), (
         f"2025: casilla 1812 = {result.values[_M100_CRIPTO_GANANCIA_IMPUTABLE_CASILLA]!r}; "
         f"expected {result.values[_M100_CRIPTO_GANANCIA_NO_EXENTA_CASILLA]!r} (= 1811).  "
@@ -263,4 +266,123 @@ def test_2025_1812_zero_when_no_crypto_gain(m100_2025_snapshot: RegistrySnapshot
 
     assert result.values[_M100_CRIPTO_GANANCIA_IMPUTABLE_CASILLA] == Decimal("0.00"), (
         f"2025: casilla 1812 = {result.values[_M100_CRIPTO_GANANCIA_IMPUTABLE_CASILLA]!r}; expected 0.00."
+    )
+
+
+# ---------------------------------------------------------------------------
+# 2022 & 2023 revisions
+# ---------------------------------------------------------------------------
+#
+# The 2022/2023 form graphs pre-date the retenciones-via-relations split and
+# carry a large binding set.  Rather than hand-transcribe every binding id
+# (brittle, and orthogonal to the crypto chain under test), the runner below
+# enumerates the snapshot's own binding/relation set and supplies neutral
+# zero/identity values.  The crypto chain (1804 -> 1811 -> 1812 -> 1814)
+# depends only on casilla 1804, so the neutral fill isolates the propagation
+# without asserting anything about unrelated casillas.
+
+
+def _run_prior_year(snapshot: RegistrySnapshot, filing_year: int, valor_1804: Decimal):
+    revision = snapshot.revision
+    enum_binding_values = {b.id: "madrid" for b in revision.bindings if ("ccaa" in b.id or "residence" in b.id)}
+    date_binding_values = {b.id: date(1975, 6, 15) for b in revision.bindings if "birth" in b.id}
+    typed_ids = set(enum_binding_values) | set(date_binding_values)
+    binding_values = {b.id: Decimal("0") for b in revision.bindings if b.id not in typed_ids}
+    relation_values = {
+        r.id: Decimal("0") for r in revision.relations if not r.target_periods or snapshot.period in r.target_periods
+    }
+    return calculate_registry_snapshot(
+        snapshot,
+        inputs={_M100_CRIPTO_TRANSMISION_CASILLA: valor_1804},
+        date_context={"filing_period": date(filing_year, 12, 31)},
+        binding_values=binding_values,
+        enum_binding_values=enum_binding_values,
+        relation_values=relation_values,
+        date_binding_values=date_binding_values,
+    )
+
+
+@pytest.fixture
+def m100_2022_snapshot(registry_authority: ValidatedRegistryAuthority):
+    return registry_authority.snapshot("100", filing_year=2022, period="0A")
+
+
+@pytest.fixture
+def m100_2023_snapshot(registry_authority: ValidatedRegistryAuthority):
+    return registry_authority.snapshot("100", filing_year=2023, period="0A")
+
+
+@pytest.mark.parametrize(
+    ("filing_year", "snapshot_fixture"),
+    [(2022, "m100_2022_snapshot"), (2023, "m100_2023_snapshot")],
+)
+def test_prior_year_1812_identity_copy_and_reaches_aggregator(
+    filing_year: int,
+    snapshot_fixture: str,
+    request: pytest.FixtureRequest,
+) -> None:
+    """2022/2023: 1812 = 1811, and the gain reaches aggregator 1814.
+
+    Before the fix 1812 was ``input_kind = "manual"`` and defaulted to zero,
+    so 1814 (``suma de las casillas [1812]``) silently dropped the crypto gain
+    from base imponible del ahorro — a silent under-declaration.  The copy
+    formula ``renta-<yr>-ganancia-cripto-imputable`` propagates 1811 to 1812,
+    and 1814 must then carry the same magnitude.
+    """
+    snapshot: RegistrySnapshot = request.getfixturevalue(snapshot_fixture)
+    result = _run_prior_year(snapshot, filing_year, Decimal("8500"))
+
+    assert (
+        result.values[_M100_CRIPTO_GANANCIA_IMPUTABLE_CASILLA] == result.values[_M100_CRIPTO_GANANCIA_NO_EXENTA_CASILLA]
+    ), (
+        f"{filing_year}: casilla 1812 = {result.values[_M100_CRIPTO_GANANCIA_IMPUTABLE_CASILLA]!r}; "
+        f"expected {result.values[_M100_CRIPTO_GANANCIA_NO_EXENTA_CASILLA]!r} (= 1811). "
+        f"Formula renta-{filing_year}-ganancia-cripto-imputable must copy 1811 to 1812."
+    )
+    assert (
+        result.values[_M100_CRIPTO_GANANCIA_SUMA_CASILLA] == result.values[_M100_CRIPTO_GANANCIA_IMPUTABLE_CASILLA]
+    ), (
+        f"{filing_year}: casilla 1814 = {result.values[_M100_CRIPTO_GANANCIA_SUMA_CASILLA]!r}; "
+        f"expected {result.values[_M100_CRIPTO_GANANCIA_IMPUTABLE_CASILLA]!r} (= 1812). "
+        "The crypto gain must reach the aggregator, not vanish from base imponible del ahorro."
+    )
+
+
+@pytest.mark.parametrize(
+    ("filing_year", "snapshot_fixture"),
+    [(2022, "m100_2022_snapshot"), (2023, "m100_2023_snapshot")],
+)
+def test_prior_year_1812_anti_tautology_tracks_input(
+    filing_year: int,
+    snapshot_fixture: str,
+    request: pytest.FixtureRequest,
+) -> None:
+    """2022/2023 anti-tautology: 1804 = 7000 must yield 1812 = 7000, not a constant."""
+    snapshot: RegistrySnapshot = request.getfixturevalue(snapshot_fixture)
+    result = _run_prior_year(snapshot, filing_year, Decimal("7000"))
+
+    assert result.values[_M100_CRIPTO_GANANCIA_IMPUTABLE_CASILLA] == Decimal("7000.00"), (
+        f"{filing_year}: casilla 1812 = {result.values[_M100_CRIPTO_GANANCIA_IMPUTABLE_CASILLA]!r}; "
+        "expected 7000.00 — the copy must track the actual 1811 value, not a cached constant."
+    )
+
+
+@pytest.mark.parametrize(
+    ("filing_year", "snapshot_fixture"),
+    [(2022, "m100_2022_snapshot"), (2023, "m100_2023_snapshot")],
+)
+def test_prior_year_1812_zero_when_no_crypto_gain(
+    filing_year: int,
+    snapshot_fixture: str,
+    request: pytest.FixtureRequest,
+) -> None:
+    """2022/2023: no spurious 1812 (or 1814) when 1804 = 0."""
+    snapshot: RegistrySnapshot = request.getfixturevalue(snapshot_fixture)
+    result = _run_prior_year(snapshot, filing_year, Decimal("0"))
+
+    assert result.values[_M100_CRIPTO_GANANCIA_IMPUTABLE_CASILLA] == Decimal("0.00"), (
+        f"{filing_year}: casilla 1812 = {result.values[_M100_CRIPTO_GANANCIA_IMPUTABLE_CASILLA]!r}; expected 0.00."
+    )
+    assert result.values[_M100_CRIPTO_GANANCIA_SUMA_CASILLA] == Decimal("0.00"), (
+        f"{filing_year}: casilla 1814 = {result.values[_M100_CRIPTO_GANANCIA_SUMA_CASILLA]!r}; expected 0.00."
     )
