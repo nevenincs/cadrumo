@@ -85,23 +85,18 @@ def test_profile_condition_matches_unsupported_op_raises() -> None:
 # ---------------------------------------------------------------------------
 
 
-def test_resolve_profile_fact_resolves_single_level_dict_key() -> None:
-    assert _resolve_profile_fact({"age": 35}, "age") == 35
-
-
-def test_resolve_profile_fact_resolves_nested_dict_path() -> None:
-    facts = {"residence": {"ccaa": "madrid"}}
-    assert _resolve_profile_fact(facts, "residence.ccaa") == "madrid"
-
-
-def test_resolve_profile_fact_resolves_single_level_object_attribute() -> None:
-    profile = SimpleNamespace(age=35, residence=SimpleNamespace(ccaa="madrid"))
-    assert _resolve_profile_fact(profile, "age") == 35
-
-
-def test_resolve_profile_fact_resolves_nested_object_attribute_path() -> None:
-    profile = SimpleNamespace(age=35, residence=SimpleNamespace(ccaa="madrid"))
-    assert _resolve_profile_fact(profile, "residence.ccaa") == "madrid"
+@pytest.mark.parametrize(
+    ("facts", "field", "expected"),
+    [
+        ({"age": 35}, "age", 35),
+        ({"residence": {"ccaa": "madrid"}}, "residence.ccaa", "madrid"),
+        (SimpleNamespace(age=35, residence=SimpleNamespace(ccaa="madrid")), "age", 35),
+        (SimpleNamespace(age=35, residence=SimpleNamespace(ccaa="madrid")), "residence.ccaa", "madrid"),
+    ],
+    ids=("dict-single", "dict-nested", "object-single", "object-nested"),
+)
+def test_resolve_profile_fact_resolves_present_paths(facts: object, field: str, expected: object) -> None:
+    assert _resolve_profile_fact(facts, field) == expected
 
 
 def test_resolve_profile_fact_mixes_dict_then_object_traversal() -> None:
