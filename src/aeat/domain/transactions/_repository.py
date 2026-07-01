@@ -3,22 +3,26 @@
 The repository is the only sanctioned read/write path for the transaction
 catalogue. It stores **one encrypted secure-object row per transaction** —
 keyed ``transaction:{bucket_id}:{transaction_id}`` inside the
-``aeat.domain.transactions.bucket`` namespace at :class:`SensitivityClass`
-``FINANCIAL`` — so a single-transaction mutation rewrites only that row instead
-of re-encrypting the whole catalogue (the prior single-blob shape was O(n) write
-amplification per ledger edit). Each row wraps its :class:`Transaction` in an
-:class:`Envelope` before serialisation; no plaintext transaction row, JSON
-catalogue, or envelope file lands on disk.
+``aeat.domain.transactions.bucket`` namespace at
+:class:`~aeat.adapters.persistence.storage.SensitivityClass` ``FINANCIAL`` —
+so a single-transaction mutation rewrites only that row instead of
+re-encrypting the whole catalogue (the prior single-blob shape was O(n) write
+amplification per ledger edit). Each row wraps its
+:class:`~aeat.domain.transactions.Transaction` in an
+:class:`~aeat.adapters.persistence.storage.Envelope` before serialisation; no
+plaintext transaction row, JSON catalogue, or envelope file lands on disk.
 
-Writes go through the :class:`SecureObjectRepository` atomic upsert+delete batch
-(:meth:`SecureObjectRepository.apply_batch`) so a multi-transaction mutation —
-and any sibling-catalogue co-writes (bucket-event history, invoices) passed to
-``save_with_secure_object_writes`` — commit
-all-or-nothing, preserving the
-co-write atomicity the single-blob ``save`` had. The diff that decides which
-rows to write or delete is driven by a decryption-free
-:meth:`SecureObjectRepository.namespace_payload_hashes` scan, so an unchanged
-transaction is never rewritten.
+Writes go through the
+:class:`~aeat.adapters.persistence.storage.SecureObjectRepository` atomic
+upsert+delete batch
+(:meth:`~aeat.adapters.persistence.storage.SecureObjectRepository.apply_batch`)
+so a multi-transaction mutation — and any sibling-catalogue co-writes
+(bucket-event history, invoices) passed to ``save_with_secure_object_writes`` —
+commit all-or-nothing, preserving the co-write atomicity the single-blob
+``save`` had. The diff that decides which rows to write or delete is driven by
+a decryption-free
+:meth:`~aeat.adapters.persistence.storage.SecureObjectRepository.namespace_payload_hashes`
+scan, so an unchanged transaction is never rewritten.
 
 The namespace authority is
 :data:`aeat.adapters.persistence.storage.TRANSACTION_CATALOGUE_NAMESPACE`;
@@ -194,9 +198,10 @@ class TransactionCatalogueRepository:
     :data:`aeat.adapters.persistence.storage.TRANSACTION_CATALOGUE_NAMESPACE`
     namespace, so two operator profiles never share transaction storage and a
     single-transaction mutation touches a single row. Each
-    :class:`Transaction` payload and the bucket membership index are wrapped in
+    :class:`~aeat.domain.transactions.Transaction` payload and the bucket
+    membership index are wrapped in
     :class:`~aeat.adapters.persistence.storage.Envelope` before
-    :class:`~aeat.adapters.persistence.storage.sql.SecureObjectRepository`
+    :class:`~aeat.adapters.persistence.storage.SecureObjectRepository`
     persists them.
     """
 
@@ -349,12 +354,14 @@ class TransactionCatalogueRepository:
         """Diff ``catalogue`` against this bucket's stored rows.
 
         Returns ``(changed writes, deletions)``. Changed-row detection is a
-        decryption-free :meth:`namespace_payload_hashes` lookup keyed by the
-        bucket-qualified HMAC digest (so it is correct even when several buckets
-        share one store): an incoming transaction whose freshly-serialised
-        payload hash matches the stored one is left untouched. Deletions and the
-        membership index are bounded to *this* bucket via the per-bucket index,
-        so a reconciliation can never touch another bucket's rows.
+        decryption-free
+        :meth:`~aeat.adapters.persistence.storage.SecureObjectRepository.namespace_payload_hashes`
+        lookup keyed by the bucket-qualified HMAC digest (so it is correct even
+        when several buckets share one store): an incoming transaction whose
+        freshly-serialised payload hash matches the stored one is left
+        untouched. Deletions and the membership index are bounded to *this*
+        bucket via the per-bucket index, so a reconciliation can never touch
+        another bucket's rows.
         """
         from ...adapters.persistence.storage import SecureObjectDeletion, SecureObjectWrite
         from ...adapters.persistence.storage.crypto import secure_object_key_digest
