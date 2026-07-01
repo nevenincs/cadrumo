@@ -138,34 +138,22 @@ class TestRegistryPeriodCodeAccessors:
 class TestRegistryPeriodCodeRoundtrip:
     """Verify RegistryPeriodCode persists through JSON roundtrip."""
 
-    def test_json_roundtrip_standard_period(self) -> None:
+    @pytest.mark.parametrize(
+        "period",
+        (
+            pytest.param("1T", id="standard"),
+            pytest.param("EXT-1T", id="extended"),
+            pytest.param("EVENT-27", id="event"),
+        ),
+    )
+    def test_json_roundtrip_period(self, period: str) -> None:
         class Envelope(BaseModel):
             period: RegistryPeriodCode
 
-        original = Envelope(period="1T")
+        original = Envelope(period=period)
         json_str = original.model_dump_json()
         restored = Envelope.model_validate_json(json_str)
-        assert restored.period == "1T"
-        assert restored == original
-
-    def test_json_roundtrip_extended_period(self) -> None:
-        class Envelope(BaseModel):
-            period: RegistryPeriodCode
-
-        original = Envelope(period="EXT-1T")
-        json_str = original.model_dump_json()
-        restored = Envelope.model_validate_json(json_str)
-        assert restored.period == "EXT-1T"
-        assert restored == original
-
-    def test_json_roundtrip_event_period(self) -> None:
-        class Envelope(BaseModel):
-            period: RegistryPeriodCode
-
-        original = Envelope(period="EVENT-27")
-        json_str = original.model_dump_json()
-        restored = Envelope.model_validate_json(json_str)
-        assert restored.period == "EVENT-27"
+        assert restored.period == period
         assert restored == original
 
     def test_roundtrip_rejects_invalid_after_deserialise(self) -> None:
