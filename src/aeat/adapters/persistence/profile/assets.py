@@ -37,8 +37,8 @@ from ..storage import (
     SecureObjectRepository,
     SensitivityClass,
     secure_object_logical_path,
+    secure_object_repository_for_active_bucket,
 )
-from ..storage.runtime_repository import secure_object_repository_for_active_bucket
 
 _log = get_logger(__name__)
 

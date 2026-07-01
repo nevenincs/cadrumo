@@ -52,8 +52,8 @@ def test_referenced_undeclared_layout_inputs_are_not_silently_skipped(
         id="missing-reference-formula",
         target=computed_casilla.id,
         expression=expression,
-        legal_refs=("test-legal",),
-        source_refs=("test-source",),
+        legal_refs=("ley-58-2003:art-29",),
+        source_refs=("aeat-source-test",),
     )
     malformed_revision = revision.model_copy(
         update={

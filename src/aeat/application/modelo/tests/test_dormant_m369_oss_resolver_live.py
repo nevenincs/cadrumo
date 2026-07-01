@@ -10,7 +10,7 @@ from pathlib import Path
 import pytest
 
 from ....adapters.persistence.storage.sql import SecureObjectRepository
-from ....core import Period
+from ....core import BindingSourceKind, Period
 from ....domain.calculations.registry import CasillaId
 from ....domain.invoices import (
     Invoice,
@@ -138,7 +138,7 @@ def test_m369_oss_resolver_folds_real_candidates_at_mesh_boundary() -> None:
     assert aggregate_oss_ioss_bindings(revision, candidates) == dict(resolution.binding_values)
     # The source is claimed; the resolver raises nothing and emits no diagnostics.
     assert resolution.diagnostics == ()
-    assert "ledger_oss_aggregation" in resolution.owned_sources
+    assert BindingSourceKind.LEDGER_OSS_AGGREGATION in resolution.owned_sources
 
 
 def _m369_invoice(

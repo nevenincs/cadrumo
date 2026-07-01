@@ -8,7 +8,7 @@ from decimal import Decimal
 from functools import lru_cache
 
 from .....core.resources import bundled_path
-from .. import CasillaId, validated_casilla_id, validated_casilla_id_map
+from .. import CasillaId, LegalRefId, SourceRefId, validated_casilla_id, validated_casilla_id_map
 from .._scenarios import (
     RegistryCalculationScenario,
     RegistryScenarioExpectedOutput,
@@ -35,21 +35,21 @@ def _inputs(values: Mapping[object, Decimal]) -> dict[CasillaId, Decimal]:
 
 
 @lru_cache(maxsize=1)
-def _m100_2025_refs_by_target() -> dict[CasillaId, tuple[tuple[str, ...], tuple[str, ...]]]:
+def _m100_2025_refs_by_target() -> dict[CasillaId, tuple[tuple[LegalRefId, ...], tuple[SourceRefId, ...]]]:
     modelo, _catalogues = _committed_modelo("100")
     revision = modelo.revisions["2025"]
-    refs: dict[CasillaId, tuple[tuple[str, ...], tuple[str, ...]]] = {
+    refs: dict[CasillaId, tuple[tuple[LegalRefId, ...], tuple[SourceRefId, ...]]] = {
         casilla.id: (
-            tuple(str(ref) for ref in casilla.legal_refs),
-            tuple(str(ref) for ref in casilla.source_refs),
+            tuple(casilla.legal_refs),
+            tuple(casilla.source_refs),
         )
         for casilla in revision.casillas
     }
     refs.update(
         {
             formula.target_casilla_id: (
-                tuple(str(ref) for ref in formula.legal_refs),
-                tuple(str(ref) for ref in formula.source_refs),
+                tuple(formula.legal_refs),
+                tuple(formula.source_refs),
             )
             for formula in revision.formulas
         },
@@ -63,8 +63,8 @@ def _expected(
     value: Decimal,
     operand_refs: tuple[object, ...] = (),
     operand_casilla_refs: tuple[CasillaId, ...] | None = None,
-    legal_refs: tuple[str, ...] | None = None,
-    source_refs: tuple[str, ...] | None = None,
+    legal_refs: tuple[LegalRefId, ...] | None = None,
+    source_refs: tuple[SourceRefId, ...] | None = None,
 ) -> RegistryScenarioExpectedOutput:
     if operand_refs and operand_casilla_refs is None:
         raise AssertionError("scenario expectations with operand_refs must declare operand_casilla_refs explicitly")

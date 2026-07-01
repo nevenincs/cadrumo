@@ -20,7 +20,9 @@ from ...core.decimal import coerce_decimal_strict
 from ...core.i18n import tr
 from ...domain.calculations.registry import (
     ApplicabilityVerdict,
+    LegalRefId,
     Modelo202Modality,
+    SourceRefId,
     derive_modelo_202_modality,
     derive_modelo_applicability,
 )
@@ -267,7 +269,7 @@ _FIRST_FILER_CANDIDATE_BLOCKERS: frozenset[CrossPeriodCleanStateBlocker] = froze
 #: verify) over art. 119 (declaración tributaria; pending compensación /
 #: deducción balances). Surfaced on every cross-period finding so the operator
 #: sees the legal basis for requiring the prior filing's evidence.
-_CROSS_PERIOD_DEPENDENCY_LEGAL_REFS: tuple[str, ...] = (
+_CROSS_PERIOD_DEPENDENCY_LEGAL_REFS: tuple[LegalRefId, ...] = (
     "ley-58-2003:art-119",
     "ley-58-2003:art-120",
 )
@@ -275,17 +277,17 @@ _CROSS_PERIOD_DEPENDENCY_LEGAL_REFS: tuple[str, ...] = (
 #: Additional grounding when the cross-period carry is an IVA compensación
 #: balance: LIVA art. 99 governs the compensación del exceso de cuotas a deducir
 #: en periodos sucesivos that the modelo-303 self-dependency carries forward.
-_IVA_COMPENSATION_CARRY_LEGAL_REF: str = "ley-37-1992:art-99"
+_IVA_COMPENSATION_CARRY_LEGAL_REF: LegalRefId = "ley-37-1992:art-99"
 
 #: Legal grounding for the first-filer / activity-start findings. Whether a prior
 #: obligation existed turns on the start-of-activity censo declaration
 #: (RGAT — RD 1065/2007 — art. 9, declaración de alta en el censo).
-_CROSS_PERIOD_ACTIVITY_START_LEGAL_REFS: tuple[str, ...] = ("rd-1065-2007:art-9",)
+_CROSS_PERIOD_ACTIVITY_START_LEGAL_REFS: tuple[LegalRefId, ...] = ("rd-1065-2007:art-9",)
 _M100_ZERO_VALUE_PREVIOUS_FILING_BINDING_RE = _re.compile(
     r"^renta-\d{4}-base-liquidable-negativa-general-anterior$",
 )
-_M100_ZERO_BIN_LEGAL_REFS: tuple[str, ...] = ("ley-35-2006:art-48",)
-_M111_NO_RETENCIONES_LEGAL_REFS: tuple[str, ...] = (
+_M100_ZERO_BIN_LEGAL_REFS: tuple[LegalRefId, ...] = ("ley-35-2006:art-48",)
+_M111_NO_RETENCIONES_LEGAL_REFS: tuple[LegalRefId, ...] = (
     "rd-439-2007:art-108",
     "orden-eha-586-2011:art-1",
 )
@@ -308,7 +310,7 @@ def _zero_value_previous_filing_binding_ids(target: CalculationRevision | None) 
     return frozenset(binding_ids)
 
 
-def _cross_period_dependency_legal_refs(origin_ids: tuple[str, ...]) -> tuple[str, ...]:
+def _cross_period_dependency_legal_refs(origin_ids: tuple[str, ...]) -> tuple[LegalRefId, ...]:
     """Return the legal grounding for one cross-period dependency finding.
 
     Every cross-period carry cites the prior-declaration basis
@@ -322,21 +324,21 @@ def _cross_period_dependency_legal_refs(origin_ids: tuple[str, ...]) -> tuple[st
     return tuple(refs)
 
 
-def _cross_period_requirement_legal_refs(requirement: CrossPeriodDependencyRequirement) -> tuple[str, ...]:
+def _cross_period_requirement_legal_refs(requirement: CrossPeriodDependencyRequirement) -> tuple[LegalRefId, ...]:
     """Return generic cross-period refs plus the registry requirement refs."""
     return tuple(
         dict.fromkeys(
             (
                 *_cross_period_dependency_legal_refs(requirement.origin_ids),
-                *(str(ref) for ref in requirement.legal_refs),
+                *requirement.legal_refs,
             ),
         ),
     )
 
 
-def _cross_period_requirement_source_refs(requirement: CrossPeriodDependencyRequirement) -> tuple[str, ...]:
+def _cross_period_requirement_source_refs(requirement: CrossPeriodDependencyRequirement) -> tuple[SourceRefId, ...]:
     """Return source refs carried by the registry requirement row."""
-    return tuple(dict.fromkeys(str(ref) for ref in requirement.source_refs))
+    return tuple(dict.fromkeys(requirement.source_refs))
 
 
 def _cross_period_clean_state_findings(

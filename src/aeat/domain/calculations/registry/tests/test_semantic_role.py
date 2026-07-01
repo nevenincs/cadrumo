@@ -54,6 +54,7 @@ _TEST_CASILLA_ID: CasillaId = validated_casilla_id("test_casilla", surface="_TES
 def _casilla(
     *,
     cid: CasillaId = _TEST_CASILLA_ID,
+    label: str = "Test casilla",
     data_type: str = "money",
     semantic_role: str | None = None,
     semantic_role_cardinality: str = "shared",
@@ -65,7 +66,7 @@ def _casilla(
         {
             "id": cid,
             "number": "01",
-            "label": "Test casilla",
+            "label": label,
             "section": ("test",),
             "data_type": data_type,
             "semantic_role": semantic_role,
@@ -127,6 +128,18 @@ class TestSemanticRoleFieldShape:
     def test_empty_role_string_rejected(self) -> None:
         with pytest.raises(ValidationError):
             _casilla(semantic_role="")
+
+    def test_blank_primary_label_rejected(self) -> None:
+        with pytest.raises(ValidationError, match="official Spanish text"):
+            _casilla(label="   ")
+
+    def test_blank_alias_label_rejected(self) -> None:
+        with pytest.raises(ValidationError, match="official Spanish text"):
+            CasillaAlias(
+                label="   ",
+                legal_refs=("ley-58-2003:art-29",),
+                source_refs=("aeat-manual",),
+            )
 
     def test_intentional_singleton_role_requires_semantic_role(self) -> None:
         with pytest.raises(ValidationError):

@@ -19,6 +19,7 @@ from ...core import BindingSourceKind
 from ...core.config import Settings
 from ...core.i18n import tr
 from ...core.identity import BucketId
+from ...domain.calculations.registry import LegalRefId
 from ._aggregator import ReviewQueue
 from ._enums import ReviewItemKind, ReviewSeverity, ReviewState
 from ._errors import ReviewError
@@ -45,7 +46,7 @@ class ReviewQueueRow(BaseModel):
     canonical_next_command: str = Field(min_length=1)
     since: datetime
     summary: str = Field(min_length=1)
-    legal_refs: tuple[str, ...] = Field(default_factory=tuple)
+    legal_refs: tuple[LegalRefId, ...] = Field(default_factory=tuple)
     """Legal references (BOE permalinks or canonical IDs) justifying the finding.
 
     Populated for ``modelo_finding`` items from the underlying

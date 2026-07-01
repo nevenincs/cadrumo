@@ -90,7 +90,7 @@ class UsageRecorder:
         Raises:
             LLMCacheError: When the storage write fails.
         """
-        from ....adapters.persistence.storage.runtime_repository import secure_object_repository_for_active_bucket
+        from ....adapters.persistence.storage import secure_object_repository_for_active_bucket
         from ....core.classification import SensitivityClass
         from ....core.redaction import default_rules_for_class, redact_structured
 
@@ -127,7 +127,7 @@ class UsageRecorder:
         Returns:
             Loaded :class:`UsageRecord` entries in file-iteration order.
         """
-        from ....adapters.persistence.storage.runtime_repository import secure_object_repository_for_active_bucket
+        from ....adapters.persistence.storage import secure_object_repository_for_active_bucket
         from ....core.classification import SensitivityClass
 
         records: list[UsageRecord] = []

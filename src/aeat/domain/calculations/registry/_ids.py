@@ -13,6 +13,7 @@ from ....core import validated_casilla_id_map as validated_casilla_id_map
 
 _MODELO_RE = r"^\d{3}$"
 _REF_RE = r"^[a-z0-9][a-z0-9._:-]*[a-z0-9]$|^[a-z0-9]$"
+_SOURCE_ID_RE = r"^[a-z0-9]+(?:-[a-z0-9]+)+$"
 # AEAT-canonical XML-dictionary field IDs (e.g. DPNIF_D, IDDeclarante)
 # are uppercase + underscore. Kept separate from _REF_RE so the
 # lowercase-only constraint on internal registry refs is preserved.
@@ -28,7 +29,7 @@ type ParameterId = Annotated[str, Field(min_length=1, max_length=128, pattern=_R
 type BindingId = Annotated[str, Field(min_length=1, max_length=128, pattern=_REF_RE)]
 type RelationId = Annotated[str, Field(min_length=1, max_length=128, pattern=_REF_RE)]
 type LegalRefId = Annotated[str, Field(min_length=1, max_length=160, pattern=_REF_RE)]
-type SourceRefId = Annotated[str, Field(min_length=1, max_length=160, pattern=_REF_RE)]
+type SourceRefId = Annotated[str, Field(min_length=1, max_length=160, pattern=_SOURCE_ID_RE)]
 type ExtractionProfileId = Annotated[str, Field(min_length=1, max_length=128, pattern=_REF_RE)]
 type CrossReferenceId = Annotated[str, Field(min_length=1, max_length=128, pattern=_REF_RE)]
 type WorkbookParityRefId = Annotated[str, Field(min_length=1, max_length=128, pattern=_REF_RE)]

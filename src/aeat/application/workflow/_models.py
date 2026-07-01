@@ -5,8 +5,9 @@ defined here as a frozen, strict, ``extra="forbid"``
 :class:`pydantic.BaseModel` or as an :class:`enum.StrEnum` for closed
 enumerations. :attr:`WorkflowStep.details` is reserved for string-valued
 diagnostics emitted by workflow diagnostics. Some helpers accept an
-optional :class:`SecureObjectRepository` so callers can supply a custom
-storage backend without going through the runtime default. The
+optional :class:`~aeat.adapters.persistence.storage.SecureObjectRepository` so
+callers can supply a custom storage backend without going through the runtime
+default. The
 :class:`WorkflowState` record carries a reference to the active-bucket
 :class:`TransactionCatalogueRepository` when one is needed downstream.
 
@@ -66,7 +67,7 @@ from ..auth._models import AuthState
 from ._utils import utc_now
 
 if TYPE_CHECKING:
-    from ...adapters.persistence.storage.sql import SecureObjectRepository
+    from ...adapters.persistence.storage import SecureObjectRepository
     from ...domain.transactions import TransactionCatalogueRepository
     from ...domain.user_profile import UserProfileRecord
     from ..review._models import InvoiceReviewRecord, LedgerReviewRecord
@@ -296,8 +297,9 @@ def active_transaction_catalogue_repository(
 
     Args:
         state: The current workflow state used to resolve the active bucket.
-        objects: Optional :class:`SecureObjectRepository` override passed through
-            to the returned repository.
+        objects: Optional
+            :class:`~aeat.adapters.persistence.storage.SecureObjectRepository`
+            override passed through to the returned repository.
     """
     from ...core.errors import NoActiveProfileError
     from ...domain.transactions import LedgerNoActiveBucketError, TransactionCatalogueRepository

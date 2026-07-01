@@ -40,9 +40,13 @@ from typing import Any, Protocol, runtime_checkable
 
 from pydantic import BaseModel
 
-from ...adapters.persistence.storage import Envelope, SecureObjectNamespaceDefinition
-from ...adapters.persistence.storage.errors import ClassificationError, EnvelopeVersionError
-from ...adapters.persistence.storage.runtime_repository import secure_object_repository_for_bucket
+from ...adapters.persistence.storage import (
+    ClassificationError,
+    Envelope,
+    EnvelopeVersionError,
+    SecureObjectNamespaceDefinition,
+    secure_object_repository_for_bucket,
+)
 from ...adapters.persistence.storage.sql import SecureObjectRecord, SecureObjectRepository
 from ...core.errors import AeatError
 from ...core.hashing import sha256_hex

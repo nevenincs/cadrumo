@@ -10,7 +10,7 @@ snapshots, and verification checks are local evidence objects, not remote filing
 mutations.
 
 Live capture services persist encrypted active-bucket evidence through
-:class:`~aeat.adapters.persistence.storage.sql.SecureObjectRepository` or the
+:class:`~aeat.adapters.persistence.storage.SecureObjectRepository` or the
 snapshot repositories re-exported by this facade. Parsed filed-declaration
 observations are typed as
 :class:`~aeat.domain.calculations.registry.CasillaObservation` rows and routed

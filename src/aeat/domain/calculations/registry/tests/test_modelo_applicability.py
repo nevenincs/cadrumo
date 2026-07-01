@@ -5,6 +5,7 @@ from __future__ import annotations
 from datetime import date
 
 import pytest
+from pydantic import ValidationError
 
 from .....core.resources import resources
 from ....deadlines import (
@@ -19,6 +20,10 @@ from ....deadlines import (
 )
 from ..applicability import (
     ApplicabilityVerdict,
+    Modelo202Modality,
+    Modelo202ModalityVerdict,
+    ModeloApplicability,
+    ModeloApplicabilityRule,
     derive_modelo_applicability,
     iter_modelo_applicability_rules,
 )
@@ -63,6 +68,59 @@ def test_seed_modelo_applicability_legal_refs_resolve_in_registry() -> None:
         assert not unresolved, f"{rule.modelo} unresolved legal_refs: {unresolved}"
         for ref in rule.legal_refs:
             assert ":" in ref, f"{rule.modelo} legal_ref is not scoped: {ref!r}"
+
+
+def test_applicability_models_reject_blank_reasons_and_legal_refs() -> None:
+    """Applicability explanations are grounded operator output, not free text."""
+    with pytest.raises(ValidationError, match="reason"):
+        ModeloApplicability(
+            modelo="130",
+            verdict=ApplicabilityVerdict.APPLICABLE,
+            reason=" ",
+            legal_refs=("ley-35-2006:art-99",),
+        )
+    with pytest.raises(ValidationError, match="legal_refs"):
+        ModeloApplicability(
+            modelo="130",
+            verdict=ApplicabilityVerdict.APPLICABLE,
+            reason="Modelo 130 aplica.",
+            legal_refs=(" ",),
+        )
+    for field_name in ("applicable_reason", "not_applicable_reason"):
+        payload = {
+            "modelo": "130",
+            "applicable_entity_types": frozenset({EntityType.NATURAL_PERSON}),
+            "applicable_reason": "Modelo 130 aplica.",
+            "not_applicable_reason": "Modelo 130 no aplica.",
+            "legal_refs": ("ley-35-2006:art-99",),
+        }
+        payload[field_name] = " "
+        with pytest.raises(ValidationError, match=field_name):
+            ModeloApplicabilityRule.model_validate(payload)
+    with pytest.raises(ValidationError, match="legal_refs"):
+        ModeloApplicabilityRule(
+            modelo="130",
+            applicable_entity_types=frozenset({EntityType.NATURAL_PERSON}),
+            applicable_reason="Modelo 130 aplica.",
+            not_applicable_reason="Modelo 130 no aplica.",
+            legal_refs=(" ",),
+        )
+
+
+def test_modelo_202_modality_verdict_rejects_blank_reason_and_legal_refs() -> None:
+    """The M202 modality gate carries the same grounding contract."""
+    with pytest.raises(ValidationError, match="reason"):
+        Modelo202ModalityVerdict(
+            modality=Modelo202Modality.ART_40_3_MANDATORY,
+            reason=" ",
+            legal_refs=("ley-27-2014:art-40",),
+        )
+    with pytest.raises(ValidationError, match="legal_refs"):
+        Modelo202ModalityVerdict(
+            modality=Modelo202Modality.ART_40_3_MANDATORY,
+            reason="Modelo 202 modalidad obligatoria.",
+            legal_refs=(" ",),
+        )
 
 
 def test_registry_rules_derive_per_entity_and_per_regime_verdicts() -> None:

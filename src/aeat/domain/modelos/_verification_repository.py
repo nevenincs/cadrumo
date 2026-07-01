@@ -121,8 +121,12 @@ class VerificationReportCatalogueRepository:
                 storage-layer classification or envelope-version integrity
                 error.
         """
-        from ...adapters.persistence.storage import Envelope, SensitivityClass
-        from ...adapters.persistence.storage.errors import ClassificationError, EnvelopeVersionError
+        from ...adapters.persistence.storage import (
+            ClassificationError,
+            Envelope,
+            EnvelopeVersionError,
+            SensitivityClass,
+        )
 
         try:
             record = self._objects.load(

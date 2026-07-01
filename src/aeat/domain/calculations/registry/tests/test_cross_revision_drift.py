@@ -19,7 +19,7 @@ from pathlib import Path
 import pytest
 
 from .....core.resources import bundled_path
-from .. import load_modelo_directory
+from .. import LegalRefId, load_modelo_directory
 from .._errors import RegistryValidationError
 from .._schema import (
     CasillaDefinition,
@@ -48,7 +48,7 @@ def _casilla(
     section: tuple[str, ...] = ("test",),
     data_type: str = "money",
     semantic_role: str | None = None,
-    legal_refs: tuple[str, ...] = ("ley-58-2003:art-29",),
+    legal_refs: tuple[LegalRefId, ...] = ("ley-58-2003:art-29",),
     continuidad_id: str | None = None,
 ) -> CasillaDefinition:
     payload = {

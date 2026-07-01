@@ -102,7 +102,7 @@ def test_schema_envelope_full_roundtrip_via_json_dump_and_load() -> None:
         formula_id="iva.formula.resultado",
         operand_refs=_IVA_RESULTADO_OPERANDS,
         operand_casilla_refs=_IVA_RESULTADO_OPERANDS,
-        legal_refs=("LIVA.art-94",),
+        legal_refs=("ley-37-1992:art-94",),
     )
     original = SchemaEnvelope[_ProvenancePayload](
         command="app modelo formulas",
@@ -127,7 +127,7 @@ def test_schema_envelope_full_roundtrip_via_json_dump_and_load() -> None:
     assert roundtripped.status is EnvelopeStatus.WARNING
     assert roundtripped.result.operand_refs == _IVA_RESULTADO_OPERANDS
     assert roundtripped.result.operand_casilla_refs == _IVA_RESULTADO_OPERANDS
-    assert roundtripped.result.legal_refs == ("LIVA.art-94",)
+    assert roundtripped.result.legal_refs == ("ley-37-1992:art-94",)
     assert roundtripped.notices[0].message == "deprecated: --format text"
 
 

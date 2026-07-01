@@ -21,6 +21,7 @@ if TYPE_CHECKING:
     from ..calculations.registry import ModeloDefinition, ModeloRevision
 
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ...core import BindingSourceKind
 
 
 class UserProfileRegistryContractSeverity(StrEnum):
@@ -154,7 +155,7 @@ def _binding_issues(
 ) -> tuple[UserProfileRegistryContractIssue, ...]:
     issues: list[UserProfileRegistryContractIssue] = []
     for binding in revision.bindings:
-        if binding.source != "profile":
+        if binding.source != BindingSourceKind.PROFILE:
             continue
         selectors = tuple(profile_binding_selectors(binding.selector))
         if not selectors:

@@ -337,6 +337,32 @@ def test_compare_registry_to_workbook_rejects_missing_grounding(tmp_path: Path) 
             registry_snapshot_id="303:2026:1T",
         )
 
+    with pytest.raises(ValidationError, match="legal_refs"):
+        compare_registry_to_workbook(
+            synthetic_input=synthetic,
+            workbook=workbook,
+            runner=verify_workbook_backend(tmp_path, scan_limit=1).runner,
+            expected_workbook_values={"result": Decimal("31")},
+            actual_registry_values={"result": Decimal("31")},
+            output_cells={"result": WorkbookCellRef(sheet="Modelo", coordinate="B1", formula="=A1+A2")},
+            registry_snapshot_id="303:2026:1T",
+            legal_refs={"result": ("",)},
+            source_refs={"result": ("aeat-dr-303-2026",)},
+        )
+
+    with pytest.raises(ValidationError, match="source_refs"):
+        compare_registry_to_workbook(
+            synthetic_input=synthetic,
+            workbook=workbook,
+            runner=verify_workbook_backend(tmp_path, scan_limit=1).runner,
+            expected_workbook_values={"result": Decimal("31")},
+            actual_registry_values={"result": Decimal("31")},
+            output_cells={"result": WorkbookCellRef(sheet="Modelo", coordinate="B1", formula="=A1+A2")},
+            registry_snapshot_id="303:2026:1T",
+            legal_refs={"result": ("ley-37-1992:art-90",)},
+            source_refs={"result": (" ",)},
+        )
+
 
 def test_compare_registry_to_workbook_rejects_missing_registry_output(tmp_path: Path) -> None:
     workbook_path = tmp_path / "modelo_303" / "files" / "303-test.xlsx"

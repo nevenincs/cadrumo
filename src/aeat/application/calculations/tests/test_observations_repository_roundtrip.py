@@ -71,8 +71,8 @@ def _populated_observation() -> RegistryModeloObservation:
                 operand_refs=(),
                 operand_casilla_refs=(),
                 operand_values=(),
-                legal_refs=("liva.art-21",),
-                source_refs=("aeat.iva.2025",),
+                legal_refs=("ley-37-1992:art-21",),
+                source_refs=("aeat-iva-2025",),
             ),
             CasillaObservation(
                 casilla_id=_IVA_RESULTADO_CASILLA,
@@ -81,8 +81,8 @@ def _populated_observation() -> RegistryModeloObservation:
                 operand_refs=(_IVA_DEVENGADO_CASILLA, _IVA_DEDUCIBLE_CASILLA),
                 operand_casilla_refs=(_IVA_DEVENGADO_CASILLA, _IVA_DEDUCIBLE_CASILLA),
                 operand_values=(Decimal("20000.00"), Decimal("7654.33")),
-                legal_refs=("liva.art-94",),
-                source_refs=("aeat.iva.2025",),
+                legal_refs=("ley-37-1992:art-94",),
+                source_refs=("aeat-iva-2025",),
             ),
         ),
     )
@@ -125,7 +125,7 @@ def test_calculation_observation_survives_encrypted_storage_roundtrip(
             Decimal("20000.00"),
             Decimal("7654.33"),
         )
-        assert loaded_computed.legal_refs == ("liva.art-94",)
+        assert loaded_computed.legal_refs == ("ley-37-1992:art-94",)
 
 
 def test_calculation_observation_repository_rejects_printed_number_reference(
@@ -141,8 +141,8 @@ def test_calculation_observation_repository_rejects_printed_number_reference(
             CasillaObservation(
                 casilla_id=_M303_PRINTED_RESULT_REFERENCE_CASILLA,
                 value=Decimal("1.00"),
-                legal_refs=("liva.art-94",),
-                source_refs=("aeat.iva.2025",),
+                legal_refs=("ley-37-1992:art-94",),
+                source_refs=("aeat-iva-2025",),
             ),
         ),
     )
@@ -180,8 +180,8 @@ def test_calculation_observation_repository_rejects_printed_operand_casilla_ref(
                 operand_refs=(_M303_PRINTED_RESULT_REFERENCE_CASILLA,),
                 operand_casilla_refs=(_M303_PRINTED_RESULT_REFERENCE_CASILLA,),
                 operand_values=(Decimal("1.00"),),
-                legal_refs=("liva.art-94",),
-                source_refs=("aeat.iva.2025",),
+                legal_refs=("ley-37-1992:art-94",),
+                source_refs=("aeat-iva-2025",),
             ),
         ),
     )

@@ -150,7 +150,7 @@ def resolve_related_party_binding_row_values(
     available = tuple(observations)
     members: list[tuple[DataBindingDefinition, _RelatedPartySelector]] = []
     for binding in revision.bindings:
-        if binding.source != "related_party_operation":
+        if binding.source != BindingSourceKind.RELATED_PARTY_OPERATION:
             continue
         selector = _validated_related_party_selector(binding)
         members.append((binding, selector))
@@ -423,7 +423,7 @@ def resolve_atribucion_binding_row_values(
     available = tuple(observations)
     members: list[tuple[DataBindingDefinition, _AtributionSelector]] = []
     for binding in revision.bindings:
-        if binding.source != "atribucion_member":
+        if binding.source != BindingSourceKind.ATRIBUCION_MEMBER:
             continue
         selector = _validated_atribucion_selector(binding)
         members.append((binding, selector))
@@ -537,7 +537,7 @@ def resolve_refund_binding_row_values(
     available = tuple(observations)
     members: list[tuple[DataBindingDefinition, _RefundSelector]] = []
     for binding in revision.bindings:
-        if binding.source != "refund_operation":
+        if binding.source != BindingSourceKind.REFUND_OPERATION:
             continue
         selector = _validated_refund_selector(binding)
         members.append((binding, selector))

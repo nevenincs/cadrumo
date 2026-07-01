@@ -49,6 +49,12 @@ __all__ = [
 ]
 
 
+def _require_official_text(value: str, field_name: str) -> None:
+    """Assert an official registry text field is not blank."""
+    if not value.strip():
+        raise RegistryValidationError(f"{field_name} must contain official Spanish text")
+
+
 class CasillaContinuidadEvolutionDefinition(RegistryModel):
     """Declared cross-revision evolution for one casilla continuity chain."""
 
@@ -89,6 +95,11 @@ class CasillaAlias(RegistryModel):
     label: str = Field(min_length=1, max_length=512)
     legal_refs: LegalRefs
     source_refs: SourceRefs
+
+    @model_validator(mode="after")
+    def _validate_label(self) -> CasillaAlias:
+        _require_official_text(self.label, "casilla alias label")
+        return self
 
 
 class CasillaConstraints(RegistryModel):
@@ -301,6 +312,7 @@ class CasillaDefinition(RegistryModel):
 
     @model_validator(mode="after")
     def _validate_input_kind(self) -> CasillaDefinition:
+        _require_official_text(self.label, f"casilla {self.id!r} label")
         if self.input_kind == InputKind.COMPUTED and self.formula is None:
             raise RegistryValidationError(f"computed casilla {self.id!r} must declare formula")
         if self.input_kind == InputKind.COMPUTED and self.binding is not None:

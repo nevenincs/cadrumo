@@ -16,7 +16,7 @@ from pathlib import Path
 from ._bindings import binding_source_casilla_ids, binding_source_modelo
 from ._casilla_membership import casillas_by_id
 from ._errors import RegistryValidationError
-from ._ids import CasillaId
+from ._ids import CasillaId, LegalRefId
 from ._record_design_schema import RecordDesignSheet
 from ._runtime_graph import expression_casilla_refs
 from ._schema import CasillaDefinition, DataBindingDefinition, ModeloRevision
@@ -261,7 +261,7 @@ def calculation_closure_record_design_metadata(
     return frozenset(metadata)
 
 
-def calculation_closure_legal_refs(revision: ModeloRevision, modelo_id: str) -> frozenset[str]:
+def calculation_closure_legal_refs(revision: ModeloRevision, modelo_id: str) -> frozenset[LegalRefId]:
     """Return legal references carried by a revision's calculation closure.
 
     Legal-ref projection of :func:`calculation_closure_casilla_ids`. The
@@ -282,7 +282,7 @@ def calculation_closure_legal_refs(revision: ModeloRevision, modelo_id: str) -> 
     declared_by_id = casillas_by_id(revision)
     formulas_by_id = {formula.id: formula for formula in revision.formulas}
     bindings_by_id = {binding.id: binding for binding in revision.bindings}
-    legal_refs: set[str] = set()
+    legal_refs: set[LegalRefId] = set()
 
     for casilla_id in calculation_closure_casilla_ids(revision, modelo_id):
         casilla = declared_by_id.get(casilla_id)

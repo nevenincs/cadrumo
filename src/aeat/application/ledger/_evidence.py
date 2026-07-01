@@ -14,10 +14,11 @@ catalogue is a :class:`PurchaseInvoiceEvidenceDocument` persisted through
 :class:`~aeat.adapters.persistence.storage.SecureBoundRepository` under
 :data:`aeat.adapters.persistence.storage.LEDGER_PURCHASE_INVOICE_EVIDENCE_NAMESPACE`.
 At ``add`` time the source file's bytes are copied into the encrypted
-:class:`AttachmentStore` (active bucket) and the resulting content-addressed
-``attachment_id`` is recorded on the evidence record; the bytes thereafter live
-only in secure storage. ``source_path`` is retained as a provenance breadcrumb
-and is never read for bytes (``sensitive-financial-data-secure-storage-only``).
+:class:`~aeat.adapters.persistence.storage.AttachmentStore` (active bucket) and
+the resulting content-addressed ``attachment_id`` is recorded on the evidence
+record; the bytes thereafter live only in secure storage. ``source_path`` is
+retained as a provenance breadcrumb and is never read for bytes
+(``sensitive-financial-data-secure-storage-only``).
 """
 
 from __future__ import annotations
@@ -31,10 +32,12 @@ from typing import override
 
 from pydantic import BaseModel, Field, field_serializer
 
-from ...adapters.persistence.storage import LEDGER_PURCHASE_INVOICE_EVIDENCE_NAMESPACE
-from ...adapters.persistence.storage.attachment import AttachmentStore
-from ...adapters.persistence.storage.envelope import SecureBoundRepository
-from ...adapters.persistence.storage.runtime_repository import secure_object_repository_for_bucket
+from ...adapters.persistence.storage import (
+    LEDGER_PURCHASE_INVOICE_EVIDENCE_NAMESPACE,
+    AttachmentStore,
+    SecureBoundRepository,
+    secure_object_repository_for_bucket,
+)
 from ...core import STRICT_FROZEN_CONFIG
 from ...core.config import Settings
 from ...core.errors import AeatError
@@ -186,7 +189,7 @@ class PurchaseInvoiceEvidenceRepository(SecureBoundRepository[PurchaseInvoiceEvi
     See Also:
         :class:`PurchaseInvoiceEvidenceService`
             CRUD service that mutates this repository and emits bucket events.
-        :class:`AttachmentStore`
+        :class:`~aeat.adapters.persistence.storage.AttachmentStore`
             Encrypted byte store that holds the referenced source files.
     """
 
@@ -313,10 +316,12 @@ class PurchaseInvoiceEvidenceService:
 
         Resolves ``source_path`` to an absolute path, verifies the file
         exists, infers the ``MediaKind`` from the extension, copies the file's
-        bytes into the encrypted :class:`AttachmentStore` (active bucket) and
-        records the resulting content-addressed ``attachment_id`` on the record
-        (the bytes thereafter live only in secure storage; ``source_path`` is a
-        provenance breadcrumb), creates a ``PurchaseInvoiceEvidence`` record,
+        bytes into the encrypted
+        :class:`~aeat.adapters.persistence.storage.AttachmentStore` (active
+        bucket) and records the resulting content-addressed ``attachment_id`` on
+        the record (the bytes thereafter live only in secure storage;
+        ``source_path`` is a provenance breadcrumb), creates a
+        ``PurchaseInvoiceEvidence`` record,
         appends it to the in-memory catalogue, persists the encrypted bucket-local catalogue
         in secure-object storage, and emits a
         ``PURCHASE_INVOICE_EVIDENCE_ATTACHED`` audit event.

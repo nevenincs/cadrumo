@@ -169,6 +169,24 @@ def test_legal_reference_rejects_empty_required_text() -> None:
         LegalReference.model_validate(payload)
 
 
+def test_legal_reference_requires_review_stamp() -> None:
+    reference = _legal_reference()
+    payload = reference.model_dump(mode="python")
+    payload.pop("reviewed_at")
+
+    with pytest.raises(ValidationError, match="reviewed_at"):
+        LegalReference.model_validate(payload)
+
+
+def test_legal_reference_rejects_blank_reviewer() -> None:
+    reference = _legal_reference()
+    payload = reference.model_dump(mode="python")
+    payload["reviewed_by"] = ""
+
+    with pytest.raises(ValidationError, match="at least 1 character"):
+        LegalReference.model_validate(payload)
+
+
 def test_verify_legal_catalogue_checks_required_local_corpus_text(tmp_path: Path) -> None:
     corpus_path = tmp_path / "corpus" / "normatives" / "html" / "rd-439-2007-art-110.html"
     corpus_path.parent.mkdir(parents=True)

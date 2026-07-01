@@ -2,13 +2,16 @@
 
 from __future__ import annotations
 
+from datetime import UTC, datetime
+
 import pytest
+from pydantic import ValidationError
 
 from ....application.user_profile._orchestration import profile_create_storage_span
 from ....core.config import Settings, override_settings
 from ....core.errors import resolve_error_message
 from .._errors import ReviewError, ReviewKindReservedError
-from .._operator import ACCEPTED_KINDS, _resolve_internal_kinds, project_review_item
+from .._operator import ACCEPTED_KINDS, ReviewQueueRow, _resolve_internal_kinds, project_review_item
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -34,6 +37,28 @@ def test_unknown_review_kind_error_omits_raw_operator_value() -> None:
     rendered = resolve_error_message(exc_info.value)
     for accepted in ACCEPTED_KINDS:
         assert accepted in rendered
+
+
+def test_review_queue_row_rejects_blank_legal_refs() -> None:
+    """Review rows keep finding grounding on the typed registry legal-ref contract."""
+
+    with pytest.raises(ValidationError, match="legal_refs"):
+        ReviewQueueRow(
+            item_id="review-001",
+            kind="modelo_finding",
+            affected_object_id="draft-abc",
+            bucket_id="b" * 32,
+            modelo="303",
+            period=None,
+            severity="high",
+            state="pending",
+            blocking=True,
+            current_owner_surface="app modelo",
+            canonical_next_command="aeat app modelo work verify draft-abc",
+            since=datetime(2026, 4, 20, 12, 0, tzinfo=UTC),
+            summary="modelo 303 finding",
+            legal_refs=(" ",),
+        )
 
 
 def test_project_review_item_not_found_error_omits_raw_item_id() -> None:

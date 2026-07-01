@@ -32,7 +32,7 @@ from ...core.errors import CoreValidationError
 if TYPE_CHECKING:
     from pathlib import Path
 
-from ...adapters.persistence.storage.errors import ClassificationError, DecryptionError, EnvelopeVersionError
+from ...adapters.persistence.storage import ClassificationError, DecryptionError, EnvelopeVersionError
 from ...domain.calculations.registry import BindingId, RegistrySnapshot
 from ..aggregation._source_mesh import (
     CalculationSourceContext,

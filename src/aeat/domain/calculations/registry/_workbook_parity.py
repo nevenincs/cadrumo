@@ -38,7 +38,7 @@ from ....core.logging import get_logger
 from ._casilla_membership import declared_casilla_ids
 from ._errors import RegistryValidationError
 from ._formula_runtime import calculate_registry_snapshot
-from ._ids import BindingId, CasillaId, RelationId, WorkbookOutputId, is_registry_id
+from ._ids import BindingId, CasillaId, LegalRefId, RelationId, SourceRefId, WorkbookOutputId, is_registry_id
 from ._schema import EvidenceTier, RegistrySnapshot
 from ._workbook_parity_models import (
     SyntheticInputSet,
@@ -672,8 +672,8 @@ def run_registry_workbook_parity(
     }
     formulas_by_target = {formula.target_casilla_id: formula for formula in snapshot.revision.formulas}
     casillas_by_id = {casilla.id: casilla for casilla in snapshot.revision.casillas}
-    legal_refs: dict[WorkbookOutputId, tuple[str, ...]] = {}
-    source_refs: dict[WorkbookOutputId, tuple[str, ...]] = {}
+    legal_refs: dict[WorkbookOutputId, tuple[LegalRefId, ...]] = {}
+    source_refs: dict[WorkbookOutputId, tuple[SourceRefId, ...]] = {}
     for output_id, casilla_id in registry_outputs.items():
         formula = formulas_by_target.get(casilla_id)
         if formula is not None:
@@ -808,8 +808,8 @@ def compare_registry_to_workbook(
     actual_registry_values: Mapping[WorkbookOutputId, Decimal | int | str | bool | None],
     output_cells: Mapping[WorkbookOutputId, WorkbookCellRef],
     registry_snapshot_id: str | None = None,
-    legal_refs: Mapping[WorkbookOutputId, tuple[str, ...]] | None = None,
-    source_refs: Mapping[WorkbookOutputId, tuple[str, ...]] | None = None,
+    legal_refs: Mapping[WorkbookOutputId, tuple[LegalRefId, ...]] | None = None,
+    source_refs: Mapping[WorkbookOutputId, tuple[SourceRefId, ...]] | None = None,
     tolerance: Decimal = Decimal("0"),
 ) -> WorkbookParityRunReport:
     """Build a deterministic parity comparison report from already-computed values.
@@ -885,9 +885,7 @@ def _workbook_output_id_set(
     values: Mapping[WorkbookOutputId, object],
 ) -> frozenset[WorkbookOutputId]:
     invalid = sorted(
-        repr(output_id)
-        for output_id in values
-        if not isinstance(output_id, str) or not is_registry_id(output_id)
+        repr(output_id) for output_id in values if not isinstance(output_id, str) or not is_registry_id(output_id)
     )
     if invalid:
         raise RegistryValidationError(f"{surface} contains invalid workbook output ids: {invalid!r}")

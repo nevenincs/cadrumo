@@ -28,8 +28,10 @@ from __future__ import annotations
 from collections.abc import Iterable, Mapping
 from datetime import date, datetime
 
+from pydantic import TypeAdapter, ValidationError
+
 from ...core.hashing import sha256_hex
-from ...domain.calculations.registry import CasillaId
+from ...domain.calculations.registry import CasillaId, LegalRefId, SourceRefId
 from ...domain.modelos._calculation_revision import CalculationRevision, CalculationRevisionState
 from ...domain.modelos._errors import ModeloValidationError
 from ...domain.modelos._ledger_filing_snapshot import (
@@ -74,6 +76,8 @@ _FINGERPRINT_FIELDS: tuple[tuple[str, str], ...] = (
     ("value_in_eur", "value_in_eur"),
     ("lifecycle_state", "lifecycle_state"),
 )
+_LEGAL_REFS_ADAPTER = TypeAdapter(tuple[LegalRefId, ...])
+_SOURCE_REFS_ADAPTER = TypeAdapter(tuple[SourceRefId, ...])
 
 
 def _normalise(value: object) -> str:
@@ -142,18 +146,42 @@ def _enum_value(value: object) -> str | None:
     return inner if isinstance(inner, str) else str(value)
 
 
-def _normalised_refs(refs: Iterable[str], *, field_name: str) -> tuple[str, ...]:
-    normalised = tuple(dict.fromkeys(str(ref).strip() for ref in refs if str(ref).strip()))
+def _normalised_ref_values(refs: Iterable[object], *, field_name: str) -> tuple[str, ...]:
+    normalised: list[str] = []
+    seen: set[str] = set()
+    for ref in refs:
+        value = str(ref).strip()
+        if not value:
+            raise ModeloValidationError(f"ledger filing evidence requires non-empty {field_name}")
+        if value not in seen:
+            normalised.append(value)
+            seen.add(value)
     if not normalised:
         raise ModeloValidationError(f"ledger filing evidence requires non-empty {field_name}")
-    return normalised
+    return tuple(normalised)
+
+
+def _normalised_legal_refs(refs: Iterable[LegalRefId], *, field_name: str) -> tuple[LegalRefId, ...]:
+    normalised = _normalised_ref_values(refs, field_name=field_name)
+    try:
+        return _LEGAL_REFS_ADAPTER.validate_python(normalised)
+    except ValidationError as exc:
+        raise ModeloValidationError(f"ledger filing evidence has invalid {field_name}") from exc
+
+
+def _normalised_source_refs(refs: Iterable[SourceRefId], *, field_name: str) -> tuple[SourceRefId, ...]:
+    normalised = _normalised_ref_values(refs, field_name=field_name)
+    try:
+        return _SOURCE_REFS_ADAPTER.validate_python(normalised)
+    except ValidationError as exc:
+        raise ModeloValidationError(f"ledger filing evidence has invalid {field_name}") from exc
 
 
 def _evidence_row(
     transaction: Transaction,
     *,
-    legal_refs: tuple[str, ...],
-    source_refs: tuple[str, ...],
+    legal_refs: tuple[LegalRefId, ...],
+    source_refs: tuple[SourceRefId, ...],
 ) -> LedgerEvidenceRow:
     """Project a typed transaction into a primitive evidence row.
 
@@ -198,8 +226,8 @@ def compute_ledger_filing_evidence(
     catalogue: TransactionCatalogue,
     snapshot_fingerprint: str,
     captured_at: datetime,
-    legal_refs: Iterable[str],
-    source_refs: Iterable[str],
+    legal_refs: Iterable[LegalRefId],
+    source_refs: Iterable[SourceRefId],
     manual_entries: tuple[ManualFactBasisEntry, ...] = (),
 ) -> LedgerFilingEvidence:
     """Capture the bundled :class:`LedgerFilingEvidence` fact basis behind one filing revision.
@@ -224,8 +252,8 @@ def compute_ledger_filing_evidence(
     """
     index = _index(catalogue)
     source_ids = tuple(sorted(set(source_transaction_ids)))
-    evidence_legal_refs = _normalised_refs(legal_refs, field_name="legal_refs") if source_ids else ()
-    evidence_source_refs = _normalised_refs(source_refs, field_name="source_refs") if source_ids else ()
+    evidence_legal_refs = _normalised_legal_refs(legal_refs, field_name="legal_refs") if source_ids else ()
+    evidence_source_refs = _normalised_source_refs(source_refs, field_name="source_refs") if source_ids else ()
     rows = tuple(
         _evidence_row(
             index[tx_id],
@@ -246,8 +274,8 @@ def compute_ledger_filing_evidence(
 def project_manual_fact_basis_entries(
     input_values_by_casilla_id: Mapping[CasillaId, str],
     *,
-    legal_refs_by_casilla_id: Mapping[CasillaId, Iterable[str]],
-    source_refs_by_casilla_id: Mapping[CasillaId, Iterable[str]],
+    legal_refs_by_casilla_id: Mapping[CasillaId, Iterable[LegalRefId]],
+    source_refs_by_casilla_id: Mapping[CasillaId, Iterable[SourceRefId]],
 ) -> tuple[ManualFactBasisEntry, ...]:
     """Project operator-entered casilla inputs into :class:`ManualFactBasisEntry` entries.
 
@@ -259,11 +287,11 @@ def project_manual_fact_basis_entries(
         ManualFactBasisEntry(
             casilla_id=casilla,
             value=value,
-            legal_refs=_normalised_refs(
+            legal_refs=_normalised_legal_refs(
                 legal_refs_by_casilla_id.get(casilla, ()),
                 field_name=f"legal_refs for manual fact {casilla}",
             ),
-            source_refs=_normalised_refs(
+            source_refs=_normalised_source_refs(
                 source_refs_by_casilla_id.get(casilla, ()),
                 field_name=f"source_refs for manual fact {casilla}",
             ),

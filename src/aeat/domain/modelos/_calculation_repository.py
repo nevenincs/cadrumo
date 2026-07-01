@@ -122,8 +122,12 @@ class CalculationRevisionCatalogueRepository:
                 integrity error surfaces while decrypting and decoding the
                 record.
         """
-        from ...adapters.persistence.storage import Envelope, SensitivityClass
-        from ...adapters.persistence.storage.errors import ClassificationError, EnvelopeVersionError
+        from ...adapters.persistence.storage import (
+            ClassificationError,
+            Envelope,
+            EnvelopeVersionError,
+            SensitivityClass,
+        )
 
         try:
             record = self._objects.load(

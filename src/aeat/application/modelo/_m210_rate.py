@@ -30,7 +30,7 @@ from decimal import Decimal
 from typing import TYPE_CHECKING
 
 from ...core.i18n import tr
-from ...domain.calculations.registry import ConvenioRateRow, RegistrySnapshot
+from ...domain.calculations.registry import ConvenioRateRow, LegalRefId, RegistrySnapshot, SourceRefId
 from ...domain.deadlines import TaxpayerProfile
 from ...domain.modelos import (
     ModeloVerificationFinding,
@@ -48,8 +48,8 @@ def _m210_blocking_finding(
     *,
     message: str,
     next_action: str,
-    legal_refs: tuple[str, ...],
-    source_refs: tuple[str, ...],
+    legal_refs: tuple[LegalRefId, ...],
+    source_refs: tuple[SourceRefId, ...],
 ) -> ModeloVerificationFinding:
     """Build a BLOCKING_RULE M210 rate finding with the shared severity/kind.
 
@@ -114,9 +114,9 @@ def _resolve_convenio_rate(
                 convenio_lookup[(row.country_code, row.tipo_renta)] = row
 
     matched_row = convenio_lookup.get((country_code, tipo_renta))
-    legal_refs: tuple[str, ...] = tuple(str(r) for r in convenio_param.legal_refs) if convenio_param is not None else ()
-    source_refs: tuple[str, ...] = (
-        tuple(str(r) for r in convenio_param.source_refs) if convenio_param is not None else ()
+    legal_refs: tuple[LegalRefId, ...] = tuple(convenio_param.legal_refs) if convenio_param is not None else ()
+    source_refs: tuple[SourceRefId, ...] = (
+        tuple(convenio_param.source_refs) if convenio_param is not None else ()
     )
 
     if matched_row is None:
@@ -211,8 +211,8 @@ def resolve_m210_rate(
                     "application.modelo.findings.m210_baseline_tipo_deferred.next_action",
                     tipo_renta=tipo_renta,
                 ),
-                legal_refs=tuple(str(r) for r in baseline_param.legal_refs),
-                source_refs=tuple(str(r) for r in baseline_param.source_refs),
+                legal_refs=tuple(baseline_param.legal_refs),
+                source_refs=tuple(baseline_param.source_refs),
             )
             return None, [finding]
         return baseline_rate, []

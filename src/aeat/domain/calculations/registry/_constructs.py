@@ -13,6 +13,7 @@ from typing import Any
 
 from ._errors import RegistrySnapshotError
 from ._schema import ModeloRevision
+from ._schema_base import LegalRefs, RegistryModel, SourceRefs
 
 
 @dataclass(frozen=True, slots=True)
@@ -31,8 +32,7 @@ class ResolvedConstructMember:
     value: object
 
 
-@dataclass(frozen=True, slots=True)
-class ResolvedConstruct:
+class ResolvedConstruct(RegistryModel):
     """A fully-resolved registry construct group for one ``ModeloRevision``.
 
     A construct is a named thematic bundle declared in the registry TOML that
@@ -48,8 +48,8 @@ class ResolvedConstruct:
 
     id: str
     title: str
-    legal_refs: tuple[str, ...]
-    source_refs: tuple[str, ...]
+    legal_refs: LegalRefs
+    source_refs: SourceRefs
     members: tuple[ResolvedConstructMember, ...]
 
     def members_of_kind(self, kind: str) -> tuple[ResolvedConstructMember, ...]:

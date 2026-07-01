@@ -7,6 +7,7 @@ from decimal import Decimal
 from pathlib import Path
 
 import pytest
+from pydantic import ValidationError
 
 from ....core import Period
 from ....core.resources import resources
@@ -27,7 +28,7 @@ from ....tests.registry_observations import registry_grounded_observations
 from ....tests.secure_sql import isolated_runtime_profile
 from ...user_profile import UserProfileLifecycleRepository
 from .. import create_work_unit
-from .._projection import compare_modelo_years
+from .._projection import ModeloCompareDeltaRow, ModeloProjectionCasillaObservation, compare_modelo_years
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -44,6 +45,15 @@ def _casilla_id(value: object) -> CasillaId:
 
 
 _M130_INGRESOS_CASILLA: CasillaId = _casilla_id("01")
+
+
+def _m130_ingresos_registry_provenance() -> tuple[tuple[str, ...], tuple[str, ...]]:
+    registry_casilla = next(
+        item
+        for item in resources().modelos.authority.snapshot("130", filing_year=2026, period="1T").revision.casillas
+        if item.id == _M130_INGRESOS_CASILLA
+    )
+    return tuple(registry_casilla.legal_refs), tuple(registry_casilla.source_refs)
 
 
 def _seed_work_unit(
@@ -166,3 +176,51 @@ def test_compare_uses_revision_observation_rows_from_registry_snapshot(tmp_path:
     assert row.source_refs == tuple(registry_casilla.source_refs)
     assert row.legal_refs, "comparison rows must not emit blank legal_refs"
     assert row.source_refs, "comparison rows must not emit blank source_refs"
+
+
+def test_projection_rows_reject_blank_registry_provenance_entries() -> None:
+    """Projection result models must not accept whitespace provenance."""
+    legal_refs, source_refs = _m130_ingresos_registry_provenance()
+
+    with pytest.raises(ValidationError):
+        ModeloProjectionCasillaObservation(
+            casilla_id=_M130_INGRESOS_CASILLA,
+            value=Decimal("1"),
+            legal_refs=(" ",),
+            source_refs=source_refs,
+        )
+
+    with pytest.raises(ValidationError):
+        ModeloProjectionCasillaObservation(
+            casilla_id=_M130_INGRESOS_CASILLA,
+            value=Decimal("1"),
+            legal_refs=legal_refs,
+            source_refs=("",),
+        )
+
+    with pytest.raises(ValidationError):
+        ModeloCompareDeltaRow(
+            casilla_id=_M130_INGRESOS_CASILLA,
+            label="Ingresos",
+            section="Actividades economicas",
+            year_a_value=Decimal("1"),
+            year_b_value=Decimal("2"),
+            delta=Decimal("1"),
+            pct_change=Decimal("100.00"),
+            formula_id=" ",
+            legal_refs=legal_refs,
+            source_refs=source_refs,
+        )
+
+    with pytest.raises(ValidationError):
+        ModeloCompareDeltaRow(
+            casilla_id=_M130_INGRESOS_CASILLA,
+            label="Ingresos",
+            section="Actividades economicas",
+            year_a_value=Decimal("1"),
+            year_b_value=Decimal("2"),
+            delta=Decimal("1"),
+            pct_change=Decimal("100.00"),
+            legal_refs=legal_refs,
+            source_refs=(" ",),
+        )

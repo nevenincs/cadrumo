@@ -33,11 +33,12 @@ from ...adapters.persistence.storage import (
     USER_PROFILE_VALUE_NAMESPACE as USER_PROFILE_VALUE_STORAGE_NAMESPACE,
 )
 from ...adapters.persistence.storage import (
+    ClassificationError,
     Envelope,
+    EnvelopeVersionError,
     SecureObjectRepository,
 )
 from ...adapters.persistence.storage.bucket import BucketValidationError
-from ...adapters.persistence.storage.errors import ClassificationError, EnvelopeVersionError
 from ...core.logging import get_logger
 from ...core.time import now
 from ...domain.user_profile import (
@@ -215,10 +216,11 @@ class UserProfileLifecycleRepository(_BucketBoundRepository):
                 in this bucket.
             StoredProfileDriftError: The stored payload no longer validates
                 against the current ``UserProfileRecord`` schema.
-            ClassificationError: The envelope's classification differs from
-                the level expected for profile data.
-            EnvelopeVersionError: The stored schema version is newer than
-                this code can read.
+            :class:`~aeat.adapters.persistence.storage.ClassificationError`:
+                The envelope's classification differs from the level expected
+                for profile data.
+            :class:`~aeat.adapters.persistence.storage.EnvelopeVersionError`:
+                The stored schema version is newer than this code can read.
         """
         record = self._objects.load(
             USER_PROFILE_VALUE_NAMESPACE,
@@ -405,10 +407,11 @@ class UserProfileSnapshotRepository(_BucketBoundRepository):
         Raises:
             ProfileSnapshotNotFoundError: No snapshot is stored under
                 ``snapshot_id`` in this bucket.
-            ClassificationError: The envelope's classification differs from
-                the level expected for snapshot data.
-            EnvelopeVersionError: The stored schema version is newer than
-                this code can read.
+            :class:`~aeat.adapters.persistence.storage.ClassificationError`:
+                The envelope's classification differs from the level expected
+                for snapshot data.
+            :class:`~aeat.adapters.persistence.storage.EnvelopeVersionError`:
+                The stored schema version is newer than this code can read.
         """
         record = self._objects.load(
             USER_PROFILE_SNAPSHOT_NAMESPACE,

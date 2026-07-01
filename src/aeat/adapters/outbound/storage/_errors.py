@@ -13,7 +13,7 @@ so the CLI taxonomy stays explicit.
 not a remote-provider transport, quota, permission, or mirror failure.
 
 The `Outbound` prefix disambiguates this hierarchy from the persistence
-side :class:`aeat.adapters.persistence.storage.errors.StorageError`, which
+side :class:`~aeat.adapters.persistence.storage.StorageError`, which
 covers at-rest persistence and has a different parent chain.
 """
 

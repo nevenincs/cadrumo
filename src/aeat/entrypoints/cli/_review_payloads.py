@@ -19,6 +19,7 @@ tooling does not depend on free-form ``model_dump(mode="json")`` output.
 from __future__ import annotations
 
 from ...core.identity import BucketId
+from ...domain.calculations.registry import LegalRefId
 from ._schemas import OutputSchema, register_schema
 
 
@@ -46,7 +47,7 @@ class ReviewQueueRowPayload(OutputSchema):
     canonical_next_command: str
     since: str  # ISO-8601 datetime
     summary: str
-    legal_refs: tuple[str, ...] = ()
+    legal_refs: tuple[LegalRefId, ...] = ()
 
 
 @register_schema("review.queue")

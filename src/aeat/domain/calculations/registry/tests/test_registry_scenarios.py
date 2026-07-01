@@ -217,6 +217,40 @@ def test_registry_scenario_expected_output_requires_grounding() -> None:
             ),
         )
 
+    with pytest.raises(ValidationError, match="legal_refs"):
+        RegistryCalculationScenario(
+            id="blank-legal-ref-expected-output",
+            modelo="100",
+            revision="2025",
+            filing_year=2025,
+            period="0A",
+            expected_outputs=(
+                {
+                    "target_casilla_id": _operand_casilla_refs("0222")[0],
+                    "value": Decimal("2000.00"),
+                    "legal_refs": ("",),
+                    "source_refs": ("aeat-renta-2025-manual-parte1",),
+                },
+            ),
+        )
+
+    with pytest.raises(ValidationError, match="source_refs"):
+        RegistryCalculationScenario(
+            id="blank-source-ref-expected-output",
+            modelo="100",
+            revision="2025",
+            filing_year=2025,
+            period="0A",
+            expected_outputs=(
+                {
+                    "target_casilla_id": _operand_casilla_refs("0222")[0],
+                    "value": Decimal("2000.00"),
+                    "legal_refs": ("ley-35-2006:art-30",),
+                    "source_refs": (" ",),
+                },
+            ),
+        )
+
 
 def test_registry_scenario_requires_declared_revision_to_match_snapshot() -> None:
     scenario = _simplified_direct_estimation_cap_scenario().model_copy(update={"revision": "2024"})

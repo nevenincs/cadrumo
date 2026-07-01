@@ -83,8 +83,8 @@ def test_missing_scalar_value_error_uses_translated_message_and_structured_conte
         id="parameter-without-current-value",
         data_type="money",
         unit="EUR",
-        legal_refs=("boe-test",),
-        source_refs=("source-test",),
+        legal_refs=("ley-58-2003:art-29",),
+        source_refs=("aeat-source-test",),
     )
 
     with pytest.raises(CalcSheetsEngineError) as raised:

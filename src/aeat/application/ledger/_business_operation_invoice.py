@@ -37,9 +37,11 @@ from typing import override
 
 from pydantic import BaseModel, Field, field_serializer, field_validator
 
-from ...adapters.persistence.storage import LEDGER_BUSINESS_OPERATION_INVOICE_NAMESPACE
-from ...adapters.persistence.storage.envelope import SecureBoundRepository
-from ...adapters.persistence.storage.runtime_repository import secure_object_repository_for_bucket
+from ...adapters.persistence.storage import (
+    LEDGER_BUSINESS_OPERATION_INVOICE_NAMESPACE,
+    SecureBoundRepository,
+    secure_object_repository_for_bucket,
+)
 from ...core import STRICT_FROZEN_CONFIG, IntracomOperationType
 from ...core.config import Settings
 from ...core.errors import AeatError

@@ -9,9 +9,11 @@ object-key layout, and method signatures are preserved exactly; only
 the inline state-machine, supersession, and content-id helpers have
 been routed through the shared base.
 
-Snapshot records are wrapped in an :class:`Envelope` and persisted through a
-:class:`SecureObjectRepository` at FINANCIAL sensitivity under the borrador
-namespace.
+Snapshot records are wrapped in an
+:class:`~aeat.adapters.persistence.storage.Envelope` and persisted through a
+:class:`~aeat.adapters.persistence.storage.SecureObjectRepository` at
+``FINANCIAL`` :class:`~aeat.adapters.persistence.storage.SensitivityClass`
+under the borrador namespace.
 """
 
 from __future__ import annotations
@@ -26,7 +28,9 @@ from pydantic import BaseModel, Field, model_validator
 from ...adapters.persistence.storage import (
     LIVE_BORRADOR_100_SNAPSHOT_NAMESPACE as BORRADOR_100_SNAPSHOT_STORAGE_NAMESPACE,
 )
-from ...adapters.persistence.storage.sql import SecureObjectRepository
+from ...adapters.persistence.storage import (
+    SecureObjectRepository,
+)
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core import Modelo, Period
 from ...core.identity import BucketId

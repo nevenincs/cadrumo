@@ -26,8 +26,9 @@ from __future__ import annotations
 from collections.abc import Iterable, Mapping
 from enum import StrEnum
 from pathlib import Path
+from typing import Annotated
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, StringConstraints
 
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.config import Settings, load_settings
@@ -65,6 +66,9 @@ from ._errors import RegistryApplicationInputError
 
 _LOGGER = get_logger(__name__)
 
+_ProjectionText = Annotated[str, StringConstraints(strip_whitespace=True, min_length=1)]
+_ProjectionDateText = Annotated[str, StringConstraints(strip_whitespace=True, min_length=10)]
+
 
 class RegistryManualId(StrEnum):
     """Manual identifiers approved for the registry manual operator surface.
@@ -87,11 +91,11 @@ class RegistryTopicProjection(BaseModel):
 
     model_config = _STRICT_FROZEN
 
-    slug: str = Field(min_length=1)
-    title: str = Field(min_length=1)
-    body: str = Field(min_length=1)
-    see_also: tuple[str, ...] = ()
-    legal_refs: tuple[str, ...] = Field(min_length=1)
+    slug: _ProjectionText
+    title: _ProjectionText
+    body: _ProjectionText
+    see_also: tuple[_ProjectionText, ...] = ()
+    legal_refs: tuple[_ProjectionText, ...] = Field(min_length=1)
 
 
 class RegistryCitationReferenceProjection(BaseModel):
@@ -104,17 +108,17 @@ class RegistryCitationReferenceProjection(BaseModel):
 
     model_config = _STRICT_FROZEN
 
-    id: str = Field(min_length=1)
-    kind: str = Field(min_length=1)
-    number: str = Field(min_length=1)
-    title: str = Field(min_length=1)
-    published_at: str = Field(min_length=10)
-    boe_id: str = Field(min_length=1)
-    boe_url: str = Field(min_length=1)
-    tags: tuple[str, ...] = ()
+    id: _ProjectionText
+    kind: _ProjectionText
+    number: _ProjectionText
+    title: _ProjectionText
+    published_at: _ProjectionDateText
+    boe_id: _ProjectionText
+    boe_url: _ProjectionText
+    tags: tuple[_ProjectionText, ...] = ()
     articulo_count: int = Field(ge=0)
-    short_title: str = Field(min_length=1)
-    topic_slugs: tuple[str, ...] = ()
+    short_title: _ProjectionText
+    topic_slugs: tuple[_ProjectionText, ...] = ()
 
 
 class RegistryCitationArticleProjection(BaseModel):
@@ -126,11 +130,11 @@ class RegistryCitationArticleProjection(BaseModel):
 
     model_config = _STRICT_FROZEN
 
-    numero: str = Field(min_length=1)
-    titulo: str = Field(min_length=1)
-    summary: str = Field(min_length=1)
-    permalink: str = Field(min_length=1)
-    cite: str = Field(min_length=1)
+    numero: _ProjectionText
+    titulo: _ProjectionText
+    summary: _ProjectionText
+    permalink: _ProjectionText
+    cite: _ProjectionText
 
 
 class RegistryCitationsListCommand(BaseModel):

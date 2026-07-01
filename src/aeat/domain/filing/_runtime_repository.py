@@ -28,7 +28,7 @@ def secure_objects_for_filing_bucket(bucket_id: str) -> SecureObjectRepository:
         A :class:`~aeat.adapters.persistence.storage.SecureObjectRepository`
         scoped to the given filing bucket.
     """
-    from ...adapters.persistence.storage.runtime_repository import secure_object_repository_for_bucket
+    from ...adapters.persistence.storage import secure_object_repository_for_bucket
 
     return secure_object_repository_for_bucket(bucket_id)
 

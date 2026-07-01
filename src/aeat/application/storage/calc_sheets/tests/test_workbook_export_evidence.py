@@ -83,7 +83,7 @@ def _evidence_plan() -> SheetExportPlan:
                     counterparty="Proveedor SL",
                     attachment_ids=("attachment-1",),
                     document_link_ids=("drive-doc-1",),
-                    legal_refs=("liva-art-99",),
+                    legal_refs=("ley-37-1992:art-99",),
                     source_refs=("boe-a-2026-1",),
                 ),
             ),
@@ -93,8 +93,8 @@ def _evidence_plan() -> SheetExportPlan:
                     value="140000.00",
                     kind="casilla_input",
                     note="operator supplied accounting result",
-                    legal_refs=("lis-art-10",),
-                    source_refs=("manual",),
+                    legal_refs=("ley-27-2014:art-10",),
+                    source_refs=("operator-manual-evidence",),
                 ),
             ),
         ),
@@ -121,7 +121,7 @@ def test_offline_workbook_renders_evidencia_tab_from_plan_evidence() -> None:
     assert evidencia["D4"].value == "-121.00"
     assert evidencia["F4"].value == "100.00"
     assert evidencia["M4"].value == "attachment-1"
-    assert evidencia["O4"].value == "liva-art-99"
+    assert evidencia["O4"].value == "ley-37-1992:art-99"
     assert evidencia["A5"].value == "manual"
     assert evidencia["B5"].value == "resultado.contable"
     assert evidencia["J5"].value == "140000.00"

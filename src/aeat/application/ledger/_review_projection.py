@@ -194,6 +194,6 @@ def _bucket_event_repository(
 ) -> BucketEventHistoryRepositoryProtocol:
     if repository is not None:
         return repository
-    from ...adapters.persistence.storage.runtime_repository import secure_object_repository_for_bucket
+    from ...adapters.persistence.storage import secure_object_repository_for_bucket
 
     return BucketEventHistoryRepository(objects=secure_object_repository_for_bucket(bucket_id))

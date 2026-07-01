@@ -31,9 +31,12 @@ from ...domain.calculations.registry import (
     BindingId,
     CasillaDefinition,
     CasillaId,
+    FormulaId,
+    LegalRefId,
     RegistrySnapshotError,
     RegistryValidationError,
     RelationId,
+    SourceRefId,
     calculate_registry_snapshot,
     validated_casilla_id,
 )
@@ -154,9 +157,9 @@ class ModeloProjectionCasillaObservation(BaseModel):
 
     casilla_id: CasillaId
     value: Decimal
-    formula_id: str | None = None
-    legal_refs: tuple[str, ...] = Field(min_length=1)
-    source_refs: tuple[str, ...] = Field(min_length=1)
+    formula_id: FormulaId | None = None
+    legal_refs: tuple[LegalRefId, ...] = Field(min_length=1)
+    source_refs: tuple[SourceRefId, ...] = Field(min_length=1)
 
 
 class ModeloProjectM130Accumulated(BaseModel):
@@ -211,9 +214,9 @@ class ModeloCompareDeltaRow(BaseModel):
     year_b_value: Decimal
     delta: Decimal
     pct_change: Decimal | None
-    formula_id: str | None = None
-    legal_refs: tuple[str, ...] = Field(min_length=1)
-    source_refs: tuple[str, ...] = Field(min_length=1)
+    formula_id: FormulaId | None = None
+    legal_refs: tuple[LegalRefId, ...] = Field(min_length=1)
+    source_refs: tuple[SourceRefId, ...] = Field(min_length=1)
 
 
 class ModeloCompareSection(BaseModel):

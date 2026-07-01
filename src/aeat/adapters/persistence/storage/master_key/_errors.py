@@ -2,7 +2,7 @@
 
 Each class carries structured payload so callers can render typed
 diagnostics without re-parsing the message string. Every class inherits
-from an appropriate base in :mod:`aeat.adapters.persistence.storage.errors`
+from an appropriate base in :mod:`aeat.adapters.persistence.storage`
 and is bound to a declared :class:`aeat.core.errors.ErrorCode` row at
 import time via the ``__init_subclass__`` hook.
 """

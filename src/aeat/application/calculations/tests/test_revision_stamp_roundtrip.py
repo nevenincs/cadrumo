@@ -77,8 +77,8 @@ def _minimal_observation(modelo: str = _MODELO, year: int = _YEAR, period: str =
             CasillaObservation(
                 casilla_id=_M303_RESULTADO_CASILLA,
                 value=Decimal("5000.00"),
-                legal_refs=("liva.art-94",),
-                source_refs=("aeat.iva.2025",),
+                legal_refs=("ley-37-1992:art-94",),
+                source_refs=("aeat-iva-2025",),
             ),
         ),
     )

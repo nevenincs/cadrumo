@@ -47,10 +47,10 @@ from ...adapters.persistence.storage import (
     IVA_WALLET_RECONCILIATION_DECISION_EVENTS_NAMESPACE,
     IVA_WALLET_RECONCILIATION_DECISIONS_NAMESPACE,
     Envelope,
+    SecureBoundRepository,
     SensitivityClass,
     safe_repository_id,
 )
-from ...adapters.persistence.storage.envelope import SecureBoundRepository
 from ...core import STRICT_FROZEN_CONFIG, Period
 from ...core.external_constants import UTF_8_ENCODING
 from ...core.hashing import sha256_hex
@@ -290,7 +290,7 @@ class CalculationObservationRepository(SecureBoundRepository[_ObservationEnvelop
     :class:`~aeat.adapters.persistence.storage.Envelope` payload to
     :data:`aeat.adapters.persistence.storage.CALCULATION_OBSERVATIONS_NAMESPACE`
     through
-    :class:`~aeat.adapters.persistence.storage.envelope.SecureBoundRepository`.
+    :class:`~aeat.adapters.persistence.storage.SecureBoundRepository`.
     """
 
     namespace: ClassVar[str] = CALCULATION_OBSERVATIONS_NAMESPACE.namespace
@@ -396,7 +396,7 @@ class IvaWalletDecisionRepository(SecureBoundRepository[_IvaWalletDecisionEnvelo
     :data:`aeat.adapters.persistence.storage.IVA_WALLET_RECONCILIATION_DECISION_EVENTS_NAMESPACE`.
     Both store :class:`IvaCompensationReconciliationDecision` payloads in
     :class:`~aeat.adapters.persistence.storage.Envelope` records through
-    :class:`~aeat.adapters.persistence.storage.envelope.SecureBoundRepository`.
+    :class:`~aeat.adapters.persistence.storage.SecureBoundRepository`.
     """
 
     namespace: ClassVar[str] = IVA_WALLET_RECONCILIATION_DECISIONS_NAMESPACE.namespace

@@ -11,7 +11,7 @@ See Also:
     :class:`aeat.application.filing.ModeloHistoryRepository`
         Application repository that consumes these helpers to persist
         filing-history payloads.
-    :func:`aeat.adapters.persistence.storage.runtime_repository.secure_object_repository_for_bucket`
+    :func:`aeat.adapters.persistence.storage.secure_object_repository_for_bucket`
         Storage-runtime factory used after the filing bucket id is resolved.
     :mod:`aeat.domain.filing._runtime_repository`
         Parallel domain helper used by governed draft and amendment
@@ -58,7 +58,7 @@ def secure_objects_for_application_filing_bucket(bucket_id: str) -> SecureObject
         A :class:`~aeat.adapters.persistence.storage.SecureObjectRepository`
         scoped to ``bucket_id``.
     """
-    from ...adapters.persistence.storage.runtime_repository import (
+    from ...adapters.persistence.storage import (
         secure_object_repository_for_bucket,
     )
 

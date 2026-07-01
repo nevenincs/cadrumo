@@ -709,7 +709,7 @@ def test_renta_source_mesh_resolver_preserves_purchase_invoice_evidence_provenan
     }
 
 
-def test_oss_source_mesh_resolver_matches_existing_candidate_binding_wrapper() -> None:
+def test_oss_source_mesh_resolver_matches_candidate_binding_aggregation() -> None:
     revision = _revision("369", "esquema-union")
     candidates = (
         OssIossLedgerCandidate(
@@ -725,7 +725,7 @@ def test_oss_source_mesh_resolver_matches_existing_candidate_binding_wrapper() -
         ),
     )
 
-    legacy = aggregate_oss_ioss_bindings(revision, candidates)
+    aggregated = aggregate_oss_ioss_bindings(revision, candidates)
     resolution = OssIossLedgerSourceResolver(candidates=candidates).resolve(
         CalculationSourceContext(
             bucket_id=_BUCKET_ID,
@@ -736,7 +736,7 @@ def test_oss_source_mesh_resolver_matches_existing_candidate_binding_wrapper() -
         ),
     )
 
-    assert resolution.binding_values == legacy
+    assert resolution.binding_values == aggregated
     assert resolution.source_transaction_ids == ("oss-ledger-1",)
     assert resolution.diagnostics == ()
     assert tuple(item.source_ref for item in resolution.provenance) == ("transaction:oss-ledger-1",)

@@ -109,6 +109,20 @@ def test_source_refs_survive_projection() -> None:
         )
 
 
+def test_subview_catalogue_ref_ids_survive_projection() -> None:
+    """RegistryModeloSubview must carry the same catalogue refs as the source snapshot."""
+    snapshot = resources().modelos.authority.snapshot(
+        _TEST_MODELO,
+        filing_year=_TEST_YEAR,
+        period=_TEST_PERIOD.registry_token,
+    )
+    provider = build_runtime_schema_provider(modelos=[_TEST_MODELO], filing_year=_TEST_YEAR, period=_TEST_PERIOD)
+    subview = provider.get_subview(_TEST_MODELO)
+
+    assert subview.legal_ref_ids == tuple(sorted(snapshot.legal))
+    assert subview.source_ref_ids == tuple(sorted(snapshot.sources))
+
+
 def test_provider_absent_modelo_error_is_localized() -> None:
     provider = build_runtime_schema_provider(modelos=[_TEST_MODELO], filing_year=_TEST_YEAR, period=_TEST_PERIOD)
 

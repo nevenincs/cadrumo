@@ -153,6 +153,28 @@ class TestStrictSchema:
                 definition_reviewed_at=date(2026, 4, 12),
             )
 
+    def test_rule_rejects_blank_applies_when(self) -> None:
+        """Optional applicability prose must not carry blank authoritative text."""
+        with pytest.raises(ValidationError, match=r"Rule.applies_when: missing authoritative Spanish text"):
+            Rule(
+                rule_id="renta-2025-part1-cap5-sec2-rule0003",
+                manual_id=ManualId.RENTA,
+                year=2025,
+                part=ManualPart.PARTE_1,
+                chapter_id="cap5",
+                section_id="sec2",
+                kind="applicability",
+                statement="Statement in Spanish.",
+                applies_when="   ",
+                references_casillas=(),
+                references_sections=(),
+                references_legal_acts=(),
+                source=_rule_source(),
+                extracted_by=_llm_provenance(),
+                definition_reviewed_by="gw",
+                definition_reviewed_at=date(2026, 4, 12),
+            )
+
     def test_rule_rejects_legacy_scalar_casilla_reference(self) -> None:
         """Manual casilla references must be structured, not MODELO:CASILLA strings."""
         with pytest.raises(ValidationError, match=r"references_casillas"):
@@ -176,6 +198,11 @@ class TestStrictSchema:
                     "definition_reviewed_at": date(2026, 4, 12),
                 },
             )
+
+    def test_paragraph_rejects_missing_spanish_text(self) -> None:
+        """Paragraph prose is source corpus text and cannot be blank."""
+        with pytest.raises(ValidationError, match=r"Paragraph.text: missing authoritative Spanish text"):
+            Paragraph(paragraph_id="p1", text="   ", page=140)
 
     def test_rule_rejects_empty_reviewer(self) -> None:
         """Reviewer metadata must be a non-empty trimmed string."""

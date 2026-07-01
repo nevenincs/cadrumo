@@ -32,8 +32,12 @@ from ....domain.contribuyente.inventory import (
     InventoryLedgerError,
     MovementRecord,
 )
-from ..storage import PROFILE_INVENTORY_LEDGER_NAMESPACE, SecureObjectRepository, secure_object_logical_path
-from ..storage.runtime_repository import secure_object_repository_for_active_bucket
+from ..storage import (
+    PROFILE_INVENTORY_LEDGER_NAMESPACE,
+    SecureObjectRepository,
+    secure_object_logical_path,
+    secure_object_repository_for_active_bucket,
+)
 
 _log = get_logger(__name__)
 

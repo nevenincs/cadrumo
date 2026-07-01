@@ -105,7 +105,7 @@ def _snapshot_for_revision(
     )
 
 
-_REFERENCE_LEGAL_ID = "lirpf:art-1"
+_REFERENCE_LEGAL_ID = "ley-35-2006:art-1"
 
 _REFERENCE_SOURCE_ID = "aeat-dr-130-2019-v12"
 _DEFAULT_MINIMAL_CASILLA_ID: CasillaId = validated_casilla_id("01", surface="_DEFAULT_MINIMAL_CASILLA_ID")
@@ -123,6 +123,8 @@ def _minimal_legal_ref() -> LegalReference:
         permalink="https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764",
         effective_from=date(2006, 11, 30),
         review_status="reviewed",
+        reviewed_at=date(2026, 7, 1),
+        reviewed_by="codex test fixture",
         required_text=("art-1",),
     )
 

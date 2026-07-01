@@ -28,6 +28,7 @@ from __future__ import annotations
 from collections.abc import Mapping
 from decimal import Decimal
 
+from ...core import BindingSourceKind as _BindingSourceKind
 from ...core import Period as _Period
 from ...domain.calculations.registry import (
     BindingId,
@@ -331,7 +332,7 @@ def _lift_previous_filing_casilla_overrides_to_bindings(
         if casilla is None or casilla.input_kind != InputKind.BOUND or not casilla.binding:
             continue
         binding = bindings_by_id.get(casilla.binding)
-        if binding is None or binding.source != "previous_filing":
+        if binding is None or binding.source != _BindingSourceKind.PREVIOUS_FILING:
             continue
         if casilla.binding in resolved_bindings:
             continue

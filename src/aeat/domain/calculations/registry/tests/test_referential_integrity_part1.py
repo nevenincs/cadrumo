@@ -52,9 +52,9 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 _NONEXISTENT_CASILLA: CasillaId = validated_casilla_id("nonexistent-casilla", surface="_NONEXISTENT_CASILLA")
 _TEXT_CASILLA: CasillaId = validated_casilla_id("text-casilla", surface="_TEXT_CASILLA")
 _NUMERIC_CASILLA_01: CasillaId = validated_casilla_id("01", surface="_NUMERIC_CASILLA_01")
-_MISSING_LEGAL_ID = "lirpf:art-99"
+_MISSING_LEGAL_ID = "ley-35-2006:art-9999"
 _MISSING_SOURCE_ID = "aeat-missing-source"
-_EXTRA_LEGAL_ID = "lirpf:art-88"
+_EXTRA_LEGAL_ID = "ley-35-2006:art-9998"
 _EXTRA_SOURCE_ID = "aeat-extra-source"
 
 
@@ -204,7 +204,8 @@ def test_casilla_alias_and_constraints_refs_must_resolve_in_registry_validation(
     failures = _modelo_validation_failures(minimal_modelo(revision))
 
     assert any(
-        "casilla 01 alias 'alternate' references unknown legal id 'lirpf:art-99'" in failure for failure in failures
+        "casilla 01 alias 'alternate' references unknown legal id 'ley-35-2006:art-9999'" in failure
+        for failure in failures
     ), f"alias legal_refs must be checked against the legal catalogue; got: {failures}"
     assert any(
         "casilla 01 constraints references unknown source id 'aeat-missing-source'" in failure for failure in failures
@@ -561,7 +562,7 @@ def test_cross_reference_applicability_predicate_refs_must_resolve_in_registry_v
 
     assert any(
         "cross-reference test.cross-ref applicability predicate 'iva.roi_enrolled' "
-        "references unknown legal id 'lirpf:art-99'" in failure
+        "references unknown legal id 'ley-35-2006:art-9999'" in failure
         for failure in failures
     ), f"cross-reference predicate legal_refs must be checked against the legal catalogue; got: {failures}"
     assert any(
@@ -693,7 +694,7 @@ def test_verification_predicate_refs_must_resolve_in_registry_validation() -> No
     failures = _modelo_validation_failures(minimal_modelo(revision))
 
     assert any(
-        "verification predicate test.predicate references unknown legal id 'lirpf:art-99'" in failure
+        "verification predicate test.predicate references unknown legal id 'ley-35-2006:art-9999'" in failure
         for failure in failures
     ), f"verification predicate legal_refs must be checked against the legal catalogue; got: {failures}"
 

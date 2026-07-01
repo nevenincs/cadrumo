@@ -47,7 +47,6 @@ from .._schema import LiveCrossReferenceDecision
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 
-
 def _casilla_id(value: object) -> CasillaId:
     try:
         return validated_casilla_id(value, surface="test casilla id")
@@ -447,7 +446,7 @@ def test_workbook_parity_reference_output_cells_roundtrip() -> None:
 
     original = WorkbookParityReference(
         id="m130-1t-parity",
-        workbook_source="boe.modelo.130.workbook",
+        workbook_source="boe-modelo-130-workbook",
         fixture_id="m130-1t-2025-fixture",
         formula_coverage="formula_form",
         runner_required=True,
@@ -457,8 +456,8 @@ def test_workbook_parity_reference_output_cells_roundtrip() -> None:
             "07": "'Modelo 130'!F22",
         },
         tolerance=Decimal("0.01"),
-        legal_refs=("lirpf.art-99",),
-        source_refs=("boe.modelo.130.workbook",),
+        legal_refs=("ley-35-2006:art-99",),
+        source_refs=("boe-modelo-130-workbook",),
     )
 
     roundtripped = WorkbookParityReference.model_validate_json(
@@ -484,14 +483,14 @@ def test_workbook_parity_reference_rejects_malformed_output_identifier() -> None
     with pytest.raises(ValidationError):
         WorkbookParityReference(
             id="m130-1t-parity",
-            workbook_source="boe.modelo.130.workbook",
+            workbook_source="boe-modelo-130-workbook",
             fixture_id="m130-1t-2025-fixture",
             formula_coverage="formula_form",
             runner_required=True,
             output_cells={"bad output": "Modelo!A1"},
             tolerance=Decimal("0.01"),
-            legal_refs=("lirpf.art-99",),
-            source_refs=("boe.modelo.130.workbook",),
+            legal_refs=("ley-35-2006:art-99",),
+            source_refs=("boe-modelo-130-workbook",),
         )
 
 

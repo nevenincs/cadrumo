@@ -10,9 +10,9 @@ from __future__ import annotations
 from typing import Literal, TypedDict
 
 import pytest
-from pydantic import ValidationError
+from pydantic import TypeAdapter, ValidationError
 
-from .._ids import CasillaId, validated_casilla_id
+from .._ids import CasillaId, LegalRefId, SourceRefId, validated_casilla_id
 from .._schema import (
     AlgorithmBindingDefinition,
     CasillaDefinition,
@@ -32,9 +32,23 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 # Shared fixture constants — pattern mirrors test_referential_integrity
 # ---------------------------------------------------------------------------
 
-_SCHEMA_LEGAL_ID = "lirpf:art-test"
-_SCHEMA_SOURCE_ID = "aeat-test-source-001"
+_SCHEMA_LEGAL_ID: LegalRefId = "ley-35-2006:art-test"
+_SCHEMA_SOURCE_ID: SourceRefId = "aeat-test-source-001"
 _SCHEMA_CASILLA_ID: CasillaId = validated_casilla_id("01", surface="_SCHEMA_CASILLA_ID")
+
+
+def test_source_ref_id_accepts_current_catalogue_key_shape() -> None:
+    adapter = TypeAdapter(SourceRefId)
+
+    assert adapter.validate_python("aeat-dr-303-2025-v2") == "aeat-dr-303-2025-v2"
+
+
+@pytest.mark.parametrize("source_ref", ["aeat.src.1", "ley-37-1992:art-1", "source"])
+def test_source_ref_id_rejects_generic_registry_and_legal_ref_shapes(source_ref: str) -> None:
+    adapter = TypeAdapter(SourceRefId)
+
+    with pytest.raises(ValidationError):
+        adapter.validate_python(source_ref)
 
 
 def _relation_payload(**overrides: object) -> dict[str, object]:
@@ -401,8 +415,8 @@ class _FieldBase(TypedDict):
     padding: Literal["left_zero", "left_space", "right_space", "none"]
     justification: Literal["left", "right", "none"]
     signed: bool
-    legal_refs: tuple[str, ...]
-    source_refs: tuple[str, ...]
+    legal_refs: tuple[LegalRefId, ...]
+    source_refs: tuple[SourceRefId, ...]
 
 
 _FIELD_BASE: _FieldBase = _FieldBase(

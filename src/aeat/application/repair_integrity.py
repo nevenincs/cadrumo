@@ -363,7 +363,7 @@ def _build_repair_list_report(
 
 
 def _active_bucket_repair_repository() -> SecureObjectRepository:
-    from ..adapters.persistence.storage.runtime_repository import secure_object_repository_for_active_bucket
+    from ..adapters.persistence.storage import secure_object_repository_for_active_bucket
 
     return secure_object_repository_for_active_bucket()
 
@@ -478,7 +478,7 @@ class RepairRemediationDecisionRepository:
     def _repo(self) -> SecureObjectRepository:
         if self._repository is not None:
             return self._repository
-        from ..adapters.persistence.storage.runtime_repository import secure_object_repository_for_active_bucket
+        from ..adapters.persistence.storage import secure_object_repository_for_active_bucket
 
         return secure_object_repository_for_active_bucket()
 

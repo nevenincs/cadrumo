@@ -90,7 +90,7 @@ class LLMCache:
         Raises:
             LLMCacheError: When the cached payload is present but cannot be parsed.
         """
-        from ....adapters.persistence.storage.runtime_repository import secure_object_repository_for_active_bucket
+        from ....adapters.persistence.storage import secure_object_repository_for_active_bucket
         from ....core.classification import SensitivityClass
 
         key = self.build_key(request, provider, model)
@@ -144,7 +144,7 @@ class LLMCache:
             LLMCacheError: When redaction produces a non-dict result or the storage
                 write fails with an OS-level error.
         """
-        from ....adapters.persistence.storage.runtime_repository import secure_object_repository_for_active_bucket
+        from ....adapters.persistence.storage import secure_object_repository_for_active_bucket
         from ....core.classification import SensitivityClass
         from ....core.redaction import default_rules_for_class, redact_structured
 
@@ -191,7 +191,7 @@ class LLMCache:
             :class:`CacheStats` with aggregate entry count and total decrypted
             JSON byte size for this logical cache partition.
         """
-        from ....adapters.persistence.storage.runtime_repository import secure_object_repository_for_active_bucket
+        from ....adapters.persistence.storage import secure_object_repository_for_active_bucket
         from ....core.classification import SensitivityClass
 
         records = tuple(
@@ -214,7 +214,7 @@ class LLMCache:
         Raises:
             LLMCacheError: When a cache entry cannot be parsed during iteration.
         """
-        from ....adapters.persistence.storage.runtime_repository import secure_object_repository_for_active_bucket
+        from ....adapters.persistence.storage import secure_object_repository_for_active_bucket
         from ....core.classification import SensitivityClass
 
         removed = 0

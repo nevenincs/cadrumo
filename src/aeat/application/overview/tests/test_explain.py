@@ -10,6 +10,7 @@ boundary refusals; the per-persona derivation matrix lives in
 from __future__ import annotations
 
 import pytest
+from pydantic import ValidationError
 
 from ....domain.calculations.registry.applicability import ApplicabilityVerdict
 from ....domain.deadlines import TaxpayerProfile
@@ -59,6 +60,17 @@ def test_explain_returns_typed_envelope_for_applicable_modelo() -> None:
     assert result.profile_facts["tax_id"] == "X1234567L"
     assert result.profile_facts["iva_regime"] == "GENERAL"
     assert result.profile_facts["entity_type"] == "natural_person"
+
+
+def test_explain_rejects_blank_legal_ref_payload() -> None:
+    """OverviewExplain keeps applicability grounding on the typed registry-id contract."""
+
+    result = build_overview_explain(_autonomo_profile(), modelo="303", year=2026)
+    payload = result.model_dump(mode="json")
+    payload["legal_refs"] = [" "]
+
+    with pytest.raises(ValidationError, match="legal_refs"):
+        OverviewExplain.model_validate(payload)
 
 
 def test_explain_refuses_unknown_modelo() -> None:

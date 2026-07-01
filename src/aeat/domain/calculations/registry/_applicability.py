@@ -88,8 +88,9 @@ from __future__ import annotations
 
 from datetime import date
 from enum import StrEnum
+from typing import Annotated
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, StringConstraints
 
 from ....core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ....core import Modelo
@@ -110,7 +111,9 @@ from ._applicability_modelo202 import (
 from ._applicability_payer_facts import PayerFact, payer_fact_holds
 from ._applicability_routes import TAX_ROUTE_FOR_ENTITY_TYPE as _TAX_ROUTE_FOR_ENTITY_TYPE
 from ._applicability_routes import TaxRoute
-from ._ids import ModeloId
+from ._ids import LegalRefId, ModeloId
+
+type _OperatorReason = Annotated[str, StringConstraints(strip_whitespace=True, min_length=1)]
 
 _SEED_COVERAGE_NOTICE = (
     "Seed coverage only — the modelos in this table are the core "
@@ -182,8 +185,8 @@ class ModeloApplicability(BaseModel):
 
     modelo: ModeloId
     verdict: ApplicabilityVerdict
-    reason: str = Field(min_length=1)
-    legal_refs: tuple[str, ...] = Field(min_length=1)
+    reason: _OperatorReason
+    legal_refs: tuple[LegalRefId, ...] = Field(min_length=1)
 
     @property
     def applicable(self) -> bool:
@@ -272,10 +275,10 @@ class ModeloApplicabilityRule(BaseModel):
     required_estimation_regimes: frozenset[IrpfEstimationRegime] = frozenset()
     applicable_fiscal_residencies: frozenset[FiscalResidency] = frozenset()
     required_payer_fact: PayerFact | None = None
-    applicable_reason: str = Field(min_length=1)
-    not_applicable_reason: str = Field(min_length=1)
+    applicable_reason: _OperatorReason
+    not_applicable_reason: _OperatorReason
     cuota_bearing: bool = False
-    legal_refs: tuple[str, ...] = Field(min_length=1)
+    legal_refs: tuple[LegalRefId, ...] = Field(min_length=1)
 
     def evaluate(self, profile: TaxpayerProfile) -> ModeloApplicability:
         """Derive the :class:`ModeloApplicability` for ``profile``.
@@ -374,7 +377,7 @@ class ModeloApplicabilityRule(BaseModel):
 # verdict still carries the LIRPF / LIS articles that frame the question
 # the operator must answer. Both keys resolve in the registry legal
 # tables (irpf.toml / is.toml).
-_INCOMPLETE_LEGAL_REFS: tuple[str, ...] = (
+_INCOMPLETE_LEGAL_REFS: tuple[LegalRefId, ...] = (
     "ley-35-2006:art-99",  # LIRPF art. 99 — IRPF contribuyente / pagos a cuenta.
     "ley-27-2014:art-124",  # LIS art. 124 — obligación de declarar del IS.
 )
@@ -386,7 +389,7 @@ _INCOMPLETE_LEGAL_REFS: tuple[str, ...] = (
 # under it (sociedades civiles sin objeto mercantil, comunidades de
 # bienes, herencias yacentes). Both keys resolve in the registry legal
 # table ``legal/irpf.toml``.
-_ATTRIBUTION_PASS_THROUGH_LEGAL_REFS: tuple[str, ...] = (
+_ATTRIBUTION_PASS_THROUGH_LEGAL_REFS: tuple[LegalRefId, ...] = (
     "ley-35-2006:art-86",  # LIRPF art. 86 — régimen general de atribución de rentas.
     "ley-35-2006:art-87",  # LIRPF art. 87 — entidades en régimen de atribución.
 )
@@ -444,7 +447,7 @@ _INCOMPLETE_UNDETERMINED_REASON = (
     "hecho se declara positivamente; en otro caso no se conjetura una "
     "obligación."
 )
-_IMPATRIADO_M720_LEGAL_REFS: tuple[str, ...] = (
+_IMPATRIADO_M720_LEGAL_REFS: tuple[LegalRefId, ...] = (
     "ley-35-2006:art-93",  # LIRPF Art. 93 — régimen especial impatriados.
     "ley-7-2012:da-1",  # Ley 7/2012 DA 1ª — obligación Modelo 720.
     "orden-hap-72-2013:art-1",  # Orden HAP/72/2013 — aprobación Modelo 720.
@@ -515,7 +518,7 @@ def _undetermined_applicability(
     modelo: str,
     *,
     payer_fact: PayerFact,
-    legal_refs: tuple[str, ...],
+    legal_refs: tuple[LegalRefId, ...],
 ) -> ModeloApplicability:
     """Return the ``INCOMPLETE`` applicability for an *undecidable* fact.
 

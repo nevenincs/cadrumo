@@ -12,6 +12,7 @@ from pydantic import BaseModel, model_validator
 
 from ...core import STRICT_FROZEN_CONFIG
 from ...core.i18n import Translatable as tr
+from ._errors import CategoryValidationError
 from ._proportionality import ProportionalityRule
 from ._spending_category import SpendingCategory
 
@@ -40,4 +41,6 @@ class CategoryProfile(_CategoryProfileStrictFrozenModel):
 
     @model_validator(mode="after")
     def _validate_profile(self) -> CategoryProfile:
+        if not str(self.display_label).strip():
+            raise CategoryValidationError("category profile display_label must contain authoritative Spanish text")
         return self

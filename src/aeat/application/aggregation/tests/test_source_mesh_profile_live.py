@@ -82,11 +82,11 @@ def _wallet(amount: Decimal) -> IvaCompensationWalletObservation:
     )
 
 
-def test_profile_source_resolver_matches_existing_profile_binding_resolution() -> None:
+def test_profile_source_resolver_matches_direct_profile_binding_resolution() -> None:
     snapshot = _modelo_100_snapshot()
     profile_record = _profile_with_ccaa("madrid")
 
-    legacy = resolve_profile_sourced_bindings(
+    direct_resolution = resolve_profile_sourced_bindings(
         snapshot,
         bucket_id=_BUCKET_ID,
         profile_record=profile_record,
@@ -104,8 +104,8 @@ def test_profile_source_resolver_matches_existing_profile_binding_resolution() -
         ),
     )
 
-    assert resolution.binding_values == legacy.binding_values
-    assert resolution.enum_binding_values == legacy.enum_binding_values
+    assert resolution.binding_values == direct_resolution.binding_values
+    assert resolution.enum_binding_values == direct_resolution.enum_binding_values
     assert resolution.source_transaction_ids == ()
     assert resolution.provenance
     assert {item.source_ref for item in resolution.provenance if item.source_kind == "profile"} == {

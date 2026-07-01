@@ -11,12 +11,17 @@ from pydantic import ValidationError
 from .....core import Period
 from .....domain.calculations.registry import CasillaId, validated_casilla_id
 from .._records import (
+    SheetCellAddress,
     SheetEvidenceContributorRow,
     SheetEvidenceFacet,
     SheetEvidenceManualEntry,
     SheetExportMetadata,
     SheetExportPlan,
     SheetGuideContent,
+    SheetProvenanceRow,
+    SheetRowSet,
+    SheetRowSetColumn,
+    TabName,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -119,4 +124,54 @@ def test_sheet_evidence_rows_require_grounding() -> None:
             value="140000.00",
             kind="casilla_input",
             legal_refs=_LEGAL_REFS,
+        )
+
+
+def test_sheet_grounding_rows_reject_blank_ref_entries() -> None:
+    with pytest.raises(ValidationError, match="legal_refs"):
+        SheetEvidenceContributorRow(
+            casilla_id=_IVA_DEVENGADO_CUOTA_CASILLA,
+            transaction_id="c" * 64,
+            amount=Decimal("121.00"),
+            currency="EUR",
+            legal_refs=(" ",),
+            source_refs=_SOURCE_REFS,
+        )
+
+    with pytest.raises(ValidationError, match="source_refs"):
+        SheetEvidenceManualEntry(
+            casilla_id=_RESULTADO_CONTABLE_CASILLA,
+            value="140000.00",
+            kind="casilla_input",
+            legal_refs=_LEGAL_REFS,
+            source_refs=(" ",),
+        )
+
+    with pytest.raises(ValidationError, match="legal_refs"):
+        SheetProvenanceRow(
+            casilla_id=_IVA_DEVENGADO_CUOTA_CASILLA,
+            display_number="01",
+            casilla_label="IVA devengado",
+            formula_id="modelo-303-test-formula",
+            rounding_rule="money",
+            legal_refs=(" ",),
+            source_refs=_SOURCE_REFS,
+            target_address=SheetCellAddress.at(TabName.CALCULOS, row=2, column=3),
+        )
+
+    row_set_column = SheetRowSetColumn(
+        binding="modelo-349-vies-row",
+        header_address=SheetCellAddress.at(TabName.DETALLE, row=1, column=1),
+        header_label="NIF IVA",
+        legal_refs=_LEGAL_REFS,
+    )
+    with pytest.raises(ValidationError, match="source_refs"):
+        SheetRowSet(
+            grouping="vies",
+            tab=TabName.DETALLE,
+            header_row=1,
+            first_data_row=2,
+            columns=(row_set_column,),
+            legal_refs=_LEGAL_REFS,
+            source_refs=(" ",),
         )

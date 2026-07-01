@@ -52,7 +52,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 _NONEXISTENT_CASILLA: CasillaId = validated_casilla_id("nonexistent-casilla", surface="_NONEXISTENT_CASILLA")
 _NUMERIC_CASILLA_01: CasillaId = validated_casilla_id("01", surface="_NUMERIC_CASILLA_01")
-_MISSING_LEGAL_ID = "lirpf:art-99"
+_MISSING_LEGAL_ID = "ley-35-2006:art-9999"
 
 
 def _modelo_validation_failures(modelo: ModeloDefinition) -> list[str]:

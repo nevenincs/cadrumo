@@ -1,7 +1,8 @@
 """Runtime-backed repository helpers for modelo persistence.
 
-Provides factory helpers that return a :class:`SecureObjectRepository`
-bound to the active profile bucket for use by modelo repository classes.
+Provides factory helpers that return a
+:class:`~aeat.adapters.persistence.storage.SecureObjectRepository` bound to the
+active profile bucket for use by modelo repository classes.
 """
 
 from __future__ import annotations
@@ -24,9 +25,10 @@ def secure_objects_for_modelo_bucket(bucket_id: str) -> SecureObjectRepository:
     """Return runtime-created secure-object storage for ``bucket_id``.
 
     Returns:
-        A :class:`SecureObjectRepository` scoped to the given modelo bucket.
+        A :class:`~aeat.adapters.persistence.storage.SecureObjectRepository`
+        scoped to the given modelo bucket.
     """
-    from ...adapters.persistence.storage.runtime_repository import secure_object_repository_for_bucket
+    from ...adapters.persistence.storage import secure_object_repository_for_bucket
 
     return secure_object_repository_for_bucket(bucket_id)
 
