@@ -170,6 +170,7 @@ from ._binding_selector_utils import (
     BooleanBindingEncodedValue,
     binding_row_set_selector,
     boolean_binding_encoded_values,
+    selector_as_dict,
 )
 from ._casilla_membership import (
     casilla_noncanonical_reference_targets,
@@ -797,6 +798,7 @@ __all__ = [
     "save_parity_tape",
     "scan_workbook",
     "select_revision",
+    "selector_as_dict",
     "selector_model_for_source",
     "summarize_non_overlapping_cross_revision_casilla_drift",
     "taxpayer_model_is_declared",

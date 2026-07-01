@@ -63,14 +63,11 @@ def _live_auth_identity_state(
 def _live_auth_identity_kind(provider_kind: AuthProviderKind | None, *, settings: Settings) -> str:
     if provider_kind is not AuthProviderKind.CLAVE_MOVIL:
         return ""
-    from ...adapters.outbound.aeat.auth._clave_movil import (
-        ClaveMovilConfigurationError,
-        _classify_identity,
-    )
+    from ...adapters.outbound.aeat.auth import ClaveMovilConfigurationError, classify_identity
 
     identity = unwrap_optional_secret(settings.aeat_clave_movil_dni_nie).strip()
     try:
-        return _classify_identity(identity)
+        return classify_identity(identity)
     except ClaveMovilConfigurationError:
         return "invalid_or_missing"
 
@@ -383,10 +380,7 @@ def _probe_clave_movil_identity(*, settings: Settings | None = None) -> _Provide
     ``invalid_identity``; an unset identity as ``identity_unset``. The
     probe never contacts AEAT — it validates the local configuration.
     """
-    from ...adapters.outbound.aeat.auth._clave_movil import (
-        ClaveMovilConfigurationError,
-        _classify_identity,
-    )
+    from ...adapters.outbound.aeat.auth import ClaveMovilConfigurationError, classify_identity
 
     resolved_settings = settings or load_settings()
     raw = unwrap_optional_secret(resolved_settings.aeat_clave_movil_dni_nie).strip()
@@ -396,7 +390,7 @@ def _probe_clave_movil_identity(*, settings: Settings | None = None) -> _Provide
             summary=tr("application.auth.operator.probe.clave_movil_identity_unset"),
         )
     try:
-        _classify_identity(raw)
+        classify_identity(raw)
     except ClaveMovilConfigurationError as exc:
         return _ProviderProbeOutcome(
             result=ProviderProbeResult.INVALID_IDENTITY,
