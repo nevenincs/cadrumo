@@ -12,37 +12,32 @@ import pytest
 from defusedxml import ElementTree as DefusedElementTree
 from pydantic import ValidationError
 
-from ....core import Period
+from ....core._period import Period
 from ....core.resources import bundled_path
-from ....domain.calculations.registry import (
-    CasillaFieldKind,
-    CasillaId,
-    ExportLayoutDefinition,
-    RegistrySnapshotRef,
-    RegistryValidationError,
-    parse_export_payload,
-    validated_casilla_id,
-    xml_dictionary_entries,
-)
-from ....domain.filing import (
-    FilingExportError,
+from ....domain.calculations._export_field_kind import CasillaFieldKind
+from ....domain.calculations.registry._errors import RegistryValidationError
+from ....domain.calculations.registry._export_parse import parse_export_payload, xml_dictionary_entries
+from ....domain.calculations.registry._ids import CasillaId, validated_casilla_id
+from ....domain.calculations.registry._schema_references import RegistrySnapshotRef
+from ....domain.calculations.registry._schema_surfaces import ExportLayoutDefinition
+from ....domain.filing._errors import FilingExportError, FilingExportValidationError
+from ....domain.filing._schema import (
     ModeloCasillaProvenance,
     ModeloDraft,
     ModeloValue,
     ModeloValueKind,
 )
-from ....domain.submission import ModeloDraftStatus
-from .. import (
+from ....domain.submission._protocols import ModeloDraftStatus
+from .. import build_draft
+from .._export import (
     DeclaracionExportFormat,
     DeclaracionExportResult,
     DeclaracionVerifyResult,
     DeclaracionVerifyVerdict,
-    ModeloOperatorProfile,
-    build_draft,
     export_draft,
     verify_export,
 )
-from ..runtime import RegistrySchemaAccessor
+from ..runtime import ModeloOperatorProfile, RegistrySchemaAccessor
 from ._export_support import (
     _EXPORT_PATH,
     _EXPORT_VERIFY_MATCH_CASES,
@@ -520,6 +515,36 @@ def test_export_writes_modelo_100_xml_dictionary_layout(tmp_path: Path) -> None:
     assert parsed_values["0610"] == Decimal("2007.50")
     assert parsed_values["0670"] == Decimal("2007.50")
     assert verify_export(draft, file_path=output, schema_provider=provider).verdict is DeclaracionVerifyVerdict.MATCH
+
+
+def test_export_preserves_official_modelo_100_ecivil_xml_code(tmp_path: Path) -> None:
+    draft = _approved_modelo_100_xml_dictionary_draft()
+    provider = _schema_provider(filing_year=2024, period="0A", modelos=("100",))
+    output = tmp_path / "modelo-100-2024-ecivil.xml"
+
+    export_draft(
+        draft,
+        output_path=output,
+        headers={"surnames": "MARTA BLANK", "name": "STATE", "ecivil": "4"},
+        schema_provider=provider,
+    )
+
+    root = DefusedElementTree.fromstring(output.read_bytes())
+    assert _xml_value(root, "/Declaracion/DatosIdentificativos/Declarante/ECIVIL") == "4"
+
+
+def test_export_rejects_profile_only_pareja_hecho_ecivil_xml_code(tmp_path: Path) -> None:
+    draft = _approved_modelo_100_xml_dictionary_draft()
+    provider = _schema_provider(filing_year=2024, period="0A", modelos=("100",))
+    output = tmp_path / "modelo-100-2024-invalid-ecivil.xml"
+
+    with pytest.raises(FilingExportValidationError, match="profile-only pareja de hecho"):
+        export_draft(
+            draft,
+            output_path=output,
+            headers={"surnames": "MARTA BLANK", "name": "STATE", "ecivil": "5"},
+            schema_provider=provider,
+        )
 
 
 def _official_modelo_100_2024_xsd_versions() -> set[str]:
