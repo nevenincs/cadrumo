@@ -303,6 +303,8 @@ aggregation:
       bucket_mismatch: A tranzakciós tár vödre nem egyezik a kért aggregálási vödörrel.
       candidate_outside_period: 'Belső hiba: az IVA-jelölt az aggregálási időszakon
         kívül esik.'
+      domestic_counterparty_on_intra_community_transaction: 'Spanyol partner nem érvényes Közösségen belüli ügylethez.'
+      eu_member_state_on_export_transaction: 'Export vagy exporttal egy tekintet alá eső ügylet nem tartalmazhat EU-tagállamot; kapott érték: %{member_state}.'
       unsupported_iva_category: 'Belső hiba: nem támogatott IVA-kategória az aggregáláshoz.'
   modelo_bindings:
     errors:

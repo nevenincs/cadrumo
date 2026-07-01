@@ -293,6 +293,8 @@ aggregation:
         aggregation bucket.
       candidate_outside_period: 'Internal error: IVA candidate falls outside the aggregation
         period.'
+      domestic_counterparty_on_intra_community_transaction: 'Spanish counterparties are not valid for intra-community transactions.'
+      eu_member_state_on_export_transaction: 'Export or export-assimilated operations must not carry an EU member state; got %{member_state}.'
       unsupported_iva_category: 'Internal error: unsupported IVA category for aggregation.'
   modelo_bindings:
     errors:

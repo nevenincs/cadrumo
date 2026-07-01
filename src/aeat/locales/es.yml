@@ -326,6 +326,8 @@ aggregation:
         bucket de agregación solicitado.
       candidate_outside_period: 'Error interno: el candidato IVA cae fuera del periodo
         de agregacion.'
+      domestic_counterparty_on_intra_community_transaction: 'Los terceros españoles no son válidos para operaciones intracomunitarias.'
+      eu_member_state_on_export_transaction: 'Las operaciones de exportación o asimiladas no pueden llevar un Estado miembro de la UE; recibido %{member_state}.'
       unsupported_iva_category: 'Error interno: categoria IVA no admitida para la
         agregacion.'
   modelo_bindings:

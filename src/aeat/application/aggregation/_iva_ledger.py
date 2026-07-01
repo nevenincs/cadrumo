@@ -33,6 +33,7 @@ from pydantic import BaseModel, Field, StringConstraints, field_serializer, fiel
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core import Period
 from ...core.external_constants import DEFAULT_CURRENCY
+from ...core.i18n import tr
 from ...domain.calculations.registry import (
     BindingId,
     IvaLedgerObservation,
@@ -673,9 +674,9 @@ def _validate_intracom_export_counterparty(
             return IvaLedgerAggregationIssue(
                 transaction_id=transaction_id,
                 reason=IvaLedgerAggregationIssueReason.DOMESTIC_COUNTERPARTY_ON_INTRA_COMMUNITY_TRANSACTION,
-                detail=(
-                    f"counterparty EU member state {eu_member_state.value!r} is Spain — "
-                    "not a valid intra-community counterparty"
+                detail=tr(
+                    "aggregation.iva_ledger.errors.domestic_counterparty_on_intra_community_transaction",
+                    default="Spanish counterparties are not valid for intra-community transactions.",
                 ),
             )
     if (
@@ -689,11 +690,28 @@ def _validate_intracom_export_counterparty(
         return IvaLedgerAggregationIssue(
             transaction_id=transaction_id,
             reason=IvaLedgerAggregationIssueReason.EU_MEMBER_STATE_ON_EXPORT_TRANSACTION,
-            detail=(
-                f"export/export-assimilated operation must not carry an EU member state; got {eu_member_state.value!r}"
+            detail=tr(
+                "aggregation.iva_ledger.errors.eu_member_state_on_export_transaction",
+                member_state=eu_member_state.value,
+                default=(
+                    "Export or export-assimilated operations must not carry an EU member state; "
+                    "got %{member_state}."
+                ),
             ),
         )
     return None
+
+
+def validate_iva_ledger_counterparty_category(transaction: Transaction) -> IvaLedgerAggregationIssue | None:
+    """Return the D5 counterparty/category gate issue for a ledger transaction."""
+    category = transaction.iva_category
+    if category is None:
+        return None
+    return _validate_intracom_export_counterparty(
+        transaction_id=transaction.transaction_id,
+        category=category,
+        eu_member_state=transaction.counterparty_eu_member_state,
+    )
 
 
 def _invoice_kind_for(direction: TransactionDirection) -> InvoiceKind | None:
@@ -805,6 +823,7 @@ __all__ = [
     "aggregate_iva_ledger_observations",
     "aggregate_iva_ledger_observations_from_repositories",
     "iva_ledger_missing_fact_reasons",
+    "validate_iva_ledger_counterparty_category",
     "validate_iva_ledger_observation",
     "validate_iva_ledger_observations",
 ]

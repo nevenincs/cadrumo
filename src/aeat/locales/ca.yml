@@ -321,6 +321,8 @@ aggregation:
       bucket_mismatch: El bucket del repositori de moviments no coincideix amb el
         bucket d'agregació sol·licitat.
       candidate_outside_period: La candidatura queda fora del periode.
+      domestic_counterparty_on_intra_community_transaction: 'Les contraparts espanyoles no són vàlides per a operacions intracomunitàries.'
+      eu_member_state_on_export_transaction: 'Les operacions d''exportació o assimilades no poden portar un Estat membre de la UE; rebut %{member_state}.'
       unsupported_iva_category: 'Error intern: categoria d''IVA no admesa per a l''agregacio.'
   modelo_bindings:
     errors:

@@ -36,6 +36,9 @@ related:
 - Reviewed W09.P45.S239 changes to `src/aeat/entrypoints/cli/tests/test_ledger_period_grammar.py`.
 - Checked that the broader historical ledger-import period testimonial is closed against the current canonical grammar: `--period 1T --year 2024` accepts, historical combined forms refuse, and bare `1T` without `--year` refuses on `ledger import`.
 - Checked validation evidence from targeted ledger-import period tests, the full ledger period grammar file, touched-file ruff, reviewer output, and RAG grounding.
+- Reviewed W09.P45.S312 changes to `src/aeat/application/aggregation/_iva_ledger.py`, `src/aeat/application/ledger/_preflight.py`, focused preflight tests, and locale catalogues.
+- Checked that the W05.P24 D5 reject reasons are now live through ledger preflight and all supported locales, rather than remaining Hungarian-only scaffold extras.
+- Checked validation evidence from focused ledger preflight tests, original intracom/export aggregation tests, locale scaffold/audit, placeholder parity, touched-file ruff, diff check, reviewer output, and RAG grounding.
 
 ## Findings
 
@@ -70,6 +73,10 @@ Initial review found no behavioral issue but identified stale test prose describ
 ### w09-p45-s239 | low | no findings
 
 No findings for the ledger import period-regression closure. Production already uses the shared strict period parser for `ledger import`; the new real CLI tests pin the accepted canonical `1T` plus `--year` form and the intentional refusal of `2024-1T`, `2024/1T`, `2024Q1`, and bare `1T` without `--year`.
+
+### w09-p45-s312 | low | no findings
+
+No findings for the D5 IVA classification locale/readiness closure. The first Hungarian-only attempt failed correctly because those keys had no live code reference; the accepted implementation promotes the existing IVA counterparty/category validator for ledger transactions, maps its D5 reasons into ledger preflight, and adds matching English, Spanish, Catalan, and Hungarian detail leaves. The preflight tests prove both blocking readiness and Hungarian rendering.
 
 ## Recommendations
 
