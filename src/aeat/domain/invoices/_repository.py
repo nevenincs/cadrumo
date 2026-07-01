@@ -2,8 +2,8 @@
 
 :class:`InvoiceCatalogueRepository` is the sanctioned read/write path for the
 :class:`InvoiceCatalogue`. It stores the catalogue as an encrypted byte object
-via :class:`~aeat.adapters.persistence.storage.sql.SecureObjectRepository` at
-:class:`~aeat.adapters.persistence.storage.SensitivityClass` ``FINANCIAL`` using
+via :class:`~aeat.adapters.persistence.storage.SecureObjectRepository` at
+``FINANCIAL`` :class:`~aeat.adapters.persistence.storage.SensitivityClass` using
 an :class:`~aeat.adapters.persistence.storage.Envelope` wrapper; no plaintext
 invoice row, JSON catalogue, or envelope file lands on disk.
 The storage contract is declared by
@@ -60,7 +60,7 @@ class InvoiceCatalogueRepository:
     singleton-key contract for the encrypted invoice catalogue row. The
     :class:`InvoiceCatalogue` payload is wrapped in
     :class:`~aeat.adapters.persistence.storage.Envelope` before
-    :class:`~aeat.adapters.persistence.storage.sql.SecureObjectRepository`
+    :class:`~aeat.adapters.persistence.storage.SecureObjectRepository`
     persists it, and :meth:`to_secure_object_write` exposes the same write for
     transaction/event co-commit paths. This class exposes the concrete load/save
     implementation behind
