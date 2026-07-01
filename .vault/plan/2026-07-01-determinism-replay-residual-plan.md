@@ -44,7 +44,7 @@ Confirm and sort only the output-feeding directory scans; leave membership/aggre
 
 Opt-in determinism-conformance axis with per-command byte-identical proof and visible uncovered-gap report; enrol the ledger-add retried-no-op as the first state-transition case via the db_sha256 tier.
 
-- [ ] `P04.S04` - Add a determinism-conformance test axis: opt-in enrolment, per-command byte-identical envelope proof under frozen_clock+injected identity against real repositories, and a visible uncovered-gap report; `enrol the ledger-add retried-no-op as the first state-transition case asserting db_sha256 identity after the idempotent second add against a hermetic synthetic var root.; `src/aeat/core/observability/tests/test_determinism_conformance.py`.
+- [x] `P04.S04` - Add a determinism-conformance test axis: opt-in enrolment, per-command byte-identical envelope proof under frozen_clock+injected identity against real repositories, and a visible uncovered-gap report; `enrol the ledger-add retried-no-op as the first state-transition case asserting db_sha256 identity after the idempotent second add against a hermetic synthetic var root.; `src/aeat/core/observability/tests/test_determinism_conformance.py`.
 
 ## Description
 
