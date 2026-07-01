@@ -200,13 +200,16 @@ class TestParseDescendienteFlagMesesTrabajo:
         d = parse_descendiente_flag("NACIMIENTO=2022-06-01,MESES_TRABAJO=0")
         assert d.meses_madre_trabajo_2024 == 0
 
-    def test_meses_trabajo_13_raises(self) -> None:
+    @pytest.mark.parametrize(
+        "spec",
+        (
+            pytest.param("NACIMIENTO=2022-06-01,MESES_TRABAJO=13", id="above-range"),
+            pytest.param("NACIMIENTO=2022-06-01,MESES_TRABAJO=-1", id="negative"),
+        ),
+    )
+    def test_meses_trabajo_out_of_range_raises(self, spec: str) -> None:
         with pytest.raises(ValueError, match="MESES_TRABAJO must be 0"):
-            parse_descendiente_flag("NACIMIENTO=2022-06-01,MESES_TRABAJO=13")
-
-    def test_meses_trabajo_negative_raises(self) -> None:
-        with pytest.raises(ValueError, match="MESES_TRABAJO must be 0"):
-            parse_descendiente_flag("NACIMIENTO=2022-06-01,MESES_TRABAJO=-1")
+            parse_descendiente_flag(spec)
 
 
 # ---------------------------------------------------------------------------
