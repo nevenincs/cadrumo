@@ -31,6 +31,7 @@ source_refs = [
     "aeat-dr-100-2025-dictionary",
     "aeat-modelo-190-instructions-2025",
     "boe-modelo-190-2025-form",
+    "aeat-modelo-193-296-note-2025",
     "boe-modelo-193-2011-form",
     "aeat-modelo-202-instructions",
     "aeat-modelo-232-procedure",
