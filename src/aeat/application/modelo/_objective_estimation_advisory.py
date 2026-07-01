@@ -37,13 +37,13 @@ from ...domain.modelos._verification_report import (
 )
 
 if TYPE_CHECKING:
-    from ...domain.calculations.registry import LegalParameter
+    from ...domain.calculations.registry import LegalParameter, SourceRefId
     from ...domain.modelos._work_unit import WorkUnit
 
 _SETTLED_YEAR_MIN = 2016
 _SETTLED_YEAR_MAX = 2026
 _AFFECTED_MODELOS = frozenset({Modelo.M100.value, Modelo.M131.value})
-_AEAT_RENTA_2025_MANUAL_SOURCE_REF = "aeat-renta-2025-manual-parte1"
+_AEAT_RENTA_2025_MANUAL_SOURCE_REF: SourceRefId = "aeat-renta-2025-manual-parte1"
 
 _PARAMETER_BY_PROFILE_FIELD = (
     (
@@ -137,7 +137,7 @@ def _objective_estimation_exclusion_advisory_findings(
                     "exclusion applies, update the IRPF estimation regime/profile before filing; if it does not, "
                     "retain the supporting activity-volume evidence."
                 ),
-                legal_refs=tuple(str(ref) for ref in parameter.legal_refs),
+                legal_refs=parameter.legal_refs,
                 source_refs=_scope_source_refs(work_unit.filing_year),
             ),
         )
@@ -155,7 +155,7 @@ def _require_parameter(parameters: Mapping[str, LegalParameter], parameter_id: s
     return parameter
 
 
-def _scope_source_refs(filing_year: int) -> tuple[str, ...]:
+def _scope_source_refs(filing_year: int) -> tuple[SourceRefId, ...]:
     if filing_year in (2025, 2026):
         return (_AEAT_RENTA_2025_MANUAL_SOURCE_REF,)
     return ()
