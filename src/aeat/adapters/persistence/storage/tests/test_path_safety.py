@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable
 from pathlib import Path
 
 import pytest
@@ -23,20 +22,11 @@ def _raise_unsafe_repository_id(_root: Path) -> None:
     safe_repository_id("foo/bar", context="x")
 
 
-@pytest.mark.parametrize(
-    "operation",
-    (
-        pytest.param(_raise_unsafe_subpath, id="subpath"),
-        pytest.param(_raise_unsafe_repository_id, id="repository-id"),
-    ),
-)
-def test_path_containment_errors_inherit_value_error(
-    tmp_path: Path,
-    operation: Callable[[Path], None],
-) -> None:
+def test_path_containment_errors_inherit_value_error(tmp_path: Path) -> None:
     """Legacy ``except ValueError`` callers must still catch typed errors."""
-    with pytest.raises(ValueError):
-        operation(tmp_path)
+    for operation in (_raise_unsafe_subpath, _raise_unsafe_repository_id):
+        with pytest.raises(ValueError):
+            operation(tmp_path)
 
 
 class TestSafeSubpath:
@@ -46,19 +36,15 @@ class TestSafeSubpath:
         resolved = safe_subpath(tmp_path, "alpha/beta/gamma.json", context="test")
         assert resolved == (tmp_path / "alpha" / "beta" / "gamma.json").resolve()
 
-    @pytest.mark.parametrize(
-        "unsafe_path",
-        (
+    def test_unsafe_relative_paths_rejected(self, tmp_path: Path) -> None:
+        for unsafe_path in (
             "../escape.json",
             "/etc/passwd",
             "alpha\\beta.json",
             "alpha/../beta.json",
-        ),
-        ids=("traversal", "absolute", "backslash", "double-dot"),
-    )
-    def test_unsafe_relative_paths_rejected(self, tmp_path: Path, unsafe_path: str) -> None:
-        with pytest.raises(PathContainmentError):
-            safe_subpath(tmp_path, unsafe_path, context="test")
+        ):
+            with pytest.raises(PathContainmentError):
+                safe_subpath(tmp_path, unsafe_path, context="test")
 
 
 class TestSafeRecordPath:
@@ -68,49 +54,38 @@ class TestSafeRecordPath:
         resolved = safe_record_path(tmp_path, "abc123", context="test")
         assert resolved == (tmp_path / "abc123.json").resolve()
 
-    @pytest.mark.parametrize(
-        "unsafe_token",
-        (
+    def test_unsafe_tokens_rejected(self, tmp_path: Path) -> None:
+        for unsafe_token in (
             "../escape",
             "alpha/beta",
             "",
             "a" * 200,
-        ),
-        ids=("traversal", "slash", "empty", "overlong"),
-    )
-    def test_unsafe_tokens_rejected(self, tmp_path: Path, unsafe_token: str) -> None:
-        with pytest.raises(PathContainmentError):
-            safe_record_path(tmp_path, unsafe_token, context="test")
+        ):
+            with pytest.raises(PathContainmentError):
+                safe_record_path(tmp_path, unsafe_token, context="test")
 
 
 class TestSafeRepositoryId:
     """``safe_repository_id`` rejects tokens that would compose into an unsafe filename."""
 
-    @pytest.mark.parametrize(
-        ("token", "context"),
-        (
-            pytest.param("abc123-de", "test_id", id="slug"),
-            pytest.param("550e8400-e29b-41d4-a716-446655440000", "submission_id", id="uuid"),
-        ),
-    )
-    def test_safe_repository_id_returns_clean_token_unchanged(self, token: str, context: str) -> None:
-        assert safe_repository_id(token, context=context) == token
+    def test_safe_repository_id_returns_clean_token_unchanged(self) -> None:
+        for token, context in (
+            ("abc123-de", "test_id"),
+            ("550e8400-e29b-41d4-a716-446655440000", "submission_id"),
+        ):
+            assert safe_repository_id(token, context=context) == token, token
 
-    @pytest.mark.parametrize(
-        ("unsafe_id", "context", "message"),
-        (
+    def test_unsafe_repository_ids_rejected(self) -> None:
+        for unsafe_id, context, message in (
             ("", "draft_id", "must be non-empty"),
             ("foo/bar", "draft_id", "path separator"),
             ("foo\\bar", "draft_id", "path separator"),
             (".", "modelo", "relative-path token"),
             ("..", "modelo", "relative-path token"),
             (".hidden", "csv", "relative-path token"),
-        ),
-        ids=("empty", "forward-slash", "backslash", "single-dot", "double-dot", "dot-prefix"),
-    )
-    def test_unsafe_repository_ids_rejected(self, unsafe_id: str, context: str, message: str) -> None:
-        with pytest.raises(PathContainmentError, match=message):
-            safe_repository_id(unsafe_id, context=context)
+        ):
+            with pytest.raises(PathContainmentError, match=message):
+                safe_repository_id(unsafe_id, context=context)
 
     def test_context_label_appears_in_error(self) -> None:
         with pytest.raises(PathContainmentError, match=r"^submission_id must"):
