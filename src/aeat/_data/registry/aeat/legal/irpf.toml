@@ -1453,8 +1453,20 @@ applies_from = 2025-01-01
 source_url = "https://sede.agenciatributaria.gob.es/Sede/procedimientoini/GI10.shtml"
 review_status = "reviewed"
 
-[sources."boe-modelo-190-2025-form"]
+[sources."aeat-modelo-190-instructions-2025"]
 evidence_tier = "official_source_guidance"
+authority = "aeat"
+kind = "manual_pdf"
+corpus_path = "corpus/aeat_official/instructions/modelo_190/files/modelo-190-instrucciones-2025.pdf"
+sha256 = "5d75dc197729fe5dfdd13fc2f97de4a4e3f4eaa4db24d68271c559e4dcca92c6"
+bytes = 225156
+retrieved_at = 2026-07-01
+applies_from = 2025-01-01
+source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Procedimiento_ayuda/GI10/Instrucciones/instr_mod190_es_es.pdf"
+review_status = "reviewed"
+
+[sources."boe-modelo-190-2025-form"]
+evidence_tier = "layout_authority"
 authority = "boe"
 kind = "form_spec"
 corpus_path = "corpus/normatives/html/orden-eha-3127-2009.html"
@@ -1467,7 +1479,7 @@ source_url = "https://www.boe.es/buscar/act.php?id=BOE-A-2009-18567"
 review_status = "reviewed"
 
 [sources."boe-modelo-190-2025-amendment"]
-evidence_tier = "official_source_guidance"
+evidence_tier = "layout_authority"
 authority = "boe"
 kind = "form_spec"
 corpus_path = "corpus/normatives/html/orden-hac-1431-2025.html"

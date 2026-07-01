@@ -65,6 +65,27 @@ def _withholding_observation(source_id: str, nif: str, clave: str) -> Withholdin
     )
 
 
+def test_modelo_190_guidance_and_layout_sources_are_separated() -> None:
+    modelo, catalogues = _committed_modelo("190")
+    instructions = catalogues.sources["aeat-modelo-190-instructions-2025"]
+
+    assert "aeat-modelo-190-instructions-2025" in modelo.source_refs
+    assert instructions.evidence_tier == "official_source_guidance"
+    assert instructions.authority == "aeat"
+    assert instructions.kind == "manual_pdf"
+    assert (bundled_path() / instructions.corpus_path).is_file()
+    assert catalogues.sources["aeat-dr-190-2025"].evidence_tier == "layout_authority"
+    assert catalogues.sources["boe-modelo-190-2025-form"].evidence_tier == "layout_authority"
+    assert catalogues.sources["boe-modelo-190-2025-amendment"].evidence_tier == "layout_authority"
+    revision = modelo.revisions["2024-y-siguientes"]
+    for formula in revision.formulas:
+        for citation in formula.source_citations:
+            assert catalogues.sources[citation.source_ref].evidence_tier == "official_source_guidance"
+    for binding in revision.bindings:
+        for citation in binding.source_citations:
+            assert catalogues.sources[citation.source_ref].evidence_tier == "official_source_guidance"
+
+
 def test_modelo_190_validates_and_gates_workflow_surfaces_through_snapshot() -> None:
     modelo, catalogues = _committed_modelo("190")
 
