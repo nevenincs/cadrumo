@@ -124,9 +124,9 @@ _ENUM_DISPATCH_BINDING_ARG_INDEX: dict[str, int] = {
 
 def _enum_dispatch_binding_arg_index(expression: FormulaExpression) -> int | None:
     op = expression.op or ""
-    if op == "m210_resolve_rate":
-        if len(expression.args) == 6:
-            return 5
+    if op == "irnr_resolve_tipo_gravamen":
+        if len(expression.args) == 5:
+            return 4
         return None
     return _ENUM_DISPATCH_BINDING_ARG_INDEX.get(op)
 
@@ -231,9 +231,7 @@ def formula_evaluation_order(revision: ModeloRevision) -> tuple[CasillaId, ...]:
     sorter: TopologicalSorter[CasillaId] = TopologicalSorter()
     for formula in revision.formulas:
         dependencies = [
-            casilla
-            for casilla in expression_casilla_refs(formula.expression)
-            if casilla in computed_targets
+            casilla for casilla in expression_casilla_refs(formula.expression) if casilla in computed_targets
         ]
         sorter.add(formula.target_casilla_id, *dependencies)
     return tuple(sorter.static_order())

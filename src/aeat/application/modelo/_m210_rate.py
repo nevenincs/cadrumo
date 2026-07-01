@@ -1,23 +1,24 @@
 """Modelo 210 IRNR treaty-rate resolution helpers.
 
-The registry formula runtime computes the filing values and emits sentinel
-rates when a Modelo 210 rate cannot be applied directly. This application helper
-reads the same ``m210-tipo-gravamen-2025`` and ``m210-convenio-rates`` parameter
-rows from a :class:`~aeat.domain.calculations.registry.RegistrySnapshot`, selects
-the treaty country from :class:`~aeat.domain.deadlines.TaxpayerProfile`, and
-returns either a scalar IRNR rate or blocking
-:class:`~aeat.domain.modelos.ModeloVerificationFinding` records for deferred
-baseline coverage or missing treaty rows.
+The registry formula runtime computes the filing values and emits sentinel rates
+when a Modelo 210 rate cannot be applied directly. This application helper replays
+the same single tipo-de-gravamen resolution path over a
+:class:`~aeat.domain.calculations.registry.RegistrySnapshot`: it reads the
+``m210-tipo-gravamen-2025`` baseline table, consults the cross-cutting
+:class:`~aeat.domain.calculations.registry.ConvenioAuthority` treaty projection for
+the profile's ``country_of_fiscal_residence``, and returns either a scalar IRNR
+rate or blocking :class:`~aeat.domain.modelos.ModeloVerificationFinding` records for
+deferred baseline coverage or missing treaty rows.
 
-``DOMESTIC_TARIFF`` rows are not scalar rates. They delegate to the live
-base-aware tariff path in the registry runtime, so this helper returns
-``(None, [])`` for that branch instead of inventing an effective rate without the
-tax base.
+Base-dependent branches — the ``allocation_domestic_tariff`` pension delegation and
+the pension ``ceiling`` — return ``(None, [])`` because the live base-aware tariff
+path in the registry runtime remains the calculation authority; the sweep keeps the
+runtime-computed effective rate for those.
 
 See Also:
     :mod:`aeat.domain.calculations.registry._formula_runtime`
-        Formula-runtime implementation of ``m210_resolve_rate`` and the M210
-        sentinel values this application layer rewrites into findings.
+        Formula-runtime implementation of ``irnr_resolve_tipo_gravamen`` and the
+        M210 sentinel values this application layer rewrites into findings.
     :func:`aeat.application.modelo._verification_actions.verify_modelo_revision`
         Verification path that replays this resolver for Modelo 210 observations.
     :mod:`aeat.application.calculations.tests.test_modelo_210_irnr_continuity`
@@ -29,8 +30,9 @@ from __future__ import annotations
 from decimal import Decimal
 from typing import TYPE_CHECKING
 
+from ...core import ConvenioOverrideKind, TipoRentaIrnr
 from ...core.i18n import tr
-from ...domain.calculations.registry import ConvenioRateRow, LegalRefId, RegistrySnapshot, SourceRefId
+from ...domain.calculations.registry import ConvenioOverride, LegalRefId, RegistrySnapshot, SourceRefId
 from ...domain.deadlines import TaxpayerProfile
 from ...domain.modelos import (
     ModeloVerificationFinding,
@@ -41,7 +43,7 @@ from ...domain.modelos import (
 if TYPE_CHECKING:
     from ...domain.calculations.registry._schema_formula import ParameterDefinition
 
-_M210_DOMESTIC_TARIFF_RATE = "DOMESTIC_TARIFF"
+_ZERO = Decimal("0")
 
 
 def _m210_blocking_finding(
@@ -93,33 +95,38 @@ def _resolve_baseline_rate(
     return None, True
 
 
-def _resolve_convenio_rate(
-    convenio_param: ParameterDefinition | None,
+def _resolve_convenio_override(
+    snapshot: RegistrySnapshot,
+    baseline_param: ParameterDefinition,
     *,
     country_code: str,
     tipo_renta: str,
     year: int,
+    baseline_rate: Decimal | None,
 ) -> tuple[Decimal | None, list[ModeloVerificationFinding]]:
-    """Resolve the Convenio (treaty) override rate for a treaty-country profile.
+    """Resolve the treaty override rate for a treaty-country profile.
 
-    Emits the ``m210-convenio-rate-missing`` BLOCKING finding when no row exists.
-    Rows whose rate is ``DOMESTIC_TARIFF`` intentionally return ``(None, [])``
-    because the base-aware tariff branch in the registry runtime remains the
-    calculation authority.
+    Reads the cross-cutting :class:`~aeat.domain.calculations.registry.ConvenioAuthority`
+    projected onto the snapshot and branches on the typed
+    :class:`~aeat.core.ConvenioOverrideKind`. Emits the
+    ``m210-convenio-rate-missing`` BLOCKING finding when the treaty carries no
+    row for the filed income type. Base-dependent kinds
+    (``allocation_domestic_tariff``, pension ``ceiling``) return ``(None, [])`` so
+    the base-aware tariff branch in the registry runtime remains the calculation
+    authority.
     """
-    convenio_lookup: dict[tuple[str, str], ConvenioRateRow] = {}
-    if convenio_param is not None:
-        for row in convenio_param.convenio_rates:
-            if row.valid_from.year <= year and (row.valid_to is None or row.valid_to.year >= year):
-                convenio_lookup[(row.country_code, row.tipo_renta)] = row
+    override: ConvenioOverride | None = None
+    try:
+        tipo_enum = TipoRentaIrnr(tipo_renta)
+    except ValueError:
+        tipo_enum = None
+    if tipo_enum is not None:
+        override = snapshot.convenio.resolve(country_code, tipo_enum, year)
 
-    matched_row = convenio_lookup.get((country_code, tipo_renta))
-    legal_refs: tuple[LegalRefId, ...] = tuple(convenio_param.legal_refs) if convenio_param is not None else ()
-    source_refs: tuple[SourceRefId, ...] = (
-        tuple(convenio_param.source_refs) if convenio_param is not None else ()
-    )
+    legal_refs: tuple[LegalRefId, ...] = tuple(baseline_param.legal_refs)
+    source_refs: tuple[SourceRefId, ...] = tuple(baseline_param.source_refs)
 
-    if matched_row is None:
+    if override is None:
         finding = _m210_blocking_finding(
             message=(
                 f"M210 Convenio rate row missing for country={country_code!r} "
@@ -136,10 +143,16 @@ def _resolve_convenio_rate(
         )
         return None, [finding]
 
-    if matched_row.rate == _M210_DOMESTIC_TARIFF_RATE:
-        return None, []
-
-    return Decimal(matched_row.rate), []
+    if override.kind is ConvenioOverrideKind.EXEMPT:
+        return _ZERO, []
+    if override.kind is ConvenioOverrideKind.FLAT and override.rate is not None:
+        return override.rate, []
+    if override.kind is ConvenioOverrideKind.CEILING and override.rate is not None:
+        if baseline_rate is None:
+            return None, []
+        return min(baseline_rate, override.rate), []
+    # ALLOCATION_DOMESTIC_TARIFF: base-aware; the runtime tariff branch is authority.
+    return None, []
 
 
 def _has_live_pension_tariff(snapshot: RegistrySnapshot, year: int) -> bool:
@@ -163,7 +176,8 @@ def resolve_m210_rate(
     """Resolve the M210 rate for (profile, tipo_renta, year).
 
     The :class:`~aeat.domain.calculations.registry.RegistrySnapshot` supplies the
-    ``m210-tipo-gravamen-2025`` and ``m210-convenio-rates`` parameter rows; the
+    ``m210-tipo-gravamen-2025`` baseline table and the cross-cutting
+    :class:`~aeat.domain.calculations.registry.ConvenioAuthority`; the
     :class:`~aeat.domain.deadlines.TaxpayerProfile` supplies
     ``country_of_fiscal_residence`` for treaty lookup. Returns ``(rate,
     findings)`` where ``findings`` contains blocking
@@ -171,23 +185,21 @@ def resolve_m210_rate(
     required rate is deferred or unavailable.
 
     A profile with no treaty country uses the baseline table. A profile with a
-    treaty country must match a Convenio row for ``(country, tipo_renta)`` unless
-    the row explicitly delegates back to the domestic tariff. The resolver
-    returns no scalar rate for live pension tariffs because those depend on the
-    actual base amount and are computed by the formula runtime.
+    treaty country must match a treaty override for ``(country, tipo_renta)``
+    unless the override delegates back to the domestic tariff. The resolver
+    returns no scalar rate for base-dependent branches because those depend on
+    the actual base amount and are computed by the formula runtime.
 
     See Also:
-        :func:`aeat.domain.calculations.registry._formula_runtime._evaluate_m210_resolve_rate`
-        :class:`aeat.domain.calculations.registry.ConvenioRateRow`
+        :func:`aeat.domain.calculations.registry._formula_runtime._evaluate_irnr_resolve_tipo_gravamen`
+        :class:`aeat.domain.calculations.registry.ConvenioAuthority`
         :class:`aeat.domain.deadlines.TaxpayerProfile`
     """
     baseline_param = None
-    convenio_param = None
     for parameter in snapshot.revision.parameters:
         if parameter.id == "m210-tipo-gravamen-2025":
             baseline_param = parameter
-        elif parameter.id == "m210-convenio-rates":
-            convenio_param = parameter
+            break
 
     if baseline_param is None:
         return None, []
@@ -199,7 +211,7 @@ def resolve_m210_rate(
     treaty_country = profile.country_of_fiscal_residence
     if treaty_country is None:
         if baseline_rate is None:
-            if tipo_renta == "pension" and _has_live_pension_tariff(snapshot, year):
+            if tipo_renta == TipoRentaIrnr.PENSION.value and _has_live_pension_tariff(snapshot, year):
                 return None, []
             finding = _m210_blocking_finding(
                 message=(
@@ -217,9 +229,11 @@ def resolve_m210_rate(
             return None, [finding]
         return baseline_rate, []
 
-    return _resolve_convenio_rate(
-        convenio_param,
+    return _resolve_convenio_override(
+        snapshot,
+        baseline_param,
         country_code=treaty_country.upper(),
         tipo_renta=tipo_renta,
         year=year,
+        baseline_rate=baseline_rate,
     )

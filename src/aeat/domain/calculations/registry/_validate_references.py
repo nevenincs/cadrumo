@@ -165,9 +165,6 @@ def _check_parameter_refs(checker: _IdReferenceChecker, revision: ModeloRevision
         checker.chk_legal_source_refs(pp, parameter.legal_refs, parameter.source_refs)
         for citation in parameter.source_citations:
             checker.chk(f"{pp}.source_citations.{citation.source_ref}", citation.source_ref, checker.source_ids)
-        for row in parameter.convenio_rates:
-            rp = f"{pp}.convenio_rate {row.country_code}/{row.tipo_renta}/{row.valid_from.isoformat()}"
-            checker.chk_tuple(f"{rp}.legal_refs", row.legal_refs, checker.legal_ids)
 
 
 def _check_binding_refs(checker: _IdReferenceChecker, revision: ModeloRevision) -> None:
