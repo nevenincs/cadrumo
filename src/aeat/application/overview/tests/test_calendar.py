@@ -873,8 +873,7 @@ def test_calendar_completeness_lists_uncomputable_with_reason() -> None:
 
     With only ``iva.regime`` declared, the completeness payload must
     list it under explicitly_set_keys and the remaining gating keys
-    (does_intracomunitario, pays_professionals_with_retencion,
-    pays_rent_with_retencion, irpf.estimation_regime) under defaulted_keys.
+    under defaulted_keys.
     """
     rng = OverviewCalendarRange(from_date=date(2026, 1, 1), to_date=date(2026, 4, 20))
     today = date(2026, 4, 1)
@@ -886,6 +885,27 @@ def test_calendar_completeness_lists_uncomputable_with_reason() -> None:
     cal = build_overview_calendar(_profile(), rng, today=today, raw_values=raw)
     assert "iva.regime" in cal.completeness.explicitly_set_keys
     assert "does_intracomunitario" in cal.completeness.defaulted_keys
+    assert "has_employees" in cal.completeness.defaulted_keys
+    assert "pays_capital_income_with_retencion" in cal.completeness.defaulted_keys
     assert "pays_professionals_with_retencion" in cal.completeness.defaulted_keys
     assert "pays_rent_with_retencion" in cal.completeness.defaulted_keys
+    assert "professional_income_withholding_ge_70pct" in cal.completeness.defaulted_keys
     assert "irpf.estimation_regime" in cal.completeness.defaulted_keys
+
+
+def test_calendar_warnings_include_registry_deadline_window_predicates() -> None:
+    """Deadline-window applicability predicates must be visible as warnings."""
+    rng = OverviewCalendarRange(from_date=date(2026, 1, 1), to_date=date(2026, 4, 20))
+    today = date(2026, 4, 1)
+    raw = {
+        "tax.id": "X1234567L",
+        "activity": "design",
+        "iva.regime": "general",
+    }
+
+    cal = build_overview_calendar(_profile(), rng, today=today, raw_values=raw)
+    warnings_by_code = {warning.code: warning for warning in cal.warnings}
+
+    assert "111" in warnings_by_code["has_employees"].affected_modelos
+    assert "123" in warnings_by_code["pays_capital_income_with_retencion"].affected_modelos
+    assert "130" in warnings_by_code["professional_income_withholding_ge_70pct"].affected_modelos
