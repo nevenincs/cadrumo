@@ -844,6 +844,16 @@ model_selectors = ["declaration.type"]
 export_headers = ["declaration_type", "complementaria", "complementaria_page", "page_complementaria"]
 
 [[sections.fields]]
+key = "rental_reduccion_art_23_2_tier_2024"
+type = "enum"
+required = false
+sensitivity = "financial"
+description = "Modelo 100 2024 Art. 23.2 housing-rental reduction tier selected from the legally applicable 50, 60, 70, or 90 percent path. Absent means the engine cannot compute casilla 0150 from the eligibility checkbox alone."
+enum_values = ["tier-50", "tier-60", "tier-70", "tier-90"]
+model_selectors = ["renta.rental_reduccion_art_23_2_tier_2024"]
+legal_refs = ["ley-35-2006:art-23"]
+
+[[sections.fields]]
 key = "previous_receipt"
 type = "string"
 required = false
