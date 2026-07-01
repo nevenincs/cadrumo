@@ -43,31 +43,19 @@ def test_single_ratio_round_trips() -> None:
     assert reloaded.ratios[SpendingCategory.SUMINISTROS_HOME_OFFICE_LUZ] == Decimal("0.21")
 
 
-def test_negative_ratio_rejected() -> None:
-    with pytest.raises(ValidationError, match=r"must be in \[0, 1\]"):
-        UsageRatioProfile(ratios={SpendingCategory.SUMINISTROS_HOME_OFFICE_LUZ: Decimal("-0.1")})
-
-
-def test_above_one_rejected() -> None:
-    with pytest.raises(ValidationError, match=r"must be in \[0, 1\]"):
-        UsageRatioProfile(ratios={SpendingCategory.SUMINISTROS_HOME_OFFICE_LUZ: Decimal("1.5")})
-
-
-def test_nan_rejected() -> None:
-    # NaN is rejected by pydantic's strict-Decimal finite-number gate
-    # BEFORE the [0, 1] bound check runs — a distinct dispatch path.
-    with pytest.raises(ValidationError, match=r"finite number"):
-        UsageRatioProfile(ratios={SpendingCategory.SUMINISTROS_HOME_OFFICE_LUZ: Decimal("NaN")})
-
-
-def test_positive_infinity_rejected() -> None:
-    with pytest.raises(ValidationError, match=r"finite number"):
-        UsageRatioProfile(ratios={SpendingCategory.SUMINISTROS_HOME_OFFICE_LUZ: Decimal("Infinity")})
-
-
-def test_negative_infinity_rejected() -> None:
-    with pytest.raises(ValidationError, match=r"finite number"):
-        UsageRatioProfile(ratios={SpendingCategory.SUMINISTROS_HOME_OFFICE_LUZ: Decimal("-Infinity")})
+@pytest.mark.parametrize(
+    ("ratio", "message"),
+    (
+        pytest.param(Decimal("-0.1"), r"must be in \[0, 1\]", id="negative"),
+        pytest.param(Decimal("1.5"), r"must be in \[0, 1\]", id="above-one"),
+        pytest.param(Decimal("NaN"), r"finite number", id="nan"),
+        pytest.param(Decimal("Infinity"), r"finite number", id="positive-infinity"),
+        pytest.param(Decimal("-Infinity"), r"finite number", id="negative-infinity"),
+    ),
+)
+def test_invalid_ratio_values_rejected(ratio: Decimal, message: str) -> None:
+    with pytest.raises(ValidationError, match=message):
+        UsageRatioProfile(ratios={SpendingCategory.SUMINISTROS_HOME_OFFICE_LUZ: ratio})
 
 
 def test_unknown_category_key_rejected_from_json() -> None:
