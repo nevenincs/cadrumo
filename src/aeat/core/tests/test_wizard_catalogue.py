@@ -90,34 +90,25 @@ _UPWARD_PATTERN = "from ...application.wizard._catalogue import"
 _ALT_UPWARD_PATTERN = "from aeat.application.wizard._catalogue import"
 
 
-def test_no_deferred_upward_import_in_deadlines_profiles() -> None:
-    """aeat.domain.deadlines._profiles must not import from _catalogue (lazy or top-level)."""
+@pytest.mark.parametrize(
+    ("module_path", "replacement"),
+    (
+        pytest.param("aeat.domain.deadlines._profiles", "get_setup_flow()", id="deadlines-profiles"),
+        pytest.param("aeat.domain.contribuyente._keys", "get_wizard_flows()", id="profile-keys"),
+    ),
+)
+def test_no_deferred_upward_import_from_wizard_catalogue(module_path: str, replacement: str) -> None:
+    """Domain modules must not import from the application wizard catalogue."""
 
-    source = _source_of("aeat.domain.deadlines._profiles")
+    source = _source_of(module_path)
     assert _UPWARD_PATTERN not in source, (
-        "aeat.domain.deadlines._profiles still contains a direct import from "
-        "aeat.application.wizard._catalogue. Remove it and use get_setup_flow() from "
+        f"{module_path} still contains a direct import from "
+        f"aeat.application.wizard._catalogue. Remove it and use {replacement} from "
         "aeat.core.wizard_catalogue instead."
     )
     assert _ALT_UPWARD_PATTERN not in source, (
-        "aeat.domain.deadlines._profiles still contains an absolute import from "
-        "aeat.application.wizard._catalogue. Remove it and use get_setup_flow() from "
-        "aeat.core.wizard_catalogue instead."
-    )
-
-
-def test_no_deferred_upward_import_in_profile_keys() -> None:
-    """aeat.domain.contribuyente._keys must not import from _catalogue (lazy or top-level)."""
-
-    source = _source_of("aeat.domain.contribuyente._keys")
-    assert _UPWARD_PATTERN not in source, (
-        "aeat.domain.contribuyente._keys still contains a direct import from "
-        "aeat.application.wizard._catalogue. Remove it and use get_wizard_flows() from "
-        "aeat.core.wizard_catalogue instead."
-    )
-    assert _ALT_UPWARD_PATTERN not in source, (
-        "aeat.domain.contribuyente._keys still contains an absolute import from "
-        "aeat.application.wizard._catalogue. Remove it and use get_wizard_flows() from "
+        f"{module_path} still contains an absolute import from "
+        f"aeat.application.wizard._catalogue. Remove it and use {replacement} from "
         "aeat.core.wizard_catalogue instead."
     )
 
