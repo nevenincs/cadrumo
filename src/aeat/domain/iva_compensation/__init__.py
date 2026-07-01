@@ -1,10 +1,34 @@
-"""IVA-compensation domain: pure carry-forward, reconciliation, and balance logic.
+"""Public facade for pure IVA-compensation domain primitives.
 
-This package owns the regulatory carry-forward projection (Modelo 303 four-year
-compensation window), the wallet reconciliation decision logic, and the wallet
-balance projection, plus their typed guard errors. Repositories, event stores,
-and orchestration that wire these pure pieces to persistence remain in the
-application layer.
+This package owns the regulatory Modelo 303 carry-forward projection, the
+Modelo 390 year-end carry partition, the wallet reconciliation decision logic,
+and the wallet balance projection. The domain works with typed immutable records
+such as :class:`IvaCompensationPeriodState`,
+:class:`IvaCompensationCarryForwardLot`,
+:class:`IvaCompensationCarryForwardReport`,
+:class:`IvaCompensationYearEndCarryPartition`, and
+:class:`IvaWalletBalanceReport`; it does not open repositories, emit bucket
+events, or resolve the active profile.
+
+Compensation availability is derived by :func:`derive_303_compensation_available`
+and then projected through
+:func:`build_iva_compensation_carry_forward_report` /
+:func:`enforce_iva_compensation_four_year_window`. Reconciliation records such
+as :class:`IvaCompensationOverride`,
+:class:`~aeat.domain.iva_compensation._reconciliation.IvaCompensationAuthoritySource`,
+and
+:class:`~aeat.domain.iva_compensation._reconciliation.IvaCompensationReconciliationDecision`
+separate AEAT wallet evidence, filed-history evidence, local recurrence, and
+taxpayer override before Modelo 303 consumes casilla ``110``.
+
+Repositories, secure-object custody, live wallet acquisition, and bucket event
+emission remain application responsibilities. See
+:class:`~aeat.application.calculations.IvaCompensationHistoryRepository`,
+:class:`~aeat.application.calculations.IvaWalletDecisionRepository`,
+:mod:`aeat.application.calculations._iva_wallet_reconciliation`,
+:mod:`aeat.application.modelo._iva_wallet_gate`, and
+:class:`~aeat.domain.buckets.BucketEventHistoryRepository` for those persisted
+and orchestration boundaries.
 """
 
 from __future__ import annotations
