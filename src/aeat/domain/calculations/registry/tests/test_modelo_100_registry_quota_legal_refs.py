@@ -41,6 +41,7 @@ def test_modelo_100_general_liquidable_and_cuota_chain_exclude_unrelated_article
     assert set(casillas_by_id) == checked_casilla_ids
     base_casilla = casillas_by_id[_BASE_LIQUIDABLE_GENERAL_GRAVAMEN_CASILLA]
     assert _BASE_LIQUIDABLE_ART_50_REF in base_casilla.legal_refs
+    assert _PERSONAL_FAMILY_MINIMUM_ART_56_REF not in base_casilla.legal_refs
     assert _SAVINGS_BASE_ART_49_REF not in base_casilla.legal_refs
     assert _FRACTIONAL_PAYMENT_ARTICLE_REF not in base_casilla.legal_refs
 
@@ -52,6 +53,8 @@ def test_modelo_100_general_liquidable_and_cuota_chain_exclude_unrelated_article
     base_formula = formula_by_target.get(_BASE_LIQUIDABLE_GENERAL_GRAVAMEN_CASILLA)
     if base_formula is not None:
         assert _BASE_LIQUIDABLE_ART_50_REF in base_formula.legal_refs
+        assert _GENERAL_SCALE_ART_63_REF in base_formula.legal_refs
+        assert _PERSONAL_FAMILY_MINIMUM_ART_56_REF not in base_formula.legal_refs
         assert _SAVINGS_BASE_ART_49_REF not in base_formula.legal_refs
         assert _FRACTIONAL_PAYMENT_ARTICLE_REF not in base_formula.legal_refs
 
