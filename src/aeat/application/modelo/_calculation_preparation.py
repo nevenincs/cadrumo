@@ -234,6 +234,16 @@ _LEDGER_PREFLIGHT_BINDING_SOURCES = frozenset(
         "ledger_renta_expense_aggregation",
     },
 )
+_IVA_LEDGER_PREFLIGHT_SOURCE = "ledger_iva_aggregation"
+_IVA_ONLY_PREFLIGHT_REASONS = frozenset(
+    {
+        "missing_iva_amount",
+        "missing_iva_rate",
+        "missing_eur_tax_substrate",
+        "anomaly_non_declarable_iva_category",
+        "anomaly_non_declarable_recargo_equivalencia",
+    },
+)
 _IVA_LEDGER_EXEMPT_REGIMES = frozenset({IVARegime.SIMPLIFICADO})
 _M200_ACCOUNTING_RESULT_CASILLA: CasillaId = "00501"
 _M200_ACCOUNTING_LEDGER_CLASSIFICATIONS = frozenset(
@@ -257,7 +267,10 @@ def _raise_if_ledger_preflight_blocks_calculation(
     transaction_repository: TransactionCatalogueRepository | None = None,
 ) -> None:
     """Refuse ledger-backed calculations whose period ledger readiness blocks."""
-    if not any(binding.source in _LEDGER_PREFLIGHT_BINDING_SOURCES for binding in revision.bindings):
+    ledger_preflight_sources = frozenset(
+        str(binding.source) for binding in revision.bindings if binding.source in _LEDGER_PREFLIGHT_BINDING_SOURCES
+    )
+    if not ledger_preflight_sources:
         return
     iva_regime = _iva_regime_for_bucket(work_unit.bucket_id)
     if iva_regime in _IVA_LEDGER_EXEMPT_REGIMES:
@@ -271,7 +284,17 @@ def _raise_if_ledger_preflight_blocks_calculation(
     )
     if report.ready:
         return
-    first_issue = report.issues[0]
+    blocking_issues = tuple(
+        issue
+        for issue in report.issues
+        if _preflight_issue_blocks_revision(
+            reason=str(issue.reason.value),
+            ledger_preflight_sources=ledger_preflight_sources,
+        )
+    )
+    if not blocking_issues:
+        return
+    first_issue = blocking_issues[0]
     raise ModeloAggregationBindingError(
         translated_message="application.modelo.errors.ledger_preflight_blocked",
         context={
@@ -282,6 +305,26 @@ def _raise_if_ledger_preflight_blocks_calculation(
         },
         suggestion=f"aeat app ledger preflight --period {report.period.registry_token} --year {report.period.year}",
     )
+
+
+def _preflight_issue_blocks_revision(
+    *,
+    reason: str,
+    ledger_preflight_sources: frozenset[str],
+) -> bool:
+    """Return whether a generic ledger-preflight issue blocks this revision.
+
+    ``preflight_ledger_tax_readiness`` reports the full IVA readiness surface.
+    Modelo 100 Renta expense aggregation consumes category, base, business
+    classification, and usage-ratio facts, but it does not consume IVA amount,
+    IVA rate, or IVA-only anomaly facts. Keep those IVA-only findings blocking
+    for revisions that own ``ledger_iva_aggregation`` bindings, while allowing
+    annual Renta calculations to proceed from the same taxable-base-only ledger
+    rows that Modelo 130 already consumes.
+    """
+    if _IVA_LEDGER_PREFLIGHT_SOURCE in ledger_preflight_sources:
+        return True
+    return reason not in _IVA_ONLY_PREFLIGHT_REASONS
 
 
 def _raise_if_m200_ledger_requires_accounting_result_input(
