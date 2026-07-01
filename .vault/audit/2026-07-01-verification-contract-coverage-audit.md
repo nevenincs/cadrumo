@@ -102,6 +102,26 @@ cannot be proven non-breaking against the verify gate. Per
 surface. Tranche 2 (enroll the M200/M303 finals) is deferred until the registry
 loads clean.
 
+### tranche-2-and-s56-completed | resolved | M200/M303 finals enrolled + regression-confirmed; S56 numeric oracle done
+
+Once the peer M100 breakage cleared and the registry loaded clean, the deferred
+work completed and was regression-confirmed: M200 (cuota integra/liquida/
+diferencial `00562`/`00592`/`00611`, commit `7b1283cca`) and M303 (total cuota
+devengada `27` + total a deducir `45`, commit `7a1af3bd4`) enrolled at
+`min_coverage = 1`, grounded in LIS / LIVA articles and AEAT DR source_refs. The
+full verify suite passes (registry validates; 64 verify + registry tests green),
+confirming all five small-modelo enrollments (M151/M210/M714/M200/M303) are
+non-breaking. M130/M131 stay unenrolled as correct calibration (situational
+negative-result carryforwards). S56 is done (commit closing the plan step): the
+operator numeric value-oracle is grounded in the bundled Renta WEB Open AEAT
+figures - every captured `expected_by_casilla_id` value is a grounded computed
+Modelo 100 casilla, giving the operator's relayed value a real, non-tautological
+AEAT reconciliation target (the value-level parity comparison itself is the calc
+engine's Renta WEB Open mechanism). The only remaining coverage is the M100 Renta
+bulk (~867 computed casillas), which by this audit's critical finding is a
+dedicated per-casilla, extraction-reconciled, verify-regression-gated campaign -
+never a mechanical sweep - and is out of scope for the small-modelos-first tranche.
+
 ## Recommendations
 
 Do NOT mechanically enroll the 922 casillas: at `min_coverage = 1` it breaks
