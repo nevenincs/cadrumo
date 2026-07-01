@@ -20,28 +20,38 @@ class _EvidenceHolder(BaseModel):
     evidence_id: EvidenceId
 
 
-def test_bundle_id_accepts_canonical_sha256_hex_digest() -> None:
-    digest = hashlib.sha256(b"bundle-payload").hexdigest()
-    assert _BundleHolder(bundle_id=digest).bundle_id == digest
+@pytest.mark.parametrize(
+    ("holder", "field_name", "payload"),
+    [
+        (_BundleHolder, "bundle_id", b"bundle-payload"),
+        (_EvidenceHolder, "evidence_id", b"evidence-payload"),
+    ],
+    ids=("bundle", "evidence"),
+)
+def test_ids_accept_canonical_sha256_hex_digest(
+    holder: type[BaseModel],
+    field_name: str,
+    payload: bytes,
+) -> None:
+    digest = hashlib.sha256(payload).hexdigest()
+    instance = holder.model_validate({field_name: digest})
+    assert getattr(instance, field_name) == digest
 
 
-def test_evidence_id_accepts_canonical_sha256_hex_digest() -> None:
-    digest = hashlib.sha256(b"evidence-payload").hexdigest()
-    assert _EvidenceHolder(evidence_id=digest).evidence_id == digest
-
-
-def test_bundle_id_rejects_uppercase_hex() -> None:
+@pytest.mark.parametrize(
+    ("holder", "field_name", "raw_id"),
+    [
+        (_BundleHolder, "bundle_id", "A" * 64),
+        (_BundleHolder, "bundle_id", "a" * 63),
+        (_BundleHolder, "bundle_id", "a" * 65),
+        (_EvidenceHolder, "evidence_id", "z" * 64),
+    ],
+    ids=("bundle-uppercase", "bundle-too-short", "bundle-too-long", "evidence-non-hex"),
+)
+def test_ids_reject_noncanonical_digest_shapes(
+    holder: type[BaseModel],
+    field_name: str,
+    raw_id: str,
+) -> None:
     with pytest.raises(ValidationError):
-        _BundleHolder(bundle_id="A" * 64)
-
-
-def test_bundle_id_rejects_wrong_length() -> None:
-    with pytest.raises(ValidationError):
-        _BundleHolder(bundle_id="a" * 63)
-    with pytest.raises(ValidationError):
-        _BundleHolder(bundle_id="a" * 65)
-
-
-def test_evidence_id_rejects_non_hex_characters() -> None:
-    with pytest.raises(ValidationError):
-        _EvidenceHolder(evidence_id="z" * 64)
+        holder.model_validate({field_name: raw_id})
