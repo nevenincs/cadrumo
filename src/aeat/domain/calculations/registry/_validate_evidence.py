@@ -98,14 +98,6 @@ class EvidenceValidator:
         self._source_root = source_root
         self._source_text_cache: dict[str, str] = {}
 
-    def require_legal_authority_refs(self, scope: str, owner: str, refs: Iterable[str]) -> list[str]:
-        failures: list[str] = []
-        for ref in refs:
-            legal = self._legal.get(ref)
-            if legal is not None and legal.evidence_tier != "legal_authority":
-                failures.append(f"{scope}: {owner} legal ref {ref!r} is not legal authority")
-        return failures
-
     def require_source_tier(
         self,
         scope: str,
