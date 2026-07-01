@@ -54,27 +54,21 @@ def _values(casilla_id: CasillaId, amount: str) -> dict[CasillaId, Decimal]:
     return {casilla_id: Decimal(amount)}
 
 
-@pytest.mark.parametrize(
-    ("disposition", "expected_code"),
-    (
-        pytest.param(ResultDisposition.COMPENSACION, "C", id="compensacion"),
-        pytest.param(ResultDisposition.DEVOLUCION, "D", id="devolucion"),
-        pytest.param(ResultDisposition.CUENTA_CORRIENTE_INGRESO, "G", id="cuenta-corriente-ingreso"),
-        pytest.param(ResultDisposition.INGRESO, "I", id="ingreso"),
-        pytest.param(ResultDisposition.NEGATIVA, "N", id="negativa"),
-        pytest.param(ResultDisposition.CUENTA_CORRIENTE_DEVOLUCION, "V", id="cuenta-corriente-devolucion"),
-        pytest.param(ResultDisposition.DOMICILIACION, "U", id="domiciliacion"),
-        pytest.param(ResultDisposition.DEVOLUCION_TRANSFERENCIA_EXTRANJERO, "X", id="devolucion-extranjero"),
-        pytest.param(ResultDisposition.RESULTADO_A_DEDUCIR, "B", id="resultado-a-deducir"),
-        pytest.param(ResultDisposition.RENUNCIA_DEVOLUCION, "R", id="renuncia-devolucion"),
-    ),
-)
-def test_disposition_codes_match_the_official_diseno_letters(
-    disposition: ResultDisposition,
-    expected_code: str,
-) -> None:
+def test_disposition_codes_match_the_official_diseno_letters() -> None:
     """Each member value is the single-character code AEAT's fichero expects."""
-    assert disposition.value == expected_code
+    for case_id, disposition, expected_code in (
+        ("compensacion", ResultDisposition.COMPENSACION, "C"),
+        ("devolucion", ResultDisposition.DEVOLUCION, "D"),
+        ("cuenta-corriente-ingreso", ResultDisposition.CUENTA_CORRIENTE_INGRESO, "G"),
+        ("ingreso", ResultDisposition.INGRESO, "I"),
+        ("negativa", ResultDisposition.NEGATIVA, "N"),
+        ("cuenta-corriente-devolucion", ResultDisposition.CUENTA_CORRIENTE_DEVOLUCION, "V"),
+        ("domiciliacion", ResultDisposition.DOMICILIACION, "U"),
+        ("devolucion-extranjero", ResultDisposition.DEVOLUCION_TRANSFERENCIA_EXTRANJERO, "X"),
+        ("resultado-a-deducir", ResultDisposition.RESULTADO_A_DEDUCIR, "B"),
+        ("renuncia-devolucion", ResultDisposition.RENUNCIA_DEVOLUCION, "R"),
+    ):
+        assert disposition.value == expected_code, case_id
 
 
 def test_m303_credit_is_compensacion_not_ingreso() -> None:
@@ -84,58 +78,51 @@ def test_m303_credit_is_compensacion_not_ingreso() -> None:
     assert disp is not ResultDisposition.INGRESO
 
 
-@pytest.mark.parametrize(
-    ("modelo", "values", "expected"),
-    (
-        pytest.param("303", _values(_M303_RESULT_CASILLA, "357.00"), ResultDisposition.INGRESO, id="m303-positive"),
-        pytest.param("303", _values(_M303_RESULT_CASILLA, "0"), ResultDisposition.NEGATIVA, id="m303-zero"),
-        pytest.param(
+def test_codified_result_disposition_cases() -> None:
+    """Codified modelo cases pin the official disposition letter semantics."""
+    for case_id, modelo, values, expected in (
+        ("m303-positive", "303", _values(_M303_RESULT_CASILLA, "357.00"), ResultDisposition.INGRESO),
+        ("m303-zero", "303", _values(_M303_RESULT_CASILLA, "0"), ResultDisposition.NEGATIVA),
+        (
+            "m130-credit",
             "130",
             _values(_M130_RESULT_CASILLA, "-50.00"),
             ResultDisposition.RESULTADO_A_DEDUCIR,
-            id="m130-credit",
         ),
-        pytest.param("130", _values(_M130_RESULT_CASILLA, "120.00"), ResultDisposition.INGRESO, id="m130-positive"),
-        pytest.param("130", _values(_M130_RESULT_CASILLA, "0"), ResultDisposition.NEGATIVA, id="m130-zero"),
-        pytest.param(
+        ("m130-positive", "130", _values(_M130_RESULT_CASILLA, "120.00"), ResultDisposition.INGRESO),
+        ("m130-zero", "130", _values(_M130_RESULT_CASILLA, "0"), ResultDisposition.NEGATIVA),
+        (
+            "m131-credit",
             "131",
             _values(_M131_RESULT_CASILLA, "-50.00"),
             ResultDisposition.RESULTADO_A_DEDUCIR,
-            id="m131-credit",
         ),
-        pytest.param("111", _values(_M111_RESULT_CASILLA, "500.00"), ResultDisposition.INGRESO, id="m111-positive"),
-        pytest.param("111", _values(_M111_RESULT_CASILLA, "0"), ResultDisposition.NEGATIVA, id="m111-zero"),
-        pytest.param("115", _values(_M115_RESULT_CASILLA, "0"), ResultDisposition.NEGATIVA, id="m115-zero"),
-        pytest.param("123", _values(_M123_RESULT_CASILLA, "12.00"), ResultDisposition.INGRESO, id="m123-current"),
-        pytest.param(
+        ("m111-positive", "111", _values(_M111_RESULT_CASILLA, "500.00"), ResultDisposition.INGRESO),
+        ("m111-zero", "111", _values(_M111_RESULT_CASILLA, "0"), ResultDisposition.NEGATIVA),
+        ("m115-zero", "115", _values(_M115_RESULT_CASILLA, "0"), ResultDisposition.NEGATIVA),
+        ("m123-current", "123", _values(_M123_RESULT_CASILLA, "12.00"), ResultDisposition.INGRESO),
+        (
+            "m123-2019-2023",
             "123",
             _values(_M123_2019_2023_RESULT_CASILLA, "12.00"),
             ResultDisposition.INGRESO,
-            id="m123-2019-2023",
         ),
-        pytest.param("200", _values(_M200_RESULT_CASILLA, "-1000.00"), ResultDisposition.DEVOLUCION, id="m200-credit"),
-        pytest.param("200", _values(_M200_RESULT_CASILLA, "5000.00"), ResultDisposition.INGRESO, id="m200-positive"),
-        pytest.param("200", _values(_M200_RESULT_CASILLA, "0"), ResultDisposition.NEGATIVA, id="m200-zero"),
-        pytest.param("202", _values(_M202_403_RESULT_CASILLA, "900.00"), ResultDisposition.INGRESO, id="m202-403"),
-        pytest.param("202", _values(_M202_402_RESULT_CASILLA, "750.00"), ResultDisposition.INGRESO, id="m202-402"),
-        pytest.param(
+        ("m200-credit", "200", _values(_M200_RESULT_CASILLA, "-1000.00"), ResultDisposition.DEVOLUCION),
+        ("m200-positive", "200", _values(_M200_RESULT_CASILLA, "5000.00"), ResultDisposition.INGRESO),
+        ("m200-zero", "200", _values(_M200_RESULT_CASILLA, "0"), ResultDisposition.NEGATIVA),
+        ("m202-403", "202", _values(_M202_403_RESULT_CASILLA, "900.00"), ResultDisposition.INGRESO),
+        ("m202-402", "202", _values(_M202_402_RESULT_CASILLA, "750.00"), ResultDisposition.INGRESO),
+        (
+            "m202-zero",
             "202",
             {
                 _M202_402_RESULT_CASILLA: Decimal("0"),
                 _M202_403_RESULT_CASILLA: Decimal("0"),
             },
             ResultDisposition.NEGATIVA,
-            id="m202-zero",
         ),
-    ),
-)
-def test_codified_result_disposition_cases(
-    modelo: str,
-    values: dict[CasillaId, Decimal],
-    expected: ResultDisposition,
-) -> None:
-    """Codified modelo cases pin the official disposition letter semantics."""
-    assert derive_result_disposition(modelo, values) is expected
+    ):
+        assert derive_result_disposition(modelo, values) is expected, case_id
 
 
 def test_missing_result_casilla_defaults_to_negativa() -> None:
@@ -160,16 +147,13 @@ def test_uncodified_modelo_returns_none_not_a_guess() -> None:
     assert modelo_has_codified_disposition("390") is False
 
 
-@pytest.mark.parametrize(
-    ("modelo", "casilla_id", "amount"),
-    (
-        pytest.param("303", _M303_RESULT_CASILLA, "210", id="m303-compensation-vs-ingreso"),
-        pytest.param("130", _M130_RESULT_CASILLA, "50", id="m130-deducir-vs-ingreso"),
-    ),
-)
-def test_credit_and_debit_diverge_per_modelo(modelo: str, casilla_id: CasillaId, amount: str) -> None:
+def test_credit_and_debit_diverge_per_modelo() -> None:
     """Anti-regression: a debit and a credit of equal magnitude never share a code."""
-    assert derive_result_disposition(modelo, _values(casilla_id, amount)) is not derive_result_disposition(
-        modelo,
-        _values(casilla_id, f"-{amount}"),
-    )
+    for case_id, modelo, casilla_id, amount in (
+        ("m303-compensation-vs-ingreso", "303", _M303_RESULT_CASILLA, "210"),
+        ("m130-deducir-vs-ingreso", "130", _M130_RESULT_CASILLA, "50"),
+    ):
+        assert derive_result_disposition(modelo, _values(casilla_id, amount)) is not derive_result_disposition(
+            modelo,
+            _values(casilla_id, f"-{amount}"),
+        ), case_id
