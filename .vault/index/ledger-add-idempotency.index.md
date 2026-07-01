@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#ledger-add-idempotency'
-date: '2026-06-30'
-modified: '2026-06-30'
+date: '2026-07-01'
+modified: '2026-07-01'
 related:
   - '[[2026-06-30-ledger-add-idempotency-P01-S01]]'
   - '[[2026-06-30-ledger-add-idempotency-P01-S02]]'
@@ -24,6 +24,7 @@ related:
   - '[[2026-06-30-ledger-add-idempotency-P05-S16]]'
   - '[[2026-06-30-ledger-add-idempotency-P05-S17]]'
   - '[[2026-06-30-ledger-add-idempotency-P05-S18]]'
+  - '[[2026-06-30-ledger-add-idempotency-P05-S19]]'
   - '[[2026-06-30-ledger-add-idempotency-P06-S20]]'
   - '[[2026-06-30-ledger-add-idempotency-P06-S21]]'
   - '[[2026-06-30-ledger-add-idempotency-P06-S22]]'
@@ -32,6 +33,7 @@ related:
   - '[[2026-06-30-ledger-add-idempotency-adr]]'
   - '[[2026-06-30-ledger-add-idempotency-plan]]'
   - '[[2026-06-30-ledger-add-idempotency-research]]'
+  - '[[2026-07-01-ledger-add-idempotency-audit]]'
 ---
 
 # `ledger-add-idempotency` feature index
@@ -43,6 +45,10 @@ Auto-generated index of all documents tagged with `#ledger-add-idempotency`.
 ### adr
 
 - `2026-06-30-ledger-add-idempotency-adr` - `ledger-add-idempotency` adr: `manual ledger add idempotency and verify-report retry shape` | (**status:** `accepted`)
+
+### audit
+
+- `2026-07-01-ledger-add-idempotency-audit` - `ledger-add-idempotency` audit: `ledger-add-idempotency close honesty review`
 
 ### exec
 
@@ -69,6 +75,7 @@ Auto-generated index of all documents tagged with `#ledger-add-idempotency`.
 - `2026-06-30-ledger-add-idempotency-P06-S22` - Surface the idempotent re-file no-op outcome as an info Notice on the modelo file envelope through the typed notice channel, never as a bespoke result field
 - `2026-06-30-ledger-add-idempotency-P06-S23` - Add real-repository tests proving a retried file of a PRESENTADO revision returns the existing record as a no-op with no duplicate record or event while a not-yet-verified file still hard-refuses
 - `2026-06-30-ledger-add-idempotency-P06-S24` - Add a strict ModeloRecord save-load-equality roundtrip plus anti-tautology proof with filed_at populated non-default and the outcome-pinned id enforced by the model validator
+- `2026-06-30-ledger-add-idempotency-P05-S19` - Run the focused gates clean: pytest collect-only, the ledger and modelo-verify suites, JSON schema and notice conformance, documented-command and harness-surface conformance, plus lint and type checks
 
 ### plan
 
