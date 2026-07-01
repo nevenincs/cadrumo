@@ -30,7 +30,7 @@ period token: a 1T target or a genuine first-obligation quarter has no prior
 trimestre to carry, so casilla ``05`` materialises zero absent-by-design.
 
 See Also:
-    :func:`aeat.application.modelo._calculation_diagnostics.collect_bucket_aggregation_advisory_diagnostics`:
+    :func:`~aeat.application.modelo._calculation_diagnostics.collect_bucket_aggregation_advisory_diagnostics`:
         Wires these advisories into the bucket-aggregation calculate path.
     :class:`~aeat.application.calculations.CalculationObservationRepository`:
         Supplies the persisted prior-filing observations inspected by both
