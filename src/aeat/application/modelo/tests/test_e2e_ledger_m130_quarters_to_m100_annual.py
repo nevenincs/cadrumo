@@ -88,6 +88,7 @@ from ....tests.secure_sql import isolated_runtime_profile
 from ...calculations._observations_repository import CalculationObservationRepository
 from ...user_profile import UserProfileLifecycleRepository
 from .. import (
+    ModeloAggregationBindingError,
     calculate_modelo_revision_from_bucket_aggregation,
     create_work_unit,
     import_external_filing_evidence,
@@ -239,13 +240,11 @@ def _income_transaction(period: str) -> Transaction:
             "business_pct": None,
             "purchase_invoice_evidence_id": None,
             "category_id": None,
-            # IVA-exempt income receipt: taxable_base == gross, zero IVA. Carrying
-            # the fiscal facts satisfies the ledger preflight that the M100 expense
-            # aggregation binding now triggers, while leaving casilla 01 (gross ==
-            # taxable_base under ingresos_integros_sum) unchanged.
+            # Marta's activity receipts are IRPF-ready taxable-base rows. They
+            # deliberately carry no IVA amount/rate facts: M130 already consumes
+            # this base-only substrate and M100 must not demand IVA-only facts
+            # unless its revision owns IVA ledger bindings.
             "taxable_base": amount,
-            "iva_rate": Decimal("0"),
-            "iva_amount": Decimal("0"),
             "lifecycle_state": TransactionLifecycleState.ACTIVE,
             "classified_at": _T0,
             "classified_by": "manual",
@@ -260,15 +259,13 @@ def _expense_transaction(
     category: SpendingCategory,
     taxable_base: Decimal,
 ) -> Transaction:
-    gross_amount = (taxable_base * Decimal("1.21")).quantize(Decimal("0.01"))
-    iva_amount = gross_amount - taxable_base
     return Transaction.model_validate(
         {
             "raw": RawTransaction(
                 transaction_id=transaction_id,
                 booked_date=value_date,
                 value_date=value_date,
-                amount=gross_amount,
+                amount=taxable_base,
                 currency="EUR",
                 counterparty="Proveedor",
                 description=f"gasto {category.value}",
@@ -291,8 +288,6 @@ def _expense_transaction(
             "attachment_ids": (f"receipt-{transaction_id}",),
             "category_id": category.value,
             "taxable_base": taxable_base,
-            "iva_rate": Decimal("0.21"),
-            "iva_amount": iva_amount,
             "lifecycle_state": TransactionLifecycleState.ACTIVE,
             "classified_at": _T0,
             "classified_by": "manual",
@@ -692,10 +687,41 @@ def test_marta_m100_salary_certificate_retenciones_reduce_cuota_diferencial(
         binding_values={_M100_SALARY_CERT_RETENCIONES_BINDING: _MARTA_SALARY_WITHHOLDING},
     )
 
+    assert Decimal(annual.casilla_values[_M100_ACTIVITY_INCOME_CASILLA]) == Decimal("12000.00")
+    assert Decimal(annual.casilla_values[_M100_EXPENSES_PREVIOUS_SUM_CASILLA]) == Decimal("2400.00")
+    assert Decimal(annual.casilla_values[_M100_NORMAL_DEDUCTIBLE_EXPENSES_CASILLA]) == Decimal("2400.00")
+    assert Decimal(annual.casilla_values[_M100_ACTIVIDAD_ECONOMICA_NET_INCOME_CASILLA]) == Decimal("9600.00")
     assert Decimal(annual.casilla_values[_M100_RETENCIONES_TRABAJO_CASILLA]) == _MARTA_SALARY_WITHHOLDING
     assert Decimal(annual.casilla_values[_M100_PAGOS_CASILLA]) == Decimal("1520.00")
     assert Decimal(annual.casilla_values[_M100_TOTAL_PAGOS_CASILLA]) == Decimal("6020.00")
     assert Decimal(annual.casilla_values[_M100_CUOTA_DIFERENCIAL_CASILLA]) == Decimal("2725.50")
+
+
+def test_m100_base_only_gate_still_blocks_missing_renta_taxable_base(
+    secure_objects: SecureObjectRepository,
+) -> None:
+    """M100 does not demand IVA-only facts, but still blocks missing Renta base facts."""
+    _seed_taxpayer_profile()
+    _seed_prior_year_m100(secure_objects)
+    transactions = (
+        *(_income_transaction(period) for period in _QUARTER_ORDER),
+        _expense_transaction(
+            "expense-missing-base",
+            value_date=date(_YEAR, 2, 20),
+            category=SpendingCategory.MATERIAL_OFICINA,
+            taxable_base=Decimal("500.00"),
+        ).model_copy(update={"taxable_base": None}),
+    )
+    TransactionCatalogueRepository(bucket_id=_BUCKET_ID, objects=secure_objects).save(
+        TransactionCatalogue.from_transactions(transactions),
+    )
+    InvoiceCatalogueRepository(bucket_id=_BUCKET_ID, objects=secure_objects).save(InvoiceCatalogue())
+
+    with pytest.raises(ModeloAggregationBindingError) as exc_info:
+        _calculate_m100_annual(secure_objects)
+
+    assert exc_info.value.translated_message == "application.modelo.errors.ledger_preflight_blocked"
+    assert exc_info.value.context["reason"] == "missing_taxable_base"
 
 
 def test_verify_gate_blocks_chain_carrying_non_official_prior_year(
