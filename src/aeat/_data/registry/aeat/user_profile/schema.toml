@@ -1309,6 +1309,66 @@ description = "Count of descendants eligible for the bajo-3-años supplement at 
 model_selectors = ["family.descendientes_menores_3_2024"]
 
 [[sections.fields]]
+key = "anualidades_sin_minimo_descendientes_2020"
+type = "decimal"
+required = false
+sensitivity = "identity"
+effective_dated = true
+description = "LIRPF Art. 64/75 anualidades por alimentos separate-escala eligibility flag for 2020: 1 when the payer has no right to the mínimo por descendientes for those children (default, non-custodial payer), 0 when custody is shared. Derived at binding-resolution time from renta_family.descendiente.*.custodia_compartida by _inject_derived_anualidades_eligibility_facts in src/aeat/application/modelo/_profile_binding.py; not stored as a profile fact and not operator-settable through the wizard."
+model_selectors = ["family.anualidades_sin_minimo_descendientes_2020"]
+legal_refs = ["ley-35-2006:art-58", "ley-35-2006:art-64"]
+
+[[sections.fields]]
+key = "anualidades_sin_minimo_descendientes_2021"
+type = "decimal"
+required = false
+sensitivity = "identity"
+effective_dated = true
+description = "LIRPF Art. 64/75 anualidades por alimentos separate-escala eligibility flag for 2021: 1 when the payer has no right to the mínimo por descendientes for those children (default, non-custodial payer), 0 when custody is shared. Derived at binding-resolution time from renta_family.descendiente.*.custodia_compartida by _inject_derived_anualidades_eligibility_facts in src/aeat/application/modelo/_profile_binding.py; not stored as a profile fact and not operator-settable through the wizard."
+model_selectors = ["family.anualidades_sin_minimo_descendientes_2021"]
+legal_refs = ["ley-35-2006:art-58", "ley-35-2006:art-64"]
+
+[[sections.fields]]
+key = "anualidades_sin_minimo_descendientes_2022"
+type = "decimal"
+required = false
+sensitivity = "identity"
+effective_dated = true
+description = "LIRPF Art. 64/75 anualidades por alimentos separate-escala eligibility flag for 2022: 1 when the payer has no right to the mínimo por descendientes for those children (default, non-custodial payer), 0 when custody is shared. Derived at binding-resolution time from renta_family.descendiente.*.custodia_compartida by _inject_derived_anualidades_eligibility_facts in src/aeat/application/modelo/_profile_binding.py; not stored as a profile fact and not operator-settable through the wizard."
+model_selectors = ["family.anualidades_sin_minimo_descendientes_2022"]
+legal_refs = ["ley-35-2006:art-58", "ley-35-2006:art-64"]
+
+[[sections.fields]]
+key = "anualidades_sin_minimo_descendientes_2023"
+type = "decimal"
+required = false
+sensitivity = "identity"
+effective_dated = true
+description = "LIRPF Art. 64/75 anualidades por alimentos separate-escala eligibility flag for 2023: 1 when the payer has no right to the mínimo por descendientes for those children (default, non-custodial payer), 0 when custody is shared. Derived at binding-resolution time from renta_family.descendiente.*.custodia_compartida by _inject_derived_anualidades_eligibility_facts in src/aeat/application/modelo/_profile_binding.py; not stored as a profile fact and not operator-settable through the wizard."
+model_selectors = ["family.anualidades_sin_minimo_descendientes_2023"]
+legal_refs = ["ley-35-2006:art-58", "ley-35-2006:art-64"]
+
+[[sections.fields]]
+key = "anualidades_sin_minimo_descendientes_2024"
+type = "decimal"
+required = false
+sensitivity = "identity"
+effective_dated = true
+description = "LIRPF Art. 64/75 anualidades por alimentos separate-escala eligibility flag for 2024: 1 when the payer has no right to the mínimo por descendientes for those children (default, non-custodial payer), 0 when custody is shared. Derived at binding-resolution time from renta_family.descendiente.*.custodia_compartida by _inject_derived_anualidades_eligibility_facts in src/aeat/application/modelo/_profile_binding.py; not stored as a profile fact and not operator-settable through the wizard."
+model_selectors = ["family.anualidades_sin_minimo_descendientes_2024"]
+legal_refs = ["ley-35-2006:art-58", "ley-35-2006:art-64"]
+
+[[sections.fields]]
+key = "anualidades_sin_minimo_descendientes_2025"
+type = "decimal"
+required = false
+sensitivity = "identity"
+effective_dated = true
+description = "LIRPF Art. 64/75 anualidades por alimentos separate-escala eligibility flag for 2025: 1 when the payer has no right to the mínimo por descendientes for those children (default, non-custodial payer), 0 when custody is shared. Derived at binding-resolution time from renta_family.descendiente.*.custodia_compartida by _inject_derived_anualidades_eligibility_facts in src/aeat/application/modelo/_profile_binding.py; not stored as a profile fact and not operator-settable through the wizard."
+model_selectors = ["family.anualidades_sin_minimo_descendientes_2025"]
+legal_refs = ["ley-35-2006:art-58", "ley-35-2006:art-64"]
+
+[[sections.fields]]
 key = "madrid_nacimiento_adopcion_eligible_count"
 type = "decimal"
 required = false
