@@ -47,12 +47,15 @@ See Also:
     :mod:`aeat.application.modelo`
         Operator-facing modelo facade that carries calculation revisions into
         this filing surface.
-    :func:`aeat.application.modelo._filing_actions.file_modelo_revision`
+    :func:`aeat.application.modelo.file_modelo_revision`
         Work-unit action that records a verified calculation revision as a
         current local :class:`aeat.domain.modelos.ModeloRecord`.
-    :func:`aeat.application.modelo._external_import_actions.import_external_filing_evidence`
+    :func:`aeat.application.modelo.import_external_filing_evidence`
         External-evidence import path that creates an evidenced
         :class:`aeat.domain.modelos.ModeloRecord` baseline for amendments.
+    :mod:`aeat.domain.justificante`
+        Receipt-metadata domain used by justificante PDF imports and
+        receipt-bound external evidence.
     :mod:`aeat.domain.filing`
         Canonical draft records, values, provenance, validation findings, and
         review helpers.
