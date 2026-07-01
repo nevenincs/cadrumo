@@ -119,31 +119,22 @@ def test_invoice_line_rejects_larger_rounding_drift() -> None:
         )
 
 
-@pytest.mark.parametrize(
-    ("raw_country", "tax_id", "stored_country", "expected_state", "expected_is_member"),
-    [
+def test_invoice_counterparty_eu_member_state_accessor() -> None:
+    """Counterparty country is normalized and exposed as a typed EU member when applicable."""
+    cases = (
         ("DE", "DE123456789", "DE", EUMemberState.DE, True),
         ("US", "US123456789", "US", None, False),
         ("fr", "FR12345678901", "FR", EUMemberState.FR, True),
-    ],
-    ids=("eu-member", "non-eu", "lowercase-eu"),
-)
-def test_invoice_counterparty_eu_member_state_accessor(
-    raw_country: str,
-    tax_id: str,
-    stored_country: str,
-    expected_state: EUMemberState | None,
-    expected_is_member: bool,
-) -> None:
-    """Counterparty country is normalized and exposed as a typed EU member when applicable."""
-    invoice = _valid_invoice(
-        counterparty_country=raw_country,
-        counterparty_tax_id=tax_id,
     )
+    for raw_country, tax_id, stored_country, expected_state, expected_is_member in cases:
+        invoice = _valid_invoice(
+            counterparty_country=raw_country,
+            counterparty_tax_id=tax_id,
+        )
 
-    assert invoice.counterparty_country == stored_country
-    assert invoice.counterparty_eu_member_state is expected_state
-    assert invoice.counterparty_is_eu_member is expected_is_member
+        assert invoice.counterparty_country == stored_country
+        assert invoice.counterparty_eu_member_state is expected_state
+        assert invoice.counterparty_is_eu_member is expected_is_member
 
 
 def test_invoice_iva_category_is_typed_as_iva_category_substrate_enum() -> None:
@@ -254,34 +245,31 @@ def test_invoice_rejects_oss_line_rate_without_invoice_oss_axes() -> None:
         )
 
 
-@pytest.mark.parametrize(
-    ("field", "value", "match"),
-    [
+def test_invoice_rejects_invalid_core_fields() -> None:
+    """Invalid core field input must stay inside the pydantic validation boundary."""
+    cases = (
         ("issued_at", "not-a-date", r"not-a-date.*not a valid ISO-8601 date"),
         ("kind", "bogus-kind", r"kind must be an InvoiceKind"),
-    ],
-    ids=("invalid-issued-at", "unknown-kind"),
-)
-def test_invoice_rejects_invalid_core_fields(field: str, value: object, match: str) -> None:
-    """Invalid core field input must stay inside the pydantic validation boundary."""
-    payload = {
-        "kind": InvoiceKind.ISSUED,
-        "invoice_number": "INV-001",
-        "issued_at": date(2026, 4, 1),
-        "counterparty_name": "Cliente SL",
-        "counterparty_tax_id": "B12345674",
-        "counterparty_country": "ES",
-        "base_total": Decimal("100"),
-        "iva_total": Decimal("21"),
-        "grand_total": Decimal("121"),
-        "currency": "EUR",
-        "lines": (_valid_line(),),
-        "payment_status": PaymentStatus.PAID,
-    }
-    payload[field] = value
+    )
+    for field, value, match in cases:
+        payload = {
+            "kind": InvoiceKind.ISSUED,
+            "invoice_number": "INV-001",
+            "issued_at": date(2026, 4, 1),
+            "counterparty_name": "Cliente SL",
+            "counterparty_tax_id": "B12345674",
+            "counterparty_country": "ES",
+            "base_total": Decimal("100"),
+            "iva_total": Decimal("21"),
+            "grand_total": Decimal("121"),
+            "currency": "EUR",
+            "lines": (_valid_line(),),
+            "payment_status": PaymentStatus.PAID,
+        }
+        payload[field] = value
 
-    with pytest.raises(ValidationError, match=match):
-        Invoice.model_validate(payload)
+        with pytest.raises(ValidationError, match=match):
+            Invoice.model_validate(payload)
 
 
 def test_iva_rate_percentage_is_resolved_against_centralized_iva_substrate() -> None:
@@ -423,18 +411,15 @@ def test_invoice_validates_iva_prefix_for_non_es_country() -> None:
     assert invoice.counterparty_tax_id == "DE123456789"
 
 
-@pytest.mark.parametrize(
-    ("country", "tax_id", "match"),
-    [
+def test_invoice_rejects_invalid_non_es_iva_prefix() -> None:
+    """Non-ES counterparties reject NIF-IVA values that do not match their country."""
+    cases = (
         ("DE", "123456789", r"is not a valid Germany NIF-IVA"),
         ("US", "123456789", r"IVA number must start with the counterparty country ISO-2 prefix"),
-    ],
-    ids=("eu-published-format", "non-eu-generic-prefix"),
-)
-def test_invoice_rejects_invalid_non_es_iva_prefix(country: str, tax_id: str, match: str) -> None:
-    """Non-ES counterparties reject NIF-IVA values that do not match their country."""
-    with pytest.raises(ValidationError, match=match):
-        _valid_invoice(counterparty_country=country, counterparty_tax_id=tax_id)
+    )
+    for country, tax_id, match in cases:
+        with pytest.raises(ValidationError, match=match):
+            _valid_invoice(counterparty_country=country, counterparty_tax_id=tax_id)
 
 
 def test_invoice_linked_transaction_ids_are_deduplicated_and_hex_validated() -> None:
@@ -513,34 +498,16 @@ def test_catalogue_iteration_yields_invoices() -> None:
 # ---------------------------------------------------------------------------
 
 
-def test_numeric_iva_rate_percentages_value() -> None:
-    """The helper returns exactly the four canonical integer percentages.
-
-    This literal set is the external anchor — ``{0, 4, 10, 21}`` as
-    ``Decimal`` — grounded in the LIVA art. 90/91 slot taxonomy.
-    """
-    assert numeric_iva_rate_percentages() == frozenset({Decimal("0"), Decimal("4"), Decimal("10"), Decimal("21")})
-
-
-def test_numeric_iva_rate_percentages_cardinality_tracks_rate_members() -> None:
-    """The set cardinality equals the count of ``RATE_*`` enum members.
+def test_numeric_iva_rate_percentages_tracks_rate_members_only() -> None:
+    """The helper returns canonical percentages for ``RATE_*`` enum members only.
 
     Derivation test: if a new ``RATE_<n>`` slot is added to
     :class:`IvaRate` the helper must pick it up without code changes.
     """
-    rate_members = [m for m in IvaRate if m.value.startswith("RATE_")]
-    assert len(numeric_iva_rate_percentages()) == len(rate_members)
-
-
-def test_numeric_iva_rate_percentages_excludes_exempt_and_not_subject() -> None:
-    """EXEMPT and NOT_SUBJECT must not contribute a percentage to the set."""
     result = numeric_iva_rate_percentages()
-    # These two members carry no numeric percentage; they must not appear.
-    assert IvaRate.EXEMPT not in {str(p) for p in result}
-    assert IvaRate.NOT_SUBJECT not in {str(p) for p in result}
-    # Structural check: the non-RATE_ members must not widen the set.
-    non_rate_count = sum(1 for m in IvaRate if not m.value.startswith("RATE_"))
-    rate_count = sum(1 for m in IvaRate if m.value.startswith("RATE_"))
-    assert len(result) == rate_count
+    rate_members = [m for m in IvaRate if m.value.startswith("RATE_")]
+
+    assert result == frozenset({Decimal("0"), Decimal("4"), Decimal("10"), Decimal("21")})
+    assert len(result) == len(rate_members)
     assert len(result) < len(IvaRate)
-    assert non_rate_count > 0  # guards against the guard itself becoming vacuous
+    assert [m for m in IvaRate if not m.value.startswith("RATE_")] == [IvaRate.EXEMPT, IvaRate.NOT_SUBJECT]
