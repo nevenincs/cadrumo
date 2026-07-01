@@ -8,7 +8,7 @@ related:
   - "[[2026-07-01-fichero-boe-parity-gate-research]]"
 ---
 
-# `fichero-boe-parity-gate` adr: `automatic casilla-completeness parity gate on the fichero-BOE export` | (**status:** `proposed`)
+# `fichero-boe-parity-gate` adr: `automatic casilla-completeness parity gate on the fichero-BOE export` | (**status:** `accepted`)
 
 ## Problem Statement
 
