@@ -1541,7 +1541,7 @@ source_url = "https://sede.agenciatributaria.gob.es/Sede/procedimientoini/G602.s
 review_status = "reviewed"
 
 [sources."boe-modelo-131-2007-form"]
-evidence_tier = "official_source_guidance"
+evidence_tier = "layout_authority"
 authority = "boe"
 kind = "form_spec"
 corpus_path = "corpus/normatives/html/orden-eha-672-2007.html"
