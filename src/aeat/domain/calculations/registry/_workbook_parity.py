@@ -38,7 +38,7 @@ from ....core.logging import get_logger
 from ._casilla_membership import declared_casilla_ids
 from ._errors import RegistryValidationError
 from ._formula_runtime import calculate_registry_snapshot
-from ._ids import BindingId, CasillaId, RelationId, WorkbookOutputId, is_registry_id
+from ._ids import BindingId, CasillaId, LegalRefId, RelationId, SourceRefId, WorkbookOutputId, is_registry_id
 from ._schema import EvidenceTier, RegistrySnapshot
 from ._workbook_parity_models import (
     SyntheticInputSet,
@@ -808,8 +808,8 @@ def compare_registry_to_workbook(
     actual_registry_values: Mapping[WorkbookOutputId, Decimal | int | str | bool | None],
     output_cells: Mapping[WorkbookOutputId, WorkbookCellRef],
     registry_snapshot_id: str | None = None,
-    legal_refs: Mapping[WorkbookOutputId, tuple[str, ...]] | None = None,
-    source_refs: Mapping[WorkbookOutputId, tuple[str, ...]] | None = None,
+    legal_refs: Mapping[WorkbookOutputId, tuple[LegalRefId, ...]] | None = None,
+    source_refs: Mapping[WorkbookOutputId, tuple[SourceRefId, ...]] | None = None,
     tolerance: Decimal = Decimal("0"),
 ) -> WorkbookParityRunReport:
     """Build a deterministic parity comparison report from already-computed values.
