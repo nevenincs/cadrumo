@@ -616,7 +616,9 @@ def test_validator_rejects_export_field_not_declared_by_casilla() -> None:
 def test_validator_rejects_export_field_without_layout_authority_source() -> None:
     modelo, catalogues = _committed_registry()
     revision = _revision(modelo)
-    target_layout = next(layout for layout in revision.export_layouts if any(record.fields for record in layout.records))
+    target_layout = next(
+        layout for layout in revision.export_layouts if any(record.fields for record in layout.records)
+    )
     target_field = next(field for record in target_layout.records for field in record.fields)
     export_layouts = tuple(
         layout.model_copy(
