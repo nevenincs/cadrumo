@@ -6,6 +6,7 @@ tags:
 date: '2026-07-01'
 modified: '2026-07-01'
 related:
+  - '[[2026-07-01-verification-power-adr]]'
   - '[[2026-07-01-verification-power-research]]'
 ---
 
@@ -14,6 +15,10 @@ related:
 Auto-generated index of all documents tagged with `#verification-power`.
 
 ## Documents
+
+### adr
+
+- `2026-07-01-verification-power-adr` - `verification-power` adr: `verification grounding tier transparency` | (**status:** `accepted`)
 
 ### research
 
