@@ -24,6 +24,8 @@ from .._schema import Justificante
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
+_FOREIGN_CLASS_WRITTEN_AT = datetime(2026, 5, 26, 16, 0, 0, tzinfo=UTC)
+
 
 def _make_justificante(
     tmp_path: Path,
@@ -153,7 +155,7 @@ class TestClassificationGate:
         record = _make_justificante(tmp_path)
         bad = Envelope[Justificante](
             schema_version=1,
-            written_at=datetime.now(UTC),
+            written_at=_FOREIGN_CLASS_WRITTEN_AT,
             classification=SensitivityClass.OPERATIONAL,
             payload=record,
         )
