@@ -1,21 +1,19 @@
-"""AEAT portal catalogue and metadata.
+"""Public facade for the local AEAT portal metadata catalogue.
 
-This subpackage exposes the strict pydantic v2 registry of AEAT and
-adjacent portal metadata used by the project. The registry is built at import
-time from the per-portal entries under the private ``_entries`` package and is
-frozen as a :class:`types.MappingProxyType`. Each entry is a
-:class:`PortalMetadata` record keyed by a :class:`PortalCategory` and
-identified by a :class:`Portal` code.
+The facade exposes :class:`Portal` identifiers, taxonomy enums
+:class:`PortalCategory`, :class:`AuthMethod`, :class:`PortalHost`, and
+:class:`UrlStability`, strict frozen :class:`PortalMetadata` records, and the
+frozen :data:`PORTAL_REGISTRY` mapping from :class:`Portal` keys to metadata.
 
-Consumers outside :mod:`aeat.domain.portals` MUST import from this module
-only; the underscore-prefixed submodules are internal and unstable.
-The public surface is the :data:`__all__` tuple below.
+Use :func:`get_portal` for one portal, :func:`portals_by_category` to filter on
+the :class:`PortalCategory` axis carried by metadata, and
+:func:`portals_for_modelo` for modelo-linked filing and borrador portals
+derived from :mod:`aeat.domain.calculations.registry` application links.
 
-The heavy imports (``_metadata``, ``_registry``) load lazily via
-``__getattr__`` so importing portal enums does not materialise the full
-catalogue. The first access to any registry name loads the full catalogue.
-
-Modelo filing linkage is resolved from validated calculation registry data.
+Consumers outside :mod:`aeat.domain.portals` import from this package root; the
+underscore-prefixed modules are internal. This package describes portal, filing,
+borrador, censo, and modelo metadata only; it does not open portals, submit
+returns, sign, pay, or perform live AEAT access.
 """
 
 from __future__ import annotations
