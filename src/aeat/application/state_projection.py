@@ -38,9 +38,19 @@ See Also:
     :class:`~aeat.application.overview.OverviewStatusReport`
         Overview emit shape derived from this projection, rather than from a
         second store assembly path.
+    :func:`~aeat.application.overview.build_overview_status_report`
+        Overview producer that consumes this projection instead of rebuilding
+        workspace, auth, and deadline readiness.
     :class:`~aeat.application.auth.AuthStatusResult`
         Auth emit shape that reads the same canonical configured/authenticated
         readiness values carried here.
+    :func:`~aeat.application.auth.inspect_operator_auth`
+        Auth status producer that reads
+        :class:`ProjectionAuthReadiness` and
+        :class:`ProjectionActiveProfile` from this projection.
+    :func:`~aeat.adapters.persistence.storage.inspect_bucket_storage_runtime`
+        Storage-runtime inspection used by the workspace summary without
+        letting presentation surfaces open their own storage-reading paths.
     :class:`ProjectionWorkspaceSummary`
         Per-store counter record that keeps declaration drafts, work units, and
         calculation revisions distinct.
