@@ -35,7 +35,7 @@ from .....application.storage.calc_sheets import (
     TabName,
 )
 from .....core import Period
-from .....domain.calculations.registry import CasillaId, validated_casilla_id
+from .....domain.calculations.registry import CasillaId, LegalRefId, validated_casilla_id
 from .._calc_sheets_apply import (
     _build_structural_cleanup_requests,
     _coerce_cell_value,
@@ -62,6 +62,7 @@ _SOME_CASILLA: CasillaId = _casilla_id("some.casilla")
 _IVA_COMPENSACION_ANTERIORES_CASILLA: CasillaId = _casilla_id("iva.compensacion-anteriores")
 _IVA_PRORRATA_PORCENTAJE_CASILLA: CasillaId = _casilla_id("iva.prorrata-porcentaje")
 _IVA_RESULTADO_NEGATIVO_CASILLA: CasillaId = _casilla_id("iva.resultado-negativo")
+_DEFAULT_CONSTRAINT_LEGAL_REFS: tuple[LegalRefId, ...] = ("ley-37-1992:art-99",)
 
 
 def _make_constraint(
@@ -70,7 +71,7 @@ def _make_constraint(
     min_value: Decimal | None = None,
     max_value: Decimal | None = None,
     casilla_id: CasillaId = _TEST_CASILLA,
-    legal_refs: tuple[str, ...] = ("ley-x:art-1",),
+    legal_refs: tuple[LegalRefId, ...] = _DEFAULT_CONSTRAINT_LEGAL_REFS,
 ) -> SheetCellConstraint:
     return SheetCellConstraint(
         address=SheetCellAddress.at(TabName.ENTRADAS, 1, 1),
