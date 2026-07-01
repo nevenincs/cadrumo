@@ -1,4 +1,11 @@
-"""Async-first public LLM client."""
+"""Async-first public LLM client.
+
+Coordinates :class:`~aeat.adapters.outbound.llm.LLMRequest` inputs,
+:class:`~aeat.adapters.outbound.llm.LLMCache` lookup/write-through,
+:class:`~aeat.adapters.outbound.llm.UsageRecorder` accounting, and concrete
+:class:`~aeat.adapters.outbound.llm.LLMProvider` adapters before returning an
+:class:`~aeat.adapters.outbound.llm.LLMResponse`.
+"""
 
 from __future__ import annotations
 
@@ -33,14 +40,19 @@ class LLMClient:
     """Public async-first LLM completion entry point.
 
     Args:
-        settings: Optional settings override used for provider selection and
-            defaults.
-        cache: Optional cache implementation override.
-        usage_recorder: Optional usage recorder override.
-        prompt_registry: Optional prompt registry override.
+        settings: Optional :class:`~aeat.core.config.Settings` override used
+            for provider selection and defaults.
+        cache: Optional :class:`~aeat.adapters.outbound.llm.LLMCache`
+            implementation override.
+        usage_recorder: Optional
+            :class:`~aeat.adapters.outbound.llm.UsageRecorder` override.
+        prompt_registry: Optional
+            :class:`~aeat.adapters.outbound.llm.PromptRegistry` override.
         caller: Stable caller identifier recorded in usage logs.
         prompt_id: Stable prompt identifier recorded in usage logs.
-        adapter_override: Optional adapter override for tests and controlled flows.
+        adapter_override: Optional
+            :class:`~aeat.adapters.outbound.llm._providers.base._ProviderAdapter`
+            override for tests and controlled flows.
     """
 
     def __init__(
@@ -66,10 +78,11 @@ class LLMClient:
         """Complete a prompt request.
 
         Args:
-            request: Structured completion request.
+            request: Structured :class:`~aeat.adapters.outbound.llm.LLMRequest`.
 
         Returns:
-            A :class:`LLMResponse` enriched with cache and cost metadata.
+            A :class:`~aeat.adapters.outbound.llm.LLMResponse` enriched with
+            cache and cost metadata.
 
         Raises:
             Exception: Re-raised after logging when the LLM provider adapter fails.
