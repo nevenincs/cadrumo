@@ -4,66 +4,632 @@
 # the `notes` field records the agent-fetched provenance pending operator
 # re-verification. review_status is stamped "reviewed" per that authorization.
 
-[legal."orden-hap-1695-2016:art-1"]
+[legal."orden-hap-70-2013:art-5"]
 evidence_tier = "legal_authority"
 authority = "boe"
 kind = "orden"
-corpus_ref = "corpus/normatives/html/orden-hap-1695-2016.html#a1"
-document_id = "BOE-A-2016-9834"
-article = "1"
-permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2016-9834"
-published_at = 2016-10-27
-effective_from = 2016-10-28
+corpus_ref = "corpus/normatives/html/orden-hap-70-2013.html#a5"
+document_id = "BOE-A-2013-952"
+article = "5"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2013-952"
+published_at = 2013-01-31
+effective_from = 2013-02-01
 review_status = "reviewed"
 reviewed_at = 2026-07-01
 reviewed_by = "wgergely"
-notes = "Articulo 1: aprobacion del modelo 289. Corpus agent-fetched from BOE; pending operator re-verification."
+notes = "Articulo 5: aprobacion del modelo 136. Corpus agent-fetched from BOE; pending operator re-verification."
 required_text = [
-    "Se aprueba el modelo 289",
-    "cuentas financieras",
+    "Se aprueba el modelo 136",
+    "Gravamen Especial",
 ]
 
-[legal."orden-hap-1695-2016:art-4"]
+[legal."orden-hap-70-2013:art-7"]
 evidence_tier = "legal_authority"
 authority = "boe"
 kind = "orden"
-corpus_ref = "corpus/normatives/html/orden-hap-1695-2016.html#a4"
-document_id = "BOE-A-2016-9834"
-article = "4"
-permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2016-9834"
-published_at = 2016-10-27
-effective_from = 2016-10-28
+corpus_ref = "corpus/normatives/html/orden-hap-70-2013.html#a7"
+document_id = "BOE-A-2013-952"
+article = "7"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2013-952"
+published_at = 2013-01-31
+effective_from = 2013-02-01
 review_status = "reviewed"
 reviewed_at = 2026-07-01
 reviewed_by = "wgergely"
-notes = "Articulo 4: plazo de presentacion del modelo 289. Corpus agent-fetched from BOE; pending operator re-verification."
+notes = "Articulo 7: plazo de presentacion del modelo 136. Corpus agent-fetched from BOE; pending operator re-verification."
 required_text = [
-    "entre el 1 de enero y el 31 de mayo de cada año",
+    "veinte primeros días naturales de los meses de abril, julio, octubre y enero",
 ]
 
-[sources."enrolled-modelo-289-procedure"]
+[sources."enrolled-modelo-136-procedure"]
 evidence_tier = "official_source_guidance"
 authority = "aeat"
 kind = "instructions"
-corpus_path = "corpus/aeat_official/instructions/modelo_289/files/modelo-289-procedure.html"
-sha256 = "56d4b8b70e677b8957847def6c8114df82167c75b1effb93c3476f62f270b0a3"
-bytes = 58046
+corpus_path = "corpus/aeat_official/instructions/modelo_136/files/modelo-136-procedure.html"
+sha256 = "122f79dff96d2276b6982b1e78019e65570f2859d391034742dfcf1e9987cd59"
+bytes = 21765
 retrieved_at = 2026-07-01
-applies_from = 2016-10-28
-source_url = "https://sede.agenciatributaria.gob.es/Sede/procedimientoini/GI42.shtml"
+published_at = 2026-06-09
+applies_from = 2019-01-01
+source_url = "https://sede.agenciatributaria.gob.es/Sede/procedimientoini/GH09.shtml"
 review_status = "reviewed"
 
-[sources."enrolled-modelo-289-layout"]
+[sources."enrolled-modelo-136-layout"]
 evidence_tier = "layout_authority"
 authority = "boe"
 kind = "form_spec"
-corpus_path = "corpus/normatives/html/orden-hap-1695-2016.html"
-sha256 = "328c1328094cce2ef4a89d00afc572a229f50e5d717a6e605394f4fc94059b20"
-bytes = 105125
+corpus_path = "corpus/normatives/html/orden-hap-70-2013.html"
+sha256 = "0e1191061bb0b527d87e09478012ecd4bc1ba283e11127299ad39202241d8adb"
+bytes = 71216
 retrieved_at = 2026-07-01
-published_at = 2016-10-27
-applies_from = 2016-10-28
-source_url = "https://www.boe.es/buscar/act.php?id=BOE-A-2016-9834"
+published_at = 2013-01-31
+applies_from = 2013-02-01
+source_url = "https://www.boe.es/buscar/act.php?id=BOE-A-2013-952"
 review_status = "reviewed"
 
+[legal."orden-hap-2455-2013:art-1"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "orden"
+corpus_ref = "corpus/normatives/html/orden-hap-2455-2013.html#a1"
+document_id = "BOE-A-2013-13798"
+article = "1"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2013-13798"
+published_at = 2013-12-30
+effective_from = 2014-01-01
+review_status = "reviewed"
+reviewed_at = 2026-07-01
+reviewed_by = "wgergely"
+notes = "Articulo 1: aprobacion del modelo 165. Corpus agent-fetched from BOE; pending operator re-verification."
+required_text = [
+    "Se aprueba el modelo de declaración 165",
+    "nueva o reciente creación",
+]
 
+[legal."orden-hap-2455-2013:art-4"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "orden"
+corpus_ref = "corpus/normatives/html/orden-hap-2455-2013.html#a4"
+document_id = "BOE-A-2013-13798"
+article = "4"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2013-13798"
+published_at = 2013-12-30
+effective_from = 2014-01-01
+review_status = "reviewed"
+reviewed_at = 2026-07-01
+reviewed_by = "wgergely"
+notes = "Articulo 4: plazo de presentacion del modelo 165. Corpus agent-fetched from BOE; pending operator re-verification."
+required_text = [
+    "en el mes de enero de cada año",
+]
+
+[sources."enrolled-modelo-165-procedure"]
+evidence_tier = "official_source_guidance"
+authority = "boe"
+kind = "form_spec"
+corpus_path = "corpus/normatives/html/orden-hap-2455-2013.html"
+sha256 = "5fa7c103ced7a2cc8c2f07ee14072fe491eac883d4af2200e2561af5123911d7"
+bytes = 1094
+retrieved_at = 2026-07-01
+published_at = 2013-12-30
+applies_from = 2014-01-01
+source_url = "https://www.boe.es/buscar/act.php?id=BOE-A-2013-13798"
+review_status = "reviewed"
+
+[sources."enrolled-modelo-165-layout"]
+evidence_tier = "layout_authority"
+authority = "boe"
+kind = "form_spec"
+corpus_path = "corpus/normatives/html/orden-hap-2455-2013.html"
+sha256 = "5fa7c103ced7a2cc8c2f07ee14072fe491eac883d4af2200e2561af5123911d7"
+bytes = 1094
+retrieved_at = 2026-07-01
+published_at = 2013-12-30
+applies_from = 2014-01-01
+source_url = "https://www.boe.es/buscar/act.php?id=BOE-A-2013-13798"
+review_status = "reviewed"
+
+[legal."orden-hac-612-2021:art-1"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "orden"
+corpus_ref = "corpus/normatives/html/orden-hac-612-2021.html#a1"
+document_id = "BOE-A-2021-10163"
+article = "1"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2021-10163"
+published_at = 2021-06-18
+effective_from = 2021-06-19
+review_status = "reviewed"
+reviewed_at = 2026-07-01
+reviewed_by = "wgergely"
+notes = "Articulo 1: aprobacion del modelo 179. Corpus agent-fetched from BOE; pending operator re-verification."
+required_text = [
+    "Se aprueba el modelo 179",
+    "viviendas con fines turísticos",
+]
+
+[legal."orden-hac-612-2021:art-4"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "orden"
+corpus_ref = "corpus/normatives/html/orden-hac-612-2021.html#a4"
+document_id = "BOE-A-2021-10163"
+article = "4"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2021-10163"
+published_at = 2021-06-18
+effective_from = 2021-06-19
+review_status = "reviewed"
+reviewed_at = 2026-07-01
+reviewed_by = "wgergely"
+notes = "Articulo 4: plazo de presentacion del modelo 179. Corpus agent-fetched from BOE; pending operator re-verification."
+required_text = [
+    "entre el 1 y el 31 de enero de cada año",
+]
+
+[sources."enrolled-modelo-179-procedure"]
+evidence_tier = "official_source_guidance"
+authority = "boe"
+kind = "form_spec"
+corpus_path = "corpus/normatives/html/orden-hac-612-2021.html"
+sha256 = "2287eb1b8d7069a0ec3d7a84f27feedb0a6c521ace9447d89e34930a4579dc16"
+bytes = 1023
+retrieved_at = 2026-07-01
+published_at = 2021-06-18
+applies_from = 2021-06-19
+source_url = "https://www.boe.es/buscar/act.php?id=BOE-A-2021-10163"
+review_status = "reviewed"
+
+[sources."enrolled-modelo-179-layout"]
+evidence_tier = "layout_authority"
+authority = "boe"
+kind = "form_spec"
+corpus_path = "corpus/normatives/html/orden-hac-612-2021.html"
+sha256 = "2287eb1b8d7069a0ec3d7a84f27feedb0a6c521ace9447d89e34930a4579dc16"
+bytes = 1023
+retrieved_at = 2026-07-01
+published_at = 2021-06-18
+applies_from = 2021-06-19
+source_url = "https://www.boe.es/buscar/act.php?id=BOE-A-2021-10163"
+review_status = "reviewed"
+
+[legal."orden-eha-3514-2009:art-1"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "orden"
+corpus_ref = "corpus/normatives/html/orden-eha-3514-2009.html#a1"
+document_id = "BOE-A-2009-21165"
+article = "1"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2009-21165"
+published_at = 2009-12-31
+effective_from = 2010-01-01
+review_status = "reviewed"
+reviewed_at = 2026-07-01
+reviewed_by = "wgergely"
+notes = "Articulo 1: aprobacion del modelo 181. Corpus agent-fetched from BOE; pending operator re-verification."
+required_text = [
+    "Se aprueba el modelo 181",
+    "préstamos y créditos",
+]
+
+[legal."orden-eha-3514-2009:art-6"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "orden"
+corpus_ref = "corpus/normatives/html/orden-eha-3514-2009.html#a6"
+document_id = "BOE-A-2009-21165"
+article = "6"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2009-21165"
+published_at = 2009-12-31
+effective_from = 2010-01-01
+review_status = "reviewed"
+reviewed_at = 2026-07-01
+reviewed_by = "wgergely"
+notes = "Articulo 6: plazo de presentacion del modelo 181. Corpus agent-fetched from BOE; pending operator re-verification."
+required_text = [
+    "entre el día 1 y el 31 del mes de enero de cada año",
+]
+
+[sources."enrolled-modelo-181-procedure"]
+evidence_tier = "official_source_guidance"
+authority = "boe"
+kind = "form_spec"
+corpus_path = "corpus/normatives/html/orden-eha-3514-2009.html"
+sha256 = "d26527410b67a4c071af17d8238da371dd22039af58484fe4e48b8683c16db4b"
+bytes = 1105
+retrieved_at = 2026-07-01
+published_at = 2009-12-31
+applies_from = 2010-01-01
+source_url = "https://www.boe.es/buscar/act.php?id=BOE-A-2009-21165"
+review_status = "reviewed"
+
+[sources."enrolled-modelo-181-layout"]
+evidence_tier = "layout_authority"
+authority = "boe"
+kind = "form_spec"
+corpus_path = "corpus/normatives/html/orden-eha-3514-2009.html"
+sha256 = "d26527410b67a4c071af17d8238da371dd22039af58484fe4e48b8683c16db4b"
+bytes = 1105
+retrieved_at = 2026-07-01
+published_at = 2009-12-31
+applies_from = 2010-01-01
+source_url = "https://www.boe.es/buscar/act.php?id=BOE-A-2009-21165"
+review_status = "reviewed"
+
+[legal."orden-eha-3021-2007:art-1"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "orden"
+corpus_ref = "corpus/normatives/html/orden-eha-3021-2007.html#a1"
+document_id = "BOE-A-2007-18192"
+article = "1"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2007-18192"
+published_at = 2007-10-18
+effective_from = 2008-01-01
+review_status = "reviewed"
+reviewed_at = 2026-07-01
+reviewed_by = "wgergely"
+notes = "Articulo 1: aprobacion del modelo 182. Corpus agent-fetched from BOE; pending operator re-verification."
+required_text = [
+    "Se aprueba el modelo 182",
+    "donativos, donaciones y aportaciones",
+]
+
+[legal."orden-eha-3021-2007:art-5"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "orden"
+corpus_ref = "corpus/normatives/html/orden-eha-3021-2007.html#a5"
+document_id = "BOE-A-2007-18192"
+article = "5"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2007-18192"
+published_at = 2007-10-18
+effective_from = 2008-01-01
+review_status = "reviewed"
+reviewed_at = 2026-07-01
+reviewed_by = "wgergely"
+notes = "Articulo 5: plazo de presentacion del modelo 182. Corpus agent-fetched from BOE; pending operator re-verification."
+required_text = [
+    "se realizará en el mes de enero de cada año",
+]
+
+[sources."enrolled-modelo-182-procedure"]
+evidence_tier = "official_source_guidance"
+authority = "boe"
+kind = "form_spec"
+corpus_path = "corpus/normatives/html/orden-eha-3021-2007.html"
+sha256 = "fa1c5567224617c0ad57d06ff5e140d12dba416b0067309c81938775e62376a4"
+bytes = 1155
+retrieved_at = 2026-07-01
+published_at = 2007-10-18
+applies_from = 2008-01-01
+source_url = "https://www.boe.es/buscar/act.php?id=BOE-A-2007-18192"
+review_status = "reviewed"
+
+[sources."enrolled-modelo-182-layout"]
+evidence_tier = "layout_authority"
+authority = "boe"
+kind = "form_spec"
+corpus_path = "corpus/normatives/html/orden-eha-3021-2007.html"
+sha256 = "fa1c5567224617c0ad57d06ff5e140d12dba416b0067309c81938775e62376a4"
+bytes = 1155
+retrieved_at = 2026-07-01
+published_at = 2007-10-18
+applies_from = 2008-01-01
+source_url = "https://www.boe.es/buscar/act.php?id=BOE-A-2007-18192"
+review_status = "reviewed"
+
+[legal."orden-hac-1400-2018:art-1"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "orden"
+corpus_ref = "corpus/normatives/html/orden-hac-1400-2018.html#a1"
+document_id = "BOE-A-2018-17772"
+article = "1"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2018-17772"
+published_at = 2018-12-27
+effective_from = 2019-01-01
+review_status = "reviewed"
+reviewed_at = 2026-07-01
+reviewed_by = "wgergely"
+notes = "Articulo 1: aprobacion del modelo 233. Corpus agent-fetched from BOE; pending operator re-verification."
+required_text = [
+    "Se aprueba el modelo 233",
+    "guarderías o centros de educación infantil",
+]
+
+[legal."orden-hac-1400-2018:art-4"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "orden"
+corpus_ref = "corpus/normatives/html/orden-hac-1400-2018.html#a4"
+document_id = "BOE-A-2018-17772"
+article = "4"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2018-17772"
+published_at = 2018-12-27
+effective_from = 2019-01-01
+review_status = "reviewed"
+reviewed_at = 2026-07-01
+reviewed_by = "wgergely"
+notes = "Articulo 4: plazo de presentacion del modelo 233. Corpus agent-fetched from BOE; pending operator re-verification."
+required_text = [
+    "se realizará en el mes de enero de cada año",
+]
+
+[sources."enrolled-modelo-233-procedure"]
+evidence_tier = "official_source_guidance"
+authority = "boe"
+kind = "form_spec"
+corpus_path = "corpus/normatives/html/orden-hac-1400-2018.html"
+sha256 = "34aa3491bf9e20e33ca909eac6b891228c5e8c1148f5cc59b9ae3d9aca004df9"
+bytes = 1022
+retrieved_at = 2026-07-01
+published_at = 2018-12-27
+applies_from = 2019-01-01
+source_url = "https://www.boe.es/buscar/act.php?id=BOE-A-2018-17772"
+review_status = "reviewed"
+
+[sources."enrolled-modelo-233-layout"]
+evidence_tier = "layout_authority"
+authority = "boe"
+kind = "form_spec"
+corpus_path = "corpus/normatives/html/orden-hac-1400-2018.html"
+sha256 = "34aa3491bf9e20e33ca909eac6b891228c5e8c1148f5cc59b9ae3d9aca004df9"
+bytes = 1022
+retrieved_at = 2026-07-01
+published_at = 2018-12-27
+applies_from = 2019-01-01
+source_url = "https://www.boe.es/buscar/act.php?id=BOE-A-2018-17772"
+review_status = "reviewed"
+
+[legal."orden-hac-72-2024:art-1"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "orden"
+corpus_ref = "corpus/normatives/html/orden-hac-72-2024.html#a1"
+document_id = "BOE-A-2024-2092"
+article = "1"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2024-2092"
+published_at = 2024-02-07
+effective_from = 2024-02-08
+review_status = "reviewed"
+reviewed_at = 2026-07-01
+reviewed_by = "wgergely"
+notes = "Articulo 1: aprobacion del modelo 238. Corpus agent-fetched from BOE; pending operator re-verification."
+required_text = [
+    "Se aprueba el modelo 238",
+    "operadores de plataformas",
+]
+
+[legal."orden-hac-72-2024:art-9"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "orden"
+corpus_ref = "corpus/normatives/html/orden-hac-72-2024.html#a9"
+document_id = "BOE-A-2024-2092"
+article = "9"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2024-2092"
+published_at = 2024-02-07
+effective_from = 2024-02-08
+review_status = "reviewed"
+reviewed_at = 2026-07-01
+reviewed_by = "wgergely"
+notes = "Articulo 9: plazo de presentacion del modelo 238. Corpus agent-fetched from BOE; pending operator re-verification."
+required_text = [
+    "tendrá carácter anual",
+]
+
+[sources."enrolled-modelo-238-procedure"]
+evidence_tier = "official_source_guidance"
+authority = "boe"
+kind = "form_spec"
+corpus_path = "corpus/normatives/html/orden-hac-72-2024.html"
+sha256 = "03abd4d5b6446e5fc12c54861b43782aaf394bbfb54822a1865add7d557c2a33"
+bytes = 1166
+retrieved_at = 2026-07-01
+published_at = 2024-02-07
+applies_from = 2024-02-08
+source_url = "https://www.boe.es/buscar/act.php?id=BOE-A-2024-2092"
+review_status = "reviewed"
+
+[sources."enrolled-modelo-238-layout"]
+evidence_tier = "layout_authority"
+authority = "boe"
+kind = "form_spec"
+corpus_path = "corpus/normatives/html/orden-hac-72-2024.html"
+sha256 = "03abd4d5b6446e5fc12c54861b43782aaf394bbfb54822a1865add7d557c2a33"
+bytes = 1166
+retrieved_at = 2026-07-01
+published_at = 2024-02-07
+applies_from = 2024-02-08
+source_url = "https://www.boe.es/buscar/act.php?id=BOE-A-2024-2092"
+review_status = "reviewed"
+
+[legal."orden-hap-2368-2013:art-1"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "orden"
+corpus_ref = "corpus/normatives/html/orden-hap-2368-2013.html#a1"
+document_id = "BOE-A-2013-13228"
+article = "1"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2013-13228"
+published_at = 2013-12-17
+effective_from = 2014-01-01
+review_status = "reviewed"
+reviewed_at = 2026-07-01
+reviewed_by = "wgergely"
+notes = "Articulo 1: aprobacion del modelo 270. Corpus agent-fetched from BOE; pending operator re-verification."
+required_text = [
+    "Se aprueba el modelo 270",
+    "premios de determinadas loterías",
+]
+
+[legal."orden-hap-2368-2013:art-3"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "orden"
+corpus_ref = "corpus/normatives/html/orden-hap-2368-2013.html#a3"
+document_id = "BOE-A-2013-13228"
+article = "3"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2013-13228"
+published_at = 2013-12-17
+effective_from = 2014-01-01
+review_status = "reviewed"
+reviewed_at = 2026-07-01
+reviewed_by = "wgergely"
+notes = "Articulo 3: plazo de presentacion del modelo 270. Corpus agent-fetched from BOE; pending operator re-verification."
+required_text = [
+    "se realizará en el mes de enero de cada año",
+]
+
+[sources."enrolled-modelo-270-procedure"]
+evidence_tier = "official_source_guidance"
+authority = "boe"
+kind = "form_spec"
+corpus_path = "corpus/normatives/html/orden-hap-2368-2013.html"
+sha256 = "624811727a1832c92a796d8465e25b26b5fe7e9fabe5eab0b91b84b781a5abe9"
+bytes = 1043
+retrieved_at = 2026-07-01
+published_at = 2013-12-17
+applies_from = 2014-01-01
+source_url = "https://www.boe.es/buscar/act.php?id=BOE-A-2013-13228"
+review_status = "reviewed"
+
+[sources."enrolled-modelo-270-layout"]
+evidence_tier = "layout_authority"
+authority = "boe"
+kind = "form_spec"
+corpus_path = "corpus/normatives/html/orden-hap-2368-2013.html"
+sha256 = "624811727a1832c92a796d8465e25b26b5fe7e9fabe5eab0b91b84b781a5abe9"
+bytes = 1043
+retrieved_at = 2026-07-01
+published_at = 2013-12-17
+applies_from = 2014-01-01
+source_url = "https://www.boe.es/buscar/act.php?id=BOE-A-2013-13228"
+review_status = "reviewed"
+
+[legal."orden-hfp-227-2017:art-2"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "orden"
+corpus_ref = "corpus/normatives/html/orden-hfp-227-2017.html#a2"
+document_id = "BOE-A-2017-2778"
+article = "2"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2017-2778"
+published_at = 2017-03-18
+effective_from = 2017-03-19
+review_status = "reviewed"
+reviewed_at = 2026-07-01
+reviewed_by = "wgergely"
+notes = "Articulo 2: aprobacion del modelo 222. Corpus agent-fetched from BOE; pending operator re-verification."
+required_text = [
+    "Se aprueba el modelo 222",
+    "Régimen de consolidación fiscal",
+]
+
+[legal."orden-hfp-227-2017:art-5"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "orden"
+corpus_ref = "corpus/normatives/html/orden-hfp-227-2017.html#a5"
+document_id = "BOE-A-2017-2778"
+article = "5"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2017-2778"
+published_at = 2017-03-18
+effective_from = 2017-03-19
+review_status = "reviewed"
+reviewed_at = 2026-07-01
+reviewed_by = "wgergely"
+notes = "Articulo 5: plazo de presentacion del modelo 222. Corpus agent-fetched from BOE; pending operator re-verification."
+required_text = [
+    "primeros veinte días naturales de los meses de abril, octubre y diciembre",
+]
+
+[sources."enrolled-modelo-222-procedure"]
+evidence_tier = "official_source_guidance"
+authority = "boe"
+kind = "form_spec"
+corpus_path = "corpus/normatives/html/orden-hfp-227-2017.html"
+sha256 = "497ce0a6cdbf7deb19c3bee0839861325c14a2fbfe7714eb47722c2084b9cef7"
+bytes = 130975
+retrieved_at = 2026-07-01
+published_at = 2017-03-18
+applies_from = 2017-03-19
+source_url = "https://www.boe.es/buscar/act.php?id=BOE-A-2017-2778"
+review_status = "reviewed"
+
+[sources."enrolled-modelo-222-layout"]
+evidence_tier = "layout_authority"
+authority = "boe"
+kind = "form_spec"
+corpus_path = "corpus/normatives/html/orden-hfp-227-2017.html"
+sha256 = "497ce0a6cdbf7deb19c3bee0839861325c14a2fbfe7714eb47722c2084b9cef7"
+bytes = 130975
+retrieved_at = 2026-07-01
+published_at = 2017-03-18
+applies_from = 2017-03-19
+source_url = "https://www.boe.es/buscar/act.php?id=BOE-A-2017-2778"
+review_status = "reviewed"
+
+[legal."orden-hac-342-2021:art-1"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "orden"
+corpus_ref = "corpus/normatives/html/orden-hac-342-2021.html#a1"
+document_id = "BOE-A-2021-5780"
+article = "1"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2021-5780"
+published_at = 2021-04-13
+effective_from = 2021-04-14
+review_status = "reviewed"
+reviewed_at = 2026-07-01
+reviewed_by = "wgergely"
+notes = "Articulo 1: aprobacion del modelo 234. Corpus agent-fetched from BOE; pending operator re-verification."
+required_text = [
+    "Se aprueba el modelo 234",
+    "mecanismos transfronterizos",
+]
+
+[legal."orden-hac-342-2021:art-4"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "orden"
+corpus_ref = "corpus/normatives/html/orden-hac-342-2021.html#a4"
+document_id = "BOE-A-2021-5780"
+article = "4"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2021-5780"
+published_at = 2021-04-13
+effective_from = 2021-04-14
+review_status = "reviewed"
+reviewed_at = 2026-07-01
+reviewed_by = "wgergely"
+notes = "Articulo 4: plazo de presentacion del modelo 234. Corpus agent-fetched from BOE; pending operator re-verification."
+required_text = [
+    "treinta días naturales siguientes al nacimiento de la obligación",
+]
+
+[sources."enrolled-modelo-234-procedure"]
+evidence_tier = "official_source_guidance"
+authority = "boe"
+kind = "form_spec"
+corpus_path = "corpus/normatives/html/orden-hac-342-2021.html"
+sha256 = "6378831ddf4b6867175d62d6a89e81a3c5bbf57b47778d1572bc741c6a9395b2"
+bytes = 1100
+retrieved_at = 2026-07-01
+published_at = 2021-04-13
+applies_from = 2021-04-14
+source_url = "https://www.boe.es/buscar/act.php?id=BOE-A-2021-5780"
+review_status = "reviewed"
+
+[sources."enrolled-modelo-234-layout"]
+evidence_tier = "layout_authority"
+authority = "boe"
+kind = "form_spec"
+corpus_path = "corpus/normatives/html/orden-hac-342-2021.html"
+sha256 = "6378831ddf4b6867175d62d6a89e81a3c5bbf57b47778d1572bc741c6a9395b2"
+bytes = 1100
+retrieved_at = 2026-07-01
+published_at = 2021-04-13
+applies_from = 2021-04-14
+source_url = "https://www.boe.es/buscar/act.php?id=BOE-A-2021-5780"
+review_status = "reviewed"
