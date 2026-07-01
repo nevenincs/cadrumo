@@ -254,21 +254,21 @@ class TestModelo349OperadorRow:
         )
         assert row.importe == Decimal("0")
 
-    @pytest.mark.parametrize("operation_type", tuple(IntracomOperationType), ids=lambda member: member.value)
-    def test_current_intracom_operation_claves_are_accepted(self, operation_type: IntracomOperationType) -> None:
-        row = Modelo349OperadorRow(
-            codigo_pais="DE",
-            nif_comunitario="DE123456789",
-            razon_social="Deutschland GmbH",
-            clave_operacion=operation_type.value,
-            importe=Decimal("1"),
-        )
+    def test_current_intracom_operation_claves_are_accepted(self) -> None:
+        for operation_type in IntracomOperationType:
+            row = Modelo349OperadorRow(
+                codigo_pais="DE",
+                nif_comunitario="DE123456789",
+                razon_social="Deutschland GmbH",
+                clave_operacion=operation_type.value,
+                importe=Decimal("1"),
+            )
 
-        assert row.clave_operacion == operation_type.value
+            assert row.clave_operacion == operation_type.value, operation_type.value
 
-    @pytest.mark.parametrize("case", _M349_INVALID_ROW_CASES, ids=lambda case: case.case_id)
-    def test_invalid_operador_rows_rejected(self, case: _ValidationErrorCase) -> None:
-        _assert_validation_error(case)
+    def test_invalid_operador_rows_rejected(self) -> None:
+        for case in _M349_INVALID_ROW_CASES:
+            _assert_validation_error(case)
 
     def test_frozen_model_immutable(self) -> None:
         row = Modelo349OperadorRow(
@@ -345,52 +345,52 @@ class TestModelo349RectificacionRow:
 
         assert row.periodo == "2T"
 
-    @pytest.mark.parametrize("operation_type", tuple(IntracomOperationType), ids=lambda member: member.value)
-    def test_current_intracom_operation_claves_are_accepted(self, operation_type: IntracomOperationType) -> None:
-        row = Modelo349RectificacionRow(
-            codigo_pais="DE",
-            nif_comunitario="DE123456789",
-            razon_social="Deutschland GmbH",
-            clave_operacion=operation_type.value,
-            ejercicio="2025",
-            periodo="2T",
-            base_rectificada=Decimal("1100.00"),
-            base_anterior=Decimal("1000.00"),
-        )
+    def test_current_intracom_operation_claves_are_accepted(self) -> None:
+        for operation_type in IntracomOperationType:
+            row = Modelo349RectificacionRow(
+                codigo_pais="DE",
+                nif_comunitario="DE123456789",
+                razon_social="Deutschland GmbH",
+                clave_operacion=operation_type.value,
+                ejercicio="2025",
+                periodo="2T",
+                base_rectificada=Decimal("1100.00"),
+                base_anterior=Decimal("1000.00"),
+            )
 
-        assert row.clave_operacion == operation_type.value
+            assert row.clave_operacion == operation_type.value, operation_type.value
 
-    @pytest.mark.parametrize("case", _M349_INVALID_RECTIFICATION_ROW_CASES, ids=lambda case: case.case_id)
-    def test_invalid_rectification_rows_rejected(self, case: _ValidationErrorCase) -> None:
-        _assert_validation_error(case)
+    def test_invalid_rectification_rows_rejected(self) -> None:
+        for case in _M349_INVALID_RECTIFICATION_ROW_CASES:
+            _assert_validation_error(case)
 
 
 class TestValidateM349NifFormat:
-    @pytest.mark.parametrize("case", _M349_NIF_FORMAT_CASES, ids=lambda case: case.case_id)
-    def test_country_specific_nif_formats(self, case: _BooleanCase) -> None:
-        assert validate_m349_nif_format(case.nif, case.pais) is case.expected
+    def test_country_specific_nif_formats(self) -> None:
+        for case in _M349_NIF_FORMAT_CASES:
+            assert validate_m349_nif_format(case.nif, case.pais) is case.expected, case.case_id
 
 
 class TestValidateM349CountryPrefixContext:
-    @pytest.mark.parametrize("case", _M349_CONTEXT_ALLOWED_CASES, ids=lambda case: case.case_id)
-    def test_allowed_country_prefix_contexts(self, case: _CountryContextCase) -> None:
-        case.call()
-
-    @pytest.mark.parametrize("case", _M349_CONTEXT_REJECTED_CASES, ids=lambda case: case.case_id)
-    def test_rejected_country_prefix_contexts(self, case: _CountryContextCase) -> None:
-        assert case.match is not None
-        with pytest.raises(Modelo349CountryPrefixContextError) as exc:
+    def test_allowed_country_prefix_contexts(self) -> None:
+        for case in _M349_CONTEXT_ALLOWED_CASES:
             case.call()
-        assert isinstance(exc.value, AeatError)
-        assert isinstance(exc.value, ValueError)
-        code = get_registered_error_code(exc.value)
-        assert code.code == "REFUSED_MODELO_349_COUNTRY_PREFIX_CONTEXT"
-        message = resolve_error_message(exc.value)
-        assert "Modelo 349" in message
-        assert "AEAT Brexit IVA NIF-IVA" in message
-        assert case.match in message
-        if case.must_contain is not None:
-            assert case.must_contain in message
+
+    def test_rejected_country_prefix_contexts(self) -> None:
+        for case in _M349_CONTEXT_REJECTED_CASES:
+            assert case.match is not None, case.case_id
+            with pytest.raises(Modelo349CountryPrefixContextError) as exc:
+                case.call()
+            assert isinstance(exc.value, AeatError), case.case_id
+            assert isinstance(exc.value, ValueError), case.case_id
+            code = get_registered_error_code(exc.value)
+            assert code.code == "REFUSED_MODELO_349_COUNTRY_PREFIX_CONTEXT", case.case_id
+            message = resolve_error_message(exc.value)
+            assert "Modelo 349" in message, case.case_id
+            assert "AEAT Brexit IVA NIF-IVA" in message, case.case_id
+            assert case.match in message, case.case_id
+            if case.must_contain is not None:
+                assert case.must_contain in message, case.case_id
 
 
 class TestM349NifNumberForExport:
