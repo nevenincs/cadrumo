@@ -229,6 +229,7 @@ def validate_revision_definition(
         revision=revision,
         legal_refs=legal_refs,
         source_refs=source_refs,
+        evidence=evidence,
     )
     context = build_revision_validation_context(revision)
     if not context.ids_by_kind["workbook parity reference"]:
