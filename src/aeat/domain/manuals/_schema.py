@@ -139,6 +139,11 @@ class Paragraph(_ManualStrictFrozen):
     text: str = Field(min_length=1, description="Source prose (authoritative Spanish).")
     page: int = Field(ge=1, description="1-indexed page number in the PDF.")
 
+    @model_validator(mode="after")
+    def _check_authoritative_text(self) -> Paragraph:
+        _require_spanish(self.text, "Paragraph.text")
+        return self
+
 
 class Rule(_ManualStrictFrozen):
     """A single extracted rule from the *Manual práctico*.
@@ -203,6 +208,8 @@ class Rule(_ManualStrictFrozen):
     @model_validator(mode="after")
     def _check_authoritative_statement(self) -> Rule:
         _require_spanish(self.statement, "Rule.statement")
+        if self.applies_when is not None:
+            _require_spanish(self.applies_when, "Rule.applies_when")
         return self
 
 
