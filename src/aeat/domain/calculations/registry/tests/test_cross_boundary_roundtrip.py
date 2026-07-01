@@ -58,6 +58,9 @@ _IVA_DEVENGADO_CASILLA: CasillaId = _casilla_id("iva.devengado")
 _IVA_DEDUCIBLE_CASILLA: CasillaId = _casilla_id("iva.deducible")
 _IVA_RESULTADO_REGIMEN_GENERAL_CASILLA: CasillaId = _casilla_id("iva.resultado-regimen-general")
 _IVA_RESULTADO_OPERANDS: tuple[CasillaId, CasillaId] = (_IVA_DEVENGADO_CASILLA, _IVA_DEDUCIBLE_CASILLA)
+_DRAFT_TIMESTAMP = datetime(2026, 5, 28, 10, 0, 0, tzinfo=UTC)
+_WORKFLOW_STEP_STARTED_AT = datetime(2026, 5, 28, 10, 5, 0, tzinfo=UTC)
+_CALCULATION_REVISION_TIMESTAMP = datetime(2026, 5, 28, 10, 10, 0, tzinfo=UTC)
 
 
 class _ModeloDraftCommonKwargs(TypedDict):
@@ -257,7 +260,6 @@ def test_filing_draft_full_roundtrip() -> None:
 
     from .._schema import RegistrySnapshotRef
 
-    now = datetime.now(UTC).replace(microsecond=0)
     snapshot_ref = RegistrySnapshotRef(
         modelo="303",
         revision_id="2025-y-siguientes",
@@ -295,8 +297,8 @@ def test_filing_draft_full_roundtrip() -> None:
         ),
         binding_values=(),
         findings=(),
-        created_at=now,
-        updated_at=now,
+        created_at=_DRAFT_TIMESTAMP,
+        updated_at=_DRAFT_TIMESTAMP,
         schema_version="schema-2025-1",
         notes="",
     )
@@ -323,7 +325,6 @@ def test_filing_draft_subject_tax_id_validates_at_boundary() -> None:
 
     from .._schema import RegistrySnapshotRef
 
-    now = datetime.now(UTC).replace(microsecond=0)
     snapshot_ref = RegistrySnapshotRef(
         modelo="303",
         revision_id="2025-y-siguientes",
@@ -340,8 +341,8 @@ def test_filing_draft_subject_tax_id_validates_at_boundary() -> None:
         "values": (),
         "binding_values": (),
         "findings": (),
-        "created_at": now,
-        "updated_at": now,
+        "created_at": _DRAFT_TIMESTAMP,
+        "updated_at": _DRAFT_TIMESTAMP,
         "schema_version": "schema-2025-1",
     }
 
@@ -364,7 +365,6 @@ def test_filing_draft_profile_tax_id_validates_at_boundary() -> None:
 
     from .._schema import RegistrySnapshotRef
 
-    now = datetime.now(UTC).replace(microsecond=0)
     snapshot_ref = RegistrySnapshotRef(
         modelo="303",
         revision_id="2025-y-siguientes",
@@ -381,8 +381,8 @@ def test_filing_draft_profile_tax_id_validates_at_boundary() -> None:
         "values": (),
         "binding_values": (),
         "findings": (),
-        "created_at": now,
-        "updated_at": now,
+        "created_at": _DRAFT_TIMESTAMP,
+        "updated_at": _DRAFT_TIMESTAMP,
         "schema_version": "schema-2025-1",
     }
 
@@ -401,7 +401,6 @@ def test_filing_draft_snapshot_ref_full_roundtrip() -> None:
 
     from .._schema import RegistrySnapshotRef
 
-    now = datetime.now(UTC).replace(microsecond=0)
     ref = RegistrySnapshotRef(
         modelo="303",
         revision_id="2025-y-siguientes",
@@ -419,8 +418,8 @@ def test_filing_draft_snapshot_ref_full_roundtrip() -> None:
         values=(),
         binding_values=(),
         findings=(),
-        created_at=now,
-        updated_at=now,
+        created_at=_DRAFT_TIMESTAMP,
+        updated_at=_DRAFT_TIMESTAMP,
         schema_version="schema-2025-1",
     )
 
@@ -552,11 +551,10 @@ def test_workflow_step_details_typed_envelope_roundtrip() -> None:
         WorkflowStepDetails,
     )
 
-    now = datetime.now(UTC).replace(microsecond=0)
     original = WorkflowStep(
         stage=WorkflowStage.RUNNING_PREFLIGHT,
-        started_at=now,
-        ended_at=now + timedelta(seconds=2),
+        started_at=_WORKFLOW_STEP_STARTED_AT,
+        ended_at=_WORKFLOW_STEP_STARTED_AT + timedelta(seconds=2),
         success=True,
         summary="health check passed",
         details={"draft_id": "f" * 64, "casilla_count": "42"},
@@ -585,7 +583,6 @@ def test_calculation_revision_carries_typed_observations() -> None:
     serialization without value loss.
     """
 
-    now = datetime.now(UTC).replace(microsecond=0)
     observation = CasillaObservation(
         casilla_id=_IVA_RESULTADO_REGIMEN_GENERAL_CASILLA,
         value=Decimal("12345.67"),
@@ -609,8 +606,8 @@ def test_calculation_revision_carries_typed_observations() -> None:
         state=CalculationRevisionState.BORRADOR,
         casilla_values=casilla_values,
         observations=(observation,),
-        created_at=now,
-        updated_at=now,
+        created_at=_CALCULATION_REVISION_TIMESTAMP,
+        updated_at=_CALCULATION_REVISION_TIMESTAMP,
     )
 
     roundtripped = CalculationRevision.model_validate_json(revision.model_dump_json())
