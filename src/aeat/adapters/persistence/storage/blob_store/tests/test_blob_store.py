@@ -27,6 +27,8 @@ from .._blob_store import BlobManifest, EncryptedBlobStore
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 
+_SESSION_OPENED_AT = datetime(2099, 5, 28, 11, 45, 0, tzinfo=UTC)
+
 
 def _digest_hex(data: bytes) -> str:
     return hashlib.sha256(data).hexdigest()
@@ -38,7 +40,7 @@ def _bucket_session(*, dek: bytes) -> BucketSession:
         kek=b"k" * KEY_SIZE,
         dek=dek,
         idle_minutes=15,
-        opened_at=datetime.now(UTC),
+        opened_at=_SESSION_OPENED_AT,
     )
 
 
