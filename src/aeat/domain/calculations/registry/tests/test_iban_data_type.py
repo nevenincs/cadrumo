@@ -70,15 +70,12 @@ class TestIbanStringRejects:
             "ES9921000418450200051332",  # wrong check digits
             "@@@@@@@@@@@@@@@@",
             "ES9121000418450200051332EXTRA",  # too long
+            123456,
         ],
     )
-    def test_invalid_ibans_rejected_through_adapter(self, raw: str) -> None:
+    def test_invalid_ibans_rejected_through_adapter(self, raw: object) -> None:
         with pytest.raises(ValidationError):
             _IBAN_ADAPTER.validate_python(raw)
-
-    def test_non_string_rejected(self) -> None:
-        with pytest.raises(ValidationError):
-            _IBAN_ADAPTER.validate_python(123456)
 
     def test_blank_raises_registry_validation_error_at_validator(self) -> None:
         with pytest.raises(RegistryValidationError):
