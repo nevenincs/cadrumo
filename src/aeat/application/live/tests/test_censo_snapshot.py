@@ -487,7 +487,7 @@ def test_anti_tautology_mutating_on_disk_payload_is_detected_on_load(
     # must raise because the SUPERSEDED state requires a successor.
     envelope = Envelope[CensoSnapshot](
         schema_version=1,
-        written_at=datetime.now(UTC),
+        written_at=captured_at,
         classification=SensitivityClass.IDENTITY,
         payload=original,
     )
