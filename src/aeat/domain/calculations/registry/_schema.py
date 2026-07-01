@@ -1048,6 +1048,23 @@ KNOWN_VERIFICATION_PREDICATE_OPERATORS: frozenset[str] = frozenset(
         # _evaluate_advisory_predicate_fires and the
         # m210-categorical-conditional-predicate ADR.
         "casilla_equals_implies_nonzero",
+        # deduccion_requires_adquisicion_before(["amount_casilla_id",
+        # "acquisition_date_casilla_id", "construction_date_casilla_id",
+        # "cutoff_iso"]) — eligibility-conditional advisory: FIRES (ADVISORY
+        # shown) when the named amount (Decimal) casilla is strictly positive
+        # (a deducción is claimed) AND neither eligibility signal is present —
+        # the acquisition-date TEXT casilla holding a date strictly before the
+        # cutoff, nor the construction-date TEXT casilla being non-empty. The
+        # one no-silent-over-declaration shape the numeric/categorical operators
+        # cannot express because its trigger combines a claimed amount with a
+        # DATE-threshold eligibility test read from the operator-entered raw
+        # text. ADVISORY-only (no BLOCKING_RULE branch). Authored for the
+        # Modelo 100 deducción por inversión en vivienda habitual, whose
+        # transitional régimen (LIRPF DT 18ª) admits only dwellings acquired
+        # before 01-01-2013 (or pre-2013 construction). See the
+        # deduccion_requires_adquisicion_before branch in
+        # _evaluate_advisory_predicate_fires.
+        "deduccion_requires_adquisicion_before",
         # equals(["lhs_id", "rhs_id"]) — consistency invariant: the two named
         # casillas must hold the same value. Authored for the M303 official
         # Diseño box projections (Stage 2): each numbered box copies a semantic
@@ -1153,6 +1170,25 @@ class VerificationPredicateDefinition(RegistryModel):
       because its trigger is a categorical equality (``tipo_renta ==
       "inmobiliaria"``) rather than a numeric antecedent. See the
       m210-categorical-conditional-predicate ADR.
+    - ``deduccion_requires_adquisicion_before(["amount_casilla_id",
+      "acquisition_date_casilla_id", "construction_date_casilla_id",
+      "cutoff_iso"])`` — eligibility-conditional advisory: FIRES (ADVISORY
+      shown) iff the named amount (Decimal) casilla is strictly positive (a
+      deducción is claimed) AND no pre-cutoff eligibility signal is recorded,
+      i.e. the acquisition-date TEXT casilla does NOT hold a date strictly
+      before ``cutoff_iso`` AND the construction-date TEXT casilla is empty. A
+      claimed amount with a pre-cutoff acquisition date, a non-empty
+      construction date, or a zero/absent amount holds trivially (no advisory).
+      ADVISORY-only: no ``BLOCKING_RULE`` branch is implemented, mirroring the
+      ``casilla_equals_implies_nonzero`` / ``advisory_when_ratio_ge``
+      ADVISORY-only convention. Authored for the Modelo 100 deducción por
+      inversión en vivienda habitual, whose transitional régimen (LIRPF DT 18ª)
+      admits only dwellings acquired before 01-01-2013 (or pre-2013
+      construction); a post-2013 acquirer claiming the abolished deducción
+      would silently over-declare the deducción (under-declare tax), the
+      no-silent-under-declaration shape neither ``implies_nonzero`` (numeric
+      antecedent) nor ``casilla_equals_implies_nonzero`` (categorical text
+      equality) can express because its trigger is a DATE threshold.
     """
 
     predicate_id: str = Field(min_length=1, max_length=128)
