@@ -32,8 +32,14 @@ Major declarations:
 * :func:`~aeat.application.ledger.preflight_ledger_tax_readiness` with
   :class:`~aeat.application.ledger.LedgerPreflightReport` and
   :class:`~aeat.application.ledger.LedgerPreflightIssue` - the readiness gate
-  that reports rows missing a category, base, IVA rate, currency, or prorrata
-  reference.
+  that reports rows missing a category, usage-ratio reference, base, IVA rate,
+  currency, censo-aligned HOME_OFFICE ratio, or prorrata reference.
+* :func:`~aeat.application.ledger.eligible_ratio_categories`,
+  :func:`~aeat.application.ledger.set_usage_ratio`,
+  :func:`~aeat.application.ledger.unset_usage_ratio`, and
+  :func:`~aeat.application.ledger.validate_ratios_for_bucket` - the
+  operator-facing ``aeat app ledger ratios`` backend that bridges category
+  proportionality rules to persisted usage-ratio overrides.
 * :class:`~aeat.application.ledger.PurchaseInvoiceEvidenceService` - the
   evidence lifecycle for receipts or supplier invoice artefacts attached to
   ledger transactions.
@@ -71,6 +77,15 @@ See Also:
     :mod:`aeat.domain.transactions`
         The transaction catalogue and lifecycle states that remain the ledger's
         durable movement authority.
+    :mod:`aeat.domain.categories`
+        Closed spending-category identifiers and proportionality rules accepted
+        by ledger ``category_id`` and ratio workflows.
+    :mod:`aeat.domain.usage_ratios`
+        Bucket-scoped, encrypted per-category business-use ratios validated by
+        ledger commands and preflight.
+    :mod:`aeat.domain.iva`
+        Legal IVA classification and prorrata substrates referenced by ledger
+        tax fields without becoming ledger lifecycle ownership.
 """
 
 from __future__ import annotations
