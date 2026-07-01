@@ -59,7 +59,8 @@ from pathlib import Path
 import pytest
 
 from ....adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
-from ....core import CasillaId, Period, validated_casilla_id
+from ....core._casilla_id import CasillaId, validated_casilla_id
+from ....core._period import Period
 from ....core.resources import resources
 from ....domain.buckets import BucketEventHistoryRepository
 from ....domain.deadlines import FiscalResidency, IVARegime, TaxpayerProfile
@@ -75,7 +76,9 @@ from ....domain.user_profile import UserProfileFact, UserProfileRecord
 from ....tests.secure_sql import isolated_runtime_profile
 from ...calculations._observations_repository import CalculationObservationRepository
 from ...user_profile import UserProfileLifecycleRepository
-from .. import calculate_modelo_revision, create_work_unit, verify_modelo_revision
+from .._calculation_actions import calculate_modelo_revision
+from .._verification_actions import verify_modelo_revision
+from .._work_lifecycle import create_work_unit
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

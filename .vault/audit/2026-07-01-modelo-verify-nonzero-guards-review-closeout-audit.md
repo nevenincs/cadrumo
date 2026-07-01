@@ -112,23 +112,53 @@ required; recorded for visibility.
 
 ## Recommendations
 
-The following deferrals are explicitly tracked out of this closeout:
+Resolved deferrals and remaining follow-ups from this closeout:
 
-- `DFR-M210-INMOBILIARIA-E2E`: add an end-to-end integration test constructing
-  registry-valid inmobiliaria inputs through `calculate_modelo_work_revision`,
-  asserting the persisted `input_values_by_casilla_id` carries `tipo_renta` and
-  the advisory fires.
-- `DFR-M210-TEXT-INPUT-LOCALE-PARITY`: add the
-  `application.modelo.errors.calculate_text_input_empty` locale key to the
-  non-English catalogues through the sanctioned locale CLI once current locale
-  peer WIP is no longer in the way.
-- `DFR-M123-RIRPF-EXONERATION-CORPUS`: bundle RD 439/2007 arts. 74-76
-  (BOE-A-2007-6820) into the corpus and cite the type-based exoneration list,
-  closing the M123 residual grounding gap with verbatim text.
-- `DFR-M202-B2-RESULTADO-FORMULA-WIRING`: verify and, if confirmed, fix the
-  M202 casilla-26 / casilla-32 B2 resultado formula-wiring defect against the
-  AEAT Diseno de Registros.
+- `DFR-M210-INMOBILIARIA-E2E`: RESOLVED — `test_modelo_210_inmobiliaria_e2e.py`
+  drives `calculate_modelo_revision` -> `verify_modelo_revision` with a
+  `tipo_renta` text input reaching the persisted `input_values_by_casilla_id`,
+  asserting the inmobiliaria ADVISORY fires on a genuine sub-cent silent-zero
+  base and holds when the base computes (the `dias_imputacion = 0` scenario is
+  refused by the engine, so a one-day sub-cent fact rounding to EUR 0.00 was
+  used instead). Committed `d10662573`. 2 tests pass.
+- `DFR-M210-TEXT-INPUT-LOCALE-PARITY`: STILL OPEN — the text-input empty
+  refusal is present in `_calculate_input.py` as
+  `application.modelo.errors.calculate_text_input_empty`, but a scoped
+  catalogue search found no locale/catalogue entry for that key. The existing
+  core error registry key `errors.refused.modelo_calculate_text_input` is a
+  different envelope-level message. This needs a sanctioned locale/error-message
+  pass rather than a closeout claim.
+- `DFR-M123-RIRPF-EXONERATION-CORPUS`: RESOLVED — RD 439/2007 art. 75.3
+  (BOE-A-2007-6820, vigente) was bundled as `rd-439-2007-art-75.html` and
+  catalogued as `rd-439-2007:art-75`. The corrected conclusion is not that only
+  letras b/c touch capital mobiliario; it is that art. 75.3 exceptions with no
+  withholding obligation do not populate a positive M123 withholding-base
+  declaration, while carve-back/payment-on-account cases remain covered by the
+  existing positive-base advisory. Committed by the owner as `b860c576e`.
+- `DFR-M202-B2-RESULTADO-FORMULA-WIRING`: RESOLVED — confirmed a real defect
+  against the bundled AEAT M202 instructions (casilla 32 dropped the B2 casilla
+  26 resultado); fixed to `add([18],[26])` across all three revisions with a
+  `required_text` evidence-gate citation and non-tautological tests. Committed
+  `cb002833a`.
 
-The fresh honesty review did run and is persisted here. After commit
-`5592a0a3a`, its commit-state blocker is resolved; the deferrals above remain
-visible until separate follow-up work lands.
+Two adjacent pre-existing defects were surfaced while proving DFR-M210 (NOT
+caused by this campaign; they live in other subsystems and are tracked for a
+separately-grounded follow-up):
+
+- `FUP-M210-ENUM-DISPATCH-ARG-INDEX`:
+  `_ENUM_DISPATCH_BINDING_ARG_INDEX["m210_resolve_rate"] = 3` is stale for the
+  current 6-arg form (country binding is now at index 5), so the bucket-profile
+  auto-resolution of `country_of_fiscal_residence` can misroute the string onto
+  the Decimal channel and raise. Needs an index correction + a regression.
+- `FUP-FILING-DRAFT-TEXT-CASILLA`: the post-verify filing-draft builder
+  (`_decimal_input` in `application/filing`) does not accept `data_type = "text"`
+  casilla inputs, so an inmobiliaria M210 draft would raise on `tipo_renta`.
+  The verify-stage guard (this campaign's scope) is unaffected; extending the
+  text channel into the filing-draft stage is the follow-up.
+
+The fresh honesty review did run and is persisted here. Its commit-state blocker
+is resolved (the campaign's substantive work is committed across
+`a7992b56f`, `3cb07b8bd`, `5592a0a3a`, `b860c576e`, `cb002833a`, `d10662573`).
+No re-export hunk is part of this closeout. Current follow-up work must import
+and test from owning modules directly, not from package facades, per the active
+no-reexports direction.
