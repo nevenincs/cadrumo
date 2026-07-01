@@ -1,18 +1,18 @@
 """Typer registration for modelo work calculation commands.
 
 This CLI module is a transport boundary around
-:func:`aeat.application.modelo.calculate_modelo_work_revision`. It resolves the
+:func:`~aeat.application.modelo.calculate_modelo_work_revision`. It resolves the
 operator target, builds a public
-:class:`aeat.application.modelo.WorkCalculateInputBundle`, calls the application
+:class:`~aeat.application.modelo.WorkCalculateInputBundle`, calls the application
 service, and serializes the resulting
-:class:`aeat.application.modelo.ModeloWorkCalculationServiceResult` into a
-:class:`aeat.entrypoints.cli._modelo_payloads.WorkCalculateResult` envelope.
+:class:`~aeat.application.modelo.ModeloWorkCalculationServiceResult` into a
+:class:`~aeat.entrypoints.cli._modelo_payloads.WorkCalculateResult` envelope.
 
 The emitted confirmation is centered on the persisted
-:class:`CalculationRevision` and parent :class:`aeat.domain.modelos.WorkUnit`;
+:class:`CalculationRevision` and parent :class:`WorkUnit`;
 advisory material such as backend authorization and non-blocking source
 diagnostics is carried on the uniform
-:class:`aeat.core.json_contract.Notice` channel instead of bespoke payload
+:class:`~aeat.core.json_contract.Notice` channel instead of bespoke payload
 fields.
 """
 
