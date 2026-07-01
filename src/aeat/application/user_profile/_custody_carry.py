@@ -179,11 +179,11 @@ def _natural_key_resolvers() -> dict[str, NaturalKeyResolver]:
 
     def _iva_wallet_event_key(record: SecureObjectRecord, _bucket_id: str) -> str:
         from ..calculations._observations_repository import (
-            _IvaWalletDecisionEnvelopePayload,
+            IvaWalletDecisionEnvelopePayload,
             iva_wallet_decision_event_key,
         )
 
-        payload = _envelope_payload(record, _IvaWalletDecisionEnvelopePayload)
+        payload = _envelope_payload(record, IvaWalletDecisionEnvelopePayload)
         return iva_wallet_decision_event_key(payload.decision)  # type: ignore[attr-defined]
 
     resolvers["aeat.calculations.iva_wallet.reconciliation_decision_events"] = _iva_wallet_event_key

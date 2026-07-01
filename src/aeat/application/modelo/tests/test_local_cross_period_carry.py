@@ -51,8 +51,7 @@ from ....domain.modelos._verification_repository import VerificationReportCatalo
 from ....domain.user_profile import UserProfileFact, UserProfileRecord
 from ....tests.registry_observations import registry_grounded_observations
 from ....tests.secure_sql import isolated_runtime_profile
-from ...calculations import CalculationObservationRepository
-from ...calculations._binding_prefill import _MODELO_303_IVA_COMPENSATION_BINDING_ID
+from ...calculations import MODELO_303_IVA_COMPENSATION_BINDING_ID, CalculationObservationRepository
 from ...calculations._cross_period_clean_state import _OFFICIAL_SOURCE_KINDS
 from ...user_profile import UserProfileLifecycleRepository
 from .. import (
@@ -529,19 +528,19 @@ def test_carry_resolver_excludes_303_iva_compensation_binding(repos: _Repos) -> 
         revision=snapshot.revision,
     )
     raw = PreviousFilingSourceResolver(registry_snapshot=snapshot).resolve(context)
-    assert _MODELO_303_IVA_COMPENSATION_BINDING_ID in raw.binding_values, (
+    assert MODELO_303_IVA_COMPENSATION_BINDING_ID in raw.binding_values, (
         "test precondition: the raw resolver must surface the 303 compensation binding "
         "so the exclusion has something to strip"
     )
 
     filtered = _previous_filing_resolution_excluding_iva_compensation(raw)
-    assert _MODELO_303_IVA_COMPENSATION_BINDING_ID not in filtered.binding_values
+    assert MODELO_303_IVA_COMPENSATION_BINDING_ID not in filtered.binding_values
     assert all(
-        not item.source_ref.endswith(f":{_MODELO_303_IVA_COMPENSATION_BINDING_ID}") for item in filtered.provenance
+        not item.source_ref.endswith(f":{MODELO_303_IVA_COMPENSATION_BINDING_ID}") for item in filtered.provenance
     )
     # Every other binding the raw resolver carried survives the exclusion untouched.
     for binding_id, value in raw.binding_values.items():
-        if binding_id == _MODELO_303_IVA_COMPENSATION_BINDING_ID:
+        if binding_id == MODELO_303_IVA_COMPENSATION_BINDING_ID:
             continue
         assert filtered.binding_values[binding_id] == value
 
@@ -571,7 +570,7 @@ def test_source_mesh_excludes_303_iva_compensation_relation_binding(repos: _Repo
         invoice_repository=None,
     )
 
-    assert _MODELO_303_IVA_COMPENSATION_BINDING_ID not in resolution.binding_values
+    assert MODELO_303_IVA_COMPENSATION_BINDING_ID not in resolution.binding_values
     assert "modelo-303-rel-self-compensacion-anteriores" not in resolution.relation_values
     assert all("modelo-303-rel-self-compensacion-anteriores" not in item.source_ref for item in resolution.provenance)
 
@@ -622,7 +621,7 @@ def test_first_iva_period_m303_1t_uses_wallet_first_period_zero(repos: _Repos) -
         clock=_T1,
     )
     revision = result.revision
-    assert Decimal(revision.binding_overrides[_MODELO_303_IVA_COMPENSATION_BINDING_ID]) == Decimal("0")
+    assert Decimal(revision.binding_overrides[MODELO_303_IVA_COMPENSATION_BINDING_ID]) == Decimal("0")
     assert revision.casilla_values[_M303_COMPENSACION_PENDIENTE_ANTERIORES_CASILLA] == Decimal("0")
 
 

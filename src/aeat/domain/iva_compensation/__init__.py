@@ -14,12 +14,13 @@ Compensation availability is derived by :func:`derive_303_compensation_available
 and then projected through
 :func:`build_iva_compensation_carry_forward_report` /
 :func:`enforce_iva_compensation_four_year_window`. Reconciliation records such
-as :class:`IvaCompensationOverride`,
-:class:`~aeat.domain.iva_compensation._reconciliation.IvaCompensationAuthoritySource`,
-and
-:class:`~aeat.domain.iva_compensation._reconciliation.IvaCompensationReconciliationDecision`
-separate AEAT wallet evidence, filed-history evidence, local recurrence, and
-taxpayer override before Modelo 303 consumes casilla ``110``.
+as :class:`IvaCompensationOverride`, :class:`IvaCompensationAuthoritySource`, and
+:class:`IvaCompensationReconciliationDecision` separate AEAT wallet evidence,
+filed-history evidence, local recurrence, and taxpayer override before Modelo
+303 consumes casilla ``110``. :func:`reconcile_iva_compensation_wallet` and
+:func:`validate_wallet_matches_snapshot` apply that reconciliation policy
+against a live wallet observation conforming to
+:class:`IvaCompensationWalletObservationProtocol`.
 
 Repositories, secure-object custody, live wallet acquisition, and bucket event
 emission remain application responsibilities.
@@ -60,6 +61,7 @@ from ._carry_forward import (
     derive_303_compensation_available,
     derive_iva_compensation_year_end_carry_partition,
     enforce_iva_compensation_four_year_window,
+    iva_compensation_period_sort_key,
 )
 from ._errors import (
     IvaCompensationCarryForwardPolicyError,
@@ -70,10 +72,19 @@ from ._errors import (
     IvaCompensationYearRangeError,
 )
 from ._reconciliation import (
+    DEFAULT_MAX_WALLET_AGE_DAYS,
+    IvaCompensationAuthoritySource,
     IvaCompensationOverride,
+    IvaCompensationReconciliationDecision,
+    IvaCompensationWalletObservationProtocol,
+    local_recurrence_authority_source,
+    reconcile_iva_compensation_wallet,
+    validate_wallet_matches_snapshot,
 )
 
 __all__ = [
+    "DEFAULT_MAX_WALLET_AGE_DAYS",
+    "IvaCompensationAuthoritySource",
     "IvaCompensationCarryForwardLot",
     "IvaCompensationCarryForwardPolicyError",
     "IvaCompensationCarryForwardReport",
@@ -82,8 +93,10 @@ __all__ = [
     "IvaCompensationExpiryReviewState",
     "IvaCompensationOverride",
     "IvaCompensationPeriodState",
+    "IvaCompensationReconciliationDecision",
     "IvaCompensationReconciliationInputError",
     "IvaCompensationSeedConflictError",
+    "IvaCompensationWalletObservationProtocol",
     "IvaCompensationYearEndCarryPartition",
     "IvaCompensationYearRangeError",
     "IvaWalletBalanceReport",
@@ -92,4 +105,8 @@ __all__ = [
     "derive_303_compensation_available",
     "derive_iva_compensation_year_end_carry_partition",
     "enforce_iva_compensation_four_year_window",
+    "iva_compensation_period_sort_key",
+    "local_recurrence_authority_source",
+    "reconcile_iva_compensation_wallet",
+    "validate_wallet_matches_snapshot",
 ]

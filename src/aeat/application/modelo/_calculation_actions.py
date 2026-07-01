@@ -1098,9 +1098,9 @@ def _previous_filing_resolution_excluding_iva_compensation(
     is immutable, the exclusion returns a copied resolution with only the 303
     compensation binding and its provenance removed.
     """
-    from ..calculations._binding_prefill import _MODELO_303_IVA_COMPENSATION_BINDING_ID
+    from ..calculations import MODELO_303_IVA_COMPENSATION_BINDING_ID
 
-    excluded = _MODELO_303_IVA_COMPENSATION_BINDING_ID
+    excluded = MODELO_303_IVA_COMPENSATION_BINDING_ID
     if excluded not in resolution.binding_values:
         return resolution
     return resolution.model_copy(
@@ -1113,9 +1113,9 @@ def _previous_filing_resolution_excluding_iva_compensation(
 
 def _iva_compensation_previous_filing_exclusions() -> frozenset[BindingId]:
     """Binding ids previous-filing must not resolve because the IVA wallet owns them."""
-    from ..calculations._binding_prefill import _MODELO_303_IVA_COMPENSATION_BINDING_ID
+    from ..calculations import MODELO_303_IVA_COMPENSATION_BINDING_ID
 
-    return frozenset({_MODELO_303_IVA_COMPENSATION_BINDING_ID})
+    return frozenset({MODELO_303_IVA_COMPENSATION_BINDING_ID})
 
 
 def _source_resolution_excluding_iva_compensation(
@@ -1123,9 +1123,9 @@ def _source_resolution_excluding_iva_compensation(
     resolution: CalculationSourceResolution,
 ) -> CalculationSourceResolution:
     """Keep Modelo 303 prior-compensation owned exclusively by the IVA wallet."""
-    from ..calculations._binding_prefill import _MODELO_303_IVA_COMPENSATION_BINDING_ID
+    from ..calculations import MODELO_303_IVA_COMPENSATION_BINDING_ID
 
-    excluded = _MODELO_303_IVA_COMPENSATION_BINDING_ID
+    excluded = MODELO_303_IVA_COMPENSATION_BINDING_ID
     relation_ids = frozenset(rel.id for rel in revision.relations if rel.target_binding == excluded)
     if excluded not in resolution.binding_values and not relation_ids.intersection(resolution.relation_values):
         return resolution

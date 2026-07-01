@@ -163,7 +163,7 @@ def build_iva_compensation_carry_forward_report(
             translated_message="errors.refused.refused_iva_compensation_year_range",
             context={"as_of_year": as_of_year, "min_year": 2000, "max_year": 2099},
         )
-    ordered = tuple(sorted(states, key=lambda item: (item.filing_year, _period_sort_key(item.period))))
+    ordered = tuple(sorted(states, key=lambda item: (item.filing_year, iva_compensation_period_sort_key(item.period))))
     working: list[_WorkingCarryForwardLot] = []
     unallocated_applied = _ZERO
     for state in ordered:
@@ -312,7 +312,7 @@ def derive_iva_compensation_year_end_carry_partition(
     )
     year_states = sorted(
         (state for state in period_states if state.filing_year == filing_year),
-        key=lambda state: _period_sort_key(state.period),
+        key=lambda state: iva_compensation_period_sort_key(state.period),
     )
     last_disponible = year_states[-1].available_end_amount if year_states else _ZERO
     # The last period's disponible is the year credit it carries forward
@@ -354,7 +354,7 @@ def enforce_iva_compensation_four_year_window(
     return report
 
 
-def _period_sort_key(period: Period) -> tuple[int, str]:
+def iva_compensation_period_sort_key(period: Period) -> tuple[int, str]:
     upper = period.registry_token
     if upper.endswith("T") and upper[:-1].isdigit():
         return (int(upper[:-1]), upper)

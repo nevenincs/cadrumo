@@ -98,7 +98,7 @@ _LOCAL_FILING_PROVENANCE: Final = "local_filing"
 _PRE_ACTIVITY_NO_PRIOR_OBLIGATION_SOURCE_KIND: Final = "pre_activity_no_prior_obligation"
 _IVA_COMPENSATION_HISTORY_SOURCE_KIND: Final = "aeat_sede_iva_compensation_history"
 _MIXED_OBSERVATION_SOURCE_KIND: Final = "mixed_observation_sources"
-_MODELO_303_IVA_COMPENSATION_BINDING_ID: Final = "modelo-303-compensacion-pendiente-anteriores"
+MODELO_303_IVA_COMPENSATION_BINDING_ID: Final = "modelo-303-compensacion-pendiente-anteriores"
 
 
 def _casilla_id(value: object) -> CasillaId:
@@ -829,20 +829,20 @@ def extract_modelo_303_local_iva_compensation_recurrence(
         iva_history_repository=iva_repo,
         captured_at=captured_at,
     )
-    amount = report.binding_values.get(_MODELO_303_IVA_COMPENSATION_BINDING_ID)
+    amount = report.binding_values.get(MODELO_303_IVA_COMPENSATION_BINDING_ID)
     if amount is None:
         return None, report
     prefilled = next(
-        (item for item in report.prefilled if item.binding_id == _MODELO_303_IVA_COMPENSATION_BINDING_ID),
+        (item for item in report.prefilled if item.binding_id == MODELO_303_IVA_COMPENSATION_BINDING_ID),
         None,
     )
     if prefilled is None:
         source_modelo, source_year, source_periods = _requirements_by_binding(snapshot)[
-            _MODELO_303_IVA_COMPENSATION_BINDING_ID
+            MODELO_303_IVA_COMPENSATION_BINDING_ID
         ]
         resolved_at = captured_at if captured_at is not None else now()
         prefilled = PrefilledBinding(
-            binding_id=_MODELO_303_IVA_COMPENSATION_BINDING_ID,
+            binding_id=MODELO_303_IVA_COMPENSATION_BINDING_ID,
             value=Decimal(amount),
             source_modelo=source_modelo,
             source_filing_year=source_year,
