@@ -5,7 +5,8 @@ This is the ledger projection behind the
 especial de trabajadores desplazados, "Ley Beckham", art. 93 LIRPF). The annual
 entry point :func:`aggregate_impatriado_income_ledger_from_repositories` loads a
 :class:`~aeat.domain.transactions.TransactionCatalogue` from the active bucket
-and delegates to :func:`aggregate_impatriado_income_ledger`.
+through :class:`~aeat.domain.transactions.TransactionCatalogueRepository` and
+delegates to :func:`aggregate_impatriado_income_ledger`.
 
 Unlike the Modelo 130 / Modelo 100 actividad-económica income pipeline
 (:mod:`~._renta_income_ledger`), which admits worldwide income into the
@@ -194,6 +195,10 @@ def aggregate_impatriado_income_ledger_from_repositories(
     transaction_repository: TransactionCatalogueRepositoryProtocol | None = None,
 ) -> ImpatriadoIncomeLedgerAggregation:
     """Load the transaction catalogue and aggregate annual impatriado Spanish-source income.
+
+    When no protocol-compatible repository override is supplied, this loader uses
+    :class:`~aeat.domain.transactions.TransactionCatalogueRepository` scoped to
+    ``bucket_id``.
 
     Returns an :class:`ImpatriadoIncomeLedgerAggregation`.
     """
