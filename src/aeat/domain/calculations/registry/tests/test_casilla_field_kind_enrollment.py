@@ -21,7 +21,7 @@ from ._registry_schema_support import _committed_registry_tree
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
-_LEGAL_REF = "lirpf:art-test"
+_LEGAL_REF = "ley-35-2006:art-test"
 _SOURCE_REF = "aeat-test-source-001"
 _CASILLA_01: CasillaId = validated_casilla_id("01", surface="_CASILLA_01")
 

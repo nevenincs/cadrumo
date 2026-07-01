@@ -32,7 +32,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 # Shared fixture constants — pattern mirrors test_referential_integrity
 # ---------------------------------------------------------------------------
 
-_SCHEMA_LEGAL_ID: LegalRefId = "lirpf:art-test"
+_SCHEMA_LEGAL_ID: LegalRefId = "ley-35-2006:art-test"
 _SCHEMA_SOURCE_ID: SourceRefId = "aeat-test-source-001"
 _SCHEMA_CASILLA_ID: CasillaId = validated_casilla_id("01", surface="_SCHEMA_CASILLA_ID")
 
