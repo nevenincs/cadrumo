@@ -79,6 +79,30 @@ def test_modelo_180_2023_amendment_is_scoped_to_2023_revision() -> None:
     assert _M180_2023_AMENDMENT_REF in current_refs
 
 
+def test_modelo_180_guidance_and_layout_sources_are_separated() -> None:
+    modelo, catalogues = _committed_modelo("180")
+
+    summary_help = catalogues.sources["aeat-modelo-180-ayuda-resumen-datos"]
+    assert "aeat-modelo-180-ayuda-resumen-datos" in modelo.source_refs
+    assert summary_help.evidence_tier == "official_source_guidance"
+    assert summary_help.authority == "aeat"
+    assert summary_help.kind == "instructions"
+    assert (bundled_path() / summary_help.corpus_path).is_file()
+
+    assert catalogues.sources["boe-modelo-180-2014-form"].evidence_tier == "layout_authority"
+    assert catalogues.sources["boe-modelo-180-2023-form"].evidence_tier == "layout_authority"
+
+    for revision in modelo.revisions.values():
+        for formula in revision.formulas:
+            for citation in formula.source_citations:
+                source = catalogues.sources[citation.source_ref]
+                assert source.evidence_tier == "official_source_guidance"
+        for binding in revision.bindings:
+            for citation in binding.source_citations:
+                source = catalogues.sources[citation.source_ref]
+                assert source.evidence_tier == "official_source_guidance"
+
+
 @pytest.mark.parametrize(
     ("revision_id", "expected_refs"),
     [

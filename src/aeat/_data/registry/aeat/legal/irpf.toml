@@ -1289,8 +1289,20 @@ applies_from = 2016-01-01
 source_url = "https://sede.agenciatributaria.gob.es/Sede/AyudaPresentacion/180.shtml"
 review_status = "reviewed"
 
-[sources."boe-modelo-180-2014-form"]
+[sources."aeat-modelo-180-ayuda-resumen-datos"]
 evidence_tier = "official_source_guidance"
+authority = "aeat"
+kind = "instructions"
+corpus_path = "corpus/aeat_official/instructions/modelo_180/files/modelo-180-ayuda-resumen-datos.html"
+sha256 = "ce57610cd55c589bd6bc633700488d3a649bbac48fc1bdfae142d07e0426267d"
+bytes = 9203
+retrieved_at = 2026-07-01
+applies_from = 2016-01-01
+source_url = "https://sede.agenciatributaria.gob.es/Sede/manuales/ejercicio-2016/modelo-180/2-normas-cumplimentacion-modelo-180/2_4-resumen-datos-incluidos-declaracion.html"
+review_status = "reviewed"
+
+[sources."boe-modelo-180-2014-form"]
+evidence_tier = "layout_authority"
 authority = "boe"
 kind = "form_spec"
 corpus_path = "corpus/normatives/html/orden-hap-1732-2014.html"
@@ -1303,7 +1315,7 @@ source_url = "https://www.boe.es/eli/es/o/2014/09/24/hap1732"
 review_status = "reviewed"
 
 [sources."boe-modelo-180-2023-form"]
-evidence_tier = "official_source_guidance"
+evidence_tier = "layout_authority"
 authority = "boe"
 kind = "form_spec"
 corpus_path = "corpus/normatives/html/orden-hfp-1284-2023.html"
