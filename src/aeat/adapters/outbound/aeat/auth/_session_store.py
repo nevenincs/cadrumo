@@ -28,8 +28,11 @@ from .....core import STRICT_FROZEN_CONFIG
 from .....core.external_constants import UTF_8_ENCODING
 from .....core.hashing import sha256_hex
 from .....core.time import now
-from ....persistence.storage import AEAT_BROWSER_SESSION_NAMESPACE, SecureObjectRepository
-from ....persistence.storage.runtime_repository import secure_object_repository_for_active_bucket
+from ....persistence.storage import (
+    AEAT_BROWSER_SESSION_NAMESPACE,
+    SecureObjectRepository,
+    secure_object_repository_for_active_bucket,
+)
 
 _SESSION_VERSION = AEAT_BROWSER_SESSION_NAMESPACE.schema_version
 
