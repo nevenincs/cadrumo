@@ -21,4 +21,4 @@ discrepancy_causes = [
     "correctness_divergence",
 ]
 legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-92", "ley-37-1992:art-94"]
-source_refs = ["aeat-dr-303-2025"]
+source_refs = ["aeat-dr-303-2025", "aeat-modelo-303-procedure", "boe-modelo-303-2008-form"]

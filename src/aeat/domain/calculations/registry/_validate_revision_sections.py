@@ -186,6 +186,7 @@ def _validate_revision_surface_sections(
         casillas=context.casillas,
         legal_refs=legal_refs,
         source_refs=source_refs,
+        evidence=evidence,
     )
     validate_application_link_section(
         failures,
