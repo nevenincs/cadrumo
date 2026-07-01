@@ -248,6 +248,12 @@ adapters:
             nem tölthető be.
           load_asset_ledger_failed: A titkosított eszköznyilvántartás nem tölthető
             be.
+      bienes_inversion:
+        errors:
+          load_register_failed: Nem sikerült betölteni a beruházási javak titkosított
+            áfa-korrekciós nyilvántartását.
+          record_already_exists: Ez a beruházási jószág már létezik a titkosított
+            korrekciós nyilvántartásban.
       inventory:
         errors:
           inventory_ledger_already_exists: Ez a készletnyilvántartás már létezik.
@@ -338,14 +344,16 @@ aggregation:
   source_mesh:
     errors:
       ambiguous_source_disposition: aggregation.source_mesh.errors.ambiguous_source_disposition
-      binding_source_mismatch: 'A source_kind es a binding_source eltero binding-forras csaladra hivatkozik.'
+      binding_source_mismatch: A source_kind es a binding_source eltero binding-forras
+        csaladra hivatkozik.
       duplicate_binding_owner: 'Belső hiba: ismétlődő kötési tulajdonos a forráshálon.'
       duplicate_bound_casilla_owner: 'Belső hiba: ismétlődő mező-kötési tulajdonos
         a forráshálon.'
       duplicate_relation_owner: 'Belső hiba: ismétlődő kapcsolati tulajdonos a forráshálon.'
       owned_sources_blank: A forrásháló saját forrásai nem tartalmazhatnak üres forrástípusokat.
       owned_sources_duplicate: A forrásháló saját forrásainak egyedinek kell lenniük.
-      relation_provenance_incomplete: 'A kapcsolat eredetenek tartalmaznia kell a forras modellt, evet, idoszakokat, mezoket, jogi hivatkozasokat es forrashivatkozasokat.'
+      relation_provenance_incomplete: A kapcsolat eredetenek tartalmaznia kell a forras
+        modellt, evet, idoszakokat, mezoket, jogi hivatkozasokat es forrashivatkozasokat.
       source_transaction_ids_blank: A forrásháló tranzakcióazonosítói nem tartalmazhatnak
         üres értékeket.
       source_transaction_ids_duplicate: A forrásháló tranzakcióazonosítóinak egyedinek
@@ -1262,6 +1270,22 @@ cli:
         persona, {skills} keszseg.'
   app:
     ledger:
+      bienes_inversion:
+        acquisition_year_help: 'A jószág beszerzésének éve.'
+        art108_help: 'A jószág a LIVA 108. cikk szerint beruházási jószágnak minősül-e.'
+        asset_ref_help: 'Opcionális kereszthivatkozás egy AssetRecord azonosítóra.'
+        cuota_soportada_help: 'A beszerzéskor viselt teljes előzetes áfa (pozitív).'
+        declare_help: 'Egy áfa-korrekcióhoz nyilvántartott beruházási jószág bejelentése.'
+        description_help: 'A jószág leírása.'
+        disposal_regime_help: 'Átruházási rezsim (sujeta_no_exenta vagy exenta_o_no_sujeta); a --disposal-year mellett kötelező.'
+        disposal_requires_both: 'A --disposal-year és a --disposal-regime csak együtt adható meg.'
+        disposal_year_help: 'Opcionális átruházási év (110. cikk).'
+        group_help: 'Beruházási javak áfa-levonás korrekciós nyilvántartása (LIVA 107-110. cikk).'
+        identifier_help: 'Stabil nyilvántartási azonosító.'
+        kind_help: 'Korrekciós időszak: ingó (4 év) vagy ingatlan (9 év).'
+        list_help: 'Az aktív profil nyilvántartásában szereplő összes beruházási jószág listázása.'
+        prorrata_inicial_help: 'A beszerzés évének végleges levonási százaléka (0-100).'
+        unknown_disposal_regime: 'Ismeretlen átruházási rezsim {regime!r}; elfogadott: {accepted}'
       evidence:
         add_help: Vásárlásiszámla-bizonyíték regisztrálása PDF-ből vagy képből.
         evidence_id_help: Bizonyíték azonosítója (pontos egyezés).
@@ -1552,8 +1576,9 @@ cli:
           {code}@{revision} ({period}) számára: {suggestion}.'
         year_help: A nyomtatvány adóéve (pl. 2026).
       casilla:
-        casilla_help: 'Leirando mezoazonosito vagy nyomtatott mezoszam (pl. 0596).'
-        help: 'Megjeleniti egy mezo cimkejet, jogi alapjat, bemeneti tipusat es kepletet a feloldott registry snapshotban.'
+        casilla_help: Leirando mezoazonosito vagy nyomtatott mezoszam (pl. 0596).
+        help: Megjeleniti egy mezo cimkejet, jogi alapjat, bemeneti tipusat es kepletet
+          a feloldott registry snapshotban.
       casillas:
         as_of_help: A megadott ISO-dátumon aktív nyomtatvány-revízió feloldása (ÉÉÉÉ-HH-NN).
         explain_help: Lokalizált súgószöveg bevonása a szöveges kimenetbe.
@@ -1865,7 +1890,8 @@ cli:
         create_not_applicable_refused: 'A(z) %{modelo} nyomtatvány nem vonatkozik
           az aktív profil adóalany-típusára: %{reason} Ha van oka mégis létrehozni
           a munkaegységet, futtassa újra a --allow-not-applicable kapcsolóval.'
-        create_quiet_help: 'Hagyja ki az ember altal olvashato megerosito kimenetet; a --format json boritek, az ertesitesek es a kilepesi kod nem valtozik.'
+        create_quiet_help: Hagyja ki az ember altal olvashato megerosito kimenetet;
+          a --format json boritek, az ertesitesek es a kilepesi kod nem valtozik.
         create_reused: 'Meglévő munkaegység visszaadva (idempotens nyomtatvány/év/időszak/revízió
           kombinációra); nem jött létre semmi új. Nevezze át: `aeat app modelo work
           rename`.'
@@ -2987,11 +3013,11 @@ cli:
       unknown_provider: 'Ismeretlen importálási --provider {provider!r}. Elismert
         szolgáltatók: {providers}.'
     exclude:
-      actor_help: 'Operator cimke.'
-      help: 'Egy atnezett fokonyvi tranzakciot szandekosan kizartkent jelol a bevallasbol.'
-      id_help: 'Fokonyvi tranzakcio azonositoja.'
-      reason_help: 'Opcionalis megjegyzes arrol, miert van kizarva a sor.'
-      yes_help: 'Erositse meg az atnezett-kizart dontest.'
+      actor_help: Operator cimke.
+      help: Egy atnezett fokonyvi tranzakciot szandekosan kizartkent jelol a bevallasbol.
+      id_help: Fokonyvi tranzakcio azonositoja.
+      reason_help: Opcionalis megjegyzes arrol, miert van kizarva a sor.
+      yes_help: Erositse meg az atnezett-kizart dontest.
     export:
       actor_help: Az üzemeltető neve, amelyet a bucket-eseményen rögzítenek.
       format_help: Exportálási sorosítási formátum.
@@ -3461,7 +3487,9 @@ cli:
       %{keys}. Futtassa a figyelmeztetés javító parancsát, vagy adja meg a --allow-incomplete
       kapcsolót az ideiglenes naptár megtekintéséhez.'
     coverage:
-      investigate: '%{count} bevallasi kotelezettseg nem volt biztosan korulhatarolhato ehhez a profilhoz, es aluljelentett lehet: %{modelos}. Vizsgalja meg oket az ''aeat app overview explain <modelo>'' paranccsal.'
+      investigate: '%{count} bevallasi kotelezettseget nem sikerult egyertelmuen megallapitani
+        ehhez a profilhoz, es bevallatlan maradhat: %{modelos}. Vizsgalja meg mindegyiket
+        az ''aeat app overview explain <modelo>'' paranccsal.'
     drafts: Tervezetek
     explain:
       help: Egy nyomtatvány alkalmazhatóságának elemzése az aktív profillal szemben.
@@ -4139,6 +4167,8 @@ errors:
     error_portals_validation: Egy portál metaadatai nem mentek át az érvényesítésen.
     error_profile_amortization_ledger: Egy profil amortizációs főkönyvi művelete érvénytelen.
     error_profile_asset_record: Egy profil vagyonelem-rekordja szerkezetileg érvénytelen.
+    error_profile_bienes_inversion_record: Egy beruházási javak áfa-korrekciós nyilvántartása
+      szerkezetileg érvénytelen.
     error_profile_cross_store_drift: A profil fizikai tárolói eltérnek az azonosságától.
       A profil nem használható.
     error_profile_inventory_ledger: Egy profil készlet-főkönyvi művelete érvénytelen.
@@ -4666,6 +4696,8 @@ errors:
       érvényesítésen.
     refused_profile_basis_cap_exceeded: A halmozott amortizáció meghaladná a vagyonelem
       bekerülési értékét.
+    refused_profile_bienes_inversion_validation: Egy beruházási javak áfa-korrekciós
+      nyilvántartása nem ment át az ellenőrzésen.
     refused_profile_binding_resolution: A számításhoz szükséges profiladatot nem sikerült
       a megfelelő kötési csatornává feloldani.
     refused_profile_foral_regime: A kiválasztott foral adózási rend nem modellezett

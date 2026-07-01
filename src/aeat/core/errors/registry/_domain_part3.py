@@ -85,6 +85,28 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
+        "aeat.domain.bienes_inversion.BienInversionRecordError",
+        ErrorCode(
+            code="ERROR_PROFILE_BIENES_INVERSION_RECORD",
+            category=ErrorCategory.ERROR,
+            message_key="errors.error.error_profile_bienes_inversion_record",
+            default_suggestion=None,
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "aeat.domain.bienes_inversion.BienInversionValidationError",
+        ErrorCode(
+            code="REFUSED_PROFILE_BIENES_INVERSION_VALIDATION",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.refused_profile_bienes_inversion_validation",
+            default_suggestion=None,
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
         "aeat.domain.contribuyente.inventory.AmortizacionLedgerError",
         ErrorCode(
             code="ERROR_PROFILE_AMORTIZATION_LEDGER",

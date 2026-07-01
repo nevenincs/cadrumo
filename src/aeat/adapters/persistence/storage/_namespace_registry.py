@@ -232,9 +232,7 @@ class StorageHierarchyRegistry(BaseModel):
     ) -> tuple[SecureObjectNamespaceDefinition, ...]:
         """Return carried :class:`SecureObjectNamespaceDefinition` rows for a custody profile."""
         dispositions = _CUSTODY_PROFILE_DISPOSITIONS[profile]
-        return tuple(
-            namespace for namespace in self.namespaces if namespace.custody_disposition in dispositions
-        )
+        return tuple(namespace for namespace in self.namespaces if namespace.custody_disposition in dispositions)
 
 
 def secure_object_logical_path(namespace: str, object_key: str) -> Path:
@@ -318,6 +316,17 @@ PROFILE_ASSETS_AMORTIZATION_LEDGER_NAMESPACE = SecureObjectNamespaceDefinition(
     key="profile_assets_amortization_ledger",
     namespace="aeat.persistence.profile.assets.amortization",
     owner="aeat.adapters.persistence.profile.assets",
+    sensitivity=SensitivityClass.FINANCIAL,
+    schema_version=SECURE_OBJECT_SCHEMA_VERSION_V1,
+    object_key_grammar="default",
+    default_object_key=SECURE_OBJECT_DEFAULT_KEY,
+    scope=StorageNamespaceScope.BUCKET_LOCAL,
+    custody_disposition=StorageCustodyDisposition.STRUCTURED_CUSTODY,
+)
+PROFILE_BIENES_INVERSION_IVA_REGISTER_NAMESPACE = SecureObjectNamespaceDefinition(
+    key="profile_bienes_inversion_iva_register",
+    namespace="aeat.persistence.profile.bienes_inversion",
+    owner="aeat.adapters.persistence.profile.bienes_inversion",
     sensitivity=SensitivityClass.FINANCIAL,
     schema_version=SECURE_OBJECT_SCHEMA_VERSION_V1,
     object_key_grammar="default",
@@ -972,6 +981,7 @@ STORAGE_NAMESPACE_REGISTRY = StorageHierarchyRegistry(
         PROFILE_INVENTORY_LEDGER_NAMESPACE,
         PROFILE_ASSETS_LEDGER_NAMESPACE,
         PROFILE_ASSETS_AMORTIZATION_LEDGER_NAMESPACE,
+        PROFILE_BIENES_INVERSION_IVA_REGISTER_NAMESPACE,
         REPAIR_INTEGRITY_DECISION_NAMESPACE,
         APPLICATION_FILING_HISTORY_NAMESPACE,
         AUTH_APODERADO_CONFIGURATION_NAMESPACE,
@@ -1059,6 +1069,7 @@ __all__ = [
     "LLM_USAGE_NAMESPACE",
     "PROFILE_ASSETS_AMORTIZATION_LEDGER_NAMESPACE",
     "PROFILE_ASSETS_LEDGER_NAMESPACE",
+    "PROFILE_BIENES_INVERSION_IVA_REGISTER_NAMESPACE",
     "PROFILE_INVENTORY_LEDGER_NAMESPACE",
     "REPAIR_INTEGRITY_DECISION_NAMESPACE",
     "SECRET_RECORD_SCHEMA_VERSION",

@@ -48,6 +48,7 @@ from ...domain.transactions import (
     TransactionValidationError,
     is_classified,
 )
+from ._bienes_inversion_cli import register_bienes_inversion_commands
 from ._common import (
     _bad,
     _emit_envelope,
@@ -933,6 +934,9 @@ register_business_invoice_commands(app)
 
 
 register_inventory_commands(app)
+
+
+register_bienes_inversion_commands(app)
 
 
 register_evidence_commands(app)

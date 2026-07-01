@@ -267,6 +267,12 @@ adapters:
           asset_already_exists: Ese activo ya existe en el libro cifrado de activos.
           load_amortizacion_ledger_failed: No se pudo cargar el libro cifrado de amortización.
           load_asset_ledger_failed: No se pudo cargar el libro cifrado de activos.
+      bienes_inversion:
+        errors:
+          load_register_failed: No se puede cargar el registro cifrado de regularización
+            de IVA por bienes de inversión.
+          record_already_exists: Ese bien de inversión ya existe en el registro cifrado
+            de regularización.
       inventory:
         errors:
           inventory_ledger_already_exists: Ese libro de inventario ya existe.
@@ -369,7 +375,8 @@ aggregation:
   source_mesh:
     errors:
       ambiguous_source_disposition: aggregation.source_mesh.errors.ambiguous_source_disposition
-      binding_source_mismatch: 'source_kind y binding_source se refieren a familias de origen de binding distintas.'
+      binding_source_mismatch: source_kind y binding_source se refieren a familias
+        de origen de binding distintas.
       duplicate_binding_owner: 'Error interno: propietario de vinculacion duplicado
         en la malla de fuentes.'
       duplicate_bound_casilla_owner: 'Error interno: propietario de casilla vinculada
@@ -380,7 +387,9 @@ aggregation:
         contener tipos de fuente en blanco.
       owned_sources_duplicate: Las fuentes propiedad del mallado de fuentes deben
         ser únicas.
-      relation_provenance_incomplete: 'La procedencia de la relacion debe incluir modelo origen, ejercicio, periodos, casillas, referencias legales y referencias de origen.'
+      relation_provenance_incomplete: La procedencia de la relacion debe incluir modelo
+        origen, ejercicio, periodos, casillas, referencias legales y referencias de
+        origen.
       source_transaction_ids_blank: Los identificadores de transacción del mallado
         de fuentes no pueden contener blancos.
       source_transaction_ids_duplicate: Los identificadores de transacción del mallado
@@ -1335,6 +1344,22 @@ cli:
         {personas} personas, {skills} habilidades.'
   app:
     ledger:
+      bienes_inversion:
+        acquisition_year_help: 'Año de adquisición del bien.'
+        art108_help: 'Si el bien tiene la consideración de bien de inversión según LIVA art. 108.'
+        asset_ref_help: 'Referencia cruzada opcional a un identificador de AssetRecord.'
+        cuota_soportada_help: 'IVA soportado total en la adquisición (positivo).'
+        declare_help: 'Declara un bien de inversión para su regularización de IVA.'
+        description_help: 'Descripción del bien.'
+        disposal_regime_help: 'Régimen de transmisión (sujeta_no_exenta o exenta_o_no_sujeta); obligatorio con --disposal-year.'
+        disposal_requires_both: '--disposal-year y --disposal-regime deben indicarse conjuntamente.'
+        disposal_year_help: 'Año de transmisión opcional (art. 110).'
+        group_help: 'Registro de regularización de IVA por bienes de inversión (LIVA arts. 107-110).'
+        identifier_help: 'Identificador estable del registro.'
+        kind_help: 'Periodo de regularización: mueble (4 años) o inmueble (9 años).'
+        list_help: 'Lista todos los bienes de inversión registrados en el perfil activo.'
+        prorrata_inicial_help: 'Porcentaje de deducción definitivo del año de adquisición (0-100).'
+        unknown_disposal_regime: 'Régimen de transmisión desconocido {regime!r}; aceptados: {accepted}'
       evidence:
         add_help: Registra un justificante de factura de compra desde PDF o imagen
         evidence_id_help: Identificador del justificante (coincidencia exacta)
@@ -1627,8 +1652,10 @@ cli:
           conocidas para {code}@{revision} ({period}): {suggestion}.'
         year_help: Ejercicio fiscal del modelo (p. ej. 2026)
       casilla:
-        casilla_help: 'Id de casilla o numero impreso de casilla que se debe describir (p. ej. 0596).'
-        help: 'Muestra la etiqueta, fundamento legal, tipo de entrada y formula de una casilla en el snapshot de registro resuelto.'
+        casilla_help: Id de casilla o numero impreso de casilla que se debe describir
+          (p. ej. 0596).
+        help: Muestra la etiqueta, fundamento legal, tipo de entrada y formula de
+          una casilla en el snapshot de registro resuelto.
       casillas:
         as_of_help: Resolver la revisión del modelo vigente en la fecha ISO indicada
           (AAAA-MM-DD)
@@ -1946,7 +1973,8 @@ cli:
         create_not_applicable_refused: 'Modelo %{modelo} no aplica al tipo de contribuyente
           del perfil activo: %{reason} Si tiene un motivo para crear la unidad de
           trabajo de todas formas, repita el comando con --allow-not-applicable.'
-        create_quiet_help: 'Omitir la salida de confirmacion legible; el envoltorio --format json, los avisos y el codigo de salida no se ven afectados.'
+        create_quiet_help: Omitir la salida de confirmacion legible; el envoltorio
+          --format json, los avisos y el codigo de salida no se ven afectados.
         create_reused: Se devolvió la unidad de trabajo existente (idempotente sobre
           modelo/ejercicio/periodo/revisión); no se creó nada nuevo. Renómbrala con
           `aeat app modelo work rename`.
@@ -3052,11 +3080,12 @@ cli:
       unknown_provider: 'Proveedor de importación --provider {provider!r} desconocido.
         Proveedores reconocidos: {providers}.'
     exclude:
-      actor_help: 'Etiqueta del operador.'
-      help: 'Marca una transaccion de libro revisada como excluida deliberadamente de la declaracion.'
-      id_help: 'Id de transaccion del libro.'
-      reason_help: 'Nota opcional que registra por que la fila esta excluida.'
-      yes_help: 'Confirma la decision de exclusion revisada.'
+      actor_help: Etiqueta del operador.
+      help: Marca una transaccion de libro revisada como excluida deliberadamente
+        de la declaracion.
+      id_help: Id de transaccion del libro.
+      reason_help: Nota opcional que registra por que la fila esta excluida.
+      yes_help: Confirma la decision de exclusion revisada.
     export:
       actor_help: Nombre del operador registrado en el evento del bucket
       format_help: Formato de serialización de exportación
@@ -3520,7 +3549,9 @@ cli:
       resolver: %{keys}. Ejecuta el comando de correccion del aviso o usa --allow-incomplete
       para inspeccionar el calendario provisional.'
     coverage:
-      investigate: '%{count} obligacion(es) de declaracion no se pudieron delimitar con certeza para este perfil y podrian estar infradeclaradas: %{modelos}. Investiga cada una con ''aeat app overview explain <modelo>''.'
+      investigate: 'No se han podido determinar con certeza %{count} obligacion(es)
+        de presentacion para este perfil y podrian quedar sin declarar: %{modelos}.
+        Investigue cada una con ''aeat app overview explain <modelo>''.'
     drafts: Borradores
     explain:
       help: Descompone la aplicabilidad de un modelo frente al perfil activo. Muestra
@@ -4228,6 +4259,8 @@ errors:
       perfil no es válida.
     error_profile_asset_record: Un registro de activo del perfil tiene una estructura
       no válida.
+    error_profile_bienes_inversion_record: Un registro de regularización de IVA por
+      bienes de inversión no es estructuralmente válido.
     error_profile_cross_store_drift: Los almacenes físicos de un perfil no coinciden
       en su identidad. El perfil no es utilizable.
     error_profile_inventory_ledger: Una operación del libro de inventario del perfil
@@ -4807,6 +4840,8 @@ errors:
       validación.
     refused_profile_basis_cap_exceeded: La amortización acumulada superaría la base
       de coste del activo.
+    refused_profile_bienes_inversion_validation: Un registro de regularización de
+      IVA por bienes de inversión no superó la validación.
     refused_profile_binding_resolution: Un dato del perfil necesario para el cálculo
       no se pudo resolver en el canal de vínculo correcto.
     refused_profile_foral_regime: El régimen foral seleccionado no está modelado por

@@ -263,6 +263,12 @@ adapters:
           load_amortizacion_ledger_failed: No s'ha pogut carregar el llibre xifrat
             d'amortització.
           load_asset_ledger_failed: No s'ha pogut carregar el llibre xifrat d'actius.
+      bienes_inversion:
+        errors:
+          load_register_failed: No es pot carregar el registre xifrat de regularització
+            d'IVA per béns d'inversió.
+          record_already_exists: Aquest bé d'inversió ja existeix en el registre xifrat
+            de regularització.
       inventory:
         errors:
           inventory_ledger_already_exists: Aquest llibre d'inventari ja existeix.
@@ -363,7 +369,8 @@ aggregation:
   source_mesh:
     errors:
       ambiguous_source_disposition: aggregation.source_mesh.errors.ambiguous_source_disposition
-      binding_source_mismatch: 'source_kind i binding_source fan referencia a families d''origen de binding diferents.'
+      binding_source_mismatch: source_kind i binding_source fan referencia a families
+        d'origen de binding diferents.
       duplicate_binding_owner: 'Error intern: propietari de vinculacio duplicat a
         la malla de fonts.'
       duplicate_bound_casilla_owner: 'Error intern: propietari de casella vinculada
@@ -374,7 +381,8 @@ aggregation:
         tipus de font en blanc.
       owned_sources_duplicate: Les fonts propietat de la malla de fonts han de ser
         úniques.
-      relation_provenance_incomplete: 'La procedencia de la relacio ha d''incloure model d''origen, exercici, periodes, caselles, referencies legals i referencies d''origen.'
+      relation_provenance_incomplete: La procedencia de la relacio ha d'incloure model
+        d'origen, exercici, periodes, caselles, referencies legals i referencies d'origen.
       source_transaction_ids_blank: Els identificadors de transacció de la malla de
         fonts no poden contenir blancs.
       source_transaction_ids_duplicate: Els identificadors de transacció de la malla
@@ -1323,6 +1331,22 @@ cli:
         persones, {skills} habilitats.'
   app:
     ledger:
+      bienes_inversion:
+        acquisition_year_help: 'Any d''adquisició del bé.'
+        art108_help: 'Si el bé té la consideració de bé d''inversió segons LIVA art. 108.'
+        asset_ref_help: 'Referència creuada opcional a un identificador d''AssetRecord.'
+        cuota_soportada_help: 'IVA suportat total en l''adquisició (positiu).'
+        declare_help: 'Declara un bé d''inversió per a la seva regularització d''IVA.'
+        description_help: 'Descripció del bé.'
+        disposal_regime_help: 'Règim de transmissió (sujeta_no_exenta o exenta_o_no_sujeta); obligatori amb --disposal-year.'
+        disposal_requires_both: '--disposal-year i --disposal-regime s''han d''indicar conjuntament.'
+        disposal_year_help: 'Any de transmissió opcional (art. 110).'
+        group_help: 'Registre de regularització d''IVA per béns d''inversió (LIVA arts. 107-110).'
+        identifier_help: 'Identificador estable del registre.'
+        kind_help: 'Període de regularització: moble (4 anys) o immoble (9 anys).'
+        list_help: 'Llista tots els béns d''inversió registrats en el perfil actiu.'
+        prorrata_inicial_help: 'Percentatge de deducció definitiu de l''any d''adquisició (0-100).'
+        unknown_disposal_regime: 'Règim de transmissió desconegut {regime!r}; acceptats: {accepted}'
       evidence:
         add_help: Registra un justificant de factura de compra des de PDF o imatge
         evidence_id_help: Identificador del justificant (coincidencia exacta)
@@ -1604,8 +1628,10 @@ cli:
           per a {code}@{revision} ({period}): {suggestion}.'
         year_help: Exercici fiscal del model (p. ex. 2026)
       casilla:
-        casilla_help: 'Id de casella o numero impres de casella que cal descriure (p. ex. 0596).'
-        help: 'Mostra l''etiqueta, el fonament legal, el tipus d''entrada i la formula d''una casella al snapshot de registre resolt.'
+        casilla_help: Id de casella o numero impres de casella que cal descriure (p.
+          ex. 0596).
+        help: Mostra l'etiqueta, el fonament legal, el tipus d'entrada i la formula
+          d'una casella al snapshot de registre resolt.
       casillas:
         as_of_help: Resoldre la revisió del model vigent a la data ISO indicada (AAAA-MM-DD)
         explain_help: Incloure el text d'ajuda localitzat a la sortida de text.
@@ -1922,7 +1948,8 @@ cli:
         create_not_applicable_refused: 'El model %{modelo} no s''aplica al tipus de
           contribuent del perfil actiu: %{reason} Si teniu un motiu per crear la unitat
           de treball igualment, torneu a executar l''ordre amb --allow-not-applicable.'
-        create_quiet_help: 'Omet la sortida de confirmacio llegible; l''envolupant --format json, els avisos i el codi de sortida no es veuen afectats.'
+        create_quiet_help: Omet la sortida de confirmacio llegible; l'envolupant --format
+          json, els avisos i el codi de sortida no es veuen afectats.
         create_reused: S'ha retornat la unitat de treball existent (idempotent sobre
           model/exercici/període/revisió); no s'ha creat res nou. Reanomena-la amb
           `aeat app modelo work rename`.
@@ -3023,11 +3050,12 @@ cli:
       unknown_provider: 'Proveïdor d''importació --provider {provider!r} desconegut.
         Proveïdors reconeguts: {providers}.'
     exclude:
-      actor_help: 'Etiqueta de l''operador.'
-      help: 'Marca una transaccio del llibre revisada com a exclosa deliberadament de la declaracio.'
-      id_help: 'Id de transaccio del llibre.'
-      reason_help: 'Nota opcional que registra per que la fila queda exclosa.'
-      yes_help: 'Confirma la decisio d''exclusio revisada.'
+      actor_help: Etiqueta de l'operador.
+      help: Marca una transaccio del llibre revisada com a exclosa deliberadament
+        de la declaracio.
+      id_help: Id de transaccio del llibre.
+      reason_help: Nota opcional que registra per que la fila queda exclosa.
+      yes_help: Confirma la decisio d'exclusio revisada.
     export:
       actor_help: Nom de l'operador registrat a l'esdeveniment del bucket
       format_help: Format de serialització d'exportació
@@ -3490,7 +3518,9 @@ cli:
       %{keys}. Executeu l ordre de correccio de l avís o useu --allow-incomplete per
       inspeccionar el calendari provisional.'
     coverage:
-      investigate: '%{count} obligacio/obligacions de declaracio no s''han pogut delimitar amb certesa per a aquest perfil i podrien quedar infradeclarades: %{modelos}. Investigueu-les amb ''aeat app overview explain <modelo>''.'
+      investigate: 'No s''han pogut determinar amb certesa %{count} obligacio(ns)
+        de presentacio per a aquest perfil i podrien quedar sense declarar: %{modelos}.
+        Investigueu cadascuna amb ''aeat app overview explain <modelo>''.'
     drafts: Esborranys
     explain:
       help: Descompon l'aplicabilitat d'un modelo davant del perfil actiu. Mostra
@@ -4194,6 +4224,8 @@ errors:
       perfil no és vàlida.
     error_profile_asset_record: Un registre d'actiu del perfil té una estructura no
       vàlida.
+    error_profile_bienes_inversion_record: Un registre de regularització d'IVA per
+      béns d'inversió no és estructuralment vàlid.
     error_profile_cross_store_drift: Els magatzems físics d'un perfil no coincideixen
       en la seva identitat. El perfil no és utilitzable.
     error_profile_inventory_ledger: Una operació del llibre d'inventari del perfil
@@ -4772,6 +4804,8 @@ errors:
       la validació.
     refused_profile_basis_cap_exceeded: L'amortització acumulada superaria la base
       de cost de l'actiu.
+    refused_profile_bienes_inversion_validation: Un registre de regularització d'IVA
+      per béns d'inversió no ha superat la validació.
     refused_profile_binding_resolution: Una dada del perfil necessària per al càlcul
       no s'ha pogut resoldre al canal de vincle correcte.
     refused_profile_foral_regime: El règim foral seleccionat no està modelat per aquest
