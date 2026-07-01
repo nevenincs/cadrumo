@@ -64,3 +64,41 @@ roundtrip tests over populated stores.
 - [x] RESOLVED - A follow-up review enforced the user correction "no reexports; provision from real sources" across the bucket custody transport surface. Package-facade imports in `src/aeat/application/user_profile/_bundle.py`, `src/aeat/application/user_profile/_custody_carry.py`, `src/aeat/application/bucket_maintenance/_service.py`, `src/aeat/entrypoints/cli/_config/_profile_bundle.py`, and focused custody/profile tests were replaced with defining modules. A RAG-grounded reviewer reported no blocking issues. Verification: direct-source import scan clean, ruff passed, 59 focused custody/application tests passed, 6 CLI profile export/import integration tests passed, and diff whitespace check passed.
 
 - [x] RESOLVED - Plan closure traceability was repaired after detecting that P03 through P07 were checked in the plan while only P01/P02 exec records existed locally. `vaultspec-core vault add exec --all-steps` scaffolded the missing P03.S07 through P07.S19 records, and each record now carries the executed scope, outcome, and verification notes.
+
+## Adversarial Review Fixes (post-completion, independently confirmed)
+
+A fresh adversarial code review over the whole custody surface (and a parallel
+self-probe) found and drove to a fix five issues the passing suite had missed
+because it only seeded carried stores and never populated the manifest, the
+participation index, or any process-local store:
+
+- [x] CRITICAL - Full-custody coverage gate failed closed on any populated
+  PROCESS_LOCAL (workflow/credential) or DERIVED_REBUILDABLE (participation
+  index) namespace, so the sealed recovery export would refuse essentially every
+  real bucket that had run a calculation. Proven with a two-probe. Fixed: every
+  registered namespace declares a disposition and is accounted for; the gate now
+  fails closed only on a populated namespace that is not in the registry at all.
+  Regression: `test_full_export_tolerates_populated_process_local_namespace` and
+  the matrix now also populates a process-local store end to end.
+- [x] CRITICAL - The attachment-manifest resolver parsed `Envelope[Attachment]`,
+  but the manifest store strips `attachment_id` from the persisted payload
+  (re-injected on load), so the resolver raised at export time on any bucket with
+  an attached document + manifest. Fixed to recover the natural key from the
+  retained content-addressed `sha256` (which the model enforces equal to
+  `attachment_id`). Proven by seeding a manifest in `test_custody_roundtrip`.
+- [x] MEDIUM - Import provisioned `bundle.profile.profile_id` but restored under
+  `header.bucket_id` with no equality check; a divergent/hand-built archive would
+  write bucket-local keys under a stale id. Added a fail-closed assertion that the
+  two are equal (recovery is same-id only; no cross-id remap exists).
+- [x] LOW - A resolver fault surfaced as a bare pydantic error out of the export;
+  wrapped resolver invocation to raise a typed `ProfileExportError` naming the
+  namespace, and attached the original error detail to the import payload-invalid
+  context.
+- [x] JUDGEMENT - `aeat.auth.apoderado` (durable per-bucket apoderamiento setup)
+  was PROCESS_LOCAL and thus dropped on recovery; reclassified to
+  FULL_CUSTODY_ONLY with a resolver and a matrix case. `aeat.google.drive.config`
+  stays PROCESS_LOCAL (an OAuth-dependent host integration binding, useless
+  without the host-local token).
+
+After these fixes all 37 carried namespaces round-trip through the real recovery
+transport and the full custody suite (64 tests) is green.
