@@ -1179,6 +1179,8 @@ application:
         "default" tartalék).
       quiet_missing_flags: 'Ennek a --quiet futtatásnak hiányoznak a kötelező adatok.
         Adja hozzá ezeket a kapcsolókat, és futtassa újra a parancsot: %{missing_flags}'
+      command_input_invalid: 'A profiladatok érvényesítése sikertelen: %{details}'
+      command_input_invalid_fallback: 'Egy vagy több profilmező érvényesítése sikertelen'
     next_hint:
       modelo_work_create: aeat app modelo work create
     notices:

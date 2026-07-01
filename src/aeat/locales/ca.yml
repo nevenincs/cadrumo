@@ -1243,6 +1243,8 @@ application:
       quiet_missing_flags: 'A aquesta execució amb --quiet li falten dades obligatòries.
         Afegeix aquests flags i torna a executar l''ordre: %{missing_flags}. O executa-la
         sense --quiet des d''un terminal interactiu per fer servir l''assistent guiat.'
+      command_input_invalid: 'Les dades del perfil no han superat la validació: %{details}'
+      command_input_invalid_fallback: 'un o més camps del perfil no han superat la validació'
     next_hint:
       modelo_work_create: aeat app modelo work create
     notices:

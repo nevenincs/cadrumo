@@ -1167,6 +1167,8 @@ application:
       quiet_missing_flags: 'This --quiet run is missing required details. Add these
         flags and run the command again: %{missing_flags}. Or run it without --quiet
         from an interactive terminal to use the guided setup.'
+      command_input_invalid: 'The profile details are invalid: %{details}'
+      command_input_invalid_fallback: 'one or more profile fields failed validation'
     next_hint:
       modelo_work_create: aeat app modelo work create
     notices:
