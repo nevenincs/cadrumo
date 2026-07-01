@@ -41,6 +41,34 @@ curated reconciliation target, not a mechanical "all computed" list. Consequence
 sweep. A mechanical sweep would invent regulated verification behaviour and is
 barred by `aeat-safety-legal-gates`.
 
+### no-safe-second-expectation-escape-hatch | critical | the multi-expectation fold makes "reconcile-when-present at low min_coverage" structurally impossible; enrolling all casillas needs a verify-GATE redesign (ADR), not registry edits
+
+The obvious way to enroll every computed casilla without breaking filings would be a
+SECOND `verification_expectation` carrying the situational casillas at a low
+`min_coverage` (reconcile a casilla's value WHEN present, without demanding 100%
+presence). The registry fold makes this impossible. `RegistrySnapshot.verification_policy()`
+(`src/aeat/domain/calculations/registry/_schema.py:1277-1296`) folds ALL of a
+revision's expectations into ONE `RegistryVerificationPolicy`:
+`computed_casilla_ids` is the **union** across every expectation (a single shared
+coverage denominator) and `min_coverage = max(expectation.min_coverage for ...)`
+(the strictest floor wins). There is no per-expectation coverage evaluation. So
+adding an M100 expectation that enrolls the 867 situational casillas at
+`min_coverage = "0"` yields, for the folded policy, a denominator of ~886 casillas
+and `min_coverage = max(1, 0) = 1`; a real filing that reconciles only its ~19
+present finals then scores coverage ~2% < 1 and **every M100 filing flips
+VERIFIED -> NEEDS_REVIEW**. Lowering the single existing expectation's `min_coverage`
+instead loses the strict finals gate (a filing missing a genuine always-present
+final would silently pass), violating `no-silent-under-declaration`. Therefore
+"write the verification contract for EVERY casilla" is NOT achievable by registry
+TOML edits at all - it requires changing the verify GATE itself (per-expectation
+coverage evaluation, or a distinct "reconcile-when-present" casilla class that is
+value-checked when present but excluded from the coverage denominator). That is a
+regulated verification-semantics change: it needs its own ADR and a verify-gate
+regression suite proving no legitimate filing's verdict regresses, and it cannot be
+done silently or mechanically (`aeat-safety-legal-gates`). This is the structural
+proof upgrading the asserted finding above: the deferral of the M100 bulk is not a
+scoping preference, it is a gate-capability blocker.
+
 ### coverage-gap-inventory | high | 922 computed casillas across 21 revisions are unenrolled, dominated by Modelo 100 (Renta)
 
 Loaded-snapshot inventory of computed-but-unenrolled casillas:
@@ -125,14 +153,26 @@ never a mechanical sweep - and is out of scope for the small-modelos-first tranc
 ## Recommendations
 
 Do NOT mechanically enroll the 922 casillas: at `min_coverage = 1` it breaks
-regulated verify verdicts and invents legal behaviour. The correct pipeline is an
-ADR deciding the enrollment policy per modelo (which computed casillas are genuinely
-reconcilable against that modelo's AEAT Diseño de Registros / oracle, and the
-`min_coverage` that keeps VERIFIED filings VERIFIED), then a per-modelo grounded
-campaign gated by verify-gate regression tests. Start with the three NO-VE computing
-revisions (151, 210, 714 - 2-4 casillas each) and the small curated gaps
-(130/131/200/303), each grounded in its revision's existing AEAT `source_refs` and
-proven non-breaking against the verify gate. The M100 Renta bulk is enrolled last,
-reconciled against the Renta WEB Open oracle. The S56 operator numeric value-oracle
-is grounded in the same Renta WEB Open captured figures (Modelo 100), not a
-fabricated number.
+regulated verify verdicts and invents legal behaviour, and (per the
+`no-safe-second-expectation-escape-hatch` finding) the multi-expectation fold gives
+no low-`min_coverage` registry-only escape hatch. Enrolling the full computed set
+requires TWO ordered pieces of work, both user-gated:
+
+1. A verify-GATE-redesign ADR that adds per-expectation coverage evaluation (or a
+   distinct "reconcile-when-present" casilla class excluded from the coverage
+   denominator but value-checked when present), with a regression suite proving no
+   legitimate filing verdict regresses. This is the prerequisite that unblocks the
+   bulk; it changes regulated verification semantics and must not be done silently.
+
+2. THEN a per-modelo grounded enrollment campaign consuming the new gate: the M100
+   Renta bulk (~867 casillas) reconciled against the Renta WEB Open oracle, plus the
+   remaining situational casillas of 303/200/etc. moved into the reconcile-when-present
+   class.
+
+The safely-completable subset - which needs NEITHER the gate redesign NOR any
+scope the current gate cannot express - is DONE: the three NO-VE computing revisions
+(151, 210, 714) and the always-present finals of 200/303 are enrolled at
+`min_coverage = 1`, grounded in each revision's AEAT `source_refs`, and proven
+non-breaking; 130/131 stay correctly excluded as situational calibration. The S56
+operator numeric value-oracle is grounded in the Renta WEB Open captured figures
+(Modelo 100), not a fabricated number.
