@@ -35,7 +35,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 # ---------------------------------------------------------------------------
 
 _ADVISORY_RATIO_GE = 'advisory_when_ratio_ge(["00501", "DP200014:00552", "0.70"])'
-_M130_ART109_PROFILE_ADVISORY = 'profile_flag_enabled("professional_income_withholding_ge_70pct")'
+_M130_ART109_PROFILE_ADVISORY = 'profile_flag_enabled("art109_activity_income_withholding_ge_70pct")'
 
 
 @pytest.mark.parametrize(
@@ -89,7 +89,7 @@ def test_art109_profile_advisory_emits_warning_when_profile_flag_is_enabled() ->
         expression=_M130_ART109_PROFILE_ADVISORY,
         finding_kind="ADVISORY",
     )
-    profile = _workflow_profile().model_copy(update={"professional_income_withholding_ge_70pct": True})
+    profile = _workflow_profile().model_copy(update={"art109_activity_income_withholding_ge_70pct": True})
     casilla_values: dict[CasillaId, Decimal] = {
         _CASILLA_06: Decimal("0"),
         _CASILLA_01: Decimal("15000"),
@@ -101,6 +101,25 @@ def test_art109_profile_advisory_emits_warning_when_profile_flag_is_enabled() ->
     assert findings[0].kind is ModeloVerificationFindingKind.ADVISORY
     assert findings[0].severity is ModeloVerificationFindingSeverity.WARNING
     assert "rd-439-2007:art-109" in findings[0].legal_refs
+
+
+def test_art109_profile_advisory_ignores_professional_only_profile_flag() -> None:
+    """The professional-only compatibility field is not the full Art. 109 fact."""
+    predicate = VerificationPredicateDefinition(
+        predicate_id="modelo-130-art109-exencion-alta-retencion",
+        legal_refs=("rd-439-2007:art-109",),
+        expression=_M130_ART109_PROFILE_ADVISORY,
+        finding_kind="ADVISORY",
+    )
+    profile = _workflow_profile().model_copy(update={"professional_income_withholding_ge_70pct": True})
+    casilla_values: dict[CasillaId, Decimal] = {
+        _CASILLA_06: Decimal("0"),
+        _CASILLA_01: Decimal("15000"),
+    }
+
+    findings = evaluate_verification_predicates((predicate,), casilla_values, profile)
+
+    assert findings == []
 
 
 def test_art109_profile_advisory_ignores_high_retention_amount_ratio_when_profile_flag_is_disabled() -> None:

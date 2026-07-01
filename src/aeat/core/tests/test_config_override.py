@@ -56,17 +56,6 @@ def test_override_settings_swaps_scalar_field_inside_block() -> None:
     assert load_settings().aeat_log_dir == baseline_log_dir
 
 
-def test_override_settings_restores_prior_value_on_normal_exit() -> None:
-    baseline_log_dir = load_settings().aeat_log_dir
-
-    with override_settings(aeat_log_dir=Path(_NONEXISTENT_PATH_PREFIX, "scratch")):
-        assert load_settings().aeat_log_dir == _expected_path("scratch")
-
-    # On exit the ContextVar is reset; the baseline default is
-    # observable again.
-    assert load_settings().aeat_log_dir == baseline_log_dir
-
-
 def test_override_settings_restores_prior_value_on_exception() -> None:
     """A user-raised exception inside the block must not leak the override."""
 

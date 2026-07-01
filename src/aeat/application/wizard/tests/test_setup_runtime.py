@@ -80,7 +80,7 @@ def _scripted_answers_for_individual_declaration() -> deque[str]:
             # ── obligations ────────────────────────
             "false",  # has-employees
             "false",  # pays-professionals-with-retencion
-            "false",  # professional-income-withholding-ge-70pct
+            "false",  # art109-activity-income-withholding-ge-70pct
             "false",  # pays-rent-with-retencion
             "false",  # pays-capital-income-with-retencion
             "",  # modelo-111-no-retenciones-periods
@@ -225,7 +225,7 @@ def test_run_flow_walks_joint_taxation_spouse_questions() -> None:
             "false",  # enrollment-public-administration-budget-gt-6000000
             "false",  # has-employees
             "false",  # pays-professionals-with-retencion
-            "false",  # professional-income-withholding-ge-70pct
+            "false",  # art109-activity-income-withholding-ge-70pct
             "false",  # pays-rent-with-retencion
             "false",  # pays-capital-income-with-retencion
             "",  # modelo-111-no-retenciones-periods

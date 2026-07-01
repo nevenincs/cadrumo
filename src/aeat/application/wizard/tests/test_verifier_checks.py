@@ -138,6 +138,19 @@ def test_obligations_consistency_ok_when_neither_flag_set() -> None:
     assert finding.message_key == "wizard.setup.verifier.obligations_consistency_ok"
 
 
+def test_obligations_consistency_ok_for_art109_activity_coverage_without_professional_payer() -> None:
+    """The full Art. 109 coverage fact is not limited to professional fees."""
+    answers = _individual_answers(
+        art109_activity_income_withholding_ge_70pct=True,
+        pays_professionals_with_retencion=False,
+    )
+
+    finding = _finding(answers, "obligations_consistency")
+
+    assert finding.severity is WizardCheckSeverity.OK
+    assert finding.message_key == "wizard.setup.verifier.obligations_consistency_ok"
+
+
 def test_obligations_consistency_ok_when_pays_professionals_set() -> None:
     """Having `pays_professionals_with_retencion=True` while
     `professional_income_withholding_ge_70pct=True` satisfies the

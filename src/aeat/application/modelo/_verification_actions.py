@@ -233,10 +233,10 @@ def _resolve_predicate_next_action(predicate_id: str) -> str | None:
 def _resolve_advisory_message_default(predicate_id: str) -> str | None:
     if predicate_id == "modelo-130-art109-exencion-alta-retencion":
         return (
-            "The taxpayer profile says at least 70% of professional activity income was subject "
-            "to withholding or payment on account for the Art. 109 RIRPF test. Modelo 130 "
-            "casilla 17 remains the official form subtraction; confirm that preparing an M130 "
-            "draft is intentional for this profile before filing."
+            "The taxpayer profile says the Art. 109 RIRPF 70% income-coverage exception is met "
+            "for covered professional, agricultural, livestock, or forestry activity income. "
+            "Modelo 130 casilla 17 remains the official form subtraction; confirm that "
+            "preparing an M130 draft is intentional for this profile before filing."
         )
     if predicate_id in {
         "modelo-100-2024-deduccion-vivienda-habitual-requiere-adquisicion-anterior-2013",

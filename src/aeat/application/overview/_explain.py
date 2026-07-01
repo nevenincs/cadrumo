@@ -116,7 +116,7 @@ _DEADLINE_RELEVANT_FIELDS: tuple[str, ...] = (
     "iva_regime",
     "has_employees",
     "pays_professionals_with_retencion",
-    "professional_income_withholding_ge_70pct",
+    "art109_activity_income_withholding_ge_70pct",
     "pays_rent_with_retencion",
     "pays_capital_income_with_retencion",
     "does_intracomunitario",

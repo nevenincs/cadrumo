@@ -163,12 +163,12 @@ def test_enum_consumed_binding_ids_reads_current_m210_resolve_rate_country_arg()
     assert "m210-convenio-rates" not in enum_ids
 
 
-def test_enum_consumed_binding_ids_preserves_legacy_m210_four_arg_country_arg() -> None:
-    """The legacy four-arg M210 rate formula still routes country through the enum channel."""
+def test_enum_consumed_binding_ids_ignores_retired_m210_four_arg_country_arg() -> None:
+    """The retired four-arg M210 rate formula is not a current enum-dispatch shape."""
 
     revision = _m210_2025_revision()
     formula = next(formula for formula in revision.formulas if formula.id == _M210_RATE_FORMULA_ID)
-    legacy_expression = FormulaExpression.model_validate(
+    retired_expression = FormulaExpression.model_validate(
         {
             "op": "m210_resolve_rate",
             "args": (
@@ -179,10 +179,10 @@ def test_enum_consumed_binding_ids_preserves_legacy_m210_four_arg_country_arg() 
             ),
         }
     )
-    legacy_formula = formula.model_copy(update={"expression": legacy_expression})
-    legacy_revision = revision.model_copy(update={"formulas": (legacy_formula,)})
+    retired_formula = formula.model_copy(update={"expression": retired_expression})
+    retired_revision = revision.model_copy(update={"formulas": (retired_formula,)})
 
-    assert enum_consumed_binding_ids(legacy_revision) == frozenset({_M210_COUNTRY_BINDING})
+    assert enum_consumed_binding_ids(retired_revision) == frozenset()
 
 
 def test_walkers_return_empty_for_unrelated_leaf_kinds() -> None:

@@ -39,6 +39,7 @@ def _profile() -> TaxpayerProfile:
         has_employees=True,
         pays_professionals_with_retencion=False,
         professional_income_withholding_ge_70pct=False,
+        art109_activity_income_withholding_ge_70pct=False,
         pays_rent_with_retencion=True,
         does_intracomunitario=False,
         third_party_transactions_above_347_threshold=False,
@@ -59,6 +60,7 @@ class TestTaxpayerProfile:
                     "has_employees": True,
                     "pays_professionals_with_retencion": False,
                     "professional_income_withholding_ge_70pct": False,
+                    "art109_activity_income_withholding_ge_70pct": False,
                     "pays_rent_with_retencion": False,
                     "does_intracomunitario": False,
                     "third_party_transactions_above_347_threshold": False,
@@ -81,6 +83,7 @@ class TestTaxpayerProfile:
                     "has_employees": 1,
                     "pays_professionals_with_retencion": False,
                     "professional_income_withholding_ge_70pct": False,
+                    "art109_activity_income_withholding_ge_70pct": False,
                     "pays_rent_with_retencion": False,
                     "does_intracomunitario": False,
                     "third_party_transactions_above_347_threshold": False,
@@ -97,6 +100,7 @@ class TestTaxpayerProfile:
                     "has_employees": False,
                     "pays_professionals_with_retencion": False,
                     "professional_income_withholding_ge_70pct": False,
+                    "art109_activity_income_withholding_ge_70pct": False,
                     "pays_rent_with_retencion": False,
                     "does_intracomunitario": False,
                     "third_party_transactions_above_347_threshold": False,
@@ -111,6 +115,7 @@ class TestTaxpayerProfile:
                 "activity": "design",
                 "iva.regime": "SIMPLIFICADO",
                 "has_employees": "true",
+                "art109_activity_income_withholding_ge_70pct": "true",
                 "pays_rent_with_retencion": "true",
                 "does_intracomunitario": "true",
                 "iva.roi_enrolled": "true",
@@ -125,6 +130,7 @@ class TestTaxpayerProfile:
         assert profile.tax_id == "12345678Z"
         assert profile.iva_regime is IVARegime.SIMPLIFICADO
         assert profile.has_employees is True
+        assert profile.art109_activity_income_withholding_ge_70pct is True
         assert profile.pays_rent_with_retencion is True
         assert profile.does_intracomunitario is True
         assert profile.iva == ModeloIVAProfile(

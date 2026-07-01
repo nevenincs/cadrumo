@@ -332,6 +332,7 @@ class SetupAnswers(BaseModel):
     has_employees: bool = False
     pays_professionals_with_retencion: bool = False
     professional_income_withholding_ge_70pct: bool = False
+    art109_activity_income_withholding_ge_70pct: bool = False
     pays_rent_with_retencion: bool = False
     pays_capital_income_with_retencion: bool = False
     modelo_111_no_retenciones_periods: str = ""

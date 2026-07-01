@@ -1640,7 +1640,8 @@ cli:
       iva_wallet:
         as_of_year_help: Reference year for carry-forward age and expiry calculations.
         balance_help: Show aggregated IVA compensation carry-forward balance computed
-          from local Modelo 303 history. Reports total_balance, lot_count, and next_expiry_year.
+          from local Modelo 303 history. Reports total_balance, active_balance,
+          expired_balance, lot_count, and next_expiry_year.
         correct_amount_help: Corrected carry-forward balance amount in EUR (decimal,
           e.g. 1200.50).
         correct_confirm_help: Required confirmation flag. Acknowledge that this overwrites
@@ -5078,6 +5079,10 @@ wizard:
         help: Pays local rent with retención
       professional-income-withholding-ge-70pct:
         help: At least 70% of professional income with prior retención
+      art109-activity-income-withholding-ge-70pct:
+        help: Art. 109 coverage - at least 70% of covered professional, agricultural,
+          livestock, or forestry activity income subject to withholding or payment
+          on account
       representante-fiscal-nif:
         help: NIF/NIE of the fiscal representative in Spain. Required for non-EU/EEA
           non-residents (Art. 47 LGT + Art. 10 TRLIRNR RDLeg 5/2004).
@@ -5219,6 +5224,8 @@ wizard:
         prompt: Pays local rent with retención
       professional-income-withholding-ge-70pct:
         prompt: At least 70% of professional income with prior retención
+      art109-activity-income-withholding-ge-70pct:
+        prompt: Art. 109 70% activity-income coverage exception applies
       third-party-transactions-above-347-threshold:
         prompt: Third-party transactions exceed Modelo 347 threshold
       title: Modelo obligations

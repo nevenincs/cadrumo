@@ -125,8 +125,6 @@ _ENUM_DISPATCH_BINDING_ARG_INDEX: dict[str, int] = {
 def _enum_dispatch_binding_arg_index(expression: FormulaExpression) -> int | None:
     op = expression.op or ""
     if op == "m210_resolve_rate":
-        if len(expression.args) == 4:
-            return 3
         if len(expression.args) == 6:
             return 5
         return None

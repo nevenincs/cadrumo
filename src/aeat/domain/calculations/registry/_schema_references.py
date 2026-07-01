@@ -136,7 +136,15 @@ class SourceReference(RegistryModel):
     id: SourceRefId
     evidence_tier: EvidenceTier
     authority: Literal["aeat", "boe", "eu", "autonomous_community", "other"]
-    kind: Literal["record_design", "manual_pdf", "instructions", "xsd", "dictionary", "form_spec"]
+    kind: Literal[
+        "record_design",
+        "manual_pdf",
+        "instructions",
+        "xsd",
+        "dictionary",
+        "form_spec",
+        "suppression_notice",
+    ]
     corpus_path: str
     sha256: str = Field(min_length=64, max_length=64)
     bytes: int = Field(gt=0)

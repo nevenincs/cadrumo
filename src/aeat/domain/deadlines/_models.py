@@ -414,6 +414,11 @@ class TaxpayerProfile(BaseModel):
         professional_income_withholding_ge_70pct: Whether at least 70%
             of the taxpayer's prior-year professional income was
             already subject to withholding.
+        art109_activity_income_withholding_ge_70pct: Whether the Art. 109
+            RIRPF 70% income-coverage exception is met for covered
+            professional, agricultural, livestock, or forestry activity
+            income. For activity-start cases this is the current payment
+            period coverage fact rather than a prior-year fact.
         pays_rent_with_retencion: Whether the taxpayer pays alquiler de
             local with retención.
         pays_capital_income_with_retencion: Whether the taxpayer pays
@@ -480,6 +485,7 @@ class TaxpayerProfile(BaseModel):
     has_employees: bool = False
     pays_professionals_with_retencion: bool = False
     professional_income_withholding_ge_70pct: bool = False
+    art109_activity_income_withholding_ge_70pct: bool = False
     pays_rent_with_retencion: bool = False
     pays_capital_income_with_retencion: bool = False
     objective_estimation_prior_year_gross_income_eur: Decimal | None = None

@@ -67,8 +67,8 @@ def test_projection_for_taxpayer_carries_section_prefixed_withholding_facts() ->
     TaxpayerProfile.
 
     These fields' schema model_selectors drop the section prefix
-    (``irpf.professional_income_withholding_ge_70pct`` ->
-    ``professional_income_withholding_ge_70pct``). The selector-aliased
+    (``irpf.art109_activity_income_withholding_ge_70pct`` ->
+    ``art109_activity_income_withholding_ge_70pct``). The selector-aliased
     projection then loses the value because the bare key has no wizard
     catalogue entry. ``projection_for_taxpayer`` must read the
     canonical schema paths so an edited fact reaches the deadline
@@ -83,7 +83,7 @@ def test_projection_for_taxpayer_carries_section_prefixed_withholding_facts() ->
             UserProfileFact(path="identity.tax_id", value="12345678Z"),
             UserProfileFact(path="iva.regime", value="GENERAL"),
             UserProfileFact(
-                path="irpf.professional_income_withholding_ge_70pct",
+                path="irpf.art109_activity_income_withholding_ge_70pct",
                 value=True,
             ),
             UserProfileFact(path="irpf.estimation_regime", value="objetiva"),
@@ -91,7 +91,7 @@ def test_projection_for_taxpayer_carries_section_prefixed_withholding_facts() ->
         ),
     )
     profile = projection_for_taxpayer(record)
-    assert profile.professional_income_withholding_ge_70pct is True
+    assert profile.art109_activity_income_withholding_ge_70pct is True
     assert profile.irpf_estimation_regime is IrpfEstimationRegime.OBJETIVA
     assert profile.has_employees is True
 

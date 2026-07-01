@@ -106,7 +106,7 @@ source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_re
 review_status = "reviewed"
 
 [sources."boe-modelo-145-2011-approval"]
-evidence_tier = "official_source_guidance"
+evidence_tier = "layout_authority"
 authority = "boe"
 kind = "form_spec"
 corpus_path = "corpus/normatives/html/boe-a-2011-208-modelo-145.html"
@@ -119,7 +119,7 @@ source_url = "https://www.boe.es/diario_boe/txt.php?id=BOE-A-2011-208"
 review_status = "reviewed"
 
 [sources."boe-modelo-145-2013-amendment"]
-evidence_tier = "official_source_guidance"
+evidence_tier = "layout_authority"
 authority = "boe"
 kind = "form_spec"
 corpus_path = "corpus/normatives/html/boe-a-2014-59-modelo-145-amendment.html"
@@ -132,7 +132,7 @@ source_url = "https://www.boe.es/buscar/doc.php?id=BOE-A-2014-59"
 review_status = "reviewed"
 
 [sources."boe-modelo-145-2014-amendment"]
-evidence_tier = "official_source_guidance"
+evidence_tier = "layout_authority"
 authority = "boe"
 kind = "form_spec"
 corpus_path = "corpus/normatives/html/boe-a-2014-13679-modelo-145-amendment.html"

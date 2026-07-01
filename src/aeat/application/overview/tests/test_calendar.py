@@ -889,7 +889,7 @@ def test_calendar_completeness_lists_uncomputable_with_reason() -> None:
     assert "pays_capital_income_with_retencion" in cal.completeness.defaulted_keys
     assert "pays_professionals_with_retencion" in cal.completeness.defaulted_keys
     assert "pays_rent_with_retencion" in cal.completeness.defaulted_keys
-    assert "professional_income_withholding_ge_70pct" in cal.completeness.defaulted_keys
+    assert "art109_activity_income_withholding_ge_70pct" in cal.completeness.defaulted_keys
     assert "irpf.estimation_regime" in cal.completeness.defaulted_keys
 
 
@@ -908,4 +908,4 @@ def test_calendar_warnings_include_registry_deadline_window_predicates() -> None
 
     assert "111" in warnings_by_code["has_employees"].affected_modelos
     assert "123" in warnings_by_code["pays_capital_income_with_retencion"].affected_modelos
-    assert "130" in warnings_by_code["professional_income_withholding_ge_70pct"].affected_modelos
+    assert "130" in warnings_by_code["art109_activity_income_withholding_ge_70pct"].affected_modelos

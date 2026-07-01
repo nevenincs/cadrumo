@@ -20,6 +20,7 @@ def _legal_entity() -> TaxpayerProfile:
         has_employees=False,
         pays_professionals_with_retencion=False,
         professional_income_withholding_ge_70pct=False,
+        art109_activity_income_withholding_ge_70pct=False,
         pays_rent_with_retencion=False,
         does_intracomunitario=False,
         third_party_transactions_above_347_threshold=False,

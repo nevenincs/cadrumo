@@ -12,25 +12,21 @@ from ..resources import as_path, packaged_data
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
 
-def test_packaged_data_root_is_a_directory() -> None:
-    """Calling :func:`packaged_data` with no parts returns the bundled root."""
+@pytest.mark.parametrize(
+    "parts",
+    (
+        pytest.param((), id="packaged-root"),
+        pytest.param(("corpus",), id="corpus-root"),
+        pytest.param(("registry",), id="registry-root"),
+    ),
+)
+def test_packaged_data_directories_exist(parts: tuple[str, ...]) -> None:
+    """The bundled root and top-level subtrees resolve to directories."""
 
-    root = packaged_data()
+    root = packaged_data(*parts)
 
     assert isinstance(root, Traversable)
     assert root.is_dir()
-
-
-def test_corpus_root_is_a_directory() -> None:
-    """The corpus subtree resolves to a directory."""
-
-    assert packaged_data("corpus").is_dir()
-
-
-def test_registry_root_is_a_directory() -> None:
-    """The registry subtree resolves to a directory."""
-
-    assert packaged_data("registry").is_dir()
 
 
 @pytest.mark.parametrize(
