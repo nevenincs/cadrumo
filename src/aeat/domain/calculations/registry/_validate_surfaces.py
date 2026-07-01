@@ -275,6 +275,11 @@ def validate_verification_expectation_section(
         for casilla_id in expectation.computed_casilla_ids:
             if casilla_id not in casillas:
                 failures.append(f"{prefix}: {owner} references unknown casilla {casilla_id!r}")
+        for casilla_id in expectation.reconcile_when_present_casilla_ids:
+            if casilla_id not in casillas:
+                failures.append(
+                    f"{prefix}: {owner} reconcile-when-present references unknown casilla {casilla_id!r}",
+                )
         for total_kind, casilla_id in expectation.reconciliation_total_casilla_ids.items():
             if casilla_id not in casillas:
                 failures.append(

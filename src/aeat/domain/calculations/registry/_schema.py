@@ -570,6 +570,7 @@ class WorkbookParityReference(RegistryModel):
 class VerificationExpectationDefinition(RegistryModel):
     id: VerificationExpectationId
     computed_casilla_ids: tuple[CasillaId, ...]
+    reconcile_when_present_casilla_ids: tuple[CasillaId, ...] = ()
     reconciliation_total_casilla_ids: Mapping[Literal["ingresar", "devolver"], CasillaId] = Field(
         default_factory=dict,
     )
@@ -589,6 +590,25 @@ class VerificationExpectationDefinition(RegistryModel):
         if len(set(value)) != len(value):
             raise RegistryValidationError("verification expectation computed_casilla_ids must be unique")
         return value
+
+    @field_validator("reconcile_when_present_casilla_ids")
+    @classmethod
+    def _reconcile_when_present_unique(cls, value: tuple[CasillaId, ...]) -> tuple[CasillaId, ...]:
+        if len(set(value)) != len(value):
+            raise RegistryValidationError(
+                "verification expectation reconcile_when_present_casilla_ids must be unique",
+            )
+        return value
+
+    @model_validator(mode="after")
+    def _reconcile_when_present_disjoint(self) -> VerificationExpectationDefinition:
+        overlap = set(self.reconcile_when_present_casilla_ids) & set(self.computed_casilla_ids)
+        if overlap:
+            raise RegistryValidationError(
+                "verification expectation reconcile_when_present_casilla_ids must be disjoint from "
+                f"computed_casilla_ids (overlap: {sorted(overlap)})",
+            )
+        return self
 
 
 class ApplicationLinkDefinition(RegistryModel):
@@ -1233,12 +1253,21 @@ class RegistryVerificationPolicy:
     """Folded verification policy across a snapshot's verification expectations.
 
     Owns the registry-grounded projection (union of computed casilla ids, the
-    strictest tolerance, the strictest coverage floor) so the application
-    verification surface consumes it rather than re-deriving the fold.
+    union of reconcile-when-present casilla ids, the strictest tolerance, the
+    strictest coverage floor) so the application verification surface consumes
+    it rather than re-deriving the fold.
+
+    ``computed_casilla_ids`` are the coverage-gated reconciliation targets: a
+    filing that fails to reconcile them below ``min_coverage`` is NEEDS_REVIEW.
+    ``reconcile_when_present_casilla_ids`` are value-reconciled when the filing
+    prints them (a filed-vs-computed divergence surfaces a discrepancy) but are
+    excluded from the coverage denominator, so enrolling a situational casilla
+    can never lower coverage and flip a legitimate filing's verdict.
     """
 
     expectation_ids: tuple[VerificationExpectationId, ...]
     computed_casilla_ids: frozenset[CasillaId]
+    reconcile_when_present_casilla_ids: frozenset[CasillaId]
     tolerance: Decimal
     min_coverage: Decimal
 
@@ -1291,6 +1320,11 @@ class RegistrySnapshot(RegistryModel):
             expectation_ids=tuple(expectation.id for expectation in expectations),
             computed_casilla_ids=frozenset(
                 casilla_id for expectation in expectations for casilla_id in expectation.computed_casilla_ids
+            ),
+            reconcile_when_present_casilla_ids=frozenset(
+                casilla_id
+                for expectation in expectations
+                for casilla_id in expectation.reconcile_when_present_casilla_ids
             ),
             tolerance=min(expectation.tolerance for expectation in expectations),
             min_coverage=max(expectation.min_coverage for expectation in expectations),

@@ -39,24 +39,25 @@ from collections.abc import Iterable, Mapping
 from datetime import datetime
 from decimal import Decimal
 from pathlib import Path
+from types import MappingProxyType
 from typing import TYPE_CHECKING
 
-from ...core import Modelo
+from ...core._modelo import Modelo
 from ...core.config import Settings
 from ...core.i18n import tr
 from ...core.time import now as _utc_now
-from ...domain.buckets import BucketEventHistoryRepository, BucketEventObjectType, BucketEventType
+from ...domain.buckets._event import BucketEventObjectType, BucketEventType
+from ...domain.buckets._event_repository import BucketEventHistoryRepository
 from ...domain.buckets._protocols import BucketEventHistoryRepositoryProtocol
-from ...domain.calculations.registry import (
-    M210_RATE_SENTINELS,
+from ...domain.calculations.registry._applicability_modelo202 import derive_modelo_202_modality
+from ...domain.calculations.registry._bindings import CasillaObservation
+from ...domain.calculations.registry._formula_runtime import M210_RATE_SENTINELS
+from ...domain.calculations.registry._ids import CasillaId, validated_casilla_id
+from ...domain.calculations.registry._schema import (
     CasillaDefinition,
-    CasillaId,
-    CasillaObservation,
     InputKind,
     RegistrySnapshot,
     VerificationPredicateDefinition,
-    derive_modelo_202_modality,
-    validated_casilla_id,
 )
 from ...domain.deadlines import FiscalResidency, TaxpayerProfile
 from ...domain.modelos._calculation_repository import (
@@ -100,21 +101,21 @@ from ...domain.modelos._verification_repository import (
     upsert_verification_report,
 )
 from ...domain.modelos._work_unit import WorkUnit
-from ...domain.transactions import TransactionCatalogueRepository
-from ..aggregation import (
-    CalculationSourceDiagnostic,
+from ...domain.transactions._repository import TransactionCatalogueRepository
+from ..aggregation._evidence_advisory import (
+    MISSING_DEDUCTIBLE_VAT_EVIDENCE_SOURCE_KIND,
     missing_evidence_advisory_observations,
 )
-from ..aggregation._evidence_advisory import MISSING_DEDUCTIBLE_VAT_EVIDENCE_SOURCE_KIND
 from ..aggregation._ledger_filing_snapshot import (
     compute_ledger_filing_evidence,
     compute_ledger_filing_snapshot,
 )
-from ..calculations import (
-    CalculationObservationRepository,
-    CrossPeriodExpectedMemberSet,
-)
-from ..workflow import WorkflowEngine, WorkflowPurpose, WorkflowRunRepository
+from ..aggregation._source_mesh import CalculationSourceDiagnostic
+from ..calculations._cross_period_models import CrossPeriodExpectedMemberSet
+from ..calculations._observations_repository import CalculationObservationRepository
+from ..workflow._engine import WorkflowEngine
+from ..workflow._models import WorkflowPurpose
+from ..workflow._persistence import WorkflowRunRepository
 from ._action_errors import (
     WORKFLOW_GATE_LEGAL_REFS,
     CalculationRevisionNotFoundError,
@@ -230,6 +231,20 @@ _PREDICATE_ADVISORY_WHEN_RATIO_GE = _re.compile(
 # carry-forward stock continuity: closing == opening − applied + max(0, −base),
 # within a one-cent tolerance. See _roll_forward_balance_reconciles.
 _PREDICATE_ROLL_FORWARD_BALANCES = _re.compile(r"^roll_forward_balances\(\[(?P<ids>[^\]]*)\]\)$")
+# casilla_equals_implies_nonzero(["antecedent_casilla_id", "literal",
+# "consequent_casilla_id"]) — categorical-conditional material implication:
+# fires when the antecedent TEXT casilla's operator-entered raw value equals
+# the literal AND the consequent (Decimal) casilla is zero. ADVISORY-only
+# (no BLOCKING_RULE branch); see the casilla_equals_implies_nonzero branch in
+# _evaluate_advisory_predicate_fires and the
+# m210-categorical-conditional-predicate ADR. Authored for the M210
+# inmobiliaria branch (tipo_renta == "inmobiliaria" implies a non-zero
+# base_imponible), the no-silent-under-declaration shape implies_nonzero
+# cannot express because its trigger is a categorical equality, not a
+# numeric antecedent.
+_PREDICATE_CASILLA_EQUALS_IMPLIES_NONZERO = _re.compile(
+    r"^casilla_equals_implies_nonzero\(\[(?P<ids>[^\]]*)\]\)$",
+)
 
 #: One-cent tolerance for the roll-forward continuity reconciliation — absorbs the
 #: sub-cent drift a total-of-per-year-detail figure can accumulate without masking
@@ -252,6 +267,18 @@ def _validated_predicate_casilla_id(token: str) -> CasillaId:
         return validated_casilla_id(token, surface="verification predicate casilla id")
     except ValueError as exc:
         raise ModeloError(f"verification predicate references non-canonical casilla.id {token!r}") from exc
+
+
+def _parse_predicate_raw_tokens(ids_fragment: str) -> list[str]:
+    """Parse the comma-separated quoted-token list without casilla-id validation.
+
+    Used for ``casilla_equals_implies_nonzero``, whose middle token is a
+    literal string (e.g. ``"inmobiliaria"``), not a casilla id — unlike
+    :func:`_parse_predicate_casilla_ids`, which validates every token. The
+    caller validates the antecedent/consequent slots individually via
+    :func:`_validated_predicate_casilla_id`.
+    """
+    return [token.strip().strip('"').strip("'") for token in ids_fragment.split(",") if token.strip()]
 
 
 def _roll_forward_balance_reconciles(
@@ -504,6 +531,7 @@ rewrite_m210_sentinels = _rewrite_m210_sentinels
 def _evaluate_advisory_predicate_fires(
     expression: str,
     casilla_values: Mapping[CasillaId, Decimal],
+    text_values: Mapping[CasillaId, str] = MappingProxyType({}),
 ) -> bool:
     """Return True when an advisory predicate's condition is met (i.e. advisory should fire).
 
@@ -525,6 +553,15 @@ def _evaluate_advisory_predicate_fires(
       positive but EVERY listed consequent is zero. The M303 official-Diseño
       contradiction (a positive computed total whose constituent official
       numbered boxes are all unpopulated by the calculate path).
+    - ``casilla_equals_implies_nonzero(["antecedent_casilla_id", "literal",
+      "consequent_casilla_id"])`` — categorical-conditional material
+      implication: fires when the named antecedent TEXT casilla's
+      operator-entered raw value (read from ``text_values``, not
+      ``casilla_values``) equals the literal AND the named consequent
+      (Decimal) casilla is zero. A missing or differing antecedent value does
+      not fire. ``text_values`` defaults to an empty mapping for callers that
+      have no text-casilla channel (every other operator ignores it). See the
+      m210-categorical-conditional-predicate ADR.
     """
     expr = expression.strip()
     m = _PREDICATE_ADVISORY_WHEN_RATIO_GE.match(expr)
@@ -573,6 +610,24 @@ def _evaluate_advisory_predicate_fires(
         # reconciling balance (within a cent) or a malformed arity does not fire.
         reconciles = _roll_forward_balance_reconciles(_parse_predicate_casilla_ids(m.group("ids")), casilla_values)
         return reconciles is False
+    m = _PREDICATE_CASILLA_EQUALS_IMPLIES_NONZERO.match(expr)
+    if m:
+        # casilla_equals_implies_nonzero(["antecedent_id", "literal",
+        # "consequent_id"]) — fires (advisory shown) when the antecedent TEXT
+        # casilla's operator-entered raw value equals the literal AND the
+        # consequent (Decimal) casilla is zero. A malformed arity, or an
+        # antecedent absent from text_values, does not fire (defensive,
+        # same convention as the other operators).
+        tokens = _parse_predicate_raw_tokens(m.group("ids"))
+        if len(tokens) != 3:
+            return False
+        antecedent_id = _validated_predicate_casilla_id(tokens[0])
+        literal = tokens[1]
+        consequent_id = _validated_predicate_casilla_id(tokens[2])
+        if text_values.get(antecedent_id) != literal:
+            return False
+        consequent = casilla_values.get(consequent_id, Decimal(0))
+        return consequent == Decimal(0)
     return False
 
 
@@ -580,8 +635,15 @@ def _evaluate_verification_predicates(
     predicates: tuple[VerificationPredicateDefinition, ...],
     casilla_values: Mapping[CasillaId, Decimal],
     profile: TaxpayerProfile,
+    text_values: Mapping[CasillaId, str] = MappingProxyType({}),
 ) -> list[ModeloVerificationFinding]:
     """Evaluate Layer 2 cross-casilla predicates; return findings for violations or advisories.
+
+    ``text_values`` carries operator-entered raw strings (e.g.
+    :attr:`~aeat.domain.modelos.CalculationRevision.input_values_by_casilla_id`),
+    independent of the Decimal ``casilla_values`` projection. It defaults to an
+    empty mapping and is consumed only by the ``casilla_equals_implies_nonzero``
+    ADVISORY operator; every other operator ignores it.
 
     ``BLOCKING_RULE`` predicates use negative logic: the predicate expression must
     hold, and a violation emits a BLOCKING finding. ``ADVISORY`` predicates use
@@ -610,7 +672,7 @@ def _evaluate_verification_predicates(
         if predicate.finding_kind == "ADVISORY":
             # ADVISORY predicates fire a WARNING finding when their condition IS met
             # (affirmative logic — opposite of BLOCKING_RULE predicates).
-            if _evaluate_advisory_predicate_fires(predicate.expression, casilla_values):
+            if _evaluate_advisory_predicate_fires(predicate.expression, casilla_values, text_values):
                 advisory_key = f"application.modelo.findings.{predicate.predicate_id.replace('-', '_')}"
                 findings.append(
                     ModeloVerificationFinding(
@@ -692,6 +754,8 @@ def _manual_fact_basis_entries(
         for casilla, value in sorted(input_values_by_casilla_id.items())
         if value.strip()
     )
+
+
 def _assert_evidence_covers_snapshot(snapshot: LedgerFilingSnapshot, evidence: LedgerFilingEvidence) -> None:
     """Guarantee the bundled evidence covers every fingerprinted contributor.
 
@@ -1216,7 +1280,7 @@ def _collect_revision_verification_findings(
     resolved_casilla_ids: list[CasillaId] = []
     missing_required_casilla_ids: list[CasillaId] = []
 
-    from ...domain.calculations.registry import RegistrySnapshotError
+    from ...domain.calculations.registry._errors import RegistrySnapshotError
 
     try:
         authority = _authority_via_resources()
@@ -1265,12 +1329,16 @@ def _collect_revision_verification_findings(
                     ),
                 )
 
-    # Layer 2: cross-casilla predicate gate.
+    # Layer 2: cross-casilla predicate gate. target.input_values_by_casilla_id
+    # carries the operator-entered raw strings (independent of the Decimal
+    # casilla_values projection) for the casilla_equals_implies_nonzero
+    # categorical-conditional operator; every other operator ignores it.
     findings.extend(
         _evaluate_verification_predicates(
             snapshot.revision.verification_predicates,
             target.casilla_values,
             profile,
+            target.input_values_by_casilla_id,
         ),
     )
 

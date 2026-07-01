@@ -9,13 +9,11 @@ from typing import Any
 
 import pytest
 
-from ....core import Period
+from ....core._period import Period
 from ....core.resources import resources
-from ....domain.buckets import BucketEventHistoryRepository
-from ....domain.calculations.registry import (
-    KNOWN_VERIFICATION_PREDICATE_OPERATORS,
-    CasillaId,
-)
+from ....domain.buckets._event_repository import BucketEventHistoryRepository
+from ....domain.calculations.registry._ids import CasillaId
+from ....domain.calculations.registry._schema import KNOWN_VERIFICATION_PREDICATE_OPERATORS
 from ....domain.modelos._calculation_repository import (
     CalculationRevisionCatalogueRepository,
     upsert_calculation_revision,
@@ -31,13 +29,11 @@ from ....domain.modelos._verification_report import (
 )
 from ....domain.modelos._verification_repository import VerificationReportCatalogueRepository
 from ....tests.secure_sql import isolated_runtime_profile
-from ...user_profile import UserProfileLifecycleRepository
-from .. import (
-    StoredCalculationDriftError,
-    calculate_modelo_revision,
-    create_work_unit,
-    verify_modelo_revision,
-)
+from ...user_profile._repository import UserProfileLifecycleRepository
+from .._action_errors import StoredCalculationDriftError
+from .._calculation_actions import calculate_modelo_revision
+from .._verification_actions import verify_modelo_revision
+from .._work_lifecycle import create_work_unit
 from ._verification_substance_support import (
     _ABSENT_REGISTRY_CASILLA,
     _CASILLA_01,
@@ -186,6 +182,9 @@ def test_runtime_evaluator_recognises_every_known_predicate_operator() -> None:
         "implies_any_nonzero": 'implies_any_nonzero(["iva.cuota-devengada-total", "03", "06", "09"])',
         "profile_field_required": ('profile_field_required("representante_fiscal_nif", "non_resident_irnr_non_eea")'),
         "roll_forward_balances": 'roll_forward_balances(["00671", "00670", "DP200014:00547", "DP200014:00552"])',
+        "casilla_equals_implies_nonzero": (
+            'casilla_equals_implies_nonzero(["tipo_renta", "inmobiliaria", "base_imponible"])'
+        ),
     }
     regex_attr_names: dict[str, str] = {
         "all_nonzero": "_PREDICATE_ALL_NONZERO",
@@ -197,6 +196,7 @@ def test_runtime_evaluator_recognises_every_known_predicate_operator() -> None:
         "implies_any_nonzero": "_PREDICATE_IMPLIES_ANY_NONZERO",
         "profile_field_required": "_PREDICATE_PROFILE_FIELD_REQUIRED",
         "roll_forward_balances": "_PREDICATE_ROLL_FORWARD_BALANCES",
+        "casilla_equals_implies_nonzero": "_PREDICATE_CASILLA_EQUALS_IMPLIES_NONZERO",
     }
 
     missing_probes = KNOWN_VERIFICATION_PREDICATE_OPERATORS.difference(probe_expressions)
@@ -458,7 +458,7 @@ def test_observation_tampering_is_detected_by_verify_path(repos: _Repos) -> None
     # injection of inconsistent state). The runtime check is a defense-in-depth
     # layer against raw storage corruption that bypasses pydantic. We bypass
     # model_validator here via model_construct to simulate that scenario.
-    from ....domain.calculations.registry import CasillaObservation
+    from ....domain.calculations.registry._bindings import CasillaObservation
     from .._registry_helpers import assert_revision_content_integrity as _assert_revision_content_integrity
 
     target_obs = revision.observations[0]
