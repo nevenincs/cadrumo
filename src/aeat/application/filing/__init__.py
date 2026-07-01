@@ -108,6 +108,9 @@ from ...domain.calculations.registry import (
     SourceRefId as _SourceRefId,
 )
 from ...domain.calculations.registry import (
+    bound_casilla_binding_ids as _registry_bound_casilla_binding_ids,
+)
+from ...domain.calculations.registry import (
     calculate_registry_snapshot as _calculate_registry_snapshot,
 )
 from ...domain.calculations.registry import (
@@ -432,9 +435,10 @@ def _formula_binding_ids(snapshot: _RegistrySnapshot) -> set[_BindingId]:
 
 def _bound_casilla_binding_ids(snapshot: _RegistrySnapshot) -> set[_BindingId]:
     return {
-        casilla.binding
+        binding_id
         for casilla in snapshot.revision.casillas
-        if casilla.input_kind == _InputKind.BOUND and casilla.binding is not None
+        if casilla.input_kind == _InputKind.BOUND
+        for binding_id in _registry_bound_casilla_binding_ids(casilla)
     }
 
 
