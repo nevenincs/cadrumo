@@ -835,41 +835,38 @@ class TestParseDaysInSpain:
 
         self._parse = _parse_days_in_spain
 
-    def test_valid_single_year(self) -> None:
-        result = self._parse({"taxpayer_type.days_in_spain_2024": "165"})
-        assert result == {2024: 165}
-
-    def test_valid_multiple_years(self) -> None:
-        result = self._parse(
-            {
-                "taxpayer_type.days_in_spain_2023": "200",
-                "taxpayer_type.days_in_spain_2024": "165",
-            },
-        )
-        assert result == {2023: 200, 2024: 165}
-
-    def test_non_four_digit_year_ignored(self) -> None:
-        # "24" is not a 4-digit year; must be silently skipped.
-        result = self._parse({"taxpayer_type.days_in_spain_24": "165"})
-        assert result == {}
-
-    def test_non_numeric_value_ignored(self) -> None:
-        result = self._parse({"taxpayer_type.days_in_spain_2024": "many"})
-        assert result == {}
-
-    def test_empty_mapping_returns_empty(self) -> None:
-        assert self._parse({}) == {}
-
-    def test_unrelated_keys_ignored(self) -> None:
-        result = self._parse(
-            {
-                "taxpayer_type.fiscal_residency": "RESIDENT_IRPF",
-                "taxpayer_type.days_in_spain_2024": "183",
-            },
-        )
-        assert result == {2024: 183}
-
-    def test_five_digit_year_ignored(self) -> None:
-        # "20244" has length 5 — not exactly 4 digits.
-        result = self._parse({"taxpayer_type.days_in_spain_20244": "100"})
-        assert result == {}
+    @pytest.mark.parametrize(
+        ("raw_facts", "expected"),
+        (
+            ({"taxpayer_type.days_in_spain_2024": "165"}, {2024: 165}),
+            (
+                {
+                    "taxpayer_type.days_in_spain_2023": "200",
+                    "taxpayer_type.days_in_spain_2024": "165",
+                },
+                {2023: 200, 2024: 165},
+            ),
+            ({"taxpayer_type.days_in_spain_24": "165"}, {}),
+            ({"taxpayer_type.days_in_spain_2024": "many"}, {}),
+            ({}, {}),
+            (
+                {
+                    "taxpayer_type.fiscal_residency": "RESIDENT_IRPF",
+                    "taxpayer_type.days_in_spain_2024": "183",
+                },
+                {2024: 183},
+            ),
+            ({"taxpayer_type.days_in_spain_20244": "100"}, {}),
+        ),
+        ids=(
+            "single-year",
+            "multiple-years",
+            "non-four-digit-year",
+            "non-numeric-value",
+            "empty",
+            "ignores-unrelated-keys",
+            "five-digit-year",
+        ),
+    )
+    def test_parse_days_in_spain_cases(self, raw_facts: dict[str, str], expected: dict[int, int]) -> None:
+        assert self._parse(raw_facts) == expected
