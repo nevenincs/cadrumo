@@ -13,8 +13,9 @@ from ...application.review import (
     project_review_queue,
 )
 from ...core.errors import resolve_error_message
+from ...core.external_constants import OutputLanguage
 from ...core.i18n import tr
-from ._common import _bad, _emit_envelope
+from ._common import _bad, _emit_envelope, activate_subcommand_output_language
 from ._review_payloads import ReviewQueueResult, ReviewQueueRowPayload, ReviewViewResult
 
 
@@ -107,8 +108,15 @@ def review_queue(
             ),
         ),
     ),
+    output_language: OutputLanguage | None = typer.Option(
+        None,
+        "--output-language",
+        "--language",
+        help=tr("cli.config.auth.output_language_help"),
+    ),
 ) -> None:
     """List read-only review queue rows."""
+    activate_subcommand_output_language(ctx, output_language)
     threshold = _resolve_confidence_threshold(confidence_below)
     try:
         resolved_state = ReviewState(state.strip().lower())
@@ -149,8 +157,15 @@ def review_show(
             ),
         ),
     ),
+    output_language: OutputLanguage | None = typer.Option(
+        None,
+        "--output-language",
+        "--language",
+        help=tr("cli.config.auth.output_language_help"),
+    ),
 ) -> None:
     """View one read-only review queue item."""
+    activate_subcommand_output_language(ctx, output_language)
     try:
         row = project_review_item(item_id)
     except ReviewError as exc:

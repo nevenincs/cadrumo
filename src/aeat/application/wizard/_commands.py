@@ -211,6 +211,8 @@ _SETUP_OPTION_INFOS: dict[str, typer.models.OptionInfo] = {
     ),
     "output-language": typer.Option(
         "--output-language",
+        click_type=_choice(list(SUPPORTED_OUTPUT_LANGUAGES)),
+        metavar=_choice_metavar(list(SUPPORTED_OUTPUT_LANGUAGES)),
         help=tr("wizard.setup.flags.output-language.help"),
     ),
     "taxpayer-sex": typer.Option(
@@ -221,8 +223,8 @@ _SETUP_OPTION_INFOS: dict[str, typer.models.OptionInfo] = {
     ),
     "taxpayer-marital-status": typer.Option(
         "--taxpayer-marital-status",
-        click_type=_choice(["1", "2", "3", "4"]),
-        metavar=_choice_metavar(["1", "2", "3", "4"]),
+        click_type=_choice(["1", "2", "3", "4", "5"]),
+        metavar=_choice_metavar(["1", "2", "3", "4", "5"]),
         help=tr("wizard.setup.flags.taxpayer-marital-status.help"),
     ),
     "taxpayer-marriage-date": typer.Option(

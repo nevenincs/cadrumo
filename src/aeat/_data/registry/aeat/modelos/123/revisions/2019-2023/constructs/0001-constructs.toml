@@ -7,6 +7,7 @@ source_refs = [
     "aeat-dr-123-2019-2023-v13-form-text",
     "aeat-modelo-123-procedure",
     "boe-modelo-123-2007-form",
+    "boe-modelo-123-2007-form-text",
 ]
 casilla_ids = ["01", "02", "03", "04", "05", "06", "07", "08"]
 formulas = ["modelo-123-2019-total-liquidacion", "modelo-123-2019-resultado-ingresar"]
@@ -28,4 +29,3 @@ application_links = [
     "modelo-123-2019-filed-declarations-observation",
     "modelo-123-2019-workflow",
 ]
-

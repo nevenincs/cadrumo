@@ -8,5 +8,5 @@ source_refs = ["aeat-renta-2025-manual-parte1", "boe-modelo-100-2025-form"]
 aeat_prefilled = true
 
 [[revisions."2025".bindings.source_citations]]
-source_ref = "boe-modelo-100-2025-form"
-required_text = ["retenciones, ingresos a cuenta y pagos fraccionados", "ejercicio 2025"]
+source_ref = "aeat-renta-2025-manual-parte1"
+required_text = ["retenciones e ingresos a cuenta", "pagos fraccionados", "ejercicio 2025"]

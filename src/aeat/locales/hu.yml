@@ -5340,7 +5340,7 @@ wizard:
           korlátozott mozgásképesség.'
       taxpayer-marital-status:
         help: 'Az első adózó családi állapota: 1 = egyedülálló, 2 = házas, 3 = özvegy,
-          4 = különváltan élő vagy elvált.'
+          4 = különváltan élő vagy elvált, 5 = bejegyzett élettársi kapcsolat.'
       taxpayer-marriage-date:
         help: A jelenlegi házasság kezdő dátuma (ÉÉÉÉ-HH-NN). Csak ha a családi állapot
           = 2 (házas). Kiszámolja a 0245/0246/0247-es rovatokat (matrimonio sobrevenido,
@@ -5585,6 +5585,8 @@ wizard:
         choices:
           casado:
             label: 2 - házas
+          pareja-hecho:
+            label: 5 - bejegyzett élettársi kapcsolat
           separado-divorciado:
             label: 4 - különváltan élő vagy elvált
           soltero:

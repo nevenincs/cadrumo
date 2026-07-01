@@ -11,4 +11,17 @@ for AEAT Sede authentication, browser, read, verify, and export adapters;
 Application-layer facades define the stable protocols and operator actions.
 Outbound adapters provide concrete implementations without becoming import-time
 dependencies of state-free command paths.
+
+See Also:
+    :mod:`aeat.adapters.outbound.aeat`
+        AEAT Sede authentication, browser, read, verify, and export adapter
+        boundary.
+    :mod:`aeat.application.auth`
+        Application auth facade that selects providers and owns operator-facing
+        session lifecycle commands.
+    :mod:`aeat.application.live`
+        Read-only live acquisition facade that consumes outbound AEAT adapters.
+    :mod:`aeat.core.access_gate`
+        Core live-read gate and permanent live-write refusal enforced before
+        outbound AEAT access proceeds.
 """

@@ -31,6 +31,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 _BUCKET_A_ID = "73737373-7373-4373-8373-737373737301"
 _BUCKET_B_ID = "73737373-7373-4373-8373-737373737302"
+_SECURE_OBJECT_WRITTEN_AT = datetime(2026, 5, 27, 9, 0, 0, tzinfo=UTC)
 
 
 @pytest.fixture(autouse=True)
@@ -146,7 +147,7 @@ def test_load_malformed_secure_object_raises_persistence_error(
         object_key=usage_ratios_object_key(_BUCKET_A_ID),
         classification=SensitivityClass.FINANCIAL,
         schema_version=1,
-        written_at=datetime.now(UTC),
+        written_at=_SECURE_OBJECT_WRITTEN_AT,
         payload=payload,
     )
     with pytest.raises(UsageRatioPersistenceError, match=message) as exc_info:
@@ -161,7 +162,7 @@ def test_load_inner_classification_mismatch_raises_persistence_error(
 ) -> None:
     envelope = Envelope[UsageRatioProfile](
         schema_version=1,
-        written_at=datetime.now(UTC),
+        written_at=_SECURE_OBJECT_WRITTEN_AT,
         classification=SensitivityClass.CACHE,
         payload=UsageRatioProfile(),
     )
@@ -170,7 +171,7 @@ def test_load_inner_classification_mismatch_raises_persistence_error(
         object_key=usage_ratios_object_key(_BUCKET_A_ID),
         classification=SensitivityClass.FINANCIAL,
         schema_version=1,
-        written_at=datetime.now(UTC),
+        written_at=_SECURE_OBJECT_WRITTEN_AT,
         payload=envelope.model_dump_json().encode("utf-8"),
     )
     with pytest.raises(UsageRatioPersistenceError, match="classification"):
@@ -182,7 +183,7 @@ def test_load_inner_schema_version_mismatch_raises_persistence_error(
 ) -> None:
     envelope = Envelope[UsageRatioProfile](
         schema_version=2,
-        written_at=datetime.now(UTC),
+        written_at=_SECURE_OBJECT_WRITTEN_AT,
         classification=SensitivityClass.FINANCIAL,
         payload=UsageRatioProfile(),
     )
@@ -191,7 +192,7 @@ def test_load_inner_schema_version_mismatch_raises_persistence_error(
         object_key=usage_ratios_object_key(_BUCKET_A_ID),
         classification=SensitivityClass.FINANCIAL,
         schema_version=1,
-        written_at=datetime.now(UTC),
+        written_at=_SECURE_OBJECT_WRITTEN_AT,
         payload=envelope.model_dump_json().encode("utf-8"),
     )
     with pytest.raises(UsageRatioPersistenceError, match="version"):

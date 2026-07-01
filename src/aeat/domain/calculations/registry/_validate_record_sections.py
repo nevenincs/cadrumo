@@ -167,12 +167,6 @@ def validate_parameter_section(
             ),
         )
         failures.extend(validate_dated_values(prefix, parameter.id, parameter.values))
-        for row in parameter.convenio_rates:
-            row_owner = (
-                f"parameter {parameter.id} convenio_rate "
-                f"{row.country_code}/{row.tipo_renta}/{row.valid_from.isoformat()}"
-            )
-            failures.extend(_missing_refs(prefix, row_owner, row.legal_refs, legal_refs, "legal"))
 
 
 def validate_binding_section(

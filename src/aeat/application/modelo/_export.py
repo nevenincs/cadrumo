@@ -650,7 +650,21 @@ def _compose_export_headers(
     if result_disposition_is_refund(ResultDisposition(declaration_type)):
         headers.update(_compose_refund_account_block(workflow_profile.iva.refund_account))
 
-    if revision.amendment_kind is not None:
+    if revision.amendment_kind is CalculationRevisionAmendmentKind.RECTIFICATIVA:
+        # Autoliquidación rectificativa (LGT art. 120.4, RD 117/2024): the
+        # unified post-2024 amendment mechanism. On the Modelo 303 2025 diseño
+        # de registros the indicator sits at page-3 position 392 (header key
+        # ``autoliq_rectificativa``, a length-1 checkbox). "1" marks the
+        # rectificativa; the DID devolución block above already carries the
+        # refund IBAN when the rectificativa lowers the resultado to a refund
+        # disposition. The número de justificante of the rectified filing
+        # (``previous_receipt``, position 393) is the ORIGINAL AEAT 13-digit
+        # receipt carried on the baseline's external evidence — not the internal
+        # 64-char ``amends_filing_record_id`` — and is populated by the
+        # regime-aware rectificativa builder (deferred), so it is intentionally
+        # left unset here rather than overflowing the field with an internal id.
+        headers["autoliq_rectificativa"] = "1"
+    elif revision.amendment_kind is not None:
         headers["complementaria"] = (
             "true" if revision.amendment_kind is CalculationRevisionAmendmentKind.COMPLEMENTARIA else "false"
         )

@@ -16,12 +16,13 @@ from decimal import Decimal, localcontext
 
 from pydantic import BaseModel, Field, model_validator
 
-from ....core import STRICT_FROZEN_CONFIG
+from ....core import STRICT_FROZEN_CONFIG, ConvenioOverrideKind, TipoRentaIrnr
 from ...contribuyente import UE_EEA_COUNTRY_CODES
 from . import _formula_initial_values as _formula_inputs
 from . import _formula_runtime_ops as _ops
 from ._bindings import CasillaObservation
 from ._casilla_membership import casillas_by_id as _casillas_by_id
+from ._convenio import ConvenioAuthority, ConvenioOverride
 from ._errors import CasillaConstraintViolationError, RegistrySnapshotError, RegistryValidationError
 from ._formula_text_inputs import validate_text_input_targets as _validate_text_input_targets
 from ._formula_text_inputs import validated_text_input_casilla_ids as _validated_text_input_casilla_ids
@@ -44,8 +45,8 @@ _M100_IMPUTATION_YEAR_DAYS = Decimal("365")
 read_parameter, _resolve_bracket = _ops.read_parameter, _ops.resolve_bracket
 
 # M210 IRNR sentinel rate values. Emitted by
-# ``m210_resolve_rate`` when a deterministic rate cannot be resolved
-# from the registry parameters at evaluation time. The verification
+# ``irnr_resolve_tipo_gravamen`` when a deterministic rate cannot be
+# resolved from the registry at evaluation time. The verification
 # layer rewrites these sentinels into BLOCKING findings post-engine
 # (see ``_rewrite_m210_sentinels`` in the application layer); they
 # never leak past the verification boundary into a draft / export.
@@ -53,7 +54,6 @@ read_parameter, _resolve_bracket = _ops.read_parameter, _ops.resolve_bracket
 # authored rate, which is always in ``[0, 1]`` per TRLIRNR Art 25.
 _M210_DEFERRED_TIPO_SENTINEL = Decimal("-1")
 _M210_CONVENIO_MISSING_SENTINEL = Decimal("-2")
-_M210_DOMESTIC_TARIFF_RATE = "DOMESTIC_TARIFF"
 _M210_RATE_SENTINELS = frozenset({_M210_DEFERRED_TIPO_SENTINEL, _M210_CONVENIO_MISSING_SENTINEL})
 
 # Public-aliased re-exports for the application-layer verification
@@ -74,10 +74,9 @@ class _UnresolvedFormulaDependencyError(RegistrySnapshotError):
 
 
 @dataclass(frozen=True, slots=True)
-class _M210ResolveRateArgs:
+class _IrnrResolveTipoGravamenArgs:
     tipo_casilla_id: CasillaId
     baseline_parameter: ParameterId
-    convenio_parameter: ParameterId
     country_binding: BindingId
     base_casilla_id: CasillaId
     pension_tariff_parameter: ParameterId
@@ -375,6 +374,7 @@ def calculate_registry_snapshot[InputKey, InputValue, TextInputKey, TextInputVal
                     date_binding_values=resolved_date_bindings,
                     filing_year=snapshot.filing_year,
                     text_values=resolved_text_inputs,
+                    convenio=snapshot.convenio,
                 )
             except _UnresolvedFormulaDependencyError:
                 unresolved_casilla_ids.add(target)
@@ -478,10 +478,12 @@ def _evaluate_expression(
     date_binding_values: Mapping[BindingId, date] | None = None,
     filing_year: int = 0,
     text_values: Mapping[CasillaId, str] | None = None,
+    convenio: ConvenioAuthority | None = None,
 ) -> Decimal:
     resolved_enum_bindings: Mapping[BindingId, str] = enum_binding_values or {}
     resolved_date_bindings: Mapping[BindingId, date] = date_binding_values or {}
     resolved_text_values: Mapping[CasillaId, str] = text_values or {}
+    resolved_convenio: ConvenioAuthority = convenio if convenio is not None else ConvenioAuthority.empty()
     if expression.op is None:
         return _evaluate_leaf(
             expression,
@@ -515,6 +517,7 @@ def _evaluate_expression(
         date_binding_values=resolved_date_bindings,
         filing_year=filing_year,
         text_values=resolved_text_values,
+        convenio=resolved_convenio,
     )
     op = expression.op
     if op == "lookup_bracket":
@@ -523,8 +526,8 @@ def _evaluate_expression(
         return _evaluate_lookup_bracket_by_ccaa(expression, ctx)
     if op == "m100_resolve_renta_inmobiliaria_imputada":
         return _evaluate_m100_resolve_renta_inmobiliaria_imputada(expression, ctx)
-    if op == "m210_resolve_rate":
-        return _evaluate_m210_resolve_rate(expression, ctx)
+    if op == "irnr_resolve_tipo_gravamen":
+        return _evaluate_irnr_resolve_tipo_gravamen(expression, ctx)
     if op == "m210_resolve_base_imponible":
         return _evaluate_m210_resolve_base_imponible(expression, ctx)
     if op == "lookup_parameter_by_entity_type":
@@ -564,6 +567,7 @@ class _EvalContext:
     filing_year: int
     unresolved_binding_ids: frozenset[BindingId] = frozenset()
     text_values: Mapping[CasillaId, str] = field(default_factory=dict)
+    convenio: ConvenioAuthority = field(default_factory=ConvenioAuthority.empty)
 
 
 def _evaluate_with_ctx(expression: FormulaExpression, ctx: _EvalContext) -> Decimal:
@@ -585,6 +589,7 @@ def _evaluate_with_ctx(expression: FormulaExpression, ctx: _EvalContext) -> Deci
         date_binding_values=ctx.date_binding_values,
         filing_year=ctx.filing_year,
         text_values=ctx.text_values,
+        convenio=ctx.convenio,
     )
 
 
@@ -849,15 +854,30 @@ def _m100_scalar_parameter_value(parameter_id: ParameterId, ctx: _EvalContext, *
     return value
 
 
-def _evaluate_m210_resolve_rate(expression: FormulaExpression, ctx: _EvalContext) -> Decimal:
-    """Resolve the M210 IRNR tipo de gravamen rate from registry parameters.
+def _evaluate_irnr_resolve_tipo_gravamen(expression: FormulaExpression, ctx: _EvalContext) -> Decimal:
+    """Resolve the IRNR tipo de gravamen rate, applying any treaty override.
 
-    The current six-leaf contract adds ``base_imponible`` and the Art.
-    25.1.b pension bracket table so the pension branch can expose an
-    effective rate whose downstream ``base * tipo`` equals the
-    statutory progressive quota.
+    The single tipo-de-gravamen resolution path for every IRNR consumer
+    (Modelo 210 today, the retenciones-a-no-residentes modelos when they
+    land). It resolves the TRLIRNR domestic baseline and, when the profile
+    declares a fiscal-residence country, consults the cross-cutting
+    :class:`~._convenio.ConvenioAuthority` projected onto the snapshot. On a
+    matched override it branches on the typed
+    :class:`~aeat.core.ConvenioOverrideKind`:
+
+    * ``flat`` replaces the domestic rate outright,
+    * ``ceiling`` applies ``min(domestic, treaty)`` so "más favorable" is
+      computed rather than assumed,
+    * ``allocation_domestic_tariff`` delegates the amount to the domestic
+      tariff (the Art. 25.1.b progressive pension tariff for ``pension``, the
+      baseline rate otherwise),
+    * ``exempt`` drives the source-state rate to zero.
+
+    A declared treaty country with no override row yields the missing-row
+    BLOCKING sentinel (``no-silent-under-declaration``); the application
+    verification sweep rewrites it into a finding post-engine.
     """
-    args = _m210_resolve_rate_args(expression)
+    args = _irnr_resolve_tipo_gravamen_args(expression)
     tipo_renta = ctx.text_values.get(args.tipo_casilla_id, "")
     ctx.operand_refs.append(args.tipo_casilla_id)
     ctx.operand_casilla_refs.append(args.tipo_casilla_id)
@@ -866,18 +886,13 @@ def _evaluate_m210_resolve_rate(expression: FormulaExpression, ctx: _EvalContext
         return _M210_DEFERRED_TIPO_SENTINEL
 
     baseline_param = ctx.parameters.get(args.baseline_parameter)
-    convenio_param = ctx.parameters.get(args.convenio_parameter)
-    ctx.operand_refs.extend((args.baseline_parameter, args.convenio_parameter, args.country_binding))
+    ctx.operand_refs.extend((args.baseline_parameter, args.country_binding))
     baseline_rate = _m210_baseline_rate(baseline_param, tipo_renta=tipo_renta, year=ctx.filing_year)
     country = ctx.enum_binding_values.get(args.country_binding) or ""
+    override = _resolve_convenio_override(ctx, country=country, tipo_renta=tipo_renta)
 
-    if tipo_renta == "pension":
-        rate = _m210_pension_effective_rate(
-            args,
-            ctx,
-            convenio_param=convenio_param,
-            country=country,
-        )
+    if tipo_renta == TipoRentaIrnr.PENSION.value:
+        rate = _irnr_pension_effective_rate(args, ctx, override=override, country=country)
         ctx.operand_values.append(rate)
         return rate
 
@@ -888,43 +903,32 @@ def _evaluate_m210_resolve_rate(expression: FormulaExpression, ctx: _EvalContext
         ctx.operand_values.append(baseline_rate)
         return baseline_rate
 
-    matched_row = _m210_convenio_rate_row(
-        convenio_param,
-        country_code=country.upper(),
-        tipo_renta=tipo_renta,
-        year=ctx.filing_year,
-    )
-    if matched_row is None:
+    if override is None:
         ctx.operand_values.append(_M210_CONVENIO_MISSING_SENTINEL)
         return _M210_CONVENIO_MISSING_SENTINEL
-    rate = _m210_rate_from_convenio_row(matched_row.rate)
-    if not isinstance(rate, Decimal):
-        rate = _M210_CONVENIO_MISSING_SENTINEL
+    rate = _apply_convenio_override(override, baseline_rate=baseline_rate)
     ctx.operand_values.append(rate)
     return rate
 
 
-def _m210_resolve_rate_args(expression: FormulaExpression) -> _M210ResolveRateArgs:
-    op = "m210_resolve_rate"
-    if len(expression.args) != 6:
-        raise RegistryValidationError(f"formula op {op!r} expects 6 args, got {len(expression.args)}")
-    tipo_arg, base_arg, baseline_arg, convenio_arg, pension_tariff_arg, country_arg = expression.args
+def _irnr_resolve_tipo_gravamen_args(expression: FormulaExpression) -> _IrnrResolveTipoGravamenArgs:
+    op = "irnr_resolve_tipo_gravamen"
+    if len(expression.args) != 5:
+        raise RegistryValidationError(f"formula op {op!r} expects 5 args, got {len(expression.args)}")
+    tipo_arg, base_arg, baseline_arg, pension_tariff_arg, country_arg = expression.args
     if tipo_arg.casilla_id is None:
         raise RegistryValidationError(f"formula op {op!r} requires args[0] to be a casilla leaf")
     if base_arg.casilla_id is None:
         raise RegistryValidationError(f"formula op {op!r} requires args[1] to be a casilla leaf")
     if baseline_arg.parameter is None:
         raise RegistryValidationError(f"formula op {op!r} requires args[2] to be a parameter leaf")
-    if convenio_arg.parameter is None:
-        raise RegistryValidationError(f"formula op {op!r} requires args[3] to be a parameter leaf")
     if pension_tariff_arg.parameter is None:
-        raise RegistryValidationError(f"formula op {op!r} requires args[4] to be a parameter leaf")
+        raise RegistryValidationError(f"formula op {op!r} requires args[3] to be a parameter leaf")
     if country_arg.binding is None:
-        raise RegistryValidationError(f"formula op {op!r} requires args[5] to be a binding leaf")
-    return _M210ResolveRateArgs(
+        raise RegistryValidationError(f"formula op {op!r} requires args[4] to be a binding leaf")
+    return _IrnrResolveTipoGravamenArgs(
         tipo_casilla_id=tipo_arg.casilla_id,
         baseline_parameter=baseline_arg.parameter,
-        convenio_parameter=convenio_arg.parameter,
         country_binding=country_arg.binding,
         base_casilla_id=base_arg.casilla_id,
         pension_tariff_parameter=pension_tariff_arg.parameter,
@@ -952,54 +956,62 @@ def _m210_baseline_rate(
     return None
 
 
-def _m210_convenio_rate_row(
-    parameter: ParameterDefinition | None,
-    *,
-    country_code: str,
-    tipo_renta: str,
-    year: int,
-):
-    if parameter is None:
-        return None
-    for row in parameter.convenio_rates:
-        if (
-            row.country_code == country_code
-            and row.tipo_renta == tipo_renta
-            and row.valid_from.year <= year
-            and (row.valid_to is None or row.valid_to.year >= year)
-        ):
-            return row
-    return None
-
-
-def _m210_rate_from_convenio_row(rate: str) -> Decimal | str:
-    if rate == _M210_DOMESTIC_TARIFF_RATE:
-        return _M210_DOMESTIC_TARIFF_RATE
-    try:
-        return Decimal(rate)
-    except (ArithmeticError, ValueError):
-        return _M210_CONVENIO_MISSING_SENTINEL
-
-
-def _m210_pension_effective_rate(
-    args: _M210ResolveRateArgs,
+def _resolve_convenio_override(
     ctx: _EvalContext,
     *,
-    convenio_param: ParameterDefinition | None,
+    country: str,
+    tipo_renta: str,
+) -> ConvenioOverride | None:
+    """Resolve the treaty override for the declared country + income type, or None.
+
+    Hydrates the free-text ``tipo_renta`` casilla value to the closed
+    :class:`~aeat.core.TipoRentaIrnr` enum at this boundary; an unrecognised
+    value carries no treaty override (the domestic baseline stands).
+    """
+    if not country:
+        return None
+    try:
+        tipo_enum = TipoRentaIrnr(tipo_renta)
+    except ValueError:
+        return None
+    return ctx.convenio.resolve(country.upper(), tipo_enum, ctx.filing_year)
+
+
+def _apply_convenio_override(override: ConvenioOverride, *, baseline_rate: Decimal | None) -> Decimal:
+    """Apply a non-pension treaty override to the domestic baseline rate."""
+    kind = override.kind
+    if kind is ConvenioOverrideKind.EXEMPT:
+        return _ZERO
+    if kind is ConvenioOverrideKind.ALLOCATION_DOMESTIC_TARIFF:
+        return baseline_rate if baseline_rate is not None else _M210_CONVENIO_MISSING_SENTINEL
+    if override.rate is None:
+        return _M210_CONVENIO_MISSING_SENTINEL
+    if kind is ConvenioOverrideKind.FLAT:
+        return override.rate
+    # CEILING: min(domestic, treaty) — "más favorable" computed, not assumed.
+    if baseline_rate is None:
+        return _M210_CONVENIO_MISSING_SENTINEL
+    return min(baseline_rate, override.rate)
+
+
+def _irnr_pension_effective_rate(
+    args: _IrnrResolveTipoGravamenArgs,
+    ctx: _EvalContext,
+    *,
+    override: ConvenioOverride | None,
     country: str,
 ) -> Decimal:
     if country:
-        matched_row = _m210_convenio_rate_row(
-            convenio_param,
-            country_code=country.upper(),
-            tipo_renta="pension",
-            year=ctx.filing_year,
-        )
-        if matched_row is None:
+        if override is None:
             return _M210_CONVENIO_MISSING_SENTINEL
-        convenio_rate = _m210_rate_from_convenio_row(matched_row.rate)
-        if convenio_rate != _M210_DOMESTIC_TARIFF_RATE:
-            return convenio_rate if isinstance(convenio_rate, Decimal) else _M210_CONVENIO_MISSING_SENTINEL
+        if override.kind is ConvenioOverrideKind.EXEMPT:
+            return _ZERO
+        if override.kind is ConvenioOverrideKind.FLAT and override.rate is not None:
+            return override.rate
+        if override.kind is ConvenioOverrideKind.CEILING and override.rate is not None:
+            effective = _m210_effective_rate_from_tariff(args.base_casilla_id, args.pension_tariff_parameter, ctx)
+            return min(effective, override.rate)
+        # ALLOCATION_DOMESTIC_TARIFF delegates the amount to the domestic tariff.
     return _m210_effective_rate_from_tariff(args.base_casilla_id, args.pension_tariff_parameter, ctx)
 
 
@@ -1021,7 +1033,7 @@ def _m210_effective_rate_from_tariff(
             f"parameter {tariff_parameter_id!r} must declare data_type='bracket_table' "
             "to be used by M210 pension tariff resolution",
             translated_message="errors.calc.dispatch_parameter_kind",
-            context={"parameter_id": tariff_parameter_id, "op": "m210_resolve_rate"},
+            context={"parameter_id": tariff_parameter_id, "op": "irnr_resolve_tipo_gravamen"},
         )
     ctx.operand_refs.append(tariff_parameter_id)
     cuota = _ops.resolve_bracket(tariff_parameter, base, ctx.date_context)

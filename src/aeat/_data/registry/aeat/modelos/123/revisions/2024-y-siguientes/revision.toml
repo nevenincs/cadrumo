@@ -9,4 +9,5 @@ source_refs = [
     "aeat-dr-123-2024-v20-form-text",
     "aeat-modelo-123-procedure",
     "boe-modelo-123-2024-form",
+    "boe-modelo-123-2024-form-text",
 ]

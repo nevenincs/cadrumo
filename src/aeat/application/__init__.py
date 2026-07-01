@@ -52,6 +52,12 @@ See Also:
     :mod:`aeat.application.aggregation`:
         Calculation source mesh that supplies registry binding values from
         ledger, invoice, profile, relation, and carry inputs.
+    :mod:`aeat.application.registry`:
+        Read-only registry tree, corpus, manual, and filed-state verification
+        services over validated registry authority.
+    :mod:`aeat.application.operator_surface`:
+        Backend-owned operator capability contract consumed by CLI adapters and
+        automation surfaces.
     :mod:`aeat.application.ledger`:
         Bucket-scoped transaction lifecycle and ledger preflight facade used by
         modelo calculation readiness.

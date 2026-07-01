@@ -5426,7 +5426,7 @@ wizard:
           3 = incapacitat judicial, 4 = ajuda de tercers o mobilitat reduïda.'
       taxpayer-marital-status:
         help: 'Estat civil del primer declarant: 1 = solter/a, 2 = casat/da, 3 = vidu/a,
-          4 = separat/da o divorciat/da.'
+          4 = separat/da o divorciat/da, 5 = parella de fet registrada.'
       taxpayer-marriage-date:
         help: Data d'inici del matrimoni actual (AAAA-MM-DD). Només quan estat civil
           = 2 (casat/da). Calcula caselles 0245/0246/0247 (matrimoni sobrevingut,
@@ -5672,6 +5672,8 @@ wizard:
         choices:
           casado:
             label: 2 - casat
+          pareja-hecho:
+            label: 5 - parella de fet registrada
           separado-divorciado:
             label: 4 - separat o divorciat
           soltero:

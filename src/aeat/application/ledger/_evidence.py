@@ -23,7 +23,6 @@ retained as a provenance breadcrumb and is never read for bytes
 
 from __future__ import annotations
 
-import uuid
 from datetime import datetime
 from decimal import Decimal
 from enum import StrEnum
@@ -42,8 +41,10 @@ from ...core import STRICT_FROZEN_CONFIG
 from ...core.config import Settings
 from ...core.errors import AeatError
 from ...core.external_constants import PDF_EXTENSION, PDF_MIME_TYPE
+from ...core.hashing import content_hash_hex
 from ...core.identity import BucketId
 from ...core.time import now as _utc_now
+from ...domain._identifiers import canonical_decimal_string
 from ...domain.attachments import Attachment, AttachmentKind, AttachmentSource
 from ...domain.buckets import (
     BucketEvent,
@@ -122,6 +123,59 @@ class PurchaseInvoiceEvidence(BaseModel):
     @field_serializer("taxable_base", "iva_rate", "iva_amount", when_used="json")
     def _serialize_decimal(self, value: Decimal | None) -> str | None:
         return None if value is None else str(value)
+
+
+#: Bound on the mint-time collision disambiguator. A genuine collision needs an
+#: identical record (same file, fields, and coarse-clock instant) already stored,
+#: so a handful of attempts is the realistic ceiling; the cap exists so a
+#: derivation regression that drops the disambiguator from the digest fails loudly
+#: instead of spinning forever.
+_ID_DISAMBIGUATION_CAP = 1024
+
+
+def derive_purchase_invoice_evidence_id(
+    *,
+    bucket_id: str,
+    source_sha256: str,
+    media_kind: MediaKind,
+    supplier: str | None,
+    invoice_number: str | None,
+    invoice_date: str | None,
+    taxable_base: Decimal | None,
+    iva_rate: Decimal | None,
+    iva_amount: Decimal | None,
+    notes: str,
+    created_at: datetime,
+    disambiguator: int = 0,
+) -> str:
+    """Return the content-addressed id for a purchase-invoice evidence record.
+
+    Mirrors :func:`aeat.domain.transactions.derive_transaction_id`: the id is a
+    SHA-256 digest (truncated to 16 hex chars, the prior surrogate's width) over
+    the record's identifying fields, so it is stable under a frozen-clock replay
+    and directly referenceable as an ``aeat app ledger evidence`` argument,
+    needing no output mask. ``created_at`` plus the ``disambiguator`` ordinal
+    preserve the genuine-duplicate case the ledger already supports: two evidence
+    records for the same file must keep distinct ids, so the mint site increments
+    ``disambiguator`` on the rare digest collision (identical fields at an
+    identical coarse-clock instant) rather than colliding.
+    """
+    return content_hash_hex(
+        {
+            "bucket_id": bucket_id,
+            "source_sha256": source_sha256,
+            "media_kind": media_kind.value,
+            "supplier": supplier or "",
+            "invoice_number": invoice_number or "",
+            "invoice_date": invoice_date or "",
+            "taxable_base": canonical_decimal_string(taxable_base) if taxable_base is not None else "",
+            "iva_rate": canonical_decimal_string(iva_rate) if iva_rate is not None else "",
+            "iva_amount": canonical_decimal_string(iva_amount) if iva_amount is not None else "",
+            "notes": notes,
+            "created_at": created_at.isoformat(),
+            "disambiguator": disambiguator,
+        },
+    )[:16]
 
 
 class PurchaseInvoiceEvidenceDocument(BaseModel):
@@ -380,8 +434,36 @@ class PurchaseInvoiceEvidenceService:
                 source_command="aeat app ledger evidence add",
             ),
         )
+        records = _load(self._settings, bucket_id)
+        existing_ids = {existing.evidence_id for existing in records}
+        for disambiguator in range(_ID_DISAMBIGUATION_CAP):
+            evidence_id = derive_purchase_invoice_evidence_id(
+                bucket_id=bucket_id,
+                source_sha256=digest,
+                media_kind=media_kind,
+                supplier=supplier,
+                invoice_number=invoice_number,
+                invoice_date=invoice_date,
+                taxable_base=taxable_base,
+                iva_rate=iva_rate,
+                iva_amount=iva_amount,
+                notes=notes,
+                created_at=now,
+                disambiguator=disambiguator,
+            )
+            if evidence_id not in existing_ids:
+                break
+        else:
+            # Unreachable unless the derivation stops incorporating the
+            # disambiguator: then every attempt collides and the loop would spin
+            # forever. Fail loudly on the bounded cap instead of hanging.
+            raise RuntimeError(
+                f"could not derive a unique purchase-invoice evidence id after "
+                f"{_ID_DISAMBIGUATION_CAP} attempts; the content digest is not "
+                "incorporating the disambiguator (a derivation regression)",
+            )
         record = PurchaseInvoiceEvidence(
-            evidence_id=uuid.uuid4().hex[:16],
+            evidence_id=evidence_id,
             bucket_id=bucket_id,
             source_path=str(resolved),
             source_sha256=digest,
@@ -397,7 +479,6 @@ class PurchaseInvoiceEvidenceService:
             created_at=now,
             updated_at=now,
         )
-        records = _load(self._settings, bucket_id)
         records.append(record)
         _save(self._settings, bucket_id, records)
         event_id = _emit_evidence_event(

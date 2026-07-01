@@ -32,12 +32,13 @@ class RentaSexCode(StrEnum):
 
 
 class RentaMaritalStatus(StrEnum):
-    """Modelo 100 ``tipo_EstadoCivil`` values."""
+    """Renta taxpayer marital / registered-partnership profile values."""
 
     SOLTERO = "1"
     CASADO = "2"
     VIUDO = "3"
     SEPARADO_DIVORCIADO = "4"
+    PAREJA_HECHO = "5"
 
 
 class RentaDisabilityGrade(StrEnum):

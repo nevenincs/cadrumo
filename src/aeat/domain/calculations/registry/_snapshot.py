@@ -23,7 +23,6 @@ from ._schema import (
     CasillaDefinition,
     ModeloDefinition,
     ModeloRevision,
-    ParameterDefinition,
     RegistryCatalogues,
     RegistrySnapshot,
     filing_period_from_scope,
@@ -180,6 +179,7 @@ def _build_validated_snapshot(
         dependency_classifications={
             classification.id: classification for classification in revision.dependency_classifications
         },
+        convenio=catalogues.convenio,
     )
     check_all_id_references(snapshot)
     return snapshot
@@ -274,9 +274,6 @@ def _collect_snapshot_ref_ids(
                 for alias in record.aliases:
                     legal_ids.update(alias.legal_refs)
                     source_ids.update(alias.source_refs)
-            if isinstance(record, ParameterDefinition):
-                for row in record.convenio_rates:
-                    legal_ids.update(row.legal_refs)
     # Cross-reference applicability predicates carry their own legal/source
     # evidence for the profile fact that gates the official/live surface.
     for cross_reference in revision.live_cross_references:

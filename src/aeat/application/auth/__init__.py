@@ -265,6 +265,11 @@ from ._operator import (
     login_operator_auth,
     test_operator_auth,
 )
+from ._operator_probes import (
+    ProviderConfigurationProbe,
+    ProviderProbeResult,
+    probe_provider_configuration,
+)
 from ._operator_results import (
     AuthClearResult,
     AuthConfigureDanglingActiveProfileError,
@@ -332,6 +337,8 @@ __all__ = [
     "CorruptAuthSessionError",
     "LiveAuthPreflightReport",
     "PersistedAuthSession",
+    "ProviderConfigurationProbe",
+    "ProviderProbeResult",
     "StorageStatePaths",
     "acquire_auth_acquisition_lock",
     "auth_acquisition_lock_path",
@@ -355,6 +362,7 @@ __all__ = [
     "load_auth_diagnostic",
     "load_persisted_session",
     "login_operator_auth",
+    "probe_provider_configuration",
     "record_auth_diagnostic_phone_state",
     "require_verified_aeat_session",
     "select_provider",

@@ -1,0 +1,178 @@
+[revisions."2019-y-siguientes"]
+label = "Orden EHA/3435/2007, ejercicios 2019 y siguientes"
+valid_from = 2019-01-01
+period_selector = { year_from = 2019, periods = ["1T", "2T", "3T", "4T"] }
+orden_aplicabilidad = ["orden-eha-3435-2007:anexo-v"]
+legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "rd-439-2007:art-108", "orden-eha-3435-2007:anexo-v"]
+source_refs = ["aeat-modelo-128-procedure", "boe-modelo-128-form-text", "boe-modelo-128-form-layout"]
+
+[[revisions."2019-y-siguientes".casillas]]
+id = "01"
+number = "01"
+label = "Numero de perceptores"
+section = ["liquidacion", "retenciones_ingresos_cuenta"]
+data_type = "integer"
+semantic_role = "capital_seguros_perceptores_1"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "rd-439-2007:art-108", "orden-eha-3435-2007:anexo-v"]
+source_refs = ["boe-modelo-128-form-layout"]
+
+[[revisions."2019-y-siguientes".casillas]]
+id = "02"
+number = "02"
+label = "Base de retenciones e ingresos a cuenta"
+section = ["liquidacion", "retenciones_ingresos_cuenta"]
+data_type = "money"
+semantic_role = "capital_seguros_base_1"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "rd-439-2007:art-108", "orden-eha-3435-2007:anexo-v"]
+source_refs = ["boe-modelo-128-form-layout"]
+
+[[revisions."2019-y-siguientes".casillas]]
+id = "03"
+number = "03"
+label = "Retenciones e ingresos a cuenta"
+section = ["liquidacion", "retenciones_ingresos_cuenta"]
+data_type = "money"
+semantic_role = "capital_seguros_retenciones"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "rd-439-2007:art-108", "orden-eha-3435-2007:anexo-v"]
+source_refs = ["boe-modelo-128-form-layout"]
+
+[[revisions."2019-y-siguientes".casillas]]
+id = "04"
+number = "04"
+label = "Numero de perceptores adicional"
+section = ["liquidacion", "retenciones_ingresos_cuenta"]
+data_type = "integer"
+semantic_role = "capital_seguros_perceptores_2"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "rd-439-2007:art-108", "orden-eha-3435-2007:anexo-v"]
+source_refs = ["boe-modelo-128-form-layout"]
+
+[[revisions."2019-y-siguientes".casillas]]
+id = "05"
+number = "05"
+label = "Base de retenciones e ingresos a cuenta adicional"
+section = ["liquidacion", "retenciones_ingresos_cuenta"]
+data_type = "money"
+semantic_role = "capital_seguros_base_2"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "rd-439-2007:art-108", "orden-eha-3435-2007:anexo-v"]
+source_refs = ["boe-modelo-128-form-layout"]
+
+[[revisions."2019-y-siguientes".casillas]]
+id = "06"
+number = "06"
+label = "Resultados a ingresar de anteriores declaraciones por el mismo concepto, ejercicio y periodo"
+section = ["liquidacion", "complementaria"]
+data_type = "money"
+semantic_role = "anteriores_declaraciones_resultado_ingresar"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "rd-439-2007:art-108", "orden-eha-3435-2007:anexo-v"]
+source_refs = ["boe-modelo-128-form-layout"]
+
+[[revisions."2019-y-siguientes".casillas]]
+id = "07"
+number = "07"
+label = "Resultado a ingresar"
+section = ["liquidacion", "resultado"]
+data_type = "money"
+semantic_role = "resultado_ingresar"
+required = false
+input_kind = "computed"
+formula = "modelo-128-resultado-ingresar"
+legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "rd-439-2007:art-108", "orden-eha-3435-2007:anexo-v"]
+source_refs = ["boe-modelo-128-form-text", "boe-modelo-128-form-layout"]
+
+[[revisions."2019-y-siguientes".formulas]]
+id = "modelo-128-resultado-ingresar"
+target_casilla_id = "07"
+expression = { op = "subtract", args = [{ casilla_id = "03" }, { casilla_id = "06" }] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "rd-439-2007:art-108", "orden-eha-3435-2007:anexo-v"]
+source_refs = ["boe-modelo-128-form-text", "boe-modelo-128-form-layout"]
+
+[[revisions."2019-y-siguientes".formulas.source_citations]]
+source_ref = "boe-modelo-128-form-text"
+required_text = ["Resultado a ingresar ([03] - [06])"]
+
+[[revisions."2019-y-siguientes".workbook_parity_refs]]
+id = "modelo-128-record-design"
+workbook_source = "boe-modelo-128-form-layout"
+fixture_id = "modelo-128-record-design-layout"
+formula_coverage = "record_design_layout"
+runner_required = false
+tolerance = "0.00"
+legal_refs = ["orden-eha-3435-2007:anexo-v"]
+source_refs = ["boe-modelo-128-form-layout"]
+
+[[revisions."2019-y-siguientes".application_links]]
+id = "modelo-128-calculation"
+surface = "calculation"
+consumer = "aeat.domain.calculations.registry"
+requires_snapshot = true
+legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "rd-439-2007:art-108", "orden-eha-3435-2007:anexo-v"]
+source_refs = ["aeat-modelo-128-procedure", "boe-modelo-128-form-text", "boe-modelo-128-form-layout"]
+
+[[revisions."2019-y-siguientes".application_links]]
+id = "modelo-128-deadline"
+surface = "deadline"
+consumer = "aeat.domain.deadlines"
+requires_snapshot = true
+legal_refs = ["orden-eha-3435-2007:anexo-v"]
+source_refs = ["aeat-modelo-128-procedure"]
+
+[[revisions."2019-y-siguientes".application_links]]
+id = "modelo-128-filing"
+surface = "filing"
+consumer = "aeat.application.filing"
+requires_snapshot = true
+legal_refs = ["orden-eha-3435-2007:anexo-v"]
+source_refs = ["aeat-modelo-128-procedure"]
+
+[[revisions."2019-y-siguientes".deadline_windows]]
+id = "modelo-128-2025-1t"
+filing_year = 2025
+period = "2025 1T"
+period_kind = "quarterly"
+opens_on = 2025-04-01
+closes_on = 2025-04-21
+legal_refs = ["orden-eha-3435-2007:anexo-v"]
+source_refs = ["aeat-modelo-128-procedure"]
+
+[[revisions."2019-y-siguientes".deadline_windows]]
+id = "modelo-128-2025-2t"
+filing_year = 2025
+period = "2025 2T"
+period_kind = "quarterly"
+opens_on = 2025-07-01
+closes_on = 2025-07-21
+legal_refs = ["orden-eha-3435-2007:anexo-v"]
+source_refs = ["aeat-modelo-128-procedure"]
+
+[[revisions."2019-y-siguientes".deadline_windows]]
+id = "modelo-128-2025-3t"
+filing_year = 2025
+period = "2025 3T"
+period_kind = "quarterly"
+opens_on = 2025-10-01
+closes_on = 2025-10-21
+legal_refs = ["orden-eha-3435-2007:anexo-v"]
+source_refs = ["aeat-modelo-128-procedure"]
+
+[[revisions."2019-y-siguientes".deadline_windows]]
+id = "modelo-128-2025-4t"
+filing_year = 2025
+period = "2025 4T"
+period_kind = "quarterly"
+opens_on = 2026-01-01
+closes_on = 2026-01-21
+legal_refs = ["orden-eha-3435-2007:anexo-v"]
+source_refs = ["aeat-modelo-128-procedure"]

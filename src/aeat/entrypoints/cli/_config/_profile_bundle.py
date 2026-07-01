@@ -45,7 +45,161 @@ def register_profile_bundle_commands(
         resolve_profile_by_label=resolve_profile_by_label,
         resolve_active_profile_pointer=resolve_active_profile_pointer,
     )
+    _register_profile_sar_command(
+        profile_app,
+        profile_state=profile_state,
+        resolve_profile_by_label=resolve_profile_by_label,
+        resolve_active_profile_pointer=resolve_active_profile_pointer,
+    )
     _register_profile_import_command(profile_app, atomic_create_profile=atomic_create_profile)
+
+
+#: Personal-data categories the portable bundle carries, surfaced in the SAR
+#: data catalogue so a subject can see what the archive holds. These mirror the
+#: v3 :class:`~aeat.domain.user_profile.UserProfilePortableExport` typed fields.
+_SAR_DATA_CATEGORIES: tuple[str, ...] = (
+    "profile_identity_and_facts",
+    "modelo_work_units",
+    "ledger_transactions",
+    "calculation_revisions",
+    "filing_records",
+)
+
+
+def _register_profile_sar_command(
+    profile_app: typer.Typer,
+    *,
+    profile_state: Callable[[], WorkflowStateRepository],
+    resolve_profile_by_label: Callable[[str], ProfileBucketPointer],
+    resolve_active_profile_pointer: Callable[[], ProfileBucketPointer | None],
+) -> None:
+    @profile_app.command(
+        "subject-access-request",
+        help=tr(
+            "cli.config.profile.sar_help",
+            default=(
+                "Export all personal data held for a profile as a GDPR "
+                "right-of-access archive (the portable profile bundle)."
+            ),
+        ),
+    )
+    def config_profile_subject_access_request(
+        ctx: typer.Context,
+        name: str | None = typer.Argument(
+            None,
+            help=tr("cli.config.profile.export_name_help", default="Profile to export; defaults to active."),
+        ),
+        out: Path = typer.Option(
+            ...,
+            "--to",
+            help=tr("cli.config.profile.export_out_help", default="Destination path for the JSON bundle."),
+        ),
+        output_language: OutputLanguage | None = typer.Option(
+            None,
+            "--output-language",
+            "--language",
+            help=tr("cli.config.auth.output_language_help"),
+        ),
+    ) -> None:
+        """Produce the operator's own personal-data archive (GDPR right of access)."""
+        from ....application.user_profile._bundle import serialize_profile_bundle
+        from ....application.user_profile._orchestration import profile_storage_session
+        from ....domain.buckets._event import BucketEventType
+        from ....domain.user_profile._errors import ProfileNotFoundError
+        from ....domain.user_profile._portable_export import UserProfilePortableExport
+        from .._config_payloads import ConfigProfileSubjectAccessRequestResult
+
+        _activate_subcommand_output_language(ctx, output_language)
+        profile_state().load()
+        if name is not None:
+            pointer = resolve_profile_by_label(name)
+        else:
+            pointer = resolve_active_profile_pointer()
+            if pointer is None:
+                raise _CliRefusedBoundaryError(translated_message="cli.config.errors.no_active_profile")
+
+        def _serialize_and_record() -> UserProfilePortableExport:
+            serialized = serialize_profile_bundle(bucket_id=pointer.bucket_id)
+            _emit_profile_lifecycle_event(
+                event_type=BucketEventType.PROFILE_EXPORTED,
+                bucket_id=pointer.bucket_id,
+                object_id=pointer.bucket_id,
+                payload={
+                    "display_name": pointer.label or "",
+                    "out": str(out),
+                    "schema_version": str(serialized.bundle_schema_version),
+                    "subject_access_request": "true",
+                },
+            )
+            return serialized
+
+        try:
+            from ....adapters.persistence.storage.master_key._active_session import has_active_bucket_session
+            from ....core._bucket_pointer_io import resolve_active_bucket_id as _resolve_active_bucket_id
+
+            if pointer.bucket_id == _resolve_active_bucket_id() and has_active_bucket_session():
+                bundle = _serialize_and_record()
+            else:
+                with profile_storage_session(pointer.bucket_id):
+                    bundle = _serialize_and_record()
+        except ProfileNotFoundError as exc:
+            raise _CliRefusedBoundaryError(
+                translated_message="cli.config.profile.unknown_profile",
+                context={"name": pointer.label},
+            ) from exc
+        out.parent.mkdir(parents=True, exist_ok=True)
+        out.write_text(bundle.model_dump_json(indent=2), encoding="utf-8")
+
+        result = ConfigProfileSubjectAccessRequestResult(
+            profile_id=pointer.bucket_id,
+            display_name=pointer.label,
+            out=str(out),
+            schema_version=bundle.bundle_schema_version,
+            data_categories=list(_SAR_DATA_CATEGORIES),
+        )
+        sensitivity_notice = _build_export_sensitivity_notice(out)
+        catalogue_notice = _build_sar_catalogue_notice()
+        _emit_envelope(
+            ctx,
+            command="config.profile.subject-access-request",
+            result=result,
+            lines=(
+                f"profile_id\t{pointer.bucket_id}",
+                f"display_name\t{pointer.label}",
+                f"out\t{out}",
+                f"schema_version\t{bundle.bundle_schema_version}",
+                f"data_categories\t{','.join(_SAR_DATA_CATEGORIES)}",
+                f"INFO\t{catalogue_notice.message}",
+                f"WARNING\t{sensitivity_notice.message}",
+            ),
+            notices=(catalogue_notice, sensitivity_notice),
+        )
+
+
+def _build_sar_catalogue_notice() -> Notice:
+    """Build the data-catalogue notice naming the personal-data categories held.
+
+    A GDPR right-of-access response must tell the subject what categories of
+    their personal data are held, not only hand over a blob. This info
+    :class:`Notice` enumerates the portable-bundle categories and carries them
+    machine-readably in ``context`` per
+    ``cli-notices-are-the-only-diagnostic-channel``.
+    """
+    return Notice(
+        severity=NoticeSeverity.INFO,
+        code="config.profile.subject_access_request.data_catalogue",
+        message=tr(
+            "cli.config.profile.sar_catalogue_info",
+            default=(
+                "This archive holds every personal-data category kept for the "
+                "profile: identity and profile facts, modelo work units, ledger "
+                "transactions, calculation revisions, and filing records. "
+                "Attachment evidence bytes and AEAT captures stay in encrypted "
+                "storage; use the encrypted recovery archive to include them."
+            ),
+        ),
+        context={"data_categories": ",".join(_SAR_DATA_CATEGORIES)},
+    )
 
 
 def _register_profile_export_command(

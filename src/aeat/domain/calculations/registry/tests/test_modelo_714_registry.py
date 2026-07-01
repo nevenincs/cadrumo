@@ -294,29 +294,9 @@ def test_modelo_714_carries_cuota_integra_under_declaration_advisory() -> None:
     assert "ley-19-1991:art-30" in {str(ref) for ref in guard.legal_refs}
 
 
-def test_modelo_714_riskier_edges_remain_unguarded() -> None:
-    """The base-liquidable and cuota-a-ingresar edges are a grounded, documented non-guard.
-
-    Wave W02 Phase P06 of the modelo-verify-nonzero-guards plan investigated
-    both edges and decided neither is guardable today without further
-    calculation-modelling work: ``base-imponible -> base-liquidable`` is
-    blocked by the minimo exento (Ley 19/1991 art. 28), which legitimately
-    floors base-liquidable at zero for any filer near the EUR 700.000/CCAA-
-    variant threshold while still being obligated to file on gross assets, and
-    the registry has no formula, parameter, or casilla encoding that
-    exemption to gate a safe predicate against; ``total-cuota-integra ->
-    cuota-a-ingresar`` is blocked because Ley 19/1991 art. 32 (deduccion por
-    impuestos satisfechos en el extranjero) and art. 33 (bonificacion
-    Ceuta/Melilla) are legitimate full-offset mechanisms that are not grounded
-    anywhere in this codebase (no legal-catalogue entry, no corpus file, no
-    casilla), so a predicate cannot distinguish a legitimate full offset from
-    a silent omission. See the modelo-verify-nonzero-guards audit document
-    (2026-06-30) for the full investigation and the prerequisite work that
-    would make either edge guardable. Asserting their absence keeps this test
-    honest about scope: closing either prerequisite and authoring a
-    false-positive-free guard updates this assertion; the wontfix decision
-    itself is not expected to change without new registry grounding.
-    """
+def _load_714_snapshot_and_casillas() -> tuple[
+    frozenset[str], dict[CasillaId, object]
+]:
     modelo, catalogues = _load_modelo_714()
     snapshot = build_snapshot(
         modelo,
@@ -325,7 +305,66 @@ def test_modelo_714_riskier_edges_remain_unguarded() -> None:
         filing_year=2024,
         period="0A",
     )
+    predicate_ids = frozenset(p.predicate_id for p in snapshot.revision.verification_predicates)
+    casillas_by_id = {casilla.id: casilla for casilla in snapshot.revision.casillas}
+    return predicate_ids, casillas_by_id
 
-    predicate_ids = {p.predicate_id for p in snapshot.revision.verification_predicates}
+
+def test_modelo_714_base_liquidable_edge_remains_unguarded() -> None:
+    """``base-imponible -> base-liquidable`` is a grounded, documented non-guard.
+
+    Per `2026-07-01-modelo-verify-nonzero-guards-residuals-research` Finding 2,
+    ``patrimonio.base-liquidable`` = ``patrimonio.base-imponible`` - minimo
+    exento (Ley 19/1991 art. 28: EUR 700.000 general, autonomically variable).
+    A filer with base imponible > 0 but <= the minimo exento legitimately has
+    base liquidable = 0 -- and is NOT a rare edge, because the M714 filing
+    obligation (art. 37) is triggered independently by patrimonio bruto >
+    EUR 2.000.000, so such a filer must file with a legitimately zero base
+    liquidable. ``implies_nonzero(["patrimonio.base-imponible",
+    "patrimonio.base-liquidable"])`` would false-fire on every such filer, and
+    the CCAA-variable minimo exento means no fixed constant lets a guard even
+    estimate the boundary; both casillas are manual with no formula linkage.
+    The prerequisite to make it guardable is to compute base-liquidable =
+    max(base-imponible - minimo_exento_CCAA, 0) from a CCAA minimo-exento table
+    (the M200 Phase-2 computed shape), after which the zero is a computed
+    consequence needing no advisory. Keep deferred per the accepted
+    `2026-07-01-modelo-verify-nonzero-guards-residuals-adr`.
+    """
+    predicate_ids, casillas_by_id = _load_714_snapshot_and_casillas()
+
     assert "modelo-714-base-imponible-implica-base-liquidable" not in predicate_ids
+
+    for casilla_id in (_PATRIMONIO_BASE_IMPONIBLE_CASILLA, _PATRIMONIO_BASE_LIQUIDABLE_CASILLA):
+        casilla = casillas_by_id[casilla_id]
+        assert casilla.input_kind is InputKind.MANUAL
+        assert casilla.formula is None
+
+
+def test_modelo_714_cuota_a_ingresar_edge_remains_unguarded() -> None:
+    """``total-cuota-integra -> cuota-a-ingresar`` is a grounded, documented non-guard.
+
+    Per `2026-07-01-modelo-verify-nonzero-guards-residuals-research` Finding 3,
+    between ``patrimonio.total-cuota-integra`` (casilla 40) and
+    ``patrimonio.cuota-a-ingresar`` (casilla 55) sit three legitimate zeroing
+    mechanisms: the art. 31 limite conjunto reduction, the art. 32 foreign-tax
+    deduction / art. 33 Ceuta-Melilla bonificacion, and -- decisively --
+    autonomic bonificaciones up to 100% (Madrid and Andalucia have applied a
+    ~100% IP bonificacion). A resident of those CCAAs with a positive total
+    cuota integra legitimately has cuota a ingresar = 0; this is the NORM there,
+    not an edge, so ``implies_nonzero(["patrimonio.total-cuota-integra",
+    "patrimonio.cuota-a-ingresar"])`` would fire on the most common case and be
+    actively miseducating (the `ledger-iva-advisory-only-on-cuota-bearing-
+    categories` antipattern). This is the lowest-value of the three residual
+    edges to ever guard: both casillas are manual, and even a full
+    deduccion/bonificacion derivation would only make the zero a legitimate
+    computed consequence. Keep deferred per the accepted
+    `2026-07-01-modelo-verify-nonzero-guards-residuals-adr`.
+    """
+    predicate_ids, casillas_by_id = _load_714_snapshot_and_casillas()
+
     assert "modelo-714-total-cuota-integra-implica-cuota-a-ingresar" not in predicate_ids
+
+    for casilla_id in (_PATRIMONIO_TOTAL_CUOTA_INTEGRA_CASILLA, _PATRIMONIO_CUOTA_A_INGRESAR_CASILLA):
+        casilla = casillas_by_id[casilla_id]
+        assert casilla.input_kind is InputKind.MANUAL
+        assert casilla.formula is None

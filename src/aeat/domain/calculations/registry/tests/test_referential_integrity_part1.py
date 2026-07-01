@@ -9,7 +9,6 @@ from .. import CasillaId, validated_casilla_id
 from .._schema import (
     CasillaAlias,
     CasillaConstraints,
-    ConvenioRateRow,
     ModeloDefinition,
     ProfilePredicateDefinition,
     VerificationPredicateDefinition,
@@ -37,7 +36,6 @@ from ._referential_integrity_support import (
     build_snapshot_with_missing_legal,
     build_snapshot_with_missing_source,
     check_all_id_references,
-    date,
     minimal_casilla,
     minimal_catalogues,
     minimal_legal_ref,
@@ -381,67 +379,6 @@ def test_dangling_parameter_source_refs() -> None:
     snapshot = build_snapshot_with_missing_source(revision, _extra)
     with pytest.raises(RegistryValidationError, match=r"parameter test.param.source_refs"):
         check_all_id_references(snapshot)
-
-
-def test_snapshot_carries_convenio_rate_row_legal_refs() -> None:
-    """Slice snapshots retain nested Convenio-rate row legal evidence."""
-    row = ConvenioRateRow(
-        country_code="MA",
-        tipo_renta="interest",
-        rate="0.10",
-        legal_ref_anchor=_EXTRA_LEGAL_ID,
-        legal_refs=(_EXTRA_LEGAL_ID,),
-        valid_from=date(2025, 1, 1),
-    )
-    parameter = ParameterDefinition(
-        id="test.convenio",
-        data_type="convenio_rate_table",
-        unit="percent",
-        convenio_rates=(row,),
-        legal_refs=(REFERENCE_LEGAL_ID,),
-        source_refs=(REFERENCE_SOURCE_ID,),
-    )
-    revision = minimal_revision(parameters=(parameter,))
-    catalogues = minimal_catalogues()
-    catalogues = RegistryCatalogues(
-        legal={
-            **catalogues.legal,
-            _EXTRA_LEGAL_ID: minimal_legal_ref().model_copy(update={"id": _EXTRA_LEGAL_ID}),
-        },
-        sources=catalogues.sources,
-    )
-
-    snapshot = snapshot_for_revision(minimal_modelo(revision), catalogues, revision)
-
-    assert _EXTRA_LEGAL_ID in snapshot.legal
-    check_all_id_references(snapshot)
-
-
-def test_snapshot_integrity_checks_convenio_rate_row_legal_refs() -> None:
-    """Snapshot integrity rejects Convenio-rate row legal refs missing from the slice catalogue."""
-    row = ConvenioRateRow(
-        country_code="MA",
-        tipo_renta="interest",
-        rate="0.10",
-        legal_ref_anchor=_MISSING_LEGAL_ID,
-        legal_refs=(REFERENCE_LEGAL_ID, _MISSING_LEGAL_ID),
-        valid_from=date(2025, 1, 1),
-    )
-    parameter = ParameterDefinition(
-        id="test.convenio",
-        data_type="convenio_rate_table",
-        unit="percent",
-        convenio_rates=(row,),
-        legal_refs=(REFERENCE_LEGAL_ID,),
-        source_refs=(REFERENCE_SOURCE_ID,),
-    )
-    revision = minimal_revision(parameters=(parameter,))
-    snapshot = build_snapshot_with_missing_legal(revision, _MISSING_LEGAL_ID)
-
-    with pytest.raises(RegistryValidationError, match=r"parameter test\.convenio\.convenio_rate MA/interest"):
-        check_all_id_references(snapshot)
-
-
 def test_dangling_binding_source_refs() -> None:
     """binding.source_refs referencing a SourceRefId absent from snapshot.sources raises."""
     _extra = "aeat-dr-binding-v1"

@@ -60,12 +60,20 @@ class DeleteBucketCommand(BaseModel):
     programmatic caller observes the same guarantee the CLI ``--yes``
     flag provides. The active bucket cannot be deleted; the operator
     must switch profiles first.
+
+    ``acknowledge_retention_override`` is the explicit legal-retention
+    override: when a filed tax record is still inside its four-year LGT
+    retention window (Ley 58/2003 art. 66/70) the erase is refused
+    unless this flag is ``True`` AND ``retention_override_reason`` is a
+    non-empty justification the audit trail records.
     """
 
     model_config = STRICT_FROZEN_CONFIG
 
     bucket_id: BucketId
     confirmed: bool = False
+    acknowledge_retention_override: bool = False
+    retention_override_reason: str | None = Field(default=None, min_length=1, max_length=512)
 
 
 class DeleteBucketResult(BaseModel):
@@ -73,6 +81,11 @@ class DeleteBucketResult(BaseModel):
 
     Carries the deleted bucket's prior label so the operator-facing
     emitter can render a confirming line without re-reading anything.
+    ``retention_override_used`` records whether a still-retained record
+    was erased under the explicit legal-retention override, and
+    ``latest_safe_erase_date`` names the instant the erased set would
+    otherwise have become safe to erase (``None`` when nothing was
+    inside its window).
     """
 
     model_config = STRICT_FROZEN_CONFIG
@@ -80,6 +93,8 @@ class DeleteBucketResult(BaseModel):
     bucket_id: BucketId
     previous_label: str = Field(min_length=1, max_length=160)
     occurred_at: datetime
+    retention_override_used: bool = False
+    latest_safe_erase_date: datetime | None = None
 
 
 class BrowseBucketCommand(BaseModel):

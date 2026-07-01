@@ -176,3 +176,69 @@ class LedgerProvidersResult(OutputSchema):
 
     providers: list[LLMProviderAvailabilityPayload]
     vision: VisionProviderPayload | None = None
+
+
+class LlmUsageProviderPayload(OutputSchema):
+    """Per-provider LLM usage/cost row.
+
+    Mirrors :class:`~aeat.application.ledger.LlmUsageProviderMetrics`, aggregated
+    from the encrypted usage log. ``calls`` counts every recorded call
+    (cache hits included); ``cost_estimate_usd`` is the summed estimate.
+    """
+
+    provider: str
+    calls: int
+    cache_hits: int
+    input_tokens: int
+    output_tokens: int
+    total_tokens: int
+    cost_estimate_usd: str
+
+
+class LlmConfidenceProviderPayload(OutputSchema):
+    """Per-provider classification-confidence distribution row.
+
+    Mirrors :class:`~aeat.application.ledger.LlmConfidenceProviderMetrics`,
+    aggregated from LLM-classified ledger transactions. ``low_confidence_count``
+    is the count below the tunable report threshold; ``high_confidence_count``
+    (>= 0.8) and ``medium_confidence_count`` ([0.5, 0.8)) are fixed-floor
+    distribution buckets.
+    """
+
+    provider: str
+    classified_count: int
+    low_confidence_count: int
+    high_confidence_count: int
+    medium_confidence_count: int
+    min_confidence: str | None = None
+    max_confidence: str | None = None
+    mean_confidence: str | None = None
+
+
+@register_schema("ledger.llm_diagnostics")
+class LedgerLlmDiagnosticsResult(OutputSchema):
+    """JSON envelope for ``aeat app ledger llm-diagnostics``.
+
+    Presents the two existing LLM metric stores in one read-only report: the
+    usage/cost log aggregated per provider
+    (:class:`~aeat.application.ledger.LlmUsageProviderMetrics`) and the
+    classification-confidence distribution over LLM-classified ledger
+    transactions (:class:`~aeat.application.ledger.LlmConfidenceProviderMetrics`),
+    both sourced from
+    :func:`~aeat.application.ledger.build_llm_diagnostics_report`. It reports
+    only accounting metadata, never response text or financial content.
+    """
+
+    since: str | None = None
+    until: str | None = None
+    low_confidence_threshold: str
+    usage_providers: list[LlmUsageProviderPayload]
+    total_calls: int
+    total_cache_hits: int
+    total_input_tokens: int
+    total_output_tokens: int
+    total_cost_estimate_usd: str
+    confidence_providers: list[LlmConfidenceProviderPayload]
+    total_classified: int
+    total_low_confidence: int
+    has_data: bool

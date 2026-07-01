@@ -27,4 +27,9 @@ See Also:
         secure-object infrastructure.
     :mod:`aeat.application`
         Use-case orchestration layer that wires adapters to domain authorities.
+    :mod:`aeat.domain`
+        Business authority layer whose records adapters populate or persist.
+    :mod:`aeat.core`
+        Layer-neutral primitives and policies adapters may consume without
+        depending inward on application workflows.
 """

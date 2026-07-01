@@ -689,6 +689,24 @@ class ConfigProfileExportResult(OutputSchema):
     schema_version: int
 
 
+@register_schema("config.profile.subject-access-request")
+class ConfigProfileSubjectAccessRequestResult(OutputSchema):
+    """JSON envelope for ``aeat config profile subject-access-request``.
+
+    A GDPR right-of-access export: the same portable bundle
+    ``config profile export`` produces, framed as the operator's own
+    personal-data archive. Reports the profile identity, output path, bundle
+    schema version, and the machine-readable catalogue of the personal-data
+    categories the archive carries so the subject can see what is held.
+    """
+
+    profile_id: str
+    display_name: str
+    out: str
+    schema_version: int
+    data_categories: list[str]
+
+
 @register_schema("config.profile.import")
 class ConfigProfileImportResult(OutputSchema):
     """JSON envelope for ``aeat config profile import``.

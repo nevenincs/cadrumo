@@ -44,6 +44,7 @@ from ....domain.user_profile import (
     profile_binding_selectors,
 )
 from .._profile_binding import (
+    inject_derived_autonomic_deduccion_facts,
     inject_derived_marriage_facts,
     profile_fact_index,
     resolve_profile_binding_value,
@@ -214,6 +215,9 @@ def test_every_scalar_profile_binding_resolves_to_typed_value() -> None:
     # profile facts but are injected at binding-resolution time.  The full-population
     # fixture supplies renta_taxpayer.marriage_date so injection populates them here.
     inject_derived_marriage_facts(fact_index, _YEAR)
+    # Madrid nacimiento/adopción derived scalars (eligible count + unidad-familiar
+    # base) are likewise injected at resolution time, defaulting to 0.
+    inject_derived_autonomic_deduccion_facts(fact_index, _YEAR)
 
     # Deliberately absent binding — tested separately.
     absent = "renta-2025-profile-taxpayer-death-date"
@@ -422,29 +426,32 @@ def test_repeating_collection_selectors_yield_known_alias() -> None:
             )
 
 
-def test_binding_count_is_exactly_33() -> None:
-    """M100 2025 has exactly 33 ``source = 'profile'`` bindings.
+def test_binding_count_is_exactly_35() -> None:
+    """M100 2025 has exactly 35 ``source = 'profile'`` bindings.
 
     This acts as a structural sentinel: adding or removing a profile binding
     without updating this test will fail, prompting a review of whether the
     pin tests cover the new binding.
 
-    Breakdown of the 33: 22 scalar bindings (single-value profile reads
+    Breakdown of the 35: 24 scalar bindings (single-value profile reads
     keyed by entity_type, ccaa, estimation_regime, income categories,
     address-cadastral references, plus the three matrimonio-sobrevenido
-    derived scalars: marriage_full_year, marriage_month_start,
-    marriage_month_end added for Art. 82 LIRPF casillas 0245/0246/0247)
+    derived scalars marriage_full_year / marriage_month_start /
+    marriage_month_end added for Art. 82 LIRPF casillas 0245/0246/0247, plus
+    the two Comunidad de Madrid nacimiento/adopción derived scalars
+    madrid_nacimiento_adopcion_eligible_count and
+    unidad_familiar_otros_miembros_base added for casilla 1039 / DL 1/2010)
     plus 11 family-repeating-collection bindings (per-dependent / per-spouse
     / per-child arrays whose cardinality follows the operator's declared
     family composition).
-    The split matters when a new binding lands: a 23-scalar / 10-collection
-    rebalance still totals 33 but indicates a different schema shift
+    The split matters when a new binding lands: a 25-scalar / 10-collection
+    rebalance still totals 35 but indicates a different schema shift
     (operator-data field add vs family-collection contract change).
     Future drift in the sentinel meaning is prevented by this note
     plus the descriptive assertion message below.
     """
     profile_bindings = _profile_bindings()
-    assert len(profile_bindings) == 33, (
-        f"expected 33 profile-sourced bindings in M100 2025, found {len(profile_bindings)}: "
+    assert len(profile_bindings) == 35, (
+        f"expected 35 profile-sourced bindings in M100 2025, found {len(profile_bindings)}: "
         + ", ".join(str(b.id) for b in profile_bindings)
     )

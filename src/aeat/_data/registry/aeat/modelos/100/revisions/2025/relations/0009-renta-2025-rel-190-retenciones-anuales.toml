@@ -11,4 +11,4 @@ source_periods = ["0A"]
 target_periods = ["0A"]
 aggregation = { op = "copy" }
 legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-108", "orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2"]
-source_refs = ["boe-modelo-190-2025-form"]
+source_refs = ["aeat-modelo-190-instructions-2025", "boe-modelo-190-2025-form"]

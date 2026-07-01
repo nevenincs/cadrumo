@@ -5144,7 +5144,7 @@ wizard:
           = judicial incapacity, 4 = third-party assistance or reduced mobility.'
       taxpayer-marital-status:
         help: 'First taxpayer marital status: 1 = single, 2 = married, 3 = widowed,
-          4 = separated or divorced.'
+          4 = separated or divorced, 5 = registered civil partnership.'
       taxpayer-marriage-date:
         help: Start date of the current marriage (YYYY-MM-DD). Only when marital status
           = 2 (married). Derives casillas 0245/0246/0247 (matrimonio sobrevenido,
@@ -5386,6 +5386,8 @@ wizard:
         choices:
           casado:
             label: 2 - married
+          pareja-hecho:
+            label: 5 - registered civil partnership
           separado-divorciado:
             label: 4 - separated or divorced
           soltero:

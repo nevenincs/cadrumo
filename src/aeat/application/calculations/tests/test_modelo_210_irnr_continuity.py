@@ -5,7 +5,7 @@ Modelo 210 (IRNR autoliquidación no residentes sin establecimiento permanente
 IRNR-obligated filers. Its primary engine (m210-irnr-full-engine contract §D2.2)
 resolves: rendimientos_integros → base_imponible (op=copy, TRLIRNR art. 24.1)
 → base_imponible (TRLIRNR art. 24.1 gross path or art. 24.6 UE/EEE expense
-deduction path) → tipo_gravamen (m210_resolve_rate op, TRLIRNR arts. 25.1.a /
+deduction path) → tipo_gravamen (irnr_resolve_tipo_gravamen op, TRLIRNR arts. 25.1.a /
 25.1.b / 25.1.f / Convenio override) → cuota_integra (base × tipo) →
 cuota_diferencial (cuota minus retenciones).
 
@@ -231,9 +231,12 @@ def test_inmobiliaria_without_cadastral_value_uses_half_of_greater_value(tmp_pat
 
 def test_inmobiliaria_cadastral_branch_rejects_unregistered_coefficient(tmp_path: Path) -> None:
     """The imputation coefficient must match a registry-authored Art. 85 rate."""
-    with isolated_runtime_profile(tmp_path=tmp_path), pytest.raises(
-        RegistryValidationError,
-        match="coefficient must be one of",
+    with (
+        isolated_runtime_profile(tmp_path=tmp_path),
+        pytest.raises(
+            RegistryValidationError,
+            match="coefficient must be one of",
+        ),
     ):
         _calculate_210(
             filing_year=_YEAR_N,
@@ -294,9 +297,12 @@ def test_ue_resident_deductible_expenses_reduce_art_24_6_base(tmp_path: Path) ->
 
 def test_non_ue_resident_deductible_expenses_are_refused(tmp_path: Path) -> None:
     """M210 refuses nonzero gastos_deducibles outside the Art. 24.6 UE/EEE path."""
-    with isolated_runtime_profile(tmp_path=tmp_path), pytest.raises(
-        RegistryValidationError,
-        match="Art\\. 24\\.6",
+    with (
+        isolated_runtime_profile(tmp_path=tmp_path),
+        pytest.raises(
+            RegistryValidationError,
+            match="Art\\. 24\\.6",
+        ),
     ):
         _calculate_210(
             filing_year=_YEAR_N,
@@ -364,9 +370,7 @@ def test_year_n_plus_1_gb_general_tipo_gravamen_is_24pct(tmp_path: Path) -> None
 
     assert values[_TIPO_GRAVAMEN_CASILLA] == _TIPO_GRAVAMEN_CONVENIO
     assert values[_BASE_IMPONIBLE_CASILLA] == _BASE_YEAR_N_PLUS_1
-    assert values[_CUOTA_INTEGRA_CASILLA] == (_BASE_YEAR_N_PLUS_1 * _TIPO_GRAVAMEN_CONVENIO).quantize(
-        Decimal("0.01")
-    )
+    assert values[_CUOTA_INTEGRA_CASILLA] == (_BASE_YEAR_N_PLUS_1 * _TIPO_GRAVAMEN_CONVENIO).quantize(Decimal("0.01"))
 
 
 def test_cuota_integra_differs_between_years_due_to_distinct_bases(tmp_path: Path) -> None:
@@ -425,9 +429,7 @@ def test_modelo_210_irnr_continuity_enrolls_two_renta_years(tmp_path: Path) -> N
     assert values_n1[_TIPO_GRAVAMEN_CASILLA] == _TIPO_GRAVAMEN_CONVENIO
 
     # Cuota correctness from Convenio registry parameter (not hand-computed formula).
-    assert values_n[_CUOTA_INTEGRA_CASILLA] == (_BASE_YEAR_N * _TIPO_GRAVAMEN_CONVENIO).quantize(
-        Decimal("0.01")
-    )
+    assert values_n[_CUOTA_INTEGRA_CASILLA] == (_BASE_YEAR_N * _TIPO_GRAVAMEN_CONVENIO).quantize(Decimal("0.01"))
     assert values_n1[_CUOTA_INTEGRA_CASILLA] == (_BASE_YEAR_N_PLUS_1 * _TIPO_GRAVAMEN_CONVENIO).quantize(
         Decimal("0.01")
     )

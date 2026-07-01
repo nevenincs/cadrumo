@@ -23,6 +23,14 @@ See Also:
     :mod:`aeat.adapters.inbound.sanitizer`
         PDF sanitisation pipeline used to prepare committed regression
         artefacts without leaking operator PII.
+    :mod:`aeat.domain.justificante`
+        Domain receipt metadata records populated by the justificante parser.
+    :mod:`aeat.application.filing`
+        Application import workflows that decide how parsed filing evidence
+        participates in local drafts and audit baselines.
+    :mod:`aeat.application.ledger`
+        Ledger import surface that consumes financial-provider transactions and
+        evidence references.
     :mod:`aeat.domain.transactions`
         Domain transaction records populated by financial import providers.
 """

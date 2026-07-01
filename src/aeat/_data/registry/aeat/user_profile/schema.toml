@@ -985,11 +985,12 @@ model_selectors = ["taxpayer.sex"]
 
 [[sections.fields]]
 key = "marital_status"
-type = "string"
+type = "enum"
 required = false
 sensitivity = "identity"
 effective_dated = true
-description = "Taxpayer marital status valid for Modelo 100."
+description = "Taxpayer marital or registered-partnership status used by Renta profile decisions."
+enum_values = ["1", "2", "3", "4", "5"]
 model_selectors = ["taxpayer.marital_status"]
 
 [[sections.fields]]
@@ -1217,6 +1218,26 @@ sensitivity = "identity"
 effective_dated = true
 description = "Count of descendants eligible for the bajo-3-años supplement at year-end 2024 (Art. 58.3 LIRPF)."
 model_selectors = ["family.descendientes_menores_3_2024"]
+
+[[sections.fields]]
+key = "madrid_nacimiento_adopcion_eligible_count"
+type = "decimal"
+required = false
+sensitivity = "identity"
+effective_dated = false
+description = "Prorrateo-weighted count of descendants inside the Comunidad de Madrid nacimiento/adopción applicability window (DL 1/2010 art. 4) who cohabit. Derived at binding-resolution time from renta_family.descendiente.* facts and tax_residence.ccaa by _inject_derived_autonomic_deduccion_facts in src/aeat/application/modelo/_profile_binding.py; not stored as a profile fact and not operator-settable through the wizard. Feeds Modelo 100 casilla 1039."
+model_selectors = ["renta_family.madrid_nacimiento_adopcion_eligible_count"]
+legal_refs = ["ley-35-2006:art-77", "madrid-dl-1-2010:art-4"]
+
+[[sections.fields]]
+key = "unidad_familiar_otros_miembros_base"
+type = "decimal"
+required = false
+sensitivity = "financial"
+effective_dated = false
+description = "Base imponible (casillas 0435 + 0460) of unidad-familiar members other than the filer, for the Comunidad de Madrid autonomic double income-limit gate (DL 1/2010 art. 18.1). Derived by _inject_derived_autonomic_deduccion_facts; supplied only for the determinable single / monoparental individual filer (Decimal 0, the filer's own base is added by the registry formula), absent for conyugal units whose spouse base is not persisted. Not operator-settable through the wizard."
+model_selectors = ["renta_family.unidad_familiar_otros_miembros_base"]
+legal_refs = ["ley-35-2006:art-77", "madrid-dl-1-2010:art-18"]
 
 [[sections.fields]]
 key = "gastos_guarderia_reales_2024"

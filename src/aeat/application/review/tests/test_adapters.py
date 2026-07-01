@@ -74,6 +74,7 @@ _REVIEW_INFO_CASILLA: CasillaId = validated_casilla_id("05", surface="_REVIEW_IN
 _PROFILE_ID = "23232323-2323-4232-8232-232323232323"
 _OTHER_PROFILE_ID = "44444444-4444-4444-8444-444444444444"
 _ACTIVE_PROFILE_ID = "45454545-4545-4454-8454-454545454545"
+_CORRUPT_ROW_WRITTEN_AT = datetime(2026, 5, 27, 10, 0, 0, tzinfo=UTC)
 
 
 # ── shared helpers ────────────────────────────────────────────────
@@ -394,7 +395,7 @@ def test_invoices_pending_load_failure_context_omits_raw_storage_error(tmp_path:
             object_key=_INVOICE_OBJECT_KEY,
             classification=SensitivityClass.FINANCIAL,
             schema_version=_INVOICE_CATALOGUE_VERSION,
-            written_at=datetime.now(UTC),
+            written_at=_CORRUPT_ROW_WRITTEN_AT,
             payload=b"{not-json",
         )
         with pytest.raises(ReviewSourceLoadError) as exc_info:
@@ -473,7 +474,7 @@ def test_drafts_pending_load_failure_context_omits_raw_storage_error(tmp_path: P
             object_key="corrupt-draft",
             classification=repository.sensitivity,
             schema_version=repository.schema_version,
-            written_at=datetime.now(UTC),
+            written_at=_CORRUPT_ROW_WRITTEN_AT,
             payload=b"{not-json",
         )
         with pytest.raises(ReviewSourceLoadError) as exc_info:

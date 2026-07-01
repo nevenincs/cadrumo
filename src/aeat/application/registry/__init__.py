@@ -26,9 +26,18 @@ See Also:
         Citation projection over reviewed registry legal references and topics.
     :class:`RegistryManualVerificationReport`
         Manual/casilla verification report for bundled manual corpus checks.
+    :mod:`aeat.domain.manuals`
+        Strict manual schema and loader surface that owns extracted manual
+        records and :class:`~aeat.domain.manuals.ManualCasillaReference` values.
+    :mod:`aeat.core.resources`
+        Bundled-data boundary used to locate packaged registry and corpus
+        material without repository-relative path reads.
     :class:`FiledStateVerificationReport`
         Filed-state comparison report built from encrypted captured AEAT
         observations and local registry recalculation.
+    :class:`~aeat.adapters.outbound.aeat.sede.FiledDeclaracionObservationStore`
+        Active-bucket observation store that persists captured filed state for
+        local registry comparison.
     :mod:`aeat.application.modelo._registry_discovery`
         Modelo work-unit discovery facade for CLI-facing registry queries.
 """

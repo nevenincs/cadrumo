@@ -27,13 +27,18 @@ from decimal import Decimal
 
 import pytest
 
-from ....core.resources import resources
+from ....core import ConvenioOverrideKind, TipoRentaIrnr
+from ....core.resources import bundled_path
 from ....domain.calculations.registry import (
     M210_CONVENIO_MISSING_SENTINEL,
     M210_DEFERRED_TIPO_SENTINEL,
     CasillaId,
     CasillaObservation,
+    ConvenioAuthority,
     RegistrySnapshot,
+    build_snapshot,
+    load_convenio_authority,
+    load_registry_tree,
 )
 from ....domain.calculations.registry._schema import VerificationPredicateDefinition
 from ....domain.deadlines import FiscalResidency, IVARegime, TaxpayerProfile
@@ -89,56 +94,63 @@ def _snapshot_with_mutated_convenio_row(
     tipo_renta: str,
     new_rate: str,
 ) -> RegistrySnapshot:
-    """Return a copy of ``base`` with the (country, tipo_renta) row's rate replaced.
+    """Return a copy of ``base`` with the (country, tipo_renta) treaty override rate replaced.
 
-    Anti-tautology proof aid: prove the helper reads the registry
-    parameter rather than a constant by mutating an existing row's
-    rate field. Frozen pydantic models are duplicated via
-    ``model_copy`` at row, parameter, revision, and snapshot levels.
+    Anti-tautology proof aid: prove the resolver reads the treaty
+    authority rather than a constant by mutating an existing override
+    row's rate field. Frozen pydantic models are duplicated via
+    ``model_copy`` at row, treaty, authority, and snapshot levels.
     """
 
-    convenio_param = next(p for p in base.revision.parameters if p.id == "m210-convenio-rates")
-    new_rows = tuple(
-        row.model_copy(update={"rate": new_rate})
-        if row.country_code == country_code and row.tipo_renta == tipo_renta
-        else row
-        for row in convenio_param.convenio_rates
+    tipo_enum = TipoRentaIrnr(tipo_renta)
+    treaty = base.convenio.treaties[country_code]
+    new_overrides = tuple(
+        row.model_copy(update={"rate": new_rate}) if row.tipo_renta is tipo_enum else row
+        for row in treaty.overrides
     )
-    new_param = convenio_param.model_copy(update={"convenio_rates": new_rows})
-    new_parameters = tuple(new_param if p.id == "m210-convenio-rates" else p for p in base.revision.parameters)
-    new_revision = base.revision.model_copy(update={"parameters": new_parameters})
-    return base.model_copy(update={"revision": new_revision})
+    new_treaty = treaty.model_copy(update={"overrides": new_overrides})
+    new_convenio = ConvenioAuthority(treaties={**base.convenio.treaties, country_code: new_treaty})
+    return base.model_copy(update={"convenio": new_convenio})
 
 
 @pytest.fixture(scope="module")
 def m210_snapshot() -> RegistrySnapshot:
-    """Authority-resolved M210 / 2025 / EVENT-1 snapshot."""
+    """M210 / 2025 / EVENT-1 snapshot carrying the cross-cutting ConvenioAuthority.
 
-    return resources().modelos.authority.snapshot("210", filing_year=2025, period="EVENT-1")
+    Built via a compile-only registry load plus M210-scoped validation so the
+    resolution regressions are independent of unrelated peer modelo churn while
+    still projecting the real treaty tree onto the snapshot.
+    """
+
+    root = bundled_path("registry", "aeat")
+    modelos, catalogues = load_registry_tree(root)
+    catalogues = catalogues.model_copy(update={"convenio": load_convenio_authority(root / "treaties")})
+    modelo = next(modelo for modelo in modelos if modelo.id == "210")
+    return build_snapshot(modelo, catalogues, source_root=bundled_path(), filing_year=2025, period="EVENT-1")
 
 
 def test_committed_convenio_rows_resolve_corrected_legal_anchors(
     m210_snapshot: RegistrySnapshot,
 ) -> None:
-    """Committed concrete convenio rows cite the treaty article and, where needed, domestic rate law."""
+    """Committed treaty overrides cite the treaty article and, where needed, domestic rate law."""
 
-    convenio_param = next(p for p in m210_snapshot.revision.parameters if p.id == "m210-convenio-rates")
-    rows = {(row.country_code, row.tipo_renta): row for row in convenio_param.convenio_rates}
+    convenio = m210_snapshot.convenio
 
-    gb_general = rows[("GB", "general")]
-    assert gb_general.legal_ref_anchor == "convenio-es-gb-2013:art-6"
+    gb_general = convenio.resolve("GB", TipoRentaIrnr.GENERAL, 2025)
+    assert gb_general is not None
     assert gb_general.legal_refs == (
         "convenio-es-gb-2013:art-6",
         "trlirnr-rdleg-5-2004:art-25.1.a",
     )
 
-    ma_interest = rows[("MA", "interest")]
-    assert ma_interest.legal_ref_anchor == "convenio-es-ma-1978:art-11"
+    ma_interest = convenio.resolve("MA", TipoRentaIrnr.INTEREST, 2025)
+    assert ma_interest is not None
     assert ma_interest.legal_refs == ("convenio-es-ma-1978:art-11",)
 
-    ar_pension = rows[("AR", "pension")]
-    assert ar_pension.rate == "DOMESTIC_TARIFF"
-    assert ar_pension.legal_ref_anchor == "convenio-es-ar-1992:art-19"
+    ar_pension = convenio.resolve("AR", TipoRentaIrnr.PENSION, 2025)
+    assert ar_pension is not None
+    assert ar_pension.kind is ConvenioOverrideKind.ALLOCATION_DOMESTIC_TARIFF
+    assert ar_pension.rate is None
     assert ar_pension.legal_refs == (
         "convenio-es-ar-1992:art-19",
         "trlirnr-rdleg-5-2004:art-25.1.b",

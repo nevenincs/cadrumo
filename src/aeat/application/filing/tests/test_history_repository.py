@@ -22,6 +22,8 @@ from .._history_repository import ModeloHistoryRepository
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
+_FOREIGN_CLASS_WRITTEN_AT = datetime(2026, 5, 26, 17, 30, 0, tzinfo=UTC)
+
 
 def _make_history(*, modelo: str = "130", n_entries: int = 2) -> ModeloHistory:
     base = datetime(2026, 1, 15, 12, 0, tzinfo=UTC)
@@ -132,7 +134,7 @@ class TestClassificationGate:
         history = _make_history(modelo="130")
         bad = Envelope[ModeloHistory](
             schema_version=1,
-            written_at=datetime.now(UTC),
+            written_at=_FOREIGN_CLASS_WRITTEN_AT,
             classification=SensitivityClass.OPERATIONAL,
             payload=history,
         )

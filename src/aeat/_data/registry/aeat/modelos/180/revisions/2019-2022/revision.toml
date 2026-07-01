@@ -18,5 +18,6 @@ orden_aplicabilidad = [
 source_refs = [
     "aeat-dr-180-2014",
     "aeat-modelo-180-ayuda-presentacion",
+    "aeat-modelo-180-ayuda-resumen-datos",
     "boe-modelo-180-2014-form",
 ]

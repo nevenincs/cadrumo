@@ -126,6 +126,7 @@ from ._action_errors import (
     WorkUnitNotFoundError,
 )
 from ._art20_advisory import _art20_reduccion_advisory_finding
+from ._art109_activity_income import derive_art109_activity_income_coverage_for_work_unit as _derive_art109_coverage
 from ._dt12_advisory import _dt12_reduccion_advisory_finding
 from ._iva_wallet_gate import (
     ModeloIvaWalletReconciliationBlocked,
@@ -137,6 +138,7 @@ from ._iva_wallet_gate import (
     require_persisted_iva_compensation_decision_matches_revision as _require_iva_compensation_revision_match,
 )
 from ._m210_rate import resolve_m210_rate as _resolve_m210_rate
+from ._m303_m349_reconcile import m303_m349_intracom_reconcile_findings
 from ._objective_estimation_advisory import _objective_estimation_exclusion_advisory_findings
 from ._registry_helpers import assert_revision_content_integrity as _assert_revision_content_integrity
 from ._registry_resources import authority_via_resources as _authority_via_resources
@@ -589,7 +591,7 @@ def _rewrite_m210_sentinels(
 ) -> tuple[tuple[CasillaObservation, ...], list[ModeloVerificationFinding]]:
     """Sweep engine observations for M210 rate sentinels and rewrite them.
 
-    The ``m210_resolve_rate`` formula op emits one of the
+    The ``irnr_resolve_tipo_gravamen`` formula op emits one of the
     ``M210_RATE_SENTINELS`` Decimals (``-1``, ``-2``) when the
     rate cannot be deterministically resolved from registry parameters
     at evaluation time. The verification sweep here:
@@ -1018,6 +1020,7 @@ def _collect_verification_gate_findings(
         work_unit=work_unit,
         target=target,
         profile=workflow_profile,
+        transaction_repository=transaction_repository,
     )
     incomplete_modality_finding = _modelo_202_incomplete_modality_finding(
         work_unit=work_unit,
@@ -1165,6 +1168,14 @@ def verify_modelo_revision(
         transaction_repository=transaction_repository,
         iva_compensation_decision_repository=iva_compensation_decision_repository,
         cross_period_expected_member_sets=cross_period_expected_member_sets,
+    )
+    findings.extend(
+        m303_m349_intracom_reconcile_findings(
+            work_unit=work_unit,
+            target=target,
+            work_unit_repository=wu_repo,
+            calculation_repository=cr_repo,
+        ),
     )
     completeness, granted = _classify_verification_outcome(
         findings=findings,
@@ -1410,6 +1421,7 @@ def _collect_revision_verification_findings(
     work_unit: WorkUnit,
     target: CalculationRevision,
     profile: TaxpayerProfile,
+    transaction_repository: TransactionCatalogueRepository | None,
 ) -> tuple[list[ModeloVerificationFinding], list[CasillaId], list[CasillaId]]:
     """Build the verification finding list for one calculation revision.
 
@@ -1483,6 +1495,12 @@ def _collect_revision_verification_findings(
                     ),
                 )
 
+    predicate_profile = _profile_with_art109_period_evidence(
+        work_unit=work_unit,
+        profile=profile,
+        transaction_repository=transaction_repository,
+    )
+
     # Layer 2: cross-casilla predicate gate. target.input_values_by_casilla_id
     # carries the operator-entered raw strings (independent of the Decimal
     # casilla_values projection) for the text-reading operators
@@ -1493,7 +1511,7 @@ def _collect_revision_verification_findings(
         _evaluate_verification_predicates(
             snapshot.revision.verification_predicates,
             target.casilla_values,
-            profile,
+            predicate_profile,
             target.input_values_by_casilla_id,
         ),
     )
@@ -1519,6 +1537,23 @@ def _collect_revision_verification_findings(
     findings.extend(_objective_estimation_exclusion_advisory_findings(work_unit=work_unit, profile=profile))
 
     return findings, resolved_casilla_ids, missing_required_casilla_ids
+
+
+def _profile_with_art109_period_evidence(
+    *,
+    work_unit: WorkUnit,
+    profile: TaxpayerProfile,
+    transaction_repository: TransactionCatalogueRepository | None,
+) -> TaxpayerProfile:
+    coverage = _derive_art109_coverage(
+        work_unit,
+        transaction_repository=transaction_repository,
+    )
+    if not coverage.is_proven or coverage.meets_threshold is None:
+        return profile
+    return profile.model_copy(
+        update={"art109_activity_income_withholding_ge_70pct": coverage.meets_threshold},
+    )
 
 
 def _detail_row_template_casilla_is_satisfied(

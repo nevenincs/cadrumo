@@ -21,7 +21,7 @@ def _m130_layout():
 
 
 def test_unsupported_translation_op_does_not_render_raw_op() -> None:
-    unsupported_op = "m210_resolve_rate"
+    unsupported_op = "irnr_resolve_tipo_gravamen"
     expression = FormulaExpression(op=unsupported_op, args=(FormulaExpression(literal=Decimal("1")),))
 
     with pytest.raises(TranslationError) as raised:

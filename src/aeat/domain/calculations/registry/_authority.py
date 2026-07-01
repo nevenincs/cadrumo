@@ -20,6 +20,7 @@ from ....core.access_gate import (
     load_authorization_manifest,
 )
 from ....core.resources import bundled_path as _bundled_path
+from ._convenio import collect_convenio_fingerprints, load_convenio_authority, validate_convenio_legal_refs
 from ._errors import RegistrySnapshotError, RegistryValidationError
 from ._loader import _collect_registry_tree_fingerprints, load_registry_tree
 from ._schema import DeadlineWindowDefinition, ModeloDefinition, ModeloRevision, RegistryCatalogues, RegistrySnapshot
@@ -54,7 +55,7 @@ class ValidatedRegistryAuthority:
         return _load_authority(
             resolved_root,
             resolved_source_root,
-            _collect_registry_tree_fingerprints(resolved_root),
+            _collect_registry_tree_fingerprints(resolved_root) + collect_convenio_fingerprints(resolved_root),
             collect_source_evidence_fingerprints(resolved_source_root),
         )
 
@@ -236,6 +237,13 @@ def _load_authority(
     _source_evidence_fingerprint: tuple[tuple[str, int, int], ...],
 ) -> ValidatedRegistryAuthority:
     modelos, catalogues = load_registry_tree(root)
+    # Compile the cross-cutting Convenio doble imposición treaty tree and fold it
+    # onto the shared catalogues so every snapshot projects the same authority.
+    # Grounding gate: every treaty override must cite a treaty article defined in
+    # the shared legal/ catalogue (which resolves to bundled BOE corpus text).
+    convenio = load_convenio_authority(root / "treaties")
+    validate_convenio_legal_refs(convenio, frozenset(catalogues.legal))
+    catalogues = catalogues.model_copy(update={"convenio": convenio})
 
     authority = ValidatedRegistryAuthority(
         root=root,

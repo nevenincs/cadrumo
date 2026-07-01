@@ -33,6 +33,7 @@ from ..sql.secure_objects import SecureObjectRepository
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 
 _PERIOD = Period.from_year_and_code(2026, "1T")
+_FOREIGN_CLASS_WRITTEN_AT = datetime(2026, 5, 26, 15, 0, 0, tzinfo=UTC)
 
 
 def _make_filing(
@@ -158,7 +159,7 @@ class TestClassificationGate:
         filing = _make_filing()
         bad = Envelope[ModeloPresentado](
             schema_version=1,
-            written_at=datetime.now(UTC),
+            written_at=_FOREIGN_CLASS_WRITTEN_AT,
             classification=SensitivityClass.OPERATIONAL,
             payload=filing,
         )

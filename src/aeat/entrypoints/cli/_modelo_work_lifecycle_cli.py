@@ -213,8 +213,15 @@ def _register_work_create_command(work_app: typer.Typer, deps: _LifecycleDeps) -
                 ),
             ),
         ] = None,
+        output_language: OutputLanguage | None = typer.Option(
+            None,
+            "--output-language",
+            "--language",
+            help=tr("cli.config.auth.output_language_help"),
+        ),
     ) -> None:
         """Create or load a modelo work unit. Idempotent on the four-axis key."""
+        deps.activate_output_language(ctx, output_language)
         _validate_filing_year(year)
         requested_revision = revision.strip() if revision is not None else None
         causante_ccaa = parse_tax_region(causante_ccaa_raw) if causante_ccaa_raw is not None else None

@@ -72,6 +72,7 @@ You MUST respect these rules at all times:
 @.claude/rules/sensitive-financial-data-secure-storage-only.md
 @.claude/rules/service-imports-via-top-level-reexports.md
 @.claude/rules/shipped-search-licence-clean.md
+@.claude/rules/single-subject-mutation-is-idempotent-guarded.md
 @.claude/rules/terminology-scaffold-preserve-contract.md
 @.claude/rules/terminology-single-declaration.md
 @.claude/rules/tests-live-under-domain-tests-folders.md

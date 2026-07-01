@@ -25,6 +25,8 @@ from .._acquisition_lock import (
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
+_STALE_LOCK_INSPECTION_AT = datetime(2026, 5, 26, 14, 0, 0, tzinfo=UTC)
+
 
 @pytest.fixture(autouse=True)
 def _active_profile() -> Iterator[None]:
@@ -80,7 +82,7 @@ def test_auth_acquisition_lock_recovers_expired_owner(tmp_path: Path) -> None:
     settings = _settings(tmp_path)
     path = auth_acquisition_lock_path(settings, AuthProviderKind.CLAVE_MOVIL)
     path.parent.mkdir(parents=True, exist_ok=True)
-    now = datetime.now(UTC)
+    now = _STALE_LOCK_INSPECTION_AT
     stale = AuthAcquisitionLockRecord(
         provider_kind=AuthProviderKind.CLAVE_MOVIL,
         profile_name="operator",

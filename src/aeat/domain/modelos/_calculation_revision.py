@@ -74,14 +74,25 @@ class CalculationRevisionAmendmentKind(StrEnum):
     Aligned with Spanish tax law's legally-distinct amendment shapes:
 
     * ``COMPLEMENTARIA`` — corrective filing that adds to the prior
-      filing's tax due. Filed when the operator discovers an error
-      that under-reported tax.
+      filing's tax due (LGT art. 122.2, ``ley-58-2003:art-122``). Filed
+      when the operator discovers an error that under-reported tax.
     * ``SUSTITUTIVA`` — substitute filing that replaces the prior
-      filing entirely. Used for material restatements.
+      filing entirely (LGT art. 122.1). Used for material restatements.
+    * ``RECTIFICATIVA`` — autoliquidación rectificativa: the unified
+      amendment mechanism established by LGT art. 120.4
+      (``ley-58-2003:art-120``, apartado 4) and developed by RD 117/2024
+      (which amended the Reglamento de gestión, RD 1065/2007). For the
+      modelos whose tax-specific orden implements it (Modelo 303 from
+      the 2023-y-siguientes revision onward), the rectificativa replaces
+      BOTH the complementaria and the separate solicitud de rectificación:
+      a single amended autoliquidación that may raise OR lower the
+      resultado, carrying its own fichero-BOE indicator and, when it
+      lowers the cuota to a refund, the operator's devolución account.
     """
 
     COMPLEMENTARIA = "complementaria"
     SUSTITUTIVA = "sustitutiva"
+    RECTIFICATIVA = "rectificativa"
 
 
 ModeloActorLabel = Annotated[

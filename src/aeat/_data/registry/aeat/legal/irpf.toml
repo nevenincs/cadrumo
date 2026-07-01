@@ -893,6 +893,26 @@ required_text = [
     "se reducirá en el 60 por ciento",
 ]
 
+[legal."orden-eha-3435-2007:anexo-i"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "orden"
+corpus_ref = "corpus/normatives/html/orden-eha-3435-2007.html#anexo-i"
+document_id = "BOE-A-2007-20485"
+section = "Anexo I"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2007-20485#ai"
+published_at = 2007-11-29
+effective_from = 2019-01-01
+review_status = "reviewed"
+reviewed_at = 2026-07-01
+reviewed_by = "codex"
+notes = "Aprobacion del Modelo 117 como autoliquidacion periodica de retenciones, ingresos a cuenta y pagos a cuenta sobre rentas o ganancias por transmisiones o reembolsos de participaciones de IIC y transmisiones de derechos de suscripcion."
+required_text = [
+    "Modelo 117",
+    "Rentas o ganancias patrimoniales obtenidas como consecuencia de las transmisiones o reembolsos",
+    "transmisiones de derechos de suscripción",
+]
+
 [legal."orden-eha-3435-2007:anexo-ii"]
 evidence_tier = "legal_authority"
 authority = "boe"
@@ -911,6 +931,46 @@ required_text = [
     "Modelo 123",
     "Retenciones e ingresos a cuenta sobre determinados rendimientos del capital mobiliario",
     "Autoliquidación periódica-Modelo 123",
+]
+
+[legal."orden-eha-3435-2007:anexo-iv"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "orden"
+corpus_ref = "corpus/normatives/html/orden-eha-3435-2007.html#anexo-iv"
+document_id = "BOE-A-2007-20485"
+section = "Anexo IV"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2007-20485#ai-4"
+published_at = 2007-11-29
+effective_from = 2008-04-01
+review_status = "reviewed"
+reviewed_at = 2026-07-01
+reviewed_by = "codex"
+notes = "Aprobacion del Modelo 126 como autoliquidacion periodica de retenciones e ingresos a cuenta sobre rendimientos del capital mobiliario y rentas por la contraprestacion de cuentas en instituciones financieras."
+required_text = [
+    "Modelo 126",
+    "rendimientos del capital mobiliario",
+    "contraprestación derivada de cuentas",
+]
+
+[legal."orden-eha-3435-2007:anexo-v"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "orden"
+corpus_ref = "corpus/normatives/html/orden-eha-3435-2007.html#anexo-v"
+document_id = "BOE-A-2007-20485"
+section = "Anexo V"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2007-20485#av"
+published_at = 2007-11-29
+effective_from = 2008-04-01
+review_status = "reviewed"
+reviewed_at = 2026-07-01
+reviewed_by = "codex"
+notes = "Aprobacion del Modelo 128 como autoliquidacion periodica de retenciones e ingresos a cuenta sobre rentas o rendimientos del capital mobiliario procedentes de operaciones de capitalizacion y contratos de seguro."
+required_text = [
+    "Modelo 128",
+    "Rentas o rendimientos del capital mobiliario procedentes de operaciones de capitalización",
+    "contratos de seguro de vida o invalidez",
 ]
 
 [legal."orden-hac-56-2024:art-1"]
@@ -1289,8 +1349,20 @@ applies_from = 2016-01-01
 source_url = "https://sede.agenciatributaria.gob.es/Sede/AyudaPresentacion/180.shtml"
 review_status = "reviewed"
 
-[sources."boe-modelo-180-2014-form"]
+[sources."aeat-modelo-180-ayuda-resumen-datos"]
 evidence_tier = "official_source_guidance"
+authority = "aeat"
+kind = "instructions"
+corpus_path = "corpus/aeat_official/instructions/modelo_180/files/modelo-180-ayuda-resumen-datos.html"
+sha256 = "ce57610cd55c589bd6bc633700488d3a649bbac48fc1bdfae142d07e0426267d"
+bytes = 9203
+retrieved_at = 2026-07-01
+applies_from = 2016-01-01
+source_url = "https://sede.agenciatributaria.gob.es/Sede/manuales/ejercicio-2016/modelo-180/2-normas-cumplimentacion-modelo-180/2_4-resumen-datos-incluidos-declaracion.html"
+review_status = "reviewed"
+
+[sources."boe-modelo-180-2014-form"]
+evidence_tier = "layout_authority"
 authority = "boe"
 kind = "form_spec"
 corpus_path = "corpus/normatives/html/orden-hap-1732-2014.html"
@@ -1303,7 +1375,7 @@ source_url = "https://www.boe.es/eli/es/o/2014/09/24/hap1732"
 review_status = "reviewed"
 
 [sources."boe-modelo-180-2023-form"]
-evidence_tier = "official_source_guidance"
+evidence_tier = "layout_authority"
 authority = "boe"
 kind = "form_spec"
 corpus_path = "corpus/normatives/html/orden-hfp-1284-2023.html"
@@ -1341,7 +1413,7 @@ source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_re
 review_status = "reviewed"
 
 [sources."aeat-dr-123-2024-v20-form-text"]
-evidence_tier = "official_source_guidance"
+evidence_tier = "layout_authority"
 authority = "aeat"
 kind = "form_spec"
 corpus_path = "corpus/aeat_official/disenos_registro/modelo_123/files/01-123-orden-eha-3435-2007-ejercicio-2024-y-siguientes-190-kb-xls.txt"
@@ -1353,7 +1425,7 @@ source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_re
 review_status = "reviewed"
 
 [sources."aeat-dr-123-2019-2023-v13-form-text"]
-evidence_tier = "official_source_guidance"
+evidence_tier = "layout_authority"
 authority = "aeat"
 kind = "form_spec"
 corpus_path = "corpus/aeat_official/disenos_registro/modelo_123/files/02-123-eha-3435-2007-ejercicios-2019-2023-169-kb-xls.txt"
@@ -1378,7 +1450,7 @@ source_url = "https://sede.agenciatributaria.gob.es/Sede/procedimientoini/GH04.s
 review_status = "reviewed"
 
 [sources."boe-modelo-123-2007-form"]
-evidence_tier = "official_source_guidance"
+evidence_tier = "layout_authority"
 authority = "boe"
 kind = "form_spec"
 corpus_path = "corpus/normatives/html/orden-eha-3435-2007.html"
@@ -1391,7 +1463,7 @@ source_url = "https://www.boe.es/buscar/act.php?id=BOE-A-2007-20485"
 review_status = "reviewed"
 
 [sources."boe-modelo-123-2024-form"]
-evidence_tier = "official_source_guidance"
+evidence_tier = "layout_authority"
 authority = "boe"
 kind = "form_spec"
 corpus_path = "corpus/normatives/html/orden-hac-56-2024.html"
@@ -1403,17 +1475,44 @@ applies_from = 2024-02-01
 source_url = "https://www.boe.es/buscar/doc.php?id=BOE-A-2024-1772"
 review_status = "reviewed"
 
-[sources."aeat-dr-193-2024"]
+[sources."boe-modelo-123-2007-form-text"]
+evidence_tier = "official_source_guidance"
+authority = "boe"
+kind = "form_spec"
+corpus_path = "corpus/normatives/pdf/boe-a-2007-20485-modelo-123-annex-text.txt"
+sha256 = "3a8245e770efdb23835f7958e76745c25cbf9ce3e8f2da9152679ea7a7ed23dc"
+bytes = 1569
+retrieved_at = 2026-07-01
+published_at = 2007-11-29
+applies_from = 2008-04-01
+applies_to = 2023-12-31
+source_url = "https://www.boe.es/eli/es/o/2007/11/23/eha3435/dof/spa/pdf"
+review_status = "reviewed"
+
+[sources."boe-modelo-123-2024-form-text"]
+evidence_tier = "official_source_guidance"
+authority = "boe"
+kind = "form_spec"
+corpus_path = "corpus/normatives/pdf/boe-a-2024-1772-modelo-123-annex-text.txt"
+sha256 = "e5e284b93878b4b30c0a835c235f73e1b1efc906d35f652dacd519bae763103e"
+bytes = 1437
+retrieved_at = 2026-07-01
+published_at = 2024-01-31
+applies_from = 2024-02-01
+source_url = "https://www.boe.es/boe/dias/2024/01/31/pdfs/BOE-A-2024-1772.pdf"
+review_status = "reviewed"
+
+[sources."aeat-dr-193-2025"]
 evidence_tier = "layout_authority"
 authority = "aeat"
 kind = "record_design"
-corpus_path = "corpus/aeat_official/disenos_registro/modelo_193/files/02-193-orden-eha-3377-2011-actualizado-por-orden-hac-1504-2024-de-26-de-diciembre-352-kb-pdf.pdf"
-sha256 = "36184283123fec6827bf830a0b7d1b3e84a45937d7d85d9504d807f334caff8e"
-bytes = 359614
-retrieved_at = 2026-05-05
-published_at = 2024-01-01
-applies_from = 2024-01-01
-source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_100_199/DR_Modelo_193_2024.pdf"
+corpus_path = "corpus/aeat_official/disenos_registro/modelo_193/files/01-193-orden-eha-3377-2011-actualizado-por-orden-hac-1430-2025-de-3-de-diciembre-357-kb-pdf.pdf"
+sha256 = "25ab19076ecc1116c660f8d4b0c47523e6cd271d89869895699c91843f562489"
+bytes = 365226
+retrieved_at = 2026-05-03
+published_at = 2025-12-12
+applies_from = 2025-01-01
+source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_100_199/DR_Modelo_193_2025.pdf"
 review_status = "reviewed"
 
 [sources."aeat-dr-190-2025"]
@@ -1441,8 +1540,20 @@ applies_from = 2025-01-01
 source_url = "https://sede.agenciatributaria.gob.es/Sede/procedimientoini/GI10.shtml"
 review_status = "reviewed"
 
-[sources."boe-modelo-190-2025-form"]
+[sources."aeat-modelo-190-instructions-2025"]
 evidence_tier = "official_source_guidance"
+authority = "aeat"
+kind = "manual_pdf"
+corpus_path = "corpus/aeat_official/instructions/modelo_190/files/modelo-190-instrucciones-2025.pdf"
+sha256 = "5d75dc197729fe5dfdd13fc2f97de4a4e3f4eaa4db24d68271c559e4dcca92c6"
+bytes = 225156
+retrieved_at = 2026-07-01
+applies_from = 2025-01-01
+source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Procedimiento_ayuda/GI10/Instrucciones/instr_mod190_es_es.pdf"
+review_status = "reviewed"
+
+[sources."boe-modelo-190-2025-form"]
+evidence_tier = "layout_authority"
 authority = "boe"
 kind = "form_spec"
 corpus_path = "corpus/normatives/html/orden-eha-3127-2009.html"
@@ -1455,7 +1566,7 @@ source_url = "https://www.boe.es/buscar/act.php?id=BOE-A-2009-18567"
 review_status = "reviewed"
 
 [sources."boe-modelo-190-2025-amendment"]
-evidence_tier = "official_source_guidance"
+evidence_tier = "layout_authority"
 authority = "boe"
 kind = "form_spec"
 corpus_path = "corpus/normatives/html/orden-hac-1431-2025.html"
@@ -1479,8 +1590,20 @@ applies_from = 2024-01-01
 source_url = "https://sede.agenciatributaria.gob.es/Sede/procedimientoini/GI12.shtml"
 review_status = "reviewed"
 
-[sources."boe-modelo-193-2011-form"]
+[sources."aeat-modelo-193-296-note-2025"]
 evidence_tier = "official_source_guidance"
+authority = "aeat"
+kind = "manual_pdf"
+corpus_path = "corpus/aeat_official/instructions/modelo_193/files/modelo-193-296-nota-informativa-2025.pdf"
+sha256 = "d71fcd7ccd03d7f4ca205b418d4415a2bd74093ca95269b0aaa4fab05e02cf17"
+bytes = 857905
+retrieved_at = 2026-07-01
+applies_from = 2024-01-01
+source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Tema/Declaraciones_informativas/2024/Notas_informartivas/Nota_informativa_193-296.pdf"
+review_status = "reviewed"
+
+[sources."boe-modelo-193-2011-form"]
+evidence_tier = "layout_authority"
 authority = "boe"
 kind = "form_spec"
 corpus_path = "corpus/normatives/html/orden-eha-3377-2011.html"
@@ -1505,7 +1628,7 @@ source_url = "https://sede.agenciatributaria.gob.es/Sede/procedimientoini/G602.s
 review_status = "reviewed"
 
 [sources."boe-modelo-131-2007-form"]
-evidence_tier = "official_source_guidance"
+evidence_tier = "layout_authority"
 authority = "boe"
 kind = "form_spec"
 corpus_path = "corpus/normatives/html/orden-eha-672-2007.html"
@@ -3571,7 +3694,7 @@ required_text = [
 ]
 
 [sources."boe-modelo-100-2020-form"]
-evidence_tier = "official_source_guidance"
+evidence_tier = "layout_authority"
 authority = "boe"
 kind = "form_spec"
 corpus_path = "corpus/normatives/html/orden-hac-248-2021.html"
@@ -3585,7 +3708,7 @@ source_url = "https://www.boe.es/buscar/act.php?id=BOE-A-2021-4238"
 review_status = "reviewed"
 
 [sources."boe-modelo-100-2021-form"]
-evidence_tier = "official_source_guidance"
+evidence_tier = "layout_authority"
 authority = "boe"
 kind = "form_spec"
 corpus_path = "corpus/normatives/html/orden-hfp-207-2022.html"
@@ -3599,7 +3722,7 @@ source_url = "https://www.boe.es/buscar/act.php?id=BOE-A-2022-4296"
 review_status = "reviewed"
 
 [sources."boe-modelo-100-2022-form"]
-evidence_tier = "official_source_guidance"
+evidence_tier = "layout_authority"
 authority = "boe"
 kind = "form_spec"
 corpus_path = "corpus/normatives/html/orden-hfp-310-2023.html"
@@ -3613,7 +3736,7 @@ source_url = "https://www.boe.es/buscar/act.php?id=BOE-A-2023-8118"
 review_status = "reviewed"
 
 [sources."boe-modelo-100-2023-form"]
-evidence_tier = "official_source_guidance"
+evidence_tier = "layout_authority"
 authority = "boe"
 kind = "form_spec"
 corpus_path = "corpus/normatives/html/orden-hac-265-2024.html"
@@ -3627,7 +3750,7 @@ source_url = "https://www.boe.es/buscar/act.php?id=BOE-A-2024-5721"
 review_status = "reviewed"
 
 [sources."boe-modelo-100-2024-form"]
-evidence_tier = "official_source_guidance"
+evidence_tier = "layout_authority"
 authority = "boe"
 kind = "form_spec"
 corpus_path = "corpus/normatives/html/orden-hac-242-2025.html"
@@ -3641,7 +3764,7 @@ source_url = "https://www.boe.es/buscar/act.php?id=BOE-A-2025-5049"
 review_status = "reviewed"
 
 [sources."boe-modelo-100-2025-form"]
-evidence_tier = "official_source_guidance"
+evidence_tier = "layout_authority"
 authority = "boe"
 kind = "form_spec"
 corpus_path = "corpus/normatives/html/orden-hac-277-2026.html"

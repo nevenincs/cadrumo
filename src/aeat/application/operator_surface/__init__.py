@@ -25,6 +25,23 @@ landing surfaces are exposed through :func:`build_help_document`,
 :class:`RootLandingReport`. Refused surfaces use the registered
 :class:`OperatorSurfaceContractError` path shared with
 :func:`require_accepted_root`.
+
+The agent-facing capability manifest is assembled by
+:func:`build_operator_surface_manifest` from the cached
+:class:`OperatorSurfaceContract` plus CLI-owned JSON schema references. The
+application layer owns the command contract and mutability taxonomy; entrypoint
+adapters own rendering, command-tree traversal, and schema-registry enumeration.
+
+See Also:
+    ``aeat app contract``
+        Command adapter that emits the :class:`OperatorSurfaceManifest` through
+        the CLI envelope.
+    :mod:`aeat.entrypoints.mcp`
+        Tool-exposure entrypoint that consumes the same manifest without
+        duplicating the operator-surface contract.
+    :mod:`aeat.core.json_contract`
+        CLI result-schema registry supplied to the manifest by entrypoint
+        adapters.
 """
 
 from __future__ import annotations

@@ -21,6 +21,25 @@ Callers outside this subpackage import exclusively from
 :mod:`~aeat.domain.manuals._verify`, :mod:`~aeat.domain.manuals._fetch`, or
 :mod:`~aeat.domain.manuals._ids`.
 
+Registry corpus services project these records into local operator reports and
+cross-check :class:`ManualCasillaReference` rows with the same
+:class:`~aeat.domain.calculations.registry.ValidatedRegistryAuthority` used by
+runtime registry workflows. Registry source catalogues cite manual PDFs as
+:class:`~aeat.domain.calculations.registry.SourceReference` entries and validate
+the cited structure through this loader before treating the corpus as official
+source guidance.
+
+See Also:
+    :mod:`aeat.application.registry`
+        Read-only application services for listing, showing, and verifying
+        manual corpus material against registry authority.
+    :mod:`aeat.domain.calculations.registry`
+        Registry legal/source catalogue that consumes manual PDF references as
+        filing-grounding evidence.
+    :mod:`aeat.core.resources`
+        Resource boundary that exposes the packaged manual catalogue without
+        turning it into mutable operator bucket state.
+
 Examples:
     >>> from aeat.domain.manuals import (
     ...     ManualId, ManualPart, fetch_manual_part, load_manual,
