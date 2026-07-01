@@ -2,7 +2,7 @@
 
 Persists each filed-declaration observation as an
 :class:`~aeat.adapters.persistence.storage.Envelope` record through
-:class:`~aeat.adapters.persistence.storage.sql.SecureObjectRepository`, keyed
+:class:`~aeat.adapters.persistence.storage.SecureObjectRepository`, keyed
 by declaration identity so a prior filing can be retrieved without re-fetching
 it from the sede. Each envelope is classified at
 :class:`~aeat.adapters.persistence.storage.SensitivityClass` ``FINANCIAL`` and
@@ -37,11 +37,11 @@ from ....persistence.storage import (
     AEAT_IVA_WALLET_OBSERVATIONS_NAMESPACE,
     Envelope,
     MasterKeyProvider,
+    SecureObjectRepository,
     SensitivityClass,
 )
 from ....persistence.storage.errors import ClassificationError, EnvelopeVersionError
 from ....persistence.storage.runtime_repository import secure_object_repository_for_active_bucket
-from ....persistence.storage.sql import SecureObjectRepository
 from ._errors import ExpedienteNotFoundError, SedeValidationError
 from ._schema import FiledDeclaracionArtefact, FiledDeclaracionObservation, IvaCompensationWalletObservation
 
@@ -64,7 +64,7 @@ class FiledDeclaracionObservationStore:
     :class:`IvaCompensationWalletObservation` payloads in
     :class:`~aeat.adapters.persistence.storage.Envelope` records before writing
     them to their dedicated FINANCIAL namespaces through
-    :class:`~aeat.adapters.persistence.storage.sql.SecureObjectRepository`.
+    :class:`~aeat.adapters.persistence.storage.SecureObjectRepository`.
     """
 
     def __init__(
