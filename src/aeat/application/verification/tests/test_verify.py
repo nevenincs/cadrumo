@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import json
-from datetime import UTC, datetime
+from datetime import UTC, date, datetime
 from decimal import Decimal
 from pathlib import Path
 
@@ -17,7 +17,8 @@ from ....adapters.inbound.declaracion import (
 from ....adapters.inbound.pdf._shared import ExtractedCasilla
 from ....core import CasillaId, Period, validated_casilla_id
 from ....core.errors import render_error_json, render_error_text
-from ....domain.calculations.registry import RegistrySnapshotRef
+from ....core.resources import resources
+from ....domain.calculations.registry import RegistrySnapshotRef, calculate_registry_snapshot
 from .. import (
     VerificationError,
     VerificationStatus,
@@ -373,6 +374,168 @@ def test_verify_declaracion_reports_period_year_mismatch_as_verification_error()
     error = raised.value
     assert error.translated_message == "application.verification.errors.period_mapping_failed"
     assert error.context == {"period": "2024 1T", "ejercicio": "2025"}
+
+
+def test_verify_declaracion_reports_zero_grounding_fraction_when_none_declared() -> None:
+    """R1: a revision with no ``externally_grounded_casilla_ids`` reports a zero fraction.
+
+    Modelo 130's verification expectations declare no
+    ``externally_grounded_casilla_ids`` (per the verification-power research,
+    M130 carries zero per-casilla external-oracle grounding - its
+    ``workbook_parity_refs`` are whole-workbook fixture parity, not a
+    per-casilla oracle). The verdict must report an empty
+    ``externally_grounded_casilla_ids`` tuple and a ``0.0``
+    ``independently_grounded_fraction`` rather than fabricating a grounding
+    claim the registry never declared.
+    """
+    filing = _build_filing(
+        values=(
+            ("01", Decimal("10000")),
+            ("02", Decimal("4000")),
+            ("03", Decimal("6000.00")),
+            ("04", Decimal("1200.00")),
+            ("05", Decimal("250")),
+            ("06", Decimal("100")),
+            ("07", Decimal("850.00")),
+            ("08", Decimal("2000")),
+            ("09", Decimal("40.00")),
+            ("10", Decimal("10")),
+            ("11", Decimal("30.00")),
+            ("12", Decimal("880.00")),
+            ("13", Decimal("0")),
+            ("14", Decimal("880.00")),
+            ("15", Decimal("0")),
+            ("16", Decimal("0")),
+            ("17", Decimal("880.00")),
+            ("18", Decimal("0")),
+            ("19", Decimal("880.00")),
+        ),
+    )
+
+    verdict = verify_declaracion(
+        filing,
+        binding_values={
+            "irpf.previous_year_economic_activity_net_income": Decimal("13000"),
+            "modelo-130-actividad-economica-ingresos-cumulative": Decimal("10000"),
+            "modelo-130-actividad-economica-ingresos-taxable-base-cumulative": Decimal("0"),
+            "modelo-130-actividad-economica-rendimiento-neto-cumulative": Decimal("0"),
+            "modelo-130-actividad-economica-retenciones-cumulative": Decimal("0"),
+            "modelo-130-actividad-economica-gastos-cumulative": Decimal("4000"),
+            "modelo-130-resultados-negativos-anteriores": Decimal("0"),
+            "modelo-130-pagos-fraccionados-anteriores": Decimal("250"),
+        },
+    )
+
+    assert verdict.status is VerificationStatus.VERIFIED
+    assert verdict.externally_grounded_casilla_ids == ()
+    assert verdict.independently_grounded_fraction == 0.0
+
+
+def test_m100_2025_registry_policy_reports_independently_grounded_fraction() -> None:
+    """R1: the M100/2025 registry-declared grounding tier folds to a non-zero fraction.
+
+    ``verify_declaracion`` cannot currently drive a full M100/2025
+    calculation end to end: the 2025 revision folds two relation-sourced
+    bindings (``renta-2025-rel-130-pagos-fraccionados`` /
+    ``renta-2025-rel-131-pagos-fraccionados``) that the verify wrapper has no
+    parameter to supply - it forwards only ``binding_values`` to
+    ``calculate_registry_snapshot``, never ``relation_values``. That gap is
+    pre-existing and orthogonal to R1 (verification grounding-tier
+    transparency); widening ``verify_declaracion``'s public signature to
+    close it is out of this Step's scope.
+
+    This test instead exercises the exact computation ``verify_declaracion``
+    performs once ``status``/``coverage`` are finalised -
+    ``policy.externally_grounded_casilla_ids & reconciled_casilla_ids`` and
+    the resulting fraction - directly against a real, fully-resolved
+    M100/2025 ``RegistryCalculationResult``. The binding/relation/date inputs
+    are the same set that
+    ``test_modelo_100_registry_scenarios_cover_direct_estimation_modes_and_payments``
+    (``domain/calculations/registry/tests/test_registry_scenarios.py``)
+    already proves calculates cleanly for this revision. The assertion is not
+    a hand-computed number: it is the live registry declaration
+    (``externally_grounded_casilla_ids`` on the 2025 cuota-chain and
+    reconcile-when-present verification expectations, derived from the
+    bundled Renta WEB Open replay corpus) intersected against the live
+    policy fold.
+    """
+    snapshot = resources().modelos.authority.snapshot("100", filing_year=2025, period="0A")
+
+    def _m100_cid(value: str) -> CasillaId:
+        return validated_casilla_id(value, surface="test_m100_2025 fixture")
+
+    inputs = {
+        _m100_cid(casilla_id): value
+        for casilla_id, value in {
+            "0171": Decimal("1000.00"),
+            "0172": Decimal("200.00"),
+            "0181": Decimal("300.00"),
+            "0219": Decimal("50.00"),
+            "0225": Decimal("10.00"),
+            "0236": Decimal("5.00"),
+            "0232": Decimal("1.00"),
+            "0233": Decimal("2.00"),
+            "0234": Decimal("3.00"),
+            "0237": Decimal("4.00"),
+            "0592": Decimal("1.00"),
+            "0593": Decimal("2.00"),
+            "0594": Decimal("3.00"),
+            "0153": Decimal("6.00"),
+            "0599": Decimal("7.00"),
+            "0600": Decimal("8.00"),
+            "0601": Decimal("9.00"),
+            "0602": Decimal("10.00"),
+            "0603": Decimal("11.00"),
+            "0605": Decimal("12.00"),
+            "0606": Decimal("13.00"),
+        }.items()
+    }
+    binding_values = {
+        "renta-2025-modelo-100-estimacion-directa-es-normal": Decimal("1"),
+        "renta-2025-modelo-184-atribucion-actividades-economicas": Decimal("0"),
+        "renta-2025-profile-declaration-type": Decimal("1"),
+        "renta-2025-profile-family-minor-children-in-unit": Decimal("0"),
+        "renta-2025-profile-marriage-full-year": Decimal("0"),
+        "renta-2025-profile-marriage-month-start": Decimal("0"),
+        "renta-2025-profile-marriage-month-end": Decimal("0"),
+        "renta-2025-base-liquidable-negativa-general-anterior": Decimal("0"),
+        "renta-2025-modelo-111-retenciones-periodicas": Decimal("4.00"),
+        "renta-2025-modelo-123-retenciones-periodicas": Decimal("5.00"),
+        "renta-2025-profile-unidad-familiar-otros-miembros-base": Decimal("0"),
+        "renta-2025-profile-madrid-nacimiento-adopcion-eligible-count": Decimal("0"),
+    }
+
+    result = calculate_registry_snapshot(
+        snapshot,
+        inputs=inputs,
+        date_context={"filing_period": date(2025, 12, 31)},
+        binding_values=binding_values,
+        enum_binding_values={"renta-2025-profile-tax-residence-ccaa": "madrid"},
+        relation_values={
+            "renta-2025-rel-130-pagos-fraccionados": Decimal("45.00"),
+            "renta-2025-rel-131-pagos-fraccionados": Decimal("55.00"),
+        },
+        date_binding_values={"renta-2025-profile-taxpayer-birth-date": date(1985, 6, 15)},
+    )
+    assert result.values, "the M100/2025 calculation must close before the policy fold is meaningful"
+
+    # This is the identical computation `_verify.py` performs after
+    # status/coverage are finalised - proven here against the real registry
+    # snapshot rather than re-derived from a synthetic policy fixture.
+    policy = snapshot.verification_policy()
+    reconciled_casilla_ids = policy.computed_casilla_ids | policy.reconcile_when_present_casilla_ids
+    externally_grounded = policy.externally_grounded_casilla_ids & reconciled_casilla_ids
+    independently_grounded_fraction = (
+        len(externally_grounded) / len(reconciled_casilla_ids) if reconciled_casilla_ids else 0.0
+    )
+
+    assert externally_grounded == {
+        _m100_cid("0519"),
+        _m100_cid("0520"),
+        _m100_cid("0610"),
+        _m100_cid("0670"),
+    }
+    assert independently_grounded_fraction > 0.0
 
 
 class TestVerdictJsonRoundTrip:
