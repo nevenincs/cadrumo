@@ -24,9 +24,8 @@ asserts:
 3. The fixture's raw bytes do not contain any leak-marker string
    from the synthetic mapping (e.g. ``REPLACE_WITH_REAL``).
 
-When no fixtures are committed yet the parametrise is empty and
-pytest reports zero collected items — that is the intended
-skip-clean state for CI runs that lack scratch captures.
+When no fixtures are committed yet, the loop has no fixture work
+to perform but the module still contributes one passing test.
 """
 
 from __future__ import annotations
@@ -79,77 +78,29 @@ def _decompressed_streams(pdf_bytes: bytes) -> bytes:
     return b"\n".join(chunks)
 
 
-@pytest.mark.parametrize(
-    ("pdf_path", "sidecar_path"),
-    _FIXTURE_PAIRS,
-    ids=[pair[0].name for pair in _FIXTURE_PAIRS],
-)
-def test_fixture_has_synthetic_values_visible(
-    pdf_path: Path,
-    sidecar_path: Path,
-) -> None:
-    """Every committed fixture exposes its synthetic values where the sanitiser put them.
-
-    Args:
-        pdf_path: Path to the committed sanitised PDF fixture.
-        sidecar_path: Path to the SanitizationResult JSON sidecar.
-    """
-    raw_bytes = pdf_path.read_bytes()
-    sidecar = json.loads(sidecar_path.read_text(encoding="utf-8"))
-    decompressed = _decompressed_streams(raw_bytes)
-
-    # Every replacement's synthetic must be present somewhere in
-    # the fixture (either in the decompressed streams or in the
-    # raw byte image — DocInfo strings appear unencoded outside of
-    # streams).
-    for replacement in sidecar.get("replacements_applied", ()):
-        synthetic = replacement.get("synthetic")
-        if synthetic is None:
-            continue
-        synthetic_bytes = synthetic.encode("utf-8")
-        assert synthetic_bytes in raw_bytes or synthetic_bytes in decompressed, (
-            f"Synthetic {synthetic!r} from {sidecar_path} not found in {pdf_path}"
-        )
-
-
-@pytest.mark.parametrize(
-    ("pdf_path", "sidecar_path"),
-    _FIXTURE_PAIRS,
-    ids=[pair[0].name for pair in _FIXTURE_PAIRS],
-)
-def test_fixture_has_no_leak_markers(
-    pdf_path: Path,
-    sidecar_path: Path,
-) -> None:
-    """No fixture carries a placeholder string from a partially-filled mapping.
-
-    ``aeat sanitize prepare-map`` scaffolds entries with placeholder
-    cleartext (``REPLACE_WITH_REAL_CLEARTEXT``) and synthetic
-    (``REPLACE_WITH_SYNTHETIC``). If a fixture ends up carrying
-    those markers, the operator forgot to fill in the mapping
-    before running ``aeat sanitize pdf``.
-    """
-    raw_bytes = pdf_path.read_bytes()
-    decompressed = _decompressed_streams(raw_bytes)
+def test_committed_fixtures_have_synthetics_and_no_leak_markers() -> None:
+    """Every committed fixture exposes synthetics and carries no scaffold markers."""
     leak_markers = (b"REPLACE_WITH_REAL_CLEARTEXT", b"REPLACE_WITH_SYNTHETIC")
-    for marker in leak_markers:
-        assert marker not in raw_bytes, (
-            f"Leak marker {marker!r} found in {pdf_path}; partially-filled mapping committed"
-        )
-        assert marker not in decompressed, f"Leak marker {marker!r} found in decompressed streams of {pdf_path}"
+    for pdf_path, sidecar_path in _FIXTURE_PAIRS:
+        raw_bytes = pdf_path.read_bytes()
+        sidecar = json.loads(sidecar_path.read_text(encoding="utf-8"))
+        decompressed = _decompressed_streams(raw_bytes)
 
+        # Every replacement's synthetic must be present somewhere in
+        # the fixture (either in the decompressed streams or in the
+        # raw byte image — DocInfo strings appear unencoded outside of
+        # streams).
+        for replacement in sidecar.get("replacements_applied", ()):
+            synthetic = replacement.get("synthetic")
+            if synthetic is None:
+                continue
+            synthetic_bytes = synthetic.encode("utf-8")
+            assert synthetic_bytes in raw_bytes or synthetic_bytes in decompressed, (
+                f"Synthetic {synthetic!r} from {sidecar_path} not found in {pdf_path}"
+            )
 
-def test_fixture_root_is_skip_clean_when_empty() -> None:
-    """No-op test that documents the skip-clean state for CI without scratch.
-
-    When ``_FIXTURE_PAIRS`` is empty, the parametrised tests above
-    collect zero cases — pytest reports them as ``no tests ran``,
-    not as failures. This sentinel test exists so the file always
-    contributes at least one passing test, making the skip-clean
-    state observable in CI summaries.
-    """
-    if not _FIXTURE_PAIRS:
-        # No fixtures committed yet; this file stays structurally green.
-        return
-    # Otherwise the parametrised tests above are the real work.
-    assert len(_FIXTURE_PAIRS) > 0
+        for marker in leak_markers:
+            assert marker not in raw_bytes, (
+                f"Leak marker {marker!r} found in {pdf_path}; partially-filled mapping committed"
+            )
+            assert marker not in decompressed, f"Leak marker {marker!r} found in decompressed streams of {pdf_path}"
