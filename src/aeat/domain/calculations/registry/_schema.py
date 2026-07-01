@@ -1030,8 +1030,33 @@ class FormulaDefinition(RegistryModel):
 
 KNOWN_VERIFICATION_PREDICATE_OPERATORS: frozenset[str] = frozenset(
     {
+        # advisory_when_positive(["casilla_id"]) — single-casilla positive
+        # advisory: FIRES (ADVISORY shown) iff the one named casilla resolves
+        # strictly > 0. The minimal "this box is populated, review the
+        # downstream treatment" prompt for a value the calculation chain does
+        # not yet fully model. ADVISORY-only (no BLOCKING_RULE branch). Authored
+        # for the Modelo 100 anualidades por alimentos a favor de los hijos
+        # (casilla 0527): the separate-escala treatment (LIRPF art. 64 / art. 75)
+        # is applied without the statutory mínimo-por-descendientes gating in the
+        # current cuota chain, so a payer declaring anualidades may be
+        # under-taxed — surfaced as a non-blocking prompt to review the cuota,
+        # per no-silent-under-declaration, pending the full separate-escala
+        # modelling. Single casilla id, so it routes through the generic
+        # _casilla_list_predicate_failures (arity 1) at registry build; see the
+        # advisory_when_positive branch in _evaluate_advisory_predicate_fires.
+        "advisory_when_positive",
         "advisory_when_ratio_ge",
         "all_nonzero",
+        # at_most_one_positive(["id1", "id2", ...]) — mutual-exclusion
+        # invariant: no more than one listed casilla may resolve strictly > 0.
+        # As a BLOCKING_RULE it refuses overstatement shapes where alternative
+        # calculation lanes are both populated. As an ADVISORY it fires on the
+        # same contradiction without blocking. Authored for Modelo 202
+        # modalidad art. 40.3 clave 32, whose official instructions say
+        # "clave [18] (o clave [26])": B1 and B2 resultado-previo lanes are
+        # alternatives, and the arithmetic formula can only add the two
+        # zero-default lanes safely when at most one is positive.
+        "at_most_one_positive",
         "any_nonzero",
         "cap_le_when_positive",
         # casilla_equals_implies_nonzero(["antecedent_casilla_id", "literal",
@@ -1104,11 +1129,31 @@ class VerificationPredicateDefinition(RegistryModel):
 
     ``expression`` uses a minimal predicate DSL:
 
+    - ``advisory_when_positive(["casilla_id"])`` — single-casilla positive
+      advisory: FIRES (ADVISORY shown) iff the one named casilla value is
+      strictly ``> 0``. A zero or absent value holds trivially (no advisory).
+      ADVISORY-only: no ``BLOCKING_RULE`` branch is implemented (a positive box
+      is not itself an error — the advisory only prompts an operator review).
+      Authored for the Modelo 100 anualidades por alimentos a favor de los
+      hijos (casilla 0527), whose separate-escala treatment (LIRPF art. 64 for
+      the state scale, art. 75 for the autonomic scale) is applied in the
+      current cuota chain without the statutory mínimo-por-descendientes
+      gating, so a payer declaring anualidades may be under-taxed; the advisory
+      surfaces a non-blocking prompt to review the cuota pending the full
+      separate-escala modelling, per no-silent-under-declaration. Routes through
+      the generic single-casilla-list validation (exact arity 1) at registry
+      build. See the ``advisory_when_positive`` branch in
+      ``_evaluate_advisory_predicate_fires``.
     - ``all_nonzero(["id1", "id2", ...])`` — every listed casilla value must
       be non-zero (i.e. the filing invariant requires them all to be present
       and non-zero simultaneously).
     - ``any_nonzero(["id1", "id2", ...])`` — at least one listed casilla
       value must be non-zero.
+    - ``at_most_one_positive(["id1", "id2", ...])`` — no more than one
+      listed casilla may be strictly positive. Missing values read as zero.
+      Authored for alternative result lanes such as Modelo 202 art. 40.3
+      claves 18/26, where the downstream formula uses both zero-default
+      lanes but the official instruction permits only one positive lane.
     - ``cap_le_when_positive(["limited_id", "ceiling_id"])`` — when the
       ceiling casilla is strictly positive, the limited casilla MUST NOT
       exceed the ceiling, enforcing AEAT cap rules like Modelo 131 C11 ≤ C10

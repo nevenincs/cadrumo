@@ -319,6 +319,31 @@ def default_log_file_path() -> Path:
     return log_dir.expanduser() / _DEFAULT_LOG_FILE_NAME
 
 
+def _prepare_log_directory(log_file: Path) -> str | None:
+    """Best-effort create the diagnostic log directory.
+
+    Returns ``None`` when the directory already exists or was created, and a
+    short ``"<ErrorType>: <detail>"`` reason string when creation failed with
+    an :exc:`OSError`.
+
+    File logging is a best-effort diagnostic channel, not the operator result
+    contract. An ``AEAT_LOCAL_STORAGE_ROOT`` / ``AEAT_LOG_DIR`` that the
+    process cannot create — an inaccessible Windows path the operator's
+    account may not write, a path routed under a non-directory, a
+    ``PermissionError`` — MUST degrade to stderr-only logging rather than
+    crash CLI startup. Because :func:`get_logger` (and therefore this call)
+    runs at module-import time, an unguarded ``mkdir`` here escapes as a raw
+    Python traceback long before any CLI error boundary exists. Swallowing the
+    :exc:`OSError` into a reason string keeps startup alive; the caller
+    surfaces the reason as an instructive, redacted diagnostic.
+    """
+    try:
+        log_file.parent.mkdir(parents=True, exist_ok=True)
+    except OSError as exc:
+        return f"{type(exc).__name__}: {exc}"
+    return None
+
+
 def configure_logging() -> None:
     """Configure the project-wide diagnostic logging defaults.
 
@@ -327,6 +352,11 @@ def configure_logging() -> None:
     configured handler. The file handler writes redacted diagnostic plaintext
     under :func:`default_log_file_path`; this module does not encrypt logs or
     persist them through secure-object repositories.
+
+    When the diagnostic log directory cannot be created (an inaccessible
+    ``AEAT_LOCAL_STORAGE_ROOT`` / ``AEAT_LOG_DIR``), logging degrades to
+    stderr-only and records an instructive diagnostic naming the likely
+    remedy — it never crashes CLI startup with a raw traceback.
 
     The function is idempotent so early imports can safely call
     :func:`get_logger` without duplicating handlers.
@@ -338,9 +368,30 @@ def configure_logging() -> None:
     from .config import load_settings
 
     log_file = default_log_file_path()
-    log_file.parent.mkdir(parents=True, exist_ok=True)
+    log_directory_failure = _prepare_log_directory(log_file)
+    file_logging_enabled = log_directory_failure is None
 
     settings = load_settings()
+    configured_handlers: dict[str, dict[str, Any]] = {
+        "stderr": {
+            "level": settings.aeat_log_stderr_level,
+            "formatter": "standard",
+            "class": "logging.StreamHandler",
+            "stream": "ext://sys.stderr",
+            "filters": ["drop_run_event"],
+        },
+    }
+    root_handlers = ["stderr"]
+    if file_logging_enabled:
+        configured_handlers["file"] = {
+            "level": settings.aeat_log_file_level,
+            "formatter": "standard",
+            "class": "logging.FileHandler",
+            "filename": str(log_file),
+            "encoding": "utf-8",
+            "filters": ["drop_run_event"],
+        }
+        root_handlers.append("file")
     logging.config.dictConfig(
         {
             "version": 1,
@@ -351,25 +402,9 @@ def configure_logging() -> None:
             "filters": {
                 "drop_run_event": {"()": f"{__name__}._DropRunEventFilter"},
             },
-            "handlers": {
-                "stderr": {
-                    "level": settings.aeat_log_stderr_level,
-                    "formatter": "standard",
-                    "class": "logging.StreamHandler",
-                    "stream": "ext://sys.stderr",
-                    "filters": ["drop_run_event"],
-                },
-                "file": {
-                    "level": settings.aeat_log_file_level,
-                    "formatter": "standard",
-                    "class": "logging.FileHandler",
-                    "filename": str(log_file),
-                    "encoding": "utf-8",
-                    "filters": ["drop_run_event"],
-                },
-            },
+            "handlers": configured_handlers,
             "root": {
-                "handlers": ["stderr", "file"],
+                "handlers": root_handlers,
                 "level": settings.aeat_log_root_level,
             },
             "loggers": {
@@ -403,6 +438,21 @@ def configure_logging() -> None:
             handler.addFilter(SecretScrubbingFilter())
 
     _CONFIGURED = True
+
+    if not file_logging_enabled:
+        # Surface the degrade at ERROR so it clears the default ERROR-gated
+        # stderr handler (a WARNING would be swallowed) and flows through the
+        # secret-scrubbing filter installed above. Never silent: the operator
+        # is told what failed and the concrete remedy, in place of the raw
+        # import-time traceback this degrade replaces.
+        logging.getLogger(__name__).error(
+            "Diagnostic file logging disabled: cannot create the log directory %s (%s). "
+            "Continuing with stderr-only logging. Ensure AEAT_LOCAL_STORAGE_ROOT / AEAT_LOG_DIR "
+            "points at a path your account can write; on Windows check the folder's permissions, "
+            "run from a directory you own, or set AEAT_LOCAL_STORAGE_ROOT to a writable location.",
+            log_file.parent,
+            log_directory_failure,
+        )
 
 
 def set_log_level(level: int, *, file_level: int = logging.DEBUG) -> None:

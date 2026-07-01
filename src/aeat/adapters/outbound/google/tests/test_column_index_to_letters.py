@@ -39,11 +39,7 @@ def test_column_index_to_letters_at_boundaries(column: int, expected: str) -> No
     assert _column_index_to_letters(column) == expected
 
 
-def test_column_index_to_letters_rejects_zero() -> None:
+@pytest.mark.parametrize("column", (0, -1), ids=("zero", "negative"))
+def test_column_index_to_letters_rejects_non_positive_values(column: int) -> None:
     with pytest.raises(ValueError, match="must be 1-based and positive"):
-        _column_index_to_letters(0)
-
-
-def test_column_index_to_letters_rejects_negative() -> None:
-    with pytest.raises(ValueError, match="must be 1-based and positive"):
-        _column_index_to_letters(-1)
+        _column_index_to_letters(column)

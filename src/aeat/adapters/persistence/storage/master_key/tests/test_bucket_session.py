@@ -118,15 +118,17 @@ def test_touch_resets_idle_deadline() -> None:
     assert session.is_expired(past_window + timedelta(minutes=16)) is True
 
 
-def test_open_rejects_wrong_size_kek() -> None:
-    with pytest.raises(StorageValidationError, match="kek must be exactly 32 bytes") as exc_info:
-        _open_session(kek=b"x" * 16)
-    assert exc_info.value.translated_message == "errors.integrity.integrity_storage_validation"
-
-
-def test_open_rejects_wrong_size_dek() -> None:
-    with pytest.raises(StorageValidationError, match="dek must be exactly 32 bytes") as exc_info:
-        _open_session(dek=b"x" * 16)
+@pytest.mark.parametrize(
+    ("key_material", "message"),
+    [
+        ({"kek": b"x" * 16}, "kek must be exactly 32 bytes"),
+        ({"dek": b"x" * 16}, "dek must be exactly 32 bytes"),
+    ],
+    ids=("kek", "dek"),
+)
+def test_open_rejects_wrong_size_key_material(key_material: dict[str, bytes], message: str) -> None:
+    with pytest.raises(StorageValidationError, match=message) as exc_info:
+        _open_session(**key_material)
     assert exc_info.value.translated_message == "errors.integrity.integrity_storage_validation"
 
 

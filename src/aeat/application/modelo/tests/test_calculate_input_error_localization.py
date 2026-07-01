@@ -9,7 +9,9 @@ from ....core.resources import resources
 from .._calculate_input import (
     ModeloCalculateDecimalInputError,
     ModeloCalculateRelationInputError,
+    ModeloCalculateTextInputError,
     _decimal,
+    _text_value,
     _validated_relation_id,
 )
 from .._selectors import ModeloCalculationRevisionSelector
@@ -28,6 +30,20 @@ def test_decimal_override_error_is_typed_registered_and_localized() -> None:
     assert error.context == {"flag": "--relation", "key": "iva_base", "value": "not-decimal"}
     assert build_error_envelope(error).code
     assert "iva_base" in resolve_error_message(error)
+
+
+def test_empty_text_override_error_is_typed_registered_and_localized() -> None:
+    with pytest.raises(ModeloCalculateTextInputError) as exc_info:
+        _text_value("   ", key="tipo_renta")
+
+    error = exc_info.value
+    assert isinstance(error, AeatError)
+    assert error.translated_message == "application.modelo.errors.calculate_text_input_empty"
+    assert error.context == {"key": "tipo_renta", "value": "   "}
+    assert build_error_envelope(error).code
+    message = resolve_error_message(error)
+    assert message != error.translated_message
+    assert "--casilla" in message
 
 
 def test_unknown_relation_override_error_names_revision_relation_ids() -> None:

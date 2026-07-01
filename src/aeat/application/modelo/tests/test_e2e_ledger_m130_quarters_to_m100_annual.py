@@ -674,7 +674,7 @@ def test_verify_accepts_marta_m100_with_official_m130_observations(
 def test_marta_m100_salary_certificate_retenciones_reduce_cuota_diferencial(
     secure_objects: SecureObjectRepository,
 ) -> None:
-    """Marta can supply suffered salary withholding through a public binding."""
+    """Marta's salary-certificate withholding replays through verify as a binding."""
     _seed_taxpayer_profile()
     _persist_marta_style_ledger(secure_objects)
     _seed_prior_year_m100(secure_objects)
@@ -696,6 +696,24 @@ def test_marta_m100_salary_certificate_retenciones_reduce_cuota_diferencial(
     assert Decimal(annual.casilla_values[_M100_PAGOS_CASILLA]) == Decimal("1520.00")
     assert Decimal(annual.casilla_values[_M100_TOTAL_PAGOS_CASILLA]) == Decimal("6020.00")
     assert Decimal(annual.casilla_values[_M100_CUOTA_DIFERENCIAL_CASILLA]) == Decimal("2725.50")
+
+    report = verify_modelo_revision(
+        annual.calculation_revision_id,
+        actor="marta-cli-rerun",
+        workflow_profile=_marta_workflow_profile(),
+        work_unit_repository=WorkUnitCatalogueRepository(objects=secure_objects),
+        calculation_repository=CalculationRevisionCatalogueRepository(objects=secure_objects),
+        transaction_repository=TransactionCatalogueRepository(bucket_id=_BUCKET_ID, objects=secure_objects),
+        calculation_observation_repository=CalculationObservationRepository(objects=secure_objects),
+    )
+
+    assert report.calculation_revision_id == annual.calculation_revision_id
+    assert report.granted_verificado_completo is True, report.findings
+    assert not [
+        finding
+        for finding in report.findings
+        if finding.severity.value == "blocking" or "formula-divergence" in finding.message
+    ]
 
 
 def test_m100_base_only_gate_still_blocks_missing_renta_taxable_base(

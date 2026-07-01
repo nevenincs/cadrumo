@@ -161,8 +161,14 @@ def test_committed_snapshot_lists_single_workbook_parity_ref(modelo_130_snapshot
     assert tuple(modelo_130_snapshot.workbook_parity_refs) == ("modelo-130-dr-xls",)
 
 
-def test_committed_snapshot_lists_single_verification_expectation(modelo_130_snapshot: RegistrySnapshot) -> None:
-    assert tuple(modelo_130_snapshot.verification_expectations) == ("modelo-130-calculation-verification",)
+def test_committed_snapshot_lists_verification_expectations(modelo_130_snapshot: RegistrySnapshot) -> None:
+    # The coverage-gated calculation contract plus the exhaustive
+    # reconcile-when-present contract (situational computed casillas value-checked
+    # when present, excluded from the coverage denominator).
+    assert tuple(modelo_130_snapshot.verification_expectations) == (
+        "modelo-130-calculation-verification",
+        "modelo-130-2019-y-siguientes-reconcile-when-present",
+    )
 
 
 def test_committed_snapshot_declares_no_support_removal_decisions(modelo_130_snapshot: RegistrySnapshot) -> None:

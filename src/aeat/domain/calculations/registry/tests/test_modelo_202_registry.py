@@ -11,7 +11,7 @@ from .....core._casilla_id import CasillaId
 from .....core.resources import bundled_path
 from .._formula_runtime import _evaluate_expression
 from .._legal import verify_legal_catalogue
-from .._schema import ModeloDefinition, RegistryCatalogues
+from .._schema import FormulaExpression, ModeloDefinition, RegistryCatalogues
 from .._snapshot import build_snapshot
 from .._validate import RegistryValidator
 from ._registry_schema_support import _committed_modelo
@@ -230,6 +230,7 @@ def test_committed_modelo_202_guards_base_imponible_previa_under_declaration(rev
 _M202_B2_TIPO_3_ADVISORY_PREDICATE_ID = "modelo-202-2025-b2-base-tipo-3-implica-importe-pago-fraccionado-tipo-3"
 _M202_B2_TIPO_4_ADVISORY_PREDICATE_ID = "modelo-202-2025-b2-base-tipo-4-implica-importe-pago-fraccionado-tipo-4"
 _M202_B2_RESULTADO_PREVIO_ADVISORY_PREDICATE_ID = "modelo-202-b2-resultado-previo-implica-modalidad-40-3-resultado"
+_M202_B1_B2_RESULTADO_PREVIO_XOR_PREDICATE_ID = "modelo-202-b1-b2-resultado-previo-at-most-one-positive"
 
 
 def test_committed_modelo_202_2025_guards_b2_tipo_3_and_tipo_4_under_declaration() -> None:
@@ -286,10 +287,11 @@ def test_committed_modelo_202_b2_resultado_previo_feeds_modalidad_40_3_resultado
     the final ``cantidad a ingresar`` (clave 34). See the
     `modelo-verify-nonzero-guards` m202-deferred-items audit (2026-07-01) for
     the investigation that confirmed the defect against the bundled corpus
-    and resolved it by combining both lanes additively (the registry models
-    no discrete B1-vs-B2 discriminator binding, and both lanes' manual
-    inputs default to zero when unused, so addition reproduces "18 (o 26)"
-    without inventing new registry data).
+    and resolved it by combining both lanes additively with a blocking
+    lane-exclusivity predicate: the registry models no discrete B1-vs-B2
+    discriminator binding, and both lanes' manual inputs default to zero when
+    unused, so addition reproduces "18 (o 26)" without inventing new registry
+    data only while verification refuses the both-positive overstatement case.
     """
     modelo, _catalogues = _load_modelo_202()
     revision = modelo.revisions[revision_id]
@@ -310,12 +312,20 @@ def test_committed_modelo_202_b2_resultado_previo_feeds_modalidad_40_3_resultado
 
     predicate_ids = {p.predicate_id for p in revision.verification_predicates}
     assert _M202_B2_RESULTADO_PREVIO_ADVISORY_PREDICATE_ID not in predicate_ids
+    predicate = next(
+        p
+        for p in revision.verification_predicates
+        if p.predicate_id == _M202_B1_B2_RESULTADO_PREVIO_XOR_PREDICATE_ID
+    )
+    assert predicate.expression == 'at_most_one_positive(["18", "26"])'
+    assert predicate.finding_kind == "BLOCKING_RULE"
+    assert "ley-27-2014:art-40-3" in tuple(str(r) for r in predicate.legal_refs)
 
 
-def _iter_expression_nodes(expression: object) -> list[object]:
+def _iter_expression_nodes(expression: FormulaExpression) -> list[FormulaExpression]:
     """Recursively collect every node (operator or leaf) in a formula expression tree."""
     nodes = [expression]
-    for arg in getattr(expression, "args", ()):
+    for arg in expression.args:
         nodes.extend(_iter_expression_nodes(arg))
     return nodes
 

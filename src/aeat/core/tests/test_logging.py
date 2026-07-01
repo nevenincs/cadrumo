@@ -19,10 +19,14 @@ from typing import cast
 
 import pytest
 
+from .. import logging as _logging_mod
+from ..config import override_settings
 from ..logging import (
     SecretScrubbingFilter,
+    _prepare_log_directory,
     _scrub_value,
     attach_run_sink,
+    configure_logging,
     default_log_file_path,
     detach_run_sink,
     get_logger,
@@ -67,6 +71,85 @@ def _read_log_tail(path: Path, *, max_bytes: int = 64 * 1024) -> str:
         size = handle.tell()
         handle.seek(max(0, size - max_bytes))
         return handle.read().decode("utf-8", errors="replace")
+
+
+def test_prepare_log_directory_returns_none_for_creatable_path(tmp_path: Path) -> None:
+    """A writable target yields no failure reason and materialises the directory."""
+
+    log_file = tmp_path / "logs" / "aeat.log"
+
+    reason = _prepare_log_directory(log_file)
+
+    assert reason is None
+    assert log_file.parent.is_dir()
+
+
+def test_prepare_log_directory_reports_reason_when_path_uncreatable(tmp_path: Path) -> None:
+    """A log directory routed under a real file cannot be created and reports why.
+
+    Reproduces the class of failure the Windows PowerShell testimonial hit: an
+    ``AEAT_LOCAL_STORAGE_ROOT`` that resolves to an inaccessible / non-directory
+    path. The helper must return a diagnostic reason string instead of letting
+    the underlying ``OSError`` escape.
+    """
+
+    blocker = tmp_path / "not-a-directory"
+    blocker.write_text("x", encoding="utf-8")
+    log_file = blocker / "logs" / "aeat.log"
+
+    reason = _prepare_log_directory(log_file)
+
+    assert reason is not None
+    assert not log_file.parent.exists()
+    # The reason names the concrete OS error type so triage sees the cause.
+    assert "Error" in reason
+
+
+def test_configure_logging_degrades_to_stderr_only_when_log_dir_uncreatable(
+    tmp_path: Path,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    """An uncreatable log directory must NOT crash startup with a raw traceback.
+
+    Real-behavior reproduction of Windows PowerShell issue #577: the log
+    directory derived from an inaccessible ``AEAT_LOCAL_STORAGE_ROOT`` cannot be
+    created, and ``configure_logging`` runs at import time — before any CLI
+    error boundary. The contract: no exception escapes, logging degrades to
+    stderr-only (no ``FileHandler`` for the dead path), and an instructive,
+    non-silent diagnostic names the remedy.
+    """
+
+    blocker = tmp_path / "storage-root-file"
+    blocker.write_text("x", encoding="utf-8")
+    dead_log_dir = blocker / "logs"
+
+    root_logger = logging.getLogger()
+    original_configured = _logging_mod._CONFIGURED
+    try:
+        _logging_mod._CONFIGURED = False
+        with override_settings(aeat_log_dir=dead_log_dir):
+            # Must not raise despite the uncreatable directory.
+            configure_logging()
+
+        file_handlers = [
+            handler
+            for handler in root_logger.handlers
+            if isinstance(handler, logging.FileHandler) and Path(handler.baseFilename).parent == dead_log_dir
+        ]
+        assert file_handlers == [], "no FileHandler may point at the uncreatable log directory"
+        assert any(isinstance(handler, logging.StreamHandler) for handler in root_logger.handlers), (
+            "stderr StreamHandler must remain so diagnostics still surface"
+        )
+
+        captured = capsys.readouterr()
+        assert "stderr-only" in captured.err
+        assert "AEAT_LOCAL_STORAGE_ROOT" in captured.err
+        assert not dead_log_dir.exists()
+    finally:
+        # Rebuild the normal configuration so sibling tests see a healthy logger.
+        _logging_mod._CONFIGURED = False
+        configure_logging()
+        _logging_mod._CONFIGURED = original_configured or True
 
 
 def test_secret_scrubbing_redacts_sensitive_fields_in_rendered_output() -> None:

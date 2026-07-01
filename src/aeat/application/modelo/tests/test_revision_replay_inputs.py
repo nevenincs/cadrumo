@@ -32,6 +32,12 @@ _M390_TIPO_DECLARACION_CASILLA: CasillaId = validated_casilla_id(
     "decl.tipo-declaracion",
     surface="_M390_TIPO_DECLARACION_CASILLA",
 )
+_M100_RETENCIONES_TRABAJO_CASILLA: CasillaId = validated_casilla_id(
+    "0596",
+    surface="_M100_RETENCIONES_TRABAJO_CASILLA",
+)
+_M100_SALARY_CERT_RETENCIONES_BINDING = "renta-2024-certificado-trabajo-retenciones"
+_M100_M111_RETENCIONES_BINDING = "renta-2024-modelo-111-retenciones-periodicas"
 
 
 def _work_unit(*, modelo: str, filing_year: int, period_code: str) -> WorkUnit:
@@ -172,6 +178,21 @@ def test_revision_replay_inputs_keep_applicable_m100_pagos_relation_unresolved()
 
     assert "renta-2025-rel-130-pagos-fraccionados" not in replay_inputs
     assert replay_inputs["renta-2025-rel-131-pagos-fraccionados"] == "0"
+
+
+def test_revision_replay_inputs_recover_salary_certificate_binding_for_m100_2024_0596() -> None:
+    work_unit = _work_unit(modelo="100", filing_year=2024, period_code="0A")
+    revision = _revision(
+        work_unit,
+        input_values_by_casilla_id={_M100_RETENCIONES_TRABAJO_CASILLA: "4500"},
+        casilla_values={_M100_RETENCIONES_TRABAJO_CASILLA: Decimal("4500")},
+    )
+
+    replay_inputs = revision_filing_replay_inputs(revision=revision, work_unit=work_unit)
+
+    assert replay_inputs[_M100_SALARY_CERT_RETENCIONES_BINDING] == "4500"
+    assert _M100_RETENCIONES_TRABAJO_CASILLA not in replay_inputs
+    assert _M100_M111_RETENCIONES_BINDING not in replay_inputs
 
 
 def test_revision_replay_inputs_strip_m349_country_prefix_from_export_nif_subfield() -> None:

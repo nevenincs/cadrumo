@@ -87,14 +87,17 @@ def test_canonicalise_none_returns_empty_string() -> None:
     assert _canonicalise(question, None) == ""
 
 
-def test_canonicalise_bool_true_returns_lowercase_true_token() -> None:
+@pytest.mark.parametrize(
+    ("value", "expected"),
+    [
+        (True, "true"),
+        (False, "false"),
+    ],
+    ids=("true", "false"),
+)
+def test_canonicalise_bool_returns_lowercase_token(value: bool, expected: str) -> None:
     question = _question(answer_type=bool, widget=WizardWidget.CONFIRM)
-    assert _canonicalise(question, True) == "true"
-
-
-def test_canonicalise_bool_false_returns_lowercase_false_token() -> None:
-    question = _question(answer_type=bool, widget=WizardWidget.CONFIRM)
-    assert _canonicalise(question, False) == "false"
+    assert _canonicalise(question, value) == expected
 
 
 def test_canonicalise_path_returns_str_form() -> None:
@@ -123,14 +126,17 @@ def test_canonicalise_empty_string_passes_through_as_empty() -> None:
 # ---------------------------------------------------------------------------
 
 
-def test_parse_canonical_bool_true_token_returns_true() -> None:
+@pytest.mark.parametrize(
+    ("raw_value", "expected"),
+    [
+        ("true", True),
+        ("false", False),
+    ],
+    ids=("true", "false"),
+)
+def test_parse_canonical_bool_declared_tokens_return_bool(raw_value: str, expected: bool) -> None:
     question = _question(answer_type=bool, widget=WizardWidget.CONFIRM)
-    assert _parse_canonical(question, "true") is True
-
-
-def test_parse_canonical_bool_false_token_returns_false() -> None:
-    question = _question(answer_type=bool, widget=WizardWidget.CONFIRM)
-    assert _parse_canonical(question, "false") is False
+    assert _parse_canonical(question, raw_value) is expected
 
 
 def test_parse_canonical_bool_non_true_token_returns_false() -> None:
@@ -245,7 +251,15 @@ def test_parse_canonical_optional_bool_blank_projects_to_undeclared() -> None:
     assert _parse_canonical(question, "") == ""
 
 
-def test_parse_canonical_optional_bool_declared_tokens_project_to_bool() -> None:
+@pytest.mark.parametrize(
+    ("raw_value", "expected"),
+    [
+        ("true", True),
+        ("false", False),
+    ],
+    ids=("true", "false"),
+)
+def test_parse_canonical_optional_bool_declared_tokens_project_to_bool(raw_value: str, expected: bool) -> None:
     """A positively-declared optional CONFIRM still projects to ``True``
     or ``False`` — the blank-aware branch must only fire for blank."""
 
@@ -257,8 +271,7 @@ def test_parse_canonical_optional_bool_declared_tokens_project_to_bool() -> None
         required=False,
         answer_type=bool,
     )
-    assert _parse_canonical(question, "true") is True
-    assert _parse_canonical(question, "false") is False
+    assert _parse_canonical(question, raw_value) is expected
 
 
 def test_canonicalise_blank_string_for_optional_bool_stays_blank() -> None:

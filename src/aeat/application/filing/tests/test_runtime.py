@@ -10,6 +10,7 @@ and representative of the registry's legal-grounding requirements.
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from datetime import date
 from pathlib import Path
 from typing import Protocol
@@ -72,40 +73,33 @@ def _source_casilla_source_refs() -> dict[CasillaId, tuple[str, ...]]:
     return {casilla.id: casilla.source_refs for casilla in snapshot.revision.casillas}
 
 
-def test_legal_refs_survive_projection() -> None:
-    """RegistryCasillaSchema must carry the same legal_refs as the source CasillaDefinition."""
-    source = _source_casilla_refs()
+@pytest.mark.parametrize(
+    ("source_factory", "attribute"),
+    [
+        (_source_casilla_refs, "legal_refs"),
+        (_source_casilla_source_refs, "source_refs"),
+    ],
+    ids=("legal-refs", "source-refs"),
+)
+def test_refs_survive_projection(
+    source_factory: Callable[[], dict[CasillaId, tuple[str, ...]]],
+    attribute: str,
+) -> None:
+    """RegistryCasillaSchema must carry the same refs as the source CasillaDefinition."""
+    source = source_factory()
     provider = build_runtime_schema_provider(modelos=[_TEST_MODELO], filing_year=_TEST_YEAR, period=_TEST_PERIOD)
     collection = provider.get_collection(_TEST_MODELO)
     schemas = collection.all()
 
     casillas_with_refs = [s for s in schemas if source.get(s.casilla_id)]
-    assert casillas_with_refs, f"No casillas with legal_refs found in modelo {_TEST_MODELO} — test would be vacuous"
+    assert casillas_with_refs, f"No casillas with {attribute} found in modelo {_TEST_MODELO} — test would be vacuous"
 
     for schema in schemas:
         assert isinstance(schema, RegistryCasillaSchema)
         expected = source.get(schema.casilla_id, ())
-        assert schema.legal_refs == expected, (
-            f"legal_refs mismatch for casilla {schema.casilla_id}: projected={schema.legal_refs!r}, source={expected!r}"
-        )
-
-
-def test_source_refs_survive_projection() -> None:
-    """RegistryCasillaSchema must carry the same source_refs as the source CasillaDefinition."""
-    source = _source_casilla_source_refs()
-    provider = build_runtime_schema_provider(modelos=[_TEST_MODELO], filing_year=_TEST_YEAR, period=_TEST_PERIOD)
-    collection = provider.get_collection(_TEST_MODELO)
-    schemas = collection.all()
-
-    casillas_with_refs = [s for s in schemas if source.get(s.casilla_id)]
-    assert casillas_with_refs, f"No casillas with source_refs found in modelo {_TEST_MODELO} — test would be vacuous"
-
-    for schema in schemas:
-        assert isinstance(schema, RegistryCasillaSchema)
-        expected = source.get(schema.casilla_id, ())
-        assert schema.source_refs == expected, (
-            f"source_refs mismatch for casilla {schema.casilla_id}: "
-            f"projected={schema.source_refs!r}, source={expected!r}"
+        projected = getattr(schema, attribute)
+        assert projected == expected, (
+            f"{attribute} mismatch for casilla {schema.casilla_id}: projected={projected!r}, source={expected!r}"
         )
 
 

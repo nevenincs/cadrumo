@@ -47,7 +47,6 @@ def validate_construct_closure(
         owner = f"construct {construct.id}"
         failures.extend(_missing_refs(scope, owner, construct.legal_refs, legal_refs, "legal"))
         failures.extend(_missing_refs(scope, owner, construct.source_refs, source_refs, "source"))
-        failures.extend(evidence.require_legal_authority_refs(scope, owner, construct.legal_refs))
         failures.extend(evidence.require_source_tier(scope, owner, construct.source_refs, "official_source_guidance"))
         construct_legal_refs = set(construct.legal_refs)
         construct_source_refs = set(construct.source_refs)

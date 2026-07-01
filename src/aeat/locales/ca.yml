@@ -363,6 +363,7 @@ aggregation:
   source_mesh:
     errors:
       ambiguous_source_disposition: aggregation.source_mesh.errors.ambiguous_source_disposition
+      binding_source_mismatch: 'source_kind i binding_source fan referencia a families d''origen de binding diferents.'
       duplicate_binding_owner: 'Error intern: propietari de vinculacio duplicat a
         la malla de fonts.'
       duplicate_bound_casilla_owner: 'Error intern: propietari de casella vinculada
@@ -373,6 +374,7 @@ aggregation:
         tipus de font en blanc.
       owned_sources_duplicate: Les fonts propietat de la malla de fonts han de ser
         úniques.
+      relation_provenance_incomplete: 'La procedencia de la relacio ha d''incloure model d''origen, exercici, periodes, caselles, referencies legals i referencies d''origen.'
       source_transaction_ids_blank: Els identificadors de transacció de la malla de
         fonts no poden contenir blancs.
       source_transaction_ids_duplicate: Els identificadors de transacció de la malla
@@ -622,7 +624,6 @@ application:
       errors:
         import_file_read_failed: 'No s ha pogut llegir el fitxer d importacio de factures:
           %{path_name}.'
-        invalid_base_total: 'El valor base_total de la factura no es decimal: %{base_total}.'
         invalid_json: El contingut JSON de factures no es valid a la linia %{line},
           columna %{column}.
         invalid_json_shape: El contingut JSON de factures ha de ser un objecte o una
@@ -647,9 +648,11 @@ application:
     errors:
       evidence_attachment_requires_ids: L'adjunt d'evidència del llibre diari requereix
         evidència de compra o identificadors d'adjunt.
+      idempotency_key_conflict: La clau d'idempotència ja identifica una transacció
+        emmagatzemada amb dades diferents. Useu una clau d'idempotència nova per a
+        un moviment diferent, o ometeu la clau per afegir un duplicat deliberat.
       purchase_evidence_already_set: La transacció del llibre diari ja té un purchase_invoice_evidence_id;
         elimineu-lo o substituïu-lo a través del flux d'adjunts.
-      idempotency_key_conflict: 'La clau d''idempotència ja identifica una transacció emmagatzemada amb dades diferents. Useu una clau d''idempotència nova per a un moviment diferent, o ometeu la clau per afegir un duplicat deliberat.'
   live:
     expedientes:
       errors:
@@ -732,6 +735,10 @@ application:
       calculate_binding_unknown: '--binding %{key} no coincideix amb cap binding d''aquesta
         revisio. Bindings acceptats: %{accepted}. Useu `aeat app modelo bindings list
         <MODELO>` per llistar els bindings valids.'
+      calculate_boolean_binding_encoding_invalid: 'El valor del binding %{key} és
+        un indicador booleà codificat com a decimal i ha de ser un de: %{accepted}.
+        S''ha rebut %{value}. Codificació acceptada: %{mapping}. Executa ''aeat app
+        modelo bindings list <MODELO>'' per veure la codificació decimal de cada binding.'
       calculate_casilla_noncanonical_refused: '--casilla %{key} no es un casilla.id
         canonic o es ambigu. Usa el casilla.id canonic exacte: %{accepted}.'
       calculate_casilla_unknown: --casilla %{key} no es un casilla.id canonic d'aquesta
@@ -762,6 +769,8 @@ application:
         canonic de forma segura.
       calculate_semantic_role_missing: La revisio del model no conte cap casella amb
         el rol semantic %{semantic_role}.
+      calculate_text_input_empty: El valor de --casilla correspon a una casella de
+        text i no pot estar buit.
       calculation_registry_root_missing: Registry root %{registry_root} is missing;
         modelo calculation cannot continue.
       calculation_registry_snapshot_unresolved: Registry snapshot for modelo %{modelo},
@@ -892,7 +901,6 @@ application:
         Torneu a crear la unitat de treball per vincular-la a la revisio actual.
       workflow_input_mismatch: La sol·licitud d'entrada del flux de treball no coincideix
         amb la revisió de càlcul.
-      calculate_boolean_binding_encoding_invalid: 'El valor del binding %{key} és un indicador booleà codificat com a decimal i ha de ser un de: %{accepted}. S''ha rebut %{value}. Codificació acceptada: %{mapping}. Executa ''aeat app modelo bindings list <MODELO>'' per veure la codificació decimal de cada binding.'
     findings:
       art20_reduccion_next_action: Verifiqueu si les vostres altres rendes diferents
         de les del treball excloses les exemptes de l'exercici no superen 6500 EUR;
@@ -950,6 +958,8 @@ application:
         (C595) és zero; confirmeu que és un zero legítim (base igual o inferior al
         mínim personal i familiar, o compensada per deduccions) i no una llacuna no
         modelada.
+      modelo_123_2024_base_total_implica_retenciones_total: La base total és positiva
+        però les retencions totals són zero; reviseu la determinació de la retenció.
       modelo_130_art109_exencion_alta_retencion: 'Art. 109 RIRPF: exempt de presentar
         M130 aquest trimestre perquè les retencions i ingressos a compte acumulats
         a l''any representen el 70% o més dels rendiments íntegres.'
@@ -969,6 +979,9 @@ application:
         rendiments nets d'activitats en dades-base (C01) són positius però el pagament
         fraccionat previ per dades-base (C02) és zero; reviseu la casella 02 amb el
         percentatge de l'Ordre de mòduls (mínim 2 per cent).
+      modelo_151_base_liquidable_implica_cuota_integra: La base liquidable general
+        és positiva però la quota íntegra general és zero; reviseu la determinació
+        de la quota íntegra.
       modelo_200_base_imponible_determinada_cuando_resultado_positivo: El resultat
         comptable és positiu però la base imposable (C552) és zero; reviseu la determinació
         de la base imposable.
@@ -976,6 +989,15 @@ application:
         imposables negatives pendents (C671) no concilia amb l'arrossegament (obertura
         C670 menys aplicat C547 més la BIN generada en el període); reviseu el saldo
         a compensar en exercicis futurs.
+      modelo_202_base_imponible_previa_determinada_cuando_resultado_positivo: El resultat
+        comptable és positiu però la base imposable prèvia és zero; reviseu la determinació
+        de la base imposable.
+      modelo_210_2025_inmobiliaria_implica_base_imponible: El tipus de renda és inmobiliaria
+        però la base imposable és zero; reviseu la determinació de la base imposable
+        de la renda immobiliària imputada (valor cadastral, coeficient, dies d'imputació).
+      modelo_210_2025_rendimientos_integros_implica_base_imponible: Els rendiments
+        íntegres són positius però la base imposable és zero; reviseu la determinació
+        de la base imposable.
       modelo_303_official_deducible_boxes_unpopulated_cuando_cuota_deducible_positiva: L'IVA
         deduible total (cuota-deducible-total) es positiu, pero totes les caselles
         oficials del Disseny de Registres (29 interiors corrents, 33 importacions,
@@ -988,6 +1010,9 @@ application:
         13 inversio del subjecte passiu) continuen a zero. El calcul no emplena automaticament
         les caselles oficials numerades; traslladeu la quota a les caselles corresponents
         abans de presentar.
+      modelo_714_cuota_integra_implica_total_cuota_integra: La quota íntegra és positiva
+        però la quota íntegra total és zero; reviseu la transcripció de la quota íntegra
+        total.
       registry_snapshot_unresolved: registry snapshot for modelo=%{modelo} filing_year=%{filing_year}
         period=%{period} could not be resolved
       representante_fiscal_required:
@@ -995,12 +1020,6 @@ application:
           mitjancant l'ordre `aeat config profile edit`. El TRLIRNR Art. 10 exigeix
           que els declarants IRNR no residents a la UE/EEE designin un representant
           per a comunicacions amb l'AEAT.
-      modelo_210_2025_rendimientos_integros_implica_base_imponible: 'Els rendiments íntegres són positius però la base imposable és zero; reviseu la determinació de la base imposable.'
-      modelo_210_2025_inmobiliaria_implica_base_imponible: 'El tipus de renda és inmobiliaria però la base imposable és zero; reviseu la determinació de la base imposable de la renda immobiliària imputada (valor cadastral, coeficient, dies d''imputació).'
-      modelo_202_base_imponible_previa_determinada_cuando_resultado_positivo: 'El resultat comptable és positiu però la base imposable prèvia és zero; reviseu la determinació de la base imposable.'
-      modelo_123_2024_base_total_implica_retenciones_total: 'La base total és positiva però les retencions totals són zero; reviseu la determinació de la retenció.'
-      modelo_151_base_liquidable_implica_cuota_integra: 'La base liquidable general és positiva però la quota íntegra general és zero; reviseu la determinació de la quota íntegra.'
-      modelo_714_cuota_integra_implica_total_cuota_integra: 'La quota íntegra és positiva però la quota íntegra total és zero; reviseu la transcripció de la quota íntegra total.'
     iva_wallet:
       correct_no_record: No existeix cap registre de compensació sembrat per a %{filing_year}/%{period}.
         Executa primer 'aeat app modelo iva-wallet seed'; la correcció sobreescriu
@@ -1217,7 +1236,10 @@ application:
     next_hint:
       modelo_work_create: aeat app modelo work create
     notices:
-      ccaa_defaulted: 'No es va triar cap comunitat autònoma, així que es va assumir %{ccaa} per a aquest perfil. Les deduccions autonòmiques i el tram autonòmic de l''escala es calculen per a %{ccaa}. Feu servir --tax-residence-ccaa per triar una altra comunitat.'
+      ccaa_defaulted: No es va triar cap comunitat autònoma, així que es va assumir
+        %{ccaa} per a aquest perfil. Les deduccions autonòmiques i el tram autonòmic
+        de l'escala es calculen per a %{ccaa}. Feu servir --tax-residence-ccaa per
+        triar una altra comunitat.
     output_labels:
       active_profile: Perfil actiu
       next: Seguent
@@ -1293,10 +1315,12 @@ categories:
     display_label_851219: Etiqueta de visualització 851219
 cli:
   agent:
-    app_help: 'Materialitza el harness de l''operador (regles, persones, habilitats) per a un runtime d''agent.'
+    app_help: Materialitza el harness de l'operador (regles, persones, habilitats)
+      per a un runtime d'agent.
     materialise:
-      output_help: 'Directori on escriure l''espai de treball de l''operador.'
-      summary: 'Espai de treball de l''operador escrit a {path}: {rules} regles, {personas} persones, {skills} habilitats.'
+      output_help: Directori on escriure l'espai de treball de l'operador.
+      summary: 'Espai de treball de l''operador escrit a {path}: {rules} regles, {personas}
+        persones, {skills} habilitats.'
   app:
     ledger:
       evidence:
@@ -1569,13 +1593,19 @@ cli:
         override_help: Sobreescriptura temporal de binding amb sintaxi KEY=VALUE (repetible)
         period_help: 'Token de periode: 0A anual, 1T-4T trimestres, 01-12 mesos; per
           a models censals (036) usa alta, modificacion o baja.'
+        relation_input_channel: "%{binding_id}\talimentada per la relació %{relation_id}\t\
+          useu --relation %{relation_id}=VALUE"
+        relation_input_guidance: Algunes vinculacions següents s'alimenten de relacions
+          del registre (agregacions entre models o entre períodes), no de valors --binding
+          directes. Indiqueu cadascuna amb --relation RELATION_ID=VALUE abans de calcular.
         resolve_help: Resol els bindings i mostra els seus valors amb sobreescriptures
           temporals opcionals, sense mutar l'estat
         unknown_keys: 'Clau(s) de --binding desconeguda(es) {keys}; vinculacions conegudes
           per a {code}@{revision} ({period}): {suggestion}.'
         year_help: Exercici fiscal del model (p. ex. 2026)
-        relation_input_guidance: 'Algunes vinculacions següents s''alimenten de relacions del registre (agregacions entre models o entre períodes), no de valors --binding directes. Indiqueu cadascuna amb --relation RELATION_ID=VALUE abans de calcular.'
-        relation_input_channel: "%{binding_id}\talimentada per la relació %{relation_id}\tuseu --relation %{relation_id}=VALUE"
+      casilla:
+        casilla_help: 'Id de casella o numero impres de casella que cal descriure (p. ex. 0596).'
+        help: 'Mostra l''etiqueta, el fonament legal, el tipus d''entrada i la formula d''una casella al snapshot de registre resolt.'
       casillas:
         as_of_help: Resoldre la revisió del model vigent a la data ISO indicada (AAAA-MM-DD)
         explain_help: Incloure el text d'ajuda localitzat a la sortida de text.
@@ -1752,9 +1782,10 @@ cli:
         seed_period_help: 'Periode de la presentacio del Model 303: trimestres 1T-4T
           (p. ex. 4T).'
       list:
+        domain_help: Filtra el catàleg de models per família tributària (p. ex. iva,
+          irpf, is)
         help: Llistar tots els models tributaris oficials registrats en el sistema.
         year_help: Filtrar el catàleg de models per un únic exercici fiscal
-        domain_help: 'Filtra el catàleg de models per família tributària (p. ex. iva, irpf, is)'
       m036:
         alta_help: Registra una declaració M036 d'alta (inscripció censal inicial)
           presentada a seu.
@@ -1891,6 +1922,7 @@ cli:
         create_not_applicable_refused: 'El model %{modelo} no s''aplica al tipus de
           contribuent del perfil actiu: %{reason} Si teniu un motiu per crear la unitat
           de treball igualment, torneu a executar l''ordre amb --allow-not-applicable.'
+        create_quiet_help: 'Omet la sortida de confirmacio llegible; l''envolupant --format json, els avisos i el codi de sortida no es veuen afectats.'
         create_reused: S'ha retornat la unitat de treball existent (idempotent sobre
           model/exercici/període/revisió); no s'ha creat res nou. Reanomena-la amb
           `aeat app modelo work rename`.
@@ -1946,6 +1978,9 @@ cli:
         dt12_computation_error: 'Error de càlcul DT12: %{message}'
         file_help: Marcar una revisió verificada com a internament presentada. NO
           envia a l'AEAT
+        file_idempotent_noop: 'Operació idempotent sense efecte: la revisió de càlcul
+          %{calculation_revision_id} ja està presentada; s''ha retornat el registre
+          de presentació existent sense canvis.'
         from_filing_record_help: Identificador estable del filing record base a amendar.
           Ha de portar evidència externa importada (justificant / CSV / captura en
           viu)
@@ -2097,7 +2132,8 @@ cli:
         revision_selector_help: Selector de revisio.
         revision_show_help: Mostrar els valors de casella desats d'una revisió de
           càlcul concreta (sense recalcular)
-        revision_verbose_help: Mostrar la traça completa de la fórmula per casella (op, formula_id, referències i valors dels operands).
+        revision_verbose_help: Mostrar la traça completa de la fórmula per casella
+          (op, formula_id, referències i valors dels operands).
         revisions_help: Llistar les revisions de càlcul, opcionalment filtrades per
           unitat de treball
         row_empty_key: Clau de camp buida a --row {token}; cada camp ha de tenir el
@@ -2158,7 +2194,6 @@ cli:
         year_help: Exercici fiscal de la unitat de treball (p. ex. 2026)
         year_out_of_range: L'exercici fiscal %{year} està fora de rang; indiqueu un
           any entre %{minimum} i %{maximum}.
-        file_idempotent_noop: 'Operació idempotent sense efecte: la revisió de càlcul %{calculation_revision_id} ja està presentada; s''ha retornat el registre de presentació existent sense canvis.'
   common:
     errors:
       draft_id_not_found: ID d'esborrany %{draft_id} no trobat
@@ -2747,8 +2782,11 @@ cli:
       description_help: Descripció no buida de la transacció
       direction_help: Sentit de la transacció (INCOMING, OUTGOING o INTERNAL_TRANSFER)
       help: Afegeix una transacció manual al llibre del perfil actiu
-      idempotency_key_help: 'Clau estable per a aquesta anotació lògica: repetir la mateixa clau és una operació sense efecte, de manera que els reintents no dupliquen la fila. Ometeu-la per afegir un duplicat deliberat.'
-      idempotent_noop: 'Operació idempotent sense efecte: ja existeix una transacció amb aquesta clau d''idempotència (%{transaction_id}); no s''ha afegit res.'
+      idempotency_key_help: 'Clau estable per a aquesta anotació lògica: repetir la
+        mateixa clau és una operació sense efecte, de manera que els reintents no
+        dupliquen la fila. Ometeu-la per afegir un duplicat deliberat.'
+      idempotent_noop: 'Operació idempotent sense efecte: ja existeix una transacció
+        amb aquesta clau d''idempotència (%{transaction_id}); no s''ha afegit res.'
       irpf_category_help: Categoria d'IRPF per a càlculs de models
       iva_amount_help: Import d'IVA de la transacció
       iva_rate_help: Tipus d'IVA com a decimal, per exemple 0.21
@@ -2911,7 +2949,10 @@ cli:
         la passa al classificador.
       reaffirm_help: Reafirmar la classificació d'una transacció ja classificada.
       reaffirmed: Classificació reafirmada.
-      reason_help: 'Motiu en text lliure que es registra com a notes de la transacció en una classificació manual, o amb una decisió --reject.'
+      reason_empty: Rebutjat. --reason ha de registrar per què classifiques aquesta
+        transacció. Indica un motiu no buit, o omet --reason.
+      reason_help: Motiu en text lliure que es registra com a notes de la transacció
+        en una classificació manual, o amb una decisió --reject.
       reject_apply_exclusive: '--reject no es pot combinar amb --apply: reject registra
         un suggeriment rebutjat, apply un d''acceptat.'
       reject_help: Registra un rebuig explícit del suggeriment del model com a esdeveniment
@@ -2932,7 +2973,6 @@ cli:
       vision_model_help: Substitueix el model de visió local d'Ollama per llegir una
         factura escanejada o en imatge (p. ex. qwen2.5vl:7b); per defecte fa servir
         el model configurat.
-      reason_empty: 'Rebutjat. --reason ha de registrar per què classifiques aquesta transacció. Indica un motiu no buit, o omet --reason.'
     doclink:
       actor_help: Etiqueta de l'operador.
       help: Descarrega un enllaç de document de Drive i desa'n els bytes com a evidència
@@ -2982,6 +3022,12 @@ cli:
         Executa `aeat app ledger categories` per veure tots els identificadors reconeguts.
       unknown_provider: 'Proveïdor d''importació --provider {provider!r} desconegut.
         Proveïdors reconeguts: {providers}.'
+    exclude:
+      actor_help: 'Etiqueta de l''operador.'
+      help: 'Marca una transaccio del llibre revisada com a exclosa deliberadament de la declaracio.'
+      id_help: 'Id de transaccio del llibre.'
+      reason_help: 'Nota opcional que registra per que la fila queda exclosa.'
+      yes_help: 'Confirma la decisio d''exclusio revisada.'
     export:
       actor_help: Nom de l'operador registrat a l'esdeveniment del bucket
       format_help: Format de serialització d'exportació
@@ -3443,6 +3489,8 @@ cli:
     calendar_refused_incomplete: 'El calendari te comprovacions de perfil sense resoldre:
       %{keys}. Executeu l ordre de correccio de l avís o useu --allow-incomplete per
       inspeccionar el calendari provisional.'
+    coverage:
+      investigate: '%{count} obligacio/obligacions de declaracio no s''han pogut delimitar amb certesa per a aquest perfil i podrien quedar infradeclarades: %{modelos}. Investigueu-les amb ''aeat app overview explain <modelo>''.'
     drafts: Esborranys
     explain:
       help: Descompon l'aplicabilitat d'un modelo davant del perfil actiu. Mostra
@@ -3460,6 +3508,10 @@ cli:
       drafts_present: '%{count} esborrany(s) de declaracions desats existeixen en
         aquest emmagatzematge local. Un espai buit acabat de crear normalment en te
         0, aixi que aquest perfil/base de dades ja conte estat local d''esborranys.'
+      filing_obligation_multiple_pagadores: Percebre rendiments del treball de més
+        d'un pagador, amb més de 1.500 € dels pagadors secundaris, redueix el límit
+        de l'obligació de declarar (art. 96.3 LIRPF); podeu estar obligat a presentar
+        el Model 100 si el total de rendiments del treball el supera.
       integrity_next: Executeu `aeat config repair` per veure el detall. No poseu
         files en quarantena tret que vulgueu arxivar deliberadament dades locals antigues
         illegibles.
@@ -3501,7 +3553,6 @@ cli:
       work_units_present_with_discarded: '%{count} unitat(s) de treball de models
         actives (%{discarded} descartada(es)) en aquest emmagatzematge local; la teva
         feina de models activa esta desada, repren-la amb `aeat app modelo work list`.'
-      filing_obligation_multiple_pagadores: 'Percebre rendiments del treball de més d''un pagador, amb més de 1.500 € dels pagadors secundaris, redueix el límit de l''obligació de declarar (art. 96.3 LIRPF); podeu estar obligat a presentar el Model 100 si el total de rendiments del treball el supera.'
     status_help: Mostrar l'estat del perfil, llibre, factures i declaracions
     taxpayer_model_undeclared: El perfil actiu no declara aquest model fiscal; actualitza
       el perfil o torna a executar amb l'anul·lació de perfil incomplet.
@@ -3617,8 +3668,9 @@ cli:
   review:
     app_help: Cua de revisió humana per a registres que requereixen criteri de l'operador
     errors:
+      invalid_confidence: El llindar de confiança %{value} està fora de rang; indica
+        un valor entre 0 i 1.
       invalid_state: 'Estat de revisió no vàlid: %{state}'
-      invalid_confidence: 'El llindar de confiança %{value} està fora de rang; indica un valor entre 0 i 1.'
     labels:
       affected_object_id: Objecte
       id: ID
@@ -3629,6 +3681,10 @@ cli:
       severity: Severitat
       source_kind: Tipus d'origen
     queue:
+      confidence_below_help: Limita la cua a les transaccions classificades la confiança
+        de classificació de les quals és estrictament inferior a aquest llindar (un
+        valor entre 0 i 1). Les files de menys confiança apareixen primer per poder
+        prioritzar-les.
       empty: No hi ha elements de revisió
       explain_help: Inclou les referències legals que fonamenten cada troballa a la
         sortida de text. La càrrega JSON sempre les inclou.
@@ -3637,7 +3693,6 @@ cli:
       modelo_help: Filtrar per model
       source_kind_help: Filtrar per tipus d'origen
       state_help: Filtrar estat (pending o all)
-      confidence_below_help: 'Limita la cua a les transaccions classificades la confiança de classificació de les quals és estrictament inferior a aquest llindar (un valor entre 0 i 1). Les files de menys confiança apareixen primer per poder prioritzar-les.'
     show:
       explain_help: Inclou les referències legals que fonamenten aquesta troballa
         a la sortida de text. La càrrega JSON sempre les inclou.

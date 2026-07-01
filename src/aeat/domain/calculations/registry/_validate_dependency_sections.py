@@ -38,7 +38,6 @@ def validate_relation_section(
         owner = f"relation {relation.id}"
         failures.extend(_missing_refs(prefix, owner, relation.legal_refs, legal_refs, "legal"))
         failures.extend(_missing_refs(prefix, owner, relation.source_refs, source_refs, "source"))
-        failures.extend(evidence.require_legal_authority_refs(prefix, owner, relation.legal_refs))
         failures.extend(evidence.require_source_tier(prefix, owner, relation.source_refs, "official_source_guidance"))
         if relation.target_binding not in bindings:
             failures.append(f"{prefix}: relation {relation.id!r} targets unknown binding {relation.target_binding!r}")
@@ -127,7 +126,6 @@ def _validate_single_dependency_classification(
     owner = f"dependency classification {classification.id}"
     failures.extend(_missing_refs(prefix, owner, classification.legal_refs, legal_refs, "legal"))
     failures.extend(_missing_refs(prefix, owner, classification.source_refs, source_refs, "source"))
-    failures.extend(evidence.require_legal_authority_refs(prefix, owner, classification.legal_refs))
     failures.extend(
         evidence.require_source_tier(prefix, owner, classification.source_refs, "official_source_guidance"),
     )

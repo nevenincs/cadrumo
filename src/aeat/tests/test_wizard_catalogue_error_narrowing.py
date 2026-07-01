@@ -97,37 +97,37 @@ class TestAdvisoryPredicateDecimalNarrowing:
     _VALID_EXPR = 'advisory_when_ratio_ge(["num_id", "den_id", "0.5"])'
     _INVALID_THR_EXPR = 'advisory_when_ratio_ge(["num_id", "den_id", "notadecimal"])'
 
-    def test_invalid_decimal_threshold_returns_false(self) -> None:
-        """A non-parseable threshold string hits InvalidOperation → returns False."""
+    @pytest.mark.parametrize(
+        ("expression", "values", "expected"),
+        [
+            (
+                _INVALID_THR_EXPR,
+                {"num_id": decimal.Decimal("2"), "den_id": decimal.Decimal("1")},
+                False,
+            ),
+            (
+                _VALID_EXPR,
+                {"num_id": decimal.Decimal("2"), "den_id": decimal.Decimal("1")},
+                True,
+            ),
+            (
+                _VALID_EXPR,
+                {"num_id": decimal.Decimal("0.1"), "den_id": decimal.Decimal("1")},
+                False,
+            ),
+        ],
+        ids=("invalid-threshold", "ratio-at-or-above-threshold", "ratio-below-threshold"),
+    )
+    def test_advisory_ratio_predicate_decimal_threshold_cases(
+        self,
+        expression: str,
+        values: dict[str, decimal.Decimal],
+        expected: bool,
+    ) -> None:
         from ..application.modelo._verification_actions import _evaluate_advisory_predicate_fires
 
-        result = _evaluate_advisory_predicate_fires(
-            self._INVALID_THR_EXPR,
-            {"num_id": decimal.Decimal("2"), "den_id": decimal.Decimal("1")},
-        )
-        assert result is False
-
-    def test_valid_ratio_ge_evaluates_true(self) -> None:
-        """A valid threshold parses and evaluates the ratio correctly."""
-        from ..application.modelo._verification_actions import _evaluate_advisory_predicate_fires
-
-        # 2/1 = 2.0 >= 0.5 → True
-        result = _evaluate_advisory_predicate_fires(
-            self._VALID_EXPR,
-            {"num_id": decimal.Decimal("2"), "den_id": decimal.Decimal("1")},
-        )
-        assert result is True
-
-    def test_valid_ratio_below_threshold_evaluates_false(self) -> None:
-        """A ratio below threshold correctly returns False."""
-        from ..application.modelo._verification_actions import _evaluate_advisory_predicate_fires
-
-        # 0.1/1 = 0.1, which is < 0.5 → False
-        result = _evaluate_advisory_predicate_fires(
-            self._VALID_EXPR,
-            {"num_id": decimal.Decimal("0.1"), "den_id": decimal.Decimal("1")},
-        )
-        assert result is False
+        result = _evaluate_advisory_predicate_fires(expression, values)
+        assert result is expected
 
 
 class TestResultSummaryNarrowing:

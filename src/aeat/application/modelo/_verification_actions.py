@@ -175,6 +175,7 @@ if TYPE_CHECKING:
 
 _PREDICATE_ALL_NONZERO = _re.compile(r"^all_nonzero\(\[(?P<ids>[^\]]*)\]\)$")
 _PREDICATE_ANY_NONZERO = _re.compile(r"^any_nonzero\(\[(?P<ids>[^\]]*)\]\)$")
+_PREDICATE_AT_MOST_ONE_POSITIVE = _re.compile(r"^at_most_one_positive\(\[(?P<ids>[^\]]*)\]\)$")
 _PREDICATE_CAP_LE_WHEN_POSITIVE = _re.compile(r"^cap_le_when_positive\(\[(?P<ids>[^\]]*)\]\)$")
 # implies_nonzero(["antecedent_id", "consequent_id"]) — material implication
 # with a strictly-positive antecedent test: predicate holds iff antecedent
@@ -240,6 +241,17 @@ def _resolve_advisory_message_default(predicate_id: str) -> str | None:
             "rehabilitation amounts); the deducción was abolished for later acquisitions. "
             "Confirm the acquisition date qualifies before filing."
         )
+    if predicate_id in {
+        "modelo-100-2024-anualidades-alimentos-hijos-revisar-cuota-escala-separada",
+        "modelo-100-2025-anualidades-alimentos-hijos-revisar-cuota-escala-separada",
+    }:
+        return (
+            "Anualidades por alimentos a favor de los hijos are declared (casilla 0527 > 0). "
+            "These amounts receive a separate-escala treatment (LIRPF art. 64 for the state "
+            "scale and art. 75 for the autonomic scale) that is applied in the current cuota "
+            "chain without the statutory mínimo-por-descendientes gating, so the resulting "
+            "cuota may under-tax the payer. Review the cuota íntegra before filing."
+        )
     return None
 
 
@@ -248,6 +260,17 @@ def _resolve_advisory_message_default(predicate_id: str) -> str | None:
 # and denominator > 0. Used for Art. 109 RIRPF M130 high-retention exemption.
 _PREDICATE_ADVISORY_WHEN_RATIO_GE = _re.compile(
     r'^advisory_when_ratio_ge\(\["(?P<num>[^"]+)",\s*"(?P<den>[^"]+)",\s*"(?P<thr>[^"]+)"\]\)$',
+)
+# advisory_when_positive(["casilla_id"]) — single-casilla positive advisory:
+# fires (advisory shown) iff the one named casilla value is strictly > 0.
+# ADVISORY-only; see the advisory_when_positive branch in
+# _evaluate_advisory_predicate_fires. Authored for the M100 anualidades por
+# alimentos (casilla 0527), whose separate-escala treatment (LIRPF art. 64 /
+# art. 75) runs without the statutory mínimo-descendientes gating in the current
+# cuota chain — a payer declaring anualidades may be under-taxed, so the
+# populated box surfaces a non-blocking cuota-review prompt.
+_PREDICATE_ADVISORY_WHEN_POSITIVE = _re.compile(
+    r"^advisory_when_positive\(\[(?P<ids>[^\]]*)\]\)$",
 )
 # roll_forward_balances(["closing_id", "opening_id", "applied_id", "base_id"]) —
 # carry-forward stock continuity: closing == opening − applied + max(0, −base),
@@ -400,6 +423,8 @@ def _evaluate_predicate_expression(
 
     - ``all_nonzero(["id1", "id2", ...])`` — all ids must have a non-zero value.
     - ``any_nonzero(["id1", "id2", ...])`` — at least one id must have a non-zero value.
+    - ``at_most_one_positive(["id1", "id2", ...])`` — no more than one named
+      casilla may be strictly positive.
     - ``cap_le_when_positive(["limited_id", "ceiling_id"])`` — when the ceiling
       casilla is strictly positive, the limited casilla MUST NOT exceed it.
     - ``equals(["lhs_id", "rhs_id"])`` — binary consistency invariant: predicate
@@ -432,6 +457,13 @@ def _evaluate_predicate_expression(
     if m:
         ids = _parse_predicate_casilla_ids(m.group("ids"))
         return any(casilla_values.get(cid, Decimal(0)) != Decimal(0) for cid in ids)
+
+    m = _PREDICATE_AT_MOST_ONE_POSITIVE.match(expr)
+    if m:
+        ids = _parse_predicate_casilla_ids(m.group("ids"))
+        if len(ids) < 2:
+            return True
+        return sum(1 for cid in ids if casilla_values.get(cid, Decimal(0)) > Decimal(0)) <= 1
 
     m = _PREDICATE_CAP_LE_WHEN_POSITIVE.match(expr)
     if m:
@@ -610,6 +642,8 @@ def _evaluate_advisory_predicate_fires(
       positive but EVERY listed consequent is zero. The M303 official-Diseño
       contradiction (a positive computed total whose constituent official
       numbered boxes are all unpopulated by the calculate path).
+    - ``at_most_one_positive(["id1", "id2", ...])`` — fires when more than one
+      listed casilla is strictly positive.
     - ``casilla_equals_implies_nonzero(["antecedent_casilla_id", "literal",
       "consequent_casilla_id"])`` — categorical-conditional material
       implication: fires when the named antecedent TEXT casilla's
@@ -635,6 +669,24 @@ def _evaluate_advisory_predicate_fires(
         except _decimal.InvalidOperation:
             return False
         return (num / den) >= threshold
+    m = _PREDICATE_ADVISORY_WHEN_POSITIVE.match(expr)
+    if m:
+        # advisory_when_positive(["casilla_id"]) — fires (advisory shown) iff the
+        # single named casilla value is strictly > 0. A malformed arity (not
+        # exactly one id) does not fire (defensive, same convention as the other
+        # operators); the registry-build validator rejects a bad arity or an
+        # unknown casilla at load, so this branch only ever sees a well-formed,
+        # existing casilla in production.
+        ids = _parse_predicate_casilla_ids(m.group("ids"))
+        if len(ids) != 1:
+            return False
+        return casilla_values.get(ids[0], Decimal(0)) > Decimal(0)
+    m = _PREDICATE_AT_MOST_ONE_POSITIVE.match(expr)
+    if m:
+        ids = _parse_predicate_casilla_ids(m.group("ids"))
+        if len(ids) < 2:
+            return False
+        return sum(1 for cid in ids if casilla_values.get(cid, Decimal(0)) > Decimal(0)) > 1
     m = _PREDICATE_IMPLIES_NONZERO.match(expr)
     if m:
         ids = _parse_predicate_casilla_ids(m.group("ids"))

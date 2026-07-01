@@ -733,3 +733,16 @@ def test_snapshot_integrity_checks_verification_predicate_legal_refs() -> None:
 
     with pytest.raises(RegistryValidationError, match=r"verification_predicate test\.predicate\.legal_refs"):
         check_all_id_references(snapshot)
+
+
+def test_snapshot_integrity_rejects_legal_ref_without_legal_authority() -> None:
+    revision = minimal_revision()
+    snapshot = build_minimal_snapshot(revision)
+    legal = dict(snapshot.legal)
+    legal[REFERENCE_LEGAL_ID] = legal[REFERENCE_LEGAL_ID].model_copy(
+        update={"evidence_tier": "official_source_guidance"},
+    )
+    mutated_snapshot = snapshot.model_copy(update={"legal": legal})
+
+    with pytest.raises(RegistryValidationError, match=r"revision\.legal_refs legal ref .* is not legal authority"):
+        check_all_id_references(mutated_snapshot)

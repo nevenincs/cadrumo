@@ -45,3 +45,25 @@ predicate_id = "modelo-100-2024-deduccion-vivienda-habitual-requiere-adquisicion
 expression = 'deduccion_requires_adquisicion_before(["0547", "0708", "0690", "2013-01-01"])'
 finding_kind = "ADVISORY"
 legal_refs = ["ley-35-2006:dt-18"]
+
+# Anualidades por alimentos a favor de los hijos — cuota-review advisory
+# (no-silent-under-declaration). casilla 0527 is the total importe de las
+# anualidades por alimentos satisfechas por decisión judicial. LIRPF art. 64
+# (state escala) and art. 75 (autonomic escala) grant these amounts a SEPARATE
+# escala treatment: the escala progresiva is applied separately to the
+# anualidades and to the rest of the base liquidable general, and the statutory
+# régimen raises the mínimo personal y familiar by 1.980 €/year — but ONLY for a
+# payer who does not also apply the mínimo por descendientes for those children.
+# The current M100 cuota chain does NOT re-apply the escala to 0527 nor add the
+# +1.980 € increment, so a payer declaring anualidades is UNDER-taxed. Until the
+# full separate-escala determination is modelled (ADR-grade, tracked as issue
+# #532), surface a NON-BLOCKING ADVISORY whenever anualidades are declared
+# (0527 > 0), prompting the operator to review the cuota íntegra. ADVISORY, not
+# BLOCKING: a positive 0527 is a legitimate declaration, not itself an error —
+# the advisory flags that the automated cuota may be low. Grounded in LIRPF
+# art. 64 (escala estatal) and art. 75 (escala autonómica).
+[[revisions."2024".verification_predicates]]
+predicate_id = "modelo-100-2024-anualidades-alimentos-hijos-revisar-cuota-escala-separada"
+expression = 'advisory_when_positive(["0527"])'
+finding_kind = "ADVISORY"
+legal_refs = ["ley-35-2006:art-64", "ley-35-2006:art-75"]

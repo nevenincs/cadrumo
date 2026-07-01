@@ -77,17 +77,18 @@ class TestIbanStringRejects:
         with pytest.raises(ValidationError):
             _IBAN_ADAPTER.validate_python(raw)
 
-    def test_blank_raises_registry_validation_error_at_validator(self) -> None:
-        with pytest.raises(RegistryValidationError):
-            _validate_iban_string("")
-
-    def test_wrong_checksum_raises_registry_validation_error_at_validator(self) -> None:
-        with pytest.raises(RegistryValidationError, match="mod-97"):
-            _validate_iban_string("ES9921000418450200051332")
-
-    def test_malformed_raises_registry_validation_error_at_validator(self) -> None:
-        with pytest.raises(RegistryValidationError, match="ISO 13616"):
-            _validate_iban_string("ES")
+    @pytest.mark.parametrize(
+        ("raw", "message"),
+        [
+            ("", "blank"),
+            ("ES9921000418450200051332", "mod-97"),
+            ("ES", "ISO 13616"),
+        ],
+        ids=("blank", "wrong-checksum", "malformed"),
+    )
+    def test_invalid_ibans_raise_registry_validation_error_at_validator(self, raw: str, message: str) -> None:
+        with pytest.raises(RegistryValidationError, match=message):
+            _validate_iban_string(raw)
 
 
 class TestCasillaDefinitionDataType:
