@@ -32,6 +32,7 @@ from ....domain.filing._schema import (
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 _AMENDMENT_CASILLA: CasillaId = validated_casilla_id("01", surface="_AMENDMENT_CASILLA")
+_FOREIGN_CLASS_WRITTEN_AT = datetime(2026, 5, 26, 17, 0, 0, tzinfo=UTC)
 
 
 def _snapshot_ref(*, modelo: str, period: Period, schema_version: str) -> RegistrySnapshotRef:
@@ -161,7 +162,7 @@ class TestClassificationGate:
         amendment = _make_amendment()
         bad = Envelope[ModeloComplementaria](
             schema_version=1,
-            written_at=datetime.now(UTC),
+            written_at=_FOREIGN_CLASS_WRITTEN_AT,
             classification=SensitivityClass.OPERATIONAL,
             payload=amendment,
         )
