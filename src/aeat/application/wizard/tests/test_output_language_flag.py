@@ -27,6 +27,7 @@ from ....core.config import override_settings
 from ....core.external_constants import OUTPUT_LANGUAGE_ENV_VAR
 from ....core.i18n import SUPPORTED_OUTPUT_LANGUAGES, tr
 from ....core.i18n._render import clear_output_language_cache
+from ....tests.env_scope import scoped_env_var
 from ....tests.secure_sql import isolated_sessionless_storage_root
 from .._catalogue import SETUP_FLOW
 from .._commands import _SETUP_OPTION_INFOS
@@ -67,18 +68,19 @@ def test_wizard_prose_renders_spanish_under_spanish_override() -> None:
 
 
 @pytest.fixture
-def _clean_install(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Iterator[None]:
+def _clean_install(tmp_path: Path) -> Iterator[None]:
     """Model a clean install: no active profile, no forced-language env var.
 
     The test/CI shell exports ``AEAT_OUTPUT_LANGUAGE=en``; a clean install
     carries neither that env var nor an active profile, so both are stripped
     to exercise the Spanish settings default.
     """
-    monkeypatch.delenv(OUTPUT_LANGUAGE_ENV_VAR, raising=False)
-    with isolated_sessionless_storage_root(tmp_path=tmp_path):
+    with scoped_env_var(OUTPUT_LANGUAGE_ENV_VAR, None), isolated_sessionless_storage_root(tmp_path=tmp_path):
         clear_output_language_cache()
-        yield
-    clear_output_language_cache()
+        try:
+            yield
+        finally:
+            clear_output_language_cache()
 
 
 @pytest.mark.usefixtures("_clean_install")
