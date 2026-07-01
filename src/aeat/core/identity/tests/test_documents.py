@@ -242,31 +242,30 @@ class TestActionableMessages:
         assert "X" in message
 
 
-class TestCifKindLetterSplit:
-    """Pin the intentional split between _CIF_KIND_LETTERS and _CIF_LEADERS.
+class TestCifKindCatalogue:
+    """Pin the distinction between NIF prefixes and CIF kind letters."""
 
-    ``_CIF_KIND_LETTERS`` is the AEAT current-spec closed catalogue (17
-    letters).  ``_tax_id._CIF_LEADERS`` is the historical-tolerance superset
-    (20 letters) that keeps K, L, and M so that ``validate_spanish_tax_id``
-    accepts legacy entities.  These tests prevent a future consolidation from
-    silently collapsing the two sets.
-    """
-
-    @pytest.mark.parametrize("legacy_kind", ("K", "L", "M"))
-    def test_legacy_kind_absent_from_cif_kind_letters(self, legacy_kind: str) -> None:
+    @pytest.mark.parametrize("nif_prefix", ("K", "L", "M"))
+    def test_nif_prefix_absent_from_cif_kind_letters(self, nif_prefix: str) -> None:
         from .._documents import _CIF_KIND_LETTERS
 
-        assert legacy_kind not in _CIF_KIND_LETTERS
+        assert nif_prefix not in _CIF_KIND_LETTERS
 
-    def test_validate_spanish_tax_id_accepts_k_led_cif(self) -> None:
-        # Synthetic K-led CIF: K + 1234567 + check character.
-        # K is in _CIF_LETTER_CONTROL_LEADERS so the check must be a letter.
-        # Computed: even_sum=12, odd_sum_doubled=14, total=26,
-        # digit_control=4, letter_control=_CIF_CONTROL_LETTERS[4]='D'.
+    @pytest.mark.parametrize("candidate", ("K1234567L", "L1234567L", "M1234567L"))
+    def test_validate_spanish_tax_id_accepts_current_prefixed_nif(self, candidate: str) -> None:
         from .._tax_id import validate_spanish_tax_id
 
-        result = validate_spanish_tax_id("K1234567D")
-        assert result == "K1234567D"
+        assert validate_spanish_tax_id(candidate) == candidate
+
+    @pytest.mark.parametrize("candidate", ("K1234567L", "L1234567L", "M1234567L"))
+    def test_validate_identity_routes_current_prefixed_nif_to_nif(self, candidate: str) -> None:
+        assert validate_identity(candidate) is IdentityDocument.NIF
+
+    @pytest.mark.parametrize("candidate", ("K1234567D", "L1234567D", "M1234567D"))
+    def test_prefixed_nif_wrong_check_letter_rejected(self, candidate: str) -> None:
+        with pytest.raises(IdentityError) as excinfo:
+            validate_identity(candidate)
+        assert excinfo.value.translated_message == "errors.identity.nif_check_letter_mismatch"
 
 
 class TestErrorCodeBinding:
