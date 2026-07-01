@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#cross-domain-continuity'
-date: '2026-06-15'
-modified: '2026-06-15'
+date: '2026-07-01'
+modified: '2026-07-01'
 related:
   - '[[2026-05-26-cross-domain-continuity-P01-S05]]'
   - '[[2026-05-26-cross-domain-continuity-P01-S06]]'
@@ -63,6 +63,7 @@ related:
   - '[[2026-05-26-cross-domain-continuity-W09-P41-S290]]'
   - '[[2026-05-26-cross-domain-continuity-W09-P41-S291]]'
   - '[[2026-05-26-cross-domain-continuity-W09-P41-S304]]'
+  - '[[2026-05-26-cross-domain-continuity-W09-P41-S323]]'
   - '[[2026-05-26-cross-domain-continuity-W09-P42-S165]]'
   - '[[2026-05-26-cross-domain-continuity-W09-P45-S168]]'
   - '[[2026-05-26-cross-domain-continuity-W09-P45-S282]]'
@@ -165,6 +166,7 @@ related:
   - '[[2026-05-31-cross-domain-continuity-exec]]'
   - '[[2026-06-03-cross-domain-continuity-audit]]'
   - '[[2026-06-04-cross-domain-continuity-research]]'
+  - '[[2026-07-01-cross-domain-continuity-audit]]'
 ---
 
 # `cross-domain-continuity` feature index
@@ -186,6 +188,7 @@ Auto-generated index of all documents tagged with `#cross-domain-continuity`.
 - `2026-05-28-cross-domain-continuity-audit` - `cross-domain-continuity` audit: `wave-3-commit-review`
 - `2026-05-29-cross-domain-continuity-audit` - `cross-domain-continuity` audit: `persona-fleet round 7`
 - `2026-06-03-cross-domain-continuity-audit` - `cross-domain-continuity` audit: `Peer-WIP collision protocol audit (lint-zero session)`
+- `2026-07-01-cross-domain-continuity-audit` - `cross-domain-continuity` audit: `W09.P41.S323-code-review`
 
 ### exec
 
@@ -338,6 +341,7 @@ Auto-generated index of all documents tagged with `#cross-domain-continuity`.
 - `2026-05-26-cross-domain-continuity-W09-P42-S165` - merge active_bucket_id_or_raise and require_active_bucket_id into one canonical function update all call sites
 - `2026-05-26-cross-domain-continuity-W09-P45-S168` - extract _covered_by_namespace to one location and import from the other
 - `2026-05-26-cross-domain-continuity-W09-P47-S170` - for every CLI command registering --verbose assert it consumes the flag fix or remove unused declarations
+- `2026-05-26-cross-domain-continuity-W09-P41-S323` - R9-MANUEL-A SC profile schema lacks socio enumeration
 
 ### plan
 

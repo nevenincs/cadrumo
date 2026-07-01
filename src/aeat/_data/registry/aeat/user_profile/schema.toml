@@ -1,6 +1,6 @@
 [schema]
 id = "aeat.user_profile"
-version = 2
+version = 3
 title = "AEAT user profile schema"
 snapshot_policy = "immutable_secure_snapshot_hash"
 remove_policy = "live_profile_tombstone_retain_snapshots"
@@ -457,6 +457,73 @@ effective_dated = true
 description = "Full name of the representante fiscal designated in Spain when fiscal_residency is non_resident_irnr. Required together with representante_fiscal_nif by TRLIRNR Art. 10 for non-EU/EEE residents."
 model_selectors = ["taxpayer.representante_fiscal_nombre"]
 legal_refs = ["trlirnr-rdleg-5-2004:art-10"]
+
+[[sections]]
+key = "attribution_entity"
+title = "Attribution entity legal shape"
+sensitivity = "identity"
+effective_dated = true
+
+[[sections.fields]]
+key = "legal_form"
+type = "enum"
+required = false
+sensitivity = "identity"
+effective_dated = true
+description = "Legal form of an entity in regimen de atribucion de rentas, such as a sociedad civil or comunidad de bienes."
+enum_values = ["sociedad_civil", "comunidad_bienes", "herencia_yacente", "other"]
+model_selectors = ["attribution_entity.legal_form"]
+legal_refs = ["ley-35-2006:art-86", "ley-35-2006:art-87", "orden-hap-2250-2015:art-2"]
+
+[[sections]]
+key = "attribution_entity_socios"
+title = "Attribution entity socios"
+sensitivity = "identity"
+effective_dated = true
+repeatable = true
+
+[[sections.fields]]
+key = "nif"
+type = "string"
+required = true
+sensitivity = "identity"
+effective_dated = true
+description = "NIF/NIE/CIF of a socio, comunero, or participe in an attribution entity member row."
+model_selectors = ["attribution_entity_socios.nif"]
+legal_refs = ["ley-35-2006:art-86", "ley-35-2006:art-87", "orden-hap-2250-2015:art-3"]
+
+[[sections.fields]]
+key = "name"
+type = "string"
+required = true
+sensitivity = "identity"
+effective_dated = true
+description = "Display or legal name of a socio, comunero, or participe in an attribution entity member row."
+model_selectors = ["attribution_entity_socios.name"]
+legal_refs = ["ley-35-2006:art-86", "ley-35-2006:art-87", "orden-hap-2250-2015:art-3"]
+
+[[sections.fields]]
+key = "share_pct"
+type = "decimal"
+required = true
+sensitivity = "financial"
+effective_dated = true
+description = "Participation percentage for the attribution entity member, expressed in the closed interval 0..100."
+minimum = "0"
+maximum = "100"
+model_selectors = ["attribution_entity_socios.share_pct"]
+legal_refs = ["ley-35-2006:art-87", "ley-35-2006:art-89", "orden-hap-2250-2015:art-3"]
+
+[[sections.fields]]
+key = "role"
+type = "enum"
+required = true
+sensitivity = "identity"
+effective_dated = true
+description = "Legal member role inside the attribution entity."
+enum_values = ["socio", "comunero", "participe"]
+model_selectors = ["attribution_entity_socios.role"]
+legal_refs = ["ley-35-2006:art-86", "ley-35-2006:art-87", "ley-35-2006:art-88", "ley-35-2006:art-89"]
 
 [[sections]]
 key = "vivienda_office"
