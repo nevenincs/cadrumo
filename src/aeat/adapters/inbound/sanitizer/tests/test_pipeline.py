@@ -163,82 +163,69 @@ class TestSanitizePdfHappyPath:
 class TestSourceParseErrorHygiene:
     """Source-open failures do not expose paths or raw parser diagnostics."""
 
-    def test_missing_path_uses_redacted_source_label(
+    def test_source_open_failures_use_redacted_source_label(
         self,
         caplog: pytest.LogCaptureFixture,
         tmp_path,
     ) -> None:
         missing_pdf = tmp_path / _SENSITIVE_SOURCE_BASENAME
-
-        caplog.set_level(logging.DEBUG, logger=sanitize_pdf.__module__)
-        with pytest.raises(SanitizerSourceParseError) as exc_info:
-            sanitize_pdf(missing_pdf, TokenMap())
-
-        rendered = str(exc_info.value)
-        assert _SENSITIVE_SOURCE_BASENAME not in rendered
-        assert str(missing_pdf) not in rendered
-        assert rendered == "source PDF could not be opened for sanitization: <input-pdf>"
-        assert exc_info.value.context == {"source": "<input-pdf>", "failure": "FileNotFoundError"}
-        assert exc_info.value.__cause__ is None
-        assert exc_info.value.__context__ is None
-
-        log_text = "\n".join(record.getMessage() for record in caplog.records)
-        assert _SENSITIVE_SOURCE_BASENAME not in log_text
-        assert str(missing_pdf) not in log_text
-        assert "source=<input-pdf>" in log_text
-        assert "failure=FileNotFoundError" in log_text
-
-    def test_invalid_pdf_bytes_do_not_render_parser_payload(
-        self,
-        caplog: pytest.LogCaptureFixture,
-    ) -> None:
         parser_payload = b"not a pdf for 12345678Z-sanitizer-source.pdf"
 
         caplog.set_level(logging.DEBUG, logger=sanitize_pdf.__module__)
-        with pytest.raises(SanitizerSourceParseError) as exc_info:
-            sanitize_pdf(parser_payload, TokenMap())
+        cases = (
+            (
+                "missing-path",
+                missing_pdf,
+                ("FileNotFoundError",),
+                (_SENSITIVE_SOURCE_BASENAME, str(missing_pdf)),
+            ),
+            (
+                "invalid-bytes",
+                parser_payload,
+                ("PdfError",),
+                (parser_payload.decode("utf-8"), "12345678Z"),
+            ),
+        )
+        for case_id, source, (failure,), forbidden_fragments in cases:
+            caplog.clear()
+            with pytest.raises(SanitizerSourceParseError) as exc_info:
+                sanitize_pdf(source, TokenMap())
 
-        rendered = str(exc_info.value)
-        assert parser_payload.decode("utf-8") not in rendered
-        assert "12345678Z" not in rendered
-        assert rendered == "source PDF could not be opened for sanitization: <input-pdf>"
-        assert exc_info.value.context == {"source": "<input-pdf>", "failure": "PdfError"}
-        assert exc_info.value.__cause__ is None
-        assert exc_info.value.__context__ is None
+            rendered = str(exc_info.value)
+            for fragment in forbidden_fragments:
+                assert fragment not in rendered, case_id
+            assert rendered == "source PDF could not be opened for sanitization: <input-pdf>", case_id
+            assert exc_info.value.context == {"source": "<input-pdf>", "failure": failure}, case_id
+            assert exc_info.value.__cause__ is None, case_id
+            assert exc_info.value.__context__ is None, case_id
 
-        log_text = "\n".join(record.getMessage() for record in caplog.records)
-        assert parser_payload.decode("utf-8") not in log_text
-        assert "12345678Z" not in log_text
-        assert "source=<input-pdf>" in log_text
-        assert "failure=PdfError" in log_text
+            log_text = "\n".join(record.getMessage() for record in caplog.records)
+            for fragment in forbidden_fragments:
+                assert fragment not in log_text, case_id
+            assert "source=<input-pdf>" in log_text, case_id
+            assert f"failure={failure}" in log_text, case_id
 
 
 class TestRefuseIfSigned:
     """The orchestrator refuses to modify signed PDFs."""
 
-    def test_raises_when_sigflags_set(self) -> None:
-        pdf = pikepdf.Pdf.new()
-        pdf.add_blank_page(page_size=(612, 792))
-        pdf.Root["/AcroForm"] = pikepdf.Dictionary(
-            Fields=pikepdf.Array(),
-            SigFlags=3,
-        )
-        buffer = io.BytesIO()
-        pdf.save(buffer)
+    def test_raises_when_signature_surface_present(self) -> None:
+        for case_id in ("sigflags", "signature-field"):
+            pdf = pikepdf.Pdf.new()
+            pdf.add_blank_page(page_size=(612, 792))
+            if case_id == "sigflags":
+                pdf.Root["/AcroForm"] = pikepdf.Dictionary(
+                    Fields=pikepdf.Array(),
+                    SigFlags=3,
+                )
+            else:
+                sig_field = pikepdf.Dictionary(FT=pikepdf.Name.Sig, T="signature")
+                pdf.Root["/AcroForm"] = pikepdf.Dictionary(Fields=pikepdf.Array([sig_field]))
+            buffer = io.BytesIO()
+            pdf.save(buffer)
 
-        with pytest.raises(SignaturePresentError, match=r"signature|SigFlags|signed|AcroForm"):
-            sanitize_pdf(buffer.getvalue(), TokenMap())
-
-    def test_raises_when_signature_field_present(self) -> None:
-        pdf = pikepdf.Pdf.new()
-        pdf.add_blank_page(page_size=(612, 792))
-        sig_field = pikepdf.Dictionary(FT=pikepdf.Name.Sig, T="signature")
-        pdf.Root["/AcroForm"] = pikepdf.Dictionary(Fields=pikepdf.Array([sig_field]))
-        buffer = io.BytesIO()
-        pdf.save(buffer)
-
-        with pytest.raises(SignaturePresentError, match=r"signature|SigFlags|signed|AcroForm"):
-            sanitize_pdf(buffer.getvalue(), TokenMap())
+            with pytest.raises(SignaturePresentError, match=r"signature|SigFlags|signed|AcroForm"):
+                sanitize_pdf(buffer.getvalue(), TokenMap())
 
 
 class TestRefuseIfAlreadySanitized:
