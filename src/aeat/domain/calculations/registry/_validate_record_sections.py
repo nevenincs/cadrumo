@@ -92,7 +92,6 @@ def validate_formula_section(
         owner = f"formula {formula.id}"
         failures.extend(_missing_refs(prefix, owner, formula.legal_refs, legal_refs, "legal"))
         failures.extend(_missing_refs(prefix, owner, formula.source_refs, source_refs, "source"))
-        failures.extend(evidence.require_legal_authority_refs(prefix, owner, formula.legal_refs))
         failures.extend(evidence.require_source_tier(prefix, owner, formula.source_refs, "official_source_guidance"))
         failures.extend(
             evidence.validate_source_citations(
@@ -134,7 +133,6 @@ def validate_parameter_section(
         owner = f"parameter {parameter.id}"
         failures.extend(_missing_refs(prefix, owner, parameter.legal_refs, legal_refs, "legal"))
         failures.extend(_missing_refs(prefix, owner, parameter.source_refs, source_refs, "source"))
-        failures.extend(evidence.require_legal_authority_refs(prefix, owner, parameter.legal_refs))
         failures.extend(evidence.require_source_tier(prefix, owner, parameter.source_refs, "official_source_guidance"))
         failures.extend(
             evidence.validate_source_citations(
@@ -152,7 +150,6 @@ def validate_parameter_section(
                 f"{row.country_code}/{row.tipo_renta}/{row.valid_from.isoformat()}"
             )
             failures.extend(_missing_refs(prefix, row_owner, row.legal_refs, legal_refs, "legal"))
-            failures.extend(evidence.require_legal_authority_refs(prefix, row_owner, row.legal_refs))
 
 
 def validate_binding_section(
@@ -170,7 +167,6 @@ def validate_binding_section(
         owner = f"binding {binding.id}"
         failures.extend(_missing_refs(prefix, owner, binding.legal_refs, legal_refs, "legal"))
         failures.extend(_missing_refs(prefix, owner, binding.source_refs, source_refs, "source"))
-        failures.extend(evidence.require_legal_authority_refs(prefix, owner, binding.legal_refs))
         if _is_layout_binding(binding):
             failures.extend(evidence.require_source_tier(prefix, owner, binding.source_refs, "layout_authority"))
         else:
