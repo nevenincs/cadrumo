@@ -2,9 +2,11 @@
 
 The read side of this module produces metadata-only reports over encrypted
 secure-object rows. Integrity sweeps iterate namespaces in a
-:class:`SecureObjectRepository` and return per-namespace
-:class:`SecureObjectNamespaceIntegrity` counts; inventory rows expose row
-metadata and HMAC digests, never natural keys or payload bytes. These reports
+:class:`~aeat.adapters.persistence.storage.SecureObjectRepository` and return
+per-namespace
+:class:`~aeat.adapters.persistence.storage.SecureObjectNamespaceIntegrity`
+counts; inventory rows expose row metadata and HMAC digests, never natural
+keys or payload bytes. These reports
 back the repair integrity surface and the quarantine dry-run path without
 emitting bucket events.
 
@@ -23,7 +25,7 @@ See Also:
     :mod:`aeat.application.diagnostics`
         Builds the user-facing repair report and delegates quarantine preview /
         commit flows through this module's active-bucket repair session.
-    :class:`~aeat.adapters.persistence.storage.sql.secure_objects.SecureObjectRepository`
+    :class:`~aeat.adapters.persistence.storage.SecureObjectRepository`
         Encrypted SQL repository whose namespace integrity probes and
         quarantine operation supply the repair data.
     :data:`~aeat.adapters.persistence.storage.STORAGE_NAMESPACE_REGISTRY`
@@ -49,11 +51,11 @@ from ..adapters.persistence.storage import (
     STORAGE_NAMESPACE_REGISTRY,
     WORKFLOW_STATE_NAMESPACE,
     SecureObjectNamespaceDefinition,
+    SecureObjectNamespaceIntegrity,
+    SecureObjectRepository,
 )
 from ..adapters.persistence.storage.sql.secure_objects import (
     SecureObjectDecryptabilityRow,
-    SecureObjectNamespaceIntegrity,
-    SecureObjectRepository,
 )
 from ..core import STRICT_FROZEN_CONFIG
 from ..core.errors import CoreError
@@ -100,11 +102,12 @@ _RepairDecisionOutcome = Literal["preserve", "quarantine", "rebuild", "export-re
 class _SecureObjectRepositoryProtocol(Protocol):
     """Structural interface consumed by the repair-integrity application layer.
 
-    :class:`SecureObjectRepository` satisfies this protocol. The interface is
-    limited to namespace enumeration, integrity probing, key inventory, and
-    :class:`SecureObjectDecryptabilityRow` iteration so read-only repair reports
-    can be tested against the real repository without granting mutation APIs to
-    the report builders.
+    :class:`~aeat.adapters.persistence.storage.SecureObjectRepository`
+    satisfies this protocol. The interface is limited to namespace enumeration,
+    integrity probing, key inventory, and
+    :class:`~aeat.adapters.persistence.storage.sql.secure_objects.SecureObjectDecryptabilityRow`
+    iteration so read-only repair reports can be tested against the real
+    repository without granting mutation APIs to the report builders.
     """
 
     def list_namespaces(self) -> tuple[str, ...]: ...
@@ -143,7 +146,7 @@ class RepairListRow(BaseModel):
     Rows are projected from
     :class:`~aeat.adapters.persistence.storage.sql.secure_objects.SecureObjectDecryptabilityRow`
     values returned by
-    :meth:`~aeat.adapters.persistence.storage.sql.secure_objects.SecureObjectRepository.iter_namespace_decryptability`.
+    :meth:`~aeat.adapters.persistence.storage.SecureObjectRepository.iter_namespace_decryptability`.
     ``object_key_digest`` is the stored HMAC digest, not the natural object key.
     ``reason`` is populated only for unreadable rows and must remain a diagnostic
     class of failure rather than decrypted payload context.
@@ -262,7 +265,7 @@ def active_bucket_repair_session() -> Generator[None]:
             decryptability.
         :func:`~aeat.application.diagnostics.quarantine_unreadable_secure_objects`
             Commit flow that uses this context before calling
-            :meth:`~aeat.adapters.persistence.storage.sql.secure_objects.SecureObjectRepository.quarantine_unreadable_rows`.
+            :meth:`~aeat.adapters.persistence.storage.SecureObjectRepository.quarantine_unreadable_rows`.
     """
     provider: object | None = None
     try:
