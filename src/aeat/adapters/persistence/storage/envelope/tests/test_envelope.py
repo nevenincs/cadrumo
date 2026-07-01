@@ -34,8 +34,7 @@ class _DemoPayloadV2(BaseModel):
     note: str = ""
 
 
-def _now_utc() -> datetime:
-    return datetime.now(UTC)
+_ENVELOPE_WRITTEN_AT = datetime(2026, 5, 28, 12, 0, 0, tzinfo=UTC)
 
 
 class TestEnvelopeShape:
@@ -44,7 +43,7 @@ class TestEnvelopeShape:
     def test_round_trip_via_model_dump(self) -> None:
         env = Envelope[_DemoPayloadV1](
             schema_version=1,
-            written_at=_now_utc(),
+            written_at=_ENVELOPE_WRITTEN_AT,
             classification=SensitivityClass.OPERATIONAL,
             payload=_DemoPayloadV1(name="x", count=1),
         )
@@ -65,7 +64,7 @@ class TestEnvelopeShape:
         with pytest.raises(ValidationError):
             Envelope[_DemoPayloadV1](
                 schema_version=invalid_version,
-                written_at=_now_utc(),
+                written_at=_ENVELOPE_WRITTEN_AT,
                 classification=SensitivityClass.OPERATIONAL,
                 payload=_DemoPayloadV1(name="x", count=1),
             )
@@ -115,7 +114,7 @@ class TestEnvelopeRoundTrip:
         # First successful write so the target exists with known content.
         first = Envelope[_DemoPayloadV1](
             schema_version=1,
-            written_at=_now_utc(),
+            written_at=_ENVELOPE_WRITTEN_AT,
             classification=SensitivityClass.OPERATIONAL,
             payload=_DemoPayloadV1(name="alpha", count=1),
         )
@@ -126,7 +125,7 @@ class TestEnvelopeRoundTrip:
         # Now write again — the on-disk file must be the new one (not corrupt).
         second = Envelope[_DemoPayloadV1](
             schema_version=1,
-            written_at=_now_utc(),
+            written_at=_ENVELOPE_WRITTEN_AT,
             classification=SensitivityClass.OPERATIONAL,
             payload=_DemoPayloadV1(name="beta", count=2),
         )
@@ -142,7 +141,7 @@ class TestEnvelopeRoundTrip:
     def test_save_write_failure_raises_storage_validation_without_path(self, tmp_path: Path) -> None:
         env = Envelope[_DemoPayloadV1](
             schema_version=1,
-            written_at=_now_utc(),
+            written_at=_ENVELOPE_WRITTEN_AT,
             classification=SensitivityClass.OPERATIONAL,
             payload=_DemoPayloadV1(name="x", count=1),
         )
@@ -177,7 +176,7 @@ class TestClassificationGate:
     def test_classification_mismatch_raises(self, tmp_path: Path) -> None:
         env = Envelope[_DemoPayloadV1](
             schema_version=1,
-            written_at=_now_utc(),
+            written_at=_ENVELOPE_WRITTEN_AT,
             classification=SensitivityClass.FINANCIAL,
             payload=_DemoPayloadV1(name="x", count=1),
         )
@@ -199,7 +198,7 @@ class TestVersionGate:
     def test_future_version_raises(self, tmp_path: Path) -> None:
         env = Envelope[_DemoPayloadV1](
             schema_version=99,
-            written_at=_now_utc(),
+            written_at=_ENVELOPE_WRITTEN_AT,
             classification=SensitivityClass.OPERATIONAL,
             payload=_DemoPayloadV1(name="x", count=1),
         )
@@ -216,7 +215,7 @@ class TestVersionGate:
     def test_older_version_raises(self, tmp_path: Path) -> None:
         env = Envelope[_DemoPayloadV1](
             schema_version=1,
-            written_at=_now_utc(),
+            written_at=_ENVELOPE_WRITTEN_AT,
             classification=SensitivityClass.OPERATIONAL,
             payload=_DemoPayloadV1(name="x", count=1),
         )
