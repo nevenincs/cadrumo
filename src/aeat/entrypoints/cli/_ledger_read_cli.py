@@ -13,6 +13,8 @@ and :class:`~aeat.entrypoints.cli._ledger_payloads.LedgerTrackResult`.
 from __future__ import annotations
 
 from collections.abc import Callable
+from datetime import date
+from decimal import Decimal
 from pathlib import Path
 from typing import Any
 
@@ -78,6 +80,7 @@ _LEDGER_HISTORY_EVENT_TYPES: tuple[BucketEventType, ...] = (
 def register_read_commands(app: typer.Typer, *, resolve_transaction_id: ResolveTransactionId) -> None:
     """Register ledger read/discovery/reporting commands."""
     _register_ledger_providers_command(app)
+    _register_ledger_llm_diagnostics_command(app)
     _register_ledger_categories_command(app)
     _register_ledger_check_command(app)
     _register_ledger_preflight_command(app)
@@ -141,6 +144,163 @@ def _register_ledger_providers_command(app: typer.Typer) -> None:
         vision_tail = f"\t{vision.remediation}" if vision.remediation else ""
         lines.append(f"{vision.service}\t{vision_status}\t{vision.detail}{vision_tail}")
         _emit_envelope(ctx, command="ledger.providers", result=result, lines=lines)
+
+
+def _register_ledger_llm_diagnostics_command(app: typer.Typer) -> None:
+    @app.command(
+        "llm-diagnostics",
+        help=tr(
+            "cli.ledger.llm_diagnostics.help",
+            default="Report existing LLM usage, cost, and classification-confidence metrics.",
+        ),
+    )
+    def ledger_llm_diagnostics(
+        ctx: typer.Context,
+        since: str | None = typer.Option(
+            None,
+            "--since",
+            help=tr(
+                "cli.ledger.llm_diagnostics.since_help",
+                default="Inclusive lower ISO date (YYYY-MM-DD) bound on usage records.",
+            ),
+        ),
+        until: str | None = typer.Option(
+            None,
+            "--until",
+            help=tr(
+                "cli.ledger.llm_diagnostics.until_help",
+                default="Inclusive upper ISO date (YYYY-MM-DD) bound on usage records.",
+            ),
+        ),
+        low_confidence_below: float = typer.Option(
+            0.5,
+            "--low-confidence-below",
+            help=tr(
+                "cli.ledger.llm_diagnostics.threshold_help",
+                default="Confidence floor below which a classification counts as low-confidence.",
+            ),
+        ),
+    ) -> None:
+        """Report existing LLM usage, cost, and classification-confidence metrics."""
+        from ...application.ledger import build_llm_diagnostics_report
+        from ._ledger_rule_payloads import LedgerLlmDiagnosticsResult
+
+        since_date = _parse_iso_date(since, "--since")
+        until_date = _parse_iso_date(until, "--until")
+        threshold = Decimal(str(low_confidence_below))
+        if not Decimal("0") <= threshold <= Decimal("1"):
+            raise _bad(
+                tr(
+                    "cli.ledger.llm_diagnostics.threshold_range",
+                    default="--low-confidence-below must be within the inclusive 0..1 range.",
+                ),
+            )
+
+        report = build_llm_diagnostics_report(
+            since=since_date,
+            until=until_date,
+            low_confidence_threshold=threshold,
+        )
+        result = LedgerLlmDiagnosticsResult.model_validate(
+            {
+                "since": since_date.isoformat() if since_date is not None else None,
+                "until": until_date.isoformat() if until_date is not None else None,
+                "low_confidence_threshold": format(report.low_confidence_threshold, "f"),
+                "usage_providers": [
+                    {
+                        "provider": row.provider,
+                        "calls": row.calls,
+                        "cache_hits": row.cache_hits,
+                        "input_tokens": row.input_tokens,
+                        "output_tokens": row.output_tokens,
+                        "total_tokens": row.total_tokens,
+                        "cost_estimate_usd": format(row.cost_estimate_usd, "f"),
+                    }
+                    for row in report.usage_providers
+                ],
+                "total_calls": report.total_calls,
+                "total_cache_hits": report.total_cache_hits,
+                "total_input_tokens": report.total_input_tokens,
+                "total_output_tokens": report.total_output_tokens,
+                "total_cost_estimate_usd": format(report.total_cost_estimate_usd, "f"),
+                "confidence_providers": [
+                    {
+                        "provider": row.provider,
+                        "classified_count": row.classified_count,
+                        "low_confidence_count": row.low_confidence_count,
+                        "high_confidence_count": row.high_confidence_count,
+                        "medium_confidence_count": row.medium_confidence_count,
+                        "min_confidence": _optional_decimal_text(row.min_confidence),
+                        "max_confidence": _optional_decimal_text(row.max_confidence),
+                        "mean_confidence": _optional_decimal_text(row.mean_confidence),
+                    }
+                    for row in report.confidence_providers
+                ],
+                "total_classified": report.total_classified,
+                "total_low_confidence": report.total_low_confidence,
+                "has_data": report.has_data,
+            },
+        )
+        lines: list[str] = []
+        for row in report.usage_providers:
+            lines.append(
+                f"{row.provider}\tcalls={row.calls}\tcache_hits={row.cache_hits}"
+                f"\ttokens={row.total_tokens}\tcost_usd={format(row.cost_estimate_usd, 'f')}",
+            )
+        for row in report.confidence_providers:
+            mean_text = _optional_decimal_text(row.mean_confidence) or "-"
+            lines.append(
+                f"{row.provider}\tclassified={row.classified_count}"
+                f"\tlow_confidence={row.low_confidence_count}\tmean={mean_text}",
+            )
+        notices: list[Notice] = []
+        if not report.has_data:
+            notices.append(
+                Notice(
+                    severity=NoticeSeverity.INFO,
+                    code="ledger.llm_diagnostics.no_data",
+                    message=tr(
+                        "cli.ledger.llm_diagnostics.no_data_message",
+                        default=(
+                            "No LLM usage or classification-confidence metrics recorded yet. "
+                            "Run an LLM-assisted classification to populate them."
+                        ),
+                    ),
+                    suggestion="aeat app ledger classify <transaction-id> --llm <provider> --apply",
+                ),
+            )
+            lines.append(
+                tr(
+                    "cli.ledger.llm_diagnostics.no_data_message",
+                    default=(
+                        "No LLM usage or classification-confidence metrics recorded yet. "
+                        "Run an LLM-assisted classification to populate them."
+                    ),
+                ),
+            )
+        _emit_envelope(ctx, command="ledger.llm_diagnostics", result=result, lines=lines, notices=notices)
+
+
+def _parse_iso_date(value: str | None, option: str) -> date | None:
+    if value is None:
+        return None
+    try:
+        return date.fromisoformat(value.strip())
+    except ValueError as exc:
+        raise _bad(
+            tr(
+                "cli.ledger.llm_diagnostics.bad_date",
+                option=option,
+                value=value,
+                default=f"{option} must be an ISO date (YYYY-MM-DD); got {value!r}.",
+            ),
+        ) from exc
+
+
+def _optional_decimal_text(value: Decimal | None) -> str | None:
+    if value is None:
+        return None
+    return format(value, "f")
 
 
 def _register_ledger_categories_command(app: typer.Typer) -> None:
