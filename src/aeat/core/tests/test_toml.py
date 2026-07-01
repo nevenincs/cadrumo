@@ -23,43 +23,36 @@ def test_to_str_keyed_dict_rejects_non_string_key_via_error_factory() -> None:
         to_str_keyed_dict({1: "x"}, error_factory=ValueError)
 
 
-@pytest.mark.parametrize(
-    ("text", "expected"),
-    (
-        pytest.param(
+def test_valid_toml_payloads_parse_from_file_and_text(tmp_path: Path) -> None:
+    """Well-formed TOML parses the same from files and in-memory text."""
+    for case_name, text, expected in (
+        (
+            "section",
             'name = "value"\n[section]\nflag = true\n',
             {"name": "value", "section": {"flag": True}},
-            id="section",
         ),
-        pytest.param('k = "v"\n', {"k": "v"}, id="flat"),
-    ),
-)
-def test_valid_toml_payloads_parse_from_file_and_text(
-    tmp_path: Path,
-    text: str,
-    expected: dict[str, object],
-) -> None:
-    """Well-formed TOML parses the same from files and in-memory text."""
-    target = tmp_path / "ok.toml"
-    target.write_text(text, encoding="utf-8")
+        ("flat", 'k = "v"\n', {"k": "v"}),
+    ):
+        target = tmp_path / f"{case_name}.toml"
+        target.write_text(text, encoding="utf-8")
 
-    assert read_toml(target, error_factory=ValueError) == expected
-    assert parse_toml_text(text, error_factory=ValueError) == expected
+        assert read_toml(target, error_factory=ValueError) == expected
+        assert parse_toml_text(text, error_factory=ValueError) == expected
 
 
-@pytest.mark.parametrize("source", ("file", "text"))
-def test_invalid_toml_wraps_decode_failure_via_error_factory(tmp_path: Path, source: str) -> None:
+def test_invalid_toml_wraps_decode_failure_via_error_factory(tmp_path: Path) -> None:
     """Invalid TOML raises the caller-supplied error type for both parser surfaces."""
-    if source == "file":
-        target = tmp_path / "bad.toml"
-        target.write_text("not = valid = toml", encoding="utf-8")
-        with pytest.raises(ValueError) as exc_info:
-            read_toml(target, error_factory=ValueError)
-        assert str(target) in str(exc_info.value)
-    else:
-        with pytest.raises(ValueError) as exc_info:
-            parse_toml_text("not = valid = toml", error_factory=ValueError)
-    assert "invalid TOML" in str(exc_info.value)
+    target = tmp_path / "bad.toml"
+    target.write_text("not = valid = toml", encoding="utf-8")
+
+    with pytest.raises(ValueError) as file_exc:
+        read_toml(target, error_factory=ValueError)
+    assert str(target) in str(file_exc.value)
+    assert "invalid TOML" in str(file_exc.value)
+
+    with pytest.raises(ValueError) as text_exc:
+        parse_toml_text("not = valid = toml", error_factory=ValueError)
+    assert "invalid TOML" in str(text_exc.value)
 
 
 def test_read_toml_wraps_filesystem_error_via_error_factory(tmp_path: Path) -> None:
