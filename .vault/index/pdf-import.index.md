@@ -3,13 +3,14 @@ generated: true
 tags:
   - '#index'
   - '#pdf-import'
-date: '2026-06-15'
-modified: '2026-06-15'
+date: '2026-07-01'
+modified: '2026-07-01'
 related:
   - '[[2026-04-20-pdf-import-adr]]'
   - '[[2026-04-20-pdf-import-phase-1-summary-exec]]'
   - '[[2026-04-20-pdf-import-plan]]'
   - '[[2026-04-20-pdf-import-research]]'
+  - '[[2026-04-22-pdf-import-audit-loop-summary-exec]]'
 ---
 
 # `pdf-import` feature index
@@ -25,6 +26,7 @@ Auto-generated index of all documents tagged with `#pdf-import`.
 ### exec
 
 - `2026-04-20-pdf-import-phase-1-summary-exec` - pdf-import phase-1 summary
+- `2026-04-22-pdf-import-audit-loop-summary-exec` - `pdf-import` audit-loop summary: waves 59–68
 
 ### plan
 
