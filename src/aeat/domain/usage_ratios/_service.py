@@ -8,7 +8,10 @@ no plaintext profile JSON or envelope file lands on disk.
 
 from __future__ import annotations
 
+from collections.abc import Iterator
+from contextlib import contextmanager
 from decimal import Decimal
+from pathlib import Path
 from typing import TYPE_CHECKING
 
 from pydantic import ValidationError
@@ -38,6 +41,7 @@ __all__ = [
     "load_usage_ratios",
     "load_usage_ratios_with_censo_guard",
     "save_usage_ratios",
+    "usage_ratio_bucket_lock",
     "usage_ratios_object_key",
 ]
 
@@ -52,6 +56,72 @@ def usage_ratios_object_key(bucket_id: str) -> str:
     if not trimmed:
         raise UsageRatioPersistenceError("bucket_id must not be blank")
     return f"profile:{trimmed}"
+
+
+def _usage_ratio_lock_target(bucket_id: str) -> Path:
+    """Return the per-bucket sidecar path that guards the usage-ratio row.
+
+    The lock sidecar is placed inside the bucket's own storage directory
+    (alongside its encrypted database) so it scopes mutual exclusion to a
+    single profile bucket and never serialises writes to unrelated profiles.
+    The sidecar carries no payload — it is an empty OS-lock coordination file —
+    so it is not sensitive financial data and does not breach the
+    secure-storage boundary; the profile bytes still live only in the
+    encrypted :class:`SecureObjectRepository` row.
+    """
+    from ...core.config import (
+        classify_storage_route,
+        load_settings,
+        settings_for_active_profile_bucket,
+    )
+
+    trimmed = bucket_id.strip()
+    if not trimmed:
+        raise UsageRatioPersistenceError("bucket_id must not be blank")
+    settings = load_settings()
+    if "aeat_database_url" in settings.model_fields_set:
+        # Explicit-database route (test/bootstrap): the route already names the
+        # storage authority; scope the lock to that database's directory.
+        route = classify_storage_route(settings)
+    else:
+        route = classify_storage_route(settings_for_active_profile_bucket(trimmed, settings))
+    base = route.database_path.parent if route.database_path is not None else settings.aeat_local_storage_root
+    safe = "".join(ch if (ch.isalnum() or ch in "-_") else "_" for ch in trimmed)
+    return base / f"usage-ratios.{safe}.lock"
+
+
+@contextmanager
+def usage_ratio_bucket_lock(bucket_id: str) -> Iterator[None]:
+    """Serialise the load-modify-save of one bucket's usage-ratio row.
+
+    The usage-ratio profile is a single :class:`SecureObjectRepository` row per
+    bucket. Every mutator (``ratios set`` / ``ratios unset`` and the censo
+    home-office seed) reads that row, mutates one entry, and writes the whole
+    row back. Without a cross-transaction guard two concurrent writers each load
+    the same snapshot, apply their own change, and the second save silently
+    drops the first writer's category — a lost update. The encrypted-SQLite
+    ``busy_timeout`` / WAL only serialises individual write transactions; it
+    does not make the read-modify-write span atomic, so the lost update
+    persists.
+
+    This context manager acquires the project's OS-level
+    :func:`aeat.core.locks.exclusive_file_lock` on a per-bucket sidecar so the
+    whole load-modify-save runs under mutual exclusion. Because the lock is held
+    across both the load and the save, concurrent writers serialise and every
+    update survives — there is no silent overwrite. The lock is scoped to the
+    bucket, so writers on unrelated profiles never contend.
+
+    Args:
+        bucket_id: Profile bucket whose usage-ratio row is being mutated.
+
+    Raises:
+        LockAcquisitionError: When the per-bucket lock cannot be acquired within
+            the configured ``aeat_file_lock_timeout_s`` budget.
+    """
+    from ...core.locks import exclusive_file_lock
+
+    with exclusive_file_lock(_usage_ratio_lock_target(bucket_id)):
+        yield
 
 
 def load_usage_ratios(*, bucket_id: str, objects: SecureObjectRepository | None = None) -> UsageRatioProfile:
