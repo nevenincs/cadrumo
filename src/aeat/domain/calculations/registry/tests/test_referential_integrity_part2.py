@@ -46,9 +46,9 @@ _SEGMENTED_TARGET_CASILLA: CasillaId = validated_casilla_id(
     "DP200014:00999",
     surface="_SEGMENTED_TARGET_CASILLA",
 )
-_MISSING_LEGAL_ID = "lirpf:art-99"
+_MISSING_LEGAL_ID = "ley-35-2006:art-9999"
 _MISSING_SOURCE_ID = "aeat-missing-source"
-_EXTRA_LEGAL_ID = "lirpf:art-88"
+_EXTRA_LEGAL_ID = "ley-35-2006:art-9998"
 _EXTRA_SOURCE_ID = "aeat-extra-source"
 
 
@@ -387,7 +387,7 @@ def test_completeness_manifest_refs_must_resolve_in_registry_validation() -> Non
     failures = _modelo_validation_failures(minimal_modelo(revision))
 
     assert any(
-        "calculation-completeness manifest references unknown legal id 'lirpf:art-99'" in failure
+        "calculation-completeness manifest references unknown legal id 'ley-35-2006:art-9999'" in failure
         for failure in failures
     ), f"manifest legal_refs must be checked against the legal catalogue; got: {failures}"
     assert any(
@@ -414,8 +414,8 @@ def test_casilla_continuidad_evolution_refs_must_resolve_in_registry_validation(
     failures = _modelo_validation_failures(minimal_modelo(revision))
 
     assert any(
-        "casilla continuidad evolution 'test-continuidad-2024-2025' references unknown legal id 'lirpf:art-99'"
-        in failure
+        "casilla continuidad evolution 'test-continuidad-2024-2025' "
+        "references unknown legal id 'ley-35-2006:art-9999'" in failure
         for failure in failures
     ), f"continuity evolution legal_refs must be checked against the legal catalogue; got: {failures}"
     assert any(
