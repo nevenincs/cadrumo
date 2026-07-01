@@ -1649,6 +1649,7 @@ cli:
       list:
         help: List all official tax forms (modelos) registered in the system.
         year_help: Filter the modelo catalogue to a single fiscal year
+        domain_help: 'Filter the modelo catalogue to a single tax family (e.g. iva, irpf, is)'
       m036:
         alta_help: Record an M036 alta declaration (initial census registration) filed
           at sede.
@@ -4261,6 +4262,7 @@ errors:
     modelo_calculate_relation_input: errors.refused.modelo_calculate_relation_input
     modelo_calculate_semantic_role: errors.refused.modelo_calculate_semantic_role
     modelo_calculate_shortcut_input: errors.refused.modelo_calculate_shortcut_input
+    modelo_calculate_text_input: errors.refused.modelo_calculate_text_input
     modelo_calculation_revision_selector_ambiguous: The calculation revision selector
       matched more than one revision; refine the selector.
     modelo_calculation_revision_selector_state: The selected calculation revision

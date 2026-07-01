@@ -135,7 +135,7 @@ def _build_secure_object_custody_payload(
     bucket_id: str,
     custody_profile: StorageCustodyProfile,
 ) -> tuple[tuple[CarriedSecureObject, ...], CoverageManifest]:
-    from ...adapters.persistence.storage import secure_object_repository_for_bucket
+    from ...adapters.persistence.storage.runtime_repository import secure_object_repository_for_bucket
     from ...domain.user_profile._portable_export import CoverageManifest
     from ._custody_carry import carried_namespace_definitions, serialize_carried_objects
 
