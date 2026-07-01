@@ -53,6 +53,33 @@ class CheckDependencyPayload(OutputSchema):
     remediation: str = ""
 
 
+class CheckPreflightPayload(OutputSchema):
+    """One workstation-preflight health row.
+
+    Nested in
+    :class:`~aeat.entrypoints.cli._config._check_payloads.ConfigCheckResult`
+    and mirrors :class:`~aeat.application.preflight.PreflightCheck` rows
+    from :func:`~aeat.application.preflight.run_preflight_checks`: the
+    per-auth-provider certificate / Cl@ve Móvil configuration health, the
+    secure-storage / bundled-corpus / configuration preflight, and the
+    registry referential-integrity gate. ``check`` is the stable row id
+    (e.g. ``auth-provider:certificate``, ``storage:local-root``,
+    ``registry:referential-integrity``); ``severity`` renders the
+    :class:`~aeat.application.preflight.HealthSeverity` verdict
+    (``ok`` / ``warn`` / ``error``); ``remediation`` names the concrete
+    operator action when the row is not healthy. These rows are reported
+    for operator visibility and do not, on their own, change the
+    command's ``ok`` verdict — the capability/dependency contract owns
+    the exit code.
+    """
+
+    check: str
+    healthy: bool
+    severity: str
+    detail: str = ""
+    remediation: str = ""
+
+
 @register_schema("config.check")
 class ConfigCheckResult(OutputSchema):
     """JSON envelope for ``aeat config check``.
@@ -74,4 +101,5 @@ class ConfigCheckResult(OutputSchema):
     ok: bool
     capabilities: list[CheckCapabilityPayload] = []
     dependencies: list[CheckDependencyPayload] = []
+    preflight: list[CheckPreflightPayload] = []
     issues: list[str] = []
