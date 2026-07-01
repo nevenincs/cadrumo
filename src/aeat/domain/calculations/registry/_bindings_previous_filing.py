@@ -15,7 +15,7 @@ from typing import Literal, Protocol
 
 from pydantic import BaseModel, Field, field_validator, model_validator
 
-from ....core import STRICT_FROZEN_CONFIG
+from ....core import STRICT_FROZEN_CONFIG, BindingSourceKind
 from ....core.aggregation import BindingAggregationOp
 from ._binding_aggregation import binding_aggregation_op
 from ._binding_selector_utils import invariant_diagnostics, selector_against_model
@@ -73,7 +73,7 @@ def previous_filing_observation_requirements(
     legal_refs_by_key: dict[tuple[ModeloId, int, str], set[LegalRefId]] = {}
     source_refs_by_key: dict[tuple[ModeloId, int, str], set[SourceRefId]] = {}
     for binding in revision.bindings:
-        if binding.source != "previous_filing":
+        if binding.source != BindingSourceKind.PREVIOUS_FILING:
             continue
         if not _is_direct_previous_filing_binding(binding):
             continue
@@ -247,7 +247,7 @@ def resolve_previous_filing_binding_values(
     for binding in revision.bindings:
         if binding.id in excluded:
             continue
-        if binding.source != "previous_filing":
+        if binding.source != BindingSourceKind.PREVIOUS_FILING:
             continue
         if not _is_direct_previous_filing_binding(binding):
             continue
