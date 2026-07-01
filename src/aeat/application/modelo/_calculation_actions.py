@@ -1,14 +1,14 @@
 """Calculation revision actions for modelo work units.
 
-The calculate paths resolve a law-determined :class:`RegistrySnapshot` from
-each :class:`aeat.domain.modelos.WorkUnit`, merge manual inputs with profile,
+The calculate paths resolve a law-determined :class:`~aeat.domain.calculations.registry.RegistrySnapshot` from
+each :class:`~aeat.domain.modelos.WorkUnit`, merge manual inputs with profile,
 borrador, IVA-wallet, and bucket aggregation channels, and execute
 :func:`aeat.domain.calculations.registry.calculate_registry_snapshot` against
-the asserted :class:`ModeloRevision`.
+the asserted :class:`~aeat.domain.calculations.registry.ModeloRevision`.
 
-Persistence is centralized through :class:`CalculationRevision`,
-:class:`aeat.domain.modelos.CalculationRevisionCatalogueRepository`,
-and :class:`BucketEventHistoryRepository`, so the work-unit pointer and
+Persistence is centralized through :class:`~aeat.domain.modelos.CalculationRevision`,
+:class:`~aeat.domain.modelos.CalculationRevisionCatalogueRepository`,
+and :class:`~aeat.domain.buckets.BucketEventHistoryRepository`, so the work-unit pointer and
 ``modelo.calculation.created`` event advance with the stored draft revision.
 
 ``calculate_modelo_revision`` is the lower-level calculation service: callers
