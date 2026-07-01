@@ -22,6 +22,8 @@ from ._validate_revision_rules import (
     validate_reconciliation_total_closure,
 )
 
+_REVISION_REFERENCE_SOURCE_TIERS = ("official_source_guidance", "layout_authority")
+
 
 def _validate_revision_closure_sections(
     failures: list[str],
@@ -75,6 +77,7 @@ def _validate_revision_reference_surfaces(
     revision: ModeloRevision,
     legal_refs: Mapping[str, LegalReference],
     source_refs: Mapping[str, SourceReference],
+    evidence: EvidenceValidator,
 ) -> None:
     manifest = revision.completeness_manifest
     if manifest is not None:
@@ -84,7 +87,18 @@ def _validate_revision_reference_surfaces(
         failures.extend(
             _missing_refs(prefix, "calculation-completeness manifest", manifest.source_refs, source_refs, "source"),
         )
+        failures.extend(
+            evidence.require_any_source_tier(
+                prefix,
+                "calculation-completeness manifest",
+                manifest.source_refs,
+                _REVISION_REFERENCE_SOURCE_TIERS,
+            ),
+        )
     for evolution in revision.casilla_continuidad_evolutions:
         owner = f"casilla continuidad evolution {evolution.id!r}"
         failures.extend(_missing_refs(prefix, owner, evolution.legal_refs, legal_refs, "legal"))
         failures.extend(_missing_refs(prefix, owner, evolution.source_refs, source_refs, "source"))
+        failures.extend(
+            evidence.require_any_source_tier(prefix, owner, evolution.source_refs, _REVISION_REFERENCE_SOURCE_TIERS),
+        )

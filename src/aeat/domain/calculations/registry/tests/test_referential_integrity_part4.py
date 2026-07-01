@@ -41,7 +41,6 @@ from ._referential_integrity_support import (
     minimal_application_link,
     minimal_casilla,
     minimal_catalogues,
-    minimal_legal_ref,
     minimal_modelo,
     minimal_revision,
     minimal_source_ref,
@@ -73,9 +72,10 @@ def _catalogues_with_layout_source() -> RegistryCatalogues:
             "corpus_path": "registry/aeat/sources/aeat-layout-source-test.pdf",
         },
     )
+    catalogues = minimal_catalogues()
     return RegistryCatalogues(
-        legal={REFERENCE_LEGAL_ID: minimal_legal_ref()},
-        sources={REFERENCE_SOURCE_ID: minimal_source_ref(), _LAYOUT_SOURCE_ID: layout_source},
+        legal=catalogues.legal,
+        sources={**catalogues.sources, _LAYOUT_SOURCE_ID: layout_source},
     )
 
 
@@ -508,9 +508,10 @@ def test_dangling_modelo_source_refs() -> None:
     _extra = "aeat-dr-extra-v1"
     revision = minimal_revision()
     extra_source = minimal_source_ref().model_copy(update={"id": _extra})
+    catalogues = minimal_catalogues()
     augmented_catalogues = RegistryCatalogues(
-        legal={REFERENCE_LEGAL_ID: minimal_legal_ref()},
-        sources={REFERENCE_SOURCE_ID: minimal_source_ref(), _extra: extra_source},
+        legal=catalogues.legal,
+        sources={**catalogues.sources, _extra: extra_source},
     )
     modelo = minimal_modelo(revision).model_copy(update={"source_refs": (REFERENCE_SOURCE_ID, _extra)})
     snapshot = snapshot_for_revision(modelo, augmented_catalogues, revision)

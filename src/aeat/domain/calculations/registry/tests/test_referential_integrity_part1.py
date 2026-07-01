@@ -74,9 +74,10 @@ def _catalogues_with_executable_parity_source() -> RegistryCatalogues:
             "evidence_tier": "executable_parity_evidence",
         },
     )
+    catalogues = minimal_catalogues()
     return RegistryCatalogues(
-        legal={REFERENCE_LEGAL_ID: minimal_legal_ref()},
-        sources={REFERENCE_SOURCE_ID: minimal_source_ref(), _PARITY_SOURCE_ID: parity_source},
+        legal=catalogues.legal,
+        sources={**catalogues.sources, _PARITY_SOURCE_ID: parity_source},
     )
 
 
@@ -288,13 +289,14 @@ def test_snapshot_carries_casilla_alias_and_constraints_refs() -> None:
         update={"aliases": (alias,), "constraints": constraints},
     )
     revision = minimal_revision(casillas=(casilla,))
+    catalogues = minimal_catalogues()
     catalogues = RegistryCatalogues(
         legal={
-            REFERENCE_LEGAL_ID: minimal_legal_ref(),
+            **catalogues.legal,
             _EXTRA_LEGAL_ID: minimal_legal_ref().model_copy(update={"id": _EXTRA_LEGAL_ID}),
         },
         sources={
-            REFERENCE_SOURCE_ID: minimal_source_ref(),
+            **catalogues.sources,
             _EXTRA_SOURCE_ID: minimal_source_ref().model_copy(update={"id": _EXTRA_SOURCE_ID}),
         },
     )
@@ -400,12 +402,13 @@ def test_snapshot_carries_convenio_rate_row_legal_refs() -> None:
         source_refs=(REFERENCE_SOURCE_ID,),
     )
     revision = minimal_revision(parameters=(parameter,))
+    catalogues = minimal_catalogues()
     catalogues = RegistryCatalogues(
         legal={
-            REFERENCE_LEGAL_ID: minimal_legal_ref(),
+            **catalogues.legal,
             _EXTRA_LEGAL_ID: minimal_legal_ref().model_copy(update={"id": _EXTRA_LEGAL_ID}),
         },
-        sources={REFERENCE_SOURCE_ID: minimal_source_ref()},
+        sources=catalogues.sources,
     )
 
     snapshot = snapshot_for_revision(minimal_modelo(revision), catalogues, revision)
@@ -656,13 +659,14 @@ def test_snapshot_carries_cross_reference_applicability_predicate_refs() -> None
         applicability_predicates=(predicate,),
     )
     revision = minimal_revision(live_cross_references=(cross_ref,))
+    catalogues = minimal_catalogues()
     catalogues = RegistryCatalogues(
         legal={
-            REFERENCE_LEGAL_ID: minimal_legal_ref(),
+            **catalogues.legal,
             _EXTRA_LEGAL_ID: minimal_legal_ref().model_copy(update={"id": _EXTRA_LEGAL_ID}),
         },
         sources={
-            REFERENCE_SOURCE_ID: minimal_source_ref(),
+            **catalogues.sources,
             _EXTRA_SOURCE_ID: minimal_source_ref().model_copy(update={"id": _EXTRA_SOURCE_ID}),
         },
     )
@@ -767,12 +771,13 @@ def test_snapshot_carries_verification_predicate_legal_refs() -> None:
         expression='any_nonzero(["01"])',
     )
     revision = minimal_revision().model_copy(update={"verification_predicates": (predicate,)})
+    catalogues = minimal_catalogues()
     catalogues = RegistryCatalogues(
         legal={
-            REFERENCE_LEGAL_ID: minimal_legal_ref(),
+            **catalogues.legal,
             _EXTRA_LEGAL_ID: minimal_legal_ref().model_copy(update={"id": _EXTRA_LEGAL_ID}),
         },
-        sources={REFERENCE_SOURCE_ID: minimal_source_ref()},
+        sources=catalogues.sources,
     )
 
     snapshot = snapshot_for_revision(minimal_modelo(revision), catalogues, revision)
