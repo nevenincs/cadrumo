@@ -66,6 +66,7 @@ See Also:
 """
 
 from ._binding_prefill import (
+    MODELO_303_IVA_COMPENSATION_BINDING_ID,
     BindingPrefillReport,
     LocalIvaCompensationRecurrence,
     PrefilledBinding,
@@ -112,7 +113,11 @@ from ._iva_wallet_reconciliation import (
     reconcile_iva_compensation_wallet,
     reconcile_modelo_303_iva_compensation,
 )
-from ._maritime_exemption_service import resolve_maritime_exemption
+from ._m111_no_retenciones import (
+    M111_NO_RETENCIONES_PROFILE_PATH,
+    m111_no_retenciones_periods_for_bucket,
+)
+from ._maritime_exemption_service import MaritimeExemptionResult, resolve_maritime_exemption
 from ._multi_year import (
     EnrollmentEvidence,
     EnrollmentEvidenceError,
@@ -123,6 +128,7 @@ from ._multi_year import (
 )
 from ._observations_repository import (
     CalculationObservationRepository,
+    IvaWalletDecisionEnvelopePayload,
     IvaWalletDecisionRepository,
     iva_wallet_decision_event_key,
     iva_wallet_decision_key,
@@ -144,6 +150,8 @@ from ._row_set_assembly import (
 IvaCompensationReconciliationReport.model_rebuild()
 
 __all__ = [
+    "M111_NO_RETENCIONES_PROFILE_PATH",
+    "MODELO_303_IVA_COMPENSATION_BINDING_ID",
     "AssembledObservations",
     "BindingPrefillReport",
     "CalculationObservationRepository",
@@ -164,9 +172,11 @@ __all__ = [
     "IvaCompensationAnnualSummary",
     "IvaCompensationHistoryRepository",
     "IvaCompensationReconciliationReport",
+    "IvaWalletDecisionEnvelopePayload",
     "IvaWalletDecisionRepository",
     "IvaWalletDecisionSourceResolver",
     "LocalIvaCompensationRecurrence",
+    "MaritimeExemptionResult",
     "NoPriorObligationProvenance",
     "NoPriorObligationProvenanceKind",
     "PrefilledBinding",
@@ -192,6 +202,7 @@ __all__ = [
     "iva_compensation_state_from_registry_observation",
     "iva_wallet_decision_event_key",
     "iva_wallet_decision_key",
+    "m111_no_retenciones_periods_for_bucket",
     "observation_key",
     "partition_cross_period_requirements_by_activity_start",
     "query_iva_wallet_balance",
