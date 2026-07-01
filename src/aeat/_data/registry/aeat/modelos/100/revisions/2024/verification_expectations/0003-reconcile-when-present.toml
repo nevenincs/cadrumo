@@ -33,9 +33,17 @@ computed_casilla_ids = []
 # (see
 # corpus/manual_oracles/modelo-100-2024-capital-inmobiliario-arrendamiento-vivienda-tensionada.json
 # and test_m100_2024_capital_inmobiliario_arrendamiento_vivienda_manual_worked_example.py).
+# 1826 ("Valor de transmision"), 1830 ("Valor de adquisicion"), 1836
+# ("Ganancia no exenta") and 1840 ("Ganancia patrimonial reducida no exenta")
+# reproduce 148.100 / 96.380 / 51.720 / 49.562,95 respectively, the four
+# subtotals the same manual (Parte 1, Cap. 11) states verbatim in its own caso
+# practico solution for don J.P.C.'s transmision de un piso with DT 9.a
+# coeficientes de abatimiento (see
+# corpus/manual_oracles/modelo-100-2024-ganancias-patrimoniales-transmision-inmueble.json
+# and test_m100_2024_ganancias_patrimoniales_transmision_inmueble_manual_worked_example.py).
 # The CI honesty gate (test_external_oracle_grounding_enrolled.py) cross-checks
 # both declarations symmetrically against the bundled corpus.
-externally_grounded_casilla_ids = ["0012", "0017", "0022", "0025", "0149", "0150", "0154", "0226"]
+externally_grounded_casilla_ids = ["0012", "0017", "0022", "0025", "0149", "0150", "0154", "0226", "1826", "1830", "1836", "1840"]
 reconcile_when_present_casilla_ids = [
     "0007",
     "0012",
