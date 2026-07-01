@@ -175,6 +175,7 @@ if TYPE_CHECKING:
 
 _PREDICATE_ALL_NONZERO = _re.compile(r"^all_nonzero\(\[(?P<ids>[^\]]*)\]\)$")
 _PREDICATE_ANY_NONZERO = _re.compile(r"^any_nonzero\(\[(?P<ids>[^\]]*)\]\)$")
+_PREDICATE_AT_MOST_ONE_POSITIVE = _re.compile(r"^at_most_one_positive\(\[(?P<ids>[^\]]*)\]\)$")
 _PREDICATE_CAP_LE_WHEN_POSITIVE = _re.compile(r"^cap_le_when_positive\(\[(?P<ids>[^\]]*)\]\)$")
 # implies_nonzero(["antecedent_id", "consequent_id"]) — material implication
 # with a strictly-positive antecedent test: predicate holds iff antecedent
@@ -422,6 +423,8 @@ def _evaluate_predicate_expression(
 
     - ``all_nonzero(["id1", "id2", ...])`` — all ids must have a non-zero value.
     - ``any_nonzero(["id1", "id2", ...])`` — at least one id must have a non-zero value.
+    - ``at_most_one_positive(["id1", "id2", ...])`` — no more than one named
+      casilla may be strictly positive.
     - ``cap_le_when_positive(["limited_id", "ceiling_id"])`` — when the ceiling
       casilla is strictly positive, the limited casilla MUST NOT exceed it.
     - ``equals(["lhs_id", "rhs_id"])`` — binary consistency invariant: predicate
@@ -454,6 +457,13 @@ def _evaluate_predicate_expression(
     if m:
         ids = _parse_predicate_casilla_ids(m.group("ids"))
         return any(casilla_values.get(cid, Decimal(0)) != Decimal(0) for cid in ids)
+
+    m = _PREDICATE_AT_MOST_ONE_POSITIVE.match(expr)
+    if m:
+        ids = _parse_predicate_casilla_ids(m.group("ids"))
+        if len(ids) < 2:
+            return True
+        return sum(1 for cid in ids if casilla_values.get(cid, Decimal(0)) > Decimal(0)) <= 1
 
     m = _PREDICATE_CAP_LE_WHEN_POSITIVE.match(expr)
     if m:
@@ -632,6 +642,8 @@ def _evaluate_advisory_predicate_fires(
       positive but EVERY listed consequent is zero. The M303 official-Diseño
       contradiction (a positive computed total whose constituent official
       numbered boxes are all unpopulated by the calculate path).
+    - ``at_most_one_positive(["id1", "id2", ...])`` — fires when more than one
+      listed casilla is strictly positive.
     - ``casilla_equals_implies_nonzero(["antecedent_casilla_id", "literal",
       "consequent_casilla_id"])`` — categorical-conditional material
       implication: fires when the named antecedent TEXT casilla's
@@ -669,6 +681,12 @@ def _evaluate_advisory_predicate_fires(
         if len(ids) != 1:
             return False
         return casilla_values.get(ids[0], Decimal(0)) > Decimal(0)
+    m = _PREDICATE_AT_MOST_ONE_POSITIVE.match(expr)
+    if m:
+        ids = _parse_predicate_casilla_ids(m.group("ids"))
+        if len(ids) < 2:
+            return False
+        return sum(1 for cid in ids if casilla_values.get(cid, Decimal(0)) > Decimal(0)) > 1
     m = _PREDICATE_IMPLIES_NONZERO.match(expr)
     if m:
         ids = _parse_predicate_casilla_ids(m.group("ids"))
