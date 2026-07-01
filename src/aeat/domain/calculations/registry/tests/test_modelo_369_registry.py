@@ -200,6 +200,8 @@ def test_modelo_369_snapshots_carry_scheme_authority(
     assert "aeat-dr-369-2021" in snapshot.sources
     assert "aeat-modelo-369-procedure" in snapshot.sources
     assert "boe-modelo-369-2021-form" in snapshot.sources
+    assert catalogues.sources["aeat-modelo-369-procedure"].evidence_tier == "official_source_guidance"
+    assert catalogues.sources["boe-modelo-369-2021-form"].evidence_tier == "layout_authority"
 
 
 def test_modelo_369_filing_schedules_match_scheme_period_selectors() -> None:
