@@ -36,16 +36,13 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 # ---------------------------------------------------------------------------
 
 
-@pytest.mark.parametrize(
-    "error_cls",
-    (
+def test_calc_sheets_error_is_aeat_error() -> None:
+    for error_cls in (
         CalcSheetsEngineError,
         CalcSheetsRecordError,
         CalcSheetsParityError,
-    ),
-)
-def test_calc_sheets_error_is_aeat_error(error_cls: type[AeatError]) -> None:
-    assert issubclass(error_cls, AeatError)
+    ):
+        assert issubclass(error_cls, AeatError)
 
 
 # ---------------------------------------------------------------------------
@@ -53,38 +50,36 @@ def test_calc_sheets_error_is_aeat_error(error_cls: type[AeatError]) -> None:
 # ---------------------------------------------------------------------------
 
 
-@pytest.mark.parametrize(
-    "error_cls,expected_code",
-    [
-        (CalcSheetsEngineError, "ERROR_CALC_SHEETS_ENGINE"),
-        (CalcSheetsRecordError, "ERROR_CALC_SHEETS_RECORD"),
-        (CalcSheetsParityError, "ERROR_CALC_SHEETS_PARITY"),
-    ],
-)
-def test_calc_sheets_error_code_registered(error_cls: type[AeatError], expected_code: str) -> None:
+def test_calc_sheets_error_code_registered() -> None:
     """Each calc_sheets error must be bound to its declared ErrorCode."""
     from ..core.errors import get_registered_error_code
 
-    ec = get_registered_error_code(error_cls)
-    assert ec is not None, f"{error_cls.__name__} has no registered ErrorCode"
-    assert ec.code == expected_code
+    cases: tuple[tuple[type[AeatError], str], ...] = (
+        (CalcSheetsEngineError, "ERROR_CALC_SHEETS_ENGINE"),
+        (CalcSheetsRecordError, "ERROR_CALC_SHEETS_RECORD"),
+        (CalcSheetsParityError, "ERROR_CALC_SHEETS_PARITY"),
+    )
+
+    for error_cls, expected_code in cases:
+        ec = get_registered_error_code(error_cls)
+        assert ec is not None, f"{error_cls.__name__} has no registered ErrorCode"
+        assert ec.code == expected_code
 
 
-@pytest.mark.parametrize(
-    "instance",
-    [
+def test_calc_sheets_error_envelope_roundtrip() -> None:
+    """Envelope construction and JSON roundtrip must not raise."""
+    instances: tuple[AeatError, ...] = (
         CalcSheetsEngineError("unsupported rounding code 'bad'"),
         CalcSheetsRecordError("column index must be 1-based"),
         CalcSheetsParityError("unknown casilla ids [999]"),
-    ],
-)
-def test_calc_sheets_error_envelope_roundtrip(instance: AeatError) -> None:
-    """Envelope construction and JSON roundtrip must not raise."""
-    envelope = build_error_envelope(instance)
-    assert isinstance(envelope, ErrorEnvelope)
-    json_bytes = envelope.model_dump_json()
-    reloaded = ErrorEnvelope.model_validate_json(json_bytes)
-    assert reloaded == envelope
+    )
+
+    for instance in instances:
+        envelope = build_error_envelope(instance)
+        assert isinstance(envelope, ErrorEnvelope)
+        json_bytes = envelope.model_dump_json()
+        reloaded = ErrorEnvelope.model_validate_json(json_bytes)
+        assert reloaded == envelope
 
 
 # ---------------------------------------------------------------------------
@@ -92,17 +87,13 @@ def test_calc_sheets_error_envelope_roundtrip(instance: AeatError) -> None:
 # ---------------------------------------------------------------------------
 
 
-@pytest.mark.parametrize(
-    ("error_cls", "base_cls"),
-    (
-        pytest.param(BucketValidationError, BucketError, id="bucket"),
-        pytest.param(GoogleAuthValidationError, GoogleAuthError, id="google-auth"),
-    ),
-)
-def test_validation_error_mro_does_not_include_value_error(
-    error_cls: type[AeatError],
-    base_cls: type[AeatError],
-) -> None:
-    assert not issubclass(error_cls, ValueError)
-    assert issubclass(error_cls, base_cls)
-    assert issubclass(error_cls, AeatError)
+def test_validation_error_mro_does_not_include_value_error() -> None:
+    cases: tuple[tuple[type[AeatError], type[AeatError]], ...] = (
+        (BucketValidationError, BucketError),
+        (GoogleAuthValidationError, GoogleAuthError),
+    )
+
+    for error_cls, base_cls in cases:
+        assert not issubclass(error_cls, ValueError), error_cls
+        assert issubclass(error_cls, base_cls), error_cls
+        assert issubclass(error_cls, AeatError), error_cls
