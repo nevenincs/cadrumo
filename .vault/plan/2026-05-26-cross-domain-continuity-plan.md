@@ -15,6 +15,16 @@ related:
   - '[[2026-06-04-cross-domain-continuity-research]]'
 ---
 
+<!-- LINK RULES:
+     - [[wiki-links]] are ONLY for .vault/ documents in the
+       related: field above.
+     - The related: field carries the AUTHORISING documents
+       (ADR, research, reference, prior plan) for every Step in
+       this plan. Steps inherit this chain; per-row reference
+       footers do not exist.
+     - NEVER use [[wiki-links]] or markdown links in the
+       document body. -->
+
 <!-- RETIRED: P02, P64, S01 -->
 
 # `cross-domain-continuity` `cross-domain continuity remediation epic - open-ended persona-driven correctness campaign` plan
@@ -223,7 +233,7 @@ Decide and implement substantive predicates on the registry side so empty drafts
 - [x] `W04.P19.S376` - extend Layer 2 verification DSL with implies_nonzero conditional operator per dsl-conditional-predicate ADR; `register operator name in KNOWN_VERIFICATION_PREDICATE_OPERATORS and extend VerificationPredicateDefinition docstring with the strictly-positive antecedent semantics; `src/aeat/domain/calculations/registry/_schema.py`.
 - [x] `W04.P19.S377` - add _PREDICATE_IMPLIES_NONZERO regex + branch in _evaluate_predicate_expression alongside cap_le_when_positive following the ADR semantics (antecedent strictly positive triggers consequent non-zero requirement; `antecedent zero or negative trivially holds); `src/aeat/application/modelo/_actions.py`.
 - [x] `W04.P19.S378` - add five-case unit-test suite for implies_nonzero (antecedent zero, negative, both positive, violated when consequent zero, unknown consequent treated as zero) plus extend the P10.S68 lock-step gate fixture so authoring-time validation accepts the new operator; `src/aeat/application/modelo/test_verification_predicates.py`.
-- [ ] `W04.P19.S398` - FU-task-226 M131 cuota-minima regulatory floor authoring gated on Orden EHA/672/2007 modulo-tariff corpus landing under task 226; `structural implies_nonzero(C01 C07) attempt rolled back at c159966df because the formula DAG does not connect C01 to C07 via the page-1 chain (C07 = C02+C04+C06 only); this Step now tracks the regulatory-floor predicate authoring waiting for the corpus blocker; `src/aeat/_data/registry/aeat/modelos/131/`.
+- [x] `W04.P19.S398` - FU-task-226 M131 cuota-minima regulatory floor authoring gated on Orden EHA/672/2007 modulo-tariff corpus landing under task 226; `structural implies_nonzero(C01 C07) attempt rolled back at c159966df because the formula DAG does not connect C01 to C07 via the page-1 chain (C07 = C02+C04+C06 only); this Step now tracks the regulatory-floor predicate authoring waiting for the corpus blocker; `src/aeat/_data/registry/aeat/modelos/131/`.
 
 ### Phase `W04.P20` - verification path naming and boundary documentation
 
@@ -429,6 +439,7 @@ Bulk of Cluster O. Each Step is a single file drift resolution. Mechanical and r
 ### Phase `W09.P39` - _missing_refs utility duplication consolidation
 
 Seven identical copies of _missing_refs across _validate modules. Extract to a single helper module and import.
+
 
 ### Phase `W09.P40` - ledger aggregation duplication pair resolution
 
