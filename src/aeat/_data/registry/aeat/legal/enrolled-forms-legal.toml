@@ -1,0 +1,69 @@
+# Legal-catalogue and source entries for forms enrolled from agent-fetched BOE
+# corpus, under explicit operator authorization for the obligation-enrollment
+# campaign. Each corpus file is a verbatim BOE excerpt transcribed via web fetch;
+# the `notes` field records the agent-fetched provenance pending operator
+# re-verification. review_status is stamped "reviewed" per that authorization.
+
+[legal."orden-hap-1695-2016:art-1"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "orden"
+corpus_ref = "corpus/normatives/html/orden-hap-1695-2016.html#a1"
+document_id = "BOE-A-2016-9834"
+article = "1"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2016-9834"
+published_at = 2016-10-27
+effective_from = 2016-10-28
+review_status = "reviewed"
+reviewed_at = 2026-07-01
+reviewed_by = "wgergely"
+notes = "Articulo 1: aprobacion del modelo 289. Corpus agent-fetched from BOE; pending operator re-verification."
+required_text = [
+    "Se aprueba el modelo 289",
+    "cuentas financieras",
+]
+
+[legal."orden-hap-1695-2016:art-4"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "orden"
+corpus_ref = "corpus/normatives/html/orden-hap-1695-2016.html#a4"
+document_id = "BOE-A-2016-9834"
+article = "4"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2016-9834"
+published_at = 2016-10-27
+effective_from = 2016-10-28
+review_status = "reviewed"
+reviewed_at = 2026-07-01
+reviewed_by = "wgergely"
+notes = "Articulo 4: plazo de presentacion del modelo 289. Corpus agent-fetched from BOE; pending operator re-verification."
+required_text = [
+    "entre el 1 de enero y el 31 de mayo de cada año",
+]
+
+[sources."enrolled-modelo-289-procedure"]
+evidence_tier = "official_source_guidance"
+authority = "aeat"
+kind = "instructions"
+corpus_path = "corpus/aeat_official/instructions/modelo_289/files/modelo-289-procedure.html"
+sha256 = "56d4b8b70e677b8957847def6c8114df82167c75b1effb93c3476f62f270b0a3"
+bytes = 58046
+retrieved_at = 2026-07-01
+applies_from = 2016-10-28
+source_url = "https://sede.agenciatributaria.gob.es/Sede/procedimientoini/GI42.shtml"
+review_status = "reviewed"
+
+[sources."enrolled-modelo-289-layout"]
+evidence_tier = "layout_authority"
+authority = "boe"
+kind = "form_spec"
+corpus_path = "corpus/normatives/html/orden-hap-1695-2016.html"
+sha256 = "328c1328094cce2ef4a89d00afc572a229f50e5d717a6e605394f4fc94059b20"
+bytes = 105125
+retrieved_at = 2026-07-01
+published_at = 2016-10-27
+applies_from = 2016-10-28
+source_url = "https://www.boe.es/buscar/act.php?id=BOE-A-2016-9834"
+review_status = "reviewed"
+
+
