@@ -38,7 +38,7 @@ Paths covered:
 
 from __future__ import annotations
 
-from datetime import UTC, datetime, timedelta
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import cast, override
 
@@ -64,6 +64,8 @@ from ._authenticator_support import (
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
+
+_EXPIRED_IDLE_DEADLINE = datetime(2026, 5, 28, 14, 35, 0, tzinfo=UTC)
 
 
 def _reason_code(exc: AeatLoginAssertionError) -> str | None:
@@ -201,7 +203,7 @@ async def test_validation_gate_raises_expected_reason(
     if mutate == "hash":
         metadata["storage_state_sha256"] = "0" * 64
     elif mutate == "idle":
-        metadata["idle_deadline"] = (datetime.now(UTC) - timedelta(days=400)).isoformat()
+        metadata["idle_deadline"] = _EXPIRED_IDLE_DEADLINE.isoformat()
     elif mutate == "thumbprint":
         metadata["certificate_thumbprint"] = "f" * 64
     else:
@@ -237,7 +239,7 @@ async def test_validation_gate_order_earliest_wins(
     settings, storage_state_path, _cert = await _seed_persisted_session(tmp_path, _settings_factory)
     metadata = dict(_load_test_session(storage_state_path).metadata)
     metadata["storage_state_sha256"] = "0" * 64
-    metadata["idle_deadline"] = (datetime.now(UTC) - timedelta(days=400)).isoformat()
+    metadata["idle_deadline"] = _EXPIRED_IDLE_DEADLINE.isoformat()
     metadata["certificate_thumbprint"] = "f" * 64
     metadata["certificate_subject"] = "CN=DIFFERENT"
     _store_test_session(storage_state_path, metadata=metadata)
@@ -263,7 +265,7 @@ async def test_validation_gate_order_idle_before_thumbprint(
     settings, storage_state_path, _cert = await _seed_persisted_session(tmp_path, _settings_factory)
     metadata = dict(_load_test_session(storage_state_path).metadata)
     # Leave storage_state_sha256 valid so the hash gate passes.
-    metadata["idle_deadline"] = (datetime.now(UTC) - timedelta(days=400)).isoformat()
+    metadata["idle_deadline"] = _EXPIRED_IDLE_DEADLINE.isoformat()
     metadata["certificate_thumbprint"] = "f" * 64
     metadata["certificate_subject"] = "CN=DIFFERENT"
     _store_test_session(storage_state_path, metadata=metadata)
