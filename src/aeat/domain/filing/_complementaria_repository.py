@@ -2,8 +2,8 @@
 
 Filing amendments carry corrected casilla deltas and original
 submission references. They are stored as encrypted byte objects via
-:class:`~aeat.adapters.persistence.storage.sql.SecureObjectRepository` at
-:class:`~aeat.adapters.persistence.storage.SensitivityClass` ``AUDIT``
+:class:`~aeat.adapters.persistence.storage.SecureObjectRepository` at
+``AUDIT`` :class:`~aeat.adapters.persistence.storage.SensitivityClass`
 sensitivity; no plaintext amendment JSON or envelope file lands on disk. Each
 record is wrapped in an
 :class:`~aeat.adapters.persistence.storage.Envelope` before serialisation.
@@ -57,9 +57,10 @@ class ModeloAmendmentRepository:
     :data:`aeat.adapters.persistence.storage.FILING_AMENDMENTS_NAMESPACE`. The
     repository wraps the amendment union in an
     :class:`~aeat.adapters.persistence.storage.Envelope` before writing through
-    :class:`~aeat.adapters.persistence.storage.sql.SecureObjectRepository`; the
+    :class:`~aeat.adapters.persistence.storage.SecureObjectRepository`; the
     amendment id is the natural key used for load, delete, and ordered
-    iteration. The namespace definition supplies the AUDIT sensitivity, schema
+    iteration. The namespace definition supplies the ``AUDIT``
+    :class:`~aeat.adapters.persistence.storage.SensitivityClass`, schema
     version, object-key grammar, and custody contract.
     """
 
