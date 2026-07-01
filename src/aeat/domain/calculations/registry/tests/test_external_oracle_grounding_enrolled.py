@@ -92,3 +92,36 @@ def test_every_externally_grounded_casilla_is_computed_and_enrolled() -> None:
 
     assert checked_years, "no M100 revision matched a Renta WEB Open replay filing year"
     assert not problems, "external oracle grounding is stranded (not enrolled/computed):\n" + "\n".join(problems)
+
+
+def test_every_declared_externally_grounded_casilla_has_oracle_evidence() -> None:
+    """Symmetric honesty gate: a registry grounding claim must be backed by evidence.
+
+    R1 lets a revision DECLARE `externally_grounded_casilla_ids` on its verification
+    expectations. This gate is the other direction of
+    `test_every_externally_grounded_casilla_is_computed_and_enrolled`: every casilla
+    the registry declares externally grounded MUST actually appear in a bundled
+    Renta WEB Open replay's `expected_by_casilla_id` for that revision's filing
+    year. It fails loudly if a grounding tier is asserted with no independent AEAT
+    oracle behind it - the guard against a fabricated grounding claim
+    (`aeat-safety-legal-gates`, `no-tautological-calculation-tests`).
+    """
+    grounded_by_year = _renta_web_open_grounded_casilla_ids_by_year()
+    problems: list[str] = []
+    checked = 0
+    for revision in _m100_revisions():
+        declared: set[str] = set()
+        for expectation in _as_list(revision.verification_expectations):
+            declared |= set(getattr(expectation, "externally_grounded_casilla_ids", ()))
+        if not declared:
+            continue
+        evidence = grounded_by_year.get(revision.id, set())
+        for casilla_id in sorted(declared):
+            checked += 1
+            if casilla_id not in evidence:
+                problems.append(
+                    f"100 {revision.id}: casilla {casilla_id} is declared externally_grounded "
+                    "but no bundled Renta WEB Open replay for that year carries it in expected_by_casilla_id",
+                )
+    assert checked, "no revision declared externally_grounded_casilla_ids to cross-check"
+    assert not problems, "declared external grounding lacks oracle evidence:\n" + "\n".join(problems)

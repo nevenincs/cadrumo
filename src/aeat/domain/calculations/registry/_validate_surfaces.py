@@ -415,6 +415,11 @@ def validate_verification_expectation_section(
                 failures.append(
                     f"{prefix}: {owner} reconcile-when-present references unknown casilla {casilla_id!r}",
                 )
+        for casilla_id in expectation.externally_grounded_casilla_ids:
+            if casilla_id not in casillas:
+                failures.append(
+                    f"{prefix}: {owner} externally-grounded references unknown casilla {casilla_id!r}",
+                )
         for total_kind, casilla_id in expectation.reconciliation_total_casilla_ids.items():
             if casilla_id not in casillas:
                 failures.append(

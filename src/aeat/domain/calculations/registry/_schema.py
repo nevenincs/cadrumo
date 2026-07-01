@@ -571,6 +571,7 @@ class VerificationExpectationDefinition(RegistryModel):
     id: VerificationExpectationId
     computed_casilla_ids: tuple[CasillaId, ...]
     reconcile_when_present_casilla_ids: tuple[CasillaId, ...] = ()
+    externally_grounded_casilla_ids: tuple[CasillaId, ...] = ()
     reconciliation_total_casilla_ids: Mapping[Literal["ingresar", "devolver"], CasillaId] = Field(
         default_factory=dict,
     )
@@ -600,6 +601,15 @@ class VerificationExpectationDefinition(RegistryModel):
             )
         return value
 
+    @field_validator("externally_grounded_casilla_ids")
+    @classmethod
+    def _externally_grounded_unique(cls, value: tuple[CasillaId, ...]) -> tuple[CasillaId, ...]:
+        if len(set(value)) != len(value):
+            raise RegistryValidationError(
+                "verification expectation externally_grounded_casilla_ids must be unique",
+            )
+        return value
+
     @model_validator(mode="after")
     def _reconcile_when_present_disjoint(self) -> VerificationExpectationDefinition:
         overlap = set(self.reconcile_when_present_casilla_ids) & set(self.computed_casilla_ids)
@@ -607,6 +617,17 @@ class VerificationExpectationDefinition(RegistryModel):
             raise RegistryValidationError(
                 "verification expectation reconcile_when_present_casilla_ids must be disjoint from "
                 f"computed_casilla_ids (overlap: {sorted(overlap)})",
+            )
+        return self
+
+    @model_validator(mode="after")
+    def _externally_grounded_subset(self) -> VerificationExpectationDefinition:
+        reconciled = set(self.computed_casilla_ids) | set(self.reconcile_when_present_casilla_ids)
+        outside = set(self.externally_grounded_casilla_ids) - reconciled
+        if outside:
+            raise RegistryValidationError(
+                "verification expectation externally_grounded_casilla_ids must be a subset of "
+                f"computed_casilla_ids | reconcile_when_present_casilla_ids (outside: {sorted(outside)})",
             )
         return self
 
@@ -1364,11 +1385,18 @@ class RegistryVerificationPolicy:
     prints them (a filed-vs-computed divergence surfaces a discrepancy) but are
     excluded from the coverage denominator, so enrolling a situational casilla
     can never lower coverage and flip a legitimate filing's verdict.
+
+    ``externally_grounded_casilla_ids`` is the third, orthogonal axis: of the
+    casillas a filing reconciles (``computed_casilla_ids`` or
+    ``reconcile_when_present_casilla_ids``), which have an AEAT-authoritative
+    independent oracle expected value backing their reconciliation, rather than
+    only the app's own engine.
     """
 
     expectation_ids: tuple[VerificationExpectationId, ...]
     computed_casilla_ids: frozenset[CasillaId]
     reconcile_when_present_casilla_ids: frozenset[CasillaId]
+    externally_grounded_casilla_ids: frozenset[CasillaId]
     tolerance: Decimal
     min_coverage: Decimal
 
@@ -1427,6 +1455,9 @@ class RegistrySnapshot(RegistryModel):
                 casilla_id
                 for expectation in expectations
                 for casilla_id in expectation.reconcile_when_present_casilla_ids
+            ),
+            externally_grounded_casilla_ids=frozenset(
+                casilla_id for expectation in expectations for casilla_id in expectation.externally_grounded_casilla_ids
             ),
             tolerance=min(expectation.tolerance for expectation in expectations),
             min_coverage=max(expectation.min_coverage for expectation in expectations),

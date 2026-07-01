@@ -6,6 +6,14 @@ computed_casilla_ids = [
     "0532", "0533", "0545", "0546",
     "0570", "0571", "0585", "0586",
 ]
+# Casillas whose engine value is independently checked against an
+# AEAT-authoritative oracle (the Renta WEB Open open-simulator replays under
+# corpus/parity_replays/renta_web_open/modelo-100-2025-*.json), not only the
+# app's own engine. Derived from the union of those replays'
+# expected_by_casilla_id keys; the CI honesty gate
+# (test_external_oracle_grounding_enrolled.py) cross-checks this declaration
+# symmetrically against the bundled corpus.
+externally_grounded_casilla_ids = ["0519", "0520"]
 tolerance = "0.01"
 rounding = "money-2"
 min_coverage = "1"
