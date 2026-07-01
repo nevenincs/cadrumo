@@ -25,6 +25,7 @@ from ....application.review import ReviewQueueReport
 from ....core.config import override_settings
 from ....core.external_constants import OUTPUT_LANGUAGE_ENV_VAR
 from ....core.i18n._render import clear_output_language_cache
+from ....tests.env_scope import scoped_env_var
 from ....tests.secure_sql import isolated_sessionless_storage_root
 from .._review import _queue_lines
 
@@ -46,7 +47,7 @@ def _rendered(language: str | None) -> str:
 
 
 @pytest.fixture
-def _clean_install(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Iterator[None]:
+def _clean_install(tmp_path: Path) -> Iterator[None]:
     """Model a clean install: no active profile, no forced-language env var.
 
     The clean-install output-language default is Spanish, resolved from the
@@ -56,11 +57,12 @@ def _clean_install(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Iterator[
     carry an English preference, so both influences are stripped: the env
     var is removed and storage is a sessionless isolated root.
     """
-    monkeypatch.delenv(OUTPUT_LANGUAGE_ENV_VAR, raising=False)
-    with isolated_sessionless_storage_root(tmp_path=tmp_path):
+    with scoped_env_var(OUTPUT_LANGUAGE_ENV_VAR, None), isolated_sessionless_storage_root(tmp_path=tmp_path):
         clear_output_language_cache()
-        yield
-    clear_output_language_cache()
+        try:
+            yield
+        finally:
+            clear_output_language_cache()
 
 
 def test_review_queue_renders_english_under_english_override() -> None:
