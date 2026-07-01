@@ -182,9 +182,114 @@ predicate is authored.
   and their two-tier test pair
   (`test_modelo_202_registry.py::test_committed_modelo_202_2025_guards_b2_tipo_3_and_tipo_4_under_declaration`,
   `test_verification_m202_advisory.py`) are the shipped, closed items from
-  this audit. The two documented non-guards are locked by
-  `test_committed_modelo_202_minimo_a_ingresar_cn_10m_remains_unguarded` and
-  `test_committed_modelo_202_b2_resultado_previo_remains_unwired_from_modalidad_40_3_resultado`
-  respectively, both citing this audit document by name in their docstrings so
-  a future change that closes either prerequisite is forced to update or
-  remove the corresponding assertion.
+  this audit. The two documented non-guards were locked by
+  `test_committed_modelo_202_minimo_a_ingresar_cn_10m_remains_unguarded` (still
+  a live non-guard) and (at the time of writing)
+  `test_committed_modelo_202_b2_resultado_previo_remains_unwired_from_modalidad_40_3_resultado`,
+  both citing this audit document by name in their docstrings so a future
+  change that closes either prerequisite is forced to update or remove the
+  corresponding assertion. The `casilla 26`-to-`32` prerequisite is now closed
+  -- see **Resolution: DFR-M202-B2-RESULTADO-FORMULA-WIRING** below.
+
+## Resolution: DFR-M202-B2-RESULTADO-FORMULA-WIRING (2026-07-01)
+
+The critical `m202-b2-resultado-previo-unwired` finding above was resolved as
+a **confirmed formula-correctness defect, now fixed**, following the exact
+prerequisite this audit specified: sourcing the official AEAT Modelo 202
+instructions text for the `modalidad-40-3-resultado` formula.
+
+**Grounding.** The bundled corpus this codebase already ships --
+`src/aeat/_data/corpus/aeat_official/instructions/modelo_202/files/modelo-202-instrucciones.html`
+(line 289, `source_ref = "aeat-modelo-202-instructions"`, the 2025+
+instructions) and the sibling
+`modelo-202-instrucciones-2023-2024.html` (line 240, `source_ref =
+"aeat-modelo-202-instructions-2023-2024"`, covering 2019-2022 and 2023-2024) --
+states the clave 32 formula verbatim, resolving the ambiguity the original
+finding flagged ("es un importe calculado" was the formula's own terse
+citation, but the fuller instructions prose was not re-checked in the prior
+pass):
+
+> "CLAVE [32]. RESULTADO. Es un importe calculado. Clave [32] = ( [clave [18]
+> (o clave [26]) - clave [27] - clave [28] ] x clave [29]/100 ) - clave [30] -
+> clave [31]."
+
+As corroboration only, the live AEAT sede 2025 instructions page
+(`https://sede.agenciatributaria.gob.es/Sede/todas-gestiones/impuestos-tasas/impuesto-sobre-sociedades/modelo-202-is-i_____resencia-territorio-fraccionado_/instrucciones/Instrucciones-para-2025.html`)
+currently repeats the same formula text. Clave 18 (B1 caso general, unico
+tipo impositivo) and clave 26 (B2 casos especificos, varios tipos
+impositivos) are confirmed as alternative, mutually exclusive computations of
+the same "resultado previo" concept -- a filer completes exactly one lane's
+section headers ("B1 CASO GENERAL (ENTIDADES CON PORCENTAJE UNICO)" vs. "B2
+CASOS ESPECIFICOS (EMPRESAS CON MAS DE UN PORCENTAJE)") -- confirming the
+original finding's B1-vs-B2 mutual-exclusivity theory. Claves 27-31 (
+bonificaciones, retenciones, volumen territorio comun, pagos previos,
+resultado declaracion anterior) apply identically to both lanes and were left
+unchanged.
+
+**Fix.** The registry declares no explicit B1-vs-B2 discriminator binding
+(there is no profile fact or bound casilla recording "this filer uses B2"),
+and the DR-202 fixed-width export layout confirms claves 18 and 26 are two
+independent, optionally-populated fields with no selector flag between them.
+Since both lanes' manual inputs (16/17/47/48/40/49 for B1; 19-25/42/50-52/
+61-66 for B2) are `input_kind` manual/optional and default to zero when
+unfilled, `formulas/0006-*` in all three revisions
+(`2019-2022`, `2023-2024`, `2025-y-siguientes`) was changed to replace the
+bare `{ casilla_id = "18" }` leaf with `{ op = "add", args = [{ casilla_id =
+"18" }, { casilla_id = "26" }] }`, reproducing the AEAT "18 (o 26)" selection
+without inventing new registry data the loader/authority cannot resolve. This
+is the additive idiom the registry already uses one level down (clave 26
+itself is `22 + 25 + 63 + 66 + 50 - 42 + 51 - 52`, a sum of optional,
+usually-only-one-populated tipo-lane sub-components) -- not a novel pattern.
+The `source_citations.required_text` for the formula was extended with `"(o
+clave [26])"`, so the evidence gate (`_validate_evidence.py`) cross-checks the
+new wiring against the bundled corpus text on every registry load, per
+`legal-grounding-verifies-bundled-authoritative-corpus` and
+`registry-calculation-legal-grounding`.
+
+**Residual risk.** This slice fixes the computed formula using the official
+"18 (o 26)" instruction, but it does not add a separate registry validation
+that rejects dual-populated B1 and B2 lanes. If an upstream input path permits
+both lanes to carry positive values, the additive selector would overstate
+clave 32. That is a follow-on validation/modeling hardening item, not a reason
+to preserve the confirmed B2 drop from the shipped formula.
+
+**Tests.** The prior canary test
+(`test_committed_modelo_202_b2_resultado_previo_remains_unwired_from_modalidad_40_3_resultado`,
+which locked the *absence* of the wiring) was replaced with two positive
+regressions in `test_modelo_202_registry.py`, parametrized across all three
+revisions:
+
+- `test_committed_modelo_202_b2_resultado_previo_feeds_modalidad_40_3_resultado`
+  -- a structural/graph-wiring assertion (per `no-tautological-calculation-tests`,
+  "test structure, graph wiring... when no external numeric oracle exists")
+  confirming clave 26 is now referenced by the clave 32 formula, and that the
+  combination is specifically an `add(clave 18, clave 26)` node (not e.g. a
+  `subtract` or `max` that would misstate one lane).
+- `test_committed_modelo_202_modalidad_40_3_resultado_reflects_b2_only_filer`
+  -- a real-behavior runtime-execution proof using the actual
+  `_evaluate_expression` primitive evaluator (the same one
+  `test_lookup_bracket_by_entity_type.py` and `test_if_then_else_short_circuit.py`
+  use for isolated formula-node tests) with claves 27-31 held at neutral
+  values (0/0/100%/0/0) and clave 18 = 0, clave 26 = 1000, asserting the
+  result is `1000`, not `0`. This proves the wiring is behaviorally live for a
+  B2-only filer without re-deriving any LIS tax-rate arithmetic.
+
+Both `implies_nonzero(["26", "32"])`-style advisories remain intentionally
+**not** authored: now that clave 26 flows through arithmetically, a genuine
+zero clave 32 following a nonzero clave 26 is a legitimate outcome under
+bonificaciones/retenciones/territorio-comun adjustments, so no antecedent
+casilla is a false-positive-free guard candidate -- consistent with the
+`m202-minimo-cn-10m` and M714-class reasoning already established in this
+audit and in `ledger-iva-advisory-only-on-cuota-bearing-categories`.
+
+**Verification.** `uv run --no-sync pytest
+src/aeat/domain/calculations/registry/tests/test_modelo_202_registry.py -q`
+(18 passed) and the full M202-scoped registry suite
+(`pytest src/aeat/domain/calculations/registry -k 202`, 1277 passed) are
+green. No unrelated regression was introduced; a single pre-existing,
+unrelated failure in `test_authority.py::test_authority_cache_invalidates_when_fragmented_revision_changes`
+(a `LegalReference` fixture missing `reviewed_at`/`reviewed_by`/`required_text`
+fields, from concurrent peer schema work, confirmed via `git diff` showing no
+uncommitted changes to `_schema.py` at inspection time) is outside this
+Step's scope per `full-tree-gate-must-distinguish-owner` and untouched by this
+fix.
