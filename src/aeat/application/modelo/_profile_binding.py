@@ -398,7 +398,7 @@ def resolve_profile_sourced_bindings(
     profile_bindings = [
         binding
         for binding in snapshot.revision.bindings
-        if binding.source == "profile"
+        if binding.source == BindingSourceKind.PROFILE
         and (
             binding.id in formula_consumed
             or binding.id in formula_date_consumed

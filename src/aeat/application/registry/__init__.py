@@ -47,6 +47,7 @@ from ...adapters.outbound.aeat.sede import (
 from ...adapters.outbound.aeat.sede import (
     registry_observation_from_filed_declaration as _registry_observation_from_filed_declaration,
 )
+from ...core import BindingSourceKind as _BindingSourceKind
 from ...core.external_constants import UTF_8_ENCODING as _UTF_8_ENCODING
 from ...core.resources import bundled_path as _bundled_path
 
@@ -470,7 +471,7 @@ def verify_filed_state(
             casilla.input_kind == _InputKind.BOUND
             and casilla.binding is not None
             and (binding_def := bindings_by_id.get(casilla.binding)) is not None
-            and binding_def.source == "previous_filing"
+            and binding_def.source == _BindingSourceKind.PREVIOUS_FILING
             and binding_def.id not in binding_values
         ):
             continue
