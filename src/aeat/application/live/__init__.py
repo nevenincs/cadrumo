@@ -220,7 +220,7 @@ async def capture_expedientes(*, bucket_id: str, modelo: str, year: int):
     """
     from ._expedientes import ExpedientesCapture, ExpedientesService
 
-    session, settings = await _active_verified_session()
+    session, settings = await _active_verified_session(operation="live-expedientes-read")
     async with (
         _shared_playwright(session) as playwright,
         _open_declarations_register(session, settings=settings, playwright=playwright) as register,
