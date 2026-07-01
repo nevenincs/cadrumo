@@ -40,12 +40,19 @@ def _without_token_dir_env():
     return scoped_env_var("AEAT_TOKEN_DIR", None)
 
 
-def test_token_dir_defaults_under_storage_root(tmp_path: Path) -> None:
+@pytest.mark.parametrize(
+    "storage_root_parts",
+    (
+        pytest.param(("state-root",), id="simple-root"),
+        pytest.param(("another", "root"), id="nested-root"),
+    ),
+)
+def test_token_dir_defaults_under_storage_root(tmp_path: Path, storage_root_parts: tuple[str, ...]) -> None:
     """With no explicit `AEAT_TOKEN_DIR`, the token directory resolves
-    to `<aeat_local_storage_root>/tokens` - the one-state-root contract.
+    to `<aeat_local_storage_root>/tokens` for any storage-root shape.
     """
 
-    storage_root = tmp_path / "state-root"
+    storage_root = tmp_path.joinpath(*storage_root_parts)
     with _without_token_dir_env():
         settings = Settings(aeat_local_storage_root=storage_root)
 
@@ -53,33 +60,6 @@ def test_token_dir_defaults_under_storage_root(tmp_path: Path) -> None:
     # The token directory is genuinely nested under the storage root,
     # not merely a sibling that happens to share a prefix.
     assert settings.aeat_local_storage_root in settings.aeat_token_dir.parents
-
-
-def test_token_dir_tracks_a_different_storage_root(tmp_path: Path) -> None:
-    """The derived default follows whatever `aeat_local_storage_root`
-    is - it is not pinned to a single hard-coded location."""
-
-    other_root = tmp_path / "another" / "root"
-    with _without_token_dir_env():
-        settings = Settings(aeat_local_storage_root=other_root)
-
-    assert settings.aeat_token_dir == other_root / "tokens"
-
-
-def test_explicit_token_dir_override_wins(tmp_path: Path) -> None:
-    """An explicit `aeat_token_dir` overrides the derived default: the
-    validator only computes the rooted path when the field was left
-    unset."""
-
-    storage_root = tmp_path / "state-root"
-    explicit_token_dir = tmp_path / "operator-chosen-tokens"
-    settings = Settings(
-        aeat_local_storage_root=storage_root,
-        aeat_token_dir=explicit_token_dir,
-    )
-
-    assert settings.aeat_token_dir == resolve_project_path(explicit_token_dir)
-    assert settings.aeat_token_dir != storage_root / "tokens"
 
 
 def test_explicit_token_dir_constructor_override_wins(tmp_path: Path) -> None:
