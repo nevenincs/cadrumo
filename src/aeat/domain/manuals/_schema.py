@@ -75,7 +75,19 @@ def _require_spanish(text: str, field_name: str) -> None:
 
 
 class _ManualStrictFrozen(BaseModel):
-    """Shared config: strict validation, immutable instances, no extras."""
+    """Shared config: strict validation, immutable instances, no extras.
+
+    Deliberately NOT the canonical :data:`~aeat.core.STRICT_FROZEN_CONFIG`. This
+    base adds an explicit ``str_strip_whitespace=False`` to guarantee that
+    authoritative Spanish manual text (rule bodies, paragraphs, section titles)
+    is preserved byte-for-byte, including leading and trailing whitespace that
+    can be legally significant in the source corpus. ``str_strip_whitespace``
+    defaults to ``False`` today, so the explicit declaration is behaviour-identical
+    to the canonical config now, but it pins the intent so a future change to the
+    canonical config (were it ever to enable stripping) cannot silently mutate
+    verbatim legal text. It is therefore kept as a divergent, non-substitutable
+    base rather than consuming the shared constant.
+    """
 
     model_config = ConfigDict(
         strict=True,
