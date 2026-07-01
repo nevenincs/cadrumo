@@ -67,6 +67,7 @@ def _validate_revision_surface_sections(
         export_field_ids=context.export_field_ids,
         legal_refs=legal_refs,
         source_refs=source_refs,
+        evidence=evidence,
     )
     validate_formula_section(
         failures,
