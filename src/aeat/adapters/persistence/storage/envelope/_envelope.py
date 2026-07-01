@@ -334,7 +334,7 @@ class CipherEnvelope(BaseModel):
             raise _storage_validation_error(str(exc)) from exc
 
 
-def _build_aad(classification: SensitivityClass, hkdf_context: bytes) -> bytes:
+def build_aad(classification: SensitivityClass, hkdf_context: bytes) -> bytes:
     """Build the AEAD associated-data binding for a cipher envelope.
 
     The AAD authenticates both the classification and the consumer's
@@ -345,7 +345,7 @@ def _build_aad(classification: SensitivityClass, hkdf_context: bytes) -> bytes:
     return _CIPHER_ENVELOPE_AAD_PREFIX + classification.value.encode("ascii") + b"::" + hkdf_context
 
 
-def _derive_envelope_key(
+def derive_envelope_key(
     *,
     master_key: bytes,
     hkdf_context: bytes,
@@ -397,8 +397,8 @@ def save_encrypted_envelope[T: BaseModel](
     """
     target = path.resolve()
     plaintext = envelope.model_dump_json().encode(_UTF_8_ENCODING)
-    aad = _build_aad(envelope.classification, hkdf_context)
-    derived_key = _derive_envelope_key(
+    aad = build_aad(envelope.classification, hkdf_context)
+    derived_key = derive_envelope_key(
         master_key=master_key_provider.get_master_key(),
         hkdf_context=hkdf_context,
     )
@@ -491,12 +491,12 @@ def load_encrypted_envelope[PayloadT: BaseModel](
             f"cipher envelope classification {cipher_envelope.classification}; consumer expected {expected_class}",
         )
     blob = cipher_envelope.encryption.to_blob()
-    aad = _build_aad(cipher_envelope.classification, hkdf_context)
+    aad = build_aad(cipher_envelope.classification, hkdf_context)
     if cipher_envelope.encryption.associated_data() != aad:
         raise DecryptionError(
             "cipher envelope AAD mismatch (classification or HKDF-context drift)",
         )
-    derived_key = _derive_envelope_key(
+    derived_key = derive_envelope_key(
         master_key=master_key_provider.get_master_key(),
         hkdf_context=hkdf_context,
     )
@@ -601,8 +601,8 @@ __all__ = [
     "CipherEnvelope",
     "EncryptionMetadata",
     "Envelope",
-    "_build_aad",
-    "_derive_envelope_key",
+    "build_aad",
+    "derive_envelope_key",
     "load_encrypted_envelope",
     "load_envelope",
     "reencrypt_envelope_file",

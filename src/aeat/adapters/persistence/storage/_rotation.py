@@ -43,11 +43,11 @@ from ....core.logging import get_logger
 from ....core.time import now
 from .blob_store._blob_store import EncryptedBlobStore
 from .crypto._crypto import decrypt_record, encrypt_record
-from .envelope._envelope import (
+from .envelope import (
     CipherEnvelope,
     EncryptionMetadata,
-    _build_aad,
-    _derive_envelope_key,
+    build_aad,
+    derive_envelope_key,
 )
 from .errors import DecryptionError, EncryptionError
 from .master_key._master_key import MasterKeyProvider
@@ -200,7 +200,7 @@ def _try_decrypt_bytes(
     """
     try:
         blob = cipher_envelope.encryption.to_blob()
-        aad = _build_aad(cipher_envelope.classification, hkdf_context)
+        aad = build_aad(cipher_envelope.classification, hkdf_context)
         if cipher_envelope.encryption.associated_data() != aad:
             return None
     except (ValueError, binascii.Error):
@@ -210,7 +210,7 @@ def _try_decrypt_bytes(
         # in the errors counter via the outer caller.
         _log.debug("rotation probe: AAD/blob parse failed; treating as miss", exc_info=True)
         return None
-    derived_key = _derive_envelope_key(
+    derived_key = derive_envelope_key(
         master_key=master_key_provider.get_master_key(),
         hkdf_context=hkdf_context,
     )
@@ -341,8 +341,8 @@ def rotate_master_key(
             # Re-encrypt under the new key. Build the AAD freshly so the
             # outer cipher-envelope wrapper continues to bind the same
             # (classification, hkdf_context) pair.
-            aad = _build_aad(cipher_envelope.classification, entry.hkdf_context)
-            new_derived_key = _derive_envelope_key(
+            aad = build_aad(cipher_envelope.classification, entry.hkdf_context)
+            new_derived_key = derive_envelope_key(
                 master_key=new_master_key_provider.get_master_key(),
                 hkdf_context=entry.hkdf_context,
             )
