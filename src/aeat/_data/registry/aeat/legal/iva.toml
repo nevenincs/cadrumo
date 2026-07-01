@@ -63,7 +63,7 @@ source_url = "https://sede.agenciatributaria.gob.es/Sede/procedimientoini/GZ09.s
 review_status = "reviewed"
 
 [sources."boe-modelo-360-2010-form"]
-evidence_tier = "official_source_guidance"
+evidence_tier = "layout_authority"
 authority = "boe"
 kind = "form_spec"
 corpus_path = "corpus/normatives/html/orden-eha-789-2010.html"
