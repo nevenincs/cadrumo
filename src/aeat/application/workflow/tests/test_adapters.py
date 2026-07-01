@@ -25,9 +25,8 @@ def _boundary_value[T](_protocol: type[T]) -> T:
 _DefaultEngineCall = Callable[[], object]
 
 
-@pytest.mark.parametrize(
-    ("call", "message_key"),
-    (
+def test_default_engine_required_adapter_guards() -> None:
+    cases: tuple[tuple[_DefaultEngineCall, str], ...] = (
         (
             lambda: default_engine(),
             "application.workflow.errors.adapter_missing_submission_engine",
@@ -59,18 +58,9 @@ _DefaultEngineCall = Callable[[], object]
             ),
             "application.workflow.errors.adapter_missing_inputs_provider",
         ),
-    ),
-    ids=(
-        "missing-submission-engine",
-        "missing-deadline-engine",
-        "missing-filing-draft-builder",
-        "missing-inputs-provider",
-    ),
-)
-def test_default_engine_required_adapter_guards(
-    call: _DefaultEngineCall,
-    message_key: str,
-) -> None:
-    with pytest.raises(WorkflowError) as raised:
-        call()
-    assert raised.value.translated_message == message_key
+    )
+
+    for call, message_key in cases:
+        with pytest.raises(WorkflowError) as raised:
+            call()
+        assert raised.value.translated_message == message_key
