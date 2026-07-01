@@ -174,6 +174,7 @@ def validate_filing_schedule_section(
         owner = f"filing schedule {schedule.id}"
         failures.extend(_missing_refs(prefix, owner, schedule.legal_refs, legal_refs, "legal"))
         failures.extend(_missing_refs(prefix, owner, schedule.source_refs, source_refs, "source"))
+        failures.extend(evidence.require_legal_authority_refs(prefix, owner, schedule.legal_refs))
         failures.extend(evidence.require_source_tier(prefix, owner, schedule.source_refs, "official_source_guidance"))
         unknown_periods = sorted(set(schedule.periods).difference(selector_periods))
         if unknown_periods:
@@ -185,6 +186,7 @@ def validate_filing_schedule_section(
             condition_owner = f"filing schedule {schedule.id} condition {condition.field}"
             failures.extend(_missing_refs(prefix, condition_owner, condition.legal_refs, legal_refs, "legal"))
             failures.extend(_missing_refs(prefix, condition_owner, condition.source_refs, source_refs, "source"))
+            failures.extend(evidence.require_legal_authority_refs(prefix, condition_owner, condition.legal_refs))
             failures.extend(
                 evidence.require_source_tier(
                     prefix,
