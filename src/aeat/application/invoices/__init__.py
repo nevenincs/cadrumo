@@ -27,6 +27,23 @@ Key exports:
   audit helpers for cross-side link integrity.
 * :class:`InvoiceCatalogueSourceResolver` — the live calculate-path resolver for
   invoice-source bindings and Modelo 349 detail rows.
+
+See Also:
+    :mod:`aeat.domain.invoices`
+        Rich invoice catalogue, line arithmetic, payment state, and
+        reconciliation/link authority adapted by this application facade.
+    :mod:`aeat.application.ledger`
+        Slim payable/collectible invoice CRUD and ledger transaction evidence
+        links that converge with invoice catalogue data at source resolution.
+    :mod:`aeat.domain.transactions`
+        Transaction catalogue whose ids are linked from invoices and reported
+        as calculation source provenance.
+    :mod:`aeat.application.aggregation`
+        Source-mesh envelope receiving invoice binding values, diagnostics,
+        detail rows, and provenance.
+    :mod:`aeat.domain.calculations.registry`
+        Pure binding declarations and invoice observation contracts consumed by
+        modelo calculation.
 """
 
 from __future__ import annotations
