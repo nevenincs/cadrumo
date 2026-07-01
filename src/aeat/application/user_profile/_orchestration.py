@@ -146,8 +146,12 @@ def profile_create_storage_span(profile_id: str):
     :meth:`~aeat.application.user_profile.ProfileRepository.create`
     owns rollback, the prior pointer bytes are restored.
     """
-    from ...adapters.persistence.storage import activate_master_key_provider, get_master_key_provider
-    from ...adapters.persistence.storage.errors import MasterKeyMaterialMissingError, SecretAlreadyExistsError
+    from ...adapters.persistence.storage import (
+        MasterKeyMaterialMissingError,
+        SecretAlreadyExistsError,
+        activate_master_key_provider,
+        get_master_key_provider,
+    )
     from ...core.config import override_settings
 
     prior_pointer = capture_active_profile_pointer()

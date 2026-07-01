@@ -21,8 +21,7 @@ from pathlib import Path
 
 from pydantic import BaseModel
 
-from ...adapters.persistence.storage import RecoveryVerificationError
-from ...adapters.persistence.storage.errors import SecretStoreError, StorageValidationError
+from ...adapters.persistence.storage import RecoveryVerificationError, SecretStoreError, StorageValidationError
 from ...adapters.persistence.storage.master_key import (
     FileFallbackMasterKeyProvider,
     activate_master_key_provider,
