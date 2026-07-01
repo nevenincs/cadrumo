@@ -31,9 +31,13 @@ from typing import Literal
 
 from pydantic import BaseModel, Field
 
-from ...adapters.persistence.storage import LIVE_VERIFY_OBSERVATION_NAMESPACE, Envelope
-from ...adapters.persistence.storage.errors import ClassificationError, EnvelopeVersionError
-from ...adapters.persistence.storage.runtime_repository import secure_object_repository_for_bucket
+from ...adapters.persistence.storage import (
+    LIVE_VERIFY_OBSERVATION_NAMESPACE,
+    ClassificationError,
+    Envelope,
+    EnvelopeVersionError,
+    secure_object_repository_for_bucket,
+)
 from ...adapters.persistence.storage.sql import SecureObjectRecord, SecureObjectRepository
 from ...core import STRICT_FROZEN_CONFIG
 from ...core.config import Settings, load_settings

@@ -208,7 +208,7 @@ def load_iva_remote_state(
 def _active_profile_storage_span():
     active_bucket_id = _resolve_active_bucket_id()
     if active_bucket_id is None:
-        from ...adapters.persistence.storage.errors import StorageValidationError as _StorageValidationError
+        from ...adapters.persistence.storage import StorageValidationError as _StorageValidationError
 
         raise _StorageValidationError(translated_message="errors.storage.runtime.not_ready")
     from ...adapters.persistence.storage import has_active_bucket_session as _has_active_bucket_session
