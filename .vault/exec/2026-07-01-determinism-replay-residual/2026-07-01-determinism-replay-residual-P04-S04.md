@@ -61,7 +61,7 @@ related:
 ## Outcome
 
 - All 4 axis tests pass; the coverage warning surfaces "1 of 54 registered --format json commands enrolled; 53 uncovered (opt-in)". Ruff clean; collect-only clean.
-- The committed-state fingerprint uses the substrate's own at-rest byte reader `read_db_at_rest_bytes` (main `.db` + committed `-wal`, omitting the volatile `-shm` WAL read-index) rather than the whole-tree `compute_db_sha256`: the `-shm` read-marks flap on every read (not a state change) and its mmap handle cannot be removed in-process on Windows after `engine.dispose()`. `compute_db_sha256` is sound at a between-process replay boundary (no open connection, no `-shm`); this in-session no-op proof needs the at-rest byte convention the substrate itself uses for state scans.
+- The state-transition tier uses the substrate's `compute_db_sha256` (the ADR's named db_sha256 tier) over a committed-files snapshot: before and after the retry the committed bucket files (main `.db` + committed `-wal`) are copied into a temp tree excluding the volatile `-shm` WAL read-index, and `compute_db_sha256` fingerprints that snapshot. The live var tree cannot be hashed directly in-session because the `-shm` read-marks flap on every read (not a state change) and its mmap handle cannot be removed on Windows after `engine.dispose()`; the snapshot lets `compute_db_sha256` run over the committed bytes exactly as it would at a between-process replay boundary where no connection is open. The main `aeat.db` is provably byte-identical across the idempotent retry.
 
 ## Notes
 
