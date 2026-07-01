@@ -36,10 +36,10 @@ from pydantic import BaseModel, ConfigDict, Field
 
 from ...adapters.persistence.storage import (
     AUTH_APODERADO_CONFIGURATION_NAMESPACE,
+    SecureBoundRepository,
     SensitivityClass,
     safe_repository_id,
 )
-from ...adapters.persistence.storage.envelope import SecureBoundRepository
 from ...core.config import Settings
 from ...core.errors import AeatError
 from ...core.identity import BucketId
@@ -92,7 +92,7 @@ class _ApoderadoConfigRepository(SecureBoundRepository[ApoderadoConfiguration]):
     ``IDENTITY`` as declared by
     :data:`aeat.adapters.persistence.storage.AUTH_APODERADO_CONFIGURATION_NAMESPACE`:
     the ``represented_nif`` is an identity-bearing tax identifier. The
-    :class:`~aeat.adapters.persistence.storage.envelope.SecureBoundRepository`
+    :class:`~aeat.adapters.persistence.storage.SecureBoundRepository`
     base serialises each
     :class:`ApoderadoConfiguration` through an
     :class:`~aeat.adapters.persistence.storage.Envelope`. The natural key is
