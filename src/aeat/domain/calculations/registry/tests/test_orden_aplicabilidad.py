@@ -22,6 +22,7 @@ from datetime import date
 
 import pytest
 
+from .._ids import LegalRefId, SourceRefId
 from .._schema import (
     LegalReference,
     ModeloRevision,
@@ -37,9 +38,12 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 # Shared helpers
 # ---------------------------------------------------------------------------
 
+_VALID_LEGAL_REF_ID: LegalRefId = "orden-test-0001:art-1"
+_NON_ORDEN_LEGAL_REF: LegalRefId = "ley-58-2003:art-29"
+
 # Minimal synthetic legal catalogue entry for tests.
 _VALID_LEGAL_REF = LegalReference(
-    id="orden-test-0001:art-1",
+    id=_VALID_LEGAL_REF_ID,
     evidence_tier="legal_authority",
     authority="boe",
     kind="orden",
@@ -52,13 +56,14 @@ _VALID_LEGAL_REF = LegalReference(
     reviewed_by="codex test fixture",
     required_text=("Artículo 1",),
 )
-# Minimal source ref used wherever a test revision needs one valid reference
-# before the orden_aplicabilidad gate can run.
-_MINIMAL_SOURCE_REF = "src-test-0001"
+# Minimal source ref used wherever a test revision needs one valid source
+# reference before the orden_aplicabilidad gate can run.
+_MINIMAL_SOURCE_REF: SourceRefId = "src-test-0001"
 
 _VALID_CATALOGUE: dict[str, LegalReference] = {
-    "orden-test-0001:art-1": _VALID_LEGAL_REF,
+    _VALID_LEGAL_REF_ID: _VALID_LEGAL_REF,
 }
+
 
 def _make_revision(
     *,
@@ -69,8 +74,8 @@ def _make_revision(
     year_to: int | None = None,
     years: tuple[int, ...] = (),
     periods: tuple[str, ...] = ("1T",),
-    legal_refs: tuple[str, ...] | None = None,
-    orden_aplicabilidad: tuple[str, ...] = (),
+    legal_refs: tuple[LegalRefId, ...] | None = None,
+    orden_aplicabilidad: tuple[LegalRefId, ...] = (),
 ) -> ModeloRevision:
     """Build a minimal ModeloRevision for gate testing.
 
@@ -85,7 +90,7 @@ def _make_revision(
     else:
         raise ValueError("supply either year_from or years")
     # LegalRefs and SourceRefs both require min_length=1 before this gate runs.
-    effective_legal_refs: tuple[str, ...] = legal_refs if legal_refs is not None else (_MINIMAL_SOURCE_REF,)
+    effective_legal_refs: tuple[LegalRefId, ...] = legal_refs if legal_refs is not None else (_NON_ORDEN_LEGAL_REF,)
     return ModeloRevision(
         id=revision_id,
         valid_from=valid_from,
@@ -110,7 +115,7 @@ def test_missing_orden_aplicabilidad_is_hard_failure() -> None:
         valid_to=date(2019, 12, 31),
         years=(2019,),
         periods=("1T",),
-        # legal_refs defaults to minimal entry (min_length=1 satisfied)
+        # legal_refs defaults to a non-orden legal entry (min_length=1 satisfied)
         orden_aplicabilidad=(),
     )
 
@@ -199,9 +204,9 @@ def test_orden_aplicabilidad_absent_from_legal_refs_is_hard_failure() -> None:
         years=(2020,),
         periods=("1T",),
         # orden-test-0001:art-1 is intentionally NOT in legal_refs (only the
-        # minimal required ref is present), but IS in the catalogue — triggers
+        # non-orden legal ref is present), but IS in the catalogue — triggers
         # check (iii) failure.
-        legal_refs=(_MINIMAL_SOURCE_REF,),
+        legal_refs=(_NON_ORDEN_LEGAL_REF,),
         orden_aplicabilidad=("orden-test-0001:art-1",),
     )
     hard = validate_orden_aplicabilidad(
@@ -227,7 +232,7 @@ def test_s24_open_ended_revision_without_orden_is_hard_failure() -> None:
         valid_to=None,  # open-ended
         year_from=2019,
         periods=("1T",),
-        # legal_refs defaults to minimal entry (min_length=1 satisfied)
+        # legal_refs defaults to a non-orden legal entry (min_length=1 satisfied)
         orden_aplicabilidad=(),
     )
     hard = validate_orden_aplicabilidad(
