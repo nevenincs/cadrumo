@@ -10,7 +10,8 @@ The captured payload is the verbatim emitted
 :class:`~aeat.core.json_contract.SchemaEnvelope` document. On load it is
 re-validated against ``SCHEMA_REGISTRY[command]`` by
 :func:`validate_captured_envelope` so the captured payload is a typed
-envelope, never a ``dict[str, Any]`` bag. Comparison
+envelope around a registered :class:`OutputSchema`, never a
+``dict[str, Any]`` bag. Comparison
 (:func:`assert_golden_match`) is over the FULL envelope (shared spine
 plus ``result``), key-sorted and canonicalised, after a declared narrow
 field mask that hides only the residual non-deterministic surrogate
@@ -232,7 +233,8 @@ def validate_captured_envelope(
             :data:`SCHEMA_REGISTRY`.
 
     Returns:
-        The strictly-validated :class:`SchemaEnvelope`.
+        The strictly-validated :class:`SchemaEnvelope` whose result is the
+        registered :class:`OutputSchema` for the captured command.
 
     Raises:
         GoldenCaptureError: When the document has no ``command`` string,
