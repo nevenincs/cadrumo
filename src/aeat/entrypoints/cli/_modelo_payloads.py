@@ -243,7 +243,7 @@ class VerificationReportPayload(OutputSchema):
 
     ``findings`` carries the blocking or advisory
     :class:`FindingPayload` rows that explain whether the selected
-    :class:`CalculationRevision` earned the verified-complete transition.
+    :class:`~aeat.domain.modelos.CalculationRevision` earned the verified-complete transition.
     """
 
     verification_report_id: VerificationReportId
@@ -258,11 +258,11 @@ class VerificationReportPayload(OutputSchema):
 
 
 class ExternalEvidencePayload(OutputSchema):
-    """JSON projection of :class:`aeat.domain.modelos.ExternalEvidence`.
+    """JSON projection of :class:`~aeat.domain.modelos.ExternalEvidence`.
 
-    The evidence reference records the official AEAT source used to import a
-    filing baseline; it is data observed from outside the application, not proof
-    that this CLI submitted the return.
+    The evidence reference records the official AEAT source consumed by
+    :func:`aeat.application.modelo.import_external_filing_evidence`; it is data
+    observed outside the application, not proof that this CLI submitted the return.
     """
 
     kind: str
@@ -271,11 +271,11 @@ class ExternalEvidencePayload(OutputSchema):
 
 
 class ModeloRecordPayload(OutputSchema):
-    """Shared projection of a :class:`aeat.domain.modelos.ModeloRecord`.
+    """Shared projection of a :class:`~aeat.domain.modelos.ModeloRecord`.
 
     The payload represents local filing state for a verified
-    :class:`CalculationRevision`; it is not a live AEAT submission. Live or
-    imported evidence appears only through ``external_evidence``.
+    :class:`~aeat.domain.modelos.CalculationRevision`; it is not a live AEAT
+    submission. Evidence appears only through ``external_evidence``.
     """
 
     filing_record_id: FilingRecordId
@@ -570,8 +570,8 @@ class WorkFileResult(OutputSchema):
     The command delegates to
     :func:`aeat.application.modelo.file_modelo_revision` and returns the
     resulting :class:`ModeloRecordPayload`. It records that the verified
-    revision was marked as internally filed. It does not represent an AEAT
-    submission; ``live_submission`` is always ``False``.
+    revision was marked as internally filed. It does not attach
+    :class:`ExternalEvidencePayload`; ``live_submission`` is always ``False``.
     """
 
     operation: str = "modelo.work.file"
@@ -603,9 +603,9 @@ class WorkAmendResult(OutputSchema):
     :func:`aeat.application.modelo.amend_modelo_revision` and returns the
     resulting :class:`ModeloRecordPayload` with the amendment-specific pair
     (``amendment_kind``, ``amends_filing_record_id``). The source filing record
-    must be an externally evidenced baseline; the new filing record clears
-    ``external_evidence`` and remains local, so ``live_submission`` is always
-    ``False``.
+    must carry :class:`~aeat.domain.modelos.ExternalEvidence`; the new filing
+    record clears ``external_evidence`` and remains local, so ``live_submission``
+    is always ``False``.
     """
 
     operation: str = "modelo.work.amend"
@@ -722,10 +722,10 @@ class FilingRecordImportResult(OutputSchema):
 
     The command delegates to
     :func:`aeat.application.modelo.import_external_filing_evidence` and returns
-    the resulting evidence-bearing :class:`ModeloRecordPayload` with the
-    requested ``evidence_kind`` and ``evidence_reference_id``. Imported records
-    are the baseline consumed by ``modelo work amend`` and remain distinct from a
-    live AEAT submission by this application.
+    the resulting evidence-bearing :class:`ModeloRecordPayload` with
+    :class:`ExternalEvidencePayload` data. Imported records are the
+    :class:`~aeat.domain.modelos.ModeloRecord` baseline consumed by
+    :func:`aeat.application.modelo.amend_modelo_revision`, not live submission.
     """
 
     operation: str = "modelo.filing_record.import"
