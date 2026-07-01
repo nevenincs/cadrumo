@@ -38,7 +38,7 @@ Content-address evidence_id/invoice_id (mirroring derive_transaction_id) so they
 
 Confirm and sort only the output-feeding directory scans; leave membership/aggregation scans alone.
 
-- [ ] `P03.S03` - Confirm whether the two ambiguous directory scans feed ordered output; `wrap the output-feeding scans in sorted() at the boundary and leave the membership/aggregation scans alone.; `src/aeat/application/user_profile/_profile_repository.py, src/aeat/entrypoints/cli/_ledger_import_cli.py`.
+- [x] `P03.S03` - Confirm whether the two ambiguous directory scans feed ordered output; `wrap the output-feeding scans in sorted() at the boundary and leave the membership/aggregation scans alone.; `src/aeat/application/user_profile/_profile_repository.py, src/aeat/entrypoints/cli/_ledger_import_cli.py`.
 
 ### Phase `P04` - Coverage axis
 
