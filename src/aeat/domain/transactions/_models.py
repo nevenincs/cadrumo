@@ -38,7 +38,7 @@ from ...core.money import round_to_cents
 from ...core.time import now, parse_iso_datetime
 from ...core.time._utc import validate_utc_aware
 from .._identifiers import canonical_decimal_string
-from ..iva._schema import EUMemberState, IvaCategory
+from ..iva._schema import EUMemberState, IvaCategory, IvaExemptionArticle
 from ._enums import BusinessClassification, SplitRole, TransactionDirection, TransactionLifecycleState
 from ._errors import TransactionValidationError
 from ._ids import TransactionId
@@ -341,6 +341,7 @@ def _coerce_transaction_enum_fields(payload: dict[str, object]) -> None:
         ("business_classification", BusinessClassification),
         ("lifecycle_state", TransactionLifecycleState),
         ("iva_category", IvaCategory),
+        ("exemption_article", IvaExemptionArticle),
         ("counterparty_eu_member_state", EUMemberState),
     )
     for key, enum_cls in enum_coercers:
@@ -767,6 +768,10 @@ class Transaction(BaseModel):
             expressed without a synthetic rate.  ``None`` for
             transactions where the standard domestic rate derivation
             is sufficient.
+        exemption_article: Optional Ley 37/1992 Art. 20 sub-article
+            discriminator. Valid only when ``iva_category`` is
+            :attr:`IvaCategory.DOMESTIC_EXEMPT`; ``None`` preserves
+            the broad exempt category with no sub-article distinction.
         counterparty_eu_member_state: ISO 3166-1 alpha-2 EU member
             state of the counterparty.  Required by the aggregation
             gate when ``iva_category`` is
@@ -834,6 +839,7 @@ class Transaction(BaseModel):
     classification_confidence: Decimal | None = None
     classification_history: tuple[ClassificationHistoryEntry, ...] = ()
     iva_category: IvaCategory | None = None
+    exemption_article: IvaExemptionArticle | None = None
     counterparty_eu_member_state: EUMemberState | None = None
     fx_rate: Decimal | None = None
     value_in_eur: Decimal | None = None
@@ -975,6 +981,17 @@ class Transaction(BaseModel):
     def _enforce_business_pct(self) -> Self:
         """Enforce the classification/business percentage coupling."""
         _validate_business_pct_coupling(self.business_classification, self.business_pct)
+        return self
+
+    @model_validator(mode="after")
+    def _enforce_exemption_article_category(self) -> Self:
+        """Keep the Art. 20 discriminator coupled to domestic exempt IVA rows."""
+        if self.exemption_article is not None and self.iva_category is not IvaCategory.DOMESTIC_EXEMPT:
+            actual = self.iva_category.value if self.iva_category is not None else None
+            raise TransactionValidationError(
+                "exemption_article is only valid when iva_category is DOMESTIC_EXEMPT; "
+                f"got iva_category {actual!r}",
+            )
         return self
 
     @model_validator(mode="after")
