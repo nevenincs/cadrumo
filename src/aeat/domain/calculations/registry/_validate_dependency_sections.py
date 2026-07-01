@@ -1,7 +1,22 @@
 """Relation, dependency-classification, and filing-schedule validation helpers.
 
 Validates relations, dependency classifications, and filing schedules
-declared on a :class:`ModeloRevision` for reference closure and legal grounding.
+declared on a :class:`~aeat.domain.calculations.registry.ModeloRevision` for
+reference closure and legal grounding.
+
+Relation validation ties
+:class:`~aeat.domain.calculations.registry._schema.RelationDefinition` records
+back to declared :class:`~aeat.domain.calculations.registry.DataBindingDefinition`
+targets. Dependency classification validation checks
+:class:`~aeat.domain.calculations.registry.DependencyClassificationDefinition`
+rows against constructs, relations, and official-source evidence.
+
+See Also:
+    :func:`aeat.domain.calculations.registry._validate_revision_sections.validate_revision_definition`
+        Per-revision dispatcher that invokes these section validators.
+    :func:`aeat.domain.calculations.registry.relation_source_requirements`
+        Runtime relation requirement projection that relies on validated
+        relation/dependency metadata.
 """
 
 from __future__ import annotations
@@ -34,6 +49,14 @@ def validate_relation_section(
     source_refs: Mapping[str, SourceReference],
     evidence: EvidenceValidator,
 ) -> None:
+    """Append relation reference, period, and grounding failures.
+
+    The supplied :class:`~aeat.domain.calculations.registry.ModeloRevision`
+    contributes relation declarations. Each relation must target a known
+    :class:`~aeat.domain.calculations.registry.BindingId`, include the legal and
+    source refs carried by that target binding, and stay inside the revision
+    period selector.
+    """
     for relation in revision.relations:
         owner = f"relation {relation.id}"
         failures.extend(_missing_refs(prefix, owner, relation.legal_refs, legal_refs, "legal"))
@@ -74,6 +97,14 @@ def validate_dependency_classification_section(
     source_refs: Mapping[str, SourceReference],
     evidence: EvidenceValidator,
 ) -> None:
+    """Append dependency-classification closure and duplicate failures.
+
+    The :class:`~aeat.domain.calculations.registry.ModeloRevision` supplies
+    dependency classifications and relations. Each
+    :class:`~aeat.domain.calculations.registry.DependencyClassificationDefinition`
+    must cite known refs, point at declared constructs/relations, and cover every
+    relation source modelo with a dependency-bearing treatment.
+    """
     for classification in revision.dependency_classifications:
         _validate_single_dependency_classification(
             failures,
@@ -123,6 +154,14 @@ def _validate_single_dependency_classification(
     source_refs: Mapping[str, SourceReference],
     evidence: EvidenceValidator,
 ) -> None:
+    """Append failures for one dependency-classification declaration.
+
+    The
+    :class:`~aeat.domain.calculations.registry.DependencyClassificationDefinition`
+    must be grounded by the supplied legal/source maps, target declared
+    :class:`~aeat.domain.calculations.registry.ConstructDefinition` rows, and
+    mirror the source-modelo plus refs of each referenced relation.
+    """
     owner = f"dependency classification {classification.id}"
     failures.extend(_missing_refs(prefix, owner, classification.legal_refs, legal_refs, "legal"))
     failures.extend(_missing_refs(prefix, owner, classification.source_refs, source_refs, "source"))
@@ -169,6 +208,13 @@ def validate_filing_schedule_section(
     source_refs: Mapping[str, SourceReference],
     evidence: EvidenceValidator,
 ) -> None:
+    """Append filing-schedule reference and period-selector failures.
+
+    The :class:`~aeat.domain.calculations.registry.ModeloRevision` supplies the
+    accepted period selector and filing-schedule declarations. Each schedule and
+    profile condition must be legally/source grounded and may only name periods
+    declared by the revision selector.
+    """
     selector_periods = set(revision.period_selector.periods)
     for schedule in revision.filing_schedules:
         owner = f"filing schedule {schedule.id}"
