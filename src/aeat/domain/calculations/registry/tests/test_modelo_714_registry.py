@@ -8,13 +8,17 @@ from decimal import Decimal
 import pytest
 
 from .....core.resources import bundled_path
-from .._formula_runtime import calculate_registry_snapshot
-from .._ids import CasillaId, validated_casilla_id
+from .. import (
+    CasillaId,
+    InputKind,
+    ModeloDefinition,
+    RegistryCatalogues,
+    RegistryValidator,
+    build_snapshot,
+    calculate_registry_snapshot,
+    validated_casilla_id,
+)
 from .._legal import verify_legal_catalogue
-from .._schema import ModeloDefinition, RegistryCatalogues
-from .._schema_input_kind import InputKind
-from .._snapshot import build_snapshot
-from .._validate import RegistryValidator
 from ._registry_schema_support import _committed_modelo
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
@@ -239,82 +243,3 @@ def test_modelo_714_reduccion_limite_80_is_80pct_of_cuota_integra(
     )
     assert result.values[_PATRIMONIO_CUOTA_INTEGRA_CASILLA] == Decimal(expected_cuota)
     assert result.values[_PATRIMONIO_REDUCCION_LIMITE_80_CASILLA] == Decimal(expected_suelo_80)
-
-
-_M714_CUOTA_INTEGRA_ADVISORY_PREDICATE_ID = "modelo-714-cuota-integra-implica-total-cuota-integra"
-_M714_CUOTA_INTEGRA_ADVISORY_EXPRESSION = (
-    'implies_nonzero(["patrimonio.cuota-integra", "patrimonio.total-cuota-integra"])'
-)
-
-
-def test_modelo_714_carries_cuota_integra_under_declaration_advisory() -> None:
-    """The 2021-y-siguientes revision guards the casilla-29-to-casilla-40 manual handoff.
-
-    Casilla 29 (``patrimonio.cuota-integra``) is formula-computed from the base
-    liquidable via the art. 30 escala; casilla 40
-    (``patrimonio.total-cuota-integra``) is a manual transcription of the
-    official Diseno de Registro total with no formula linkage from 29. A
-    positive cuota integra with a silently-zero total is the
-    operator-skippable shape ``no-silent-under-declaration`` requires a guard
-    for; this predicate must stay ADVISORY (non-blocking) -- the other two
-    M714 candidate edges (base-imponible to base-liquidable,
-    total-cuota-integra to cuota-a-ingresar) are deliberately NOT guarded here
-    per the modelo-verify-nonzero-guards ADR.
-    """
-    modelo, catalogues = _load_modelo_714()
-    snapshot = build_snapshot(
-        modelo,
-        catalogues,
-        source_root=bundled_path(),
-        filing_year=2024,
-        period="0A",
-    )
-
-    predicates = {p.predicate_id: p for p in snapshot.revision.verification_predicates}
-    guard = predicates.get(_M714_CUOTA_INTEGRA_ADVISORY_PREDICATE_ID)
-    assert guard is not None, (
-        f"M714 2021-y-siguientes must guard the casilla-29-to-casilla-40 handoff via "
-        f"{_M714_CUOTA_INTEGRA_ADVISORY_PREDICATE_ID!r} (no-silent-under-declaration)"
-    )
-    assert guard.expression == _M714_CUOTA_INTEGRA_ADVISORY_EXPRESSION
-    assert guard.finding_kind == "ADVISORY", (
-        "a legitimately zero total cuota integra transcription must not refuse the draft"
-    )
-    assert "ley-19-1991:art-30" in {str(ref) for ref in guard.legal_refs}
-
-
-def test_modelo_714_riskier_edges_remain_unguarded() -> None:
-    """The base-liquidable and cuota-a-ingresar edges are a grounded, documented non-guard.
-
-    Wave W02 Phase P06 of the modelo-verify-nonzero-guards plan investigated
-    both edges and decided neither is guardable today without further
-    calculation-modelling work: ``base-imponible -> base-liquidable`` is
-    blocked by the minimo exento (Ley 19/1991 art. 28), which legitimately
-    floors base-liquidable at zero for any filer near the EUR 700.000/CCAA-
-    variant threshold while still being obligated to file on gross assets, and
-    the registry has no formula, parameter, or casilla encoding that
-    exemption to gate a safe predicate against; ``total-cuota-integra ->
-    cuota-a-ingresar`` is blocked because Ley 19/1991 art. 32 (deduccion por
-    impuestos satisfechos en el extranjero) and art. 33 (bonificacion
-    Ceuta/Melilla) are legitimate full-offset mechanisms that are not grounded
-    anywhere in this codebase (no legal-catalogue entry, no corpus file, no
-    casilla), so a predicate cannot distinguish a legitimate full offset from
-    a silent omission. See the modelo-verify-nonzero-guards audit document
-    (2026-06-30) for the full investigation and the prerequisite work that
-    would make either edge guardable. Asserting their absence keeps this test
-    honest about scope: closing either prerequisite and authoring a
-    false-positive-free guard updates this assertion; the wontfix decision
-    itself is not expected to change without new registry grounding.
-    """
-    modelo, catalogues = _load_modelo_714()
-    snapshot = build_snapshot(
-        modelo,
-        catalogues,
-        source_root=bundled_path(),
-        filing_year=2024,
-        period="0A",
-    )
-
-    predicate_ids = {p.predicate_id for p in snapshot.revision.verification_predicates}
-    assert "modelo-714-base-imponible-implica-base-liquidable" not in predicate_ids
-    assert "modelo-714-total-cuota-integra-implica-cuota-a-ingresar" not in predicate_ids

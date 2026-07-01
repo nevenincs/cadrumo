@@ -1227,6 +1227,8 @@ application:
         sin --quiet desde una terminal interactiva para usar el asistente guiado.'
     next_hint:
       modelo_work_create: aeat app modelo work create
+    notices:
+      ccaa_defaulted: 'No se eligió comunidad autónoma, por lo que se asumió %{ccaa} para este perfil. Las deducciones autonómicas y el tramo autonómico de la escala se calculan para %{ccaa}. Use --tax-residence-ccaa para elegir otra comunidad.'
     output_labels:
       active_profile: Perfil activo
       next: Siguiente

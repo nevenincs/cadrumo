@@ -1215,6 +1215,8 @@ application:
         sense --quiet des d''un terminal interactiu per fer servir l''assistent guiat.'
     next_hint:
       modelo_work_create: aeat app modelo work create
+    notices:
+      ccaa_defaulted: 'No es va triar cap comunitat autònoma, així que es va assumir %{ccaa} per a aquest perfil. Les deduccions autonòmiques i el tram autonòmic de l''escala es calculen per a %{ccaa}. Feu servir --tax-residence-ccaa per triar una altra comunitat.'
     output_labels:
       active_profile: Perfil actiu
       next: Seguent

@@ -846,6 +846,7 @@ def _run_full_flow(
 
     span = profile_create_storage_span(profile_id) if mode == "create" else profile_storage_session(profile_id)
     with span as routing_profile_id:
+
         def _persist_if_filing_baseline_survives(state):
             if mode == "edit":
                 values = record_to_path_values(read_active_profile(state))
@@ -996,11 +997,43 @@ def _next_step_command_for_profile_values(profile_values: dict[str, str]) -> str
     return _DEFAULT_PROFILE_NEXT_COMMAND
 
 
+def _ccaa_was_defaulted(
+    mode: WizardPersistMode,
+    explicit_flags: dict[str, str],
+    profile_values: dict[str, str],
+    *,
+    non_interactive: bool,
+) -> bool:
+    """Return True when the comunidad autónoma was assumed, not chosen.
+
+    The wizard descriptor defaults ``tax-residence-ccaa`` to Madrid for a
+    resident-IRPF profile. That default is applied silently on the
+    non-interactive create paths (``--quiet`` / ``--accept-defaults``)
+    when the operator omits ``--tax-residence-ccaa`` — precisely the case
+    that lands a Madrid-based autonomic calculation without the operator
+    knowing. The signal is therefore: a non-interactive ``create`` where
+    the operator supplied no CCAA flag yet the persisted profile carries
+    the Madrid default. An explicitly-supplied CCAA (including an explicit
+    ``madrid``) sits in ``explicit_flags`` and is excluded; the interactive
+    path prompts for the value and is likewise excluded, as is ``edit``
+    (whose CCAA already exists on the profile).
+    """
+    from ...domain.contribuyente._ccaa import CCAA
+
+    return (
+        mode == "create"
+        and non_interactive
+        and "tax-residence-ccaa" not in explicit_flags
+        and profile_values.get("tax_residence.ccaa") == CCAA.MADRID.value
+    )
+
+
 def _emit_wizard_success(
     mode: WizardPersistMode,
     profile_name: str,
     *,
     next_command: str = _DEFAULT_PROFILE_NEXT_COMMAND,
+    ccaa_defaulted: bool = False,
 ) -> None:
     """Emit the success payload in JSON or tabular CLI form.
 
@@ -1009,20 +1042,39 @@ def _emit_wizard_success(
     ``suggestion`` is the follow-on command) rather than as a bespoke
     ``next`` payload field, so next-step guidance is uniform with every
     other command's notices.
+
+    ``ccaa_defaulted`` requests an additional ``warning``-severity
+    :class:`Notice` disclosing that no comunidad autónoma was chosen and
+    that Madrid was assumed for the profile — so the operator learns the
+    autonomic deductions and autonomic tax scale are being computed for
+    Madrid rather than the value being applied silently.
     """
     import typer as _typer
 
     from ...core.click_context import json_output_requested
     from ...core.json_contract import Notice, NoticeSeverity, emit_json_success
     from ...core.output_rendering import render_command_output
+    from ...domain.contribuyente._ccaa import CCAA
 
     verb = tr("wizard.commands.status.created" if mode == "create" else "wizard.commands.status.updated")
-    next_notice = Notice(
-        severity=NoticeSeverity.INFO,
-        code=f"config.profile.{'create' if mode == 'create' else 'edit'}.next_step",
-        message=tr("application.wizard.output_labels.next"),
-        suggestion=next_command,
-    )
+    notices: list[Notice] = [
+        Notice(
+            severity=NoticeSeverity.INFO,
+            code=f"config.profile.{'create' if mode == 'create' else 'edit'}.next_step",
+            message=tr("application.wizard.output_labels.next"),
+            suggestion=next_command,
+        )
+    ]
+    ccaa_message = tr("application.wizard.notices.ccaa_defaulted", ccaa=CCAA.MADRID.value)
+    if ccaa_defaulted:
+        notices.append(
+            Notice(
+                severity=NoticeSeverity.WARNING,
+                code=f"config.profile.{'create' if mode == 'create' else 'edit'}.ccaa_defaulted",
+                message=ccaa_message,
+                context={"assumed_ccaa": CCAA.MADRID.value},
+            )
+        )
     payload: dict[str, object] = {
         "profile_name": profile_name,
         "status": verb,
@@ -1031,7 +1083,7 @@ def _emit_wizard_success(
         payload["active_profile"] = profile_name
     if json_output_requested():
         command_path = "config.profile.create" if mode == "create" else "config.profile.edit"
-        emit_json_success(command_path, payload, notices=[next_notice])
+        emit_json_success(command_path, payload, notices=notices)
         return
 
     lines = [
@@ -1041,6 +1093,8 @@ def _emit_wizard_success(
     if mode == "create":
         lines.append(f"active_profile\t{profile_name}")
     lines.append(f"next\t{next_command}")
+    if ccaa_defaulted:
+        lines.append(ccaa_message)
     rendered = render_command_output(format_name="text", payload=payload, lines=lines)
     _typer.echo(rendered.text)
 
@@ -1073,7 +1127,17 @@ def _execute_wizard_command(
         profile_name=profile_name,
         profile_id=profile_id,
     )
-    _emit_wizard_success(mode, profile_name, next_command=_next_step_command_for_profile_values(profile_values))
+    _emit_wizard_success(
+        mode,
+        profile_name,
+        next_command=_next_step_command_for_profile_values(profile_values),
+        ccaa_defaulted=_ccaa_was_defaulted(
+            mode,
+            explicit_flags,
+            profile_values,
+            non_interactive=quiet or accept_defaults,
+        ),
+    )
 
 
 def build_wizard_command(flow: WizardFlow, *, mode: WizardPersistMode) -> Callable[..., None]:

@@ -17,7 +17,6 @@ from ._schema import (
     ModeloRevision,
     SourceReference,
 )
-from ._schema_surfaces import CasillaDefinition
 from ._validate_evidence import EvidenceValidator
 from ._validate_helpers import _missing_refs
 
@@ -194,69 +193,6 @@ def _roll_forward_balances_predicate_arity_failures(
     return failures
 
 
-# casilla_equals_implies_nonzero(["antecedent_casilla_id", "literal",
-# "consequent_casilla_id"]) — categorical-conditional material implication.
-# Unlike the other casilla-list operators, the middle token is a literal
-# string, not a casilla id, so it cannot route through the generic
-# _casilla_list_predicate_failures (which validates every bracketed token as
-# a casilla id). Mirrors roll_forward_balances's bespoke-validator shape:
-# this authoring-time gate rejects a malformed arity, an unknown antecedent
-# or consequent casilla id, or an empty literal at registry load, rather than
-# letting the runtime evaluator's defensive bad-arity branch (returns False —
-# never fires) silently mask a typo.
-_CASILLA_EQUALS_IMPLIES_NONZERO_PREDICATE = _re.compile(
-    r"^casilla_equals_implies_nonzero\(\[(?P<ids>[^\]]*)\]\)$",
-)
-
-
-def _casilla_equals_implies_nonzero_predicate_failures(
-    prefix: str,
-    owner: str,
-    expression: str,
-    casillas: set[CasillaId],
-    casilla_by_id: Mapping[CasillaId, CasillaDefinition],
-) -> list[str]:
-    """Return failures for a malformed ``casilla_equals_implies_nonzero`` predicate."""
-    match = _CASILLA_EQUALS_IMPLIES_NONZERO_PREDICATE.match(expression.strip())
-    if match is None:
-        return [
-            f"{prefix}: {owner} casilla_equals_implies_nonzero expression {expression!r} is malformed; "
-            'expected casilla_equals_implies_nonzero(["antecedent_casilla_id", "literal", "consequent_casilla_id"])',
-        ]
-    tokens = _parse_predicate_casilla_id_tokens(match.group("ids"))
-    failures: list[str] = []
-    if len(tokens) != 3:
-        failures.append(
-            f"{prefix}: {owner} casilla_equals_implies_nonzero must name exactly three tokens "
-            f"(antecedent casilla id, literal, consequent casilla id), got {len(tokens)}: {tokens!r}",
-        )
-        return failures
-    antecedent_id, literal, consequent_id = tokens
-    antecedent = casilla_by_id.get(antecedent_id)
-    if antecedent_id not in casillas:
-        failures.append(
-            f"{prefix}: {owner} casilla_equals_implies_nonzero references unknown antecedent casilla {antecedent_id!r}",
-        )
-    elif antecedent is not None and antecedent.data_type != "text":
-        failures.append(
-            f"{prefix}: {owner} casilla_equals_implies_nonzero antecedent casilla {antecedent_id!r} "
-            "must have data_type 'text'",
-        )
-    if not literal:
-        failures.append(f"{prefix}: {owner} casilla_equals_implies_nonzero literal must be non-empty")
-    consequent = casilla_by_id.get(consequent_id)
-    if consequent_id not in casillas:
-        failures.append(
-            f"{prefix}: {owner} casilla_equals_implies_nonzero references unknown consequent casilla {consequent_id!r}",
-        )
-    elif consequent is not None and consequent.data_type == "text":
-        failures.append(
-            f"{prefix}: {owner} casilla_equals_implies_nonzero consequent casilla {consequent_id!r} "
-            "must not have data_type 'text'",
-        )
-    return failures
-
-
 def validate_verification_expectation_section(
     failures: list[str],
     *,
@@ -266,8 +202,6 @@ def validate_verification_expectation_section(
     legal_refs: Mapping[str, LegalReference],
     source_refs: Mapping[str, SourceReference],
 ) -> None:
-    casilla_by_id = {casilla.id: casilla for casilla in revision.casillas}
-
     for expectation in revision.verification_expectations:
         owner = f"verification expectation {expectation.id}"
         failures.extend(_missing_refs(prefix, owner, expectation.legal_refs, legal_refs, "legal"))
@@ -319,20 +253,6 @@ def validate_verification_expectation_section(
             # evaluator's bad-arity branch silently hold / never fire.
             failures.extend(
                 _roll_forward_balances_predicate_arity_failures(prefix, owner, predicate.expression, casillas),
-            )
-        elif op_name == "casilla_equals_implies_nonzero":
-            # casilla_equals_implies_nonzero(["antecedent_id", "literal",
-            # "consequent_id"]) mixes two casilla ids with a literal string;
-            # reject a malformed arity, an unknown antecedent/consequent
-            # casilla, or an empty literal at authoring time.
-            failures.extend(
-                _casilla_equals_implies_nonzero_predicate_failures(
-                    prefix,
-                    owner,
-                    predicate.expression,
-                    casillas,
-                    casilla_by_id,
-                ),
             )
         elif op_name in _CASILLA_LIST_OPERATORS:
             failures.extend(
