@@ -19,8 +19,8 @@ from ._providers import (
     LocalAdapter,
     OpenAIAdapter,
     ProviderRequest,
-    _ProviderAdapter,
 )
+from ._providers.base import _ProviderAdapter
 
 # AnthropicAdapter stays lazy here so provider construction remains behind the
 # optional-extra guard in _build_adapter.
