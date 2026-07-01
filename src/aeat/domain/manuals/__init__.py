@@ -1,18 +1,25 @@
-"""AEAT *Manual práctico* corpus subpackage.
+"""Public facade for the AEAT *Manual práctico* handbook corpus.
 
-Provides the typed schema, file-backed loader, query API, verification
-report, and raw-manual fetcher for the annual AEAT *Manual práctico de
-Renta* and *Manual práctico de IVA* handbooks. The handbook is the
-*de facto* rule book for every modelo the project files, and the
-registry definitions, schema extractor, and downstream filing modules all
-consume this schema.
+This package exposes the strict manual schema (:class:`Manual`,
+:class:`Chapter`, :class:`Section`, :class:`Paragraph`, :class:`Rule`,
+:class:`ManualCasillaReference`), handbook identifiers (:class:`ManualId`,
+:class:`ManualPart`), file-backed loaders, rule queries, verification reports,
+and manifest-backed raw-PDF fetch results for the annual *Manual práctico de
+Renta* and *Manual práctico de IVA* handbooks.
 
-Public surface: callers from outside this subpackage must import
-exclusively from :mod:`aeat.domain.manuals` and MUST NOT reach into the
-private :mod:`~aeat.domain.manuals._schema`,
-:mod:`~aeat.domain.manuals._loader`, :mod:`~aeat.domain.manuals._verify`,
-:mod:`~aeat.domain.manuals._fetch`, or :mod:`~aeat.domain.manuals._ids`
-modules.
+Manual records are public authority corpus data, not operator bucket state.
+Source PDFs are represented by :class:`FetchedManualPart` manifests; structured
+rules carry :class:`LLMProvenance`, source pointers, casilla/legal references,
+and human review fields before they can pass the manual verification gate.
+Registry definitions, calculation grounding, and user-facing handbook lookup
+consume these records as evidence, while live AEAT access and any persisted
+operator workflow remain outside this domain surface.
+
+Callers outside this subpackage import exclusively from
+:mod:`aeat.domain.manuals` and must not reach into private modules such as
+:mod:`~aeat.domain.manuals._schema`, :mod:`~aeat.domain.manuals._loader`,
+:mod:`~aeat.domain.manuals._verify`, :mod:`~aeat.domain.manuals._fetch`, or
+:mod:`~aeat.domain.manuals._ids`.
 
 Examples:
     >>> from aeat.domain.manuals import (
