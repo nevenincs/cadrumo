@@ -19,6 +19,7 @@ import json
 import uuid
 from collections.abc import Iterator, Sequence
 from pathlib import Path
+from typing import Any
 
 import pytest
 from click.testing import Result
@@ -91,7 +92,15 @@ def _import_bundle(
     return _invoke(args)
 
 
-def _create_minimal_profile_and_export(tmp_path: Path, bundle_path: Path) -> str:
+def _read_bundle(bundle_path: Path) -> dict[str, Any]:
+    return json.loads(bundle_path.read_text(encoding="utf-8"))
+
+
+def _write_bundle(bundle_path: Path, raw: dict[str, Any]) -> None:
+    bundle_path.write_text(json.dumps(raw), encoding="utf-8")
+
+
+def _create_minimal_profile_and_export(bundle_path: Path) -> str:
     """Create a minimal profile and export it to ``bundle_path``.
 
     Returns the exported ``profile_id`` (UUID).
@@ -109,7 +118,7 @@ def _create_minimal_profile_and_export(tmp_path: Path, bundle_path: Path) -> str
     assert r_export.exit_code == 0, r_export.output
     assert bundle_path.is_file()
 
-    raw = json.loads(bundle_path.read_text(encoding="utf-8"))
+    raw = _read_bundle(bundle_path)
     exported_id = raw["profile"]["profile_id"]
     assert_public_profile_id_redacted(r_export.output, exported_id)
     return exported_id
@@ -144,7 +153,7 @@ def _create_legal_entity_profile_and_export(bundle_path: Path) -> str:
     assert r_export.exit_code == 0, r_export.output
     assert bundle_path.is_file()
 
-    raw = json.loads(bundle_path.read_text(encoding="utf-8"))
+    raw = _read_bundle(bundle_path)
     exported_id = raw["profile"]["profile_id"]
     assert_public_profile_id_redacted(r_export.output, exported_id)
     return exported_id
@@ -177,7 +186,7 @@ def _create_attribution_entity_profile_and_export(bundle_path: Path) -> str:
     assert r_export.exit_code == 0, r_export.output
     assert bundle_path.is_file()
 
-    raw = json.loads(bundle_path.read_text(encoding="utf-8"))
+    raw = _read_bundle(bundle_path)
     exported_id = raw["profile"]["profile_id"]
     assert_public_profile_id_redacted(r_export.output, exported_id)
     return exported_id
@@ -198,7 +207,7 @@ def test_reimport_same_bundle_is_refused(tmp_path: Path) -> None:
     """
 
     bundle_path = tmp_path / "idempotency.json"
-    exported_id = _create_minimal_profile_and_export(tmp_path, bundle_path)
+    exported_id = _create_minimal_profile_and_export(bundle_path)
 
     # The source profile is already present (created above).
     # A first import attempt into the SAME root where the source profile
@@ -254,7 +263,7 @@ def test_label_collision_different_uuid_refused_even_with_explicit_label(tmp_pat
     """
 
     bundle_path = tmp_path / "label-collision.json"
-    exported_id = _create_minimal_profile_and_export(tmp_path, bundle_path)
+    exported_id = _create_minimal_profile_and_export(bundle_path)
 
     dest_root = tmp_path / "dest"
     with isolated_profile_storage_root(tmp_path=dest_root):
@@ -319,14 +328,14 @@ def test_mutated_profile_id_creates_second_profile(tmp_path: Path) -> None:
     """
 
     bundle_path = tmp_path / "original.json"
-    exported_id = _create_minimal_profile_and_export(tmp_path, bundle_path)
+    exported_id = _create_minimal_profile_and_export(bundle_path)
 
     mutated_bundle_path = tmp_path / "mutated.json"
-    raw = json.loads(bundle_path.read_text(encoding="utf-8"))
+    raw = _read_bundle(bundle_path)
     mutated_id = str(uuid.uuid4())
     # Change the profile_id inside the profile sub-object.
     raw["profile"]["profile_id"] = mutated_id
-    mutated_bundle_path.write_text(json.dumps(raw), encoding="utf-8")
+    _write_bundle(mutated_bundle_path, raw)
 
     dest_root = tmp_path / "dest"
     with isolated_profile_storage_root(tmp_path=dest_root):
@@ -395,9 +404,9 @@ def test_import_refuses_tampered_invalid_tax_id(tmp_path: Path) -> None:
     """
 
     bundle_path = tmp_path / "tax-tamper.json"
-    _create_minimal_profile_and_export(tmp_path, bundle_path)
+    _create_minimal_profile_and_export(bundle_path)
 
-    raw = json.loads(bundle_path.read_text(encoding="utf-8"))
+    raw = _read_bundle(bundle_path)
     tampered = False
     for fact in raw["profile"]["facts"]:
         if fact.get("path") == "identity.tax_id":
@@ -405,7 +414,7 @@ def test_import_refuses_tampered_invalid_tax_id(tmp_path: Path) -> None:
             tampered = True
     assert tampered, "exported bundle did not carry an identity.tax_id fact"
     tampered_path = tmp_path / "tampered.json"
-    tampered_path.write_text(json.dumps(raw), encoding="utf-8")
+    _write_bundle(tampered_path, raw)
 
     dest_root = tmp_path / "dest"
     with isolated_profile_storage_root(tmp_path=dest_root):
@@ -427,27 +436,35 @@ def test_import_refuses_tampered_invalid_tax_id(tmp_path: Path) -> None:
         assert r_ok.exit_code == 0, r_ok.output
 
 
-@pytest.mark.parametrize(
-    ("source_kind", "removed_path", "expected_flag"),
+_MISSING_BASELINE_CASES_BY_SOURCE = (
     (
-        pytest.param("natural_person", "taxpayer_type.entity_type", "--entity-type", id="natural-missing-entity-type"),
-        pytest.param("natural_person", "identity.name", "--name", id="natural-missing-name"),
-        pytest.param("natural_person", "identity.surnames", "--surnames", id="natural-missing-surnames"),
-        pytest.param(
-            "legal_entity",
-            "taxpayer_type.legal_entity_form",
-            "--legal-entity-form",
-            id="legal-missing-legal-entity-form",
+        "natural_person",
+        (
+            ("taxpayer_type.entity_type", "--entity-type"),
+            ("identity.name", "--name"),
+            ("identity.surnames", "--surnames"),
         ),
-        pytest.param("legal_entity", "identity.legal_name", "--legal-name", id="legal-missing-legal-name"),
-        pytest.param("attribution_entity", "identity.name", "--name", id="attribution-missing-name"),
     ),
+    (
+        "legal_entity",
+        (
+            ("taxpayer_type.legal_entity_form", "--legal-entity-form"),
+            ("identity.legal_name", "--legal-name"),
+        ),
+    ),
+    ("attribution_entity", (("identity.name", "--name"),)),
+)
+
+
+@pytest.mark.parametrize(
+    ("source_kind", "missing_cases"),
+    _MISSING_BASELINE_CASES_BY_SOURCE,
+    ids=[source_kind for source_kind, _ in _MISSING_BASELINE_CASES_BY_SOURCE],
 )
 def test_import_refuses_missing_filing_identity_baseline(
     tmp_path: Path,
     source_kind: str,
-    removed_path: str,
-    expected_flag: str,
+    missing_cases: tuple[tuple[str, str], ...],
 ) -> None:
     """A tampered bundle cannot register a filing-incomplete active profile."""
 
@@ -457,25 +474,27 @@ def test_import_refuses_missing_filing_identity_baseline(
     elif source_kind == "attribution_entity":
         _create_attribution_entity_profile_and_export(bundle_path)
     else:
-        _create_minimal_profile_and_export(tmp_path, bundle_path)
+        _create_minimal_profile_and_export(bundle_path)
 
-    raw = json.loads(bundle_path.read_text(encoding="utf-8"))
-    original_facts = raw["profile"]["facts"]
-    raw["profile"]["facts"] = [fact for fact in original_facts if fact.get("path") != removed_path]
-    assert len(raw["profile"]["facts"]) == len(original_facts) - 1, f"bundle did not contain {removed_path}"
-    tampered_path = tmp_path / f"tampered-{source_kind}.json"
-    tampered_path.write_text(json.dumps(raw), encoding="utf-8")
+    for case_index, (removed_path, expected_flag) in enumerate(missing_cases):
+        raw = _read_bundle(bundle_path)
+        original_facts = raw["profile"]["facts"]
+        raw["profile"]["facts"] = [fact for fact in original_facts if fact.get("path") != removed_path]
+        assert len(raw["profile"]["facts"]) == len(original_facts) - 1, f"bundle did not contain {removed_path}"
+        case_token = removed_path.replace(".", "-")
+        tampered_path = tmp_path / f"tampered-{source_kind}-{case_token}.json"
+        _write_bundle(tampered_path, raw)
 
-    label = f"missing-baseline-{source_kind}"
-    with isolated_profile_storage_root(tmp_path=tmp_path / f"dest-{source_kind}"):
-        r = _import_bundle(tampered_path, label=label)
-        assert r.exit_code != 0, r.output
-        assert "Traceback" not in r.output
-        assert expected_flag in r.output
+        label = f"missing-baseline-{source_kind}-{case_index}"
+        with isolated_profile_storage_root(tmp_path=tmp_path / f"dest-{source_kind}-{case_index}"):
+            r = _import_bundle(tampered_path, label=label)
+            assert r.exit_code != 0, r.output
+            assert "Traceback" not in r.output
+            assert expected_flag in r.output, f"{removed_path}: {r.output}"
 
-        r_list = _invoke(["config", "profile", "list"])
-        assert r_list.exit_code == 0, r_list.output
-        assert label not in r_list.output
+            r_list = _invoke(["config", "profile", "list"])
+            assert r_list.exit_code == 0, r_list.output
+            assert label not in r_list.output
 
 
 @pytest.mark.parametrize("tamper_case", ["missing", "blank", "non_string", "duplicate"])
@@ -483,9 +502,9 @@ def test_import_refuses_missing_or_non_string_tax_id(tmp_path: Path, tamper_case
     """The import boundary requires exactly one nonblank string identity.tax_id fact."""
 
     bundle_path = tmp_path / f"tax-id-{tamper_case}.json"
-    _create_minimal_profile_and_export(tmp_path, bundle_path)
+    _create_minimal_profile_and_export(bundle_path)
 
-    raw = json.loads(bundle_path.read_text(encoding="utf-8"))
+    raw = _read_bundle(bundle_path)
     facts = raw["profile"]["facts"]
     tax_facts = [fact for fact in facts if fact.get("path") == "identity.tax_id"]
     assert len(tax_facts) == 1, "exported bundle must carry one identity.tax_id fact"
@@ -501,7 +520,7 @@ def test_import_refuses_missing_or_non_string_tax_id(tmp_path: Path, tamper_case
         raise AssertionError(f"unhandled tamper case {tamper_case!r}")
 
     tampered_path = tmp_path / f"tampered-{tamper_case}.json"
-    tampered_path.write_text(json.dumps(raw), encoding="utf-8")
+    _write_bundle(tampered_path, raw)
 
     dest_root = tmp_path / f"dest-{tamper_case}"
     label = f"tampered-{tamper_case}"
