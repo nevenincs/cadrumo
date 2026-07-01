@@ -180,6 +180,7 @@ class _RecordingBrowserSession:
 
     def __init__(self) -> None:
         self.closed = False
+        self.profile = None
 
     async def create_context(
         self,

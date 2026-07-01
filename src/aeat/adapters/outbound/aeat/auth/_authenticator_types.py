@@ -186,6 +186,21 @@ class BrowserContextLike(Protocol):
 
 
 @runtime_checkable
+class BrowserSessionProfileLike(Protocol):
+    """Minimal profile surface a browser session exposes to resume state.
+
+    Mirrors the single field auth reads off
+    :class:`aeat.adapters.outbound.aeat.browser.Profile`: the filesystem path
+    of the Playwright storage-state JSON a resumed session loads cookies from.
+    """
+
+    @property
+    def storage_state_path(self) -> Path:
+        """Path to the profile's Playwright storage-state JSON."""
+        ...
+
+
+@runtime_checkable
 class BrowserSessionLike(Protocol):
     """Browser-session factory surface used by certificate and Cl@ve auth.
 
@@ -193,7 +208,20 @@ class BrowserSessionLike(Protocol):
     :meth:`aeat.adapters.outbound.aeat.browser.BrowserSession.create_context`:
     certificate auth may pass a context provisioner, while resume paths pass
     either a storage-state path or an in-memory storage-state mapping.
+
+    ``profile`` exposes the session's resume path so
+    :meth:`AeatAuthenticator._resolve_storage_state_path` can read it as a
+    declared member rather than duck-typing via ``getattr``; it is ``None``
+    for lightweight test doubles that rely on the settings fallback. A
+    ``close()`` coroutine is intentionally *not* mandated here — real sessions
+    own a Chromium process while doubles may not, so teardown probes for it
+    (see :meth:`AeatAuthenticator._close_browser_session`).
     """
+
+    @property
+    def profile(self) -> BrowserSessionProfileLike | None:
+        """Optional profile carrying this session's resume ``storage_state_path``."""
+        ...
 
     async def create_context(
         self,
@@ -241,6 +269,7 @@ __all__ = [
     "BrowserResponseLike",
     "BrowserSessionFactory",
     "BrowserSessionLike",
+    "BrowserSessionProfileLike",
     "CertificateHealthCheck",
     "_PersistedSessionInvalidError",
 ]

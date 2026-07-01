@@ -61,10 +61,16 @@ from ._authenticator_types import (
     BrowserResponseLike,
     BrowserSessionFactory,
     BrowserSessionLike,
+    BrowserSessionProfileLike,
     CertificateHealthCheck,
     _PersistedSessionInvalidError,
 )
-from ._errors import AeatLoginAssertionError, AeatSessionExpiredError, AuthValidationError
+from ._errors import (
+    AeatLoginAssertionError,
+    AeatSessionExpiredError,
+    AuthConfigurationError,
+    AuthValidationError,
+)
 from ._providers import (
     CERTIFICATE_CONTEXT_MARKER,
     AuthProviderDescription,
@@ -247,10 +253,6 @@ class AeatAuthenticator:
         target = url or self._settings.aeat_certificate_verify_url
         cert = self.load_certificate()
         return self._handshake_verifier(cert, target)
-
-    def extract_nif_from_subject(self, cert: LoadedCertificate) -> str:
-        """Parse the taxpayer NIF / NIE from ``cert``'s subject."""
-        return extract_nif_from_subject(cert)
 
     # ── Async lifecycle ─────────────────────────────────────────────────────
 
@@ -1009,10 +1011,9 @@ class AeatAuthenticator:
     ) -> Path:
         """Return the storage-state path for ``browser_session`` or settings."""
         if browser_session is not None:
-            profile = getattr(browser_session, "profile", None)
-            storage_state_path = getattr(profile, "storage_state_path", None)
-            if isinstance(storage_state_path, Path):
-                return storage_state_path
+            profile = browser_session.profile
+            if profile is not None:
+                return profile.storage_state_path
         from .....core import require_active_bucket_id
         from .....core.auth_session_keys import aeat_auth_session_storage_state_path
 
@@ -1148,7 +1149,7 @@ class AeatAuthenticator:
         """
         if self._browser_session_factory is not None:
             return await self._browser_session_factory(self._settings)
-        raise AeatLoginAssertionError(
+        raise AuthConfigurationError(
             "AeatAuthenticator was constructed without a browser "
             "session factory; the default Playwright factory is not "
             "yet wired. Pass a factory explicitly or use only the "
@@ -1197,4 +1198,5 @@ __all__ = [
     "BrowserResponseLike",
     "BrowserSessionFactory",
     "BrowserSessionLike",
+    "BrowserSessionProfileLike",
 ]

@@ -104,6 +104,7 @@ class _MinimalBrowserSession:
     def __init__(self) -> None:
         self.contexts: list[_MinimalContext] = []
         self.closed = False
+        self.profile = None
 
     async def create_context(
         self,

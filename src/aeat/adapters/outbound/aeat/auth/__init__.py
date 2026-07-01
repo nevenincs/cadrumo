@@ -64,6 +64,7 @@ from ._authenticator import (
     BrowserResponseLike,
     BrowserSessionFactory,
     BrowserSessionLike,
+    BrowserSessionProfileLike,
 )
 from ._certificate_backends._playwright_context import (
     build_client_certificates_kwarg,
@@ -142,6 +143,7 @@ __all__ = [
     "BrowserResponseLike",
     "BrowserSessionFactory",
     "BrowserSessionLike",
+    "BrowserSessionProfileLike",
     "CertificateBundle",
     "CertificateContextProvisioner",
     "CertificateError",
