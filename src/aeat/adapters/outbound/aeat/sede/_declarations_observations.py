@@ -1,14 +1,14 @@
 """Filed-declaration observation and registry interpretation helpers.
 
 The Sede capture path resolves a
-:class:`~aeat.domain.calculations.registry.RegistrySnapshot` through
-:class:`~aeat.domain.calculations.registry.ValidatedRegistryAuthority`,
-interprets its :class:`~aeat.domain.calculations.registry.ModeloRevision`, and
+:class:`RegistrySnapshot` through
+:class:`ValidatedRegistryAuthority`,
+interprets its :class:`ModeloRevision`, and
 materialises filed rows as provenance-bearing
-:class:`~aeat.domain.calculations.registry.CasillaObservation` records.
+:class:`CasillaObservation` records.
 
 See Also:
-    :func:`aeat.adapters.outbound.aeat.sede.capture_filed_declaration_observation`
+    :func:`~aeat.adapters.outbound.aeat.sede.capture_filed_declaration_observation`
         Browser capture surface that produces filed-declaration observations.
     :func:`registry_observation_from_filed_declaration`
         Conversion boundary from Sede observations to registry observations.
@@ -474,9 +474,9 @@ def registry_observation_from_filed_declaration(
 
     The :class:`~aeat.adapters.outbound.aeat.sede.FiledDeclaracionObservation`
     is checked against the selected
-    :class:`~aeat.domain.calculations.registry.RegistrySnapshot`; each accepted
+    :class:`RegistrySnapshot`; each accepted
     :class:`~aeat.adapters.outbound.aeat.sede.ObservedCasillaValue` becomes a
-    provenance-bearing :class:`~aeat.domain.calculations.registry.CasillaObservation`
+    provenance-bearing :class:`CasillaObservation`
     inside the returned
     :class:`~aeat.domain.calculations.registry.RegistryModeloObservation`.
     """
@@ -614,7 +614,7 @@ def resolve_previous_filing_bindings_from_filed_declarations(
 ) -> dict[BindingId, Decimal]:
     """Resolve registry previous-filing bindings from filed AEAT observations.
 
-    The :class:`~aeat.domain.calculations.registry.ModeloRevision` supplies the
+    The :class:`ModeloRevision` supplies the
     previous-filing binding selectors and the :class:`~aeat.core.Period` selects
     the target filing period. Filed Sede
     :class:`~aeat.adapters.outbound.aeat.sede.FiledDeclaracionObservation` rows
@@ -641,7 +641,7 @@ def resolve_relation_values_from_filed_declarations(
 ) -> dict[RelationId, Decimal]:
     """Resolve registry cross-model relation values from filed AEAT observations.
 
-    The :class:`~aeat.domain.calculations.registry.ModeloRevision` supplies the
+    The :class:`ModeloRevision` supplies the
     relation declarations and the :class:`~aeat.core.Period` selects the target
     filing period. Filed Sede
     :class:`~aeat.adapters.outbound.aeat.sede.FiledDeclaracionObservation` rows
