@@ -9,7 +9,7 @@ The repository exposes typed
 objects; carry-forward projection is produced by
 :func:`~aeat.domain.iva_compensation._carry_forward.build_iva_compensation_carry_forward_report`.
 Rows are written through
-:class:`~aeat.adapters.persistence.storage.envelope.SecureBoundRepository`, so
+:class:`~aeat.adapters.persistence.storage.SecureBoundRepository`, so
 the namespace, schema version, and sensitivity declared by the storage registry
 remain the persistence authority.
 
@@ -39,10 +39,10 @@ from pydantic import BaseModel, ConfigDict, Field
 
 from ...adapters.persistence.storage import (
     IVA_COMPENSATION_HISTORY_NAMESPACE,
+    SecureBoundRepository,
     SensitivityClass,
     safe_repository_id,
 )
-from ...adapters.persistence.storage.envelope import SecureBoundRepository
 from ...core import Modelo, Period
 from ...core.resources import resources
 from ...core.time import now
@@ -162,8 +162,9 @@ class IvaCompensationHistoryRepository(SecureBoundRepository[IvaCompensationPeri
     rows in
     :data:`aeat.adapters.persistence.storage.IVA_COMPENSATION_HISTORY_NAMESPACE`
     for later carry-forward, balance, and reconciliation reads. The
-    :class:`SecureBoundRepository` base writes those rows as encrypted
-    AUDIT-class envelopes for active-bucket lookup.
+    :class:`~aeat.adapters.persistence.storage.SecureBoundRepository` base
+    writes those rows as encrypted AUDIT-class envelopes for active-bucket
+    lookup.
     """
 
     namespace: ClassVar[str] = IVA_COMPENSATION_HISTORY_NAMESPACE.namespace
