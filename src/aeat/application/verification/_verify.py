@@ -163,9 +163,10 @@ def verify_declaracion(
         if warning.casilla_id is not None and warning.code in _UNRELIABLE_WARNING_CODES
     }
     registry_casilla_ids = declared_casilla_ids(snapshot.revision)
+    reconciled_casilla_ids = policy.computed_casilla_ids | policy.reconcile_when_present_casilla_ids
     discrepancies: list[ClassifiedDiscrepancy] = []
     for casilla_id, actual in sorted(extracted.items()):
-        if casilla_id in registry_casilla_ids and casilla_id not in policy.computed_casilla_ids:
+        if casilla_id in registry_casilla_ids and casilla_id not in reconciled_casilla_ids:
             continue
         expected = result.values.get(casilla_id, actual)
         delta = actual - expected
