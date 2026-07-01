@@ -36,13 +36,15 @@ if TYPE_CHECKING:  # pragma: no cover — import-cycle guard
 class ModeloDraftRepository(SecureBoundRepository[ModeloDraft]):
     """Encrypted FINANCIAL repository for :class:`ModeloDraft` payloads.
 
-    The :class:`SecureBoundRepository` base wraps each draft in an
+    The :class:`~aeat.adapters.persistence.storage.SecureBoundRepository`
+    base wraps each draft in an
     :class:`~aeat.adapters.persistence.storage.Envelope` and writes it under
     :data:`aeat.adapters.persistence.storage.FILING_DRAFTS_NAMESPACE`. The
     draft id is the natural key, so list and iteration APIs expose draft
     aggregates rather than submission or amendment records. The namespace
-    definition supplies the FINANCIAL sensitivity, schema version, object-key
-    grammar, and custody contract.
+    definition supplies the FINANCIAL
+    :class:`~aeat.adapters.persistence.storage.SensitivityClass`, schema
+    version, object-key grammar, and custody contract.
     """
 
     namespace: ClassVar[str] = "aeat.domain.filing.drafts"
