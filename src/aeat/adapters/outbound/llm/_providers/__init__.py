@@ -1,16 +1,8 @@
-"""Private provider adapters for the LLM package.
-
-The two underscore-prefixed names ``_ProviderAdapter`` and
-``_DeterministicAdapter`` are intentionally available to internal
-callers via this package as redundant aliases; they are NOT part of
-the public star-import surface and stay absent from ``__all__``.
-"""
+"""Provider package facade for public LLM adapter helpers."""
 
 from typing import TYPE_CHECKING
 
 from .base import ProviderCompletion, ProviderRequest
-from .base import _ProviderAdapter as _ProviderAdapter
-from .deterministic import _DeterministicAdapter as _DeterministicAdapter
 from .gemini import GeminiAdapter
 from .local import LocalAdapter, rasterise_pdf_pages_to_base64_png
 from .openai import OpenAIAdapter
