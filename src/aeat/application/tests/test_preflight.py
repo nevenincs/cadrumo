@@ -31,6 +31,7 @@ from ..preflight import (
     HealthSeverity,
     PreflightCheck,
     probe_auth_providers,
+    probe_portal_registry_health,
     probe_registry_referential_integrity,
     probe_storage_corpus_env,
     run_preflight_checks,
@@ -233,5 +234,57 @@ def test_run_preflight_checks_never_raises_and_covers_every_dimension() -> None:
         "corpus:manuals",
         "env:configuration",
         "registry:referential-integrity",
+        "portal-registry:health",
     } <= ids
     assert all(isinstance(row, PreflightCheck) for row in rows)
+
+
+# ── #413 — portal-registry health / recorded portal drift ────────────────────
+
+
+def test_portal_health_ok_offline_when_no_drift_recorded() -> None:
+    """With no recorded drift (the offline default) the row is healthy and names the count."""
+    row = probe_portal_registry_health()
+    assert row.check == "portal-registry:health"
+    assert row.healthy is True
+    assert row.severity is HealthSeverity.OK
+    assert "no portal drift recorded" in row.detail
+
+
+def test_portal_health_warns_on_recorded_volatile_url_drift() -> None:
+    """A recorded drift on a rotatable app-path URL is a non-blocking advisory."""
+    from datetime import UTC, datetime
+
+    from ...domain.portals import PORTAL_REGISTRY, UrlStability, evaluate_portal_drift
+
+    entry = next(m for m in PORTAL_REGISTRY.values() if m.url_stability is UrlStability.VOLATILE_APP_PATH)
+    drift = evaluate_portal_drift(
+        entry,
+        observed_url=str(entry.url).rstrip("/") + "/rotated-shell",
+        detected_at=datetime(2026, 6, 30, tzinfo=UTC),
+    )
+    assert drift is not None
+    row = probe_portal_registry_health(drift_events=(drift,))
+    assert row.healthy is True
+    assert row.severity is HealthSeverity.WARN
+    assert entry.portal.value in row.detail
+    assert row.remediation
+
+
+def test_portal_health_errors_on_recorded_stable_url_drift() -> None:
+    """A recorded drift on a BOE-referenced stable URL is a red integrity row."""
+    from datetime import UTC, datetime
+
+    from ...domain.portals import PORTAL_REGISTRY, UrlStability, evaluate_portal_drift
+
+    entry = next(m for m in PORTAL_REGISTRY.values() if m.url_stability is UrlStability.STABLE_PROTOCOL_GRADE)
+    drift = evaluate_portal_drift(
+        entry,
+        observed_url="https://impostor.example.org/moved",
+        detected_at=datetime(2026, 6, 30, tzinfo=UTC),
+    )
+    assert drift is not None
+    row = probe_portal_registry_health(drift_events=(drift,))
+    assert row.healthy is False
+    assert row.severity is HealthSeverity.ERROR
+    assert row.remediation
