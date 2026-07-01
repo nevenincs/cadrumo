@@ -33,7 +33,7 @@ from decimal import Decimal
 import pytest
 
 from ....core.resources import bundled_path, resources
-from ...invoices import IvaRate, iva_rate_percentage
+from ...invoices import IvaRate, iva_rate_kind, iva_rate_percentage
 from .. import (
     EUMemberState,
     IvaCatalogueError,
@@ -238,31 +238,46 @@ def test_iva_rate_slot_to_iva_rate_kind_mapping_is_total_and_consistent() -> Non
     IVA) must map to a IvaRateKind tier. The mapping is the bridge
     between the invoice-domain rate slots and the substrate's rate
     tiers, anchored to LIVA arts 90-91."""
-    # Verify the slot-to-tier contract through the public percentage helper:
-    # each numeric slot must resolve to the correct IvaRateKind tier by querying
-    # the substrate.  The mapping has exactly three numeric slots (RATE_4, RATE_10,
-    # RATE_21); RATE_0, EXEMPT, and NOT_SUBJECT are handled separately.
-    # Slot ↔ tier alignment per LIVA art 90 / 91
-    assert lookup_rate(EUMemberState.ES, IvaRateKind.GENERAL, _BINDING_DATE) is not None
-    assert lookup_rate(EUMemberState.ES, IvaRateKind.REDUCED, _BINDING_DATE) is not None
-    assert lookup_rate(EUMemberState.ES, IvaRateKind.SUPER_REDUCED, _BINDING_DATE) is not None
-    # The percentage helper bridges the same mapping and raises for unmapped slots.
-    assert iva_rate_percentage(IvaRate.RATE_21, on_date=_BINDING_DATE) is not None
-    assert iva_rate_percentage(IvaRate.RATE_10, on_date=_BINDING_DATE) is not None
-    assert iva_rate_percentage(IvaRate.RATE_4, on_date=_BINDING_DATE) is not None
+    assert {
+        rate: iva_rate_kind(rate)
+        for rate in (
+            IvaRate.RATE_0,
+            IvaRate.RATE_4,
+            IvaRate.RATE_10,
+            IvaRate.RATE_21,
+            IvaRate.EXEMPT,
+            IvaRate.NOT_SUBJECT,
+        )
+    } == {
+        IvaRate.RATE_0: IvaRateKind.ZERO,
+        IvaRate.RATE_4: IvaRateKind.SUPER_REDUCED,
+        IvaRate.RATE_10: IvaRateKind.REDUCED,
+        IvaRate.RATE_21: IvaRateKind.GENERAL,
+        IvaRate.EXEMPT: IvaRateKind.EXEMPT,
+        IvaRate.NOT_SUBJECT: None,
+    }
+
+    for rate, kind in (
+        (IvaRate.RATE_4, IvaRateKind.SUPER_REDUCED),
+        (IvaRate.RATE_10, IvaRateKind.REDUCED),
+        (IvaRate.RATE_21, IvaRateKind.GENERAL),
+    ):
+        assert lookup_rate(EUMemberState.ES, kind, _BINDING_DATE) is not None
+        assert iva_rate_percentage(rate, on_date=_BINDING_DATE) is not None
 
 
-def test_iva_rate_zero_resolves_to_zero_percent_directly() -> None:
-    """RATE_0 doesn't map through IvaRateKind — it's a direct
-    Decimal('0') return. This is correct: zero-rated supplies don't
-    need substrate lookup since the rate is structurally zero."""
+def test_iva_rate_zero_resolves_to_zero_percent_without_rate_lookup() -> None:
+    """RATE_0 maps to the ZERO substrate tier for classification, while
+    the percentage helper returns structural Decimal('0') directly."""
+    assert iva_rate_kind(IvaRate.RATE_0) is IvaRateKind.ZERO
     assert iva_rate_percentage(IvaRate.RATE_0, on_date=_BINDING_DATE) == Decimal("0")
 
 
 def test_iva_rate_exempt_and_not_subject_resolve_to_none() -> None:
-    """EXEMPT and NOT_SUBJECT lines have no numeric rate — the helper
-    must return None, anchoring the absence in the substrate
-    classification rather than producing a sentinel zero."""
+    """EXEMPT has a classification tier but no numeric percentage;
+    NOT_SUBJECT has neither a rate tier nor a numeric percentage."""
+    assert iva_rate_kind(IvaRate.EXEMPT) is IvaRateKind.EXEMPT
+    assert iva_rate_kind(IvaRate.NOT_SUBJECT) is None
     assert iva_rate_percentage(IvaRate.EXEMPT, on_date=_BINDING_DATE) is None
     assert iva_rate_percentage(IvaRate.NOT_SUBJECT, on_date=_BINDING_DATE) is None
 
