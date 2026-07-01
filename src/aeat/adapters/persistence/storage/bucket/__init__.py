@@ -1,8 +1,22 @@
 """Per-bucket directory model under ``<aeat-root>/buckets/<bucket-id>/``.
 
-Pydantic v2 strict records, error types, and the filesystem
-provisioning, manifest read/write, keystore separation, pointer-file,
-and lockfile primitives that compose the multi-bucket on-disk layout.
+Pydantic v2 strict records, error types, and filesystem primitives that compose
+the multi-bucket on-disk layout. The facade exposes
+:class:`BucketPaths` / :func:`bucket_paths` /
+:func:`provision_bucket_directory` for the ``db/``, ``blobs/``, and
+``audit/`` tree; :class:`BucketManifest`,
+:class:`ManifestKdfParams`, :class:`BucketKeySchedule`, and
+:class:`BucketLifecycleStatus` for the plaintext manifest; and
+:func:`read_manifest` / :func:`write_manifest` for strict TOML I/O.
+
+The manifest is discovery metadata only: bucket identity, operator label,
+UTC timestamps, public Argon2id KDF parameters and salt, recovery-enrollment
+state, idle-lock setting, key schedule, schema version, and lifecycle mirror.
+It must not contain passphrases, derived keys, wrapped DEKs, recovery secrets,
+taxpayer payloads, or secure-object ciphertext. Keystore helpers
+(:func:`keystore_root`, :func:`keystore_path`, and
+:func:`validate_keystore_separation`) enforce that custody material lives
+outside the ``buckets/`` tree and the per-bucket database directory.
 
 The sealed-archive surface re-exports :class:`ExportArchiveHeader`,
 :class:`SealedArchiveContents`, :func:`write_sealed_archive`, and
