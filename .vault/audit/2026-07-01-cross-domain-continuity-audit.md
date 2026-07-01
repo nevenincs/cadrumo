@@ -39,6 +39,9 @@ related:
 - Reviewed W09.P45.S312 changes to `src/aeat/application/aggregation/_iva_ledger.py`, `src/aeat/application/ledger/_preflight.py`, focused preflight tests, and locale catalogues.
 - Checked that the W05.P24 D5 reject reasons are now live through ledger preflight and all supported locales, rather than remaining Hungarian-only scaffold extras.
 - Checked validation evidence from focused ledger preflight tests, original intracom/export aggregation tests, locale scaffold/audit, placeholder parity, touched-file ruff, diff check, reviewer output, and RAG grounding.
+- Reviewed W09.P45.S303 changes to `src/aeat/application/wizard/_commands.py`, `src/aeat/entrypoints/cli/tests/test_profile_lifecycle_verbs.py`, and profile-validation locale leaves.
+- Checked that profile-create wizard validation now catches pydantic `ValidationError` before the generic CLI boundary and renders concrete `--flag` details for the joint-taxation missing-spouse case.
+- Checked validation evidence from the focused Rosa regression, the full profile lifecycle CLI module, touched-file ruff, locale scaffold/audit, direct isolated CLI output, reviewer output, and RAG grounding.
 
 ## Findings
 
@@ -77,6 +80,10 @@ No findings for the ledger import period-regression closure. Production already 
 ### w09-p45-s312 | low | no findings
 
 No findings for the D5 IVA classification locale/readiness closure. The first Hungarian-only attempt failed correctly because those keys had no live code reference; the accepted implementation promotes the existing IVA counterparty/category validator for ledger transactions, maps its D5 reasons into ledger preflight, and adds matching English, Spanish, Catalan, and Hungarian detail leaves. The preflight tests prove both blocking readiness and Hungarian rendering.
+
+### w09-p45-s303 | low | no findings
+
+No findings for the profile-create validation specificity fix. The dynamic wizard command now formats leaked `SetupAnswers` pydantic validation entries with operator-facing flag names and raises a localized `BadParameter`, so Rosa's joint-taxation path names `--spouse-tax-id` and `--taxation-type` instead of falling through to the generic command-input validation boundary. The test covers the concrete testimonial path; other wizard validation shapes now share the same generic formatter.
 
 ## Recommendations
 

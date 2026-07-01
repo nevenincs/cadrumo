@@ -755,6 +755,41 @@ def test_config_profile_create_nif_error_does_not_leak_internal_keys() -> None:
     assert "NIF" in result.output or "nif" in result.output or "tax" in result.output.lower()
 
 
+def test_config_profile_create_joint_family_validation_names_failing_flags() -> None:
+    """A cross-field profile refusal must name the concrete CLI flags."""
+
+    result = _invoke_profile(
+        (
+            "create",
+            "joint-family",
+            "--quiet",
+            "--tax-id",
+            distinct_nif("joint-family"),
+            "--entity-type",
+            "natural_person",
+            "--name",
+            "Joint",
+            "--surnames",
+            "Operator",
+            "--activity",
+            "Design",
+            "--iva-regime",
+            "GENERAL",
+            "--taxation-type",
+            "2",
+            "--family-minor-children-in-unit",
+        ),
+    )
+
+    assert result.exit_code != 0
+    assert "Traceback" not in result.output
+    assert "La entrada del comando no superó la validación" not in result.output
+    assert "command input failed validation" not in result.output
+    assert "config repair" not in result.output
+    assert "--spouse-tax-id" in result.output
+    assert "--taxation-type" in result.output
+
+
 def test_config_profile_create_invalid_nif_does_not_leave_orphan_bucket(_isolated_backend: Path) -> None:
     """A NIF validation failure must not leave a manifest-less bucket behind."""
 

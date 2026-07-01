@@ -35,12 +35,14 @@ if TYPE_CHECKING:
     from ...core.errors import AeatError
 
 import contextlib
+import re
 
 import click
 import click.types
 import typer
 import typer._click.types
-from pydantic import BaseModel
+from pydantic import BaseModel, ValidationError
+from pydantic_core import ErrorDetails
 
 from ...core.i18n import SUPPORTED_OUTPUT_LANGUAGES, tr
 from ._catalogue import SETUP_FLOW
@@ -970,6 +972,77 @@ def _refuse_foral_ccaa(canonical: dict[str, str], explicit_flags: dict[str, str]
         ) from foral_exc
 
 
+def _wizard_field_flags(flow: WizardFlow) -> dict[str, str]:
+    """Return answers-model field names mapped to their CLI flag names."""
+    return {
+        question.id.replace("-", "_"): _flag_name(question)
+        for section in flow.sections
+        for question in section.questions
+    }
+
+
+def _replace_validation_field_names(message: str, field_flags: dict[str, str]) -> str:
+    """Replace model field identifiers in ``message`` with operator-facing flags."""
+    rendered = message
+    for field_name, flag_name in sorted(field_flags.items(), key=lambda item: len(item[0]), reverse=True):
+        rendered = re.sub(rf"\b{re.escape(field_name)}\b", flag_name, rendered)
+    return rendered
+
+
+def _validation_location_flag(location: tuple[object, ...], field_flags: dict[str, str]) -> str:
+    """Render a pydantic location tuple as a flag-oriented field path."""
+    path: list[str] = []
+    for part in location:
+        if part == "__root__":
+            continue
+        if isinstance(part, str):
+            path.append(field_flags.get(part, part))
+        else:
+            path.append(str(part))
+    return ".".join(path)
+
+
+def _first_flag_mentioned(message: str, field_flags: dict[str, str]) -> str | None:
+    """Infer the failing flag from a model-level validation message."""
+    positions: list[tuple[int, str]] = []
+    for field_name, flag_name in field_flags.items():
+        match = re.search(rf"\b{re.escape(field_name)}\b", message)
+        if match is not None:
+            positions.append((match.start(), flag_name))
+    if not positions:
+        return None
+    return min(positions, key=lambda item: item[0])[1]
+
+
+def _format_wizard_validation_error(flow: WizardFlow, item: ErrorDetails) -> tuple[str, str | None]:
+    """Render one pydantic validation entry as ``--flag: message`` text."""
+    field_flags = _wizard_field_flags(flow)
+    raw_message = str(item.get("msg", "")).removeprefix("Value error, ").strip()
+    rendered_message = _replace_validation_field_names(raw_message, field_flags)
+    raw_location = tuple(item.get("loc", ()))
+    field_path = _validation_location_flag(raw_location, field_flags)
+    inferred_flag = field_path or _first_flag_mentioned(raw_message, field_flags)
+    if inferred_flag:
+        if rendered_message.startswith(f"{inferred_flag} "):
+            return rendered_message, inferred_flag
+        return f"{inferred_flag}: {rendered_message}", inferred_flag
+    return rendered_message, None
+
+
+def _wizard_validation_bad(flow: WizardFlow, error: ValidationError) -> typer.BadParameter:
+    """Convert leaked wizard answer validation into a specific CLI refusal."""
+    rendered = [_format_wizard_validation_error(flow, item) for item in error.errors()]
+    details = "; ".join(message for message, _flag in rendered)
+    message = tr(
+        "application.wizard.errors.command_input_invalid",
+        details=details or tr("application.wizard.errors.command_input_invalid_fallback"),
+    )
+    first_flag = next((flag for _message, flag in rendered if flag), None)
+    if first_flag is not None:
+        return typer.BadParameter(message, param_hint=f"'{first_flag}'")
+    return typer.BadParameter(message)
+
+
 def _run_wizard_persistence_path(
     flow: WizardFlow,
     mode: WizardPersistMode,
@@ -1130,17 +1203,20 @@ def _execute_wizard_command(
 
     _seed_output_language_from_environment(canonical)
     _refuse_foral_ccaa(canonical, explicit_flags)
-    profile_values = _run_wizard_persistence_path(
-        flow,
-        mode,
-        canonical,
-        explicit_flags,
-        _prompter=_prompter,
-        quiet=quiet,
-        accept_defaults=accept_defaults,
-        profile_name=profile_name,
-        profile_id=profile_id,
-    )
+    try:
+        profile_values = _run_wizard_persistence_path(
+            flow,
+            mode,
+            canonical,
+            explicit_flags,
+            _prompter=_prompter,
+            quiet=quiet,
+            accept_defaults=accept_defaults,
+            profile_name=profile_name,
+            profile_id=profile_id,
+        )
+    except ValidationError as exc:
+        raise _wizard_validation_bad(flow, exc) from exc
     _emit_wizard_success(
         mode,
         profile_name,
