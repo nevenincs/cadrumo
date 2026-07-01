@@ -29,6 +29,7 @@ def test_schema_selector_index_contains_modelo_profile_namespaces() -> None:
     assert "RentaFamilyProfile.descendants.tax_id" in index.profile_selectors
     assert "RentaFamilyProfile.ascendants.cohabiting_descendant_count" in index.profile_selectors
     assert "enrollment.large_company" in index.schedule_predicates
+    assert "enrollment.public_administration_budget_gt_6000000" in index.schedule_predicates
     assert "tax.id" not in index.schedule_predicates
     assert "profile_tax_id" in index.export_headers
 
