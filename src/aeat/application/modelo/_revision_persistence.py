@@ -2,8 +2,7 @@
 
 The calculate path stores draft :class:`CalculationRevision` rows with their
 provenance-bearing :class:`CasillaObservation` entries, advances the parent
-:class:`aeat.domain.modelos.WorkUnit` pointer, and emits
-``modelo.calculation.created`` through the
+:class:`WorkUnit` pointer, and emits ``modelo.calculation.created`` through the
 :class:`BucketEventHistoryRepository` catalogue. The event is a lightweight join
 record; full legal/source provenance remains on the persisted calculation
 revision's observations, with ``has_provenance`` signalling that the join is
@@ -13,10 +12,10 @@ The filing path runs here only after its caller has passed readiness, workflow,
 and clean-state gates. It records the local/internal filing transition: create a
 current :class:`ModeloRecord`, supersede any prior current filing for the work
 target, move calculation revisions into ``PRESENTADO`` states, and co-emit
-the :class:`aeat.domain.modelos.TransactionRevisionParticipationIndex` writes
+the :class:`~aeat.domain.modelos.TransactionRevisionParticipationIndex` writes
 plus cross-period observation projections. It never submits to AEAT and never
-turns the non-official ``app_filing`` carry projection into filing-grade
-external evidence.
+turns the non-official ``app_filing`` carry projection into filing-grade external
+evidence.
 
 See Also:
     :func:`aeat.application.modelo.file_modelo_revision`:
@@ -258,7 +257,7 @@ def _build_filed_participation_writes(
 
     For each ``source_transaction_id`` of the filed revision, load that
     transaction's
-    :class:`aeat.domain.modelos.TransactionRevisionParticipationIndex`, upsert
+    :class:`~aeat.domain.modelos.TransactionRevisionParticipationIndex`, upsert
     the ``PRESENTADO`` participation carrying the ``filing_record_id``
     (replacing the prior verified entry for the same revision in place), and
     return the resulting ``SecureObjectWrite`` so the caller co-emits them in
@@ -306,21 +305,22 @@ def persist_filed_revision(
     refunded: bool = False,
     taxpayer_nif: str | None = None,
 ) -> ModeloRecord:
-    """Persist the filing transition for a verified-complete calculation revision and return a :class:`ModeloRecord`.
+    """Persist a verified-complete calculation revision and return a :class:`ModeloRecord`.
 
     The caller has already run verification/workflow/readiness gates. The
     ``target`` :class:`CalculationRevision` is the verified-complete source
     revision that becomes ``PRESENTADO`` when this transition succeeds.
-    The parent :class:`aeat.domain.modelos.WorkUnit` is advanced to the new
-    current filing record after the calculation and filing catalogues are saved.
+    The parent :class:`WorkUnit` is advanced to the new current filing record
+    after the calculation and filing catalogues are saved.
 
     When ``calculation_observation_repository`` is supplied, the filed revision's
     observations are co-emitted with ``MODELO_FILED`` through
-    :func:`persist_filed_revision_observation`, so later calculations can carry
-    them through the ``previous_filing`` resolver. The record is stamped with
-    NON-official ``app_filing`` and never satisfies the cross-period clean-state
-    filing gate; use :func:`aeat.application.modelo.import_external_filing_evidence`
-    when the current record must carry
+    :func:`~aeat.application.modelo._filed_revision_observation.persist_filed_revision_observation`,
+    so later calculations can carry them through the ``previous_filing`` resolver.
+    The record is stamped with NON-official ``app_filing`` and never satisfies the
+    cross-period clean-state filing gate; use
+    :func:`aeat.application.modelo.import_external_filing_evidence` when the
+    current record must carry
     :class:`~aeat.domain.modelos.ExternalEvidence`.
 
     ``refunded`` is resolved once at the calculate/file boundary by
