@@ -46,10 +46,10 @@ from pydantic import BaseModel, Field
 
 from ...adapters.persistence.storage import (
     WITHHOLDING_OBSERVATIONS_NAMESPACE,
+    SecureBoundRepository,
     SensitivityClass,
     safe_repository_id,
 )
-from ...adapters.persistence.storage.envelope import SecureBoundRepository
 from ...core import STRICT_FROZEN_CONFIG, Period
 from ...core.external_constants import UTF_8_ENCODING
 from ...core.time import now
