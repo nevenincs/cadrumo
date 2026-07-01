@@ -794,7 +794,12 @@ def _evaluate_verification_predicates(
     profile: TaxpayerProfile,
     text_values: Mapping[CasillaId, str] = MappingProxyType({}),
 ) -> list[ModeloVerificationFinding]:
-    """Evaluate Layer 2 cross-casilla predicates; return findings for violations or advisories.
+    """Evaluate Layer 2 cross-casilla predicates into verification findings.
+
+    ``predicates`` are
+    :class:`~aeat.domain.calculations.registry.VerificationPredicateDefinition`
+    entries from the selected registry snapshot. The returned records are
+    :class:`~aeat.domain.modelos.ModeloVerificationFinding` values.
 
     ``text_values`` carries operator-entered raw strings (e.g.
     :attr:`~aeat.domain.modelos.CalculationRevision.input_values_by_casilla_id`),
@@ -808,9 +813,10 @@ def _evaluate_verification_predicates(
     WARNING-severity ADVISORY finding and the verified-complete grant remains
     possible if no blocking findings exist.
 
-    ``profile`` is threaded through to support profile-state-aware
-    predicate operators such as ``profile_field_required`` and
-    ``profile_flag_enabled``. Casilla-only operators ignore the parameter.
+    ``profile`` is a :class:`~aeat.domain.deadlines.TaxpayerProfile` threaded
+    through to support profile-state-aware predicate operators such as
+    ``profile_field_required`` and ``profile_flag_enabled``. Casilla-only
+    operators ignore the parameter.
 
     See Also:
         :func:`_evaluate_predicate_expression`:
@@ -961,7 +967,9 @@ def _missing_evidence_findings(
 ) -> list[ModeloVerificationFinding]:
     """Build verification findings for evidence-less positive IVA rows.
 
-    Loads the revision's source transactions and projects each
+    Loads the :class:`~aeat.domain.modelos.CalculationRevision` source
+    transactions for the supplied :class:`~aeat.domain.modelos.WorkUnit` and
+    projects each
     :class:`~aeat.application.aggregation.CalculationSourceDiagnostic`
     (reason ``missing_transaction_evidence``) into a
     :class:`~aeat.domain.modelos.ModeloVerificationFinding`. Deductible input-IVA
@@ -1114,16 +1122,50 @@ def verify_modelo_revision(
     revision. WARNING-severity advisories remain report content; only BLOCKING
     severity can refuse the transition.
 
+    Args:
+        calculation_revision_id: Stable id of the draft
+            :class:`~aeat.domain.modelos.CalculationRevision` to verify.
+        actor: Operator label recorded on the verification report and bucket
+            history event.
+        workflow_profile: :class:`~aeat.domain.deadlines.TaxpayerProfile`
+            supplying profile facts for workflow, deadline, applicability, and
+            registry predicate gates.
+        work_unit_repository: Optional work-unit repository port.
+        calculation_repository: Optional calculation-revision repository port.
+        filing_repository: Optional modelo-record repository port for filed-state
+            and cross-period checks.
+        transaction_repository: Optional
+            :class:`~aeat.domain.transactions.TransactionCatalogueRepository`
+            used for transaction-evidence advisories.
+        verification_repository: Optional verification-report repository port.
+        bucket_event_repository: Optional bucket-event history repository port.
+        iva_compensation_decision_repository: Optional IVA-wallet decision
+            repository used by Modelo 303 verification gates.
+        calculation_observation_repository: Optional calculation-observation
+            repository used by cross-period clean-state checks.
+        participation_index_repository: Optional transaction participation-index
+            repository co-emitted with verified revisions.
+        cross_period_expected_member_sets: Optional expected-member overrides
+            for the cross-period clean-state gate.
+        workflow_engine: Optional :class:`~aeat.application.workflow.WorkflowEngine`
+            override for tests and controlled workflow runs.
+        workflow_runs_dir: Optional workflow-runs directory override.
+        settings: Optional runtime settings for workflow-engine construction.
+        clock: Optional timestamp override for deterministic verification.
+
     Returns:
         The persisted :class:`~aeat.domain.modelos.VerificationReport`.
 
     Raises:
-        CalculationRevisionNotFoundError: The requested calculation revision does
-            not exist in the active catalogue.
-        CalculationRevisionStateError: The revision is not in ``BORRADOR`` state.
-        WorkUnitNotFoundError: The owning work unit is missing.
-        ModeloCrossPeriodCleanStateError: A required cross-period dependency has a
-            blocking clean-state finding.
+        :class:`~aeat.application.modelo.CalculationRevisionNotFoundError`: The
+            requested calculation revision does not exist in the active
+            catalogue.
+        :class:`~aeat.application.modelo.CalculationRevisionStateError`: The
+            revision is not in ``BORRADOR`` state.
+        :class:`~aeat.application.modelo.WorkUnitNotFoundError`: The owning work
+            unit is missing.
+        :class:`~aeat.application.modelo.ModeloCrossPeriodCleanStateError`: A
+            required cross-period dependency has a blocking clean-state finding.
     """
     cr_repo = calculation_repository or CalculationRevisionCatalogueRepository()
     wu_repo = work_unit_repository or WorkUnitCatalogueRepository()
