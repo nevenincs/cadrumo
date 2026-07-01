@@ -89,6 +89,7 @@ _UNSAFE_IDS: tuple[str, ...] = (
     "a/b",
     "a\\b",
 )
+_FOREIGN_CLASS_WRITTEN_AT = datetime(2026, 5, 26, 18, 0, 0, tzinfo=UTC)
 
 
 @dataclass(frozen=True)
@@ -248,7 +249,7 @@ def _foreign_class_object_refused[T: BaseModel](
     # to a static ``type[T]`` here, so the cast to ``Any`` is required to
     # call the resulting parameterised factory without a spurious type error.
     envelope_factory = cast(Any, Envelope.__class_getitem__(payload_cls))
-    written_at = datetime.now(UTC)
+    written_at = _FOREIGN_CLASS_WRITTEN_AT
     bad = envelope_factory(
         schema_version=repo.schema_version,
         written_at=written_at,
