@@ -43,7 +43,7 @@ _M349_ROW_FIELD_TEMPLATE_PREFIXES = ("op.", "rect.")
 def binding_encoded_option_payloads(
     options: tuple[BooleanBindingEncodedValue, ...],
 ) -> tuple[BindingEncodedOptionPayload, ...]:
-    """Project the registry boolean-encoding rows onto the CLI payload shape."""
+    """Project registry boolean-encoding rows onto :class:`BindingEncodedOptionPayload` rows."""
     return tuple(
         BindingEncodedOptionPayload(
             encoded_value=option.encoded_value,
