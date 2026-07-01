@@ -51,6 +51,7 @@ from ...aggregation._ledger_filing_snapshot import (
     compute_ledger_filing_snapshot,
 )
 from ...calculations import IvaWalletDecisionRepository
+from ...ledger import PurchaseInvoiceEvidenceService, attach_manual_transaction_evidence
 from ...user_profile import UserProfileLifecycleRepository
 from .. import (
     calculate_modelo_revision_from_bucket_aggregation,
@@ -298,7 +299,7 @@ def _persist_legacy_verified_revision(
     return legacy
 
 
-def test_modelo_303_verify_blocks_deductible_vat_missing_evidence_but_warns_output_gap(
+def test_modelo_303_verify_warns_deductible_vat_missing_evidence_and_output_gap(
     secure_objects: SecureObjectRepository,
 ) -> None:
     revision, sale, purchase, wu_repo, cr_repo, filing_repo, vr_repo, event_repo, tx_repo = _calculate_irene_revision(
@@ -322,12 +323,13 @@ def test_modelo_303_verify_blocks_deductible_vat_missing_evidence_but_warns_outp
         clock=_VERIFIED_AT,
     )
 
-    assert report.granted_verificado_completo is False
-    assert report.completeness_status is VerificationCompletenessStatus.BLOCKED
+    assert report.granted_verificado_completo is True
+    assert report.completeness_status is VerificationCompletenessStatus.COMPLETE
     blocking = [
         finding for finding in report.findings if finding.severity is ModeloVerificationFindingSeverity.BLOCKING
     ]
     warning = [finding for finding in report.findings if finding.severity is ModeloVerificationFindingSeverity.WARNING]
+    assert blocking == []
     expected_source_refs = tuple(dict.fromkeys(ref for obs in revision.observations for ref in obs.source_refs))
     evidence_findings = [
         finding
@@ -344,7 +346,7 @@ def test_modelo_303_verify_blocks_deductible_vat_missing_evidence_but_warns_outp
         for source_ref in finding.source_refs
     )
     assert any(
-        finding.kind is ModeloVerificationFindingKind.BLOCKING_RULE
+        finding.kind is ModeloVerificationFindingKind.ADVISORY
         and purchase.transaction_id in finding.message
         and "deductible VAT" in finding.message
         and "aeat app ledger evidence add" in (finding.next_action or "")
@@ -352,7 +354,7 @@ def test_modelo_303_verify_blocks_deductible_vat_missing_evidence_but_warns_outp
             f"aeat app ledger attach {purchase.transaction_id} --purchase-invoice-evidence-id"
             in (finding.next_action or "")
         )
-        for finding in blocking
+        for finding in warning
     )
     assert any(
         finding.kind is ModeloVerificationFindingKind.ADVISORY
@@ -366,8 +368,66 @@ def test_modelo_303_verify_blocks_deductible_vat_missing_evidence_but_warns_outp
     )
     stored = cr_repo.load().get(revision.calculation_revision_id)
     assert stored is not None
-    assert stored.state is CalculationRevisionState.BORRADOR
-    assert stored.ledger_filing_evidence is None
+    assert stored.state is CalculationRevisionState.VERIFICADO_COMPLETO
+    assert stored.ledger_filing_evidence is not None
+
+
+def test_modelo_303_verify_uses_attached_purchase_invoice_evidence(
+    tmp_path: Path,
+) -> None:
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
+        revision, _sale, purchase, wu_repo, cr_repo, filing_repo, vr_repo, event_repo, tx_repo = (
+            _calculate_irene_revision(profile.repository)
+        )
+        invoice = tmp_path / "supplier-invoice.pdf"
+        invoice.write_bytes(b"%PDF-1.4\n1 0 obj<</Type/Catalog>>endobj\ntrailer<</Root 1 0 R>>\n%%EOF\n")
+        evidence = PurchaseInvoiceEvidenceService(
+            settings=profile.settings,
+            bucket_event_repository=event_repo,
+        ).add(bucket_id=_BUCKET_ID, source_path=invoice)
+
+        attached = attach_manual_transaction_evidence(
+            bucket_id=_BUCKET_ID,
+            transaction_id=purchase.transaction_id,
+            purchase_invoice_evidence_id=evidence.record.evidence_id,
+            actor="operator",
+            transaction_repository=tx_repo,
+            bucket_event_repository=event_repo,
+            occurred_at=_VERIFIED_AT,
+        )
+
+        assert attached.transaction.purchase_invoice_evidence_id == evidence.record.evidence_id
+        reloaded = tx_repo.load().get(purchase.transaction_id)
+        assert reloaded is not None
+        assert reloaded.purchase_invoice_evidence_id == evidence.record.evidence_id
+
+        report = verify_modelo_revision(
+            revision.calculation_revision_id,
+            actor="operator",
+            workflow_profile=_workflow_profile(),
+            work_unit_repository=wu_repo,
+            calculation_repository=cr_repo,
+            filing_repository=filing_repo,
+            verification_repository=vr_repo,
+            bucket_event_repository=event_repo,
+            transaction_repository=tx_repo,
+            clock=_VERIFIED_AT,
+        )
+
+        assert report.granted_verificado_completo is True
+        assert report.completeness_status is VerificationCompletenessStatus.COMPLETE
+        assert not any(
+            purchase.transaction_id in finding.message and "deductible VAT" in finding.message
+            for finding in report.findings
+        )
+        stored = cr_repo.load().get(revision.calculation_revision_id)
+        assert stored is not None
+        assert stored.ledger_filing_evidence is not None
+        purchase_rows = [
+            row for row in stored.ledger_filing_evidence.rows if row.transaction_id == purchase.transaction_id
+        ]
+        assert len(purchase_rows) == 1
+        assert purchase_rows[0].purchase_invoice_evidence_id == evidence.record.evidence_id
 
 
 def _work_unit() -> WorkUnit:
