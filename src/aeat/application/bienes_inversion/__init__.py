@@ -38,7 +38,12 @@ class BienesInversionRegisterService:
         return self._repository.add(record)
 
     def list_all(self) -> BienesInversionIvaRegister:
-        """Return the full register (empty when nothing has been declared)."""
+        """Return the full active-profile register.
+
+        Returns:
+            A :class:`BienesInversionIvaRegister`; empty when nothing has been
+            declared.
+        """
         return self._repository.load()
 
 

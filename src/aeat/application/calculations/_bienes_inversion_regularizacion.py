@@ -58,8 +58,9 @@ def build_bienes_inversion_regularizacion_advisory(
             percentages keyed by record identifier (absent keys are pending).
 
     Returns:
-        ``(projection, diagnostic)`` — the diagnostic is ``None`` when there is
-        nothing to regularise.
+        ``(projection, diagnostic)`` where ``projection`` is a
+        :class:`RegistroRegularizacionResult`; the diagnostic is ``None`` when
+        there is nothing to regularise.
     """
     projection = compute_registro_regularizacion(
         register,

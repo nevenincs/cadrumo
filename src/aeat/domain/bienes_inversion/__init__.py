@@ -1,8 +1,10 @@
 """Capital-goods IVA deduction-regularización register and annual compute.
 
 Models the LIVA arts. 107-110 regularización de deducciones por bienes de
-inversión: a durable, cross-year, per-capital-good register plus the pure
-art-109 single-good annual adjustment.
+inversión: a durable, cross-year :class:`BienesInversionIvaRegister`, one
+:class:`BienInversionIvaRecord` per capital good, and the pure art-109
+:class:`RegularizacionAnualResult` computed for each supplied definitive
+prorrata percentage.
 
 The register is a taxpayer-fact store (owned goods, acquisition year, cuota
 soportada, initial definitive prorrata percentage), sibling to
@@ -10,6 +12,13 @@ soportada, initial definitive prorrata percentage), sibling to
 4/9-year windows, the over-10-point gate, and the /5, /10 divisors) live in the
 central authoring surface :mod:`aeat.core.external_constants`, grounded verbatim
 in the bundled consolidated LIVA corpus.
+
+Register-wide projection returns :class:`RegistroRegularizacionResult`: each
+art-108-eligible in-window good is either computed into the proposed Modelo 303
+casilla 43 / Modelo 390 regularización value, or reported as pending the
+separately deferred current-year prorrata-definitiva input. This domain module
+does not read the secure-object store or derive prorrata; application and
+persistence layers supply those facts.
 
 The art-110 disposal (transmisión) compute is deliberately deferred; the
 disposal fields are carried on :class:`BienInversionIvaRecord` so no schema
@@ -329,7 +338,7 @@ class BienesInversionIvaRegister(BaseModel):
         return self
 
     def in_window_records(self, regularization_year: int) -> tuple[BienInversionIvaRecord, ...]:
-        """Return every art-108-eligible record in its art-107 window for the year."""
+        """Return each art-108-eligible :class:`BienInversionIvaRecord` in-window for the year."""
         return tuple(
             record
             for record in self.records
