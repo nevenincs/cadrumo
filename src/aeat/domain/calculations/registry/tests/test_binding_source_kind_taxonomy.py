@@ -171,14 +171,15 @@ def test_invoice_frozenset_is_the_invoice_subset_of_the_enum() -> None:
     assert set(BindingSourceKind) >= INVOICE_BINDING_SOURCE_KINDS
 
 
-def test_ledger_frozenset_covers_all_five_ledger_members() -> None:
-    """``LEDGER_BINDING_SOURCE_KINDS`` is exactly the five ledger members.
+def test_ledger_frozenset_covers_all_six_ledger_members() -> None:
+    """``LEDGER_BINDING_SOURCE_KINDS`` is exactly the six ledger members.
 
     Guards against the historical regression where the set listed only two of
     the ledger kinds (OSS and renta-income were missing), which silently
     excluded those modelos from the ledger preflight. The fifth member is the
     M130 deductible-expense (gasto) aggregation source, the OUTGOING sibling of
-    the renta-income source.
+    the renta-income source; the sixth is the M151 impatriado (Ley Beckham)
+    Spanish-source base aggregation source.
     """
     assert {
         BindingSourceKind.LEDGER_OSS_AGGREGATION,
@@ -186,9 +187,10 @@ def test_ledger_frozenset_covers_all_five_ledger_members() -> None:
         BindingSourceKind.LEDGER_RENTA_EXPENSE_AGGREGATION,
         BindingSourceKind.LEDGER_RENTA_INCOME_AGGREGATION,
         BindingSourceKind.LEDGER_RENTA_GASTO_AGGREGATION,
+        BindingSourceKind.LEDGER_IMPATRIADO_INCOME_AGGREGATION,
     } == LEDGER_BINDING_SOURCE_KINDS
     assert set(BindingSourceKind) >= LEDGER_BINDING_SOURCE_KINDS
-    assert len(LEDGER_BINDING_SOURCE_KINDS) == 5
+    assert len(LEDGER_BINDING_SOURCE_KINDS) == 6
 
 
 def test_counterpart_frozenset_is_a_subset_of_the_enum() -> None:

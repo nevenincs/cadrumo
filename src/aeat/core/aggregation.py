@@ -256,6 +256,17 @@ class BindingSourceKind(StrEnum):
     # mechanism (invoice-evidence + category-profile + annual-window) and is
     # deliberately not reused for the M130 quarterly cumulative gasto sum.
     LEDGER_RENTA_GASTO_AGGREGATION = "ledger_renta_gasto_aggregation"
+    # Modelo 151 régimen especial de impatriados (Ley Beckham, art. 93 LIRPF)
+    # Spanish-source base aggregation. Reads the bucket ledger like the other
+    # ledger-aggregation sources, but its per-row classifier admits INCOMING
+    # income ONLY when source_jurisdiction resolves to ES (art. 93.2: the
+    # impatriado is taxed by IRNR scope rules, not the art. 8 worldwide base),
+    # admits trabajo income (the class the M130 income pipeline excludes), and
+    # segregates every foreign-source or jurisdiction-unresolved row as a typed
+    # BECKHAM_FOREIGN_SOURCE_SEGREGATED issue (never a silent ES coercion). Feeds
+    # impatriado.base-liquidable-general (ADR
+    # 2026-07-01-modelo-151-beckham-source-scope).
+    LEDGER_IMPATRIADO_INCOME_AGGREGATION = "ledger_impatriado_income_aggregation"
     # Per-perceptor retención aggregation: the calc-mesh source that reads the
     # dedicated per-perceptor retención store (RETENCION_OBSERVATIONS_NAMESPACE,
     # operator-supplied — NOT the bucket ledger, so deliberately NOT in
@@ -403,14 +414,16 @@ LEDGER_BINDING_SOURCE_KINDS: Final[frozenset[BindingSourceKind]] = frozenset(
         BindingSourceKind.LEDGER_RENTA_EXPENSE_AGGREGATION,
         BindingSourceKind.LEDGER_RENTA_INCOME_AGGREGATION,
         BindingSourceKind.LEDGER_RENTA_GASTO_AGGREGATION,
+        BindingSourceKind.LEDGER_IMPATRIADO_INCOME_AGGREGATION,
     },
 )
-"""Ledger-aggregation binding source kinds (all five), derived from the enum.
+"""Ledger-aggregation binding source kinds (all six), derived from the enum.
 
 Every binding whose ``source`` is a member reads its values from the
 bucket-scoped ledger (transaction-classified IVA / OSS aggregation, Renta
-first-slice income/expense aggregation, or the M130 pago-fraccionado gasto
-cumulative aggregation). Cross-domain consumers route through this frozenset
+first-slice income/expense aggregation, the M130 pago-fraccionado gasto
+cumulative aggregation, or the M151 impatriado Spanish-source base
+aggregation). Cross-domain consumers route through this frozenset
 so the registry stays the single source of truth for ledger readiness.
 """
 

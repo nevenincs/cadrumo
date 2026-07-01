@@ -528,6 +528,7 @@ def _resolve_bucket_source_mesh(
     from ..aggregation import (
         CalculationSourceContext,
         CalculationSourceDiagnostic,
+        LedgerImpatriadoIncomeAggregationSourceResolver,
         LedgerIvaAggregationSourceResolver,
         LedgerRentaExpenseAggregationSourceResolver,
         LedgerRentaGastoAggregationSourceResolver,
@@ -567,6 +568,14 @@ def _resolve_bucket_source_mesh(
             # (ledger_renta_gasto_aggregation) — the OUTGOING sibling of the
             # income resolver, same cumulative quarterly window.
             LedgerRentaGastoAggregationSourceResolver(
+                transaction_repository=transaction_repository,
+            ).resolve(context),
+            # M151 impatriado (Ley Beckham) Spanish-source base
+            # (ledger_impatriado_income_aggregation): folds only ES-source income
+            # into impatriado.base-liquidable-general over the annual ejercicio and
+            # segregates every foreign / jurisdiction-unresolved row as a typed
+            # BECKHAM_FOREIGN_SOURCE_SEGREGATED source diagnostic (art. 93.2 LIRPF).
+            LedgerImpatriadoIncomeAggregationSourceResolver(
                 transaction_repository=transaction_repository,
             ).resolve(context),
             # M369 OSS/IOSS (ledger_oss_aggregation).  The live path projects
