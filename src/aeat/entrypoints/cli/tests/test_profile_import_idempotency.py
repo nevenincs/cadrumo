@@ -2,7 +2,7 @@
 
 Import idempotency contract:
   - Re-importing the same bundle twice produces exactly ONE profile; the
-    second attempt is refused with "already registered".
+    second attempt is refused with a UUID collision message.
   - Re-importing a bundle with ``--label <taken>`` when that label belongs
     to a different UUID is refused until the operator picks a fresh label.
   - Mutating the bundle's ``profile_id`` before a second import causes the
@@ -83,10 +83,13 @@ def _import_bundle(
     *,
     json_format: bool = False,
     label: str | None = None,
+    output_language: str | None = None,
 ) -> Result:
     args = ["config", "profile", "import", str(bundle_path)]
     if label is not None:
         args.extend(("--label", label))
+    if output_language is not None:
+        args.extend(("--output-language", output_language))
     if json_format:
         args = ["--format", "json", *args]
     return _invoke(args)
@@ -122,6 +125,19 @@ def _create_minimal_profile_and_export(bundle_path: Path) -> str:
     exported_id = raw["profile"]["profile_id"]
     assert_public_profile_id_redacted(r_export.output, exported_id)
     return exported_id
+
+
+def _assert_uuid_collision_message(output: str) -> None:
+    lowered = output.lower()
+    assert "uuid" in lowered and "conflict" in lowered, output
+    assert "label" not in lowered, output
+
+
+def _assert_label_collision_message(output: str, label: str) -> None:
+    lowered = output.lower()
+    assert label in output, output
+    assert "label" in lowered and "already in use" in lowered, output
+    assert "uuid" not in lowered, output
 
 
 def _create_legal_entity_profile_and_export(bundle_path: Path) -> str:
@@ -201,7 +217,7 @@ def test_reimport_same_bundle_is_refused(tmp_path: Path) -> None:
     """Re-importing the same bundle in the same storage root is refused.
 
     The profile_id UUID already exists locally after the first import, so
-    the second attempt must be refused with a clear "already registered"
+    the second attempt must be refused with a clear UUID collision
     message.  The storage root must still contain exactly ONE profile after
     both attempts.
     """
@@ -212,10 +228,10 @@ def test_reimport_same_bundle_is_refused(tmp_path: Path) -> None:
     # The source profile is already present (created above).
     # A first import attempt into the SAME root where the source profile
     # lives must fail — profile_id UUID collision.
-    r_first = _import_bundle(bundle_path)
+    r_first = _import_bundle(bundle_path, output_language="en")
     assert r_first.exit_code != 0, r_first.output
     assert_public_profile_id_not_leaked(r_first.output, exported_id)
-    assert "already registered" in r_first.output or "profile" in r_first.output.lower()
+    _assert_uuid_collision_message(r_first.output)
     assert "Traceback" not in r_first.output
 
     # Import into a fresh root succeeds once.
@@ -227,10 +243,10 @@ def test_reimport_same_bundle_is_refused(tmp_path: Path) -> None:
         assert ok_payload["display_name"] == "idempotency-test"
 
         # Second import into the same fresh root must be refused (UUID taken).
-        r_second = _import_bundle(bundle_path)
+        r_second = _import_bundle(bundle_path, output_language="en")
         assert r_second.exit_code != 0, r_second.output
         assert_public_profile_id_not_leaked(r_second.output, exported_id)
-        assert "already registered" in r_second.output or "profile" in r_second.output.lower()
+        _assert_uuid_collision_message(r_second.output)
         assert "Traceback" not in r_second.output
 
         # Confirm exactly one profile is present — list must return one entry.
@@ -278,15 +294,17 @@ def test_label_collision_different_uuid_refused_even_with_explicit_label(tmp_pat
 
         # Import the bundle without --label: display_name is "idempotency-test",
         # which is already taken by the locally-minted profile → refused.
-        r_import = _import_bundle(bundle_path)
+        r_import = _import_bundle(bundle_path, output_language="en")
         assert r_import.exit_code != 0, r_import.output
         assert_public_profile_id_not_leaked(r_import.output, exported_id)
+        _assert_label_collision_message(r_import.output, "idempotency-test")
         assert "Traceback" not in r_import.output
 
         # Passing --label with the SAME taken name is also refused.
-        r_explicit = _import_bundle(bundle_path, label="idempotency-test")
+        r_explicit = _import_bundle(bundle_path, label="idempotency-test", output_language="en")
         assert r_explicit.exit_code != 0, r_explicit.output
         assert_public_profile_id_not_leaked(r_explicit.output, exported_id)
+        _assert_label_collision_message(r_explicit.output, "idempotency-test")
         assert "Traceback" not in r_explicit.output
 
         # Passing --label with a FREE name succeeds.

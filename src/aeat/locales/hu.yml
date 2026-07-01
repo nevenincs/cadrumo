@@ -2523,12 +2523,11 @@ cli:
       import_invalid_tax_id: 'A profilcsomag adóazonosítója érvénytelen: %{error}.
         Javítsd az azonosítót és exportáld újra, vagy érvényes csomagot importálj.'
       import_label_help: 'Az importált profil megjelenítési neve; alapértelmezés:
-        a csomagban tárolt név. Használja második példány importálásához új felirat
-        alatt.'
+        a csomagban tárolt név. Akkor használja, ha a tárolt címke már foglalt.'
       import_label_taken: Már létezik %{name} nevű profil. Futtassa újra `--label
         ÚJ_NÉV` kapcsolóval más névvel való importáláshoz.
-      import_label_taken_different_id: A megadott felirat egy másik azonosítójú profil
-        által foglalt.
+      import_label_taken_different_id: A(z) %{name} profilcímke már használatban
+        van. Az importáláshoz adjon meg másik címkét a --label ÚJ_NÉV kapcsolóval.
       import_missing_bundle: 'A profilcsomag nem található: %{path}'
       import_missing_filing_baseline: 'A profilcsomagból hiányoznak a bevallási azonosító
         adatok. Javítsa a csomagot, vagy exportáljon újra teljes profilt ezekkel a
