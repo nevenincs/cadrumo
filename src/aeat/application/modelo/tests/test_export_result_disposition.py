@@ -79,8 +79,8 @@ def _result_disposition_revision(
             CasillaObservation(
                 casilla_id=casilla_id,
                 value=value,
-                legal_refs=("result-disposition-test",),
-                source_refs=("result-disposition-test",),
+                legal_refs=("ley-58-2003:art-120",),
+                source_refs=("aeat-modelo-disposition-fixture",),
             )
             for casilla_id, value in casilla_values.items()
         ),
