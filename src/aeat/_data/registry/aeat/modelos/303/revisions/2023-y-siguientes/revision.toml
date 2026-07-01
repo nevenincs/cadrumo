@@ -23,13 +23,23 @@ source_refs = ["aeat-dr-303-2025"]
 
 [[revisions.2023-y-siguientes.verification_expectations]]
 id = "modelo-303-iva-chain-verification"
-computed_casilla_ids = ["iva.cuota-devengada-total", "iva.cuota-deducible-total", "iva.resultado-regimen-general", "64", "66", "iva.compensacion-aplicada-periodo", "iva.compensacion-pendiente-periodos-posteriores", "iva.resultado", "71", "iva.compensacion-generada-periodo", "iva.compensacion-disponible-fin-periodo"]
+computed_casilla_ids = ["iva.cuota-devengada-total", "iva.cuota-deducible-total", "iva.resultado-regimen-general", "64", "66", "iva.compensacion-aplicada-periodo", "iva.compensacion-pendiente-periodos-posteriores", "iva.resultado", "71", "iva.compensacion-generada-periodo", "iva.compensacion-disponible-fin-periodo", "27", "45"]
 tolerance = "0.00"
 rounding = "money-2"
 min_coverage = "1"
 discrepancy_causes = ["extraction_unreliable", "unmodelled_rule", "rounding", "correctness_divergence"]
 legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
 source_refs = ["aeat-dr-303-2025", "aeat-modelo-303-procedure", "boe-modelo-303-2008-form"]
+# Grounded against the AEAT Manual practico IVA 2024, Cap. 9 "La declaracion-
+# resumen anual. Modelo 390", 1T supuesto practico (a domestic-general-21
+# ventas/servicios + recargo de equivalencia + adquisicion intracomunitaria +
+# importacion + compensacion-pendiente-anteriores worked example): "TOTAL
+# CUOTA DEVENGADA: 23.088 euros" (casilla 27), "TOTAL A DEDUCIR: 16.800 euros"
+# (casilla 45), "Diferencia a ingresar: 3.288 euros" (casilla 71) and its own
+# "Casilla 69" resultado line (iva.resultado). See
+# test_m303_2024_regimen_general_manual_worked_example.py and
+# corpus/manual_oracles/modelo-303-2024-regimen-general-recargo-intracomunitaria-importacion.json.
+externally_grounded_casilla_ids = ["27", "45", "71", "iva.resultado"]
 
 [[revisions.2023-y-siguientes.bindings]]
 id = "modelo-303-iva-repercutido-general-cuota"
@@ -184,7 +194,22 @@ op = "copy"
 id = "modelo-303-iva-cuota-devengada-total"
 target_casilla_id = "iva.cuota-devengada-total"
 rounding = "money-2"
-legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+# Casilla 27 = suma de [03]+[06]+[09]+[11]+[13]+[15]+[18]+[21]+[24]+[26] (Orden
+# EHA/3786/2008, instrucciones casilla 27). The recargo de equivalencia cuota
+# tiers (casillas 18/21/24, LIVA art. 161) are bound from the ledger
+# (modelo-303-recargo-equivalencia-{super-reducido,reducido,general}-cuota) but
+# were omitted from this aggregate, so a supplier that charges recargo to a
+# recargo-de-equivalencia customer had its recargo cuota silently excluded from
+# "Total cuota devengada" (casilla 27) and therefore from the resultado chain —
+# grounded and cross-validated against four independent AEAT Manual practico
+# IVA 2024 worked examples (Cap. 9 "La declaracion-resumen anual. Modelo 390"),
+# each of which explicitly sums its own "Recargo de equivalencia" line into its
+# printed "TOTAL CUOTA DEVENGADA" (1T: 17.430+1.248+4.410=23.088; 2T:
+# 19.110+4.410+624-2.520=21.624; 3T: 19.782-1.260+1.248+2.520=22.290; 4T:
+# 21.420-630+624=21.414). Casillas 25/26 (modificacion bases y cuotas recargo)
+# have no ledger binding yet and are not summed here; they remain out of scope
+# of this fix.
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "ley-37-1992:art-161", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
 source_refs = ["aeat-dr-303-2025", "aeat-modelo-303-procedure", "boe-modelo-303-2008-form"]
 
 [[revisions.2023-y-siguientes.formulas.source_citations]]
@@ -211,6 +236,15 @@ casilla_id = "iva.autorepercutido.interior.devengado"
 
 [[revisions.2023-y-siguientes.formulas.expression.args]]
 casilla_id = "iva.autoconsumo.promotor.cuota"
+
+[[revisions.2023-y-siguientes.formulas.expression.args]]
+casilla_id = "18"
+
+[[revisions.2023-y-siguientes.formulas.expression.args]]
+casilla_id = "21"
+
+[[revisions.2023-y-siguientes.formulas.expression.args]]
+casilla_id = "24"
 
 [[revisions.2023-y-siguientes.formulas]]
 id = "modelo-303-autoconsumo-promotor-cuota"
@@ -902,7 +936,38 @@ source_refs = ["boe-modelo-303-2008-form", "aeat-modelo-303-procedure"]
 
 # Monthly deadline windows for SII-enrolled taxpayers (Art. 62.6 RD 1624/1992,
 # Orden HFP/187/2017). The 2026 calendar materialises periods 01 through 11;
-# period 12 belongs to the next calendar cycle.
+# period 12 belongs to the next calendar cycle. 2024 and 2025 carry a
+# representative sample (01, 06, 12) rather than every month.
+[[revisions.2023-y-siguientes.deadline_windows]]
+id = "modelo-303-2024-01-mensual"
+filing_year = 2024
+period = "2024 01"
+period_kind = "monthly"
+opens_on = 2024-02-01
+closes_on = 2024-02-29
+legal_refs = ["rd-1624-1992:art-71"]
+source_refs = ["boe-modelo-303-2008-form", "aeat-modelo-303-procedure"]
+
+[[revisions.2023-y-siguientes.deadline_windows]]
+id = "modelo-303-2024-06-mensual"
+filing_year = 2024
+period = "2024 06"
+period_kind = "monthly"
+opens_on = 2024-07-01
+closes_on = 2024-07-30
+legal_refs = ["rd-1624-1992:art-71"]
+source_refs = ["boe-modelo-303-2008-form", "aeat-modelo-303-procedure"]
+
+[[revisions.2023-y-siguientes.deadline_windows]]
+id = "modelo-303-2024-12-mensual"
+filing_year = 2024
+period = "2024 12"
+period_kind = "monthly"
+opens_on = 2025-01-01
+closes_on = 2025-01-30
+legal_refs = ["rd-1624-1992:art-71"]
+source_refs = ["boe-modelo-303-2008-form", "aeat-modelo-303-procedure"]
+
 [[revisions.2023-y-siguientes.deadline_windows]]
 id = "modelo-303-2025-01-mensual"
 filing_year = 2025
@@ -1256,6 +1321,9 @@ deadline_windows = [
     "modelo-303-2026-2t",
     "modelo-303-2026-3t",
     "modelo-303-2026-4t",
+    "modelo-303-2024-01-mensual",
+    "modelo-303-2024-06-mensual",
+    "modelo-303-2024-12-mensual",
     "modelo-303-2025-01-mensual",
     "modelo-303-2025-06-mensual",
     "modelo-303-2025-12-mensual",
