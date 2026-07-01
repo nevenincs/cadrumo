@@ -33,6 +33,7 @@ from ...domain.usage_ratios import (
     UsageRatioValidationError,
     load_usage_ratios,
     save_usage_ratios,
+    usage_ratio_bucket_lock,
 )
 
 _HOME_OFFICE_FAMILIES = frozenset(
@@ -203,11 +204,16 @@ def set_usage_ratio(*, bucket_id: str, category: SpendingCategory, ratio: Decima
     caller can emit a before/after audit event. Application command boundary for
     the CLI ``ledger ratios set`` verb; the CLI no longer calls the domain
     load/save primitives directly.
+
+    The load-modify-save runs under the per-bucket
+    :func:`aeat.domain.usage_ratios.usage_ratio_bucket_lock` so two concurrent
+    writers cannot read the same snapshot and lose one another's override.
     """
-    profile = load_usage_ratios(bucket_id=bucket_id)
-    prior = profile.ratios.get(category)
-    save_usage_ratios(profile.with_ratio(category, ratio), bucket_id=bucket_id)
-    return prior
+    with usage_ratio_bucket_lock(bucket_id):
+        profile = load_usage_ratios(bucket_id=bucket_id)
+        prior = profile.ratios.get(category)
+        save_usage_ratios(profile.with_ratio(category, ratio), bucket_id=bucket_id)
+        return prior
 
 
 def unset_usage_ratio(*, bucket_id: str, category: SpendingCategory) -> Decimal | None:
@@ -217,15 +223,20 @@ def unset_usage_ratio(*, bucket_id: str, category: SpendingCategory) -> Decimal 
     the category carries no persisted override (so the caller can surface a
     precise "nothing to clear" message). Application command boundary for the
     CLI ``ledger ratios unset`` verb.
+
+    The load-modify-save runs under the per-bucket
+    :func:`aeat.domain.usage_ratios.usage_ratio_bucket_lock` so a concurrent
+    ``set`` on a sibling category cannot be lost by this clear.
     """
-    profile = load_usage_ratios(bucket_id=bucket_id)
-    prior = profile.ratios.get(category)
-    if prior is None:
-        raise UsageRatioValidationError(
-            f"no persisted usage-ratio override for category {category.value!r} on bucket {bucket_id!r}",
-        )
-    save_usage_ratios(profile.without_ratio(category), bucket_id=bucket_id)
-    return prior
+    with usage_ratio_bucket_lock(bucket_id):
+        profile = load_usage_ratios(bucket_id=bucket_id)
+        prior = profile.ratios.get(category)
+        if prior is None:
+            raise UsageRatioValidationError(
+                f"no persisted usage-ratio override for category {category.value!r} on bucket {bucket_id!r}",
+            )
+        save_usage_ratios(profile.without_ratio(category), bucket_id=bucket_id)
+        return prior
 
 
 class RatiosCensoOverrideWarning(BaseModel):
