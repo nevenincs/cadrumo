@@ -23,7 +23,8 @@ disposition of each, plus the follow-up items surfaced during remediation. The
 campaign is not structurally complete until every honest-pass item is closed
 with verification or formally deferred with a tracked follow-up, and the scoped
 campaign changes are committed without sweeping unrelated peer WIP; this
-document is the review ledger, not a commit record.
+document is the review ledger. The scoped commit condition is satisfied by
+commit `5592a0a3a`.
 
 ## Findings
 
@@ -77,17 +78,17 @@ by a categorical CN>=10M fact no casilla carries — not predicate-expressible);
 the B2 tramo-3/tramo-4 edges got two new ADVISORY `percent()`-relationship
 guards. A third, new critical finding was surfaced and escalated (below).
 
-### review closeout | high | most campaign work remains uncommitted - NOT YET CLOSED
+### review closeout | high | most campaign work remained uncommitted - RESOLVED
 
 The honesty review flagged that most of the campaign's product sat uncommitted
 in the shared worktree (only the M210 base guard had landed, via a peer's
 pathspec-less commit). The earlier closeout draft incorrectly claimed this was
-already resolved by atomic explicit-pathspec commits. That claim is false at the
-time of this audit update: relevant campaign files and vault records are still
-modified or untracked in the shared worktree. DISPOSITION: keep this as a
-closeout blocker until a scoped explicit-pathspec commit lands, or until the
-orchestrator records why the campaign is intentionally left as active WIP. Do
-not claim structural completion from this audit alone.
+already resolved by atomic explicit-pathspec commits. That claim was false when
+the honesty review ran. RESOLUTION: commit `5592a0a3a` landed the scoped
+campaign files and vault records with an explicit pathspec while leaving
+unrelated staged peer files outside the commit. Residual dirty worktree state
+after that commit belongs to other active campaigns and is not part of this
+feature closeout.
 
 ### review closeout | critical (follow-up) | M202 casilla-26 (B2 resultado previo) is consumed by no formula
 
@@ -128,7 +129,6 @@ The following deferrals are explicitly tracked out of this closeout:
   M202 casilla-26 / casilla-32 B2 resultado formula-wiring defect against the
   AEAT Diseno de Registros.
 
-The fresh honesty review did run and is persisted here. It did not approve full
-structural closure: it blocks closure on the still-uncommitted campaign state
-and requires the deferrals above to stay visible until separate follow-up work
-lands.
+The fresh honesty review did run and is persisted here. After commit
+`5592a0a3a`, its commit-state blocker is resolved; the deferrals above remain
+visible until separate follow-up work lands.

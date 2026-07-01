@@ -117,7 +117,7 @@ Dispatch vaultspec-code-review over the full campaign diff and run a fresh-conte
 - `DFR-M210-TEXT-INPUT-LOCALE-PARITY` - add `application.modelo.errors.calculate_text_input_empty` to the non-English locale catalogues through the sanctioned locale CLI once current locale peer WIP is clear; cross-reference `2026-07-01-modelo-verify-nonzero-guards-review-closeout-audit`.
 - `DFR-M123-RIRPF-EXONERATION-CORPUS` - bundle RD 439/2007 arts. 74-76 and re-check the M123 type-exoneration residual against verbatim corpus text; cross-reference `2026-07-01-modelo-verify-nonzero-guards-audit`.
 - `DFR-M202-B2-RESULTADO-FORMULA-WIRING` - verify and, if confirmed, fix the M202 casilla-26 to casilla-32 B2 resultado formula wiring against AEAT instructions / Diseno de Registros; cross-reference `2026-07-01-modelo-verify-nonzero-guards-m202-deferred-items-audit`.
-- `DFR-CAMPAIGN-SCOPED-COMMIT` - do not declare structural campaign closure until the scoped campaign files and vault records are committed with explicit pathspecs or intentionally recorded as active WIP; cross-reference `2026-07-01-modelo-verify-nonzero-guards-review-closeout-audit`.
+- `RESOLVED-CAMPAIGN-SCOPED-COMMIT` - commit `5592a0a3a` landed the scoped campaign files and vault records with explicit pathspecs while leaving unrelated peer WIP outside the commit; cross-reference `2026-07-01-modelo-verify-nonzero-guards-review-closeout-audit`.
 
 ### Phase `W03.P10` - Exec-record completeness and vault closeout
 

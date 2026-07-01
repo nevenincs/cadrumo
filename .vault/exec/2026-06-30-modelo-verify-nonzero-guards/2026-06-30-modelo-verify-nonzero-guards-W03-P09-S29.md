@@ -28,8 +28,8 @@ related:
 - `DFR-M210-TEXT-INPUT-LOCALE-PARITY` tracks the missing non-English locale parity for `application.modelo.errors.calculate_text_input_empty`; this was not edited here because the locale files currently carry unrelated peer WIP.
 - `DFR-M123-RIRPF-EXONERATION-CORPUS` tracks the RD 439/2007 arts. 74-76 corpus-bundling gap behind the M123 guard's residual legal-grounding caveat.
 - `DFR-M202-B2-RESULTADO-FORMULA-WIRING` tracks the suspected M202 casilla-26 to casilla-32 formula-wiring defect.
-- `DFR-CAMPAIGN-SCOPED-COMMIT` tracks the operational closeout blocker: campaign files and vault records must be committed with explicit pathspecs, or intentionally recorded as active WIP, before structural campaign closure is claimed.
+- `RESOLVED-CAMPAIGN-SCOPED-COMMIT` records that commit `5592a0a3a` landed the scoped campaign files and vault records with explicit pathspecs, leaving unrelated peer WIP outside the commit.
 
 ## Notes
 
-No code changes were made for this Step. The plan now records the review findings honestly, but it does not claim the campaign is fully complete until the scoped commit condition is satisfied.
+No code changes were made for this Step. The plan now records the review findings honestly, and the scoped commit condition is satisfied by `5592a0a3a`.
