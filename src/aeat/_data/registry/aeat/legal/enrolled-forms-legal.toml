@@ -4,69 +4,6 @@
 # the `notes` field records the agent-fetched provenance pending operator
 # re-verification. review_status is stamped "reviewed" per that authorization.
 
-[legal."orden-hap-70-2013:art-5"]
-evidence_tier = "legal_authority"
-authority = "boe"
-kind = "orden"
-corpus_ref = "corpus/normatives/html/orden-hap-70-2013.html#a5"
-document_id = "BOE-A-2013-952"
-article = "5"
-permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2013-952"
-published_at = 2013-01-31
-effective_from = 2013-02-01
-review_status = "reviewed"
-reviewed_at = 2026-07-01
-reviewed_by = "wgergely"
-notes = "Articulo 5: aprobacion del modelo 136. Corpus agent-fetched from BOE; pending operator re-verification."
-required_text = [
-    "Se aprueba el modelo 136",
-    "Gravamen Especial",
-]
-
-[legal."orden-hap-70-2013:art-7"]
-evidence_tier = "legal_authority"
-authority = "boe"
-kind = "orden"
-corpus_ref = "corpus/normatives/html/orden-hap-70-2013.html#a7"
-document_id = "BOE-A-2013-952"
-article = "7"
-permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2013-952"
-published_at = 2013-01-31
-effective_from = 2013-02-01
-review_status = "reviewed"
-reviewed_at = 2026-07-01
-reviewed_by = "wgergely"
-notes = "Articulo 7: plazo de presentacion del modelo 136. Corpus agent-fetched from BOE; pending operator re-verification."
-required_text = [
-    "veinte primeros días naturales de los meses de abril, julio, octubre y enero",
-]
-
-[sources."enrolled-modelo-136-procedure"]
-evidence_tier = "official_source_guidance"
-authority = "aeat"
-kind = "instructions"
-corpus_path = "corpus/aeat_official/instructions/modelo_136/files/modelo-136-procedure.html"
-sha256 = "122f79dff96d2276b6982b1e78019e65570f2859d391034742dfcf1e9987cd59"
-bytes = 21765
-retrieved_at = 2026-07-01
-published_at = 2026-06-09
-applies_from = 2019-01-01
-source_url = "https://sede.agenciatributaria.gob.es/Sede/procedimientoini/GH09.shtml"
-review_status = "reviewed"
-
-[sources."enrolled-modelo-136-layout"]
-evidence_tier = "layout_authority"
-authority = "boe"
-kind = "form_spec"
-corpus_path = "corpus/normatives/html/orden-hap-70-2013.html"
-sha256 = "0e1191061bb0b527d87e09478012ecd4bc1ba283e11127299ad39202241d8adb"
-bytes = 71216
-retrieved_at = 2026-07-01
-published_at = 2013-01-31
-applies_from = 2013-02-01
-source_url = "https://www.boe.es/buscar/act.php?id=BOE-A-2013-952"
-review_status = "reviewed"
-
 [legal."orden-hap-2455-2013:art-1"]
 evidence_tier = "legal_authority"
 authority = "boe"
