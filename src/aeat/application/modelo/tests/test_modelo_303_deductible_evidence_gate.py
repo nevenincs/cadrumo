@@ -328,6 +328,21 @@ def test_modelo_303_verify_blocks_deductible_vat_missing_evidence_but_warns_outp
         finding for finding in report.findings if finding.severity is ModeloVerificationFindingSeverity.BLOCKING
     ]
     warning = [finding for finding in report.findings if finding.severity is ModeloVerificationFindingSeverity.WARNING]
+    expected_source_refs = tuple(dict.fromkeys(ref for obs in revision.observations for ref in obs.source_refs))
+    evidence_findings = [
+        finding
+        for finding in report.findings
+        if "VAT" in finding.message and ("no linked evidence" in finding.message)
+    ]
+    assert evidence_findings
+    assert all(finding.source_refs == expected_source_refs for finding in evidence_findings)
+    assert all("deductible_vat_evidence" not in finding.source_refs for finding in evidence_findings)
+    assert all("output_vat_evidence" not in finding.source_refs for finding in evidence_findings)
+    assert all(
+        "_" not in source_ref and "-" in source_ref
+        for finding in evidence_findings
+        for source_ref in finding.source_refs
+    )
     assert any(
         finding.kind is ModeloVerificationFindingKind.BLOCKING_RULE
         and purchase.transaction_id in finding.message
