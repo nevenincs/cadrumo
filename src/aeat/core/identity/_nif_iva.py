@@ -188,7 +188,7 @@ def normalise_nif_iva(value: str) -> str:
 
 
 def nif_iva_prefix_for_country(iso_country: str) -> NifIvaPrefix | None:
-    """Resolve an ISO-3166 alpha-2 country code (or VAT prefix) to its prefix.
+    """Resolve an ISO-3166 alpha-2 country code (or VAT prefix) to its :class:`NifIvaPrefix`.
 
     Returns ``None`` for a country that has no NIF-IVA pattern (a non-EU
     counterparty, or Spain which uses the checksum validator).
@@ -197,7 +197,7 @@ def nif_iva_prefix_for_country(iso_country: str) -> NifIvaPrefix | None:
 
 
 def nif_iva_format_for_country(iso_country: str) -> NifIvaFormatSpec | None:
-    """Return the NIF-IVA format spec for a country, or ``None`` if unknown.
+    """Return the :class:`NifIvaFormatSpec` for a country, or ``None`` if unknown.
 
     A ``None`` result means the country is not an EU Member State carrying a
     structural NIF-IVA pattern; the caller applies its generic prefix/body check
