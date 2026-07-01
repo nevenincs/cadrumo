@@ -153,6 +153,9 @@ def _attribution_entity_profile(
     iva_regime: IVARegime = IVARegime.GENERAL,
     has_employees: bool = False,
     pays_professionals_with_retencion: bool = False,
+    pays_rent_with_retencion: bool = False,
+    does_intracomunitario: bool = False,
+    third_party_transactions_above_347_threshold: bool = False,
 ) -> TaxpayerProfile:
     return TaxpayerProfile(
         tax_id="E12345678",
@@ -160,6 +163,9 @@ def _attribution_entity_profile(
         iva_regime=iva_regime,
         has_employees=has_employees,
         pays_professionals_with_retencion=pays_professionals_with_retencion,
+        pays_rent_with_retencion=pays_rent_with_retencion,
+        does_intracomunitario=does_intracomunitario,
+        third_party_transactions_above_347_threshold=third_party_transactions_above_347_threshold,
     )
 
 
@@ -206,6 +212,42 @@ def test_attribution_entity_without_withheld_income_fact_is_incomplete_for_model
     """Without an employee/professional payer fact, M111 is undecided, not applicable."""
 
     result = derive_modelo_applicability(_attribution_entity_profile(), "111")
+
+    assert result.verdict is ApplicabilityVerdict.INCOMPLETE
+    assert result.applicable is False
+
+
+@pytest.mark.parametrize(
+    ("modelo", "payer_fact_update"),
+    (
+        ("115", {"pays_rent_with_retencion": True}),
+        ("180", {"pays_rent_with_retencion": True}),
+        ("349", {"does_intracomunitario": True}),
+        ("347", {"third_party_transactions_above_347_threshold": True}),
+    ),
+    ids=("rent-retention", "rent-summary", "intracommunity", "third-party-threshold"),
+)
+def test_attribution_entity_with_required_fact_is_applicable_for_fact_gated_modelos(
+    modelo: str,
+    payer_fact_update: dict[str, bool],
+) -> None:
+    """Attribution entities can owe non-cuota payer/informative modelos."""
+
+    result = derive_modelo_applicability(_attribution_entity_profile(**payer_fact_update), modelo)
+
+    assert result.verdict is ApplicabilityVerdict.APPLICABLE
+    assert result.applicable is True
+
+
+@pytest.mark.parametrize(
+    "modelo",
+    ("115", "180", "349", "347"),
+    ids=("rent-retention", "rent-summary", "intracommunity", "third-party-threshold"),
+)
+def test_attribution_entity_without_required_fact_is_incomplete_for_fact_gated_modelos(modelo: str) -> None:
+    """Missing payer/trade facts stay undecided instead of entity-excluded."""
+
+    result = derive_modelo_applicability(_attribution_entity_profile(), modelo)
 
     assert result.verdict is ApplicabilityVerdict.INCOMPLETE
     assert result.applicable is False

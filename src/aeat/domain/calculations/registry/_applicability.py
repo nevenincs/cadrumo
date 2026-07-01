@@ -620,7 +620,7 @@ _IVA_OBLIGED_ENTITY_TYPES: frozenset[EntityType] = frozenset(
 _IVA_SELF_ASSESSMENT_REGIMES: frozenset[IVARegime] = frozenset(
     {IVARegime.GENERAL, IVARegime.SIMPLIFICADO},
 )
-_WITHHELD_INCOME_PAYER_ENTITY_TYPES: frozenset[EntityType] = frozenset(
+_PAYER_FACT_ENTITY_TYPES: frozenset[EntityType] = frozenset(
     {EntityType.NATURAL_PERSON, EntityType.LEGAL_ENTITY, EntityType.ATTRIBUTION_ENTITY},
 )
 
@@ -756,7 +756,7 @@ _MODELO_APPLICABILITY_RULES: dict[str, ModeloApplicabilityRule] = {
     # Research §1.1.
     Modelo.M111: ModeloApplicabilityRule(
         modelo=Modelo.M111,
-        applicable_entity_types=_WITHHELD_INCOME_PAYER_ENTITY_TYPES,
+        applicable_entity_types=_PAYER_FACT_ENTITY_TYPES,
         required_payer_fact=PayerFact.PAYS_WITHHELD_INCOME,
         applicable_reason=(
             "Modelo 111 (retenciones e ingresos a cuenta del IRPF): el "
@@ -780,13 +780,13 @@ _MODELO_APPLICABILITY_RULES: dict[str, ModeloApplicabilityRule] = {
         ),
     ),
     # Modelo 115 — autoliquidación de retenciones por arrendamiento de
-    # inmuebles urbanos. The PAYER's obligation: a taxpayer who pays rent
-    # subject to retención. Whether the taxpayer pays such rent is a payer
-    # fact the three-axis model cannot decide alone; an undeclared fact
-    # yields INCOMPLETE.
+    # inmuebles urbanos. The PAYER's obligation: a natural person, legal
+    # entity, or attribution entity who pays rent subject to retención.
+    # Whether the taxpayer pays such rent is a payer fact the three-axis
+    # model cannot decide alone; an undeclared fact yields INCOMPLETE.
     Modelo.M115: ModeloApplicabilityRule(
         modelo=Modelo.M115,
-        applicable_entity_types=frozenset({EntityType.NATURAL_PERSON, EntityType.LEGAL_ENTITY}),
+        applicable_entity_types=_PAYER_FACT_ENTITY_TYPES,
         required_payer_fact=PayerFact.PAYS_RENT_WITH_RETENCION,
         applicable_reason=(
             "Modelo 115 (retenciones por arrendamiento de inmuebles "
@@ -814,7 +814,7 @@ _MODELO_APPLICABILITY_RULES: dict[str, ModeloApplicabilityRule] = {
     # files Modelo 190. Gated on the same payer fact as Modelo 111.
     Modelo.M190: ModeloApplicabilityRule(
         modelo=Modelo.M190,
-        applicable_entity_types=_WITHHELD_INCOME_PAYER_ENTITY_TYPES,
+        applicable_entity_types=_PAYER_FACT_ENTITY_TYPES,
         required_payer_fact=PayerFact.PAYS_WITHHELD_INCOME,
         applicable_reason=(
             "Modelo 190 (resumen anual de retenciones del IRPF): el "
@@ -840,7 +840,7 @@ _MODELO_APPLICABILITY_RULES: dict[str, ModeloApplicabilityRule] = {
     # annual companion to Modelo 115: gated on the same payer fact.
     Modelo.M180: ModeloApplicabilityRule(
         modelo=Modelo.M180,
-        applicable_entity_types=frozenset({EntityType.NATURAL_PERSON, EntityType.LEGAL_ENTITY}),
+        applicable_entity_types=_PAYER_FACT_ENTITY_TYPES,
         required_payer_fact=PayerFact.PAYS_RENT_WITH_RETENCION,
         applicable_reason=(
             "Modelo 180 (resumen anual de retenciones por arrendamiento): "
@@ -865,13 +865,13 @@ _MODELO_APPLICABILITY_RULES: dict[str, ModeloApplicabilityRule] = {
     ),
     # Modelo 349 — declaración recapitulativa de operaciones
     # intracomunitarias. Applies to a taxpayer — a natural person with
-    # actividad económica or a legal entity — who performs operaciones
-    # intracomunitarias. Whether the taxpayer trades intracommunity is a
-    # payer fact the three-axis model cannot decide alone; an undeclared
-    # fact yields INCOMPLETE. Research §3.3.
+    # actividad económica, a legal entity, or an attribution entity — who
+    # performs operaciones intracomunitarias. Whether the taxpayer trades
+    # intracommunity is a payer fact the three-axis model cannot decide
+    # alone; an undeclared fact yields INCOMPLETE. Research §3.3.
     Modelo.M349: ModeloApplicabilityRule(
         modelo=Modelo.M349,
-        applicable_entity_types=frozenset({EntityType.NATURAL_PERSON, EntityType.LEGAL_ENTITY}),
+        applicable_entity_types=_PAYER_FACT_ENTITY_TYPES,
         required_payer_fact=PayerFact.TRADES_INTRACOMMUNITY,
         applicable_reason=(
             "Modelo 349 (declaración recapitulativa de operaciones "
@@ -883,22 +883,24 @@ _MODELO_APPLICABILITY_RULES: dict[str, ModeloApplicabilityRule] = {
             "corresponde a quien realiza operaciones intracomunitarias."
         ),
         # Orden EHA/769/2010 art. 1 — aprobación del Modelo 349; Orden
-        # HAC/174/2020 art. 1 — modificación del Modelo 349; LGT art. 93 —
-        # obligación de información sobre operaciones con terceros.
+        # HAC/174/2020 art. 1 — modificación del Modelo 349; RD
+        # 1624/1992 art. 79 — obligados a la declaración recapitulativa;
+        # LGT art. 93 — obligación de información.
         legal_refs=(
             "orden-eha-769-2010:art-1",
             "orden-hac-174-2020:art-1",
+            "rd-1624-1992:art-79",
             "ley-58-2003:art-93",
         ),
     ),
     # Modelo 347 — declaración anual de operaciones con terceras personas.
-    # Applies to a taxpayer whose third-party transactions exceeded the
-    # declaration threshold. Whether the threshold is exceeded is a payer
-    # fact the three-axis model cannot decide alone; an undeclared fact
-    # yields INCOMPLETE.
+    # Applies to a natural person, legal entity, or attribution entity
+    # whose third-party transactions exceeded the declaration threshold.
+    # Whether the threshold is exceeded is a payer fact the three-axis
+    # model cannot decide alone; an undeclared fact yields INCOMPLETE.
     Modelo.M347: ModeloApplicabilityRule(
         modelo=Modelo.M347,
-        applicable_entity_types=frozenset({EntityType.NATURAL_PERSON, EntityType.LEGAL_ENTITY}),
+        applicable_entity_types=_PAYER_FACT_ENTITY_TYPES,
         required_payer_fact=PayerFact.EXCEEDS_THIRD_PARTY_THRESHOLD,
         applicable_reason=(
             "Modelo 347 (declaración anual de operaciones con terceras "
@@ -911,11 +913,13 @@ _MODELO_APPLICABILITY_RULES: dict[str, ModeloApplicabilityRule] = {
             "terceros solo corresponde a quien supera el umbral de "
             "operaciones declarable."
         ),
-        # Orden EHA/3012/2008 art. 1 — aprobación del Modelo 347 y
-        # obligados a presentarlo; Orden EHA/3012/2008 art. 10 — contenido
-        # de la declaración; LGT art. 93 — obligación de información sobre
-        # operaciones con terceros.
+        # RD 1065/2007 art. 31 — obligados a informar sobre operaciones
+        # con terceros; Orden EHA/3012/2008 art. 1 — aprobación del
+        # Modelo 347 y obligados a presentarlo; Orden EHA/3012/2008 art.
+        # 10 — contenido de la declaración; LGT art. 93 — obligación de
+        # información sobre operaciones con terceros.
         legal_refs=(
+            "rd-1065-2007:art-31",
             "orden-eha-3012-2008:art-1",
             "orden-eha-3012-2008:art-10",
             "ley-58-2003:art-93",
