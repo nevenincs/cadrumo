@@ -37,6 +37,8 @@ from .envelope_helpers import unwrap_schema_envelope as _payload
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
+_IVA_WALLET_DECIDED_AT = datetime(2026, 5, 28, 16, 10, tzinfo=UTC)
+
 
 @pytest.fixture(autouse=True)
 def _isolated_cli_backend(tmp_path: Path) -> Iterator[None]:
@@ -271,7 +273,7 @@ def _seed_m100_profile_facts(bucket_id: str) -> None:
         record.model_copy(
             update={
                 "facts": tuple(facts_by_path[path] for path in sorted(facts_by_path)),
-                "updated_at": datetime.now(UTC),
+                "updated_at": record.created_at,
             },
         ),
     )
@@ -671,8 +673,6 @@ def test_work_calculate_persists_ledger_source_mesh_observations() -> None:
     # A local_recurrence decision with selected_amount=0 satisfies the guard
     # while leaving the ledger mesh assertions meaningful.
     with profile_storage_session(bucket_id):
-        from datetime import UTC, datetime
-
         from ....application.calculations._observations_repository import IvaWalletDecisionRepository
         from ....domain.iva_compensation._reconciliation import (
             IvaCompensationReconciliationDecision,
@@ -694,7 +694,7 @@ def test_work_calculate_persists_ledger_source_mesh_observations() -> None:
             blocked=False,
             stale_wallet=False,
             reason="test: no prior IVA compensation",
-            decided_at=datetime.now(UTC),
+            decided_at=_IVA_WALLET_DECIDED_AT,
         )
         IvaWalletDecisionRepository().save_decision(decision)
 
@@ -801,7 +801,7 @@ def _seed_zero_iva_wallet_decision(bucket_id: str) -> None:
             blocked=False,
             stale_wallet=False,
             reason="test: no prior IVA compensation",
-            decided_at=datetime.now(UTC),
+            decided_at=_IVA_WALLET_DECIDED_AT,
         )
         IvaWalletDecisionRepository().save_decision(decision)
 
