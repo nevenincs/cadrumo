@@ -949,34 +949,36 @@ class TestSemanticRoleTypoTwinHelpers:
     def _index(*known_roles: str) -> _SemanticRoleTypoIndex:
         return _build_semantic_role_typo_index(known_roles)
 
-    def test_identity_candidate_is_not_a_typo_twin(self) -> None:
-        role = "taxpayer_nif"
-        index = self._index(role)
-        assert _candidate_is_typo_twin(role, set(role), len(role), role, len(role), 1, index) is False
-
-    def test_single_char_substitution_is_a_typo_twin(self) -> None:
-        # taxpayer_niff vs taxpayer_nif: a near-duplicate that is not a sibling.
-        role = "taxpayer_niff"
-        known = "taxpayer_nif"
+    @pytest.mark.parametrize(
+        ("role", "known", "expected"),
+        (
+            ("taxpayer_nif", "taxpayer_nif", False),
+            ("taxpayer_niff", "taxpayer_nif", True),
+            ("irpf_ascendiente_fecha_nacimiento", "irpf_descendiente_fecha_nacimiento", True),
+        ),
+        ids=("identity", "single-char-substitution", "relationship-not-axis-exempt"),
+    )
+    def test_candidate_typo_twin_cases(self, role: str, known: str, expected: bool) -> None:
         index = self._index(known)
-        max_diff = int(0.08 * (len(role) + len(known)))
-        assert _candidate_is_typo_twin(role, set(role), len(role), known, len(known), max_diff, index) is True
+        max_diff = max(1, int(0.08 * (len(role) + len(known))))
+        assert _candidate_is_typo_twin(role, set(role), len(role), known, len(known), max_diff, index) is expected
 
-    def test_relationship_candidate_is_not_axis_exempt(self) -> None:
-        # ascendiente vs descendiente are source-visible relationship subjects.
-        role = "irpf_ascendiente_fecha_nacimiento"
-        known = "irpf_descendiente_fecha_nacimiento"
-        index = self._index(known)
-        max_diff = int(0.08 * (len(role) + len(known)))
-        assert _candidate_is_typo_twin(role, set(role), len(role), known, len(known), max_diff, index) is True
-
-    def test_scan_finds_near_duplicate_across_length_buckets(self) -> None:
-        index = self._index("taxpayer_nif", "unrelated_role_value")
-        assert _scan_length_buckets_for_typo_twin("taxpayer_niff", index) is True
-
-    def test_scan_returns_false_when_no_near_duplicate(self) -> None:
-        index = self._index("taxpayer_nif", "counterparty_amount")
-        assert _scan_length_buckets_for_typo_twin("completely_distinct_role", index) is False
+    @pytest.mark.parametrize(
+        ("candidate", "known_roles", "expected"),
+        (
+            ("taxpayer_niff", ("taxpayer_nif", "unrelated_role_value"), True),
+            ("completely_distinct_role", ("taxpayer_nif", "counterparty_amount"), False),
+        ),
+        ids=("near-duplicate", "distinct"),
+    )
+    def test_scan_length_buckets_for_typo_twin_cases(
+        self,
+        candidate: str,
+        known_roles: tuple[str, ...],
+        expected: bool,
+    ) -> None:
+        index = self._index(*known_roles)
+        assert _scan_length_buckets_for_typo_twin(candidate, index) is expected
 
 
 class TestSignedCuotaResultadoRoles:
