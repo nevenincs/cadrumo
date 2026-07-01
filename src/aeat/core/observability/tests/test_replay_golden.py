@@ -80,6 +80,20 @@ def _build_trace(run_id: str, *, corpus_sha256: str) -> RunTrace:
     )
 
 
+def _save_replay_fixture(
+    run_id: str,
+    *,
+    label: str = "ok",
+    snapshot_id: str = "snap-A",
+    with_envelope: bool = True,
+) -> RunTrace:
+    trace = _build_trace(run_id, corpus_sha256=compute_corpus_sha256(PROJECT_ROOT / ".vault", Settings()))
+    save_trace(trace)
+    if with_envelope:
+        save_envelope(trace.run_id, _capture_document(label=label, snapshot_id=snapshot_id))
+    return trace
+
+
 def _emit_into_replay(*, label: str = "ok", snapshot_id: str = "snap-A"):
     import io
 
@@ -92,10 +106,7 @@ def _emit_into_replay(*, label: str = "ok", snapshot_id: str = "snap-A"):
 class TestReplayEnvelopeAssertion:
     def test_matches_identical_replay(self, tmp_path: Path) -> None:
         with override_settings(aeat_runs_dir=tmp_path):
-            corpus = compute_corpus_sha256(PROJECT_ROOT / ".vault", Settings())
-            trace = _build_trace("0123456789abcdef", corpus_sha256=corpus)
-            save_trace(trace)
-            save_envelope(trace.run_id, _capture_document(snapshot_id="snap-A"))
+            trace = _save_replay_fixture("0123456789abcdef", snapshot_id="snap-A")
 
             result = replay_run(
                 trace.run_id,
@@ -107,10 +118,7 @@ class TestReplayEnvelopeAssertion:
     def test_masked_field_divergence_still_matches(self, tmp_path: Path) -> None:
         """A differing ``snapshot_id`` is masked, so replay still passes."""
         with override_settings(aeat_runs_dir=tmp_path):
-            corpus = compute_corpus_sha256(PROJECT_ROOT / ".vault", Settings())
-            trace = _build_trace("1111222233334444", corpus_sha256=corpus)
-            save_trace(trace)
-            save_envelope(trace.run_id, _capture_document(snapshot_id="snap-A"))
+            trace = _save_replay_fixture("1111222233334444", snapshot_id="snap-A")
 
             # Re-entry emits a DIFFERENT snapshot_id — the opaque surrogate
             # key the substrate is licensed to mask.
@@ -122,10 +130,7 @@ class TestReplayEnvelopeAssertion:
 
     def test_unmasked_divergence_raises(self, tmp_path: Path) -> None:
         with override_settings(aeat_runs_dir=tmp_path):
-            corpus = compute_corpus_sha256(PROJECT_ROOT / ".vault", Settings())
-            trace = _build_trace("aaaabbbbccccdddd", corpus_sha256=corpus)
-            save_trace(trace)
-            save_envelope(trace.run_id, _capture_document(label="ok"))
+            trace = _save_replay_fixture("aaaabbbbccccdddd", label="ok")
 
             with pytest.raises(GoldenReplayMismatchError) as excinfo:
                 replay_run(
@@ -137,10 +142,7 @@ class TestReplayEnvelopeAssertion:
 
     def test_no_emitted_envelope_raises(self, tmp_path: Path) -> None:
         with override_settings(aeat_runs_dir=tmp_path):
-            corpus = compute_corpus_sha256(PROJECT_ROOT / ".vault", Settings())
-            trace = _build_trace("deadbeefcafe0001", corpus_sha256=corpus)
-            save_trace(trace)
-            save_envelope(trace.run_id, _capture_document())
+            trace = _save_replay_fixture("deadbeefcafe0001")
 
             def _silent(_argv: list[str]) -> None:
                 return None
@@ -150,10 +152,7 @@ class TestReplayEnvelopeAssertion:
 
     def test_missing_golden_artifact_raises(self, tmp_path: Path) -> None:
         with override_settings(aeat_runs_dir=tmp_path):
-            corpus = compute_corpus_sha256(PROJECT_ROOT / ".vault", Settings())
-            trace = _build_trace("0f0f0f0f0f0f0f0f", corpus_sha256=corpus)
-            save_trace(trace)
-            # No save_envelope — the golden artifact is absent.
+            trace = _save_replay_fixture("0f0f0f0f0f0f0f0f", with_envelope=False)
             with pytest.raises(RunTraceValidationError, match=r"envelope\.json not found"):
                 replay_run(
                     trace.run_id,
@@ -164,9 +163,7 @@ class TestReplayEnvelopeAssertion:
     def test_assert_envelope_off_is_backward_compatible(self, tmp_path: Path) -> None:
         """Default ``assert_envelope=False`` replays without needing a golden artifact."""
         with override_settings(aeat_runs_dir=tmp_path):
-            corpus = compute_corpus_sha256(PROJECT_ROOT / ".vault", Settings())
-            trace = _build_trace("ccccddddeeeeffff", corpus_sha256=corpus)
-            save_trace(trace)
+            trace = _save_replay_fixture("ccccddddeeeeffff", with_envelope=False)
             result = replay_run(trace.run_id, invoke=_emit_into_replay())
             assert result.run_id == trace.run_id
 
