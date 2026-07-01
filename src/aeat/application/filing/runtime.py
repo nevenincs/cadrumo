@@ -60,6 +60,7 @@ from ...core.resources import bundled_path
 # Importing the renta package registers the first-slice routing
 # cross-domain snapshot check required by Modelo 100 snapshots.
 from ...domain.calculations.registry import (
+    CalculationCompletenessManifest,
     CasillaDefinition,
     CasillaId,
     ExportLayoutDefinition,
@@ -205,6 +206,18 @@ class RegistryModeloSubview:
     export_layouts: tuple[ExportLayoutDefinition, ...]
     application_link_ids: tuple[str, ...]
     deadline_window_ids: tuple[str, ...]
+    completeness_manifest: CalculationCompletenessManifest | None
+
+    def has_completeness_manifest(self) -> bool:
+        """Return whether this revision carries a calculation-completeness manifest.
+
+        The manifest is the AEAT Diseño de Registros calculation-closure
+        projection (:class:`CalculationCompletenessManifest`) that grounds the
+        fichero-BOE export parity gate. A revision without one cannot have its
+        `.boe` export checked for casilla completeness, so the export path
+        surfaces a coverage advisory rather than asserting parity.
+        """
+        return self.completeness_manifest is not None
 
 
 @dataclass(frozen=True, slots=True)
@@ -604,6 +617,7 @@ def _subview_from_snapshot(snapshot: RegistrySnapshot) -> RegistryModeloSubview:
         export_layouts=tuple(sorted(snapshot.revision.export_layouts, key=lambda layout: layout.id)),
         application_link_ids=tuple(sorted(snapshot.application_links)),
         deadline_window_ids=tuple(sorted(snapshot.deadline_windows)),
+        completeness_manifest=snapshot.revision.completeness_manifest,
     )
 
 
