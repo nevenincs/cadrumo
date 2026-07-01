@@ -88,8 +88,12 @@ class WorkUnitCatalogueRepository:
                 classification or schema version disagrees with the consumer's
                 contract.
         """
-        from ...adapters.persistence.storage import Envelope, SensitivityClass
-        from ...adapters.persistence.storage.errors import ClassificationError, EnvelopeVersionError
+        from ...adapters.persistence.storage import (
+            ClassificationError,
+            Envelope,
+            EnvelopeVersionError,
+            SensitivityClass,
+        )
 
         try:
             record = self._objects.load(

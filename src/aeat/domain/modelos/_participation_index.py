@@ -16,15 +16,16 @@ justificante reference. The index is co-written atomically inside the same
 the composition-service single-writer discipline); it is a read-side cache, never
 a second source of truth, and is fully rebuildable from the revision catalogue.
 
-The index is keyed by ``transaction_id`` and persisted one secure :class:`Envelope` per
-transaction, so a revision over N contributing transactions co-emits N index
-upserts. Each upsert merges its new participation into that transaction's entry
-without disturbing the participations already recorded for it.
+The index is keyed by ``transaction_id`` and persisted one secure
+:class:`~aeat.adapters.persistence.storage.Envelope` per transaction, so a
+revision over N contributing transactions co-emits N index upserts. Each upsert
+merges its new participation into that transaction's entry without disturbing
+the participations already recorded for it.
 
 See :func:`derive_participation_index_id` for the object-key grammar, and the
 ``TransactionParticipationIndexRepository`` for the encrypted persistence
 boundary mirroring the :class:`CalculationRevision` catalogue repository at
-:class:`SensitivityClass` FINANCIAL.
+:class:`~aeat.adapters.persistence.storage.SensitivityClass` FINANCIAL.
 """
 
 from __future__ import annotations
@@ -181,11 +182,13 @@ class TransactionParticipationIndexRepository:
     """Read / write one transaction's participation index in encrypted storage.
 
     Mirrors the :class:`CalculationRevision` catalogue repository: persistence is
-    delegated to a :class:`SecureObjectRepository` at :class:`SensitivityClass`
-    FINANCIAL under the active profile bucket, one secure object per
-    ``transaction_id``. The participation index is critically sensitive financial
-    data (it links a ledger transaction to its filings); no plaintext index is
-    ever written to disk.
+    delegated to
+    :class:`~aeat.adapters.persistence.storage.SecureObjectRepository` at
+    :class:`~aeat.adapters.persistence.storage.SensitivityClass` FINANCIAL under
+    the active profile bucket, one secure object per ``transaction_id``. The
+    participation index is critically sensitive financial data (it links a
+    ledger transaction to its filings); no plaintext index is ever written to
+    disk.
     """
 
     def __init__(self, *, bucket_id: str | None = None, objects: SecureObjectRepository | None = None) -> None:
@@ -206,7 +209,7 @@ class TransactionParticipationIndexRepository:
 
     @property
     def secure_object_repository(self) -> SecureObjectRepository:
-        """Return the :class:`SecureObjectRepository` backend used by this repository."""
+        """Return the :class:`~aeat.adapters.persistence.storage.SecureObjectRepository` backend."""
         return self._objects
 
     def exists(self, transaction_id: str) -> bool:
@@ -219,8 +222,12 @@ class TransactionParticipationIndexRepository:
         Returns an empty :class:`TransactionRevisionParticipationIndex` for that
         transaction when nothing has been persisted yet, rather than raising.
         """
-        from ...adapters.persistence.storage import Envelope, SensitivityClass
-        from ...adapters.persistence.storage.errors import ClassificationError, EnvelopeVersionError
+        from ...adapters.persistence.storage import (
+            ClassificationError,
+            Envelope,
+            EnvelopeVersionError,
+            SensitivityClass,
+        )
 
         object_key = derive_participation_index_id(transaction_id)
         try:

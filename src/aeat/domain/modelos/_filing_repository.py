@@ -106,8 +106,12 @@ class ModeloRecordCatalogueRepository:
                 its on-disk classification is not FINANCIAL, or if it was
                 written at a schema version newer than this consumer supports.
         """
-        from ...adapters.persistence.storage import Envelope, SensitivityClass
-        from ...adapters.persistence.storage.errors import ClassificationError, EnvelopeVersionError
+        from ...adapters.persistence.storage import (
+            ClassificationError,
+            Envelope,
+            EnvelopeVersionError,
+            SensitivityClass,
+        )
 
         try:
             record = self._objects.load(
