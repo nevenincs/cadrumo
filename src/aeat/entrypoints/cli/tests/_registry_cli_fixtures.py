@@ -15,6 +15,8 @@ from ....core.config import override_settings
 from ....tests.secure_sql import dev_test_database_password, isolated_runtime_profile
 from ._registry_cli_support import _BUCKET_ID, _clear_cli_env, _set_cli_env
 
+_SESSION_OPENED_AT = datetime(2026, 5, 28, 15, 55, tzinfo=UTC)
+
 
 @pytest.fixture(scope="module", autouse=True)
 def _isolated_registry_cli_backend(tmp_path_factory: pytest.TempPathFactory) -> Iterator[None]:
@@ -57,5 +59,5 @@ def _session() -> BucketSession:
         kek=b"k" * 32,
         dek=b"d" * 32,
         idle_minutes=15,
-        opened_at=datetime.now(UTC),
+        opened_at=_SESSION_OPENED_AT,
     )
