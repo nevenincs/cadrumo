@@ -106,7 +106,7 @@ class SubmissionEngine:
             SubmissionError: If ``submission_id`` is malformed or no
                 secure object exists for the supplied id.
         """
-        from ...adapters.persistence.storage.errors import StorageError
+        from ...adapters.persistence.storage import StorageError
 
         repository = SubmissionRepository()
         try:
