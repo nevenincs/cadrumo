@@ -228,6 +228,15 @@ from ._projection import (
     compare_modelo_years,
     project_modelo_100_from_m130,
 )
+from ._quickfile import (
+    QUICKFILE_STAGE_ORDER,
+    QuickfileCommand,
+    QuickfileResult,
+    QuickfileStage,
+    QuickfileStageOutcome,
+    QuickfileStageStatus,
+    run_modelo_quickfile,
+)
 from ._reconcile import (
     ModeloReconciliationBytesCommand,
     ModeloReconciliationCommand,
@@ -369,6 +378,7 @@ __all__ = [
     "CEDED_AUTONOMIC_MODELOS",
     "CEDED_AUTONOMIC_MODELO_LOCALE_KEYS",
     "OPERATOR_MANUAL_OBSERVATION_SOURCE_KIND",
+    "QUICKFILE_STAGE_ORDER",
     "STUB_MODELO_LOCALE_KEYS",
     "STUB_ONLY_MODELOS",
     "AmendmentEvidenceMissingError",
@@ -488,6 +498,11 @@ __all__ = [
     "ModeloWorkflowGateError",
     "ParticipationRebuildStats",
     "ProfileBindingResolutionError",
+    "QuickfileCommand",
+    "QuickfileResult",
+    "QuickfileStage",
+    "QuickfileStageOutcome",
+    "QuickfileStageStatus",
     "ReconciliationCrossBucketRefusedError",
     "ReconciliationDeclaracionSourceUnsupportedError",
     "ReconciliationEvidenceInvalidError",
@@ -607,6 +622,7 @@ __all__ = [
     "resolve_profile_sourced_bindings",
     "resolve_registry_revision_for_work_target",
     "resolve_verifiable_modelo_calculation_revision_address",
+    "run_modelo_quickfile",
     "seed_iva_compensation_period_for_bucket",
     "select_current_draft_revision",
     "select_current_verified_revision",

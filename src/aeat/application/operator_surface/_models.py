@@ -85,6 +85,7 @@ class MountedCommandDomain(StrEnum):
     REGISTRY = "registry"
     CONTRACT = "contract"
     AGENT = "agent"
+    QUICKFILE = "quickfile"
 
 
 class RootSurface(BaseModel):
