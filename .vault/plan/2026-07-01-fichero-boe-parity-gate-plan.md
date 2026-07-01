@@ -10,6 +10,16 @@ related:
   - '[[2026-07-01-fichero-boe-parity-gate-research]]'
 ---
 
+<!-- LINK RULES:
+     - [[wiki-links]] are ONLY for .vault/ documents in the
+       related: field above.
+     - The related: field carries the AUTHORISING documents
+       (ADR, research, reference, prior plan) for every Step in
+       this plan. Steps inherit this chain; per-row reference
+       footers do not exist.
+     - NEVER use [[wiki-links]] or markdown links in the
+       document body. -->
+
 # `fichero-boe-parity-gate` plan
 
 ### Phase `P01` - Registry manifest projection
@@ -24,10 +34,10 @@ Make the completeness manifest reachable at the fichero-BOE render choke point b
 
 Derive the on-disk rendered casilla set across all casilla-bearing field kinds and the manifest required set restricted to casillas representable in an applicable non-suppressed record.
 
-- [ ] `P02.S04` - Widen the rendered casilla-set derivation to enumerate every casilla-bearing field kind that reaches disk; `src/aeat/application/filing/_export.py`.
-- [ ] `P02.S05` - Add a helper for the manifest required set restricted to casillas representable in an applicable non-suppressed record, carrying number, segmento and record-order metadata; `src/aeat/application/filing/_export.py`.
-- [ ] `P02.S06` - Unit-test the rendered-set enumeration across CASILLA, BINDING-row and COMPUTED field kinds; `src/aeat/application/filing/tests/test_export_rendered_casilla_set.py`.
-- [ ] `P02.S07` - Unit-test the applicable-required restriction drops disposition-suppressed casillas; `src/aeat/application/filing/tests/test_export_applicable_required_set.py`.
+- [x] `P02.S04` - Widen the rendered casilla-set derivation to enumerate every casilla-bearing field kind that reaches disk; `src/aeat/application/filing/_export.py`.
+- [x] `P02.S05` - Add a helper for the manifest required set restricted to casillas representable in an applicable non-suppressed record, carrying number, segmento and record-order metadata; `src/aeat/application/filing/_export.py`.
+- [x] `P02.S06` - Unit-test the rendered-set enumeration across CASILLA, BINDING-row and COMPUTED field kinds; `src/aeat/application/filing/tests/test_export_rendered_casilla_set.py`.
+- [x] `P02.S07` - Unit-test the applicable-required restriction drops disposition-suppressed casillas; `src/aeat/application/filing/tests/test_export_applicable_required_set.py`.
 
 ### Phase `P03` - Automatic pre-write parity assertion and coverage honesty
 
