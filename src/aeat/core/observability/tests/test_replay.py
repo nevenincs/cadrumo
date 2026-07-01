@@ -267,79 +267,74 @@ class TestEnvFileFingerprint:
 
 
 class TestArgvReconstruction:
-    @pytest.mark.parametrize(
-        ("entrypoint", "args", "expected"),
-        (
+    def test_argv_reconstruction_cases(self) -> None:
+        cases: tuple[
+            tuple[str, str, tuple[ArgumentRecord, ...], tuple[str, ...]],
+            ...,
+        ] = (
             (
+                "positional-first",
                 "aeat inbox ack",
                 (
                     ArgumentRecord(name="notificacion_id", value="N-42", source=ArgumentSource.POSITIONAL),
                     ArgumentRecord(name="by", value="gw", source=ArgumentSource.FLAG),
                 ),
-                ["inbox", "ack", "N-42", "--by=gw"],
+                ("inbox", "ack", "N-42", "--by=gw"),
             ),
             (
+                "multiple-positionals",
                 "aeat app modelo work file",
                 (
                     ArgumentRecord(name="modelo", value="130", source=ArgumentSource.POSITIONAL),
                     ArgumentRecord(name="period", value="2026Q1", source=ArgumentSource.POSITIONAL),
                     ArgumentRecord(name="force", value="True", source=ArgumentSource.FLAG),
                 ),
-                ["app", "modelo", "work", "file", "130", "2026Q1", "--force"],
+                ("app", "modelo", "work", "file", "130", "2026Q1", "--force"),
             ),
             (
+                "underscore-flag",
                 "aeat workflow list",
                 (ArgumentRecord(name="as_json", value="True", source=ArgumentSource.FLAG),),
-                ["workflow", "list", "--as-json"],
+                ("workflow", "list", "--as-json"),
             ),
             (
+                "false-bool-skipped",
                 "aeat inbox list",
                 (
                     ArgumentRecord(name="unread", value="False", source=ArgumentSource.FLAG),
                     ArgumentRecord(name="modelo", value="130", source=ArgumentSource.FLAG),
                 ),
-                ["inbox", "list", "--modelo=130"],
+                ("inbox", "list", "--modelo=130"),
             ),
             (
+                "true-bool-bare",
                 "aeat workflow show",
                 (ArgumentRecord(name="json", value="True", source=ArgumentSource.FLAG),),
-                ["workflow", "show", "--json"],
+                ("workflow", "show", "--json"),
             ),
             (
+                "leading-dash-value",
                 "aeat sync resolve-divergence",
                 (
                     ArgumentRecord(name="record_id", value="R-42", source=ArgumentSource.POSITIONAL),
                     ArgumentRecord(name="notes", value="--urgent", source=ArgumentSource.FLAG),
                 ),
-                ["sync", "resolve-divergence", "R-42", "--notes=--urgent"],
+                ("sync", "resolve-divergence", "R-42", "--notes=--urgent"),
             ),
             (
+                "env-default-skipped",
                 "aeat run show",
                 (
                     ArgumentRecord(name="run_id", value="abc", source=ArgumentSource.POSITIONAL),
                     ArgumentRecord(name="aeat_runs_dir", value="var/runs", source=ArgumentSource.ENV),
                     ArgumentRecord(name="mode", value="quiet", source=ArgumentSource.DEFAULT),
                 ),
-                ["run", "show", "abc"],
+                ("run", "show", "abc"),
             ),
-        ),
-        ids=(
-            "positional-first",
-            "multiple-positionals",
-            "underscore-flag",
-            "false-bool-skipped",
-            "true-bool-bare",
-            "leading-dash-value",
-            "env-default-skipped",
-        ),
-    )
-    def test_argv_reconstruction_cases(
-        self,
-        entrypoint: str,
-        args: tuple[ArgumentRecord, ...],
-        expected: list[str],
-    ) -> None:
-        assert _argv_from_arguments(entrypoint, args) == expected
+        )
+
+        for case_id, entrypoint, args, expected in cases:
+            assert tuple(_argv_from_arguments(entrypoint, args)) == expected, case_id
 
     def test_cli_flag_override_wins_over_name_derivation(self) -> None:
         """:attr:`ArgumentRecord.cli_flag` overrides the name-derived flag.
