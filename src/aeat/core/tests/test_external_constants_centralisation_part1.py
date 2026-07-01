@@ -21,6 +21,39 @@ _DECIMAL_CONSTANT_CASES = (
 )
 _DECIMAL_CONSTANT_IDS = tuple(name.lower() for name, _ in _DECIMAL_CONSTANT_CASES)
 
+_STRING_CONSTANT_CASES = (
+    ("BINARY_MIME_TYPE", "application/octet-stream"),
+    ("DEFAULT_CURRENCY", "EUR"),
+    ("CLASSIFIED_BY_MANUAL", "manual"),
+    ("JSON_MIME_TYPE", "application/json"),
+    ("CSV_MIME_TYPE", "text/csv"),
+    ("JSONL_MIME_TYPE", "application/x-ndjson"),
+    ("XLSX_MIME_TYPE", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"),
+)
+_STRING_CONSTANT_IDS = tuple(name.lower() for name, _ in _STRING_CONSTANT_CASES)
+_STRING_TYPE_CONSTANT_NAMES = tuple(
+    name for name, _ in _STRING_CONSTANT_CASES if name != "BINARY_MIME_TYPE"
+)
+_STRING_TYPE_CONSTANT_IDS = tuple(name.lower() for name in _STRING_TYPE_CONSTANT_NAMES)
+
+
+@pytest.mark.parametrize(("constant_name", "expected"), _STRING_CONSTANT_CASES, ids=_STRING_CONSTANT_IDS)
+def test_string_external_constant_values(constant_name: str, expected: str) -> None:
+    """String external constants carry their authoritative literal values."""
+
+    from .. import external_constants
+
+    assert getattr(external_constants, constant_name) == expected
+
+
+@pytest.mark.parametrize("constant_name", _STRING_TYPE_CONSTANT_NAMES, ids=_STRING_TYPE_CONSTANT_IDS)
+def test_string_external_constants_are_str(constant_name: str) -> None:
+    """String external constants remain plain ``str`` instances."""
+
+    from .. import external_constants
+
+    assert isinstance(getattr(external_constants, constant_name), str)
+
 
 @pytest.mark.parametrize(("constant_name", "expected"), _DECIMAL_CONSTANT_CASES, ids=_DECIMAL_CONSTANT_IDS)
 def test_decimal_external_constant_values_and_types(constant_name: str, expected: str) -> None:
@@ -36,14 +69,6 @@ def test_decimal_external_constant_values_and_types(constant_name: str, expected
 # ---------------------------------------------------------------------------
 # contract — BINARY_MIME_TYPE centralisation tests
 # ---------------------------------------------------------------------------
-
-
-def test_binary_mime_type_value() -> None:
-    """``BINARY_MIME_TYPE`` equals the IANA-registered opaque-binary MIME type."""
-
-    from ..external_constants import BINARY_MIME_TYPE
-
-    assert BINARY_MIME_TYPE == "application/octet-stream"
 
 
 def test_google_drive_reads_binary_mime_from_external_constants() -> None:
@@ -65,22 +90,6 @@ def test_google_drive_reads_binary_mime_from_external_constants() -> None:
 # ---------------------------------------------------------------------------
 # contract / contract — DEFAULT_CURRENCY centralisation tests
 # ---------------------------------------------------------------------------
-
-
-def test_default_currency_value() -> None:
-    """``DEFAULT_CURRENCY`` equals the ISO 4217 Euro code."""
-
-    from ..external_constants import DEFAULT_CURRENCY
-
-    assert DEFAULT_CURRENCY == "EUR"
-
-
-def test_default_currency_is_final_str() -> None:
-    """``DEFAULT_CURRENCY`` is a ``str`` instance (typed ``Final[str]``)."""
-
-    from ..external_constants import DEFAULT_CURRENCY
-
-    assert isinstance(DEFAULT_CURRENCY, str)
 
 
 def test_ledger_transaction_command_reads_currency_from_external_constants() -> None:
@@ -173,22 +182,6 @@ def test_declarations_filed_artefact_uses_binary_mime_constant() -> None:
 # ---------------------------------------------------------------------------
 # contract / contract / contract — CLASSIFIED_BY_MANUAL single-source-of-truth tests
 # ---------------------------------------------------------------------------
-
-
-def test_classified_by_manual_value() -> None:
-    """``CLASSIFIED_BY_MANUAL`` equals the sentinel stored in persisted records."""
-
-    from ..external_constants import CLASSIFIED_BY_MANUAL
-
-    assert CLASSIFIED_BY_MANUAL == "manual"
-
-
-def test_classified_by_manual_is_final_str() -> None:
-    """``CLASSIFIED_BY_MANUAL`` is a ``str`` instance (typed ``Final[str]``)."""
-
-    from ..external_constants import CLASSIFIED_BY_MANUAL
-
-    assert isinstance(CLASSIFIED_BY_MANUAL, str)
 
 
 def test_application_ledger_imports_classified_by_manual_from_core() -> None:
@@ -299,70 +292,6 @@ def test_no_local_classified_by_manual_shadow_in_application_or_domain() -> None
 # ---------------------------------------------------------------------------
 # contract / contract / contract — JSON_MIME_TYPE and CSV_MIME_TYPE centralisation tests
 # ---------------------------------------------------------------------------
-
-
-def test_json_mime_type_value() -> None:
-    """``JSON_MIME_TYPE`` equals the IANA-registered JSON MIME type."""
-
-    from ..external_constants import JSON_MIME_TYPE
-
-    assert JSON_MIME_TYPE == "application/json"
-
-
-def test_csv_mime_type_value() -> None:
-    """``CSV_MIME_TYPE`` equals the IANA-registered CSV MIME type."""
-
-    from ..external_constants import CSV_MIME_TYPE
-
-    assert CSV_MIME_TYPE == "text/csv"
-
-
-def test_jsonl_mime_type_value() -> None:
-    """``JSONL_MIME_TYPE`` equals the newline-delimited JSON MIME type."""
-
-    from ..external_constants import JSONL_MIME_TYPE
-
-    assert JSONL_MIME_TYPE == "application/x-ndjson"
-
-
-def test_xlsx_mime_type_value() -> None:
-    """``XLSX_MIME_TYPE`` equals the Office Open XML workbook MIME type."""
-
-    from ..external_constants import XLSX_MIME_TYPE
-
-    assert XLSX_MIME_TYPE == "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-
-
-def test_json_mime_type_is_final_str() -> None:
-    """``JSON_MIME_TYPE`` is a ``str`` instance (typed ``Final[str]``)."""
-
-    from ..external_constants import JSON_MIME_TYPE
-
-    assert isinstance(JSON_MIME_TYPE, str)
-
-
-def test_csv_mime_type_is_final_str() -> None:
-    """``CSV_MIME_TYPE`` is a ``str`` instance (typed ``Final[str]``)."""
-
-    from ..external_constants import CSV_MIME_TYPE
-
-    assert isinstance(CSV_MIME_TYPE, str)
-
-
-def test_jsonl_mime_type_is_final_str() -> None:
-    """``JSONL_MIME_TYPE`` is a ``str`` instance (typed ``Final[str]``)."""
-
-    from ..external_constants import JSONL_MIME_TYPE
-
-    assert isinstance(JSONL_MIME_TYPE, str)
-
-
-def test_xlsx_mime_type_is_final_str() -> None:
-    """``XLSX_MIME_TYPE`` is a ``str`` instance (typed ``Final[str]``)."""
-
-    from ..external_constants import XLSX_MIME_TYPE
-
-    assert isinstance(XLSX_MIME_TYPE, str)
 
 
 def test_declarations_uses_json_mime_constant() -> None:
