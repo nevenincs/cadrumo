@@ -16,7 +16,7 @@ from pathlib import Path
 
 import pytest
 
-from ....core import Period
+from ....core import BindingSourceKind, Period
 from ....core.resources import resources
 from ....domain.calculations.registry import (
     CasillaId,
@@ -108,7 +108,7 @@ def test_relation_prefill_source_resolver_matches_local_store_prefill(tmp_path: 
         assert source_resolution.relation_values == {
             item.relation: item.value for item in prefill.values if item.value is not None
         }
-        assert source_resolution.owned_sources == ("relation_prefill",)
+        assert source_resolution.owned_sources == (BindingSourceKind.RELATION_PREFILL,)
         assert source_resolution.provenance
         assert all(item.source_kind == "relation_prefill" for item in source_resolution.provenance)
         relations_by_id = {relation.id: relation for relation in snapshot.revision.relations}
@@ -313,9 +313,7 @@ def _m130_pagos_requirement(
     requirements: tuple[RegistryFoldRequirement, ...],
 ) -> RegistryFoldRequirement:
     return next(
-        r
-        for r in requirements
-        if r.source_modelo == "130" and r.source_casilla_ids == (_M130_RESULTADO_FINAL_CASILLA,)
+        r for r in requirements if r.source_modelo == "130" and r.source_casilla_ids == (_M130_RESULTADO_FINAL_CASILLA,)
     )
 
 

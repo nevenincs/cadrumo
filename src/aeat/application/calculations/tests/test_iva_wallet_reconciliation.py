@@ -14,7 +14,7 @@ from ....adapters.outbound.aeat.sede import (
     IvaCompensationWalletObservation,
     IvaCompensationWalletRow,
 )
-from ....core import Period
+from ....core import BindingSourceKind, Period
 from ....core.errors import ERROR_REGISTRY, build_error_envelope
 from ....core.resources import resources
 from ....domain.iva_compensation._carry_forward import IvaCompensationPeriodState
@@ -120,7 +120,7 @@ def test_iva_wallet_decision_source_resolver_emits_modelo_303_binding_and_proven
     )
 
     assert resolution.binding_values == {"modelo-303-compensacion-pendiente-anteriores": Decimal("1200")}
-    assert resolution.owned_sources == ("iva_wallet_decision",)
+    assert resolution.owned_sources == (BindingSourceKind.IVA_WALLET_DECISION,)
     assert {item.source_kind for item in resolution.provenance} == {
         "aeat_wallet",
         "local_recurrence",
