@@ -64,44 +64,35 @@ def _trace_with_argument(*, run_id: str, argument_name: str, argument_value: str
     )
 
 
-@pytest.mark.parametrize(
-    ("trace", "forbidden_fragments", "required_fragments"),
-    (
-        pytest.param(
+def test_save_trace_redacts_sensitive_arguments(tmp_path: Path) -> None:
+    """Trace arguments redact NIFs, bearer tokens, and sensitive URL paths before disk."""
+    cases = (
+        (
             _trace_with_argument(run_id="0123456789abcdef", argument_name="taxpayer", argument_value=_NIF_CANARY),
             (_NIF_CANARY,),
             ("sha256:",),
-            id="nif",
         ),
-        pytest.param(
+        (
             _trace_with_argument(run_id="fedcba9876543210", argument_name="auth", argument_value=_BEARER_CANARY),
             (_BEARER_CANARY,),
             ("token:sha256:",),
-            id="bearer-token",
         ),
-        pytest.param(
+        (
             _trace_with_argument(run_id="abcdef0123456789", argument_name="endpoint", argument_value=_URL_CANARY),
             ("/internal/path", "token=12345"),
             (AEAT_HOST_SUFFIX_EXPECTED,),
-            id="url-path",
         ),
-    ),
-)
-def test_save_trace_redacts_sensitive_arguments(
-    tmp_path: Path,
-    trace: RunTrace,
-    forbidden_fragments: tuple[str, ...],
-    required_fragments: tuple[str, ...],
-) -> None:
-    """Trace arguments redact NIFs, bearer tokens, and sensitive URL paths before disk."""
-    with override_settings(aeat_runs_dir=str(tmp_path)):
-        save_trace(trace)
-        on_disk = (runs_dir() / trace.run_id / _TRACE_FILENAME).read_text(encoding="utf-8")
+    )
 
-    for forbidden in forbidden_fragments:
-        assert forbidden not in on_disk
-    for required in required_fragments:
-        assert required in on_disk
+    with override_settings(aeat_runs_dir=str(tmp_path)):
+        for trace, forbidden_fragments, required_fragments in cases:
+            save_trace(trace)
+            on_disk = (runs_dir() / trace.run_id / _TRACE_FILENAME).read_text(encoding="utf-8")
+
+            for forbidden in forbidden_fragments:
+                assert forbidden not in on_disk
+            for required in required_fragments:
+                assert required in on_disk
 
 
 def test_save_events_append_redacts_url_path(
