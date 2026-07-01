@@ -124,6 +124,15 @@ def test_statutory_cap_accepts_daily_cap_variants() -> None:
     assert {variant.id for variant in rule.statutory_cap_variants} == {"sin-pernocta", "con-pernocta"}
 
 
+def test_statutory_cap_variant_rejects_blank_label_at_schema_boundary() -> None:
+    with pytest.raises(ValidationError, match="statutory cap variant label"):
+        StatutoryCapVariant(
+            id="sin-pernocta",
+            label=tr("   "),
+            statutory_cap_eur_per_day=Decimal("26.67"),
+        )
+
+
 def test_statutory_cap_rejects_mixed_cap_modes() -> None:
     """A statutory-cap rule must not mix generic and variant cap modes."""
 
@@ -158,6 +167,15 @@ def test_statutory_multiplier_rejected_on_non_usage_ratio_kind() -> None:
             statutory_multiplier=Decimal("0.30"),
             citations=(_citation(),),
             notes=tr("Multiplicador estatutario incompatible."),
+        )
+
+
+def test_proportionality_rule_rejects_blank_notes_at_schema_boundary() -> None:
+    with pytest.raises(ValidationError, match="proportionality rule notes"):
+        ProportionalityRule(
+            kind=ProportionalityKind.FULL_DEDUCTIBLE,
+            citations=(_citation(),),
+            notes=tr("   "),
         )
 
 

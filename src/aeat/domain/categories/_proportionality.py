@@ -27,6 +27,12 @@ class _ProportionalityStrictFrozenModel(BaseModel):
     model_config = STRICT_FROZEN_CONFIG
 
 
+def _require_translatable_text(value: tr, field_name: str) -> None:
+    """Assert a translatable authority field contains non-blank text."""
+    if not str(value).strip():
+        raise CategoryValidationError(f"{field_name} must contain authoritative Spanish text")
+
+
 class CategoryCitationSource(StrEnum):
     """Allowed citation sources for explainable category profiles.
 
@@ -67,8 +73,7 @@ class CategoryCitation(_ProportionalityStrictFrozenModel):
 
     @model_validator(mode="after")
     def _validate_quote(self) -> CategoryCitation:
-        if not str(self.quote).strip():
-            raise CategoryValidationError("category citation quote must contain authoritative Spanish text")
+        _require_translatable_text(self.quote, "category citation quote")
         return self
 
 
@@ -131,6 +136,11 @@ class StatutoryCapVariant(_ProportionalityStrictFrozenModel):
     label: tr = Field(description="Human-readable label.")
     statutory_cap_eur_per_day: Decimal = Field(ge=Decimal("0"))
 
+    @model_validator(mode="after")
+    def _validate_label(self) -> StatutoryCapVariant:
+        _require_translatable_text(self.label, "statutory cap variant label")
+        return self
+
 
 class ProportionalityRule(_ProportionalityStrictFrozenModel):
     """Deductibility and proportionality rule for one spending category.
@@ -183,6 +193,7 @@ class ProportionalityRule(_ProportionalityStrictFrozenModel):
     def _validate_shape(self) -> ProportionalityRule:
         if not self.citations:
             raise CategoryValidationError("proportionality rules require at least one citation")
+        _require_translatable_text(self.notes, "proportionality rule notes")
         self._validate_fixed_percentage_invariants()
         self._validate_usage_ratio_invariants()
         if self.kind is ProportionalityKind.STATUTORY_CAP:
