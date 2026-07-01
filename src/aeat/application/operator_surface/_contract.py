@@ -62,7 +62,17 @@ ACCEPTED_ROOTS: tuple[RootSurface, ...] = (
         purpose="operational tax workflow over the active profile bucket",
         owns_storage_maintenance=False,
         owns_operational_workflow=True,
-        required_children=("overview", "ledger", "live", "modelo", "registry", "review", "contract", "agent"),
+        required_children=(
+            "overview",
+            "ledger",
+            "live",
+            "modelo",
+            "registry",
+            "review",
+            "contract",
+            "agent",
+            "quickfile",
+        ),
     ),
 )
 
@@ -346,6 +356,17 @@ MOUNTED_COMMAND_FAMILIES: tuple[MountedCommandFamily, ...] = (
         operator_question="materialise the shipped operator agent harness (rules, personas, skills) for a runtime",
         service_owner="aeat.application.operator_surface",
         commands=("agent",),
+        mutability=OperatorMutability.LOCAL_STATE_MUTATING,
+    ),
+    MountedCommandFamily(
+        domain=MountedCommandDomain.QUICKFILE,
+        root=RootSurfaceName.APP,
+        child="quickfile",
+        operator_question=(
+            "run the full local modelo filing chain (readiness, calculate, verify, export) in one command"
+        ),
+        service_owner="aeat.application.modelo",
+        commands=("quickfile",),
         mutability=OperatorMutability.LOCAL_STATE_MUTATING,
     ),
 )

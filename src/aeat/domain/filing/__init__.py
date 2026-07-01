@@ -22,11 +22,11 @@ The orchestration entry points (:func:`aeat.application.filing.build_draft`,
 :func:`aeat.application.filing.import_filing_from_justificante`)
 live at :mod:`aeat.application.filing`: domain records are stable
 boundary-crossing types; the use cases that compose them belong on
-the application layer. Justificante data is receipt metadata and import
-evidence, not a casilla-value authority; when the application import path needs
-an audit baseline, it composes these draft records with
-:class:`aeat.domain.submission.ModeloPresentado` rather than extending the draft
-schema with submission state.
+the application layer. :class:`aeat.domain.justificante.Justificante` data is
+receipt metadata and import evidence, not a casilla-value authority; when the
+application import path needs an audit baseline, it composes these draft records
+with :class:`aeat.domain.submission.ModeloPresentado` rather than extending the
+draft schema with submission state.
 
 See Also:
     :mod:`aeat.application.filing`
@@ -42,6 +42,9 @@ See Also:
     :mod:`aeat.domain.submission`
         Local-only submission audit records paired with imported or historical
         draft baselines without turning draft records into live submissions.
+    :mod:`aeat.domain.justificante`
+        Receipt metadata that filing imports may compose with drafts, without
+        treating receipt data as a casilla-value authority.
     :mod:`aeat.domain.calculations.registry`
         Registry snapshot and export-layout authority used to construct and
         verify draft casilla payloads.

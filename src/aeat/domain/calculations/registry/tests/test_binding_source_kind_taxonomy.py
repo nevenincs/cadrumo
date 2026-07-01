@@ -106,6 +106,11 @@ _MESH_ONLY_SOURCE_KINDS: frozenset[BindingSourceKind] = frozenset(
 _DEFERRED_UNDECLARED_SOURCE_KINDS: frozenset[BindingSourceKind] = frozenset(
     {
         BindingSourceKind.BIENES_INVERSION_REGULARIZACION,
+        # LIVA arts. 104-105 annual prorrata-general regularización — deferred until
+        # the provisional-carry store is wired; surfaces an advisory rather than
+        # resolving silently to zero, per ADR
+        # ``2026-07-01-iva-complexity-hardening-scope``.
+        BindingSourceKind.PRORRATA_REGULARIZACION,
     },
 )
 

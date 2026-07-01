@@ -138,6 +138,12 @@ DEFERRED_SOURCE_KINDS: frozenset[BindingSourceKind] = frozenset(
         # registry binding yet; the automatic casilla-43 feed is blocked on the
         # deferred prorrata-definitiva source (ADR 2026-07-01).
         BindingSourceKind.BIENES_INVERSION_REGULARIZACION,
+        # LIVA arts. 104-105 annual prorrata-general regularización por porcentaje
+        # definitivo — advisory-backed, no registry binding yet; casilla 44 stays
+        # operator-confirmable until the provisional-carry store is wired and the
+        # source is promoted to a live mesh binding (ADR
+        # 2026-07-01-iva-complexity-hardening-scope).
+        BindingSourceKind.PRORRATA_REGULARIZACION,
     },
 )
 

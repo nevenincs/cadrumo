@@ -29,25 +29,26 @@ from .._schema import Justificante
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
+_PRESENTED_AT = datetime(2026, 5, 27, 11, 15, 0, tzinfo=UTC)
+
 
 def _populated_justificante() -> Justificante:
     """Build a Justificante with every typed field set to a non-default value."""
 
-    now = datetime.now(UTC).replace(microsecond=0)
     return Justificante(
         csv="ABCD12345678EFGH",
         modelo="303",
         period=Period.from_year_and_code(2025, "1T"),
         ejercicio="2025",
         presentation_id="PRES-2025-001-XYZ",
-        presented_at=now,
+        presented_at=_PRESENTED_AT,
         tax_id="12345678Z",
         total_a_ingresar=Decimal("12345.67"),
         total_a_devolver=None,
         verification_url=AnyHttpUrl(justificante_wlpl_cotejo_url("ABCD12345678EFGH")),
         source_pdf_path=Path("justificantes/303-2025-1T-ABCD.pdf"),
         source_pdf_sha256="a" * 64,
-        parsed_at=now,
+        parsed_at=_PRESENTED_AT,
     )
 
 

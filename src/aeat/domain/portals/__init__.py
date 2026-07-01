@@ -48,6 +48,7 @@ from ._errors import (
 )
 
 if TYPE_CHECKING:
+    from ._drift import PortalDriftEvent, PortalDriftField, evaluate_portal_drift
     from ._metadata import PortalMetadata
     from ._registry import (
         PORTAL_REGISTRY,
@@ -59,7 +60,10 @@ if TYPE_CHECKING:
 _LAZY_NAMES: frozenset[str] = frozenset(
     {
         "PORTAL_REGISTRY",
+        "PortalDriftEvent",
+        "PortalDriftField",
         "PortalMetadata",
+        "evaluate_portal_drift",
         "get_portal",
         "portals_by_category",
         "portals_for_modelo",
@@ -71,11 +75,14 @@ def __getattr__(name: str) -> object:
     """Lazily materialise the registry surface on first access."""
     if name not in _LAZY_NAMES:
         raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
-    from . import _metadata, _registry
+    from . import _drift, _metadata, _registry
 
     resolved = {
         "PORTAL_REGISTRY": _registry.PORTAL_REGISTRY,
+        "PortalDriftEvent": _drift.PortalDriftEvent,
+        "PortalDriftField": _drift.PortalDriftField,
         "PortalMetadata": _metadata.PortalMetadata,
+        "evaluate_portal_drift": _drift.evaluate_portal_drift,
         "get_portal": _registry.get_portal,
         "portals_by_category": _registry.portals_by_category,
         "portals_for_modelo": _registry.portals_for_modelo,
@@ -90,12 +97,15 @@ __all__ = (
     "AuthMethod",
     "Portal",
     "PortalCategory",
+    "PortalDriftEvent",
+    "PortalDriftField",
     "PortalHost",
     "PortalIntegrityError",
     "PortalMetadata",
     "PortalRegistryError",
     "UnknownPortalError",
     "UrlStability",
+    "evaluate_portal_drift",
     "get_portal",
     "portals_by_category",
     "portals_for_modelo",

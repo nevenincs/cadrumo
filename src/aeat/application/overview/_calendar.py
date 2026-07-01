@@ -39,6 +39,9 @@ from types import MappingProxyType
 from typing import TYPE_CHECKING
 
 from ...core import Period as _Period
+from ...core import PostFilingEventKind as _PostFilingEventKind
+from ...core import classify_post_filing_event_kind as _classify_post_filing_event_kind
+from ...core import post_filing_event_is_actionable as _post_filing_event_is_actionable
 from ...core.external_constants import IVA_REGIME_MODELOS
 from ...core.i18n import tr as _tr
 from ...core.logging import get_logger as _get_logger
@@ -196,6 +199,7 @@ def calendar_events_from_expedientes_snapshots(
             events.append(
                 OverviewCalendarEvent(
                     event_type=OverviewCalendarEventType.FILING,
+                    post_filing_kind=_PostFilingEventKind.DECLARACION_PRESENTADA,
                     event_date=event_date,
                     source="aeat_sede_expedientes",
                     summary=summary,
@@ -252,9 +256,11 @@ def calendar_events_from_notification_snapshots(
             read_state = "read" if row.leida is True else "unread" if row.leida is False else None
             status = read_state or row.tipo
             summary = row.concepto.strip() or row.tipo
+            post_filing_kind = _classify_post_filing_event_kind(concepto=row.concepto, tipo=row.tipo)
             events.append(
                 OverviewCalendarEvent(
                     event_type=OverviewCalendarEventType.MESSAGE,
+                    post_filing_kind=post_filing_kind,
                     event_date=event_date,
                     source="aeat_sede_notifications",
                     summary=summary,
@@ -300,6 +306,7 @@ def calendar_events_from_justificante_capture_snapshots(
         events.append(
             OverviewCalendarEvent(
                 event_type=OverviewCalendarEventType.FILING,
+                post_filing_kind=_PostFilingEventKind.DECLARACION_PRESENTADA,
                 event_date=event_date,
                 source="aeat_sede_live_capture",
                 summary=(
@@ -379,6 +386,30 @@ def build_overview_calendar_events(
     return _dedupe_calendar_events(events)
 
 
+def actionable_post_filing_events(
+    events: tuple[OverviewCalendarEvent, ...],
+) -> tuple[OverviewCalendarEvent, ...]:
+    """Return the observed events that demand operator attention.
+
+    An event is actionable when its
+    :attr:`~aeat.application.overview.OverviewCalendarEvent.post_filing_kind`
+    is a member of :data:`~aeat.core.ACTIONABLE_POST_FILING_EVENT_KINDS` — a
+    requerimiento, a propuesta / acuerdo de liquidación, a procedimiento
+    sancionador, or a recaudación enforcement act (providencia de apremio or
+    diligencia de embargo). These are the post-filing events an operator must
+    not miss; the overview surfaces them so a pulled requerimiento is not
+    buried in an undifferentiated message list.
+
+    The result preserves the input order (the callers pass deduped,
+    sort-stable event tuples).
+    """
+    return tuple(
+        event
+        for event in events
+        if event.post_filing_kind is not None and _post_filing_event_is_actionable(event.post_filing_kind)
+    )
+
+
 def calendar_events_from_modelo_records(
     filing_records: tuple[ModeloRecord, ...],
     calendar_range: OverviewCalendarRange,
@@ -421,6 +452,7 @@ def calendar_events_from_modelo_records(
         events.append(
             OverviewCalendarEvent(
                 event_type=OverviewCalendarEventType.FILING,
+                post_filing_kind=_PostFilingEventKind.DECLARACION_PRESENTADA,
                 event_date=event_date,
                 source="modelo_filing_record",
                 reference_id=record.filing_record_id,

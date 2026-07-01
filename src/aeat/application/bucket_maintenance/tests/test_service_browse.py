@@ -33,6 +33,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 
 _BUCKET_ID = "bucket-maintenance-browse-test"
+_OBJECT_WRITTEN_AT = datetime(2026, 5, 28, 11, 30, 0, tzinfo=UTC)
 
 
 @pytest.fixture
@@ -46,10 +47,9 @@ def runtime(tmp_path: Path) -> Iterator[TestRuntimeProfile]:
 
 
 def _write_object(runtime: TestRuntimeProfile, namespace: str, object_key: str) -> None:
-    now = datetime.now(UTC)
     envelope = Envelope[UserProfileFact](
         schema_version=1,
-        written_at=now,
+        written_at=_OBJECT_WRITTEN_AT,
         classification=SensitivityClass.FINANCIAL,
         payload=UserProfileFact(path="placeholder.key", value="x"),
     )
@@ -60,7 +60,7 @@ def _write_object(runtime: TestRuntimeProfile, namespace: str, object_key: str) 
                 object_key=object_key,
                 classification=SensitivityClass.FINANCIAL,
                 schema_version=1,
-                written_at=now,
+                written_at=_OBJECT_WRITTEN_AT,
                 payload=envelope.model_dump_json().encode("utf-8"),
             ),
         ),

@@ -216,6 +216,10 @@ _GROUP_CALLBACK_EMIT_KEYS: frozenset[str] = frozenset(
         # ``invoke_without_command`` group-callback that materialises the operator
         # workspace under ``agent``, with no leaf subcommand.
         "agent",
+        # ``aeat app quickfile`` is the same shape: an ``invoke_without_command``
+        # group-callback that runs the full readiness -> calculate -> verify ->
+        # export chain and emits under ``quickfile``, with no leaf subcommand.
+        "quickfile",
     },
 )
 

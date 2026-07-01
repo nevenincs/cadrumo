@@ -20,10 +20,13 @@ import pytest
 
 from .._errors import RegistryLoadError, RegistryValidationError
 from .._loader import (
+    ModeloSource,
+    clear_fingerprint_cache,
     discover_modelo_sources,
     load_legal_parameters_only,
     load_modelo_directory,
     load_modelo_file,
+    load_modelo_source,
     load_registry_tree,
 )
 from ._loader_directory_mode_support import (
@@ -483,6 +486,90 @@ source_refs = ["aeat-manual"]
 
     with pytest.raises(RegistryLoadError, match="also declared"):
         discover_modelo_sources(modelos_dir)
+
+
+def test_registry_tree_cache_invalidates_when_single_file_becomes_directory_inside_ttl(tmp_path: Path) -> None:
+    """Directory-level layout changes must not reuse the previous registry-tree fingerprint."""
+
+    registry_root = tmp_path / "registry" / "aeat"
+    modelos_dir = registry_root / "modelos"
+    (registry_root / "legal").mkdir(parents=True)
+    modelos_dir.mkdir()
+
+    single_file = modelos_dir / "999.toml"
+    single_file.write_text(
+        _standard_manifest_text("Cache invalidation before")
+        + "\n"
+        + _standard_revision_preamble_text()
+        + 'label = "before"\n',
+        encoding="utf-8",
+    )
+
+    clear_fingerprint_cache()
+    first_modelos, _first_catalogues = load_registry_tree(registry_root)
+    first_by_id = {modelo.id: modelo for modelo in first_modelos}
+    assert first_by_id["999"].revisions["2025"].label == "before"
+
+    single_file.unlink()
+    fragmented = modelos_dir / "999"
+    _build_directory_layout(
+        fragmented,
+        manifest_text=_standard_manifest_text("Cache invalidation after"),
+        revision_files={"revision.toml": _standard_revision_preamble_text() + 'label = "after"\n'},
+    )
+
+    second_modelos, _second_catalogues = load_registry_tree(registry_root)
+    second_by_id = {modelo.id: modelo for modelo in second_modelos}
+    assert second_by_id["999"].revisions["2025"].label == "after"
+    assert (modelos_dir / "999.toml").exists() is False
+    assert (modelos_dir / "999" / "manifest.toml").is_file()
+
+
+def test_stale_discovered_single_file_reports_typed_disappearance(tmp_path: Path) -> None:
+    """A source removed after discovery raises RegistryLoadError, not bare FileNotFoundError."""
+
+    source_path = tmp_path / "999.toml"
+    source_path.write_text(
+        _standard_manifest_text("Disappearing source")
+        + "\n"
+        + _standard_revision_preamble_text()
+        + 'label = "before"\n',
+        encoding="utf-8",
+    )
+    source = ModeloSource(
+        modelo_id="999",
+        layout="single_file",
+        path=source_path,
+        manifest_path=source_path,
+    )
+
+    source_path.unlink()
+
+    with pytest.raises(RegistryLoadError, match="registry TOML could not be fingerprinted") as exc_info:
+        load_modelo_source(source)
+
+    message = str(exc_info.value)
+    assert str(source_path) in message
+    assert "retry after concurrent registry writes settle" in message
+
+
+def test_stable_malformed_modelo_toml_remains_invalid_registry_data(tmp_path: Path) -> None:
+    """Malformed TOML that does not change during load remains a real parse error."""
+
+    registry_root = tmp_path / "registry" / "aeat"
+    modelos_dir = registry_root / "modelos"
+    (registry_root / "legal").mkdir(parents=True)
+    modelos_dir.mkdir()
+    bad_path = modelos_dir / "999.toml"
+    bad_path.write_text("[modelo]\nid = ", encoding="utf-8")
+
+    clear_fingerprint_cache()
+    with pytest.raises(RegistryLoadError, match="invalid TOML") as exc_info:
+        load_registry_tree(registry_root)
+
+    message = str(exc_info.value)
+    assert str(bad_path) in message
+    assert "changed during load" not in message
 
 
 def test_fragmented_modelos_do_not_keep_stale_single_file_siblings() -> None:

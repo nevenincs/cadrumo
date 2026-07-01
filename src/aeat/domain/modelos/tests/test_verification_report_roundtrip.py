@@ -54,12 +54,15 @@ _IVA_RESULTADO_CASILLA: CasillaId = _casilla_id("iva.resultado")
 _IVA_RESOLVED_CASILLA_IDS = (_IVA_DEDUCIBLE_CASILLA, _IVA_RESULTADO_CASILLA)
 _IVA_MISSING_REQUIRED_CASILLA_IDS = (_IVA_DEVENGADO_CASILLA,)
 _TEST_FINDING_LEGAL_REFS = ("ley-58-2003:art-119",)
+_REPORT_RUN_AT = datetime(2026, 5, 28, 11, 5, 0, tzinfo=UTC)
+_LEGACY_KEY_REPORT_RUN_AT = datetime(2026, 5, 28, 11, 10, 0, tzinfo=UTC)
+_CORRUPT_ENVELOPE_WRITTEN_AT = datetime(2026, 5, 28, 11, 15, 0, tzinfo=UTC)
+_FUTURE_ENVELOPE_WRITTEN_AT = datetime(2026, 5, 28, 11, 20, 0, tzinfo=UTC)
 
 
 def _populated_report() -> VerificationReport:
     """Build a VerificationReport with every defaultable field non-default."""
 
-    now = datetime.now(UTC).replace(microsecond=0)
     revision_id = "a" * 64
     verified_by = "cli/aeat"
     findings = (
@@ -94,7 +97,7 @@ def _populated_report() -> VerificationReport:
         findings=findings,
         resolved_casilla_ids=_IVA_RESOLVED_CASILLA_IDS,
         missing_required_casilla_ids=_IVA_MISSING_REQUIRED_CASILLA_IDS,
-        run_at=now,
+        run_at=_REPORT_RUN_AT,
         verified_by=verified_by,
         # Non-default lifecycle bit: granted_verificado_completo defaults
         # to False naturally on BLOCKED reports, but we still pin the
@@ -142,7 +145,6 @@ def test_verification_report_catalogue_survives_encrypted_storage(
 def test_verification_report_rejects_legacy_casilla_list_keys() -> None:
     """VerificationReport must not accept pre-canonical casilla list field names."""
 
-    now = datetime.now(UTC).replace(microsecond=0)
     revision_id = "b" * 64
     verified_by = "cli/aeat"
     report_id = derive_verification_report_id(
@@ -161,7 +163,7 @@ def test_verification_report_rejects_legacy_casilla_list_keys() -> None:
                 "findings": (),
                 "resolved_casillas": _IVA_RESOLVED_CASILLA_IDS,
                 "missing_required_casillas": _IVA_MISSING_REQUIRED_CASILLA_IDS,
-                "run_at": now,
+                "run_at": _LEGACY_KEY_REPORT_RUN_AT,
                 "verified_by": verified_by,
                 "granted_verificado_completo": False,
             },
@@ -361,7 +363,7 @@ def test_verification_report_catalogue_wrong_inner_classification_is_localized(
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
         envelope = Envelope[VerificationReportCatalogue](
             schema_version=_VERIFICATION_CATALOGUE_VERSION,
-            written_at=datetime.now(UTC).replace(microsecond=0),
+            written_at=_CORRUPT_ENVELOPE_WRITTEN_AT,
             classification=SensitivityClass.AUDIT,
             payload=VerificationReportCatalogue(),
         )
@@ -396,7 +398,7 @@ def test_verification_report_catalogue_unsupported_storage_version_is_localized(
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
         envelope = Envelope[VerificationReportCatalogue](
             schema_version=stored_schema_version,
-            written_at=datetime.now(UTC).replace(microsecond=0),
+            written_at=_FUTURE_ENVELOPE_WRITTEN_AT,
             classification=SensitivityClass.FINANCIAL,
             payload=VerificationReportCatalogue(),
         )

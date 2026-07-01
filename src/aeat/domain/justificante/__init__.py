@@ -30,6 +30,14 @@ See Also:
     :mod:`aeat.application.live`
         Read-only live-capture surface that can persist and verify justificante
         evidence against existing filing records.
+    :func:`aeat.application.live.register_capture_as_filing_evidence`
+        Live-capture path that parses a persisted receipt snapshot into
+        :class:`Justificante` metadata before stamping matching local filing
+        evidence.
+    :func:`aeat.application.modelo.import_external_filing_evidence`
+        Modelo work-unit import path that requires matching
+        :class:`JustificanteRepository` metadata for receipt-bound evidence
+        kinds.
     :mod:`aeat.domain.submission`
         Local-only :class:`aeat.domain.submission.ModeloPresentado` audit trail
         populated by imported or historical receipt evidence.

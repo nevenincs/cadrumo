@@ -239,6 +239,13 @@ Set up a recovery key, change or recover your passphrase, lock, or reset.
 Fix active-profile, storage, registry, and authentication problems.
 :::
 
+:::{grid-item-card} Recovery Runbooks
+:link: ../runbooks/index
+:link-type: doc
+
+Step-by-step recovery procedures for common refusals and failures.
+:::
+
 ::::
 
 `aeat` does not submit to AEAT. Exported files are local files. You upload them

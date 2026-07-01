@@ -40,6 +40,7 @@ from ...application.overview import (
 )
 from ...core.hashing import sha256_hex
 from ...core.i18n import tr
+from ...core.json_contract import Notice
 from ...core.logging import get_logger
 from ._common import (
     _bad,
@@ -57,7 +58,11 @@ from ._overview_payloads import (
     OverviewExplainResult,
     OverviewStatusResult,
 )
-from ._overview_rendering import overview_next_step_notices, render_cli_overview_status_lines
+from ._overview_rendering import (
+    overview_next_step_notices,
+    overview_post_filing_event_notices,
+    render_cli_overview_status_lines,
+)
 
 logger = get_logger(__name__)
 
@@ -286,6 +291,8 @@ def _calendar_event_text_line(event: OverviewCalendarEvent) -> str:
         event.reference_id,
         event.summary,
     ]
+    if event.post_filing_kind is not None:
+        parts.append(f"kind={event.post_filing_kind.value}")
     if event.modelo:
         parts.append(f"modelo={event.modelo}")
     if event.filing_year is not None:
@@ -623,7 +630,16 @@ def overview_calendar(
             f"\tverdict={suppressed.verdict.value}"
             f"\treason={suppressed.reason[:80]}",
         )
-    _emit_envelope(ctx, command="overview.calendar", result=typed_cal, lines=lines)
+    post_filing_notices = overview_post_filing_event_notices(cal.events)
+    for notice in post_filing_notices:
+        lines.append(f"post_filing_pending\t{len(notice.context)}\t{notice.message}")
+    _emit_envelope(
+        ctx,
+        command="overview.calendar",
+        result=typed_cal,
+        lines=lines,
+        notices=post_filing_notices,
+    )
 
 
 def _overview_calendar_all_profiles(
@@ -663,6 +679,7 @@ def _overview_calendar_all_profiles(
         f"profiles\t{len(active_buckets)}",
     ]
     all_calendars: list[dict[str, object]] = []
+    all_post_filing_notices: list[Notice] = []
 
     repository = ProfileRepository()
     for bucket_id, pointer in sorted(active_buckets.items(), key=lambda kv: kv[1].label):
@@ -737,6 +754,10 @@ def _overview_calendar_all_profiles(
                 f"\tverdict={suppressed.verdict.value}"
                 f"\treason={suppressed.reason[:80]}",
             )
+        for notice in overview_post_filing_event_notices(cal.events):
+            tagged = notice.model_copy(update={"context": {**(notice.context or {}), "profile": pointer.label}})
+            all_post_filing_notices.append(tagged)
+            all_lines.append(f"post_filing_pending\t{pointer.label}\t{len(notice.context)}\t{notice.message}")
 
         all_calendars.append(
             {
@@ -747,7 +768,13 @@ def _overview_calendar_all_profiles(
         )
 
     typed_all = OverviewCalendarResult.model_validate({"profiles": all_calendars})
-    _emit_envelope(ctx, command="overview.calendar", result=typed_all, lines=all_lines)
+    _emit_envelope(
+        ctx,
+        command="overview.calendar",
+        result=typed_all,
+        lines=all_lines,
+        notices=all_post_filing_notices,
+    )
 
 
 @app.command(

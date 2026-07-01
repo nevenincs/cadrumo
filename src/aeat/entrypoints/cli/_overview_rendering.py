@@ -11,7 +11,13 @@ stay upstream in :mod:`~aeat.application.overview` and
 
 from __future__ import annotations
 
-from ...application.overview import OverviewStatusReport
+from collections.abc import Sequence
+
+from ...application.overview import (
+    OverviewCalendarEvent,
+    OverviewStatusReport,
+    actionable_post_filing_events,
+)
 from ...core import Modelo
 from ...core.i18n import tr
 from ...core.json_contract import Notice, NoticeSeverity
@@ -30,6 +36,51 @@ def overview_next_step_notices(report: OverviewStatusReport) -> list[Notice]:
         Notice(severity=NoticeSeverity.INFO, code="overview.status.next_step", message=line.strip())
         for line in _next_step_lines(report)
         if line.strip()
+    ]
+
+
+_POST_FILING_NOTICE_CODE = "overview.post_filing.pending"
+
+
+def overview_post_filing_event_notices(events: Sequence[OverviewCalendarEvent]) -> list[Notice]:
+    """Surface pulled AEAT post-filing events that demand operator attention.
+
+    Filters the observed calendar events to the actionable
+    :class:`~aeat.core.PostFilingEventKind` categories through
+    :func:`~aeat.application.overview.actionable_post_filing_events` — a
+    requerimiento, a propuesta / acuerdo de liquidación, a procedimiento
+    sancionador, or a recaudación enforcement act — and projects them onto a
+    single ``warning``-severity :class:`~aeat.core.json_contract.Notice` so the
+    overview never silently buries a pending requerimiento in an
+    undifferentiated event list. The per-event reference->kind map rides on
+    :attr:`~aeat.core.json_contract.Notice.context` so machine consumers keep the
+    structured list. Empty when no actionable event is present.
+    """
+    actionable = actionable_post_filing_events(tuple(events))
+    if not actionable:
+        return []
+    kinds = sorted({event.post_filing_kind.value for event in actionable if event.post_filing_kind is not None})
+    message = tr(
+        "cli.overview.post_filing.pending",
+        default=(
+            "%{count} AEAT post-filing event(s) require attention: %{kinds}. "
+            "Review them with 'aeat app live notifications list'."
+        ),
+        count=len(actionable),
+        kinds=", ".join(kinds),
+    )
+    return [
+        Notice(
+            severity=NoticeSeverity.WARNING,
+            code=_POST_FILING_NOTICE_CODE,
+            message=message,
+            suggestion="aeat app live notifications list",
+            context={
+                event.reference_id: event.post_filing_kind.value
+                for event in actionable
+                if event.post_filing_kind is not None
+            },
+        ),
     ]
 
 
@@ -212,4 +263,7 @@ def _filing_obligation_lines(report: OverviewStatusReport) -> tuple[str, ...]:
     return tuple(lines)
 
 
-__all__ = ["render_cli_overview_status_lines"]
+__all__ = [
+    "overview_post_filing_event_notices",
+    "render_cli_overview_status_lines",
+]

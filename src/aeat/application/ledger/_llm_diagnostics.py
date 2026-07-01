@@ -9,7 +9,9 @@ operator-facing report:
 * the classification confidence stamped on each ledger
   :class:`~aeat.domain.transactions.Transaction` whose active decision came
   from an LLM classifier (``classified_by`` shaped ``llm:<provider>:<model>``
-  with a ``classification_confidence`` in ``[0, 1]``).
+  with a ``classification_confidence`` in ``[0, 1]``), loaded from the active
+  bucket's :class:`~aeat.domain.transactions.TransactionCatalogueRepository`
+  when callers do not inject transactions directly.
 
 No new tracking is introduced here: every figure is aggregated from records
 already on disk. The usage store and the classification store use distinct
@@ -20,6 +22,14 @@ sections rather than a lossy cross-namespace join.
 The report reads only accounting metadata (token counts, cost, confidence
 scores, provider labels); it never surfaces the persisted response text or any
 financial content, honouring ``sensitive-financial-data-secure-storage-only``.
+
+See Also:
+    :func:`build_llm_diagnostics_report`:
+        Public aggregator that folds the usage log and ledger confidence rows.
+    :class:`~aeat.adapters.outbound.llm.UsageRecorder`:
+        Storage boundary for provider/token/cost accounting records.
+    :class:`~aeat.domain.transactions.TransactionCatalogueRepository`:
+        Bucket-scoped ledger catalogue reader used for confidence diagnostics.
 """
 
 from __future__ import annotations
@@ -151,8 +161,10 @@ def build_llm_diagnostics_report(
             counts as low-confidence.
         usage_recorder: Injected recorder; defaults to the active-bucket
             :class:`~aeat.adapters.outbound.llm.UsageRecorder`.
-        bucket_id: Ledger bucket to read confidence from; defaults to the
-            active bucket. Ignored when ``transactions`` is supplied.
+        bucket_id: Ledger bucket whose
+            :class:`~aeat.domain.transactions.TransactionCatalogueRepository`
+            supplies confidence rows; defaults to the active bucket. Ignored
+            when ``transactions`` is supplied.
         transactions: Injected transaction iterable; when ``None`` the active
             (or ``bucket_id``) ledger catalogue is loaded.
 

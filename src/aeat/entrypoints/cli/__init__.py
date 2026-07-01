@@ -712,6 +712,7 @@ _LAZY_COMMAND_MODULES: frozenset[str] = frozenset(
         "._app_agent_workspace",
         "._app_contract",
         "._app_live",
+        "._app_quickfile",
         "._config",
         "._ledger",
         "._modelo",
@@ -768,6 +769,7 @@ _lazy("app", "agent", "._app_agent_workspace")
 _lazy("app", "ledger", "._ledger")
 _lazy("app", "live", "._app_live")
 _lazy("app", "modelo", "._modelo")
+_lazy("app", "quickfile", "._app_quickfile")
 _lazy("app", "registry", ".registry")
 _lazy("app", "review", "._review")
 

@@ -130,6 +130,7 @@ class OverviewCalendarEventPayload(OutputSchema):
     """
 
     event_type: str
+    post_filing_kind: str | None = None
     event_date: str
     source: str
     summary: str

@@ -24,6 +24,7 @@ from pydantic import BaseModel, Field, field_serializer, field_validator, model_
 
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core import Period as _Period
+from ...core import PostFilingEventKind as _PostFilingEventKind
 from ...domain.calculations.registry.applicability import ApplicabilityVerdict
 from ...domain.deadlines import HolidayJurisdiction as _HolidayJurisdiction
 from ...domain.deadlines import ObligationStatus as _ObligationStatus
@@ -266,11 +267,19 @@ class OverviewCalendarEvent(BaseModel):
     persisted snapshot already observed it. Messages and unverified filings
     remain event-only observations and do not imply
     :class:`OverviewCalendarFilingEvidence` or receipt verification.
+
+    ``post_filing_kind`` carries the fine-grained
+    :class:`~aeat.core.PostFilingEventKind` procedural category (requerimiento,
+    propuesta de liquidación, diligencia de embargo, …) classified from the
+    pulled notification / expediente, so the coarse ``event_type`` axis does not
+    collapse a demand for documents and an informational comunicación onto the
+    same ``message`` row.
     """
 
     model_config = _STRICT_FROZEN
 
     event_type: OverviewCalendarEventType
+    post_filing_kind: _PostFilingEventKind | None = None
     event_date: date
     source: str = Field(min_length=1, max_length=64)
     summary: str = Field(min_length=1, max_length=256)

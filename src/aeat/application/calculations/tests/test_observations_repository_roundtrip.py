@@ -56,6 +56,7 @@ _IVA_RESULTADO_CASILLA: CasillaId = _casilla_id("iva.resultado")
 _M303_PRINTED_RESULT_REFERENCE_CASILLA: CasillaId = _casilla_id("69")
 _M130_ABSENT_BY_DESIGN_CASILLA: CasillaId = _casilla_id("15")
 _M130_PAYMENT_BASE_CASILLA: CasillaId = _casilla_id("14")
+_CAPTURED_AT = datetime(2026, 5, 28, 11, 35, 0, tzinfo=UTC)
 
 
 def _populated_observation() -> RegistryModeloObservation:
@@ -95,12 +96,11 @@ def test_calculation_observation_survives_encrypted_storage_roundtrip(
 
     with isolated_runtime_profile(tmp_path=tmp_path):
         original = _populated_observation()
-        captured_at = datetime.now(UTC).replace(microsecond=0)
         repo = CalculationObservationRepository()
         repo.save_observation(
             original,
             source_kind="aeat_sede_justificante",
-            captured_at=captured_at,
+            captured_at=_CAPTURED_AT,
             source_metadata={
                 "aeat_register_status": "ALTA",
                 "aeat_expediente_id": "202530300000001Z",
@@ -111,7 +111,7 @@ def test_calculation_observation_survives_encrypted_storage_roundtrip(
         assert loaded is not None
         assert loaded.observation == original
         assert loaded.source_kind == "aeat_sede_justificante"
-        assert loaded.captured_at == captured_at
+        assert loaded.captured_at == _CAPTURED_AT
         assert loaded.source_metadata == {
             "aeat_register_status": "ALTA",
             "aeat_expediente_id": "202530300000001Z",
@@ -153,7 +153,7 @@ def test_calculation_observation_repository_rejects_printed_number_reference(
             repo.save_observation(
                 observation,
                 source_kind="aeat_sede_justificante",
-                captured_at=datetime.now(UTC).replace(microsecond=0),
+                captured_at=_CAPTURED_AT,
             )
 
         assert "canonical casilla.id values" in str(raised.value)
@@ -192,7 +192,7 @@ def test_calculation_observation_repository_rejects_printed_operand_casilla_ref(
             repo.save_observation(
                 observation,
                 source_kind="aeat_sede_justificante",
-                captured_at=datetime.now(UTC).replace(microsecond=0),
+                captured_at=_CAPTURED_AT,
             )
 
         assert raised.value.context is not None
@@ -243,12 +243,11 @@ def test_calculation_observation_absent_by_design_flag_survives_encrypted_storag
             ),
         )
 
-        captured_at = datetime.now(UTC).replace(microsecond=0)
         repo = CalculationObservationRepository()
         repo.save_observation(
             absent_by_design_observation,
             source_kind="aeat_sede_justificante",
-            captured_at=captured_at,
+            captured_at=_CAPTURED_AT,
         )
         loaded = repo.load_observation("130", Period.from_year_and_code(2026, "1T"))
 
@@ -332,12 +331,11 @@ def test_calculation_observation_dropped_legal_refs_surfaces_at_load(
 
     with isolated_runtime_profile(tmp_path=tmp_path) as profile:
         original = _populated_observation()
-        captured_at = datetime.now(UTC).replace(microsecond=0)
         repo = CalculationObservationRepository()
         repo.save_observation(
             original,
             source_kind="aeat_sede_justificante",
-            captured_at=captured_at,
+            captured_at=_CAPTURED_AT,
         )
 
         object_key = observation_key("303", Period.from_year_and_code(2025, "1T"))

@@ -48,6 +48,8 @@ _BUCKET_ID = "30330300-0000-4000-8000-000000000700"
 _RECORD_BUCKET_ID = "30330300-0000-4000-8000-000000000701"
 _P_2024_2T = Period.from_year_and_code(2024, "2T")
 _P_2026_01 = Period.from_year_and_code(2026, "01")
+_CORRUPT_ENVELOPE_WRITTEN_AT = datetime(2026, 5, 28, 10, 55, 0, tzinfo=UTC)
+_FUTURE_ENVELOPE_WRITTEN_AT = datetime(2026, 5, 28, 11, 0, 0, tzinfo=UTC)
 
 
 def _hex(seed: str) -> str:
@@ -443,7 +445,7 @@ def test_filing_record_catalogue_wrong_inner_classification_is_localized(
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
         envelope = Envelope[ModeloRecordCatalogue](
             schema_version=_FILING_CATALOGUE_VERSION,
-            written_at=datetime.now(UTC).replace(microsecond=0),
+            written_at=_CORRUPT_ENVELOPE_WRITTEN_AT,
             classification=SensitivityClass.AUDIT,
             payload=ModeloRecordCatalogue(),
         )
@@ -478,7 +480,7 @@ def test_filing_record_catalogue_unsupported_inner_version_is_localized(
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
         envelope = Envelope[ModeloRecordCatalogue](
             schema_version=stored_schema_version,
-            written_at=datetime.now(UTC).replace(microsecond=0),
+            written_at=_FUTURE_ENVELOPE_WRITTEN_AT,
             classification=SensitivityClass.FINANCIAL,
             payload=ModeloRecordCatalogue(),
         )

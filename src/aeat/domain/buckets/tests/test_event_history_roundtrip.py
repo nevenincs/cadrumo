@@ -35,6 +35,8 @@ from .._event_repository import (
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
+_OCCURRED_AT = datetime(2026, 5, 28, 9, 0, 0, tzinfo=UTC)
+
 
 def _build_event(
     *,
@@ -74,11 +76,10 @@ def test_bucket_event_history_survives_encrypted_storage_roundtrip(
 
     with isolated_runtime_profile(tmp_path=tmp_path):
         bucket_id = "b" * 32
-        now = datetime.now(UTC).replace(microsecond=0)
         event_a = _build_event(
             bucket_id=bucket_id,
             event_type=BucketEventType.MODELO_CALCULATION_CREATED,
-            occurred_at=now,
+            occurred_at=_OCCURRED_AT,
             actor="cli/aeat",
             object_type=BucketEventObjectType.CALCULATION_REVISION,
             object_id="r" * 64,
@@ -87,7 +88,7 @@ def test_bucket_event_history_survives_encrypted_storage_roundtrip(
         event_b = _build_event(
             bucket_id=bucket_id,
             event_type=BucketEventType.PROFILE_SELECTED,
-            occurred_at=now,
+            occurred_at=_OCCURRED_AT,
             actor="cli/aeat",
             object_type=BucketEventObjectType.PROFILE,
             object_id="profile-active",
@@ -146,11 +147,10 @@ def test_bucket_event_payload_tampering_surfaces_at_load(tmp_path: Path) -> None
 
     with isolated_runtime_profile(tmp_path=tmp_path) as profile:
         bucket_id = "b" * 32
-        now = datetime.now(UTC).replace(microsecond=0)
         event = _build_event(
             bucket_id=bucket_id,
             event_type=BucketEventType.MODELO_CALCULATION_CREATED,
-            occurred_at=now,
+            occurred_at=_OCCURRED_AT,
             actor="cli/aeat",
             object_type=BucketEventObjectType.CALCULATION_REVISION,
             object_id="r" * 64,

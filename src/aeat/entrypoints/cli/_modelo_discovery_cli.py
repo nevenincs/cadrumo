@@ -29,7 +29,7 @@ from ...application.modelo import (
     registry_list_modelos,
     registry_modelo_codes,
 )
-from ...core import Period, TaxDomain
+from ...core import NON_REGISTRY_MODELOS, Modelo, Period, TaxDomain
 from ...core.i18n import output_language, tr
 from ...domain.calculations.registry import (
     InputKind,
@@ -101,14 +101,16 @@ def register_discovery_commands(
     _register_formulas_command(app, deps)
 
 
-# The registry-bound accepted-code set for the ``--modelo`` option, built
-# once from the registry authority (:func:`registry_modelo_codes`). ``--help``
-# renders the full accepted-code set and an unknown ``--modelo`` refuses at
-# parse time with the accepted list, per the CLI-Choice-hint mandate in
-# ``aeat-architecture-boundaries``. The choice is a module-level constant
-# because ``from __future__ import annotations`` stringifies the ``Annotated``
-# metadata carrying ``click_type=...`` and Typer re-evaluates that string in
-# this module's global namespace, where a closure-local binding is invisible.
+# The accepted-code set for the ``--modelo`` option is derived from the closed
+# core identifier taxonomy instead of the registry authority. Help and
+# parse-time refusals are introspection surfaces; they must render even while a
+# peer registry authoring slice is fail-hard invalid. Command bodies still call
+# the registry-backed services for real data access.
+#
+# The choice is a module-level constant because ``from __future__ import
+# annotations`` stringifies the ``Annotated`` metadata carrying
+# ``click_type=...`` and Typer re-evaluates that string in this module's global
+# namespace, where a closure-local binding is invisible.
 #
 # typer vendors its own copy of click, so ``click.Choice`` is a
 # ``click.types.ParamType`` while ``typer.Option``'s ``click_type`` expects
@@ -121,7 +123,7 @@ def register_discovery_commands(
 # static duality, with no Any escape.
 _MODELO_CHOICE: typer_click_types.ParamType = cast(
     typer_click_types.ParamType,
-    click.Choice(list(registry_modelo_codes())),
+    click.Choice([modelo.value for modelo in Modelo if modelo not in NON_REGISTRY_MODELOS]),
 )
 
 

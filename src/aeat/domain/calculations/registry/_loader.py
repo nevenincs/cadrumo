@@ -8,6 +8,7 @@ file or a set of append fragments merged in deterministic order.
 
 from __future__ import annotations
 
+import os
 from collections.abc import Iterable, Mapping
 from dataclasses import dataclass
 from functools import lru_cache
@@ -66,6 +67,8 @@ _CONSTRUCT_APPEND_ARRAYS: frozenset[str] = frozenset(
 ModeloSourceLayout = Literal["single_file", "directory"]
 ModeloRevisionSourceLayout = Literal["revision_file", "fragment_directory"]
 _REGISTRY_TREE_CACHE_SCHEMA_VERSION = "legal-parameter-refs-v1"
+type _RegistryPathFingerprint = tuple[str, int, int]
+type _RegistryPathFingerprints = tuple[_RegistryPathFingerprint, ...]
 
 
 @dataclass(frozen=True, slots=True)
@@ -128,8 +131,14 @@ def load_modelo_file(path: Path) -> ModeloDefinition:
         The compiled :class:`ModeloDefinition` from the TOML file.
     """
     resolved = path.resolve()
-    stat = resolved.stat()
-    return _load_modelo_file_cached(str(resolved), stat.st_size, stat.st_mtime_ns)
+    fingerprint = _toml_fingerprint(resolved)
+    try:
+        return _load_modelo_file_cached(str(resolved), fingerprint[1], fingerprint[2])
+    except RegistryLoadError as exc:
+        refreshed = _refresh_toml_fingerprint_after_load_error(resolved, exc)
+        if refreshed == fingerprint:
+            raise
+        return _load_modelo_file_cached(str(resolved), refreshed[1], refreshed[2])
 
 
 @lru_cache(maxsize=256)
@@ -215,16 +224,14 @@ def load_modelo_directory(directory: Path) -> ModeloDefinition:
     if not manifest_path.is_file():
         raise RegistryLoadError(f"{resolved}: missing manifest.toml")
 
-    fingerprints: list[tuple[str, int, int]] = [_toml_fingerprint(manifest_path)]
-    locales_dir = resolved / "locales"
-    if locales_dir.is_dir():
-        for path in sorted(locales_dir.glob("*.toml")):
-            fingerprints.append(_toml_fingerprint(path))
-    revisions_dir = resolved / "revisions"
-    if revisions_dir.is_dir():
-        for path in sorted(revisions_dir.rglob("*.toml")):
-            fingerprints.append(_toml_fingerprint(path))
-    return _load_modelo_directory_cached(str(resolved), tuple(fingerprints))
+    fingerprints = _collect_modelo_directory_fingerprints(resolved)
+    try:
+        return _load_modelo_directory_cached(str(resolved), fingerprints)
+    except RegistryLoadError as exc:
+        refreshed = _refresh_modelo_directory_fingerprints_after_load_error(resolved, exc)
+        if refreshed == fingerprints:
+            raise
+        return _load_modelo_directory_cached(str(resolved), refreshed)
 
 
 def load_modelo_path(path: Path) -> ModeloDefinition:
@@ -841,8 +848,14 @@ def load_catalogue_file(path: Path) -> RegistryCatalogues:
         The compiled :class:`RegistryCatalogues` from the TOML file.
     """
     resolved = path.resolve()
-    stat = resolved.stat()
-    return _load_catalogue_file_cached(str(resolved), stat.st_size, stat.st_mtime_ns)
+    fingerprint = _toml_fingerprint(resolved)
+    try:
+        return _load_catalogue_file_cached(str(resolved), fingerprint[1], fingerprint[2])
+    except RegistryLoadError as exc:
+        refreshed = _refresh_toml_fingerprint_after_load_error(resolved, exc)
+        if refreshed == fingerprint:
+            raise
+        return _load_catalogue_file_cached(str(resolved), refreshed[1], refreshed[2])
 
 
 @lru_cache(maxsize=128)
@@ -975,7 +988,13 @@ def load_registry_tree(root: Path) -> tuple[tuple[ModeloDefinition, ...], Regist
     """
     resolved = root.resolve()
     fingerprints = _collect_registry_tree_fingerprints(resolved)
-    return _load_registry_tree_cached(str(resolved), fingerprints)
+    try:
+        return _load_registry_tree_cached(str(resolved), fingerprints)
+    except RegistryLoadError as exc:
+        refreshed = _refresh_registry_tree_fingerprints_after_load_error(resolved, exc)
+        if refreshed == fingerprints:
+            raise
+        return _load_registry_tree_cached(str(resolved), refreshed)
 
 
 def discover_modelo_sources(modelos_dir: Path) -> tuple[ModeloSource, ...]:
@@ -1088,40 +1107,59 @@ def _discover_revision_sources(revisions_dir: Path) -> tuple[ModeloRevisionSourc
     return tuple(sources)
 
 
-_registry_fingerprint_cache: dict[Path, tuple[float, tuple[tuple[str, int, int], ...]]] = {}
+_registry_fingerprint_cache: dict[Path, tuple[float, _RegistryPathFingerprints, _RegistryPathFingerprints]] = {}
 
 
 def clear_fingerprint_cache() -> None:
-    """Clear the 1-second TTL fingerprint cache."""
+    """Clear the 1-second TTL registry-tree fingerprint cache."""
     _registry_fingerprint_cache.clear()
 
 
-def _collect_registry_tree_fingerprints(resolved: Path) -> tuple[tuple[str, int, int], ...]:
+def _collect_registry_tree_fingerprints(resolved: Path) -> _RegistryPathFingerprints:
+    return _collect_registry_tree_fingerprints_for_cache(resolved, use_cache=True)
+
+
+def _collect_registry_tree_fingerprints_uncached(resolved: Path) -> _RegistryPathFingerprints:
+    return _collect_registry_tree_fingerprints_for_cache(resolved, use_cache=False)
+
+
+def _collect_registry_tree_fingerprints_for_cache(
+    resolved: Path,
+    *,
+    use_cache: bool,
+) -> _RegistryPathFingerprints:
     """Walk ``resolved`` and return ``(path, size, mtime)`` fingerprints for the lru_cache key.
 
     Covers every catalogue source the loader will subsequently
     re-open: ``legal/*.toml``, single-file ``modelos/*.toml``, and
     directory-mode ``modelos/<id>/manifest.toml`` plus its
-    ``revisions/*.toml`` siblings. It also covers every multi-year-renta
+    ``revisions/*.toml`` siblings. It also includes directory mtimes
+    under the registry root so add/remove/rename layout changes invalidate
+    the one-second fingerprint cache before a stale file list can be reused.
+    It also covers every multi-year-renta
     ``authorization.d/<modelo>.toml`` fragment, which the authority reads at
     the same registry root: per ``aeat-registry-authority-flow`` the
     authorization surface must invalidate the registry cache when it
     changes, so adding, editing, or removing an enrollment fragment reliably
     re-derives every per-modelo capability rather than serving a stale
-    authorization. The cache key invalidates the moment any of those files
-    changes shape on disk.
+    authorization. Fresh fingerprints key on every TOML file; the TTL cache
+    also rechecks directory fingerprints so structural edits do not reuse a
+    stale file list.
     """
     import time
 
     now = time.time()
-    if resolved in _registry_fingerprint_cache:
-        cached_time, cached_val = _registry_fingerprint_cache[resolved]
+    directory_fingerprints = _collect_registry_directory_fingerprints(resolved)
+    if use_cache and resolved in _registry_fingerprint_cache:
+        cached_time, cached_directories, cached_val = _registry_fingerprint_cache[resolved]
         if now - cached_time < 1.0:
-            return cached_val
+            if cached_directories == directory_fingerprints:
+                return cached_val
+            _registry_fingerprint_cache.pop(resolved, None)
 
     legal_dir = resolved / "legal"
     modelos_dir = resolved / "modelos"
-    fingerprints: list[tuple[str, int, int]] = []
+    fingerprints: list[_RegistryPathFingerprint] = list(directory_fingerprints)
     authorization_dir = resolved / "authorization.d"
     if authorization_dir.is_dir():
         for fragment in sorted(authorization_dir.glob("*.toml")):
@@ -1136,16 +1174,56 @@ def _collect_registry_tree_fingerprints(resolved: Path) -> tuple[tuple[str, int,
     schema_path = resolved / "user_profile" / "schema.toml"
     if schema_path.is_file():
         fingerprints.append(_toml_fingerprint(schema_path))
+
+    refreshed_directory_fingerprints = _collect_registry_directory_fingerprints(resolved)
+    if refreshed_directory_fingerprints != directory_fingerprints:
+        _registry_fingerprint_cache.pop(resolved, None)
+        raise RegistryLoadError(
+            f"{resolved}: registry directory changed during cache fingerprinting; "
+            "retry after concurrent registry writes settle",
+        )
     res = tuple(fingerprints)
-    _registry_fingerprint_cache[resolved] = (now, res)
+    _registry_fingerprint_cache[resolved] = (now, refreshed_directory_fingerprints, res)
     return res
 
 
-def _modelo_directory_fingerprints(entry: Path) -> tuple[tuple[str, int, int], ...]:
+def _collect_registry_directory_fingerprints(resolved: Path) -> _RegistryPathFingerprints:
+    if not resolved.is_dir():
+        return ()
+
+    def _raise_walk_error(exc: OSError) -> None:
+        raise RegistryLoadError(
+            f"{resolved}: registry directory could not be walked during cache fingerprinting; "
+            f"retry after concurrent registry writes settle: {exc}",
+        ) from exc
+
+    fingerprints: list[_RegistryPathFingerprint] = []
+    for dirpath, dirnames, _filenames in os.walk(resolved, onerror=_raise_walk_error):
+        dirnames.sort()
+        fingerprints.append(_directory_fingerprint(Path(dirpath)))
+    return tuple(fingerprints)
+
+
+def _collect_modelo_directory_fingerprints(resolved: Path) -> _RegistryPathFingerprints:
+    manifest_path = resolved / "manifest.toml"
+    fingerprints: list[_RegistryPathFingerprint] = list(_collect_registry_directory_fingerprints(resolved))
+    fingerprints.append(_toml_fingerprint(manifest_path))
+    locales_dir = resolved / "locales"
+    if locales_dir.is_dir():
+        for path in sorted(locales_dir.glob("*.toml")):
+            fingerprints.append(_toml_fingerprint(path))
+    revisions_dir = resolved / "revisions"
+    if revisions_dir.is_dir():
+        for path in sorted(revisions_dir.rglob("*.toml")):
+            fingerprints.append(_toml_fingerprint(path))
+    return tuple(fingerprints)
+
+
+def _modelo_directory_fingerprints(entry: Path) -> _RegistryPathFingerprints:
     """Return fingerprints for one directory-mode modelo entry, or ``()`` if not in that layout."""
     if not (entry.is_dir() and (entry / "manifest.toml").is_file()):
         return ()
-    fingerprints: list[tuple[str, int, int]] = [_toml_fingerprint(entry / "manifest.toml")]
+    fingerprints: list[_RegistryPathFingerprint] = [_toml_fingerprint(entry / "manifest.toml")]
     locales_dir = entry / "locales"
     if locales_dir.is_dir():
         for path in sorted(locales_dir.rglob("*.toml")):
@@ -1242,6 +1320,61 @@ def _load_all_modelo_definitions(modelos_dir: Path) -> tuple[ModeloDefinition, .
     return tuple(load_modelo_source(source) for source in discover_modelo_sources(modelos_dir))
 
 
-def _toml_fingerprint(path: Path) -> tuple[str, int, int]:
-    stat = path.stat()
+def _refresh_toml_fingerprint_after_load_error(
+    path: Path,
+    initial_error: RegistryLoadError,
+) -> _RegistryPathFingerprint:
+    try:
+        return _toml_fingerprint(path)
+    except RegistryLoadError as refresh_error:
+        raise RegistryLoadError(
+            f"{path}: registry TOML changed during load; retry after concurrent registry writes settle. "
+            f"Initial failure: {initial_error}; refresh failure: {refresh_error}",
+        ) from refresh_error
+
+
+def _refresh_modelo_directory_fingerprints_after_load_error(
+    resolved: Path,
+    initial_error: RegistryLoadError,
+) -> _RegistryPathFingerprints:
+    try:
+        return _collect_modelo_directory_fingerprints(resolved)
+    except RegistryLoadError as refresh_error:
+        raise RegistryLoadError(
+            f"{resolved}: modelo directory changed during load; retry after concurrent registry writes settle. "
+            f"Initial failure: {initial_error}; refresh failure: {refresh_error}",
+        ) from refresh_error
+
+
+def _refresh_registry_tree_fingerprints_after_load_error(
+    resolved: Path,
+    initial_error: RegistryLoadError,
+) -> _RegistryPathFingerprints:
+    try:
+        return _collect_registry_tree_fingerprints_uncached(resolved)
+    except RegistryLoadError as refresh_error:
+        raise RegistryLoadError(
+            f"{resolved}: registry tree changed during load; retry after concurrent registry writes settle. "
+            f"Initial failure: {initial_error}; refresh failure: {refresh_error}",
+        ) from refresh_error
+
+
+def _directory_fingerprint(path: Path) -> _RegistryPathFingerprint:
+    try:
+        stat = path.stat()
+    except OSError as exc:
+        raise RegistryLoadError(
+            f"{path}: registry directory could not be fingerprinted; "
+            f"retry after concurrent registry writes settle: {exc}",
+        ) from exc
+    return str(path), stat.st_size, stat.st_mtime_ns
+
+
+def _toml_fingerprint(path: Path) -> _RegistryPathFingerprint:
+    try:
+        stat = path.stat()
+    except OSError as exc:
+        raise RegistryLoadError(
+            f"{path}: registry TOML could not be fingerprinted; retry after concurrent registry writes settle: {exc}",
+        ) from exc
     return str(path), stat.st_size, stat.st_mtime_ns
