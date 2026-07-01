@@ -34,13 +34,22 @@ _CANONICAL_SOURCE_KINDS: frozenset[BindingSourceKind] = frozenset(
 )
 
 
-def _validate_source_kind(value: str) -> str:
-    if value not in _CANONICAL_SOURCE_KINDS:
+def _foreign_asset_source_kind(value: object) -> BindingSourceKind:
+    if isinstance(value, BindingSourceKind):
+        source_kind = value
+    elif isinstance(value, str):
+        try:
+            source_kind = BindingSourceKind(value)
+        except ValueError as exc:
+            raise ValueError(f"foreign asset source_kind {value!r} is not a BindingSourceKind") from exc
+    else:
+        raise ValueError("foreign asset source_kind must be a BindingSourceKind or source-kind string")
+    if source_kind not in _CANONICAL_SOURCE_KINDS:
+        allowed = ", ".join(kind.value for kind in _CANONICAL_SOURCE_KINDS)
         raise ValueError(
-            "unsupported source_kind; use one of ledger_transaction, "
-            "purchase_invoice_evidence, payable_invoice, collectible_invoice",
+            f"unsupported source_kind {source_kind.value!r}; use one of {allowed}",
         )
-    return value
+    return source_kind
 
 
 def _validate_country(value: str) -> str:
@@ -54,7 +63,7 @@ class ForeignAssetIngestObservation(BaseModel):
 
     model_config = STRICT_FROZEN_CONFIG
 
-    source_kind: str = Field(min_length=1)
+    source_kind: BindingSourceKind
     source_object_id: str = Field(min_length=1)
     asset_class: ForeignAssetClass
     asset_external_id: str = Field(min_length=1, max_length=128)
@@ -64,10 +73,10 @@ class ForeignAssetIngestObservation(BaseModel):
     acquisition_date: str = Field(min_length=10, max_length=10)
     held_at_year_end: bool = True
 
-    @field_validator("source_kind")
+    @field_validator("source_kind", mode="before")
     @classmethod
-    def _source_kind_is_canonical(cls, value: str) -> str:
-        return _validate_source_kind(value)
+    def _source_kind_is_canonical(cls, value: object) -> BindingSourceKind:
+        return _foreign_asset_source_kind(value)
 
     @field_validator("country")
     @classmethod
@@ -80,7 +89,7 @@ class ForeignAssetClassRollup(BaseModel):
 
     model_config = STRICT_FROZEN_CONFIG
 
-    source_kind: str = Field(min_length=1)
+    source_kind: BindingSourceKind
     asset_class: ForeignAssetClass
     assets_count: int = Field(ge=0)
     held_at_year_end_count: int = Field(ge=0)
@@ -94,10 +103,10 @@ class ForeignAssetClassRollup(BaseModel):
             _validate_country(country)
         return value
 
-    @field_validator("source_kind")
+    @field_validator("source_kind", mode="before")
     @classmethod
-    def _source_kind_is_canonical(cls, value: str) -> str:
-        return _validate_source_kind(value)
+    def _source_kind_is_canonical(cls, value: object) -> BindingSourceKind:
+        return _foreign_asset_source_kind(value)
 
     @model_validator(mode="after")
     def _held_count_within_total(self) -> ForeignAssetClassRollup:
@@ -172,7 +181,7 @@ def aggregate_foreign_assets_720(
     :func:`declarable_class` to filter rollups before binding to
     Modelo 720 casillas.
     """
-    grouped: dict[tuple[str, ForeignAssetClass], list[ForeignAssetIngestObservation]] = {}
+    grouped: dict[tuple[BindingSourceKind, ForeignAssetClass], list[ForeignAssetIngestObservation]] = {}
     for obs in observations:
         grouped.setdefault((obs.source_kind, obs.asset_class), []).append(obs)
     rollups: list[ForeignAssetClassRollup] = []
