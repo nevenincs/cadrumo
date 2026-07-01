@@ -12,11 +12,13 @@ that source: it persists each :class:`RetencionObservation` (perceptor NIF +
 scheme + taxable base + retención) keyed by ``(modelo, filing_year, period)`` plus
 the per-perceptor identity, so the pull and calculate surfaces read ONE store.
 
-Sensitivity is :class:`SensitivityClass` ``FINANCIAL`` — perceptor NIFs are
-identity-bearing financial data, stored encrypted at rest through an
-:class:`Envelope`-wrapped repository. The plaintext NIF lives only inside the
-encrypted payload; the object key carries the sha256 of the NIF (the
-iva-wallet-decision key convention), never the cleartext value
+Sensitivity is :class:`~aeat.adapters.persistence.storage.SensitivityClass`
+``FINANCIAL`` — perceptor NIFs are identity-bearing financial data, stored
+encrypted at rest through a
+:class:`~aeat.adapters.persistence.storage.SecureBoundRepository` that writes
+:class:`~aeat.adapters.persistence.storage.Envelope` records. The plaintext NIF
+lives only inside the encrypted payload; the object key carries the sha256 of
+the NIF (the iva-wallet-decision key convention), never the cleartext value
 (``sensitive-financial-data-secure-storage-only``).
 The namespace, schema version, object-key grammar, and custody disposition are
 declared by
@@ -109,6 +111,13 @@ def retencion_observation_key(
 
 class RetencionObservationRepository(SecureBoundRepository[_RetencionObservationEnvelopePayload]):
     """Encrypted repository for per-perceptor :class:`RetencionObservation` payloads.
+
+    The :class:`~aeat.adapters.persistence.storage.SecureBoundRepository` base
+    wraps each payload in a
+    :class:`~aeat.adapters.persistence.storage.Envelope` under
+    :data:`aeat.adapters.persistence.storage.RETENCION_OBSERVATIONS_NAMESPACE`
+    and enforces the namespace's FINANCIAL
+    :class:`~aeat.adapters.persistence.storage.SensitivityClass`.
 
     See Also:
         :data:`aeat.adapters.persistence.storage.RETENCION_OBSERVATIONS_NAMESPACE`
