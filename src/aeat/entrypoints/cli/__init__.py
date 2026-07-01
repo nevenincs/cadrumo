@@ -418,7 +418,7 @@ def _activate_active_bucket_session(ctx: typer.Context) -> None:
     # root callback cached the settings-default language before the
     # profile preference was readable. Drop the cache here so the verb
     # body re-resolves through the now-readable profile preference.
-    from ...core.i18n._render import clear_output_language_cache
+    from ...core.i18n import clear_output_language_cache
 
     clear_output_language_cache()
 
@@ -778,6 +778,22 @@ app.add_typer(app_app, name="app")
 _decorate_typer_app(app)
 
 
+def __getattr__(name: str) -> object:
+    """Lazily resolve ``command_schema_refs`` without importing ``_app_contract`` eagerly.
+
+    ``_app_contract`` is a registered :data:`_LAZY_COMMAND_MODULES` entry
+    precisely so constructing the ``aeat`` app object never imports the
+    registry-dependent command tree; a top-level ``from ._app_contract
+    import command_schema_refs`` would defeat that and reintroduce the
+    startup cost :mod:`._stdio` / the lazy command-tree gate guard against.
+    """
+    if name == "command_schema_refs":
+        from ._app_contract import command_schema_refs
+
+        return command_schema_refs
+    raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
+
+
 def main() -> None:
     """Console-script entry point.
 
@@ -796,4 +812,4 @@ def main() -> None:
         app(prog_name="aeat")
 
 
-__all__ = ["AppRootResult", "RootStatusResult", "app", "main"]
+__all__ = ["AppRootResult", "RootStatusResult", "app", "command_schema_refs", "main"]

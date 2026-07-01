@@ -94,9 +94,9 @@ def build_tool_descriptors() -> tuple[McpToolDescriptor, ...]:
     Returns:
         Tuple of exposed :class:`McpToolDescriptor` entries.
     """
-    from ..cli._app_contract import _command_schema_refs
+    from ..cli import command_schema_refs
 
-    refs: tuple[CommandSchemaRef, ...] = _command_schema_refs()
+    refs: tuple[CommandSchemaRef, ...] = command_schema_refs()
     family_map = _family_mutability()
     contract = build_operator_surface_manifest(
         envelope_schema_version=ENVELOPE_SCHEMA_VERSION,
