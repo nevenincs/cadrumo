@@ -4,7 +4,6 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 from functools import cache
-from typing import cast
 
 import pytest
 
@@ -68,7 +67,7 @@ _EXPECTED_ROW_BINDING_TARGETS: Mapping[str, tuple[str, str]] = {
 
 def _profile_selector(value: object) -> _ProfileSelector:
     assert isinstance(value, _ProfileSelector)
-    return cast("_ProfileSelector", value)
+    return value
 
 
 @cache
