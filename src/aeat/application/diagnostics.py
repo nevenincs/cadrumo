@@ -651,8 +651,6 @@ def _probe_secure_objects_integrity() -> SecureObjectIntegrityReport:
     _ensure_models_rebuilt()
     from ..adapters.persistence.storage import (
         SecureObjectNamespaceIntegrity,
-    )
-    from ..adapters.persistence.storage.runtime_repository import (
         secure_object_repository_for_active_bucket_or_default_route,
     )
 
@@ -1151,7 +1149,7 @@ def quarantine_unreadable_secure_objects() -> SecureObjectIntegrityReport:
         in ``secure_objects``).
     """
     _ensure_models_rebuilt()
-    from ..adapters.persistence.storage.runtime_repository import (
+    from ..adapters.persistence.storage import (
         secure_object_repository_for_active_bucket_or_default_route,
     )
     from .repair_integrity import active_bucket_repair_session

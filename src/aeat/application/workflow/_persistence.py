@@ -41,16 +41,14 @@ from ...adapters.persistence.storage import (
     Envelope,
     SecureObjectRepository,
     SecureObjectWrite,
+    secure_object_repository_for_active_bucket,
+    secure_object_repository_for_cold_bootstrap_state,
 )
 from ...adapters.persistence.storage.errors import (
     ClassificationError,
     EnvelopeVersionError,
     SecretStoreError,
     StorageError,
-)
-from ...adapters.persistence.storage.runtime_repository import (
-    secure_object_repository_for_active_bucket,
-    secure_object_repository_for_cold_bootstrap_state,
 )
 from ...core.config import Settings, StorageRouteKind, classify_storage_route, load_settings
 from ...core.logging import get_logger
@@ -379,7 +377,7 @@ def workflow_state_repository() -> WorkflowStateRepository:
 
     When an active profile bucket is present, the repository is backed by
     the bucket's own encrypted database resolved through
-    :func:`~aeat.adapters.persistence.storage.runtime_repository.secure_object_repository_for_active_bucket`
+    :func:`~aeat.adapters.persistence.storage.secure_object_repository_for_active_bucket`
     so the URL is derived from the live bucket path rather than the
     settings-override snapshot captured at test-fixture construction
     time. A cold root with no active bucket pointer is the bootstrap
