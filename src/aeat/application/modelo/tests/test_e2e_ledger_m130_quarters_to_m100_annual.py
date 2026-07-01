@@ -108,6 +108,7 @@ _M130_REVISION = "2019-y-siguientes"
 _M100_ANNUAL_PERIOD = "0A"
 _RELATION_PREFILL_SOURCE = "relation_prefill"
 _M100_ESTIMACION_DIRECTA_NORMAL_BINDING: BindingId = "renta-2024-modelo-100-estimacion-directa-es-normal"
+_M100_SALARY_CERT_RETENCIONES_BINDING: BindingId = "renta-2024-certificado-trabajo-retenciones"
 
 
 def _casilla_id(value: object) -> CasillaId:
@@ -125,6 +126,9 @@ _M130_HOME_DEDUCTION_CASILLA: CasillaId = _casilla_id("16")
 _M130_PRIOR_RETURN_RESULT_CASILLA: CasillaId = _casilla_id("18")
 _M130_RESULTADO_FINAL_CASILLA: CasillaId = _casilla_id("19")
 _M100_PAGOS_CASILLA: CasillaId = _casilla_id("0604")
+_M100_RETENCIONES_TRABAJO_CASILLA: CasillaId = _casilla_id("0596")
+_M100_TOTAL_PAGOS_CASILLA: CasillaId = _casilla_id("0609")
+_M100_CUOTA_DIFERENCIAL_CASILLA: CasillaId = _casilla_id("0610")
 _M100_ACTIVITY_INCOME_CASILLA: CasillaId = _casilla_id("0171")
 _M100_ACTIVITY_EXPENSES_SUMMARY_CASILLA: CasillaId = _casilla_id("0199")
 _M100_EXPENSES_PREVIOUS_SUM_CASILLA: CasillaId = _casilla_id("0218")
@@ -173,6 +177,8 @@ _MARTA_M130_C19_BY_PERIOD: dict[str, Decimal] = {
     "3T": Decimal("400.00"),
     "4T": Decimal("460.00"),
 }
+_MARTA_SALARY_GROSS = Decimal("30000.00")
+_MARTA_SALARY_WITHHOLDING = Decimal("4500.00")
 _EXPENSE_ROWS: tuple[tuple[str, date, SpendingCategory, Decimal], ...] = (
     ("expense-office", date(_YEAR, 2, 20), SpendingCategory.MATERIAL_OFICINA, Decimal("500.00")),
     ("expense-software", date(_YEAR, 5, 22), SpendingCategory.SOFTWARE_SUSCRIPCION, Decimal("700.00")),
@@ -524,6 +530,7 @@ def _m100_non_relation_zero_bindings() -> dict[BindingId, Decimal]:
     values = {
         binding.id: Decimal("0")
         for binding in snapshot.revision.bindings
+        if binding.id != _M100_SALARY_CERT_RETENCIONES_BINDING
         if binding.source
         not in (
             "profile",
@@ -540,7 +547,12 @@ def _m100_non_relation_zero_bindings() -> dict[BindingId, Decimal]:
     return values
 
 
-def _calculate_m100_annual(secure_objects: SecureObjectRepository) -> CalculationRevision:
+def _calculate_m100_annual(
+    secure_objects: SecureObjectRepository,
+    *,
+    casilla_inputs: dict[CasillaId, Decimal] | None = None,
+    binding_values: dict[BindingId, Decimal] | None = None,
+) -> CalculationRevision:
     """Run the live M100/2024/0A annual calc, leaving the pagos relations to fold."""
     _seed_taxpayer_profile()
     wu_repo = WorkUnitCatalogueRepository(objects=secure_objects)
@@ -559,7 +571,8 @@ def _calculate_m100_annual(secure_objects: SecureObjectRepository) -> Calculatio
     )
     return calculate_modelo_revision_from_bucket_aggregation(
         work_unit.work_unit_id,
-        binding_values=_m100_non_relation_zero_bindings(),
+        casilla_inputs=casilla_inputs,
+        binding_values={**_m100_non_relation_zero_bindings(), **(binding_values or {})},
         work_unit_repository=wu_repo,
         calculation_repository=cr_repo,
         transaction_repository=tx_repo,
@@ -660,6 +673,29 @@ def test_verify_accepts_marta_m100_with_official_m130_observations(
         for finding in report.findings
         if finding.severity.value == "blocking" or "formula-divergence" in finding.message
     ]
+
+
+def test_marta_m100_salary_certificate_retenciones_reduce_cuota_diferencial(
+    secure_objects: SecureObjectRepository,
+) -> None:
+    """Marta can supply suffered salary withholding through a public binding."""
+    _seed_taxpayer_profile()
+    _persist_marta_style_ledger(secure_objects)
+    _seed_prior_year_m100(secure_objects)
+
+    for period, c19_value in _MARTA_M130_C19_BY_PERIOD.items():
+        _import_official_m130_result_observation(secure_objects, period=period, c19_value=c19_value)
+
+    annual = _calculate_m100_annual(
+        secure_objects,
+        casilla_inputs={_casilla_id("0003"): _MARTA_SALARY_GROSS},
+        binding_values={_M100_SALARY_CERT_RETENCIONES_BINDING: _MARTA_SALARY_WITHHOLDING},
+    )
+
+    assert Decimal(annual.casilla_values[_M100_RETENCIONES_TRABAJO_CASILLA]) == _MARTA_SALARY_WITHHOLDING
+    assert Decimal(annual.casilla_values[_M100_PAGOS_CASILLA]) == Decimal("1520.00")
+    assert Decimal(annual.casilla_values[_M100_TOTAL_PAGOS_CASILLA]) == Decimal("6020.00")
+    assert Decimal(annual.casilla_values[_M100_CUOTA_DIFERENCIAL_CASILLA]) == Decimal("2725.50")
 
 
 def test_verify_gate_blocks_chain_carrying_non_official_prior_year(
