@@ -91,10 +91,10 @@ def validate_workbook_parity_section(
                 f"{prefix}: workbook parity {workbook.id!r} formula workbook "
                 "requires executable parity evidence source",
             )
-        if workbook.formula_coverage != "formula_form" and source.evidence_tier == "executable_parity_evidence":
+        if workbook.formula_coverage != "formula_form" and source.evidence_tier != "layout_authority":
             failures.append(
-                f"{prefix}: workbook parity {workbook.id!r} non-formula workbook must not use "
-                "executable parity evidence source",
+                f"{prefix}: workbook parity {workbook.id!r} non-formula workbook "
+                "requires layout_authority source evidence",
             )
 
 

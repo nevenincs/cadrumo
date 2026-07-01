@@ -486,6 +486,24 @@ def test_validator_rejects_formula_workbook_without_executable_parity_source() -
         _validate_revision(modelo, catalogues, mutated)
 
 
+def test_validator_rejects_layout_workbook_without_layout_authority_source() -> None:
+    modelo, catalogues = _committed_registry()
+    revision = _revision(modelo)
+    workbook = revision.workbook_parity_refs[0]
+    source = catalogues.sources[workbook.workbook_source]
+    mutated_catalogues = catalogues.model_copy(
+        update={
+            "sources": {
+                **catalogues.sources,
+                workbook.workbook_source: source.model_copy(update={"evidence_tier": "official_source_guidance"}),
+            },
+        },
+    )
+
+    with pytest.raises(RegistryValidationError, match="requires layout_authority source evidence"):
+        _validate_revision(modelo, mutated_catalogues, revision)
+
+
 def test_validator_rejects_formula_without_official_source_guidance() -> None:
     modelo, catalogues = _committed_registry()
     revision = _revision(modelo)
