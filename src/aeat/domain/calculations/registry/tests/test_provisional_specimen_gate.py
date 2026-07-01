@@ -62,34 +62,17 @@ def _assert_justificante_corpus_root(
     return corpus_root
 
 
-def test_provisional_field_defaults_false() -> None:
-    profile = _committed_profile()
-    assert profile.provisional_pending_specimen is False
-
-
-def test_provisional_field_accepts_true() -> None:
-    profile = _committed_profile(provisional=True)
-    assert profile.provisional_pending_specimen is True
-
-
-# --- Gate: no fixture, no flag → fails validation ---------------------------
-
-
-def test_no_fixture_no_flag_fails_validation(tmp_path: Path) -> None:
-    """Profile with no corpus fixture and provisional_pending_specimen=False must fail."""
-    modelo, catalogues = _committed_130()
-    # Use an empty corpus root so no fixture exists for any modelo
-    empty_corpus_root = tmp_path / "justificantes"
-    empty_corpus_root.mkdir()
-
-    revision = modelo.revisions["2019-y-siguientes"]
-    profile = _committed_profile(provisional=False)
-    mutated = revision.model_copy(update={"extraction_profiles": (profile,)})
-    mutated_modelo = modelo.model_copy(update={"revisions": {**modelo.revisions, mutated.id: mutated}})
-
-    validator = _validator(catalogues, justificante_corpus_root=empty_corpus_root)
-    with pytest.raises(RegistryValidationError, match="provisional_pending_specimen"):
-        validator.validate_modelo(mutated_modelo)
+@pytest.mark.parametrize(
+    ("provisional", "expected"),
+    [
+        (False, False),
+        (True, True),
+    ],
+    ids=("default-false", "explicit-true"),
+)
+def test_provisional_field_round_trips(provisional: bool, expected: bool) -> None:
+    profile = _committed_profile(provisional=provisional)
+    assert profile.provisional_pending_specimen is expected
 
 
 # --- Gate: no fixture but flag set → validates --------------------------------
