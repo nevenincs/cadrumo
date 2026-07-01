@@ -22,7 +22,7 @@ from collections.abc import Mapping
 from datetime import datetime
 from pathlib import Path
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, JsonValue, TypeAdapter
 
 from .....core import STRICT_FROZEN_CONFIG
 from .....core.external_constants import UTF_8_ENCODING
@@ -35,6 +35,11 @@ from ....persistence.storage import (
 )
 
 _SESSION_VERSION = AEAT_BROWSER_SESSION_NAMESPACE.schema_version
+type JsonObject = Mapping[str, JsonValue]
+type PlaywrightStorageState = JsonObject
+type ProviderSessionMetadata = JsonObject
+
+_JSON_OBJECT_ADAPTER: TypeAdapter[JsonObject] = TypeAdapter(JsonObject)
 
 
 class PersistedBrowserSession(BaseModel):
@@ -51,8 +56,8 @@ class PersistedBrowserSession(BaseModel):
     model_config = STRICT_FROZEN_CONFIG
 
     schema_version: int = Field(default=_SESSION_VERSION, ge=1)
-    storage_state: Mapping[str, object]
-    metadata: Mapping[str, object]
+    storage_state: PlaywrightStorageState
+    metadata: ProviderSessionMetadata
     written_at: datetime
 
     @property
@@ -152,5 +157,6 @@ def _repository() -> SecureObjectRepository:
 
 
 def _storage_state_sha256(storage_state: Mapping[str, object]) -> str:
-    payload = json.dumps(storage_state, sort_keys=True, separators=(",", ":"), default=str).encode(UTF_8_ENCODING)
+    validated = _JSON_OBJECT_ADAPTER.validate_python(storage_state)
+    payload = json.dumps(validated, sort_keys=True, separators=(",", ":")).encode(UTF_8_ENCODING)
     return sha256_hex(payload)
