@@ -30,6 +30,20 @@ Callers from outside this subpackage import exclusively from
 :mod:`aeat.domain.iva` and must not reach into private modules. This domain
 surface is pure substrate logic: repositories, CLI commands, modelo binding,
 and live AEAT access belong to application and adapter layers.
+
+See Also:
+    :mod:`aeat.domain.invoices`
+        Invoice records and helpers that use this IVA substrate to produce
+        registry-ready invoice and IVA observations.
+    :mod:`aeat.application.aggregation`
+        Source-mesh resolvers that convert bucket-local ledger and invoice facts
+        into IVA, OSS/IOSS, and prorrata-aware calculation payloads.
+    :mod:`aeat.domain.calculations.registry`
+        Binding declarations, observation models, and formulas that consume the
+        resolved IVA substrate during modelo calculation.
+    :mod:`aeat.application.modelo`
+        Work-unit calculation and verification flows that persist the registry
+        results; they do not own IVA taxonomy or rate lookup.
 """
 
 from __future__ import annotations
