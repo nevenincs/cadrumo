@@ -1,7 +1,23 @@
 """Fail-fast validation for registry definitions.
 
-Validates :class:`ModeloDefinition` instances and their constituent
-:class:`ModeloRevision` records against the legal and source catalogues.
+Validates :class:`~aeat.domain.calculations.registry.ModeloDefinition`
+instances and their constituent
+:class:`~aeat.domain.calculations.registry.ModeloRevision` records against the
+legal and source catalogues.
+
+The validator owns catalogue checks,
+:class:`~aeat.domain.calculations.registry._validate_evidence.EvidenceValidator`
+source-tier checks, per-revision dispatch through
+:func:`aeat.domain.calculations.registry._validate_revision_sections.validate_revision_definition`,
+and cross-model scope validation.
+
+See Also:
+    :class:`aeat.domain.calculations.registry.ValidatedRegistryAuthority`
+        Production authority that loads registry material before validation.
+    :func:`aeat.domain.calculations.registry._validate_registry_scope.validate_registry_scope`
+        Cross-model relation and registry-scope validation invoked here.
+    :mod:`aeat.domain.calculations.registry._validate_cache`
+        Identity-keyed failure caches used by this validator.
 """
 
 from __future__ import annotations
@@ -36,7 +52,14 @@ _MODELO_SOURCE_TIERS = ("official_source_guidance", "layout_authority")
 
 
 class RegistryValidator:
-    """Validate legal/source closure and calculability for modelos."""
+    """Validate legal/source closure and calculability for registry modelos.
+
+    The validator accepts
+    :class:`~aeat.domain.calculations.registry.RegistryCatalogues`, checks each
+    :class:`~aeat.domain.calculations.registry.ModeloDefinition`, and delegates
+    each :class:`~aeat.domain.calculations.registry.ModeloRevision` to the
+    section-level dispatcher.
+    """
 
     def __init__(
         self,
@@ -80,6 +103,14 @@ class RegistryValidator:
         )
 
     def validate_modelo(self, modelo: ModeloDefinition) -> None:
+        """Validate one modelo definition and raise on accumulated failures.
+
+        Args:
+            modelo: The
+                :class:`~aeat.domain.calculations.registry.ModeloDefinition`
+                whose catalogue refs, revisions, user-profile contract, and
+                revision windows are validated.
+        """
         failures = self._cached_modelo_failures(modelo)
         if failures:
             raise RegistryValidationError("registry validation failed:\n" + "\n".join(f" - {f}" for f in failures))
@@ -164,7 +195,11 @@ class RegistryValidator:
         """Validate every modelo and the cross-model relation graph.
 
         Args:
-            modelos: Iterable of :class:`ModeloDefinition` instances to validate.
+            modelos: Iterable of
+                :class:`~aeat.domain.calculations.registry.ModeloDefinition`
+                instances to validate together before
+                :func:`aeat.domain.calculations.registry._validate_registry_scope.validate_registry_scope`
+                checks cross-model closure.
         """
         modelo_tuple = tuple(modelos)
         cache_key = (
