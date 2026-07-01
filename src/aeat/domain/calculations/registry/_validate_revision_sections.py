@@ -104,6 +104,7 @@ def _validate_revision_surface_sections(
         binding_by_id=context.binding_by_id,
         legal_refs=legal_refs,
         source_refs=source_refs,
+        evidence=evidence,
     )
     validate_dependency_classification_section(
         failures,

@@ -18,6 +18,7 @@ from ._schema import (
     RelationDefinition,
     SourceReference,
 )
+from ._validate_evidence import EvidenceValidator
 from ._validate_helpers import _missing_refs
 from ._validate_revision_identity import _duplicates
 
@@ -31,10 +32,14 @@ def validate_relation_section(
     binding_by_id: Mapping[BindingId, DataBindingDefinition],
     legal_refs: Mapping[str, LegalReference],
     source_refs: Mapping[str, SourceReference],
+    evidence: EvidenceValidator,
 ) -> None:
     for relation in revision.relations:
-        failures.extend(_missing_refs(prefix, f"relation {relation.id}", relation.legal_refs, legal_refs, "legal"))
-        failures.extend(_missing_refs(prefix, f"relation {relation.id}", relation.source_refs, source_refs, "source"))
+        owner = f"relation {relation.id}"
+        failures.extend(_missing_refs(prefix, owner, relation.legal_refs, legal_refs, "legal"))
+        failures.extend(_missing_refs(prefix, owner, relation.source_refs, source_refs, "source"))
+        failures.extend(evidence.require_legal_authority_refs(prefix, owner, relation.legal_refs))
+        failures.extend(evidence.require_source_tier(prefix, owner, relation.source_refs, "official_source_guidance"))
         if relation.target_binding not in bindings:
             failures.append(f"{prefix}: relation {relation.id!r} targets unknown binding {relation.target_binding!r}")
         else:
