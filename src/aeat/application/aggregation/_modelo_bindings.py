@@ -72,6 +72,7 @@ from ._renta_income_ledger import (
 )
 from ._renta_ledger import aggregate_renta_ledger_expenses_from_repositories
 from ._retencion_observations_repository import RetencionObservationRepository
+from ._retencion_rate_advisory import administrador_retencion_rate_advisory_observations
 from ._retenciones import (
     aggregate_retenciones_111,
     aggregate_retenciones_115,
@@ -728,6 +729,7 @@ class RetencionesAggregationSourceResolver:
             resolver_id=self.resolver_id,
             owned_sources=self.owned_sources,
             binding_values=resolve_retenciones_aggregation_binding_values(context.revision, aggregation),
+            diagnostics=administrador_retencion_rate_advisory_observations(observations),
             provenance=tuple(
                 CalculationSourceProvenance(
                     source_kind="retenciones_aggregation",

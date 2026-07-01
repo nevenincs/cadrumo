@@ -75,6 +75,7 @@ CalculationSourceDiagnosticReason = Literal[
     "unrouted_observation",
     "oss_no_live_source",
     "missing_transaction_evidence",
+    "administrador_retencion_rate_mismatch",
     "official_box_unpopulated",
     "prior_payment_not_deducted",
     "prior_payment_minoracion_not_captured",
