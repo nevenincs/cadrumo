@@ -206,26 +206,52 @@ def test_put_with_relabel_replaces_existing_file(provider: LocalFileSystemProvid
     assert Path(metadata_v2.provider_object_id).exists()
 
 
-def test_put_rejects_blank_namespace(provider: LocalFileSystemProvider) -> None:
-    with pytest.raises(OutboundStorageValidationError, match="namespace must not be blank") as raised:
-        provider.put("", "abcdef0123456789", b"x", content_hash="sha256-x", label="x")
-    assert raised.value.translated_message == "adapters.outbound.storage.local.errors.namespace_blank"
-    assert resolve_error_message(raised.value) == tr(raised.value.translated_message)
-
-
-def test_put_rejects_namespace_with_slash(provider: LocalFileSystemProvider) -> None:
-    with pytest.raises(OutboundStorageValidationError, match="forbidden characters") as raised:
-        provider.put("with/slash", "abcdef0123456789", b"x", content_hash="sha256-x", label="x")
-    assert raised.value.translated_message == "adapters.outbound.storage.local.errors.namespace_forbidden_characters"
-    assert raised.value.context == {"namespace": "with/slash"}
+@pytest.mark.parametrize(
+    ("put_kwargs", "match", "message", "context"),
+    [
+        (
+            {"namespace": "", "object_key_hmac": "abcdef0123456789", "payload": b"x", "content_hash": "sha256-x"},
+            "namespace must not be blank",
+            "adapters.outbound.storage.local.errors.namespace_blank",
+            None,
+        ),
+        (
+            {
+                "namespace": "with/slash",
+                "object_key_hmac": "abcdef0123456789",
+                "payload": b"x",
+                "content_hash": "sha256-x",
+            },
+            "forbidden characters",
+            "adapters.outbound.storage.local.errors.namespace_forbidden_characters",
+            {"namespace": "with/slash"},
+        ),
+        (
+            {
+                "namespace": "ledger_transaction",
+                "object_key_hmac": "abcdef0123456789",
+                "payload": b"x",
+                "content_hash": "",
+            },
+            "content_hash",
+            "adapters.outbound.storage.local.errors.content_hash_blank",
+            None,
+        ),
+    ],
+    ids=("blank-namespace", "forbidden-namespace", "blank-content-hash"),
+)
+def test_put_rejects_invalid_storage_keys(
+    provider: LocalFileSystemProvider,
+    put_kwargs: dict[str, object],
+    match: str,
+    message: str,
+    context: dict[str, str] | None,
+) -> None:
+    with pytest.raises(OutboundStorageValidationError, match=match) as raised:
+        provider.put(**put_kwargs, label="x")
+    assert raised.value.translated_message == message
+    assert raised.value.context == context
     assert resolve_error_message(raised.value) == tr(raised.value.translated_message, **(raised.value.context or {}))
-
-
-def test_put_rejects_blank_content_hash(provider: LocalFileSystemProvider) -> None:
-    with pytest.raises(OutboundStorageValidationError, match="content_hash") as raised:
-        provider.put("ledger_transaction", "abcdef0123456789", b"x", content_hash="", label="x")
-    assert raised.value.translated_message == "adapters.outbound.storage.local.errors.content_hash_blank"
-    assert resolve_error_message(raised.value) == tr(raised.value.translated_message)
 
 
 def test_get_rejects_non_object_sidecar_with_localized_integrity_error(provider: LocalFileSystemProvider) -> None:
