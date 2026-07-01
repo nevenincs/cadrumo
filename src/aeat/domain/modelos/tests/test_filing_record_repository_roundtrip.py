@@ -686,7 +686,7 @@ def test_filing_record_rejects_id_not_matching_outcome() -> None:
     ``filed_at`` populated non-default to confirm it never participates in the id.
     """
     work_unit_id = _hex("f")
-    revision_id = _hex("g")
+    revision_id = _hex("e")
     mismatched_id = derive_filing_record_id(
         work_unit_id=work_unit_id,
         calculation_revision_id=revision_id,

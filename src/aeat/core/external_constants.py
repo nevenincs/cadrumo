@@ -499,12 +499,11 @@ WORK_INCOME_GENERAL_DECLARATION_LIMIT_EUR: Final[Decimal] = Decimal("22000")
 #: was obtained). The general 22.000 € ceiling drops to this reduced amount when
 #: work income comes from more than one pagador AND the 2nd-and-subsequent
 #: aggregate exceeds ``MULTIPLE_PAGADORES_SECONDARY_THRESHOLD_EUR`` (1.500 €).
-#: The amount is DATED — it was revalued upward across recent filing years:
-#:   - 2019-2022: 14.000 €  (Art. 96.3 LIRPF base value, post-Ley 26/2014)
-#:   - 2023:      15.000 €  (Ley 31/2022 PGE-2023, BOE-A-2022-22128, art. 96.3 mod.)
-#:   - 2024-2026: 15.876 €  (RD-Ley 4/2024, BOE-A-2024-13066, art. 96.3 mod.;
-#:                confirmed by the bundled consolidated LIRPF art-96 corpus,
-#:                which states "15.876 euros")
+#: The amount is DATED: 2019-2022 use 14.000 € (Art. 96.3 LIRPF base value,
+#: post-Ley 26/2014); 2023 uses 15.000 € (Ley 31/2022 PGE-2023,
+#: BOE-A-2022-22128, art. 96.3 modification); 2024-2026 use 15.876 €
+#: (RD-Ley 4/2024, BOE-A-2024-13066, art. 96.3 modification, confirmed by
+#: the bundled consolidated LIRPF art-96 corpus).
 #: Binding provision: Art. 96.3 LIRPF (Ley 35/2006), as modified per year above.
 #: A filing year beyond the latest tabulated entry resolves to the latest known
 #: amount (forward-compatible) until a new law revalues it.

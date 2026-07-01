@@ -60,6 +60,9 @@ def faithfulness_check(*, agent_text: str, tool_result_json: str, blocking: bool
             is supposed to be grounded in.
         blocking: When true (the export / record-marker handoff path), an
             unfaithful result blocks; otherwise it is advisory.
+
+    Returns:
+        :class:`FaithfulnessResult` with the advisory or blocking verdict.
     """
     grounded = {_digits(match) for match in _ANY_NUMBER.findall(tool_result_json)}
     grounded.discard("")

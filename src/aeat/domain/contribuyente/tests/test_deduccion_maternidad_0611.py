@@ -60,40 +60,19 @@ def _hijo_no_menor_3() -> DescendantInfo:
 class TestDeduccionMaternidad0611Oracle:
     """Oracle values derived from Art. 81 LIRPF: sum(min(meses×100, 1200)) per hijo menor 3."""
 
-    def test_two_hijos_12_months_each_gives_2400(self) -> None:
-        """2 hijos × 12 meses each → 1200 + 1200 = 2400."""
-        profile = RentaFamilyProfile(
-            descendientes=(
-                _hijo_menor_3(12),
-                _hijo_menor_3(12),
-            ),
-        )
-        assert profile.deduccion_maternidad_0611(2024) == 2400
-
-    def test_two_hijos_6_and_12_months_gives_1800(self) -> None:
-        """2 hijos, 6 and 12 meses → 600 + 1200 = 1800."""
-        profile = RentaFamilyProfile(
-            descendientes=(
-                _hijo_menor_3(6),
-                _hijo_menor_3(12),
-            ),
-        )
-        assert profile.deduccion_maternidad_0611(2024) == 1800
-
-    def test_one_hijo_6_months_gives_600(self) -> None:
-        """1 hijo × 6 meses → min(600, 1200) = 600."""
-        profile = RentaFamilyProfile(descendientes=(_hijo_menor_3(6),))
-        assert profile.deduccion_maternidad_0611(2024) == 600
-
-    def test_one_hijo_12_months_gives_1200(self) -> None:
-        """Cap: 12 meses × 100 = 1200, which hits the 1200 ceiling."""
-        profile = RentaFamilyProfile(descendientes=(_hijo_menor_3(12),))
-        assert profile.deduccion_maternidad_0611(2024) == 1200
-
-    def test_zero_meses_gives_zero(self) -> None:
-        """A hijo menor-3 with meses=0 does not contribute."""
-        profile = RentaFamilyProfile(descendientes=(_hijo_menor_3(0),))
-        assert profile.deduccion_maternidad_0611(2024) == 0
+    @pytest.mark.parametrize(
+        ("meses_por_hijo", "expected"),
+        (
+            pytest.param((12, 12), 2400, id="two-hijos-full-year"),
+            pytest.param((6, 12), 1800, id="two-hijos-partial-and-full"),
+            pytest.param((6,), 600, id="one-hijo-six-months"),
+            pytest.param((12,), 1200, id="one-hijo-cap"),
+            pytest.param((0,), 0, id="zero-months"),
+        ),
+    )
+    def test_oracle_examples(self, meses_por_hijo: tuple[int, ...], expected: int) -> None:
+        profile = RentaFamilyProfile(descendientes=tuple(_hijo_menor_3(meses) for meses in meses_por_hijo))
+        assert profile.deduccion_maternidad_0611(2024) == expected
 
 
 # ---------------------------------------------------------------------------
@@ -184,29 +163,29 @@ class TestMesesTornoFacts:
 class TestParseDescendienteFlagMesesTrabajo:
     """parse_descendiente_flag must accept MESES_TRABAJO= and validate 0–12 range."""
 
-    def test_meses_trabajo_12_parsed(self) -> None:
-        d = parse_descendiente_flag("NACIMIENTO=2022-06-01,MESES_TRABAJO=12")
-        assert d.meses_madre_trabajo_2024 == 12
+    @pytest.mark.parametrize(
+        ("spec", "expected"),
+        (
+            pytest.param("NACIMIENTO=2022-06-01,MESES_TRABAJO=12", 12, id="twelve"),
+            pytest.param("NACIMIENTO=2022-06-01,MESES_TRABAJO=6", 6, id="six"),
+            pytest.param("NACIMIENTO=2022-06-01,MESES_TRABAJO=0", 0, id="zero"),
+            pytest.param("NACIMIENTO=2022-06-01", 0, id="absent"),
+        ),
+    )
+    def test_meses_trabajo_parsed(self, spec: str, expected: int) -> None:
+        d = parse_descendiente_flag(spec)
+        assert d.meses_madre_trabajo_2024 == expected
 
-    def test_meses_trabajo_6_parsed(self) -> None:
-        d = parse_descendiente_flag("NACIMIENTO=2022-06-01,MESES_TRABAJO=6")
-        assert d.meses_madre_trabajo_2024 == 6
-
-    def test_meses_trabajo_absent_defaults_zero(self) -> None:
-        d = parse_descendiente_flag("NACIMIENTO=2022-06-01")
-        assert d.meses_madre_trabajo_2024 == 0
-
-    def test_meses_trabajo_zero_accepted(self) -> None:
-        d = parse_descendiente_flag("NACIMIENTO=2022-06-01,MESES_TRABAJO=0")
-        assert d.meses_madre_trabajo_2024 == 0
-
-    def test_meses_trabajo_13_raises(self) -> None:
+    @pytest.mark.parametrize(
+        "spec",
+        (
+            pytest.param("NACIMIENTO=2022-06-01,MESES_TRABAJO=13", id="above-range"),
+            pytest.param("NACIMIENTO=2022-06-01,MESES_TRABAJO=-1", id="negative"),
+        ),
+    )
+    def test_meses_trabajo_out_of_range_raises(self, spec: str) -> None:
         with pytest.raises(ValueError, match="MESES_TRABAJO must be 0"):
-            parse_descendiente_flag("NACIMIENTO=2022-06-01,MESES_TRABAJO=13")
-
-    def test_meses_trabajo_negative_raises(self) -> None:
-        with pytest.raises(ValueError, match="MESES_TRABAJO must be 0"):
-            parse_descendiente_flag("NACIMIENTO=2022-06-01,MESES_TRABAJO=-1")
+            parse_descendiente_flag(spec)
 
 
 # ---------------------------------------------------------------------------

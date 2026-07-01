@@ -393,6 +393,13 @@ def _classify_income_transaction(
     """
     transaction_id = transaction.transaction_id
 
+    if transaction.business_classification is BusinessClassification.REVIEWED_EXCLUDED:
+        # Operator reviewed and deliberately excluded this row from filing (a
+        # final disposition): omit it silently. This short-circuits before the
+        # ``irpf_category=actividad_economica`` business override in
+        # ``_income_business_amount`` so an excluded row can never slip back into
+        # aggregation through the category tag.
+        return None
     if transaction.direction is not TransactionDirection.INCOMING:
         # OUTGOING (and any non-income) rows are out of scope for the income
         # pass. Deductible business expenses are owned by the gasto pipeline;

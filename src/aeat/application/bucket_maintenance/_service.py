@@ -466,7 +466,7 @@ class BucketMaintenanceService:
         except Exception as exc:
             raise BucketImportError(
                 translated_message="application.bucket_maintenance.errors.import_payload_invalid",
-                context={"bucket_id": header.bucket_id},
+                context={"bucket_id": header.bucket_id, "error": str(exc)},
             ) from exc
 
         if bundle.bundle_schema_version not in SUPPORTED_BUNDLE_SCHEMA_VERSIONS:
@@ -481,6 +481,17 @@ class BucketMaintenanceService:
             )
 
         self._validate_imported_profile_filing_baseline(bundle)
+        # Recovery is same-id: the bucket is provisioned under the bundle's
+        # profile_id and the carry is restored under header.bucket_id, and the
+        # bucket-local object keys embed that id. If a (hand-built or tampered)
+        # archive's profile_id and header.bucket_id diverge, the provision and the
+        # restore would target different ids and every bucket-local row would be
+        # written under a stale key and become unreadable; fail closed instead.
+        if bundle.profile.profile_id != header.bucket_id:
+            raise BucketImportError(
+                translated_message="application.bucket_maintenance.errors.import_payload_invalid",
+                context={"bucket_id": header.bucket_id, "profile_id": bundle.profile.profile_id},
+            )
         if existing is None:
             self._provision_imported_bucket(bundle)
         with profile_storage_session(header.bucket_id):

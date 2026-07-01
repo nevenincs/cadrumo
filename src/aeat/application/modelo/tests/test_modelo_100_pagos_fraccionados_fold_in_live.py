@@ -90,6 +90,9 @@ _M100_BASE_LIQUIDABLE_NEGATIVA_GENERAL_CASILLA: CasillaId = validated_casilla_id
     surface="_M100_BASE_LIQUIDABLE_NEGATIVA_GENERAL_CASILLA",
 )
 _RELATION_PREFILL_SOURCE = "relation_prefill"
+_OPTIONAL_PAYEE_RETENCIONES_BINDINGS: frozenset[BindingId] = frozenset(
+    {"renta-2024-certificado-trabajo-retenciones"},
+)
 _M130_PAGOS_BINDING_ID: BindingId = "renta-2024-modelo-130-pagos-fraccionados"
 _M130_PAGOS_RELATION_ID = "renta-2024-rel-130-pagos-fraccionados"
 _M131_PAGOS_RELATION_ID = "renta-2024-rel-131-pagos-fraccionados"
@@ -217,6 +220,7 @@ def _non_relation_zero_bindings() -> dict[BindingId, Decimal]:
     return {
         binding.id: Decimal("0")
         for binding in snapshot.revision.bindings
+        if binding.id not in _OPTIONAL_PAYEE_RETENCIONES_BINDINGS
         if binding.source
         not in (
             "profile",

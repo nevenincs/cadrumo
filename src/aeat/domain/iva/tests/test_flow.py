@@ -44,19 +44,6 @@ def test_iva_flow_direction_string_values_are_kebab_case() -> None:
         (IvaCategory.INTRA_COMMUNITY_SUPPLY, InvoiceKind.ISSUED, IvaFlowDirection.REPERCUTIDO),
         (IvaCategory.EXPORT_THIRD_COUNTRY_ZERO_RATED, InvoiceKind.ISSUED, IvaFlowDirection.REPERCUTIDO),
         (IvaCategory.EXPORT_ASSIMILATED_ZERO_RATED, InvoiceKind.ISSUED, IvaFlowDirection.REPERCUTIDO),
-    ],
-)
-def test_derive_flow_classifies_issued_non_reverse_charge_as_repercutido(
-    category: IvaCategory,
-    direction: InvoiceKind,
-    expected: IvaFlowDirection,
-) -> None:
-    assert derive_flow_for_classification(category=category, invoice_direction=direction) is expected
-
-
-@pytest.mark.parametrize(
-    ("category", "direction", "expected"),
-    [
         (IvaCategory.DOMESTIC_GENERAL_21, InvoiceKind.RECEIVED, IvaFlowDirection.SOPORTADO),
         (IvaCategory.DOMESTIC_REDUCED_10, InvoiceKind.RECEIVED, IvaFlowDirection.SOPORTADO),
         (IvaCategory.DOMESTIC_SUPER_REDUCED_4, InvoiceKind.RECEIVED, IvaFlowDirection.SOPORTADO),
@@ -64,7 +51,7 @@ def test_derive_flow_classifies_issued_non_reverse_charge_as_repercutido(
         (IvaCategory.RECARGO_EQUIVALENCIA, InvoiceKind.RECEIVED, IvaFlowDirection.SOPORTADO),
     ],
 )
-def test_derive_flow_classifies_received_non_reverse_charge_as_soportado(
+def test_derive_flow_classifies_non_reverse_charge_categories(
     category: IvaCategory,
     direction: InvoiceKind,
     expected: IvaFlowDirection,

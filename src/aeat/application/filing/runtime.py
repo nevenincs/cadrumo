@@ -51,6 +51,7 @@ from pydantic import BaseModel, Field
 
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core import Period
+from ...core.identity import SubjectTaxId
 from ...core.resources import bundled_path
 
 # Importing the renta package registers the first-slice routing
@@ -79,8 +80,8 @@ class TaxpayerProfileIdentity(Protocol):
     """Structural identity surface accepted by the filing profile projector."""
 
     @property
-    def tax_id(self) -> str:
-        """Tax identity copied into the filing runtime profile."""
+    def tax_id(self) -> SubjectTaxId:
+        """Validated tax identity copied into the filing runtime profile."""
         ...
 
 
@@ -91,13 +92,13 @@ class ModeloOperatorProfile(BaseModel):
     profile Protocol.
 
     Attributes:
-        tax_id: NIF / NIE of the filing operator.
+        tax_id: Validated NIF / NIE / CIF of the filing operator.
         display_name: Human-readable label for the profile.
     """
 
     model_config = _STRICT_FROZEN
 
-    tax_id: str = Field(min_length=1)
+    tax_id: SubjectTaxId = Field(min_length=1)
     display_name: str = Field(min_length=1)
 
 

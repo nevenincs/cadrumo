@@ -58,6 +58,28 @@ def _determinism_flags() -> DeterminismFlags:
     )
 
 
+@pytest.mark.parametrize(
+    ("replacement_cls", "real", "surface_label"),
+    (
+        pytest.param(NifReplacement, _REAL_NIE_CANARY, "taxpayer NIE", id="nif"),
+        pytest.param(ArbitraryReplacement, "opaque", "ad-hoc", id="arbitrary"),
+    ),
+)
+def test_replacement_rejects_blank_synthetic(
+    replacement_cls: type[NifReplacement] | type[ArbitraryReplacement],
+    real: str,
+    surface_label: str,
+) -> None:
+    # Blank synthetic is rejected by the _NonEmptyStr field-type constraint
+    # before subclass-specific validators run.
+    with pytest.raises(ValidationError, match=r"at least 1 character"):
+        replacement_cls(
+            real=SecretStr(real),
+            synthetic="",
+            surface_label=surface_label,
+        )
+
+
 class TestNifReplacement:
     """Synthetic NIF/NIE values must pass the AEAT checksum."""
 
@@ -96,18 +118,6 @@ class TestNifReplacement:
                 synthetic="Y0000001Z",  # wrong checksum letter
                 surface_label="taxpayer NIE",
             )
-
-    def test_rejects_blank_synthetic(self) -> None:
-        # Blank synthetic is rejected by the _NonEmptyStr field-type
-        # constraint (min_length=1) BEFORE the custom field_validator
-        # runs — pydantic surfaces this through ValidationError.
-        with pytest.raises(ValidationError, match=r"at least 1 character"):
-            NifReplacement(
-                real=SecretStr(_REAL_NIE_CANARY),
-                synthetic="",
-                surface_label="taxpayer NIE",
-            )
-
 
 class TestNameReplacement:
     """Synthetic names must be uppercase and digit-free."""
@@ -275,17 +285,6 @@ class TestArbitraryReplacement:
         )
         assert replacement.synthetic == "SANITIZED-OPAQUE"
         assert replacement.synthetic, "non-empty synthetic must survive validation"
-
-    def test_rejects_blank(self) -> None:
-        # Same _NonEmptyStr field-type constraint as NifReplacement —
-        # pydantic rejects min_length violation with the stock message.
-        with pytest.raises(ValidationError, match=r"at least 1 character"):
-            ArbitraryReplacement(
-                real=SecretStr("opaque"),
-                synthetic="",
-                surface_label="ad-hoc",
-            )
-
 
 class TestAddressReplacement:
     """Address replacement has no shape constraint beyond non-empty."""

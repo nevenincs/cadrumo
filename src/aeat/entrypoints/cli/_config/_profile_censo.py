@@ -72,7 +72,7 @@ def _active_pointer() -> tuple[str, str]:
 
 
 def _build_service(bucket_id: str):
-    from ....adapters.persistence.storage.runtime_repository import secure_object_repository_for_bucket
+    from ....adapters.persistence.storage import secure_object_repository_for_bucket
     from ....application.user_profile import CensoSyncService
     from ....domain.buckets import BucketEventHistoryRepository
 

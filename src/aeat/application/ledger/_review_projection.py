@@ -66,6 +66,8 @@ def ledger_transaction_review_status(transaction: Transaction) -> LedgerReviewSt
     """Return the :class:`~aeat.application.review.LedgerReviewStatus` for one bucket-local transaction fact."""
     if transaction.business_classification is BusinessClassification.SKIPPED_BY_RULE:
         return LedgerReviewStatus.SKIPPED
+    if transaction.business_classification is BusinessClassification.REVIEWED_EXCLUDED:
+        return LedgerReviewStatus.EXCLUDED
     if transaction.business_classification in {
         BusinessClassification.BUSINESS,
         BusinessClassification.PERSONAL,

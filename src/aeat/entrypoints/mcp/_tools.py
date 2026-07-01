@@ -90,6 +90,9 @@ def build_tool_descriptors() -> tuple[McpToolDescriptor, ...]:
     emits one descriptor per operator-callable command key, skipping group-callback
     help surfaces. The output schema is the command's registered result model;
     the input schema is the CLI argument vector.
+
+    Returns:
+        Tuple of exposed :class:`McpToolDescriptor` entries.
     """
     from ..cli._app_contract import _command_schema_refs
 

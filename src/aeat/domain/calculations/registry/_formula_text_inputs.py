@@ -36,9 +36,12 @@ def validated_text_input_casilla_ids[InputKey, InputValue](
         )
     resolved_text_inputs: dict[CasillaId, str] = {}
     for key, value in canonical_text_inputs.items():
-        if not isinstance(value, str) or not value:
+        if not isinstance(value, str):
             raise RegistryValidationError(f"text_input {key!r} must be a non-empty string")
-        resolved_text_inputs[key] = value
+        stripped = value.strip()
+        if not stripped:
+            raise RegistryValidationError(f"text_input {key!r} must be a non-empty string")
+        resolved_text_inputs[key] = stripped
     return resolved_text_inputs
 
 

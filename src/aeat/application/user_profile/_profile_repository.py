@@ -47,7 +47,12 @@ from typing import TYPE_CHECKING
 
 from pydantic import BaseModel, Field, ValidationError
 
-from ...adapters.persistence.storage import BUCKET_DEK_FILENAME, BUCKETS_DIRNAME, SecureObjectRepository
+from ...adapters.persistence.storage import (
+    BUCKET_DEK_FILENAME,
+    BUCKETS_DIRNAME,
+    SecureObjectRepository,
+    StorageValidationError,
+)
 from ...adapters.persistence.storage.bucket import (
     BucketKeySchedule,
     BucketLifecycleStatus,
@@ -60,7 +65,6 @@ from ...adapters.persistence.storage.bucket import (
     read_manifest,
     write_manifest,
 )
-from ...adapters.persistence.storage.errors import StorageValidationError
 from ...adapters.persistence.storage.master_key import KdfParams
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core import BucketPointer, pointer_path, write_pointer

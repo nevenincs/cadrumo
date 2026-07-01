@@ -42,6 +42,7 @@ from ...domain.calculations.registry import (
     ModeloRevision,
     RelationId,
     casilla_noncanonical_reference_targets,
+    casillas_by_id,
     declared_casilla_ids,
     enum_consumed_binding_ids,
     revision_date_binding_ids,
@@ -89,6 +90,10 @@ class ModeloCalculateDecimalInputError(ModeloCalculateInputError):
     """Raised when a calculation override value is not decimal-shaped."""
 
 
+class ModeloCalculateTextInputError(ModeloCalculateInputError):
+    """Raised when a ``--casilla`` override targets a text casilla with an empty value."""
+
+
 class ModeloCalculateCasillaInputError(ModeloCalculateInputError):
     """Raised when a casilla override cannot be resolved for the active revision."""
 
@@ -114,12 +119,22 @@ class WorkCalculateInputBundle:
     """Application-facing input channels for one ``modelo work calculate`` run.
 
     The bundle is the handoff from CLI parsing to application calculation. It
-    separates manual casilla inputs, decimal binding overrides, enum binding
-    overrides, relation values, typed detail rows, and the optional borrador
-    snapshot id so each downstream channel keeps its registry-declared type.
+    separates manual casilla inputs, text casilla inputs, decimal binding
+    overrides, enum binding overrides, relation values, typed detail rows, and
+    the optional borrador snapshot id so each downstream channel keeps its
+    registry-declared type. ``text_casilla_inputs`` carries operator-supplied
+    ``data_type = "text"`` casilla values (e.g. Modelo 210's ``tipo_renta``) on
+    a channel parallel to ``casilla_inputs``: the registry engine's
+    ``calculate_registry_snapshot(text_inputs=...)`` reads it for categorical
+    formula dispatch, and it rides into the persisted
+    :class:`aeat.domain.modelos.CalculationRevision.input_values_by_casilla_id`
+    so the verification layer's required-casilla and
+    ``casilla_equals_implies_nonzero`` predicate checks can see it. It is never
+    folded into the Decimal ``casilla_values`` projection.
     """
 
     casilla_inputs: Mapping[CasillaId, Decimal]
+    text_casilla_inputs: Mapping[CasillaId, str]
     binding_values: Mapping[BindingId, Decimal]
     enum_binding_values: Mapping[BindingId, str]
     relation_values: Mapping[RelationId, Decimal]
@@ -136,6 +151,7 @@ class WorkCalculateInputBundle:
         relation_values: Mapping[RelationId, Decimal],
         detail_rows: tuple[ModeloDetailRow, ...],
         borrador_snapshot_id: str | None,
+        text_casilla_inputs: Mapping[CasillaId, str] | None = None,
     ) -> WorkCalculateInputBundle:
         """Freeze CLI-assembled mappings before crossing into calculation services.
 
@@ -144,6 +160,7 @@ class WorkCalculateInputBundle:
         """
         return cls(
             casilla_inputs=dict(casilla_inputs),
+            text_casilla_inputs=dict(text_casilla_inputs or {}),
             binding_values=dict(binding_values),
             enum_binding_values=dict(enum_binding_values),
             relation_values=dict(relation_values),
@@ -162,6 +179,10 @@ class WorkCalculateInputBundle:
     def optional_relation_values(self) -> Mapping[RelationId, Decimal] | None:
         """Return relation values using the calculation-service optional contract."""
         return self.relation_values or None
+
+    def optional_text_casilla_inputs(self) -> Mapping[CasillaId, str] | None:
+        """Return text casilla inputs using the calculation-service optional contract."""
+        return self.text_casilla_inputs or None
 
 
 @dataclass(frozen=True, slots=True)
@@ -283,11 +304,16 @@ def build_work_calculate_input_bundle(
 
     The active work unit determines the :class:`ModeloRevision` used for every
     validation step. ``--casilla`` values must be canonical casilla ids; printed
-    numbers and ambiguous noncanonical references are refused. ``--binding`` is
-    routed by the registry-declared channel, so enum bindings stay as strings,
-    decimal bindings are parsed as :class:`~decimal.Decimal`, and date-valued
-    profile bindings are rejected with profile guidance. ``--relation`` values
-    must match declared relation ids.
+    numbers and ambiguous noncanonical references are refused. A ``--casilla``
+    key whose registry :class:`~aeat.domain.calculations.registry.CasillaDefinition`
+    declares ``data_type = "text"`` (e.g. Modelo 210's ``tipo_renta``) is routed
+    onto the parallel text-casilla channel as a raw, non-empty string instead of
+    being forced through the decimal parser; every other ``--casilla`` key keeps
+    the existing decimal-only contract. ``--binding`` is routed by the
+    registry-declared channel, so enum bindings stay as strings, decimal
+    bindings are parsed as :class:`~decimal.Decimal`, and date-valued profile
+    bindings are rejected with profile guidance. ``--relation`` values must
+    match declared relation ids.
 
     Detail rows are checked before engine dispatch, and shortcut flags are
     translated into semantic-role casilla values or backend-owned bindings by
@@ -295,11 +321,17 @@ def build_work_calculate_input_bundle(
     """
     _validate_detail_rows(detail_rows)
     revision = _revision_for_work_unit(work_unit_id)
+    revision_casillas_by_id = casillas_by_id(revision)
     casilla_inputs: dict[CasillaId, Decimal] = {}
+    text_casilla_inputs: dict[CasillaId, str] = {}
     for raw_key, raw_value in casilla_overrides.items():
         _refuse_detail_casilla_override(raw_key)
         key = _validated_canonical_casilla_id(raw_key, revision)
-        casilla_inputs[key] = _decimal(raw_value, flag="--casilla", key=key)
+        casilla_def = revision_casillas_by_id.get(key)
+        if casilla_def is not None and casilla_def.data_type == "text":
+            text_casilla_inputs[key] = _text_value(raw_value, key=key)
+        else:
+            casilla_inputs[key] = _decimal(raw_value, flag="--casilla", key=key)
     casilla_inputs = validate_casilla_input_ids(revision, casilla_inputs)
 
     binding_values: dict[BindingId, Decimal] = {}
@@ -347,6 +379,7 @@ def build_work_calculate_input_bundle(
         relation_values[key] = _decimal(raw_value, flag="--relation", key=key)
     return WorkCalculateInputBundle.build(
         casilla_inputs=casilla_inputs,
+        text_casilla_inputs=text_casilla_inputs,
         binding_values=binding_values,
         enum_binding_values=enum_binding_values,
         relation_values=relation_values,
@@ -387,6 +420,25 @@ def _decimal(raw_value: str, *, flag: str, key: str) -> Decimal:
             context={"flag": flag, "key": key, "value": raw_value},
             translated_message="application.modelo.errors.calculate_decimal_input_invalid",
         ) from exc
+
+
+def _text_value(raw_value: str, *, key: str) -> str:
+    """Validate a ``--casilla`` value routed to a ``data_type = "text"`` casilla.
+
+    Mirrors the registry engine's own
+    :func:`aeat.domain.calculations.registry.validated_text_input_casilla_ids`
+    non-empty-string contract at the CLI boundary, so an empty text value
+    refuses loudly here instead of surfacing a generic registry error deeper in
+    the calculation pipeline.
+    """
+    value = raw_value.strip()
+    if not value:
+        raise ModeloCalculateTextInputError(
+            f"--casilla value for {key!r} is a text casilla and must be a non-empty string; got {raw_value!r}",
+            context={"key": key, "value": raw_value},
+            translated_message="application.modelo.errors.calculate_text_input_empty",
+        )
+    return value
 
 
 def _refuse_detail_casilla_override(key: str) -> None:
@@ -688,6 +740,7 @@ __all__ = [
     "ModeloCalculateRelationInputError",
     "ModeloCalculateSemanticRoleError",
     "ModeloCalculateShortcutInputError",
+    "ModeloCalculateTextInputError",
     "ModeloWorkCalculationServiceResult",
     "WorkCalculateInputBundle",
     "apply_calculation_shortcut_inputs",

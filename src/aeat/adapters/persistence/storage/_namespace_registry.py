@@ -230,7 +230,7 @@ class StorageHierarchyRegistry(BaseModel):
         self,
         profile: StorageCustodyProfile,
     ) -> tuple[SecureObjectNamespaceDefinition, ...]:
-        """Return carried secure-object namespaces for a custody profile."""
+        """Return carried :class:`SecureObjectNamespaceDefinition` rows for a custody profile."""
         dispositions = _CUSTODY_PROFILE_DISPOSITIONS[profile]
         return tuple(
             namespace for namespace in self.namespaces if namespace.custody_disposition in dispositions
@@ -355,7 +355,10 @@ AUTH_APODERADO_CONFIGURATION_NAMESPACE = SecureObjectNamespaceDefinition(
     schema_version=SECURE_OBJECT_SCHEMA_VERSION_V1,
     object_key_grammar="{bucket_id}",
     scope=StorageNamespaceScope.PROFILE_LOCAL,
-    custody_disposition=StorageCustodyDisposition.PROCESS_LOCAL,
+    # Durable per-bucket apoderamiento setup (represented NIF + granted scopes): it
+    # is not a host credential or session and is not re-derivable, so it must
+    # survive a recovery restore. Sealed-only because it carries identity data.
+    custody_disposition=StorageCustodyDisposition.FULL_CUSTODY_ONLY,
 )
 CALCULATION_OBSERVATIONS_NAMESPACE = SecureObjectNamespaceDefinition(
     key="calculation_observations",

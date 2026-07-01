@@ -26,7 +26,7 @@ from ...application.modelo import (
     registry_list_modelos,
     registry_modelo_codes,
 )
-from ...core import Period
+from ...core import Period, TaxDomain
 from ...core.i18n import output_language, tr
 from ...domain.calculations.registry import (
     InputKind,
@@ -171,14 +171,19 @@ def _register_list_command(app: typer.Typer, deps: _DiscoveryDeps) -> None:
     def list_modelos(
         ctx: typer.Context,
         year: Annotated[int | None, typer.Option("--year", help=tr("cli.app.modelo.list.year_help"))] = None,
+        domain: Annotated[
+            TaxDomain | None,
+            typer.Option("--domain", help=tr("cli.app.modelo.list.domain_help")),
+        ] = None,
     ) -> None:
         report = _run_query(
-            lambda: registry_list_modelos(year=year),
+            lambda: registry_list_modelos(year=year, domain=domain),
             bad_parameter_from_error=deps.bad_parameter_from_error,
         )
         modelos = [_modelo_row_payload(row) for row in report.modelos]
         result = ModeloListResult(
             year_filter=year,
+            domain_filter=domain.value if domain is not None else None,
             modelo_count=len(report.modelos),
             modelos=modelos,
         )

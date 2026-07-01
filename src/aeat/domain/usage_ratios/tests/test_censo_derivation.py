@@ -86,11 +86,13 @@ def test_zero_ratio_is_accepted() -> None:
     assert all(value == Decimal("0") for value in profile.ratios.values())
 
 
-def test_ratio_above_one_is_rejected() -> None:
+@pytest.mark.parametrize(
+    "ratio",
+    (
+        pytest.param(Decimal("1.01"), id="above-one"),
+        pytest.param(Decimal("-0.01"), id="negative"),
+    ),
+)
+def test_out_of_range_ratio_is_rejected(ratio: Decimal) -> None:
     with pytest.raises(UsageRatioValidationError):
-        derive_home_office_ratios_from_censo(Decimal("1.01"), year=2025)
-
-
-def test_negative_ratio_is_rejected() -> None:
-    with pytest.raises(UsageRatioValidationError):
-        derive_home_office_ratios_from_censo(Decimal("-0.01"), year=2025)
+        derive_home_office_ratios_from_censo(ratio, year=2025)

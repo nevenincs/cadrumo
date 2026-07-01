@@ -24,11 +24,14 @@ import pytest
 
 from ....core.hashing import sha256_hex
 from ....core.resources import resources
-from ....domain.buckets import BucketEventHistoryRepository
-from ....domain.user_profile import ProfileSchemaDefinition, UserProfileFact
+from ....domain.buckets._event_repository import BucketEventHistoryRepository
+from ....domain.user_profile._schema import ProfileSchemaDefinition
+from ....domain.user_profile._values import UserProfileFact
 from ....tests.secure_sql import TestRuntimeProfile, isolated_profile_storage_root, isolated_runtime_profile
-from ...bucket_maintenance import BucketMaintenanceService, ExportBucketCommand, ImportBucketCommand
-from ...user_profile import RegisterProfileCommand, profile_storage_session
+from ...bucket_maintenance._contracts import ExportBucketCommand, ImportBucketCommand
+from ...bucket_maintenance._service import BucketMaintenanceService
+from ...user_profile._commands import RegisterProfileCommand
+from ...user_profile._orchestration import profile_storage_session
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -54,7 +57,7 @@ class StoreCase:
 def _seed_classification_rule(bucket_id: str) -> None:
     from ....domain.transactions._classification_rule import LedgerClassificationRule
     from ....domain.transactions._enums import BusinessClassification
-    from ...ledger import LedgerClassificationRuleRepository
+    from ...ledger._rule_repository import LedgerClassificationRuleRepository
 
     rule = LedgerClassificationRule.create(
         description_pattern="amazon",
@@ -66,14 +69,19 @@ def _seed_classification_rule(bucket_id: str) -> None:
 
 
 def _verify_classification_rule(bucket_id: str) -> None:
-    from ...ledger import LedgerClassificationRuleRepository
+    from ...ledger._rule_repository import LedgerClassificationRuleRepository
 
     assert LedgerClassificationRuleRepository().list_rules(), "classification rule lost"
 
 
 def _seed_submission(bucket_id: str) -> None:
-    from ....core import Period
-    from ....domain.submission import ModeloPresentado, SubmissionAttempt, SubmissionStatus, make_submission_id
+    from ....core._period import Period
+    from ....domain.submission._models import (
+        ModeloPresentado,
+        SubmissionAttempt,
+        SubmissionStatus,
+        make_submission_id,
+    )
     from ....domain.submission._repository import SubmissionRepository
 
     attempt = SubmissionAttempt(
@@ -103,8 +111,8 @@ def _verify_submission(bucket_id: str) -> None:
 
 
 def _seed_evidence_bundle(bucket_id: str) -> None:
-    from ...evidence import BundleVerificationState, EvidenceBundle, EvidenceBundleRepository
-    from ...evidence._models import derive_bundle_id
+    from ...evidence._models import BundleVerificationState, EvidenceBundle, derive_bundle_id
+    from ...evidence._service import EvidenceBundleRepository
 
     bundle_id = derive_bundle_id(bucket_id=bucket_id, work_unit_id=_HEX64, manifest_version=1, records=())
     EvidenceBundleRepository().save(
@@ -121,15 +129,15 @@ def _seed_evidence_bundle(bucket_id: str) -> None:
 
 
 def _verify_evidence_bundle(bucket_id: str) -> None:
-    from ...evidence import EvidenceBundleRepository
+    from ...evidence._service import EvidenceBundleRepository
 
     assert tuple(EvidenceBundleRepository().iter_records()), "evidence bundle lost"
 
 
 def _seed_iva_compensation(bucket_id: str) -> None:
-    from ....core import Period
-    from ....domain.iva_compensation import IvaCompensationPeriodState
-    from ...calculations import IvaCompensationHistoryRepository
+    from ....core._period import Period
+    from ....domain.iva_compensation._carry_forward import IvaCompensationPeriodState
+    from ...calculations._iva_compensation_history import IvaCompensationHistoryRepository
 
     IvaCompensationHistoryRepository().save_period(
         IvaCompensationPeriodState(
@@ -147,16 +155,16 @@ def _seed_iva_compensation(bucket_id: str) -> None:
 
 
 def _verify_iva_compensation(bucket_id: str) -> None:
-    from ...calculations import IvaCompensationHistoryRepository
+    from ...calculations._iva_compensation_history import IvaCompensationHistoryRepository
 
     assert IvaCompensationHistoryRepository().list_periods(), "iva compensation history lost"
 
 
 def _seed_filing_history(bucket_id: str) -> None:
-    from ....core import Period
+    from ....core._period import Period
     from ....domain._identifiers import ModeloIdentifier
-    from ...filing import ModeloHistory, ModeloHistoryRepository
-    from ...filing._history_models import ModeloHistoryEntry
+    from ...filing._history_models import ModeloHistory, ModeloHistoryEntry
+    from ...filing._history_repository import ModeloHistoryRepository
 
     modelo = ModeloIdentifier("303")
     entry = ModeloHistoryEntry(
@@ -169,17 +177,17 @@ def _seed_filing_history(bucket_id: str) -> None:
 
 
 def _verify_filing_history(bucket_id: str) -> None:
-    from ...filing import ModeloHistoryRepository
+    from ...filing._history_repository import ModeloHistoryRepository
 
     assert tuple(ModeloHistoryRepository().iter_records()), "filing history lost"
 
 
 def _seed_draft(bucket_id: str) -> None:
-    from ....core import Period
-    from ....domain.calculations.registry import RegistrySnapshotRef
-    from ....domain.filing import ModeloDraftRepository
+    from ....core._period import Period
+    from ....domain.calculations.registry._schema_references import RegistrySnapshotRef
+    from ....domain.filing._repository import ModeloDraftRepository
     from ....domain.filing._schema import ModeloDraft
-    from ....domain.submission import ModeloDraftStatus
+    from ....domain.submission._protocols import ModeloDraftStatus
 
     draft = ModeloDraft(
         draft_id="draft-303-2024-4t",
@@ -198,7 +206,7 @@ def _seed_draft(bucket_id: str) -> None:
 
 
 def _verify_draft(bucket_id: str) -> None:
-    from ....domain.filing import ModeloDraftRepository
+    from ....domain.filing._repository import ModeloDraftRepository
 
     assert tuple(ModeloDraftRepository().iter_drafts()), "draft lost"
 
@@ -217,10 +225,10 @@ def _verify_usage_ratios(bucket_id: str) -> None:
 
 
 def _seed_invoice_catalogue(bucket_id: str) -> None:
-    from ....domain.invoices import InvoiceCatalogueRepository
     from ....domain.invoices._enums import IvaRate, PaymentStatus
     from ....domain.invoices._models import Invoice, InvoiceCatalogue, InvoiceLine
-    from ....domain.iva import InvoiceKind
+    from ....domain.invoices._repository import InvoiceCatalogueRepository
+    from ....domain.iva._classification import InvoiceKind
 
     line = InvoiceLine(
         description="Servicio",
@@ -248,28 +256,29 @@ def _seed_invoice_catalogue(bucket_id: str) -> None:
 
 
 def _verify_invoice_catalogue(bucket_id: str) -> None:
-    from ....domain.invoices import InvoiceCatalogueRepository
+    from ....domain.invoices._repository import InvoiceCatalogueRepository
 
     assert InvoiceCatalogueRepository().load().invoices, "invoice catalogue lost"
 
 
 def _seed_verification_reports(bucket_id: str) -> None:
-    from ....domain.modelos import VerificationReportCatalogue, VerificationReportCatalogueRepository
+    from ....domain.modelos._verification_report import VerificationReportCatalogue
+    from ....domain.modelos._verification_repository import VerificationReportCatalogueRepository
 
     # An empty catalogue still persists one secure-object row to carry.
     VerificationReportCatalogueRepository().save(VerificationReportCatalogue())
 
 
 def _verify_verification_reports(bucket_id: str) -> None:
-    from ....domain.modelos import VerificationReportCatalogueRepository
+    from ....domain.modelos._verification_repository import VerificationReportCatalogueRepository
 
     assert VerificationReportCatalogueRepository().load() is not None, "verification reports lost"
 
 
 def _seed_iva_wallet_decision(bucket_id: str) -> None:
-    from ....core import Period
+    from ....core._period import Period
     from ....domain.iva_compensation._reconciliation import IvaCompensationReconciliationDecision
-    from ...calculations import IvaWalletDecisionRepository
+    from ...calculations._observations_repository import IvaWalletDecisionRepository
 
     IvaWalletDecisionRepository().save_decision(
         IvaCompensationReconciliationDecision(
@@ -288,8 +297,8 @@ def _seed_iva_wallet_decision(bucket_id: str) -> None:
 
 
 def _verify_iva_wallet_decision(bucket_id: str) -> None:
-    from ....core import Period
-    from ...calculations import IvaWalletDecisionRepository
+    from ....core._period import Period
+    from ...calculations._observations_repository import IvaWalletDecisionRepository
 
     repo = IvaWalletDecisionRepository()
     assert repo.list_decisions(), "iva wallet decision lost"
@@ -300,9 +309,9 @@ def _verify_iva_wallet_decision(bucket_id: str) -> None:
 
 
 def _seed_iva_remote_state(bucket_id: str) -> None:
-    from ....core import Period
-    from ...live import IvaRemoteStateAcquisitionManifestRepository
+    from ....core._period import Period
     from ...live._errors import LiveIvaAcquisitionFailureMode
+    from ...live._iva_remote_state import IvaRemoteStateAcquisitionManifestRepository
     from ...live._remote_state_models import (
         IvaRemoteStateAcquisitionManifest,
         LiveIvaAuthOutcome,
@@ -328,7 +337,7 @@ def _seed_iva_remote_state(bucket_id: str) -> None:
 
 
 def _verify_iva_remote_state(bucket_id: str) -> None:
-    from ...live import IvaRemoteStateAcquisitionManifestRepository
+    from ...live._iva_remote_state import IvaRemoteStateAcquisitionManifestRepository
 
     assert tuple(IvaRemoteStateAcquisitionManifestRepository().iter_records()), "iva remote state lost"
 
@@ -356,9 +365,8 @@ def _verify_censo(bucket_id: str) -> None:
 
 
 def _seed_justificante_capture(bucket_id: str) -> None:
-    from ....core import Period
-    from ...live import JustificanteCaptureSnapshotRepository
-    from ...live._justificante import JustificanteCaptureSnapshot
+    from ....core._period import Period
+    from ...live._justificante import JustificanteCaptureSnapshot, JustificanteCaptureSnapshotRepository
     from ...live._snapshot_base import SnapshotLifecycleState
 
     pdf = b"%PDF-1.4 minimal"
@@ -379,7 +387,7 @@ def _seed_justificante_capture(bucket_id: str) -> None:
 
 
 def _verify_justificante_capture(bucket_id: str) -> None:
-    from ...live import JustificanteCaptureSnapshotRepository
+    from ...live._justificante import JustificanteCaptureSnapshotRepository
 
     assert JustificanteCaptureSnapshotRepository(bucket_id=bucket_id).list_snapshots(), "justificante capture lost"
 
@@ -428,11 +436,31 @@ def _verify_expedientes(bucket_id: str) -> None:
     assert _expedientes_repository(load_settings(), bucket_id).list_snapshots(), "expedientes snapshot lost"
 
 
+def _seed_apoderado(bucket_id: str) -> None:
+    from ...auth._apoderado import ApoderadoConfiguration, _ApoderadoConfigRepository
+
+    _ApoderadoConfigRepository(bucket_id=bucket_id).save(
+        ApoderadoConfiguration(
+            bucket_id=bucket_id,
+            represented_nif="12345678Z",
+            granted_scopes=("modelo-filing",),
+            catalogue_version="1",
+            configured_at=_NOW,
+        ),
+    )
+
+
+def _verify_apoderado(bucket_id: str) -> None:
+    from ...auth._apoderado import _ApoderadoConfigRepository
+
+    assert _ApoderadoConfigRepository(bucket_id=bucket_id).load(bucket_id) is not None, "apoderado config lost"
+
+
 def _build_modelo_draft() -> object:
-    from ....core import Period
-    from ....domain.calculations.registry import RegistrySnapshotRef
+    from ....core._period import Period
+    from ....domain.calculations.registry._schema_references import RegistrySnapshotRef
     from ....domain.filing._schema import ModeloDraft
-    from ....domain.submission import ModeloDraftStatus
+    from ....domain.submission._protocols import ModeloDraftStatus
 
     return ModeloDraft(
         draft_id="draft-303-2024-4t-amend",
@@ -450,7 +478,7 @@ def _build_modelo_draft() -> object:
 
 
 def _seed_amendment(bucket_id: str) -> None:
-    from ....core import Period
+    from ....core._period import Period
     from ....domain.filing._amendment import AmendmentKind, CasillaChange, ModeloComplementaria, make_amendment_id
     from ....domain.filing._complementaria_repository import ModeloAmendmentRepository
 
@@ -529,7 +557,8 @@ def _verify_amortization_ledger(bucket_id: str) -> None:
 
 
 def _seed_borrador_100(bucket_id: str) -> None:
-    from ....core import Modelo, Period
+    from ....core._modelo import Modelo
+    from ....core._period import Period
     from ...live._borrador_100 import (
         Borrador100Snapshot,
         Borrador100SnapshotRepository,
@@ -566,7 +595,7 @@ def _verify_borrador_100(bucket_id: str) -> None:
 
 
 def _seed_m036(bucket_id: str) -> None:
-    from ....domain.calculations.registry import CensoModeloEventKind
+    from ....domain.calculations.registry._censo_modelos import CensoModeloEventKind
     from ...modelo._m036_lifecycle import (
         M036DeclarationResult,
         _m036_declaration_repository,
@@ -626,7 +655,7 @@ _SEEDED_SNAPSHOT_ID: dict[str, str] = {}
 
 
 def _seed_user_profile_snapshot(bucket_id: str) -> None:
-    from ....domain.user_profile import UserProfileRecord, UserProfileSnapshot
+    from ....domain.user_profile._values import UserProfileRecord, UserProfileSnapshot
     from .._repository import UserProfileSnapshotRepository
 
     record = UserProfileRecord(profile_id=bucket_id, display_name="Snapshot Operator")
@@ -643,7 +672,7 @@ def _verify_user_profile_snapshot(bucket_id: str) -> None:
 
 
 def _seed_observations(bucket_id: str) -> None:
-    from ....domain.calculations.registry import RegistryModeloObservation
+    from ....domain.calculations.registry._bindings import RegistryModeloObservation
     from ...calculations._observations_repository import CalculationObservationRepository
 
     obs = RegistryModeloObservation(modelo="303", filing_year=2024, period="4T")
@@ -651,7 +680,7 @@ def _seed_observations(bucket_id: str) -> None:
 
 
 def _verify_observations(bucket_id: str) -> None:
-    from ....core import Period
+    from ....core._period import Period
     from ...calculations._observations_repository import CalculationObservationRepository
 
     loaded = CalculationObservationRepository().load_observation("303", Period(filing_year=2024, code="4T"))
@@ -659,7 +688,7 @@ def _verify_observations(bucket_id: str) -> None:
 
 
 def _seed_retencion(bucket_id: str) -> None:
-    from ....core import Period
+    from ....core._period import Period
     from ....core.aggregation import BindingSourceKind, RetencionScheme
     from ...aggregation._retencion_observations_repository import RetencionObservationRepository
     from ...aggregation._retenciones import RetencionObservation
@@ -683,7 +712,7 @@ def _seed_retencion(bucket_id: str) -> None:
 
 
 def _verify_retencion(bucket_id: str) -> None:
-    from ....core import Period
+    from ....core._period import Period
     from ...aggregation._retencion_observations_repository import RetencionObservationRepository
 
     assert RetencionObservationRepository().load_observations("115", Period.from_year_and_code(2024, "1T")), (
@@ -692,9 +721,9 @@ def _verify_retencion(bucket_id: str) -> None:
 
 
 def _seed_withholding(bucket_id: str) -> None:
-    from ....core import Period
+    from ....core._period import Period
     from ....core.aggregation import RetencionClave
-    from ....domain.calculations.registry import WithholdingObservation
+    from ....domain.calculations.registry._withholding_bindings import WithholdingObservation
     from ...aggregation._withholding_observations_repository import WithholdingObservationRepository
 
     obs = WithholdingObservation(
@@ -715,7 +744,7 @@ def _seed_withholding(bucket_id: str) -> None:
 
 
 def _verify_withholding(bucket_id: str) -> None:
-    from ....core import Period
+    from ....core._period import Period
     from ...aggregation._withholding_observations_repository import WithholdingObservationRepository
 
     assert WithholdingObservationRepository().load_observations("190", Period.from_year_and_code(2024, "0A")), (
@@ -809,7 +838,7 @@ def _filed_artefact(body: bytes) -> object:
 
 def _seed_filed_observation(bucket_id: str) -> None:
     from ....adapters.outbound.aeat.sede._schema import FiledDeclaracionObservation
-    from ....core import Period
+    from ....core._period import Period
 
     fobs = FiledDeclaracionObservation(
         modelo="303",
@@ -829,7 +858,7 @@ def _verify_filed_observation(bucket_id: str) -> None:
 
 
 def _seed_filed_artefact(bucket_id: str) -> None:
-    from ....core import Period
+    from ....core._period import Period
 
     body = b"<row/>"
     _filed_declaration_store().persist_artefact(  # type: ignore[attr-defined]
@@ -848,7 +877,7 @@ def _verify_filed_artefact(bucket_id: str) -> None:
 
 def _seed_iva_wallet_observation(bucket_id: str) -> None:
     from ....adapters.outbound.aeat.sede._schema import IvaCompensationWalletObservation, IvaCompensationWalletRow
-    from ....core import Period
+    from ....core._period import Period
 
     wobs = IvaCompensationWalletObservation(
         taxpayer_nif="12345678Z",
@@ -875,6 +904,7 @@ def _verify_iva_wallet_observation(bucket_id: str) -> None:
 
 _CASES: tuple[StoreCase, ...] = (
     StoreCase("aeat.ledger.classification.rules", _seed_classification_rule, _verify_classification_rule),
+    StoreCase("aeat.auth.apoderado", _seed_apoderado, _verify_apoderado),
     StoreCase("aeat.domain.filing.amendments", _seed_amendment, _verify_amendment),
     StoreCase("aeat.persistence.profile.inventory", _seed_inventory_ledger, _verify_inventory_ledger),
     StoreCase("aeat.persistence.profile.assets", _seed_assets_ledger, _verify_assets_ledger),
@@ -967,11 +997,9 @@ def _required_facts(schema: ProfileSchemaDefinition) -> tuple[UserProfileFact, .
 @pytest.fixture
 def source_runtime(tmp_path: Path) -> Iterator[TestRuntimeProfile]:
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID, label=_LABEL) as profile:
-        from ...user_profile import (
-            ProfileLifecycleService,
-            ProfileValidationService,
-            UserProfileLifecycleRepository,
-        )
+        from ...user_profile._lifecycle import ProfileLifecycleService
+        from ...user_profile._repository import UserProfileLifecycleRepository
+        from ...user_profile._validation import ProfileValidationService
 
         schema = resources().user_profile_schema.singleton
         assert isinstance(schema, ProfileSchemaDefinition)

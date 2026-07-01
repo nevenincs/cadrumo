@@ -65,13 +65,16 @@ class TestConstraintsShapeRejects:
         with pytest.raises(ValidationError, match="min_length"):
             _make(min_length=10, max_length=3)
 
-    def test_negative_min_length_rejected(self) -> None:
+    @pytest.mark.parametrize(
+        "fields",
+        (
+            pytest.param({"min_length": -1}, id="min-length"),
+            pytest.param({"max_length": -1}, id="max-length"),
+        ),
+    )
+    def test_negative_length_bound_rejected(self, fields: _ConstraintFields) -> None:
         with pytest.raises(ValidationError):
-            _make(min_length=-1)
-
-    def test_negative_max_length_rejected(self) -> None:
-        with pytest.raises(ValidationError):
-            _make(max_length=-1)
+            _make(**fields)
 
     def test_empty_enum_rejected(self) -> None:
         with pytest.raises(ValidationError, match="at least one"):
@@ -104,13 +107,21 @@ class TestViolatesText:
         c = _make(min_length=2, max_length=5)
         assert c.violates_text("abc") is None
 
-    def test_value_below_min_length_rejected(self) -> None:
-        c = _make(min_length=3)
-        assert "min_length" in _reason(c, "ab")
-
-    def test_value_above_max_length_rejected(self) -> None:
-        c = _make(max_length=3)
-        assert "max_length" in _reason(c, "abcde")
+    @pytest.mark.parametrize(
+        ("fields", "value", "reason"),
+        (
+            pytest.param({"min_length": 3}, "ab", "min_length", id="below-min"),
+            pytest.param({"max_length": 3}, "abcde", "max_length", id="above-max"),
+        ),
+    )
+    def test_value_outside_length_bounds_rejected(
+        self,
+        fields: _ConstraintFields,
+        value: str,
+        reason: str,
+    ) -> None:
+        c = _make(**fields)
+        assert reason in _reason(c, value)
 
     def test_value_not_matching_pattern_rejected(self) -> None:
         c = _make(pattern=r"^[A-Z]{2}$")

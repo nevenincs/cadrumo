@@ -174,9 +174,9 @@ def jsonable_output_payload(payload: object) -> object:
     :mod:`aeat.core.tests.test_json_envelope_roundtrip` pin the correct usage.
 
     This is a transport normalization helper, not a domain contract authority.
-    Command-specific payload classes own field semantics, ordering, and
-    backwards-compatibility; this helper only prepares already-selected output
-    values for redaction and JSON serialization.
+    Command-specific payload classes own field semantics and ordering; this
+    helper only prepares already-selected output values for redaction and JSON
+    serialization.
     """
     if isinstance(payload, BaseModel):
         return jsonable_output_payload(payload.model_dump(mode="python"))

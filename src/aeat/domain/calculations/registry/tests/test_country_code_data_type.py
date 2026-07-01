@@ -54,23 +54,23 @@ class TestCountryCodeRejects:
             "  ES",
             "ES ",
             "ES-1",
+            34,
         ],
     )
-    def test_malformed_rejected_through_adapter(self, raw: str) -> None:
+    def test_malformed_rejected_through_adapter(self, raw: object) -> None:
         with pytest.raises(ValidationError):
             _COUNTRY_ADAPTER.validate_python(raw)
 
-    def test_non_string_rejected(self) -> None:
-        with pytest.raises(ValidationError):
-            _COUNTRY_ADAPTER.validate_python(34)
-
-    def test_lowercase_raises_registry_validation_error_at_validator(self) -> None:
+    @pytest.mark.parametrize(
+        "raw",
+        (
+            pytest.param("es", id="lowercase"),
+            pytest.param(34, id="non-string"),
+        ),
+    )
+    def test_invalid_value_raises_registry_validation_error_at_validator(self, raw: object) -> None:
         with pytest.raises(RegistryValidationError):
-            _validate_country_code("es")
-
-    def test_non_string_raises_registry_validation_error_at_validator(self) -> None:
-        with pytest.raises(RegistryValidationError):
-            _validate_country_code(34)
+            _validate_country_code(raw)
 
 
 class TestCasillaDefinitionDataType:

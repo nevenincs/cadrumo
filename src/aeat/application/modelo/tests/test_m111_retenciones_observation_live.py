@@ -56,6 +56,20 @@ def _administrador_observation() -> RetencionObservation:
     )
 
 
+def _administrador_wrong_rate_observation() -> RetencionObservation:
+    """An administrador retención withheld at 25 % — neither the 35 % nor the 19 % art. 101.2 rate."""
+    return RetencionObservation(
+        source_kind="ledger_transaction",
+        source_object_id="administrador-payment-002",
+        perceptor_nif="87654321X",
+        perceptor_name="Administrador Ejemplo",
+        scheme=RetencionScheme.WORK_INCOME_DIRECTOR,
+        taxable_base=Decimal("2000.00"),
+        retencion_amount=Decimal("500.00"),  # 25 % — matches no art. 101.2 fixed rate
+        accrued_on="2026-03-15",
+    )
+
+
 def _seed_ready_profile(objects: SecureObjectRepository) -> None:
     UserProfileLifecycleRepository(bucket_id=_BUCKET_ID, objects=objects).save(
         UserProfileRecord(
@@ -169,3 +183,52 @@ def test_m111_administrador_retencion_observation_folds_into_trabajo_boxes(tmp_p
     assert values["28"] == Decimal("700.00")
     assert values["30"] == Decimal("700.00")
     assert result.source_diagnostics == ()
+
+
+def test_m111_administrador_wrong_rate_surfaces_calculate_advisory(tmp_path: Path) -> None:
+    """An administrador retención at a non-art.-101.2 rate surfaces a non-blocking calculate advisory.
+
+    The withheld 500.00 on a 2.000,00 base is 25 %, which matches neither the fixed 35 %
+    general rate nor the 19 % reduced rate of LIRPF art. 101.2. The trabajo boxes still fold
+    the operator-supplied amounts (the advisory never overrides values), but the engine surfaces
+    an ``administrador_retencion_rate_mismatch`` diagnostic so the operator can confirm the rate
+    before filing (``no-silent-under-declaration``).
+    """
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID, label="M111 retenciones") as profile:
+        objects: SecureObjectRepository = profile.repository
+        _seed_ready_profile(objects)
+        period = Period.from_year_and_code(2026, "1T")
+        RetencionObservationRepository().replace_observations(
+            modelo="111",
+            filing_year=2026,
+            period=period,
+            observations=[_administrador_wrong_rate_observation()],
+            source_kind="aggregate_pull",
+        )
+        snapshot = resources().modelos.authority.snapshot("111", filing_year=2026, period="1T")
+        wu_repo = WorkUnitCatalogueRepository(objects=objects)
+        work_unit = create_work_unit(
+            bucket_id=_BUCKET_ID,
+            modelo="111",
+            filing_year=2026,
+            period=period,
+            revision_id=snapshot.revision.id,
+            repository=wu_repo,
+            clock=_T0,
+        )
+
+        result = calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
+            work_unit.work_unit_id,
+            work_unit_repository=wu_repo,
+            calculation_repository=CalculationRevisionCatalogueRepository(objects=objects),
+            transaction_repository=TransactionCatalogueRepository(bucket_id=_BUCKET_ID, objects=objects),
+            invoice_repository=InvoiceCatalogueRepository(objects=objects),
+            clock=_T1,
+        )
+
+    values = result.revision.casilla_values
+    assert values["02"] == Decimal("2000.00")
+    assert values["03"] == Decimal("500.00")
+    mismatch = [d for d in result.source_diagnostics if d.reason == "administrador_retencion_rate_mismatch"]
+    assert len(mismatch) == 1
+    assert "87654321X" in mismatch[0].message

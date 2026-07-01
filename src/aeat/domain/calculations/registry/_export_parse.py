@@ -166,7 +166,7 @@ def xml_dictionary_entries(
     source_root: Path | None,
     sources: Mapping[str, SourceReference] | None,
 ) -> tuple[XmlDictionaryEntry, ...]:
-    """Resolve official AEAT XML dictionary entries for ``layout``."""
+    """Resolve official AEAT XML dictionary :class:`XmlDictionaryEntry` rows for ``layout``."""
     if layout.dictionary_source_ref is None:
         raise RegistryValidationError(f"XML export layout {layout.id!r} has no dictionary source")
     if source_root is None or sources is None:

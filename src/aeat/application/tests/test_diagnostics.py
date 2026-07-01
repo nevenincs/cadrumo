@@ -857,8 +857,8 @@ def test_diagnostic_check_invariant_errors_raise_diagnostic_model_error(
     _assert_validation_error_caused_by_diagnostic_model_error(exc_info, message_fragment)
 
 
-def test_diagnostic_model_error_is_subclass_of_value_error() -> None:
-    """DiagnosticModelError is a ValueError subclass for legacy catch compatibility."""
+def test_diagnostic_model_error_is_pydantic_validator_value_error() -> None:
+    """DiagnosticModelError is a ValueError subclass for Pydantic validator wrapping."""
 
     from .._errors import DiagnosticModelError
 

@@ -33,7 +33,7 @@ from .....core.i18n import tr
 from .....core.logging import get_logger
 from .....core.time import now
 from .....domain.calculations.registry import RemoteOperation, assert_remote_operation_allowed
-from ....persistence.storage.runtime_repository import secure_object_repository_for_active_bucket
+from ....persistence.storage import secure_object_repository_for_active_bucket
 from .._playwright import PlaywrightError, PlaywrightTimeoutError
 from ._authenticator_types import BrowserPageLike
 from ._clave_movil_support import (

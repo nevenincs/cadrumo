@@ -226,6 +226,57 @@ def test_modelo_369_filing_schedules_match_scheme_period_selectors() -> None:
 
 
 @pytest.mark.parametrize(
+    ("period", "revision_id"),
+    [
+        ("EXT-1T", "esquema-exterior"),
+        ("1T", "esquema-union"),
+        ("01", "esquema-importacion"),
+    ],
+)
+def test_modelo_369_filing_schedule_explains_b2c_scope_not_b2b(
+    period: str,
+    revision_id: str,
+) -> None:
+    """Every Esquema's filing-schedule condition must disambiguate that the OSS/IOSS
+    ventanilla unica covers B2C operations to final consumers (destinatarios que no
+    tengan la condicion de sujetos pasivos), never B2B operations between taxable
+    persons — so an operator does not misuse Modelo 369 for reverse-charge B2B flows.
+
+    Grounded against the modelo official_name ("...que presten servicios a personas que
+    no tengan la condicion de sujetos pasivos...") and the OSS regime (LIVA arts.
+    163 octiesdecies-octovicies; HAC/610/2021). The note is asserted on the built
+    snapshot projection, the surface an operator-facing consumer reads.
+    """
+    modelo, catalogues = _load_modelo_369()
+
+    snapshot = build_snapshot(
+        modelo,
+        catalogues,
+        source_root=bundled_path(),
+        filing_year=2025,
+        period=period,
+        revision_id=revision_id,
+    )
+
+    schedules = tuple(snapshot.filing_schedules.values())
+    assert len(schedules) == 1
+    conditions = schedules[0].profile_conditions
+    assert conditions, f"{revision_id} filing schedule must declare a profile condition"
+    explanation = conditions[0].explanation.lower()
+
+    assert "b2c" in explanation
+    assert "b2b" in explanation
+    # The B2C scope is grounded in the "no sujetos pasivos" / final-consumer wording.
+    assert "no tengan la condicion de sujetos pasivos" in explanation
+    assert "consumidores finales" in explanation
+    # The Union scheme additionally routes B2B intra-community flows to 303/349.
+    if revision_id == "esquema-union":
+        assert "inversion del sujeto pasivo" in explanation
+        assert "303" in explanation
+        assert "349" in explanation
+
+
+@pytest.mark.parametrize(
     ("revision_id", "window_id", "period", "opens_on", "closes_on"),
     [
         (

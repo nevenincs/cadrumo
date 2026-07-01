@@ -184,6 +184,17 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
+        "aeat.application.modelo._calculate_input.ModeloCalculateTextInputError",
+        ErrorCode(
+            code="REFUSED_MODELO_CALCULATE_TEXT_INPUT",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.modelo_calculate_text_input",
+            default_suggestion="aeat app modelo work calculate --help",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
         "aeat.application.modelo._calculate_input.ModeloCalculateCasillaInputError",
         ErrorCode(
             code="REFUSED_MODELO_CALCULATE_CASILLA_INPUT",

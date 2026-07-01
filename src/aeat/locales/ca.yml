@@ -1215,6 +1215,8 @@ application:
         sense --quiet des d''un terminal interactiu per fer servir l''assistent guiat.'
     next_hint:
       modelo_work_create: aeat app modelo work create
+    notices:
+      ccaa_defaulted: 'No es va triar cap comunitat autònoma, així que es va assumir %{ccaa} per a aquest perfil. Les deduccions autonòmiques i el tram autonòmic de l''escala es calculen per a %{ccaa}. Feu servir --tax-residence-ccaa per triar una altra comunitat.'
     output_labels:
       active_profile: Perfil actiu
       next: Seguent
@@ -1751,6 +1753,7 @@ cli:
       list:
         help: Llistar tots els models tributaris oficials registrats en el sistema.
         year_help: Filtrar el catàleg de models per un únic exercici fiscal
+        domain_help: 'Filtra el catàleg de models per família tributària (p. ex. iva, irpf, is)'
       m036:
         alta_help: Registra una declaració M036 d'alta (inscripció censal inicial)
           presentada a seu.
@@ -2154,6 +2157,7 @@ cli:
         year_help: Exercici fiscal de la unitat de treball (p. ex. 2026)
         year_out_of_range: L'exercici fiscal %{year} està fora de rang; indiqueu un
           any entre %{minimum} i %{maximum}.
+        file_idempotent_noop: 'Operació idempotent sense efecte: la revisió de càlcul %{calculation_revision_id} ja està presentada; s''ha retornat el registre de presentació existent sense canvis.'
   common:
     errors:
       draft_id_not_found: ID d'esborrany %{draft_id} no trobat
@@ -4515,6 +4519,7 @@ errors:
     modelo_calculate_relation_input: errors.refused.modelo_calculate_relation_input
     modelo_calculate_semantic_role: errors.refused.modelo_calculate_semantic_role
     modelo_calculate_shortcut_input: errors.refused.modelo_calculate_shortcut_input
+    modelo_calculate_text_input: errors.refused.modelo_calculate_text_input
     modelo_calculation_revision_selector_ambiguous: El selector de revisio de calcul
       coincideix amb mes d'una revisio; refineu el selector.
     modelo_calculation_revision_selector_state: La revisio de calcul seleccionada

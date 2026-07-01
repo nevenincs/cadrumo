@@ -98,7 +98,25 @@ def test_leading_zero_identifier_stays_a_string() -> None:
     assert reloaded == fact
 
 
-def test_json_restoration_still_recovers_canonical_decimal_and_zero() -> None:
+@pytest.mark.parametrize(
+    ("payload_json", "expected"),
+    (
+        pytest.param(
+            UserProfileFact(path="usage_ratios.business_ratio", value=Decimal("0.50")).model_dump_json(),
+            Decimal("0.50"),
+            id="decimal",
+        ),
+        pytest.param(
+            '{"path": "usage_ratios.business_ratio", "value": "0"}',
+            Decimal("0"),
+            id="zero",
+        ),
+    ),
+)
+def test_json_restoration_still_recovers_canonical_decimal_and_zero(
+    payload_json: str,
+    expected: Decimal,
+) -> None:
     """A genuine round-tripped Decimal (and a lone ``0``) is still restored.
 
     The leading-zero exclusion must not regress the original purpose of the
@@ -107,14 +125,9 @@ def test_json_restoration_still_recovers_canonical_decimal_and_zero() -> None:
     is a legitimate Decimal shape.
     """
 
-    decimal_fact = UserProfileFact(path="usage_ratios.business_ratio", value=Decimal("0.50"))
-    reloaded = UserProfileFact.model_validate_json(decimal_fact.model_dump_json())
-    assert reloaded.value == Decimal("0.50")
+    reloaded = UserProfileFact.model_validate_json(payload_json)
+    assert reloaded.value == expected
     assert isinstance(reloaded.value, Decimal)
-
-    zero_fact = UserProfileFact.model_validate_json('{"path": "usage_ratios.business_ratio", "value": "0"}')
-    assert zero_fact.value == Decimal("0")
-    assert isinstance(zero_fact.value, Decimal)
 
 
 def test_snapshot_is_canonical_and_rejects_tombstoned_profiles() -> None:

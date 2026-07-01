@@ -82,6 +82,7 @@ from ._actions_export import export_ledger_transactions
 from ._actions_import import LedgerProviderID, import_ledger_source, import_ledger_transactions
 from ._actions_lifecycle import (
     archive_manual_transaction,
+    mark_transaction_reviewed_excluded,
     remove_manual_transaction,
     reset_ledger_catalogue,
     restore_manual_transaction,
@@ -307,6 +308,7 @@ __all__ = [
     "ledger_transaction_tracking_payload",
     "list_eligible_ratios_for_bucket",
     "list_manual_transactions",
+    "mark_transaction_reviewed_excluded",
     "merge_transactions",
     "preflight_ledger_tax_readiness",
     "preflight_transaction_catalogue",

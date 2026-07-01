@@ -613,6 +613,14 @@ def test_registry_topic_projection_is_strict_and_frozen() -> None:
             legal_refs=("   ",),
         )
 
+    with pytest.raises(ValidationError, match=r"legal_refs"):
+        RegistryTopicProjection(
+            slug="iva-regime",
+            title="IVA",
+            body="IVA regime",
+            legal_refs=("Ley-37-1992:art-1",),
+        )
+
 
 def test_registry_citation_projections_reject_blank_authoritative_text() -> None:
     with pytest.raises(ValidationError, match=r"title"):

@@ -119,6 +119,34 @@ def test_parse_relation_metadata_preserves_relation_grounding() -> None:
     assert resolved_at is not None and resolved_at.isoformat() == "2026-06-30T12:00:00+00:00"
 
 
+def test_parse_relation_metadata_refuses_malformed_legal_ref() -> None:
+    """Relation metadata must preserve legal ref ids under the registry id contract."""
+
+    with pytest.raises(OutboundStorageValidationError) as raised:
+        _parse_relation_metadata(
+            "provenance=local_filing; legal_refs=Ley-35-2006:art-99; source_refs=boe-modelo-180-2023-form",
+        )
+
+    assert raised.value.context == {
+        "metadata_key": "legal_refs",
+        "metadata_value": "Ley-35-2006:art-99",
+    }
+
+
+def test_parse_relation_metadata_refuses_malformed_source_ref() -> None:
+    """Relation metadata must preserve source ref ids under the registry id contract."""
+
+    with pytest.raises(OutboundStorageValidationError) as raised:
+        _parse_relation_metadata(
+            "provenance=local_filing; legal_refs=ley-35-2006:art-99; source_refs=ley-35-2006:art-99",
+        )
+
+    assert raised.value.context == {
+        "metadata_key": "source_refs",
+        "metadata_value": "ley-35-2006:art-99",
+    }
+
+
 # ---------------------------------------------------------------------------
 # _classify_metadata_match
 # ---------------------------------------------------------------------------

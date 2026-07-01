@@ -36,16 +36,16 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 # ---------------------------------------------------------------------------
 
 
-def test_calc_sheets_engine_error_is_aeat_error() -> None:
-    assert issubclass(CalcSheetsEngineError, AeatError)
-
-
-def test_calc_sheets_record_error_is_aeat_error() -> None:
-    assert issubclass(CalcSheetsRecordError, AeatError)
-
-
-def test_calc_sheets_parity_error_is_aeat_error() -> None:
-    assert issubclass(CalcSheetsParityError, AeatError)
+@pytest.mark.parametrize(
+    "error_cls",
+    (
+        CalcSheetsEngineError,
+        CalcSheetsRecordError,
+        CalcSheetsParityError,
+    ),
+)
+def test_calc_sheets_error_is_aeat_error(error_cls: type[AeatError]) -> None:
+    assert issubclass(error_cls, AeatError)
 
 
 # ---------------------------------------------------------------------------
@@ -92,15 +92,17 @@ def test_calc_sheets_error_envelope_roundtrip(instance: AeatError) -> None:
 # ---------------------------------------------------------------------------
 
 
-def test_bucket_validation_error_mro_does_not_include_value_error() -> None:
-    """BucketValidationError must not inherit ValueError."""
-    assert not issubclass(BucketValidationError, ValueError)
-    assert issubclass(BucketValidationError, BucketError)
-    assert issubclass(BucketValidationError, AeatError)
-
-
-def test_google_auth_validation_error_mro_does_not_include_value_error() -> None:
-    """GoogleAuthValidationError must not inherit ValueError."""
-    assert not issubclass(GoogleAuthValidationError, ValueError)
-    assert issubclass(GoogleAuthValidationError, GoogleAuthError)
-    assert issubclass(GoogleAuthValidationError, AeatError)
+@pytest.mark.parametrize(
+    ("error_cls", "base_cls"),
+    (
+        pytest.param(BucketValidationError, BucketError, id="bucket"),
+        pytest.param(GoogleAuthValidationError, GoogleAuthError, id="google-auth"),
+    ),
+)
+def test_validation_error_mro_does_not_include_value_error(
+    error_cls: type[AeatError],
+    base_cls: type[AeatError],
+) -> None:
+    assert not issubclass(error_cls, ValueError)
+    assert issubclass(error_cls, base_cls)
+    assert issubclass(error_cls, AeatError)

@@ -276,6 +276,11 @@ def aggregate_renta_ledger_expenses(
     for transaction in transactions.values():
         if transaction.lifecycle_state is not TransactionLifecycleState.ACTIVE:
             continue
+        if transaction.business_classification is BusinessClassification.REVIEWED_EXCLUDED:
+            # Operator reviewed and deliberately excluded this row from filing
+            # (a final disposition): omit it silently, no observation and no
+            # advisory-bearing issue.
+            continue
         outcome = _classify_renta_transaction(
             transaction,
             invoices=invoices,

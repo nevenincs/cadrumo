@@ -31,6 +31,7 @@ from ._service import (
     load_usage_ratios,
     load_usage_ratios_with_censo_guard,
     save_usage_ratios,
+    usage_ratio_bucket_lock,
     usage_ratios_object_key,
 )
 
@@ -47,6 +48,7 @@ __all__ = [
     "load_usage_ratios_with_censo_guard",
     "resolve_user_ratio",
     "save_usage_ratios",
+    "usage_ratio_bucket_lock",
     "usage_ratios_object_key",
     "validate_usage_ratio_reference",
 ]

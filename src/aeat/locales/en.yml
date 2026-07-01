@@ -1141,6 +1141,8 @@ application:
         from an interactive terminal to use the guided setup.'
     next_hint:
       modelo_work_create: aeat app modelo work create
+    notices:
+      ccaa_defaulted: 'No comunidad autónoma was chosen, so %{ccaa} was assumed for this profile. Autonomic deductions and the autonomic part of the tax scale are calculated for %{ccaa}. Set --tax-residence-ccaa to use a different comunidad.'
     output_labels:
       active_profile: Active profile
       next: Next
@@ -1649,6 +1651,7 @@ cli:
       list:
         help: List all official tax forms (modelos) registered in the system.
         year_help: Filter the modelo catalogue to a single fiscal year
+        domain_help: 'Filter the modelo catalogue to a single tax family (e.g. iva, irpf, is)'
       m036:
         alta_help: Record an M036 alta declaration (initial census registration) filed
           at sede.
@@ -2026,6 +2029,7 @@ cli:
         year_help: Tax year of the work unit (e.g. 2026)
         year_out_of_range: Filing year %{year} is out of range; supply a year between
           %{minimum} and %{maximum}.
+        file_idempotent_noop: 'Idempotent no-op: calculation revision %{calculation_revision_id} is already filed; returned the existing filing record without changes.'
   common:
     errors:
       draft_id_not_found: Draft ID %{draft_id} not found
@@ -4261,6 +4265,7 @@ errors:
     modelo_calculate_relation_input: errors.refused.modelo_calculate_relation_input
     modelo_calculate_semantic_role: errors.refused.modelo_calculate_semantic_role
     modelo_calculate_shortcut_input: errors.refused.modelo_calculate_shortcut_input
+    modelo_calculate_text_input: errors.refused.modelo_calculate_text_input
     modelo_calculation_revision_selector_ambiguous: The calculation revision selector
       matched more than one revision; refine the selector.
     modelo_calculation_revision_selector_state: The selected calculation revision

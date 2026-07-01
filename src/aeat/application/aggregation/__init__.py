@@ -117,6 +117,10 @@ from ._retencion_observations_repository import (
     persist_retencion_observations,
     retencion_observation_key,
 )
+from ._retencion_rate_advisory import (
+    ADMINISTRADOR_RETENCION_RATE_SOURCE_KIND,
+    administrador_retencion_rate_advisory_observations,
+)
 from ._retenciones import (
     RetencionesAggregation,
     RetencionObservation,
@@ -165,6 +169,7 @@ from ._withholding_source import WithholdingSourceResolver
 
 __all__ = [
     "ACCEPTED_SOURCE_KINDS",
+    "ADMINISTRADOR_RETENCION_RATE_SOURCE_KIND",
     "DEFERRED_SOURCE_KINDS",
     "MISSING_TRANSACTION_EVIDENCE_SOURCE_KIND",
     "RESERVED_SOURCE_KINDS",
@@ -225,6 +230,7 @@ __all__ = [
     "WithholdingObservation",
     "WithholdingObservationRepository",
     "WithholdingSourceResolver",
+    "administrador_retencion_rate_advisory_observations",
     "aggregate_counterpart_347",
     "aggregate_counterpart_349",
     "aggregate_foreign_assets_720",

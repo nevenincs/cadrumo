@@ -535,7 +535,7 @@ _WORK_INCOME_RETENCION_TREATMENTS: Mapping[RetencionScheme, WorkIncomeRetencionT
 
 
 def work_income_retencion_treatment(scheme: RetencionScheme) -> WorkIncomeRetencionTreatment | None:
-    """Return the statutory retención treatment for a work-income scheme.
+    """Return the statutory :class:`WorkIncomeRetencionTreatment` for a work-income scheme.
 
     Returns ``None`` for non-work-income schemes (actividades, premios, capital,
     arrendamiento), which are not governed by the LIRPF art. 101.1/101.2 trabajo

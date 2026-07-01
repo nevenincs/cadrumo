@@ -165,8 +165,7 @@ def _active_profile_record() -> UserProfileRecord | None:
     workstation running ``aeat config check``). A diagnostic/gate resolves to the
     conservative global default rather than crashing when the profile is locked.
     """
-    from ...adapters.persistence.storage import has_active_bucket_session
-    from ...adapters.persistence.storage.errors import PersistenceError
+    from ...adapters.persistence.storage import PersistenceError, has_active_bucket_session
 
     try:
         if not has_active_bucket_session():

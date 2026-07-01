@@ -166,7 +166,10 @@ class EvidenceValidator:
             return cached
         if self._source_root is None:
             return ""
-        source_path = (self._source_root / source.corpus_path).expanduser().resolve()
+        source_root = self._source_root.expanduser().resolve()
+        source_path = (source_root / source.corpus_path).expanduser().resolve()
+        if source_root not in source_path.parents and source_path != source_root:
+            raise OSError(f"source {source.id!r} escapes source root")
         stat = source_path.stat()
         source_key = (source.kind, str(source_path), stat.st_size, stat.st_mtime_ns)
         global_cached = _NORMALISED_SOURCE_TEXT_CACHE.get(source_key)

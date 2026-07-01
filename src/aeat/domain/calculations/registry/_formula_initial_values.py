@@ -194,8 +194,8 @@ def _reject_smuggled_previous_filing_inputs(
     smuggled_previous_filing_bound = sorted(
         casilla_id
         for casilla_id in inputs
-        if (bindings := _observation_backed_bindings_for_bound_casilla(casillas[casilla_id], bindings_by_id))
-        and not any(binding.id in binding_values for binding in bindings)
+        if _observation_backed_bindings_for_bound_casilla(casillas[casilla_id], bindings_by_id)
+        and not any(binding_id in binding_values for binding_id in bound_casilla_binding_ids(casillas[casilla_id]))
     )
     if smuggled_previous_filing_bound:
         raise RegistryValidationError(

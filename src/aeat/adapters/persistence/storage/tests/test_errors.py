@@ -36,6 +36,9 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 def test_secure_storage_errors_reuse_central_aeat_error_registry(error_type: type[BaseException]) -> None:
     assert issubclass(error_type, AeatError)
     assert issubclass(error_type, SecureStorageError)
+
+
+def test_secure_storage_base_error_is_registered() -> None:
     assert get_registered_error_code(SecureStorageError).code == "FAIL_SECURE_STORAGE"
 
 

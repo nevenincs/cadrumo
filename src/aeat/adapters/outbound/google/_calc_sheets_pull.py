@@ -49,7 +49,7 @@ from typing import TYPE_CHECKING, Any, Final, Literal
 if TYPE_CHECKING:
     from googleapiclient.discovery import Resource as _GoogleResource
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, TypeAdapter, ValidationError
 
 from ....application.storage.calc_sheets import collect_row_sets, registry_sha
 from ....application.storage.calc_sheets._layout import SheetLayout, plan_layout
@@ -95,6 +95,8 @@ _DUPLICATE_SENSITIVE_METADATA_KEYS: Final[frozenset[str]] = frozenset(
         "aeat_period",
     },
 )
+_LEGAL_REFS_ADAPTER = TypeAdapter(tuple[LegalRefId, ...])
+_SOURCE_REFS_ADAPTER = TypeAdapter(tuple[SourceRefId, ...])
 
 # A single batch-get value-range entry from the Sheets API.
 # Shape: {"range": str, "values": list[list[object]]}
@@ -746,11 +748,11 @@ def _parse_relation_metadata(
     legal_refs: tuple[LegalRefId, ...] = ()
     raw_legal_refs = fields.get("legal_refs", "")
     if raw_legal_refs:
-        legal_refs = tuple(piece for piece in raw_legal_refs.split("+") if piece)
+        legal_refs = _validated_relation_legal_refs(raw_legal_refs)
     source_refs: tuple[SourceRefId, ...] = ()
     raw_source_refs = fields.get("source_refs", "")
     if raw_source_refs:
-        source_refs = tuple(piece for piece in raw_source_refs.split("+") if piece)
+        source_refs = _validated_relation_source_refs(raw_source_refs)
     resolved_at: datetime | None = None
     raw_resolved = fields.get("resolved_at", "")
     if raw_resolved:
@@ -768,6 +770,30 @@ def _parse_relation_metadata(
         source_refs,
         resolved_at,
     )
+
+
+def _relation_ref_tokens(raw: str) -> tuple[str, ...]:
+    return tuple(piece for piece in raw.split("+") if piece)
+
+
+def _validated_relation_legal_refs(raw: str) -> tuple[LegalRefId, ...]:
+    try:
+        return _LEGAL_REFS_ADAPTER.validate_python(_relation_ref_tokens(raw))
+    except ValidationError as exc:
+        raise OutboundStorageValidationError(
+            "relation metadata legal_refs contains malformed registry legal reference ids",
+            context={"metadata_key": "legal_refs", "metadata_value": raw},
+        ) from exc
+
+
+def _validated_relation_source_refs(raw: str) -> tuple[SourceRefId, ...]:
+    try:
+        return _SOURCE_REFS_ADAPTER.validate_python(_relation_ref_tokens(raw))
+    except ValidationError as exc:
+        raise OutboundStorageValidationError(
+            "relation metadata source_refs contains malformed registry source reference ids",
+            context={"metadata_key": "source_refs", "metadata_value": raw},
+        ) from exc
 
 
 # ADAPTER-INTERNAL-ALIAS-RATIONALE-GOOGLE-RESOURCE: googleapiclient Resource exposes

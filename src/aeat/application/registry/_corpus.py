@@ -37,6 +37,7 @@ from ...core.logging import get_logger
 from ...core.topics import Topic, TopicCatalogue, load_topic_catalogue
 from ...domain.calculations.registry import (
     LegalReference,
+    LegalRefId,
     RegistryValidationError,
     ValidatedRegistryAuthority,
     bundled_authority,
@@ -95,7 +96,7 @@ class RegistryTopicProjection(BaseModel):
     title: _ProjectionText
     body: _ProjectionText
     see_also: tuple[_ProjectionText, ...] = ()
-    legal_refs: tuple[_ProjectionText, ...] = Field(min_length=1)
+    legal_refs: tuple[LegalRefId, ...] = Field(min_length=1)
 
 
 class RegistryCitationReferenceProjection(BaseModel):

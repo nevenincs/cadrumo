@@ -335,6 +335,38 @@ def test_source_citation_text_cache_is_path_scoped_for_same_size_files(tmp_path:
     assert bravo_failures == []
 
 
+def test_source_citation_text_rejects_path_escape(tmp_path: Path) -> None:
+    source_root = tmp_path / "bundle"
+    source_root.mkdir()
+    outside_payload = b"<p>escaped required text</p>"
+    outside_path = tmp_path / "escaped-source.html"
+    outside_path.write_bytes(outside_payload)
+    source = _source_reference("corpus/../../escaped-source.html", outside_payload).model_copy(
+        update={
+            "id": "source-escape",
+            "evidence_tier": "official_source_guidance",
+            "kind": "instructions",
+        },
+    )
+    validator = EvidenceValidator(
+        legal_refs={},
+        source_refs={source.id: source},
+        source_root=source_root,
+    )
+
+    failures = validator.validate_source_citations(
+        "scope",
+        "escape",
+        (source.id,),
+        (SourceCitation(source_ref=source.id, required_text=("escaped required text",)),),
+        "official_source_guidance",
+    )
+
+    assert failures == [
+        f"scope: escape source citation {source.id!r} cannot be read: source {source.id!r} escapes source root",
+    ]
+
+
 def test_verify_legal_catalogue_rejects_missing_required_text_on_single_path(tmp_path: Path) -> None:
     """Legal catalogue verification always enforces required_text against corpus."""
     corpus_path = tmp_path / "corpus" / "normatives" / "html" / "rd-439-2007-art-110.html"

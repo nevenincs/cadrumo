@@ -40,6 +40,7 @@ def _make_filing(
     draft_id: str = "draft-abc123",
     attempt_ordinal: int = 1,
     status: SubmissionStatus = SubmissionStatus.PRESENTADA,
+    profile_tax_id: str = "00000000T",
     period: object = _PERIOD,
 ) -> ModeloPresentado:
     submitted_at = datetime(2026, 4, 27, 10, 0, tzinfo=UTC)
@@ -56,7 +57,7 @@ def _make_filing(
             "draft_id": draft_id,
             "modelo": "130",
             "period": period,
-            "profile_tax_id": "00000000T",
+            "profile_tax_id": profile_tax_id,
             "status": status,
             "submitted_at": submitted_at,
             "attempts": (attempt,),
@@ -111,6 +112,10 @@ class TestSaveLoad:
         filing = _make_filing(period={"filing_year": 2026, "code": "1T"})
 
         assert filing.period == _PERIOD
+
+    def test_profile_tax_id_checksum_rejected_at_model_boundary(self) -> None:
+        with pytest.raises(ValidationError, match="profile_tax_id"):
+            _make_filing(profile_tax_id="12345678A")
 
     def test_combined_period_string_rejected_at_model_boundary(self) -> None:
         with pytest.raises(ValidationError, match="period"):

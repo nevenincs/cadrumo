@@ -16,7 +16,7 @@ See Also:
     :class:`aeat.domain.calculations.registry.ValidatedRegistryAuthority`:
         Loads and validates modelo definitions, then serves registry snapshots.
     :mod:`aeat.application.modelo._registry_helpers`:
-        Uses this authority shim for import/amendment registry checks.
+        Uses this authority helper for import/amendment registry checks.
 """
 
 from __future__ import annotations

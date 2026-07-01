@@ -56,18 +56,25 @@ def test_no_profile_fact_falls_back_to_global_default(
     assert resolved.source is expected_source
 
 
-def test_profile_fact_overrides_the_default() -> None:
+@pytest.mark.parametrize(
+    ("capability", "expected_enabled"),
+    (
+        pytest.param(ServiceCapability.LLM_VISION, False, id="vision-disabled"),
+        pytest.param(ServiceCapability.CLOUD_EVIDENCE_UPLOAD, True, id="cloud-enabled"),
+    ),
+)
+def test_profile_fact_overrides_the_default(capability: ServiceCapability, expected_enabled: bool) -> None:
     settings = load_settings()
     record = _record(
         UserProfileFact(path="capabilities.llm_vision", value=False),
         UserProfileFact(path="capabilities.cloud_evidence_upload", value=True),
     )
-    vision = resolve_capability(ServiceCapability.LLM_VISION, profile_record=record, settings=settings)
-    assert vision.enabled is False and vision.source is CapabilitySource.PROFILE
-    cloud = resolve_capability(ServiceCapability.CLOUD_EVIDENCE_UPLOAD, profile_record=record, settings=settings)
+    resolved = resolve_capability(capability, profile_record=record, settings=settings)
+
     # The profile opted in, and gestor mode is off + global default off, so the
     # profile fact is the deciding layer.
-    assert cloud.enabled is True and cloud.source is CapabilitySource.PROFILE
+    assert resolved.enabled is expected_enabled
+    assert resolved.source is CapabilitySource.PROFILE
 
 
 def test_gestor_mode_bars_cloud_upload_even_with_profile_opt_in() -> None:

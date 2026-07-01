@@ -45,24 +45,21 @@ from datetime import date, datetime
 from decimal import Decimal
 from typing import TYPE_CHECKING
 
-from ...core import BindingSourceKind, Modelo
+from ...core._modelo import Modelo
+from ...core.aggregation import BindingSourceKind
 from ...core.decimal import coerce_decimal_strict
 from ...core.time import now as _utc_now
-from ...domain.buckets import BucketEventHistoryRepository
+from ...domain.buckets._event_repository import BucketEventHistoryRepository
 from ...domain.buckets._protocols import BucketEventHistoryRepositoryProtocol
-from ...domain.calculations.registry import (
-    BindingId,
-    CasillaId,
-    CasillaObservation,
-    InputKind,
-    ModeloRevision,
-    RelationId,
-    bound_casilla_binding_ids,
-    calculate_registry_snapshot,
-    casillas_by_id,
-    relation_source_requirements,
-)
-from ...domain.invoices import InvoiceCatalogueRepository
+from ...domain.calculations.registry._bindings import CasillaObservation, bound_casilla_binding_ids
+from ...domain.calculations.registry._casilla_membership import casillas_by_id
+from ...domain.calculations.registry._formula_runtime import calculate_registry_snapshot
+from ...domain.calculations.registry._formula_text_inputs import validated_text_input_casilla_ids
+from ...domain.calculations.registry._ids import BindingId, CasillaId, RelationId
+from ...domain.calculations.registry._relations import relation_source_requirements
+from ...domain.calculations.registry._schema import ModeloRevision
+from ...domain.calculations.registry._schema_input_kind import InputKind
+from ...domain.invoices._repository import InvoiceCatalogueRepository
 from ...domain.modelos._calculation_repository import (
     CalculationRevisionCatalogueRepository,
     upsert_calculation_revision,
@@ -75,9 +72,11 @@ from ...domain.modelos._protocols import (
 from ...domain.modelos._repository import WorkUnitCatalogueRepository
 from ...domain.modelos._row_models import Modelo349OperadorRow, Modelo349RectificacionRow, ModeloDetailRow
 from ...domain.modelos._work_unit import WorkUnit
-from ...domain.transactions import TransactionCatalogueRepository
-from ..calculations import cross_period_dependency_requirements as _cross_period_dependency_requirements
-from ..live import Borrador100SnapshotRepository
+from ...domain.transactions._repository import TransactionCatalogueRepository
+from ..calculations._cross_period_clean_state import (
+    cross_period_dependency_requirements as _cross_period_dependency_requirements,
+)
+from ..live._borrador_100 import Borrador100SnapshotRepository
 from ._action_errors import (
     CalculationRevisionNotFoundError,
     CalculationRevisionStateError,
@@ -128,8 +127,8 @@ from ._registry_helpers import validate_casilla_input_ids as _validate_casilla_i
 from ._revision_persistence import persist_calculation_revision
 
 if TYPE_CHECKING:
-    from ...domain.calculations.registry import RegistrySnapshot
-    from ..aggregation import CalculationSourceDiagnostic, CalculationSourceResolution
+    from ...domain.calculations.registry._schema import RegistrySnapshot
+    from ..aggregation._source_mesh import CalculationSourceDiagnostic, CalculationSourceResolution
     from ..calculations._observations_repository import IvaWalletDecisionRepository
 
 
@@ -284,6 +283,7 @@ def calculate_modelo_revision(
     *,
     actor: str = "system",
     casilla_inputs: Mapping[CasillaId, Decimal],
+    text_casilla_inputs: Mapping[CasillaId, str] | None = None,
     binding_values: Mapping[BindingId, Decimal] | None = None,
     enum_binding_values: Mapping[BindingId, str] | None = None,
     backend_binding_values: Mapping[BindingId, Decimal] | None = None,
@@ -380,9 +380,12 @@ def calculate_modelo_revision(
         casilla_inputs=prepared.casilla_inputs,
     )
 
+    resolved_text_inputs = validated_text_input_casilla_ids(text_casilla_inputs or {})
+
     engine_result = calculate_registry_snapshot(
         snapshot,
         inputs=resolved_inputs,
+        text_inputs=resolved_text_inputs or None,
         date_context={"filing_period": prepared.period_date},
         binding_values=prepared.channels.bindings,
         enum_binding_values=prepared.channels.enum_bindings,
@@ -419,7 +422,7 @@ def calculate_modelo_revision(
         work_unit_id=work_unit_id,
         work_unit=work_unit,
         work_units=work_units,
-        input_values_by_casilla_id=replay_payloads.input_values_by_casilla_id,
+        input_values_by_casilla_id={**replay_payloads.input_values_by_casilla_id, **resolved_text_inputs},
         binding_overrides=replay_payloads.binding_overrides,
         relation_overrides=replay_payloads.relation_overrides,
         casilla_values=casilla_values,
@@ -442,6 +445,7 @@ def calculate_modelo_revision_from_bucket_aggregation(
     *,
     actor: str = "system",
     casilla_inputs: Mapping[CasillaId, Decimal] | None = None,
+    text_casilla_inputs: Mapping[CasillaId, str] | None = None,
     binding_values: Mapping[BindingId, Decimal] | None = None,
     enum_binding_values: Mapping[BindingId, str] | None = None,
     iva_compensation_decision: object | None = None,
@@ -486,6 +490,7 @@ def calculate_modelo_revision_from_bucket_aggregation(
         work_unit_id,
         actor=actor,
         casilla_inputs=casilla_inputs,
+        text_casilla_inputs=text_casilla_inputs,
         binding_values=binding_values,
         enum_binding_values=enum_binding_values,
         iva_compensation_decision=iva_compensation_decision,
@@ -726,6 +731,7 @@ def calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
     *,
     actor: str = "system",
     casilla_inputs: Mapping[CasillaId, Decimal] | None = None,
+    text_casilla_inputs: Mapping[CasillaId, str] | None = None,
     binding_values: Mapping[BindingId, Decimal] | None = None,
     enum_binding_values: Mapping[BindingId, str] | None = None,
     iva_compensation_decision: object | None = None,
@@ -884,6 +890,7 @@ def calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
         work_unit_id,
         actor=actor,
         casilla_inputs=casilla_inputs or {},
+        text_casilla_inputs=text_casilla_inputs,
         binding_values=binding_values or {},
         backend_binding_values=backend_binding_values,
         backend_casilla_inputs=backend_inputs,

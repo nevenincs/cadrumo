@@ -405,22 +405,27 @@ class CensoSyncService:
             derive_home_office_ratios_from_censo,
             load_usage_ratios,
             save_usage_ratios,
+            usage_ratio_bucket_lock,
         )
 
         raw_ratio = _raw_afectacion_ratio(snapshot.censo_facts)
         if raw_ratio is None:
             return ()
         derived = derive_home_office_ratios_from_censo(raw_ratio, year=_HOME_OFFICE_DEDUCTION_YEAR)
-        current = load_usage_ratios(bucket_id=self._bucket_id)
-        seeded: list[str] = []
-        merged_ratios = dict(current.ratios)
-        for category, value in derived.ratios.items():
-            if merged_ratios.get(category) != value:
-                merged_ratios[category] = value
-                seeded.append(category.value)
-        if not seeded:
-            return ()
-        save_usage_ratios(UsageRatioProfile(ratios=merged_ratios), bucket_id=self._bucket_id)
+        # Hold the per-bucket lock across the load-modify-save so a concurrent
+        # ``ratios set``/``unset`` (or a second censo apply) cannot read the
+        # same snapshot and silently drop this seed's HOME_OFFICE categories.
+        with usage_ratio_bucket_lock(self._bucket_id):
+            current = load_usage_ratios(bucket_id=self._bucket_id)
+            seeded: list[str] = []
+            merged_ratios = dict(current.ratios)
+            for category, value in derived.ratios.items():
+                if merged_ratios.get(category) != value:
+                    merged_ratios[category] = value
+                    seeded.append(category.value)
+            if not seeded:
+                return ()
+            save_usage_ratios(UsageRatioProfile(ratios=merged_ratios), bucket_id=self._bucket_id)
         return tuple(sorted(seeded))
 
     def _load_profile_or_empty(self, profile_id: str) -> UserProfileRecord | None:

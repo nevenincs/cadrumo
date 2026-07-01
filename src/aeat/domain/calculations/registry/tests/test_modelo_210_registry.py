@@ -8,9 +8,11 @@ from decimal import Decimal
 import pytest
 
 from .....core.resources import bundled_path
-from .. import ModeloDefinition, RegistryCatalogues, RegistryValidator, build_snapshot
 from .._errors import NoRevisionForPeriodError
 from .._legal import verify_legal_catalogue
+from .._schema import ModeloDefinition, RegistryCatalogues
+from .._snapshot import build_snapshot
+from .._validate import RegistryValidator
 from ._registry_schema_support import _committed_modelo
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
@@ -172,8 +174,7 @@ def test_modelo_210_interest_rate_is_grounded_in_unconditional_art_25_1_f() -> N
 
     art_25_1_f = catalogues.legal["trlirnr-rdleg-5-2004:art-25.1.f"]
     assert any(
-        "Intereses y otros rendimientos obtenidos por la cesion a terceros" in text
-        for text in art_25_1_f.required_text
+        "Intereses y otros rendimientos obtenidos por la cesion a terceros" in text for text in art_25_1_f.required_text
     )
     assert "condicion de residencia UE/EEE" in (art_25_1_f.notes or "")
 
@@ -334,3 +335,43 @@ def test_modelo_210_2025_verification_predicates_guard_representante_fiscal_and_
     )
     for required_text in art_24.required_text:
         assert required_text in corpus_text
+
+
+def test_modelo_210_2025_inmobiliaria_branch_carries_categorical_conditional_advisory() -> None:
+    """The 2025 revision carries the inmobiliaria-branch categorical-conditional advisory.
+
+    Per the m210-categorical-conditional-predicate ADR: the inmobiliaria
+    branch's silent-zero risk (tipo_renta == "inmobiliaria" implies a
+    non-zero base_imponible) is gated on a categorical casilla condition the
+    implies_nonzero operator cannot express, so it uses the
+    casilla_equals_implies_nonzero operator instead. Co-exists with the
+    pre-existing representante-fiscal and rendimientos-integros-implica-
+    base-imponible predicates in the same array, neither of which is
+    modified by this addition.
+    """
+    modelo, catalogues = _load_modelo_210()
+    revision = modelo.revisions["2025"]
+    predicates = {p.predicate_id: p for p in revision.verification_predicates}
+
+    assert set(predicates) == {
+        "m210-representante-fiscal-required",
+        "modelo-210-2025-rendimientos-integros-implica-base-imponible",
+        "modelo-210-2025-inmobiliaria-implica-base-imponible",
+    }
+
+    inmobiliaria_guard = predicates["modelo-210-2025-inmobiliaria-implica-base-imponible"]
+    assert inmobiliaria_guard.expression == (
+        'casilla_equals_implies_nonzero(["tipo_renta", "inmobiliaria", "base_imponible"])'
+    )
+    assert inmobiliaria_guard.finding_kind == "ADVISORY"
+    legal_refs = tuple(str(r) for r in inmobiliaria_guard.legal_refs)
+    assert "trlirnr-rdleg-5-2004:art-13.1.h" in legal_refs
+    assert "trlirnr-rdleg-5-2004:art-24" in legal_refs
+
+    casillas = {casilla.id for casilla in revision.casillas}
+    assert "tipo_renta" in casillas
+    assert "base_imponible" in casillas
+
+    art_13_1_h = catalogues.legal["trlirnr-rdleg-5-2004:art-13.1.h"]
+    assert art_13_1_h.corpus_ref.endswith("#a13-1-h")
+    verify_legal_catalogue({"trlirnr-rdleg-5-2004:art-13.1.h": art_13_1_h}, source_root=bundled_path())

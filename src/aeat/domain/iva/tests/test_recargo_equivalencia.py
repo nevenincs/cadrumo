@@ -78,26 +78,18 @@ def test_recargo_record_is_frozen() -> None:
         load_recargo_rates().general_rate = Decimal("0.999")
 
 
-def test_recargo_rate_for_general_returns_5_2_percent() -> None:
-    assert recargo_rate_for(IvaRateKind.GENERAL) == Decimal("0.052")
-
-
-def test_recargo_rate_for_reduced_returns_1_4_percent() -> None:
-    assert recargo_rate_for(IvaRateKind.REDUCED) == Decimal("0.014")
-
-
-def test_recargo_rate_for_super_reduced_returns_0_5_percent() -> None:
-    assert recargo_rate_for(IvaRateKind.SUPER_REDUCED) == Decimal("0.005")
-
-
-def test_recargo_rate_for_zero_returns_none() -> None:
-    """Recargo de equivalencia does not apply to zero-rated operations."""
-    assert recargo_rate_for(IvaRateKind.ZERO) is None
-
-
-def test_recargo_rate_for_exempt_returns_none() -> None:
-    """Recargo de equivalencia does not apply to exempt operations."""
-    assert recargo_rate_for(IvaRateKind.EXEMPT) is None
+@pytest.mark.parametrize(
+    ("iva_rate_kind", "expected"),
+    (
+        pytest.param(IvaRateKind.GENERAL, Decimal("0.052"), id="general"),
+        pytest.param(IvaRateKind.REDUCED, Decimal("0.014"), id="reduced"),
+        pytest.param(IvaRateKind.SUPER_REDUCED, Decimal("0.005"), id="super-reduced"),
+        pytest.param(IvaRateKind.ZERO, None, id="zero"),
+        pytest.param(IvaRateKind.EXEMPT, None, id="exempt"),
+    ),
+)
+def test_recargo_rate_for(iva_rate_kind: IvaRateKind, expected: Decimal | None) -> None:
+    assert recargo_rate_for(iva_rate_kind) == expected
 
 
 def test_recargo_record_validates_inputs_in_strict_mode() -> None:

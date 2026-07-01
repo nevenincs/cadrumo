@@ -6,7 +6,7 @@ from decimal import Decimal
 
 import pytest
 
-from ....core import Period
+from ....core import BindingSourceKind, Period
 from ....core.external_constants import MODELO_720_REPORTING_THRESHOLD_EUR
 from .._foreign_assets import (
     ForeignAssetClass,
@@ -28,7 +28,7 @@ def _obs(
     valuation: str,
     asset_external_id: str = "ASSET-001",
     country: str = "AD",
-    source_kind: str = "ledger_transaction",
+    source_kind: BindingSourceKind | str = BindingSourceKind.LEDGER_TRANSACTION,
     source_id: str = "tx-001",
     held: bool = True,
     acquisition: str = "2023-01-15",
@@ -46,11 +46,36 @@ def _obs(
 
 
 class TestObservationContract:
+    def test_observation_accepts_canonical_source_kinds(self) -> None:
+        expected = {
+            BindingSourceKind.LEDGER_TRANSACTION,
+            BindingSourceKind.PURCHASE_INVOICE_EVIDENCE,
+            BindingSourceKind.PAYABLE_INVOICE,
+            BindingSourceKind.COLLECTIBLE_INVOICE,
+        }
+        observed: set[BindingSourceKind] = set()
+        for kind in expected:
+            obs = _obs(asset_class=ForeignAssetClass.ACCOUNT, valuation="0", source_kind=kind)
+            observed.add(obs.source_kind)
+            from_string = _obs(asset_class=ForeignAssetClass.ACCOUNT, valuation="0", source_kind=kind.value)
+            assert from_string.source_kind is kind
+        assert observed == expected
+
     def test_bare_invoice_source_kind_rejected(self) -> None:
         from pydantic import ValidationError
 
-        with pytest.raises(ValidationError, match="unsupported source_kind"):
+        with pytest.raises(ValidationError, match="not a BindingSourceKind"):
             _obs(asset_class=ForeignAssetClass.ACCOUNT, valuation="1000", source_kind="invoice")
+
+    def test_registry_foreign_asset_binding_source_rejected_as_ingest_provenance(self) -> None:
+        from pydantic import ValidationError
+
+        with pytest.raises(ValidationError, match="unsupported source_kind"):
+            _obs(
+                asset_class=ForeignAssetClass.ACCOUNT,
+                valuation="1000",
+                source_kind=BindingSourceKind.FOREIGN_ASSET,
+            )
 
     def test_lowercase_country_rejected(self) -> None:
         from pydantic import ValidationError
@@ -72,6 +97,7 @@ class TestAggregateBasic:
         result = aggregate_foreign_assets_720((obs,), period=_P_2025_ANNUAL)
         assert len(result.rollups) == 1
         row = result.rollups[0]
+        assert row.source_kind is BindingSourceKind.LEDGER_TRANSACTION
         assert row.asset_class is ForeignAssetClass.ACCOUNT
         assert row.assets_count == 1
         assert row.held_at_year_end_count == 1

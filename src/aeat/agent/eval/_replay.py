@@ -31,7 +31,11 @@ class GoldenToolCall(BaseModel):
 
 
 def record_tool_call(tool_name: str, args: tuple[str, ...], *, resolve: ToolCallResolver) -> GoldenToolCall:
-    """Capture a golden tool call by resolving it once."""
+    """Capture a golden tool call by resolving it once.
+
+    Returns:
+        :class:`GoldenToolCall` containing the original call and invocation.
+    """
     return GoldenToolCall(tool_name=tool_name, args=args, invocation=resolve(tool_name, args))
 
 
@@ -45,5 +49,9 @@ def divergent_replays(
     *,
     resolve: ToolCallResolver,
 ) -> tuple[GoldenToolCall, ...]:
-    """Return the records whose replay diverges from their captured invocation."""
+    """Return the records whose replay diverges from their captured invocation.
+
+    Returns:
+        Tuple of divergent :class:`GoldenToolCall` records.
+    """
     return tuple(record for record in records if not replay_tool_call(record, resolve=resolve))

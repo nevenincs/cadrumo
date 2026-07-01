@@ -20,7 +20,7 @@ _log = _get_logger(__name__)
 
 def _locked_store_refusal(error: BaseException) -> _AeatError | None:
     """Return the locked-store refusal wrapped in ``error``, if any."""
-    from ....adapters.persistence.storage.errors import SecretStoreError
+    from ....adapters.persistence.storage import SecretStoreError
 
     seen: set[int] = set()
     current: BaseException | None = error

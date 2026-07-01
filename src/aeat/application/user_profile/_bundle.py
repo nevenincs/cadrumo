@@ -29,7 +29,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from ...adapters.persistence.storage._namespace_registry import STORAGE_NAMESPACE_REGISTRY, StorageCustodyProfile
+from ...adapters.persistence.storage import STORAGE_NAMESPACE_REGISTRY, StorageCustodyProfile
 from ...core.errors import AeatError
 
 if TYPE_CHECKING:
@@ -59,6 +59,12 @@ def serialize_profile_bundle(
     from ``bucket_id``'s encrypted repositories and assembles them into
     one portable payload. The caller is responsible for ensuring a live
     bucket session is active for ``bucket_id``.
+
+    Args:
+        bucket_id: Profile bucket whose domain repositories are exported.
+        custody_profile: Secure-object custody scope to apply, as a
+            :class:`~aeat.adapters.persistence.storage.StorageCustodyProfile`
+            or one of its string values.
 
     The bundle carries only decrypted pydantic domain-model payloads
     (no encrypted envelopes or key material). The recipient re-encrypts
@@ -135,7 +141,7 @@ def _build_secure_object_custody_payload(
     bucket_id: str,
     custody_profile: StorageCustodyProfile,
 ) -> tuple[tuple[CarriedSecureObject, ...], CoverageManifest]:
-    from ...adapters.persistence.storage.runtime_repository import secure_object_repository_for_bucket
+    from ...adapters.persistence.storage import secure_object_repository_for_bucket
     from ...domain.user_profile._portable_export import CoverageManifest
     from ._custody_carry import carried_namespace_definitions, serialize_carried_objects
 

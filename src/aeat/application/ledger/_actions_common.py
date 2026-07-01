@@ -654,6 +654,8 @@ def _command_matches_current(command: ManualLedgerTransactionCommand, current: T
         and command.iva_rate == current.iva_rate
         and command.iva_amount == current.iva_amount
         and command.iva_category == current.iva_category
+        and command.recargo_amount == current.recargo_amount
+        and command.source_jurisdiction == current.source_jurisdiction
         and command.counterparty_eu_member_state == current.counterparty_eu_member_state
         and command.irpf_category == current.irpf_category
         and command.usage_ratio_id == current.usage_ratio_id

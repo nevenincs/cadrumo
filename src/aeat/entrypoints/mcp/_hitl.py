@@ -42,6 +42,9 @@ def confirmation_for_tool(*, command_key: str, annotations: McpAnnotations) -> C
     Order matters: a forbidden live-write blocks before any approval; a
     destructive or filing-handoff verb requires confirmation; everything else
     (reads and non-destructive local mutations) auto-approves.
+
+    Returns:
+        :class:`ConfirmationPolicy` selected for the command.
     """
     leaf = command_key.rsplit(".", 1)[-1]
     if leaf in _LIVE_WRITE_LEAVES:

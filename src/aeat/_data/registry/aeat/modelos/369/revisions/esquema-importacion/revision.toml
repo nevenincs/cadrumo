@@ -279,7 +279,7 @@ source_refs = ["boe-modelo-369-2021-form", "aeat-modelo-369-procedure"]
 field = "iva.oss_enrolled"
 op = "equals"
 value = true
-explanation = "Modelo 369 esquema importacion aplica solo a sujetos pasivos acogidos al regimen IOSS de ventanilla unica para ventas a distancia de bienes importados de baja cuantia."
+explanation = "Modelo 369 esquema importacion aplica solo a sujetos pasivos acogidos al regimen IOSS de ventanilla unica, y unicamente por ventas a distancia de bienes importados de baja cuantia B2C a destinatarios que no tengan la condicion de sujetos pasivos (consumidores finales); las operaciones B2B con destinatarios que sean sujetos pasivos no se declaran en el modelo 369."
 legal_refs = ["orden-hac-610-2021:art-2"]
 source_refs = ["aeat-modelo-369-procedure"]
 
