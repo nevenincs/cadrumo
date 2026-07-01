@@ -15,14 +15,16 @@ from decimal import Decimal
 
 import pytest
 
+from .....core.resources import resources
 from .._ids import CasillaId, validated_casilla_id
 from .._runtime_graph import (
+    enum_consumed_binding_ids,
     expression_binding_refs,
     expression_casilla_refs,
     expression_parameter_refs,
     expression_relation_refs,
 )
-from .._schema import FormulaExpression
+from .._schema import FormulaExpression, ModeloRevision
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -30,6 +32,8 @@ _CASILLA_0001: CasillaId = validated_casilla_id("0001", surface="_CASILLA_0001")
 _CASILLA_0002: CasillaId = validated_casilla_id("0002", surface="_CASILLA_0002")
 _CASILLA_0003: CasillaId = validated_casilla_id("0003", surface="_CASILLA_0003")
 _CASILLA_0505: CasillaId = validated_casilla_id("0505", surface="_CASILLA_0505")
+_M210_RATE_FORMULA_ID = "m210-tipo-gravamen-2025-resolve"
+_M210_COUNTRY_BINDING = "m210-2025-profile-country-of-fiscal-residence"
 
 
 def _leaf(**kwargs: object) -> FormulaExpression:
@@ -42,6 +46,10 @@ def _operator(op: str, *args: FormulaExpression) -> FormulaExpression:
     """Build a non-leaf FormulaExpression by validating its op + args."""
 
     return FormulaExpression.model_validate({"op": op, "args": args})
+
+
+def _m210_2025_revision() -> ModeloRevision:
+    return resources().modelos.authority.snapshot("210", filing_year=2025, period="EVENT-1").revision
 
 
 def test_expression_casilla_refs_returns_direct_leaf() -> None:
@@ -136,6 +144,45 @@ def test_expression_relation_refs_walks_nested_args() -> None:
         "modelo-130-rel-base-1t",
         "modelo-130-rel-base-2t",
     )
+
+
+def test_enum_consumed_binding_ids_reads_current_m210_resolve_rate_country_arg() -> None:
+    """The committed M210 2025 six-arg rate formula routes country as an enum binding."""
+
+    revision = _m210_2025_revision()
+    formula = next(formula for formula in revision.formulas if formula.id == _M210_RATE_FORMULA_ID)
+    expression = formula.expression
+    assert expression.op == "m210_resolve_rate"
+    assert len(expression.args) == 6
+    assert expression.args[3].parameter == "m210-convenio-rates"
+    assert expression.args[5].binding == _M210_COUNTRY_BINDING
+
+    enum_ids = enum_consumed_binding_ids(revision)
+
+    assert _M210_COUNTRY_BINDING in enum_ids
+    assert "m210-convenio-rates" not in enum_ids
+
+
+def test_enum_consumed_binding_ids_preserves_legacy_m210_four_arg_country_arg() -> None:
+    """The legacy four-arg M210 rate formula still routes country through the enum channel."""
+
+    revision = _m210_2025_revision()
+    formula = next(formula for formula in revision.formulas if formula.id == _M210_RATE_FORMULA_ID)
+    legacy_expression = FormulaExpression.model_validate(
+        {
+            "op": "m210_resolve_rate",
+            "args": (
+                {"casilla_id": "tipo_renta"},
+                {"parameter": "m210-tipo-gravamen-2025"},
+                {"parameter": "m210-convenio-rates"},
+                {"binding": _M210_COUNTRY_BINDING},
+            ),
+        }
+    )
+    legacy_formula = formula.model_copy(update={"expression": legacy_expression})
+    legacy_revision = revision.model_copy(update={"formulas": (legacy_formula,)})
+
+    assert enum_consumed_binding_ids(legacy_revision) == frozenset({_M210_COUNTRY_BINDING})
 
 
 def test_walkers_return_empty_for_unrelated_leaf_kinds() -> None:
