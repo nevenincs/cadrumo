@@ -12,7 +12,7 @@
 id = "m151-impatriado-calculation"
 title = "Modelo 151 IRPF régimen impatriados cuota"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113"]
-source_refs = ["aeat-modelo-151-procedure", "boe-modelo-151-form"]
+source_refs = ["aeat-modelo-151-procedure", "boe-modelo-151-layout"]
 formulas = [
     "modelo-151-cuota-integra-general",
     "modelo-151-cuota-diferencial",
