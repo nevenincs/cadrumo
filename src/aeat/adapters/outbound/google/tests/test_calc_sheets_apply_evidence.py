@@ -86,7 +86,7 @@ def _evidence_plan() -> SheetExportPlan:
                     kind="casilla_input",
                     note="operator supplied accounting result",
                     legal_refs=("ley-27-2014:art-10",),
-                    source_refs=("manual",),
+                    source_refs=("operator-manual-evidence",),
                 ),
             ),
         ),
