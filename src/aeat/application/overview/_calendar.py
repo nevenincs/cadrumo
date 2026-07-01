@@ -1587,10 +1587,10 @@ def build_overview_calendar(
 
     entries: list[OverviewCalendarEntry] = []
     suppressed: list[SuppressedCalendarEntry] = []
+    coverage_surface_modelos: set[str] = set()
     for schedule in schedules:
         for obligation in schedule.obligations:
-            if not _entry_intersects_range(obligation, calendar_range):
-                continue
+            intersects_range = _entry_intersects_range(obligation, calendar_range)
             # Each modelo's applicability is DERIVED from the taxpayer
             # model. Only a positively ``APPLICABLE`` verdict earns a
             # calendar row. An obligation the taxpayer model excludes
@@ -1606,7 +1606,7 @@ def build_overview_calendar(
             # deferred expansion (see ``_SEED_COVERAGE_NOTICE``).
             applicability = derive_modelo_applicability(profile, obligation.modelo)
             if applicability.verdict is not ApplicabilityVerdict.APPLICABLE:
-                if show_suppressed:
+                if show_suppressed and intersects_range:
                     suppressed.append(
                         SuppressedCalendarEntry(
                             modelo=obligation.modelo,
@@ -1615,6 +1615,9 @@ def build_overview_calendar(
                             reason=applicability.reason,
                         ),
                     )
+                continue
+            coverage_surface_modelos.add(obligation.modelo)
+            if not intersects_range:
                 continue
             entries.append(
                 _calendar_entry_from_obligation(
@@ -1649,7 +1652,7 @@ def build_overview_calendar(
     evidence_conflict_warnings = _calendar_aeat_evidence_conflict_warnings(entries=entries_tuple)
     coverage = build_obligation_coverage(
         profile,
-        {entry.modelo for entry in entries_tuple},
+        coverage_surface_modelos | {entry.modelo for entry in entries_tuple},
         today=today,
     )
     return OverviewCalendar(
