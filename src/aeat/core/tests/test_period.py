@@ -23,26 +23,22 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 class TestStandardPeriodCode:
     """Verify StandardPeriodCode enum covers expected members."""
 
-    def test_quarterly_codes(self) -> None:
-        assert StandardPeriodCode.Q1 == "1T"
-        assert StandardPeriodCode.Q2 == "2T"
-        assert StandardPeriodCode.Q3 == "3T"
-        assert StandardPeriodCode.Q4 == "4T"
-
-    def test_instalment_codes(self) -> None:
-        assert StandardPeriodCode.P1 == "1P"
-        assert StandardPeriodCode.P2 == "2P"
-        assert StandardPeriodCode.P3 == "3P"
-        assert StandardPeriodCode.P4 == "4P"
-
-    def test_annual_code(self) -> None:
-        assert StandardPeriodCode.ANNUAL == "0A"
-
-    def test_monthly_codes(self) -> None:
-        assert StandardPeriodCode.JAN == "01"
-        assert StandardPeriodCode.DEC == "12"
-
-    def test_strenumed_members(self) -> None:
+    def test_canonical_member_values(self) -> None:
+        expected_values = {
+            StandardPeriodCode.Q1: "1T",
+            StandardPeriodCode.Q2: "2T",
+            StandardPeriodCode.Q3: "3T",
+            StandardPeriodCode.Q4: "4T",
+            StandardPeriodCode.P1: "1P",
+            StandardPeriodCode.P2: "2P",
+            StandardPeriodCode.P3: "3P",
+            StandardPeriodCode.P4: "4P",
+            StandardPeriodCode.ANNUAL: "0A",
+            StandardPeriodCode.JAN: "01",
+            StandardPeriodCode.DEC: "12",
+        }
+        for member, expected in expected_values.items():
+            assert member == expected
         assert len(StandardPeriodCode) == 21
 
 
@@ -104,32 +100,16 @@ class TestRegistryPeriodCodeValidator:
 class TestRegistryPeriodCodeAccessors:
     """Verify accessor functions for period-code discovery."""
 
-    def test_accepted_period_codes_returns_tuple(self) -> None:
+    def test_accepted_period_codes_surface_expected_families(self) -> None:
         codes = accepted_period_codes()
         assert isinstance(codes, tuple)
+        for expected in ("1T", "0A", "12", "EXT-1T", "EXT-4T", "AD-HOC"):
+            assert expected in codes
 
-    def test_accepted_period_codes_includes_standard(self) -> None:
-        codes = accepted_period_codes()
-        assert "1T" in codes
-        assert "0A" in codes
-        assert "12" in codes
-
-    def test_accepted_period_codes_includes_extended(self) -> None:
-        codes = accepted_period_codes()
-        assert "EXT-1T" in codes
-        assert "EXT-4T" in codes
-
-    def test_accepted_period_codes_includes_ad_hoc(self) -> None:
-        codes = accepted_period_codes()
-        assert "AD-HOC" in codes
-
-    def test_accepted_period_patterns_returns_tuple(self) -> None:
+    def test_accepted_period_patterns_describe_event_regex(self) -> None:
         patterns = accepted_period_patterns()
         assert isinstance(patterns, tuple)
         assert len(patterns) >= 3
-
-    def test_accepted_period_patterns_describes_event_regex(self) -> None:
-        patterns = accepted_period_patterns()
         pattern_str = " ".join(patterns).lower()
         assert "event" in pattern_str
         assert "integer" in pattern_str
