@@ -119,7 +119,7 @@ def configure_operator_auth(provider: str, *, certificate_path: Path | None = No
         :class:`~aeat.application.workflow.ActiveProfileHealth`
             Redacted health verdict used to accept or refuse the active bucket.
     """
-    from ...adapters.persistence.storage.runtime_repository import secure_object_repository_for_active_bucket
+    from ...adapters.persistence.storage import secure_object_repository_for_active_bucket
     from ...core import resolve_active_bucket_id
     from ...domain.buckets import (
         BucketEvent,
