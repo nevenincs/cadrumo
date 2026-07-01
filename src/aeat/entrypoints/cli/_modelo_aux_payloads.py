@@ -15,7 +15,29 @@ catalogue metadata; this module only pins CLI transport shapes.
 
 from __future__ import annotations
 
+from ...core.aggregation import RetencionClave
 from ._schemas import OutputSchema, register_schema
+
+
+class WithholdingClaveBreakdownPayload(OutputSchema):
+    """One per-clave retención row of the Modelo 190 reconciliation breakdown.
+
+    JSON projection of
+    :class:`~aeat.domain.calculations.registry.WithholdingClaveBreakdown`: the
+    ``clave`` keeps its typed :class:`~aeat.core.aggregation.RetencionClave`
+    member (the closed AEAT clave-de-percepción axis) and the magnitudes are
+    rendered as canonical decimal strings. Re-exported through
+    :mod:`aeat.entrypoints.cli._modelo_payloads` so the
+    :class:`~aeat.entrypoints.cli._modelo_payloads.ModeloAggregateResult`
+    envelope can carry the breakdown that lets an operator reconcile the annual
+    Modelo 190 retención totals against the per-clave figures of the individual
+    Modelo 111 quarterly filings.
+    """
+
+    clave: RetencionClave
+    percepcion_count: int
+    percibido_total: str
+    retencion_total: str
 
 
 class EvidenceRecordRefPayload(OutputSchema):

@@ -27,11 +27,13 @@ from ....domain.transactions import (
 )
 from .. import (
     CasillaSchemaProvider,
+    ModeloBuilderError,
     ModeloCalculateError,
     ModeloDraft,
     ModeloValidationFinding,
     ModeloValidator,
     ModeloValueKind,
+    _binding_provenance,
     approve_draft,
     build_draft,
     build_runtime_schema_provider,
@@ -244,6 +246,24 @@ def test_build_draft_uses_registry_snapshot_for_modelo_130() -> None:
     assert _M130_CASILLA_19 in values
     assert values[_M130_CASILLA_19].kind is ModeloValueKind.COMPUTED
     assert values[_M130_CASILLA_19].formula_trace_casilla_ids == _M130_RESULT_TRACE
+
+
+def test_binding_provenance_rejects_empty_registry_refs() -> None:
+    """A bound filing value cannot be projected from an ungrounded binding definition."""
+
+    snapshot = resources().modelos.authority.snapshot("130", filing_year=2026, period="1T")
+    binding = next(item for item in snapshot.revision.bindings if item.legal_refs and item.source_refs)
+    source, legal_refs, source_refs = _binding_provenance(binding)
+    assert source == binding.source
+    assert legal_refs == tuple(binding.legal_refs)
+    assert source_refs == tuple(binding.source_refs)
+
+    for corrupted in (
+        binding.model_copy(update={"legal_refs": ()}),
+        binding.model_copy(update={"source_refs": ()}),
+    ):
+        with pytest.raises(ModeloBuilderError, match="legal_refs/source_refs"):
+            _binding_provenance(corrupted)
 
 
 def test_build_draft_uses_registry_snapshot_for_modelo_111() -> None:

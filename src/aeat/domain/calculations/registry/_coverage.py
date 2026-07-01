@@ -13,7 +13,7 @@ from collections.abc import Iterable
 from pathlib import Path
 from typing import Literal
 
-from pydantic import BaseModel
+from pydantic import BaseModel, model_validator
 
 from ....core import STRICT_FROZEN_CONFIG
 from ._errors import RegistryValidationError
@@ -47,6 +47,17 @@ class EvidenceTierCoverageGate(CoverageModel):
     workbook_refs: tuple[str, ...] = ()
     cross_reference_refs: tuple[str, ...] = ()
     detail: str
+
+    @model_validator(mode="after")
+    def _validate_status_matches_evidence(self) -> EvidenceTierCoverageGate:
+        has_evidence = bool(
+            self.legal_refs or self.source_refs or self.workbook_refs or self.cross_reference_refs,
+        )
+        if self.status == "satisfied" and not has_evidence:
+            raise RegistryValidationError(f"{self.tier} coverage cannot be satisfied without evidence refs")
+        if self.status == "gap" and has_evidence:
+            raise RegistryValidationError(f"{self.tier} coverage gap cannot carry evidence refs")
+        return self
 
 
 class ModelLawCoverageLedger(CoverageModel):

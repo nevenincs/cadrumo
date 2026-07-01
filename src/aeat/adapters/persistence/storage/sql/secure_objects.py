@@ -113,7 +113,7 @@ class SecureObjectRepository:
 
     @property
     def namespace_registry(self) -> StorageHierarchyRegistry | None:
-        """Return the :class:`StorageHierarchyRegistry` bound to this repository, if any."""
+        """Return the :class:`~aeat.adapters.persistence.storage.StorageHierarchyRegistry` bound here, if any."""
         return self._namespace_registry
 
     def _registered_namespace_definition(self, namespace: str) -> SecureObjectNamespaceDefinition | None:
@@ -262,7 +262,8 @@ class SecureObjectRepository:
 
         Used by the archive restore pipeline when the natural key was
         not present in the source bundle. Same
-        master-key constraint as :meth:`save_with_raw_key`.
+        master-key constraint as
+        :meth:`~aeat.adapters.persistence.storage.SecureObjectRepository.save_with_raw_key`.
         """
         self._check_session_freshness()
         if len(hashed_object_key) != 32:
@@ -428,8 +429,9 @@ class SecureObjectRepository:
 
         Natural object keys are HMAC digested before storage and cannot be
         recovered from the index. Domain repositories that need natural IDs
-        should iterate :meth:`list_records` and read IDs from decrypted
-        payloads.
+        should iterate
+        :meth:`~aeat.adapters.persistence.storage.SecureObjectRepository.list_records`
+        and read IDs from decrypted payloads.
         """
         self._check_session_freshness()
         with session_scope(self._engine) as session:
@@ -447,19 +449,26 @@ class SecureObjectRepository:
         expected_class: SensitivityClass,
         max_supported_version: int,
     ) -> Iterator[SecureObjectRecord]:
-        """Yield every :class:`SecureObjectRecord` under ``namespace`` or fail on unreadable rows.
+        """Yield secure-object rows under ``namespace`` or fail on unreadable rows.
+
+        Every readable row is returned as a
+        :class:`~aeat.adapters.persistence.storage.SecureObjectRecord`.
 
         The default listing path is fail-closed: it first walks the
-        namespace through :meth:`iter_records_with_failures`, and if any
-        row is unreadable it raises :class:`SecureObjectUnreadableError`
+        namespace through
+        :meth:`~aeat.adapters.persistence.storage.SecureObjectRepository.iter_records_with_failures`,
+        and if any row is unreadable it raises
+        :class:`~aeat.adapters.persistence.storage.SecureObjectUnreadableError`
         before yielding a readable subset. Use
-        :meth:`iter_records_with_failures` for explicit diagnostic
+        :meth:`~aeat.adapters.persistence.storage.SecureObjectRepository.iter_records_with_failures`
+        for explicit diagnostic
         iteration over mixed readable/unreadable rows.
 
         Args:
             namespace: The storage namespace whose rows are listed.
-            expected_class: The :class:`SensitivityClass` all rows in this
-                namespace must carry.
+            expected_class: The
+                :class:`~aeat.adapters.persistence.storage.SensitivityClass`
+                all rows in this namespace must carry.
             max_supported_version: Current row ``schema_version`` expected
                 by the consumer. Any different version is treated as
                 unreadable.
@@ -492,11 +501,13 @@ class SecureObjectRepository:
     ) -> Iterator[SecureObjectListItem]:
         """Yield a typed outcome per stored row under ``namespace``.
 
-        Each row is represented by either a :class:`SecureObjectRecord`
-        (the row decrypts cleanly and matches the consumer's classification
-        and schema-version contract) or a :class:`SecureObjectUnreadable`
-        (the on-wire ciphertext exists but cannot be decrypted under the
-        current master key, or its metadata fails the consumer's contract).
+        Each row is represented by either a
+        :class:`~aeat.adapters.persistence.storage.SecureObjectRecord` (the
+        row decrypts cleanly and matches the consumer's classification and
+        schema-version contract) or a
+        :class:`~aeat.adapters.persistence.storage.SecureObjectUnreadable` (the
+        on-wire ciphertext exists but cannot be decrypted under the current
+        master key, or its metadata fails the consumer's contract).
 
         The iterator is fault-isolated: a failure on row ``N`` does not
         prevent rows ``> N`` from being inspected. Consumers count the
@@ -504,19 +515,22 @@ class SecureObjectRepository:
 
         Args:
             namespace: The storage namespace whose rows are scanned.
-            expected_class: The :class:`SensitivityClass` all rows in this
-                namespace must carry; rows with a differing classification
-                are yielded as :class:`SecureObjectUnreadable`.
+            expected_class: The
+                :class:`~aeat.adapters.persistence.storage.SensitivityClass`
+                all rows in this namespace must carry; rows with a differing
+                classification are yielded as
+                :class:`~aeat.adapters.persistence.storage.SecureObjectUnreadable`.
             max_supported_version: Current row ``schema_version`` expected
                 by the consumer. Rows with a different version are yielded
-                as :class:`SecureObjectUnreadable`.
+                as :class:`~aeat.adapters.persistence.storage.SecureObjectUnreadable`.
             batch_size: SQLAlchemy ``yield_per`` chunk size for the raw row
                 scan. The default keeps memory bounded for large namespaces
                 while preserving deterministic ``(object_key ASC)`` order.
 
         Yields:
             One ``SecureObjectListItem`` per stored row — either a
-            :class:`SecureObjectRecord` or a :class:`SecureObjectUnreadable`.
+            :class:`~aeat.adapters.persistence.storage.SecureObjectRecord` or
+            a :class:`~aeat.adapters.persistence.storage.SecureObjectUnreadable`.
 
         Raises:
             StorageValidationError: When ``batch_size`` is less than 1.
@@ -668,12 +682,17 @@ class SecureObjectRepository:
         expected_class: SensitivityClass,
         max_supported_version: int,
     ) -> SecureObjectRecord | None:
-        """Load and decrypt one :class:`SecureObjectRecord`, returning ``None`` when absent.
+        """Load and decrypt one secure-object row, returning ``None`` when absent.
+
+        Returns a :class:`~aeat.adapters.persistence.storage.SecureObjectRecord`
+        when the row is present and decrypts under the expected class/version.
 
         Args:
             namespace: The storage namespace to look in.
             object_key: The natural string key identifying the record.
-            expected_class: The :class:`SensitivityClass` the consumer expects.
+            expected_class: The
+                :class:`~aeat.adapters.persistence.storage.SensitivityClass`
+                the consumer expects.
             max_supported_version: Highest ``schema_version`` the consumer supports.
         """
         self._check_session_freshness()
@@ -715,13 +734,17 @@ class SecureObjectRepository:
         The natural ``object_key`` is HMAC-digested at the column
         boundary. To upsert against a pre-computed digest (e.g. when
         restoring an archive bundle whose natural key was lost in the
-        original HMAC), use :meth:`save_with_raw_key` instead.
+        original HMAC), use
+        :meth:`~aeat.adapters.persistence.storage.SecureObjectRepository.save_with_raw_key`
+        instead.
 
         Args:
             namespace: The storage namespace to write into.
             object_key: Natural string identifier for this record. Digested
                 via HMAC before being stored on disk.
-            classification: The :class:`SensitivityClass` for this record.
+            classification: The
+                :class:`~aeat.adapters.persistence.storage.SensitivityClass`
+                for this record.
             schema_version: Envelope schema version to stamp on the row.
             written_at: Timezone-aware write timestamp.
             payload: Plaintext envelope bytes. Encrypted at the column boundary.
@@ -859,17 +882,20 @@ class SecureObjectRepository:
         """Encrypt and upsert one byte payload keyed by a pre-computed digest.
 
         The 32-byte ``hashed_object_key`` is passed straight through
-        the :class:`HashedLookup` column without re-hashing. Used by
+        the :class:`~aeat.adapters.persistence.storage.HashedLookup` column
+        without re-hashing. Used by
         the archive restore path to round-trip rows whose natural key
         is not present in the bundle (e.g. the path-keyed setup-profile
         and inventory namespaces).
 
         Args:
-            namespace: The :class:`SecureObjectRepository` namespace.
+            namespace: Storage namespace string.
             hashed_object_key: 32 raw HMAC-SHA256 bytes (the digest
-                produced by :meth:`HashedLookup.compute` under the
-                same master key the row was originally written with).
-            classification: :class:`SensitivityClass` to upsert at.
+                produced by ``HashedLookup.compute`` under the same master key
+                the row was originally written with).
+            classification:
+                :class:`~aeat.adapters.persistence.storage.SensitivityClass`
+                to upsert at.
             schema_version: Envelope schema version captured on the row.
             written_at: Timezone-aware datetime captured on the row.
             payload: Plaintext envelope bytes (the column encrypts).
@@ -917,7 +943,13 @@ class SecureObjectRepository:
         source_event_id: str | None,
         expected_revision_id: str | None,
     ) -> None:
-        """Shared upsert backing :meth:`save` and :meth:`save_with_raw_key`."""
+        """Shared secure-object upsert implementation.
+
+        Backs
+        :meth:`~aeat.adapters.persistence.storage.SecureObjectRepository.save`
+        and
+        :meth:`~aeat.adapters.persistence.storage.SecureObjectRepository.save_with_raw_key`.
+        """
         self._enforce_registered_write_policy(
             namespace=namespace,
             classification=classification,

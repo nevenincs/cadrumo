@@ -4,12 +4,15 @@ Submission audit records keep the local or imported
 :class:`aeat.domain.submission.ModeloPresentado` lifecycle: draft id, modelo,
 period, taxpayer identity, AEAT receipt metadata when observed, and attempt
 summaries. They are stored as encrypted byte objects in the primary SQL backend
-at :class:`SensitivityClass` AUDIT; no plaintext submission JSON or envelope
-file lands on disk.
+at :class:`~aeat.adapters.persistence.storage.SensitivityClass` ``AUDIT``; no
+plaintext submission JSON or envelope file lands on disk.
 
 See Also:
     :class:`aeat.domain.submission.ModeloPresentado`
         Payload model encrypted by this repository.
+    :data:`aeat.adapters.persistence.storage.SUBMISSION_RECORDS_NAMESPACE`
+        AUDIT namespace, schema-version, object-key, and custody contract for
+        submission audit records.
     :class:`aeat.adapters.persistence.storage.sql.SecureObjectRepository`
         SQL object store underlying the bound repository.
     :mod:`aeat.application.filing._import`
@@ -38,7 +41,22 @@ _log = get_logger(__name__)
 
 
 class SubmissionRepository(SecureBoundRepository[ModeloPresentado]):
-    """Repository over encrypted SQL-backed :class:`ModeloPresentado` audit records."""
+    """Encrypted AUDIT repository for :class:`ModeloPresentado` records.
+
+    The :class:`~aeat.adapters.persistence.storage.SecureBoundRepository` base
+    stores each :class:`ModeloPresentado` in a
+    :class:`~aeat.adapters.persistence.storage.Envelope` row under
+    :data:`aeat.adapters.persistence.storage.SUBMISSION_RECORDS_NAMESPACE`.
+    The natural key is the submission id, so the list and iteration APIs expose
+    historical filing attempts rather than any live submission capability.
+
+    See Also:
+        :mod:`aeat.application.filing._import`
+            Offline justificante import path that can create submission audit
+            records.
+        :class:`~aeat.adapters.persistence.storage.sql.SecureObjectRepository`
+            SQL object store composed by the bound repository base.
+    """
 
     namespace: ClassVar[str] = "aeat.domain.submission.records"
     sensitivity: ClassVar[SensitivityClass] = SensitivityClass.AUDIT

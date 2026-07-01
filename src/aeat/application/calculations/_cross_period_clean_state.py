@@ -597,6 +597,8 @@ def _requirements_from_previous_filing(
         source_casilla_ids=requirement.source_casilla_ids,
         origin=CrossPeriodDependencyOrigin.PREVIOUS_FILING_BINDING,
         origin_ids=requirement.binding_ids,
+        legal_refs=requirement.legal_refs,
+        source_refs=requirement.source_refs,
         requires_member_fan_in=(requirement.source_modelo, requirement.filing_year, source_period) in grouped_keys,
     )
 
@@ -613,6 +615,8 @@ def _requirements_from_relation(
             source_casilla_ids=(source_casilla_id,),
             origin=CrossPeriodDependencyOrigin.REGISTRY_RELATION,
             origin_ids=requirement.relation_ids,
+            legal_refs=requirement.legal_refs,
+            source_refs=requirement.source_refs,
         )
 
 
@@ -649,7 +653,6 @@ class _CrossPeriodSource(NamedTuple):
     unexpected_member_nifs: tuple[str, ...]
     payload: _ObservationPayload | None
     blockers: tuple[CrossPeriodCleanStateBlocker, ...]
-    unstamped_revision_advisory: bool = False
 
 
 class _MemberHistory(NamedTuple):
@@ -667,27 +670,26 @@ def _revision_carry_check(
     source_modelo: str,
     source_filing_year: int,
     source_period: Period,
-) -> tuple[list[CrossPeriodCleanStateBlocker], bool]:
-    """Return (blockers, advisory) for a carry-read revision check.
+) -> list[CrossPeriodCleanStateBlocker]:
+    """Return blockers for a carry-read revision check.
 
     Thin adapter over the single shared
     :func:`~aeat.application.calculations._revision_carry_gate.revision_carry_outcome`
-    gate: it maps
-    the shared ``(diverges, advisory)`` decision onto this site's blocker shape —
-    a divergent stamp becomes a ``REGISTRY_REVISION_DIVERGENCE`` blocker, an
-    indeterminate source context becomes a non-blocking advisory — so the
-    cross-period clean-state, binding-prefill, and relation-prefill carry reads
-    share one law-determined re-confirmation.
+    gate: it maps the shared refusal decision onto this site's
+    blocker shape. A divergent or unreconfirmable stamp becomes a
+    ``REGISTRY_REVISION_DIVERGENCE`` blocker so the cross-period clean-state,
+    binding-prefill, and relation-prefill carry reads share one fail-closed
+    law-determined re-confirmation.
     """
-    diverges, advisory = revision_carry_outcome(
+    refused = revision_carry_outcome(
         stamped_revision_id,
         source_modelo=source_modelo,
         source_filing_year=source_filing_year,
         source_period=source_period.registry_token,
     )
-    if diverges:
-        return [CrossPeriodCleanStateBlocker.REGISTRY_REVISION_DIVERGENCE], False
-    return [], advisory
+    if refused:
+        return [CrossPeriodCleanStateBlocker.REGISTRY_REVISION_DIVERGENCE]
+    return []
 
 
 def _aeat_register_provenance_blockers(
@@ -724,7 +726,6 @@ def _resolve_cross_period_source(
     taxpayer_tax_id: str | None,
 ) -> _CrossPeriodSource:
     blockers: list[CrossPeriodCleanStateBlocker] = []
-    unstamped_advisory = False
     value_member_payloads: tuple[_ObservationPayload, ...] = ()
     observed_member_nifs: tuple[str, ...] = ()
     expected_member_nifs: tuple[str, ...] = ()
@@ -760,14 +761,13 @@ def _resolve_cross_period_source(
         # R2 carry gate: check revision stamp on each member payload.
         for item in value_member_payloads:
             blockers.extend(_aeat_register_provenance_blockers(item, expected_tax_id=item.member_nif))
-            extra_blockers, item_advisory = _revision_carry_check(
+            extra_blockers = _revision_carry_check(
                 item.stamped_revision_id,
                 requirement.source_modelo,
                 requirement.filing_year,
                 requirement.period,
             )
             blockers.extend(extra_blockers)
-            unstamped_advisory = unstamped_advisory or item_advisory
     else:
         payload = observation_repository.load_observation(
             requirement.source_modelo,
@@ -776,7 +776,7 @@ def _resolve_cross_period_source(
         # R2 carry gate: re-confirm stamped revision == law-determined revision.
         if payload is not None:
             blockers.extend(_aeat_register_provenance_blockers(payload, expected_tax_id=taxpayer_tax_id))
-            extra_blockers, unstamped_advisory = _revision_carry_check(
+            extra_blockers = _revision_carry_check(
                 payload.stamped_revision_id,
                 requirement.source_modelo,
                 requirement.filing_year,
@@ -791,7 +791,6 @@ def _resolve_cross_period_source(
         unexpected_member_nifs,
         payload,
         tuple(blockers),
-        unstamped_advisory,
     )
 
 
@@ -939,7 +938,6 @@ def _evaluate_requirement(
             aeat_accepted=history.aeat_accepted,
             external_evidence_kind=history.external_evidence_kind,
             blockers=_unique_blockers(blockers),
-            unstamped_revision_advisory=source.unstamped_revision_advisory,
         )
 
     filing_result = _evaluate_filing_history(
@@ -971,7 +969,6 @@ def _evaluate_requirement(
         missing_member_nifs=source.missing_member_nifs,
         unexpected_member_nifs=source.unexpected_member_nifs,
         blockers=_unique_blockers(blockers),
-        unstamped_revision_advisory=source.unstamped_revision_advisory,
     )
 
 

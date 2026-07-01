@@ -24,9 +24,22 @@ from .. import (
     LLMRequest,
     UsageRecorder,
 )
-from .._providers import ProviderRequest, _DeterministicAdapter
+from .._providers import ProviderRequest
+from .._providers.deterministic import _DeterministicAdapter
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
+
+
+def test_provider_package_facade_does_not_reexport_private_adapters() -> None:
+    """Private adapter types must stay on their owning modules."""
+
+    from .. import _providers
+
+    assert "_ProviderAdapter" not in _providers.__dict__
+    assert "_DeterministicAdapter" not in _providers.__dict__
+    assert all(not name.startswith("_") for name in _providers.__all__)
+    assert not hasattr(_providers, "_ProviderAdapter")
+    assert not hasattr(_providers, "_DeterministicAdapter")
 
 
 def test_deterministic_adapter_contract() -> None:

@@ -7,8 +7,9 @@ superseded filing lifecycle records live in
 :class:`aeat.domain.modelos.ModeloRecordCatalogue`.
 
 Records are stored as encrypted byte objects in the primary SQL backend at
-:class:`SensitivityClass` ``AUDIT`` via a :class:`SecureObjectRepository`;
-no plaintext filing-history JSON or envelope file lands on disk.
+:class:`~aeat.adapters.persistence.storage.SensitivityClass` ``AUDIT`` via a
+:class:`~aeat.adapters.persistence.storage.sql.SecureObjectRepository`; no
+plaintext filing-history JSON or envelope file lands on disk.
 
 See Also:
     :class:`aeat.application.filing.ModeloHistory`
@@ -44,7 +45,26 @@ from ._runtime_repository import (
 
 
 class ModeloHistoryRepository(SecureBoundRepository[ModeloHistory]):
-    """Repository over encrypted SQL-backed :class:`ModeloHistory` records."""
+    """Encrypted filing-history store for bucket-local :class:`ModeloHistory`.
+
+    The :class:`~aeat.adapters.persistence.storage.SecureBoundRepository`
+    base wraps each payload in an
+    :class:`~aeat.adapters.persistence.storage.Envelope` and binds it to
+    :data:`aeat.adapters.persistence.storage.APPLICATION_FILING_HISTORY_NAMESPACE`.
+    The modelo identifier is the natural object key, so list and iteration APIs
+    expose one lightweight history per modelo rather than the authoritative
+    work-unit filing catalogue. The namespace definition supplies the AUDIT
+    :class:`~aeat.adapters.persistence.storage.SensitivityClass`, schema
+    version, bucket-local scope, ``{modelo}`` key grammar, and custody
+    contract.
+
+    See Also:
+        :class:`ModeloHistory`
+            Strict payload stored by this repository.
+        :class:`aeat.domain.modelos.ModeloRecordCatalogueRepository`
+            FINANCIAL-class filing-record catalogue for current and superseded
+            work-unit lifecycle records.
+    """
 
     namespace: ClassVar[str] = APPLICATION_FILING_HISTORY_NAMESPACE.namespace
     sensitivity: ClassVar[SensitivityClass] = APPLICATION_FILING_HISTORY_NAMESPACE.sensitivity

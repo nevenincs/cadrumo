@@ -133,18 +133,17 @@ def _gather_observations_for_snapshot(
                 continue
             # R2 carry gate (shared with binding-prefill and cross-period
             # clean-state): re-confirm the carried observation's revision stamp
-            # against the law-determined revision. A divergent stamp means the
-            # prior was filed under a revision that is no longer the law-determined
-            # revision for its source context; drop it from the fold rather than
-            # silently injecting a stale-revision value into the relation.
+            # against the law-determined revision. A divergent or unreconfirmable
+            # stamp is dropped from the fold rather than silently injecting a
+            # stale value into the relation.
             obs = payload.observation
-            diverges, _advisory = revision_carry_outcome(
+            refused = revision_carry_outcome(
                 payload.stamped_revision_id,
                 source_modelo=obs.modelo,
                 source_filing_year=obs.filing_year,
                 source_period=obs.period,
             )
-            if diverges:
+            if refused:
                 continue
             key = (obs.modelo, obs.filing_year, obs.period)
             needed.setdefault(key, obs)
@@ -826,6 +825,13 @@ class RelationPrefillSourceResolver:
                 CalculationSourceProvenance(
                     source_kind="relation_prefill",
                     source_ref=_relation_provenance_ref(item),
+                    relation_id=item.relation,
+                    source_modelo=item.source_modelo,
+                    source_filing_year=item.source_filing_year,
+                    source_periods=item.source_periods,
+                    source_casilla_ids=item.source_casilla_ids,
+                    legal_refs=item.legal_refs,
+                    source_refs=item.source_refs,
                 )
                 for item in resolved
             ),

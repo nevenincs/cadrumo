@@ -3,9 +3,12 @@
 Concrete adapter-layer implementation of the
 :class:`~aeat.domain.attachments._protocols.AttachmentStoreProtocol`. The
 domain declares the protocol; this module provides the implementation that
-reads/writes encrypted attachment blobs and manifests wrapped in
-:class:`Envelope` records through the :class:`SecureObjectRepository`
-persistence substrate.
+reads/writes encrypted attachment blobs and manifests through the
+:class:`SecureObjectRepository` persistence substrate. Blob rows are framed
+byte payloads governed by
+:data:`aeat.adapters.persistence.storage.ATTACHMENT_BLOB_NAMESPACE`; manifest
+rows wrap :class:`Attachment` payloads in :class:`Envelope` records governed by
+:data:`aeat.adapters.persistence.storage.ATTACHMENT_MANIFEST_NAMESPACE`.
 
 Sensitivity rationale: attachment blobs and manifests are content-addressed
 byte objects (invoice PDFs, bank statements, supporting documents) that are
@@ -175,7 +178,14 @@ def _require_digest(value: str, *, field_name: str = "attachment_id") -> str:
 class AttachmentStore(BaseModel):
     """Encrypted SQL-backed content-addressed attachment store.
 
-    Implements :class:`~aeat.domain.attachments._protocols.AttachmentStoreProtocol`.
+    Implements :class:`~aeat.domain.attachments._protocols.AttachmentStoreProtocol`
+    by storing raw document bytes under their SHA-256 digest in
+    :data:`aeat.adapters.persistence.storage.ATTACHMENT_BLOB_NAMESPACE` and
+    encrypted :class:`Attachment` manifests in
+    :data:`aeat.adapters.persistence.storage.ATTACHMENT_MANIFEST_NAMESPACE`.
+    Both namespaces are profile-local FINANCIAL custody surfaces; the
+    :class:`~aeat.adapters.persistence.storage.sql.SecureObjectRepository`
+    encrypts the stored rows and HMAC-digests the object keys.
     """
 
     model_config = ConfigDict(strict=True, frozen=True, extra="forbid", arbitrary_types_allowed=True)
@@ -187,12 +197,12 @@ class AttachmentStore(BaseModel):
 
     @property
     def blobs_dir(self) -> Path:
-        """Return the logical byte-object namespace marker."""
+        """Return the logical marker for the attachment blob namespace."""
         return secure_object_namespace_logical_path(_ATTACHMENT_BLOB_NAMESPACE)
 
     @property
     def manifests_dir(self) -> Path:
-        """Return the logical manifest-object namespace marker."""
+        """Return the logical marker for the attachment manifest namespace."""
         return secure_object_namespace_logical_path(_ATTACHMENT_MANIFEST_NAMESPACE)
 
     def manifest_path(self, attachment_id: str) -> Path:
@@ -200,7 +210,7 @@ class AttachmentStore(BaseModel):
         return self.manifests_dir / _require_digest(attachment_id)
 
     def put_bytes(self, data: bytes) -> str:
-        """Write ``data`` under its SHA-256 digest if not already present."""
+        """Write ``data`` under its SHA-256 digest in the blob namespace."""
         digest = sha256_hex(data)
         objects = self._objects_repo()
         if objects.exists(_ATTACHMENT_BLOB_NAMESPACE, digest):
@@ -274,7 +284,7 @@ class AttachmentStore(BaseModel):
             raise _attachment_validation_error("blob digest drift", violation="blob_digest_drift")
 
     def write_manifest(self, attachment: Attachment) -> None:
-        """Persist ``attachment`` as an encrypted database object."""
+        """Persist ``attachment`` as an encrypted manifest envelope."""
         if is_link_only_mime_type(attachment.mime_type):
             raise _attachment_validation_error(
                 "attachment manifest must carry document bytes, not a link-only URI list",
@@ -302,7 +312,7 @@ class AttachmentStore(BaseModel):
         _LOGGER.debug("wrote attachment manifest %s", attachment.attachment_id)
 
     def load_manifest(self, attachment_id: str) -> Attachment:
-        """Load and validate the :class:`Attachment` manifest for ``attachment_id``."""
+        """Load and validate the :class:`Attachment` manifest envelope."""
         digest = _require_digest(attachment_id)
         record = self._objects_repo().load(
             _ATTACHMENT_MANIFEST_NAMESPACE,

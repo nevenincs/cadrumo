@@ -571,6 +571,7 @@ def test_registry_topic_projection_is_strict_and_frozen() -> None:
         slug="iva-regime",
         title="IVA",
         body="IVA regime",
+        legal_refs=("ley-37-1992:art-1",),
     )
 
     with pytest.raises(ValidationError, match=r"frozen"):
@@ -583,5 +584,13 @@ def test_registry_topic_projection_is_strict_and_frozen() -> None:
                 "title": "IVA",
                 "body": "IVA regime",
                 "extra": "rejected",
+                "legal_refs": ("ley-37-1992:art-1",),
             },
+        )
+
+    with pytest.raises(ValidationError, match=r"legal_refs"):
+        RegistryTopicProjection(
+            slug="iva-regime",
+            title="IVA",
+            body="IVA regime",
         )

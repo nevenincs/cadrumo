@@ -22,6 +22,7 @@ import pytest
 from pydantic import ValidationError
 
 from .....core import Period
+from .....core.identity import SubjectTaxId
 from ....filing._schema import (
     ModeloBindingValue,
     ModeloDraft,
@@ -64,7 +65,7 @@ class _ModeloDraftCommonKwargs(TypedDict):
     draft_id: str
     modelo: str
     period: Period
-    profile_tax_id: str
+    profile_tax_id: SubjectTaxId
     snapshot_ref: object
     status: ModeloDraftStatus
     values: tuple[ModeloValue, ...]
@@ -352,6 +353,48 @@ def test_filing_draft_subject_tax_id_validates_at_boundary() -> None:
     # Same digits with a wrong checksum letter must fail at validation.
     with _pytest.raises(ValidationError):
         ModeloDraft(subject_tax_id="12345678A", **common_kwargs)
+
+
+def test_filing_draft_profile_tax_id_validates_at_boundary() -> None:
+    """``ModeloDraft.profile_tax_id`` is also a validated subject tax id.
+
+    Export layouts still read ``profile_tax_id`` as a draft attribute for
+    declarante NIF fields, so it must not remain a bare string while
+    ``subject_tax_id`` is validated.
+    """
+
+    from .._schema import RegistrySnapshotRef
+
+    now = datetime.now(UTC).replace(microsecond=0)
+    snapshot_ref = RegistrySnapshotRef(
+        modelo="303",
+        revision_id="2025-y-siguientes",
+        modelo_year=2025,
+        period="1T",
+    )
+    common_kwargs: _ModeloDraftCommonKwargs = {
+        "draft_id": "f" * 64,
+        "modelo": "303",
+        "period": Period.from_year_and_code(2025, "1T"),
+        "profile_tax_id": "12345678Z",
+        "snapshot_ref": snapshot_ref,
+        "status": ModeloDraftStatus.BORRADOR,
+        "values": (),
+        "binding_values": (),
+        "findings": (),
+        "created_at": now,
+        "updated_at": now,
+        "schema_version": "schema-2025-1",
+    }
+
+    valid = ModeloDraft(subject_tax_id="12345678Z", **common_kwargs)
+    assert valid.profile_tax_id == "12345678Z"
+
+    with pytest.raises(ValidationError):
+        ModeloDraft(
+            subject_tax_id="12345678Z",
+            **(common_kwargs | {"profile_tax_id": "12345678A"}),
+        )
 
 
 def test_filing_draft_snapshot_ref_full_roundtrip() -> None:

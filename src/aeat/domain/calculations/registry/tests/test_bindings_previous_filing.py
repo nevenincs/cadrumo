@@ -166,6 +166,23 @@ def test_expanding_span_classified_direct_previous_filing_binding() -> None:
     assert requirements[0].source_refs == (_REFERENCE_SOURCE_ID,)
 
 
+def test_previous_filing_requirement_rejects_ungrounded_binding_snapshot() -> None:
+    binding = _span_binding(source_casilla_ids=(_M130_PAGO_FRACCIONADO_CASILLA,)).model_copy(
+        update={"legal_refs": (), "source_refs": ()},
+    )
+
+    with pytest.raises(ValidationError) as exc_info:
+        previous_filing_observation_requirements(
+            _revision(bindings=(binding,)),
+            filing_year=2025,
+            period="2T",
+        )
+
+    error_fields = {tuple(error["loc"]) for error in exc_info.value.errors()}
+    assert ("legal_refs",) in error_fields
+    assert ("source_refs",) in error_fields
+
+
 def test_expanding_span_mutually_exclusive_with_offset() -> None:
     with pytest.raises(ValidationError, match="mutually exclusive"):
         _span_binding(

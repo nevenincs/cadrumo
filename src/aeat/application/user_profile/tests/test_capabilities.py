@@ -32,12 +32,28 @@ def _record(*facts: UserProfileFact) -> UserProfileRecord:
     )
 
 
-def test_no_profile_fact_falls_back_to_global_default() -> None:
+@pytest.mark.parametrize(
+    ("capability", "expected_enabled", "expected_source"),
+    (
+        pytest.param(
+            ServiceCapability.CLOUD_EVIDENCE_UPLOAD,
+            False,
+            CapabilitySource.GLOBAL_SETTING,
+            id="cloud-global-setting",
+        ),
+        pytest.param(ServiceCapability.LLM_VISION, True, CapabilitySource.DEFAULT, id="vision-default"),
+    ),
+)
+def test_no_profile_fact_falls_back_to_global_default(
+    capability: ServiceCapability,
+    expected_enabled: bool,
+    expected_source: CapabilitySource,
+) -> None:
     settings = load_settings()
-    cloud = resolve_capability(ServiceCapability.CLOUD_EVIDENCE_UPLOAD, profile_record=None, settings=settings)
-    assert cloud.enabled is False and cloud.source is CapabilitySource.GLOBAL_SETTING
-    vision = resolve_capability(ServiceCapability.LLM_VISION, profile_record=None, settings=settings)
-    assert vision.enabled is True and vision.source is CapabilitySource.DEFAULT
+    resolved = resolve_capability(capability, profile_record=None, settings=settings)
+
+    assert resolved.enabled is expected_enabled
+    assert resolved.source is expected_source
 
 
 def test_profile_fact_overrides_the_default() -> None:

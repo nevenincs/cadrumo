@@ -43,6 +43,7 @@ from ..calculations import (
     CrossPeriodCleanStateBlocker,
     CrossPeriodCleanStateVerdict,
     CrossPeriodDependencyEvidence,
+    CrossPeriodDependencyRequirement,
     CrossPeriodExpectedMemberSet,
     evaluate_cross_period_clean_state,
 )
@@ -321,6 +322,23 @@ def _cross_period_dependency_legal_refs(origin_ids: tuple[str, ...]) -> tuple[st
     return tuple(refs)
 
 
+def _cross_period_requirement_legal_refs(requirement: CrossPeriodDependencyRequirement) -> tuple[str, ...]:
+    """Return generic cross-period refs plus the registry requirement refs."""
+    return tuple(
+        dict.fromkeys(
+            (
+                *_cross_period_dependency_legal_refs(requirement.origin_ids),
+                *(str(ref) for ref in requirement.legal_refs),
+            ),
+        ),
+    )
+
+
+def _cross_period_requirement_source_refs(requirement: CrossPeriodDependencyRequirement) -> tuple[str, ...]:
+    """Return source refs carried by the registry requirement row."""
+    return tuple(dict.fromkeys(str(ref) for ref in requirement.source_refs))
+
+
 def _cross_period_clean_state_findings(
     verdict: CrossPeriodCleanStateVerdict | None,
     *,
@@ -330,12 +348,9 @@ def _cross_period_clean_state_findings(
     """Return verification findings for a cross-period clean-state verdict.
 
     Emits a BLOCKING ``CROSS_PERIOD_DEPENDENCY_UNCLEAN`` finding for each unclean
-    dependency, plus a NON-BLOCKING ``ADVISORY`` (``WARNING`` severity) finding for
-    each dependency whose source revision stamp could not be re-confirmed
-    (``unstamped_revision_advisory``). The advisory is surfaced even when the
-    dependency is otherwise ``clean`` so an indeterminate carry never degrades
-    silently. The WARNING severity keeps the grant path open (see
-    :func:`_classify_verification_outcome`) while making the carry operator-visible.
+    dependency. A source revision stamp that cannot be re-confirmed is a blocker,
+    not a legacy advisory: current carry data must resolve against the
+    law-determined revision before it can feed a downstream filing.
 
     ADR 2026-06-13-first-filer-attestation-adr adds two outcomes:
 
@@ -375,11 +390,10 @@ def _cross_period_clean_state_findings(
                             f"origin_ids={origin_text} blockers={blocker_text}"
                         ),
                         next_action=_cross_period_clean_state_next_action(verdict, evidence),
-                        legal_refs=_cross_period_dependency_legal_refs(requirement.origin_ids),
+                        legal_refs=_cross_period_requirement_legal_refs(requirement),
+                        source_refs=_cross_period_requirement_source_refs(requirement),
                     ),
                 )
-        if evidence.unstamped_revision_advisory:
-            findings.append(_cross_period_unstamped_revision_advisory_finding(verdict, evidence))
         if evidence.operator_declared_suppression_advisory:
             findings.append(_cross_period_operator_declared_suppression_advisory_finding(verdict, evidence))
         if evidence.non_official_local_chain_advisory:
@@ -430,6 +444,7 @@ def _cross_period_operator_declared_suppression_advisory_finding(
             "available, the date will be corroborated and this advisory cleared."
         ),
         legal_refs=_CROSS_PERIOD_ACTIVITY_START_LEGAL_REFS,
+        source_refs=_cross_period_requirement_source_refs(requirement),
     )
 
 
@@ -479,6 +494,7 @@ def _cross_period_first_year_fractional_suppression_advisory_finding(
             "rerun verification."
         ),
         legal_refs=_M202_FIRST_YEAR_LEGAL_REFS,
+        source_refs=_cross_period_requirement_source_refs(requirement),
     )
 
 
@@ -513,44 +529,6 @@ def _cross_period_missing_activity_start_finding(
     )
 
 
-def _cross_period_unstamped_revision_advisory_finding(
-    verdict: CrossPeriodCleanStateVerdict,
-    evidence: CrossPeriodDependencyEvidence,
-) -> ModeloVerificationFinding:
-    """Build the NON-BLOCKING revision-stamp advisory finding for one dependency.
-
-    A prior filing whose stamp could not be re-confirmed because the source
-    context will not resolve carries, but the operator MUST be told so the value
-    is not accepted silently. The remediation is to re-pull the source period so
-    a currently verifiable observation is captured.
-    """
-    requirement = evidence.requirement
-    requirement_period = requirement.period.registry_token
-    re_file_capture = (
-        "aeat app live filed pull-sources "
-        f"--modelo {requirement.source_modelo} "
-        f"--year {requirement.filing_year} "
-        f"--period {requirement_period}"
-    )
-    return ModeloVerificationFinding(
-        kind=ModeloVerificationFindingKind.ADVISORY,
-        severity=ModeloVerificationFindingSeverity.WARNING,
-        message=(
-            "cross-period carry used a prior filing whose registry "
-            f"revision stamp could not be re-confirmed: modelo={requirement.source_modelo} "
-            f"year={requirement.filing_year} "
-            f"period={requirement_period} origin={requirement.origin.value}. The carried value "
-            "was accepted but its source revision could not be re-confirmed against the "
-            "law-determined revision."
-        ),
-        next_action=(
-            f"Re-pull the source period to capture a currently verifiable observation: run `{re_file_capture}`, "
-            "then rerun verification so the carry is re-confirmed against the law-determined revision."
-        ),
-        legal_refs=_cross_period_dependency_legal_refs(requirement.origin_ids),
-    )
-
-
 def _summarize_cross_period_ids(
     values: Iterable[str],
     *,
@@ -579,7 +557,15 @@ def _cross_period_modelo_not_applicable_advisory_finding(
             ref
             for item in verdict.dependencies
             if item.modelo_not_applicable_advisory
-            for ref in _cross_period_dependency_legal_refs(item.requirement.origin_ids)
+            for ref in _cross_period_requirement_legal_refs(item.requirement)
+        ),
+    )
+    source_refs = tuple(
+        dict.fromkeys(
+            ref
+            for item in verdict.dependencies
+            if item.modelo_not_applicable_advisory
+            for ref in _cross_period_requirement_source_refs(item.requirement)
         ),
     )
     return ModeloVerificationFinding(
@@ -597,6 +583,7 @@ def _cross_period_modelo_not_applicable_advisory_finding(
             "estimation regime if a mutually exclusive pago-fraccionado modelo was scoped out."
         ),
         legal_refs=legal_refs,
+        source_refs=source_refs,
     )
 
 
@@ -622,7 +609,10 @@ def _cross_period_zero_value_previous_filing_advisory_finding(
             "If a prior-year negative general base balance exists and is being applied, replace the zero "
             "with the carried amount and capture/import the prior Modelo 100 AEAT evidence before filing."
         ),
-        legal_refs=(*_M100_ZERO_BIN_LEGAL_REFS, *_cross_period_dependency_legal_refs(requirement.origin_ids)),
+        legal_refs=tuple(
+            dict.fromkeys((*_M100_ZERO_BIN_LEGAL_REFS, *_cross_period_requirement_legal_refs(requirement))),
+        ),
+        source_refs=_cross_period_requirement_source_refs(requirement),
     )
 
 
@@ -650,7 +640,10 @@ def _cross_period_m111_no_retenciones_advisory_finding(
             "payment existed, remove that period from the profile fact, capture the per-perceptor "
             "retencion observation, calculate/file Modelo 111, and rerun verification."
         ),
-        legal_refs=(*_M111_NO_RETENCIONES_LEGAL_REFS, *_cross_period_dependency_legal_refs(requirement.origin_ids)),
+        legal_refs=tuple(
+            dict.fromkeys((*_M111_NO_RETENCIONES_LEGAL_REFS, *_cross_period_requirement_legal_refs(requirement))),
+        ),
+        source_refs=_cross_period_requirement_source_refs(requirement),
     )
 
 
@@ -675,7 +668,8 @@ def _cross_period_non_official_local_chain_advisory_finding(
             origin=requirement.origin.value,
         ),
         next_action=tr("application.modelo.findings.cross_period_non_official_local_chain.next_action"),
-        legal_refs=_cross_period_dependency_legal_refs(requirement.origin_ids),
+        legal_refs=_cross_period_requirement_legal_refs(requirement),
+        source_refs=_cross_period_requirement_source_refs(requirement),
     )
 
 
@@ -714,12 +708,13 @@ def _cross_period_clean_state_next_action(
     )
     if CrossPeriodCleanStateBlocker.REGISTRY_REVISION_DIVERGENCE in blockers:
         # ADR 2026-06-10-period-revision-resolution-adr, Ruling 3 / R2: the prior
-        # filing's stamped revision is no longer the law-determined revision for its
-        # source context. Re-file and re-stamp the source period under the correct
-        # revision rather than carrying a stale-norm value forward.
+        # filing's stamped revision no longer re-confirms against the law-determined
+        # revision for its source context. Re-file and re-stamp the source period
+        # under the current revision rather than carrying a stale or unverifiable
+        # value forward.
         return (
-            f"The prior filing for {source_hint} was captured under a registry revision that is no longer "
-            "the law-determined revision for that period; its values may follow superseded rules. Re-file and "
+            f"The prior filing for {source_hint} does not re-confirm against the law-determined registry "
+            "revision for that period; its values may follow superseded or unverifiable rules. Re-file and "
             f"re-capture the source period so it is re-stamped under the current revision: run `{source_capture}`, "
             "then rerun verification."
         )

@@ -142,7 +142,19 @@ def _enum_value(value: object) -> str | None:
     return inner if isinstance(inner, str) else str(value)
 
 
-def _evidence_row(transaction: Transaction) -> LedgerEvidenceRow:
+def _normalised_refs(refs: Iterable[str], *, field_name: str) -> tuple[str, ...]:
+    normalised = tuple(dict.fromkeys(str(ref).strip() for ref in refs if str(ref).strip()))
+    if not normalised:
+        raise ModeloValidationError(f"ledger filing evidence requires non-empty {field_name}")
+    return normalised
+
+
+def _evidence_row(
+    transaction: Transaction,
+    *,
+    legal_refs: tuple[str, ...],
+    source_refs: tuple[str, ...],
+) -> LedgerEvidenceRow:
     """Project a typed transaction into a primitive evidence row.
 
     Carries the same tax-relevant facts the fingerprint covers (so evidence and
@@ -175,6 +187,8 @@ def _evidence_row(transaction: Transaction) -> LedgerEvidenceRow:
         description=raw.description,
         purchase_invoice_evidence_id=transaction.purchase_invoice_evidence_id,
         attachment_ids=transaction.attachment_ids,
+        legal_refs=legal_refs,
+        source_refs=source_refs,
     )
 
 
@@ -184,6 +198,8 @@ def compute_ledger_filing_evidence(
     catalogue: TransactionCatalogue,
     snapshot_fingerprint: str,
     captured_at: datetime,
+    legal_refs: Iterable[str],
+    source_refs: Iterable[str],
     manual_entries: tuple[ManualFactBasisEntry, ...] = (),
 ) -> LedgerFilingEvidence:
     """Capture the bundled :class:`LedgerFilingEvidence` fact basis behind one filing revision.
@@ -202,10 +218,23 @@ def compute_ledger_filing_evidence(
         catalogue: The live :class:`TransactionCatalogue`.
         snapshot_fingerprint: The fingerprinted snapshot identifier.
         captured_at: Captured timestamp.
+        legal_refs: Registry legal references grounding this evidence bundle.
+        source_refs: Official source references grounding this evidence bundle.
         manual_entries: The manual entries basis.
     """
     index = _index(catalogue)
-    rows = tuple(_evidence_row(index[tx_id]) for tx_id in sorted(set(source_transaction_ids)) if tx_id in index)
+    source_ids = tuple(sorted(set(source_transaction_ids)))
+    evidence_legal_refs = _normalised_refs(legal_refs, field_name="legal_refs") if source_ids else ()
+    evidence_source_refs = _normalised_refs(source_refs, field_name="source_refs") if source_ids else ()
+    rows = tuple(
+        _evidence_row(
+            index[tx_id],
+            legal_refs=evidence_legal_refs,
+            source_refs=evidence_source_refs,
+        )
+        for tx_id in source_ids
+        if tx_id in index
+    )
     return LedgerFilingEvidence(
         snapshot_fingerprint=snapshot_fingerprint,
         rows=rows,
@@ -216,6 +245,9 @@ def compute_ledger_filing_evidence(
 
 def project_manual_fact_basis_entries(
     input_values_by_casilla_id: Mapping[CasillaId, str],
+    *,
+    legal_refs_by_casilla_id: Mapping[CasillaId, Iterable[str]],
+    source_refs_by_casilla_id: Mapping[CasillaId, Iterable[str]],
 ) -> tuple[ManualFactBasisEntry, ...]:
     """Project operator-entered casilla inputs into :class:`ManualFactBasisEntry` entries.
 
@@ -224,7 +256,18 @@ def project_manual_fact_basis_entries(
     row explains them.
     """
     return tuple(
-        ManualFactBasisEntry(casilla_id=casilla, value=value)
+        ManualFactBasisEntry(
+            casilla_id=casilla,
+            value=value,
+            legal_refs=_normalised_refs(
+                legal_refs_by_casilla_id.get(casilla, ()),
+                field_name=f"legal_refs for manual fact {casilla}",
+            ),
+            source_refs=_normalised_refs(
+                source_refs_by_casilla_id.get(casilla, ()),
+                field_name=f"source_refs for manual fact {casilla}",
+            ),
+        )
         for casilla, value in sorted(input_values_by_casilla_id.items())
         if value.strip()
     )

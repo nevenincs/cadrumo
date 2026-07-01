@@ -1,7 +1,21 @@
 """Encrypted SQL persistence for actividad economica inventory ledgers.
 
-:class:`aeat.domain.contribuyente.inventory.InventoryLedger` payloads are stored
-as FINANCIAL-class secure objects in the primary database.
+:class:`InventoryLedger` payloads are grouped in
+:class:`InventoryLedgerDocument` and stored as
+:class:`~aeat.adapters.persistence.storage.SensitivityClass` ``FINANCIAL``
+secure objects in the primary database through
+:class:`~aeat.adapters.persistence.storage.sql.SecureObjectRepository`. The
+singleton namespace, default object key, schema version, and custody contract
+come from
+:data:`aeat.adapters.persistence.storage.PROFILE_INVENTORY_LEDGER_NAMESPACE`.
+
+See Also:
+    :mod:`aeat.domain.contribuyente.inventory`
+        Typed inventory ledger, movement, and valuation payload models persisted
+        here.
+    :mod:`aeat.application.inventory`
+        Application service layer that validates inventory commands before this
+        adapter writes the encrypted secure object.
 """
 
 from __future__ import annotations
@@ -46,6 +60,9 @@ def load_inventory() -> tuple[InventoryLedger, ...]:
 
 def save_inventory(ledgers: tuple[InventoryLedger, ...]) -> Path:
     """Persist ``ledgers`` as a governed FINANCIAL-class secure object.
+
+    The storage contract comes from
+    :data:`aeat.adapters.persistence.storage.PROFILE_INVENTORY_LEDGER_NAMESPACE`.
 
     Args:
         ledgers: Inventory ledgers to persist.
@@ -94,7 +111,13 @@ def record_movement(
 
 
 class InventoryLedgerRepository:
-    """Governed repository for the encrypted inventory ledger."""
+    """Governed repository for the encrypted :class:`InventoryLedgerDocument` singleton.
+
+    The singleton row is owned by
+    :data:`aeat.adapters.persistence.storage.PROFILE_INVENTORY_LEDGER_NAMESPACE`
+    and persisted through
+    :class:`~aeat.adapters.persistence.storage.sql.SecureObjectRepository`.
+    """
 
     def __init__(self, *, objects: SecureObjectRepository | None = None) -> None:
         """Construct the repository.
@@ -157,6 +180,10 @@ class InventoryLedgerRepository:
 
     def save(self, document: InventoryLedgerDocument) -> None:
         """Persist ``document`` as FINANCIAL-class ciphertext.
+
+        The classification, schema version, namespace, and object key are taken
+        from
+        :data:`aeat.adapters.persistence.storage.PROFILE_INVENTORY_LEDGER_NAMESPACE`.
 
         Args:
             document: Ledger document to encrypt and write.

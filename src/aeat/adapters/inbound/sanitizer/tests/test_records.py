@@ -47,30 +47,43 @@ _SYNTHETIC_NIF = "12345678Z"
 _SYNTHETIC_NAME = "APELLIDO APELLIDO NOMBRE"
 
 
+def _determinism_flags() -> DeterminismFlags:
+    return DeterminismFlags(
+        deterministic_id=True,
+        static_id=False,
+        object_stream_mode="preserve",
+        linearize=False,
+        recompress_flate=False,
+        compress_streams=True,
+    )
+
+
 class TestNifReplacement:
     """Synthetic NIF/NIE values must pass the AEAT checksum."""
 
-    def test_accepts_valid_synthetic_nie(self) -> None:
+    @pytest.mark.parametrize(
+        ("real", "synthetic", "surface_label"),
+        (
+            pytest.param(_REAL_NIE_CANARY, _SYNTHETIC_NIE, "taxpayer NIE", id="nie"),
+            pytest.param(_REAL_NIF_CANARY, _SYNTHETIC_NIF, "taxpayer NIF", id="nif"),
+        ),
+    )
+    def test_accepts_valid_synthetic_identity(
+        self,
+        real: str,
+        synthetic: str,
+        surface_label: str,
+    ) -> None:
         replacement = NifReplacement(
-            real=SecretStr(_REAL_NIE_CANARY),
-            synthetic=_SYNTHETIC_NIE,
-            surface_label="taxpayer NIE",
+            real=SecretStr(real),
+            synthetic=synthetic,
+            surface_label=surface_label,
         )
         # A silent-acceptance regression would still match "no exception
         # raised"; pinning the synthetic and real fields catches a
         # validator that wrongly normalises (trim, lowercase) the input.
-        assert replacement.synthetic == _SYNTHETIC_NIE
-        assert replacement.real.get_secret_value() == _REAL_NIE_CANARY
-
-    def test_accepts_valid_synthetic_nif(self) -> None:
-        # 12345678 % 23 == 14 → letter Z
-        replacement = NifReplacement(
-            real=SecretStr(_REAL_NIF_CANARY),
-            synthetic=_SYNTHETIC_NIF,
-            surface_label="taxpayer NIF",
-        )
-        assert replacement.synthetic == _SYNTHETIC_NIF
-        assert replacement.real.get_secret_value() == _REAL_NIF_CANARY
+        assert replacement.synthetic == synthetic
+        assert replacement.real.get_secret_value() == real
 
     def test_rejects_synthetic_with_bad_checksum(self) -> None:
         # IdentityError now inherits from ValueError so pydantic wraps
@@ -155,19 +168,18 @@ class TestCsvReplacement:
         assert replacement.synthetic == "SANITIZED1002021"
         assert len(replacement.synthetic) == 16
 
-    def test_rejects_short(self) -> None:
-        with pytest.raises(ValidationError, match=r"synthetic CSV must be exactly 16 characters"):
+    @pytest.mark.parametrize(
+        ("synthetic", "expected_message"),
+        (
+            pytest.param("TOO_SHORT", r"synthetic CSV must be exactly 16 characters", id="short"),
+            pytest.param("sanitized1002021", r"synthetic CSV must be uppercase alphanumeric", id="lowercase"),
+        ),
+    )
+    def test_rejects_invalid_synthetic_csv(self, synthetic: str, expected_message: str) -> None:
+        with pytest.raises(ValidationError, match=expected_message):
             CsvReplacement(
                 real=SecretStr("FNBB57PE9KZ5TN4R"),
-                synthetic="TOO_SHORT",
-                surface_label="csv",
-            )
-
-    def test_rejects_lowercase(self) -> None:
-        with pytest.raises(ValidationError, match=r"synthetic CSV must be uppercase alphanumeric"):
-            CsvReplacement(
-                real=SecretStr("FNBB57PE9KZ5TN4R"),
-                synthetic="sanitized1002021",
+                synthetic=synthetic,
                 surface_label="csv",
             )
 
@@ -236,19 +248,18 @@ class TestImporteReplacement:
         assert replacement.synthetic == "-1.000,00"
         assert replacement.synthetic.startswith("-")
 
-    def test_rejects_dot_decimal(self) -> None:
-        with pytest.raises(ValidationError, match=r"synthetic IMPORTE must contain a decimal comma"):
+    @pytest.mark.parametrize(
+        ("synthetic", "expected_message"),
+        (
+            pytest.param("1000.00", r"synthetic IMPORTE must contain a decimal comma", id="dot-decimal"),
+            pytest.param("1.000,5", r"synthetic IMPORTE must end with two decimal digits", id="one-decimal-digit"),
+        ),
+    )
+    def test_rejects_invalid_importe_shape(self, synthetic: str, expected_message: str) -> None:
+        with pytest.raises(ValidationError, match=expected_message):
             ImporteReplacement(
                 real=SecretStr("9.876,54"),
-                synthetic="1000.00",
-                surface_label="importe",
-            )
-
-    def test_rejects_one_decimal_digit(self) -> None:
-        with pytest.raises(ValidationError, match=r"synthetic IMPORTE must end with two decimal digits"):
-            ImporteReplacement(
-                real=SecretStr("9.876,54"),
-                synthetic="1.000,5",
+                synthetic=synthetic,
                 surface_label="importe",
             )
 
@@ -296,17 +307,13 @@ class TestTokenMapShape:
         mapping = TokenMap()
         assert mapping.is_empty()
 
-    def test_categories_default_to_empty_tuples(self) -> None:
+    @pytest.mark.parametrize(
+        "category",
+        ("nif", "name", "address", "expediente", "csv", "nrc", "iban", "importe", "arbitrary"),
+    )
+    def test_categories_default_to_empty_tuples(self, category: str) -> None:
         mapping = TokenMap()
-        assert mapping.nif == ()
-        assert mapping.name == ()
-        assert mapping.address == ()
-        assert mapping.expediente == ()
-        assert mapping.csv == ()
-        assert mapping.nrc == ()
-        assert mapping.iban == ()
-        assert mapping.importe == ()
-        assert mapping.arbitrary == ()
+        assert getattr(mapping, category) == ()
 
     def test_frozen_rejects_mutation(self) -> None:
         mapping = TokenMap()
@@ -430,9 +437,10 @@ class TestReplacementShape:
                 encoding="literal",
             )
 
-    def test_rejects_unknown_surface(self) -> None:
-        with pytest.raises(ValidationError, match=r"Input should be"):
-            Replacement.model_validate(
+    @pytest.mark.parametrize(
+        "payload",
+        (
+            pytest.param(
                 {
                     "surface": "unknown_surface_kind",
                     "surface_index": (0,),
@@ -440,11 +448,9 @@ class TestReplacementShape:
                     "synthetic": "X",
                     "encoding": "literal",
                 },
-            )
-
-    def test_rejects_unknown_encoding(self) -> None:
-        with pytest.raises(ValidationError, match=r"Input should be"):
-            Replacement.model_validate(
+                id="surface",
+            ),
+            pytest.param(
                 {
                     "surface": "content_stream",
                     "surface_index": (0,),
@@ -452,7 +458,13 @@ class TestReplacementShape:
                     "synthetic": "X",
                     "encoding": "bogus",
                 },
-            )
+                id="encoding",
+            ),
+        ),
+    )
+    def test_rejects_unknown_enum_fields(self, payload: dict[str, object]) -> None:
+        with pytest.raises(ValidationError, match=r"Input should be"):
+            Replacement.model_validate(payload)
 
 
 class TestScrubbedSurfaceShape:
@@ -489,14 +501,7 @@ class TestDeterminismFlagsShape:
     """DeterminismFlags exposes the captured save-flag set."""
 
     def test_accepts_canonical_flags(self) -> None:
-        flags = DeterminismFlags(
-            deterministic_id=True,
-            static_id=False,
-            object_stream_mode="preserve",
-            linearize=False,
-            recompress_flate=False,
-            compress_streams=True,
-        )
+        flags = _determinism_flags()
         assert flags.object_stream_mode == "preserve"
 
     def test_rejects_unknown_object_stream_mode(self) -> None:
@@ -517,14 +522,7 @@ class TestSanitizationResultShape:
     """SanitizationResult assembles the typed outcome of a sanitisation run."""
 
     def test_accepts_canonical_result(self) -> None:
-        flags = DeterminismFlags(
-            deterministic_id=True,
-            static_id=False,
-            object_stream_mode="preserve",
-            linearize=False,
-            recompress_flate=False,
-            compress_streams=True,
-        )
+        flags = _determinism_flags()
         result = SanitizationResult(
             output_bytes=b"%PDF-1.4\n",
             source_sha256="a" * 64,
@@ -540,14 +538,7 @@ class TestSanitizationResultShape:
         assert result.sanitizer_version == "0.1.0"
 
     def test_rejects_invalid_source_sha(self) -> None:
-        flags = DeterminismFlags(
-            deterministic_id=True,
-            static_id=False,
-            object_stream_mode="preserve",
-            linearize=False,
-            recompress_flate=False,
-            compress_streams=True,
-        )
+        flags = _determinism_flags()
         with pytest.raises(ValidationError, match=r"source_sha256"):
             SanitizationResult(
                 output_bytes=b"%PDF-1.4\n",

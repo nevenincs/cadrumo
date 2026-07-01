@@ -66,12 +66,15 @@ class TestSafeRecordPath:
 class TestSafeRepositoryId:
     """``safe_repository_id`` rejects tokens that would compose into an unsafe filename."""
 
-    def test_clean_token_returned_unchanged(self) -> None:
-        assert safe_repository_id("abc123-de", context="test_id") == "abc123-de"
-
-    def test_uuid_shape_accepted(self) -> None:
-        token = "550e8400-e29b-41d4-a716-446655440000"
-        assert safe_repository_id(token, context="submission_id") == token
+    @pytest.mark.parametrize(
+        ("token", "context"),
+        (
+            pytest.param("abc123-de", "test_id", id="slug"),
+            pytest.param("550e8400-e29b-41d4-a716-446655440000", "submission_id", id="uuid"),
+        ),
+    )
+    def test_safe_repository_id_returns_clean_token_unchanged(self, token: str, context: str) -> None:
+        assert safe_repository_id(token, context=context) == token
 
     @pytest.mark.parametrize(
         ("unsafe_id", "context", "message"),

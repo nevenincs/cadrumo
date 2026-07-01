@@ -2,8 +2,10 @@
 
 Bundle roundtrip requirement:
   Every domain object in the bundle's four financial-history categories
-  must survive export/import with strict pydantic equality. The v3 custody
-  fields are present with default-empty values until later phases populate them.
+  must survive export/import with strict pydantic equality. The cleartext
+  structured profile export carries no generic secure-object bytes, and its
+  coverage manifest explicitly names populated stores that are not part of the
+  cleartext transport.
 
 Bundle anti-tautology proof:
   Mutate one ``legal_refs`` entry in the exported JSON before re-import.
@@ -123,9 +125,13 @@ def _seed_and_export(tmp_path: Path, bundle_path: Path) -> str:
     Returns the source ``bucket_id`` (== ``profile_id``) for D5 checks.
     """
 
-    from ....adapters.persistence.storage import activate_master_key_provider, get_master_key_provider
-    from ....application.modelo import create_work_unit
-    from ....core import Period, resolve_active_bucket_id
+    from ....adapters.persistence.storage.master_key._master_key import (
+        activate_master_key_provider,
+        get_master_key_provider,
+    )
+    from ....application.modelo._work_lifecycle import create_work_unit
+    from ....core._bucket_pointer_io import resolve_active_bucket_id
+    from ....core._period import Period
     from ....core.config import override_settings
     from ....domain.modelos._calculation_repository import (
         CalculationRevisionCatalogueRepository,
@@ -274,8 +280,11 @@ def _seed_and_export(tmp_path: Path, bundle_path: Path) -> str:
 def test_v3_bundle_export_import_roundtrip(tmp_path: Path) -> None:
     """All four financial-history categories survive export/import with strict equality."""
 
-    from ....adapters.persistence.storage import activate_master_key_provider, get_master_key_provider
-    from ....core import resolve_active_bucket_id
+    from ....adapters.persistence.storage.master_key._master_key import (
+        activate_master_key_provider,
+        get_master_key_provider,
+    )
+    from ....core._bucket_pointer_io import resolve_active_bucket_id
     from ....core.config import override_settings
     from ....domain.modelos._calculation_repository import CalculationRevisionCatalogueRepository
     from ....domain.modelos._filing_repository import ModeloRecordCatalogueRepository
@@ -291,8 +300,19 @@ def test_v3_bundle_export_import_roundtrip(tmp_path: Path) -> None:
     assert exported_bundle["coverage_manifest"] == {
         "custody_profile": "structured",
         "carried_namespaces": [],
-        "excluded_namespaces": [],
-        "row_counts_by_namespace": {},
+        "excluded_namespaces": [
+            "aeat.domain.buckets.event_history",
+            "aeat.workflow",
+        ],
+        "row_counts_by_namespace": {
+            "aeat.application.user_profile.value": 1,
+            "aeat.domain.buckets.event_history": 1,
+            "aeat.domain.modelos.calculation_revisions": 1,
+            "aeat.domain.modelos.filing_records": 1,
+            "aeat.domain.modelos.work_units": 1,
+            "aeat.domain.transactions.bucket": 2,
+            "aeat.workflow": 1,
+        },
     }
 
     json_bundle_path = tmp_path / "source-bundle-json.json"
@@ -370,7 +390,10 @@ def test_v3_bundle_anti_tautology_legal_refs_mutation(tmp_path: Path) -> None:
     is not enforcing provenance preservation.
     """
 
-    from ....adapters.persistence.storage import activate_master_key_provider, get_master_key_provider
+    from ....adapters.persistence.storage.master_key._master_key import (
+        activate_master_key_provider,
+        get_master_key_provider,
+    )
     from ....core.config import override_settings
     from ....domain.modelos._calculation_repository import CalculationRevisionCatalogueRepository
     from ....domain.user_profile._portable_export import UserProfilePortableExport

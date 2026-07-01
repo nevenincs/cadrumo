@@ -33,6 +33,9 @@ from .._calc_sheets_apply import _build_grid_resize_requests
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 
+_TEST_LEGAL_REFS = ("ley-58-2003:art-119",)
+_TEST_SOURCE_REFS = ("aeat-dr-190-2025",)
+
 _TEST_CASILLA: CasillaId = validated_casilla_id("test.casilla", surface="_TEST_CASILLA")
 
 
@@ -140,8 +143,11 @@ def test_row_sets_grow_detalle_grid_beyond_default() -> None:
                 binding="modelo-190-perceptor-row-nif",
                 header_address=SheetCellAddress.at(TabName.DETALLE, 50, 1),
                 header_label="NIF",
+                legal_refs=_TEST_LEGAL_REFS,
             ),
         ),
+        legal_refs=_TEST_LEGAL_REFS,
+        source_refs=_TEST_SOURCE_REFS,
     )
     plan = _plan(row_sets=(row_set,))
     requests = _build_grid_resize_requests(plan, sheet_id_by_tab=_SHEET_IDS)

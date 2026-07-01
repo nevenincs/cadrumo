@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from collections.abc import Iterator
+from collections.abc import Callable, Iterator
 from pathlib import Path
 
 import pytest
@@ -58,13 +58,36 @@ def secure_objects(tmp_path: Path) -> Iterator[SecureObjectRepository]:
         yield profile.repository
 
 
-def test_object_key_helpers_reject_blank_inputs() -> None:
-    with pytest.raises(BucketValidationError, match="profile_id must not be blank"):
-        user_profile_value_object_key("  ")
-    with pytest.raises(BucketValidationError, match="profile_id must not be blank"):
-        user_profile_snapshot_object_key(" ", "snap-1")
-    with pytest.raises(BucketValidationError, match="snapshot_id must not be blank"):
-        user_profile_snapshot_object_key("a4f1c2e0-1111-4222-8333-444455556666", "")
+@pytest.mark.parametrize(
+    ("helper", "args", "expected_message"),
+    (
+        pytest.param(
+            user_profile_value_object_key,
+            ("  ",),
+            "profile_id must not be blank",
+            id="value-profile-id",
+        ),
+        pytest.param(
+            user_profile_snapshot_object_key,
+            (" ", "snap-1"),
+            "profile_id must not be blank",
+            id="snapshot-profile-id",
+        ),
+        pytest.param(
+            user_profile_snapshot_object_key,
+            ("a4f1c2e0-1111-4222-8333-444455556666", ""),
+            "snapshot_id must not be blank",
+            id="snapshot-id",
+        ),
+    ),
+)
+def test_object_key_helpers_reject_blank_inputs(
+    helper: Callable[..., str],
+    args: tuple[str, ...],
+    expected_message: str,
+) -> None:
+    with pytest.raises(BucketValidationError, match=expected_message):
+        helper(*args)
 
 
 def test_object_key_helpers_compose_canonical_keys() -> None:

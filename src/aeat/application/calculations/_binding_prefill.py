@@ -119,14 +119,14 @@ _M303_GENERADA_CASILLA: Final[CasillaId] = _casilla_id("iva.compensacion-generad
 _M303_DISPONIBLE_CASILLA: Final[CasillaId] = _casilla_id("iva.compensacion-disponible-fin-periodo")
 
 
-def _revision_carry_outcome(payload: _ObservationEnvelopePayload) -> tuple[bool, bool]:
-    """Return ``(diverges, advisory)`` for a payload's revision stamp.
+def _revision_carry_outcome(payload: _ObservationEnvelopePayload) -> bool:
+    """Return whether a payload's revision stamp must be refused.
 
     Thin adapter over the single shared
     :func:`~aeat.application.calculations._revision_carry_gate.revision_carry_outcome`
     gate (ADR 2026-06-10-period-revision-resolution-adr, Ruling 3 / R2): it
     extracts the source context off the payload's observation and delegates the
-    ``(diverges, advisory)`` decision so the binding-prefill, cross-period
+    refusal decision so the binding-prefill, cross-period
     clean-state, and relation-prefill carry reads share one law-determined
     re-confirmation rather than three parallel copies.
     """
@@ -140,13 +140,12 @@ def _revision_carry_outcome(payload: _ObservationEnvelopePayload) -> tuple[bool,
 
 
 def _revision_prefill_divergence(payload: _ObservationEnvelopePayload) -> bool:
-    """Return True when the payload's stamped revision diverges from the law-determined revision.
+    """Return True when the payload's stamped revision cannot be re-confirmed.
 
-    See :func:`_revision_carry_outcome` — a divergent stamp means the prior was filed
-    under a revision that is no longer the law-determined revision for its source
-    context; the carry must be refused (the caller drops the observation).
+    See :func:`_revision_carry_outcome` — a divergent or unreconfirmable stamp
+    means the carry must be refused (the caller drops the observation).
     """
-    return _revision_carry_outcome(payload)[0]
+    return _revision_carry_outcome(payload)
 
 
 class _GatheredObservation(BaseModel):
@@ -157,21 +156,17 @@ class _GatheredObservation(BaseModel):
     observation: RegistryModeloObservation
     source_kind: str
     casilla_source_kinds: Mapping[CasillaId, str]
-    unstamped_revision_advisory: bool = False
-    """Non-blocking advisory: the source revision stamp could not be re-confirmed."""
 
 
 def _gathered_observation(
     observation: RegistryModeloObservation,
     *,
     source_kind: str,
-    unstamped_revision_advisory: bool = False,
 ) -> _GatheredObservation:
     return _GatheredObservation(
         observation=observation,
         source_kind=source_kind,
         casilla_source_kinds={item.casilla_id: source_kind for item in observation.observations},
-        unstamped_revision_advisory=unstamped_revision_advisory,
     )
 
 
@@ -227,13 +222,6 @@ class PrefilledBinding(BaseModel):
     source_filing_year: int
     source_periods: tuple[str, ...]
     resolved_at: datetime
-    unstamped_revision_advisory: bool = False
-    """Non-blocking advisory: the source revision stamp could not be re-confirmed.
-
-    True when the carry proceeded after the source context could not be resolved
-    for stamp re-confirmation. Operators should re-pull the source period to
-    obtain a currently verifiable record.
-    """
 
 
 class BindingPrefillReport(BaseModel):
@@ -250,12 +238,6 @@ class BindingPrefillReport(BaseModel):
 
     prefilled: tuple[PrefilledBinding, ...]
     binding_values: Mapping[BindingId, Decimal]
-
-    @property
-    def has_unstamped_revision_advisory(self) -> bool:
-        """True when any prefilled binding carries a revision re-confirmation advisory."""
-        return any(item.unstamped_revision_advisory for item in self.prefilled)
-
 
 class LocalIvaCompensationRecurrence(BaseModel):
     """Local Modelo 303 recurrence evidence extracted for wallet reconciliation only.
@@ -297,34 +279,29 @@ def _gather_grouped_member_observations(
         obs = payload.observation
         if (obs.modelo, obs.filing_year, obs.period) != req_key:
             continue
-        # R2 carry gate: divergent stamp -> skip; indeterminate source context -> advisory.
-        diverges, advisory = _revision_carry_outcome(payload)
-        if diverges:
+        # R2 carry gate: divergent or unreconfirmable stamp -> skip.
+        if _revision_carry_outcome(payload):
             continue
         member_idx = seen_member.get(req_key, 0)
         seen_member[req_key] = member_idx + 1
         needed[(obs.modelo, obs.filing_year, obs.period, member_idx)] = _gathered_observation(
             obs,
             source_kind=payload.source_kind,
-            unstamped_revision_advisory=advisory,
         )
 
 
 def _gathered_from_payload(payload: _ObservationEnvelopePayload | None) -> _GatheredObservation | None:
     """Apply the R2 carry gate to a single-key payload.
 
-    Divergent stamp refuses the carry; an indeterminate source context carries
-    with the non-blocking advisory set.
+    Divergent or unreconfirmable source revision stamps refuse the carry.
     """
     if payload is None:
         return None
-    diverges, advisory = _revision_carry_outcome(payload)
-    if diverges:
+    if _revision_carry_outcome(payload):
         return None
     return _gathered_observation(
         payload.observation,
         source_kind=payload.source_kind,
-        unstamped_revision_advisory=advisory,
     )
 
 
@@ -642,30 +619,6 @@ def _selector_value(selector: object, key: str, default: object) -> object:
     return getattr(selector, key, default)
 
 
-def _advisory_for_binding(
-    gathered: tuple[_GatheredObservation, ...],
-    *,
-    source_modelo: str,
-    source_filing_year: int,
-    source_periods: tuple[str, ...],
-) -> bool:
-    """Return True when any gathered observation matching this binding's source carries the advisory.
-
-    Propagates the revision re-confirmation advisory from the source observation
-    through to the :class:`PrefilledBinding` so callers can surface it to operators.
-    """
-    required_periods = set(source_periods)
-    for item in gathered:
-        if (
-            item.observation.modelo == source_modelo
-            and item.observation.filing_year == source_filing_year
-            and item.observation.period in required_periods
-            and item.unstamped_revision_advisory
-        ):
-            return True
-    return False
-
-
 def _source_kind_for_binding(
     gathered: tuple[_GatheredObservation, ...],
     *,
@@ -795,14 +748,6 @@ def resolve_bindings_from_local_store(
             ),
         )
         source_casilla_ids = binding_source_casilla_ids(binding)
-        # Propagate the revision re-confirmation advisory from the gathered source observation
-        # for this binding's (modelo, filing_year, periods) to the prefilled record
-        unstamped_advisory = _advisory_for_binding(
-            observations,
-            source_modelo=source_modelo,
-            source_filing_year=source_filing_year,
-            source_periods=source_periods,
-        )
         source_kind = (
             _PRE_ACTIVITY_NO_PRIOR_OBLIGATION_SOURCE_KIND
             if binding_id in pre_activity_zero_binding_ids
@@ -823,7 +768,6 @@ def resolve_bindings_from_local_store(
                 source_filing_year=source_filing_year,
                 source_periods=source_periods,
                 resolved_at=when,
-                unstamped_revision_advisory=unstamped_advisory,
             ),
         )
     return BindingPrefillReport(

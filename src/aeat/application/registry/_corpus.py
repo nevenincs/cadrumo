@@ -91,7 +91,7 @@ class RegistryTopicProjection(BaseModel):
     title: str = Field(min_length=1)
     body: str = Field(min_length=1)
     see_also: tuple[str, ...] = ()
-    legal_refs: tuple[str, ...] = ()
+    legal_refs: tuple[str, ...] = Field(min_length=1)
 
 
 class RegistryCitationReferenceProjection(BaseModel):

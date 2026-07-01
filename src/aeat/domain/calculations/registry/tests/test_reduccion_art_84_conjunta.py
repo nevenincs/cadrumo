@@ -41,6 +41,17 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 _REGISTRY_ROOT = bundled_path("registry", "aeat")
 _SOURCE_ROOT = bundled_path()
 _REDUCCION_ART_84_CASILLA: CasillaId = validated_casilla_id("0461", surface="_REDUCCION_ART_84_CASILLA")
+_ART_84_LEGAL_REFS = ("ley-35-2006:art-82", "ley-35-2006:art-83", "ley-35-2006:art-84")
+_ART_84_SOURCE_REFS_2024 = (
+    "aeat-dr-100-2024-dictionary",
+    "boe-modelo-100-2024-form",
+    "aeat-renta-2024-manual-parte1",
+)
+_ART_84_SOURCE_REFS_2025 = (
+    "aeat-dr-100-2025-dictionary",
+    "boe-modelo-100-2025-form",
+    "aeat-renta-2025-manual-parte1",
+)
 
 _REL_2024 = {
     "renta-2024-rel-111-retenciones-trimestrales": Decimal("0"),
@@ -137,7 +148,8 @@ def _scenario_2024(
             RegistryScenarioExpectedOutput(
                 target_casilla_id=_REDUCCION_ART_84_CASILLA,
                 value=expected_0461,
-                legal_refs=("ley-35-2006:art-82", "ley-35-2006:art-83", "ley-35-2006:art-84"),
+                legal_refs=_ART_84_LEGAL_REFS,
+                source_refs=_ART_84_SOURCE_REFS_2024,
             ),
         ),
     )
@@ -169,7 +181,8 @@ def _scenario_2025(
             RegistryScenarioExpectedOutput(
                 target_casilla_id=_REDUCCION_ART_84_CASILLA,
                 value=expected_0461,
-                legal_refs=("ley-35-2006:art-82", "ley-35-2006:art-83", "ley-35-2006:art-84"),
+                legal_refs=_ART_84_LEGAL_REFS,
+                source_refs=_ART_84_SOURCE_REFS_2025,
             ),
         ),
     )

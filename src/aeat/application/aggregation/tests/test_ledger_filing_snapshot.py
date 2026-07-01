@@ -45,6 +45,8 @@ def _casilla_id(value: object) -> CasillaId:
 _MANUAL_FACT_CASILLA: CasillaId = _casilla_id("00501")
 _SKIPPED_MANUAL_FACT_CASILLA: CasillaId = _casilla_id("00502")
 _EMPTY_MANUAL_FACT_CASILLA: CasillaId = _casilla_id("00503")
+_LEGAL_REFS = ("ley-37-1992:art-99",)
+_SOURCE_REFS = ("boe-modelo-303-2025-form",)
 
 
 def _tx(
@@ -145,6 +147,8 @@ def test_evidence_capture_projects_tax_facts_and_manual_basis() -> None:
         casilla_id=_MANUAL_FACT_CASILLA,
         value="140000.00",
         note="resultado contable",
+        legal_refs=_LEGAL_REFS,
+        source_refs=_SOURCE_REFS,
     )
 
     evidence = compute_ledger_filing_evidence(
@@ -152,6 +156,8 @@ def test_evidence_capture_projects_tax_facts_and_manual_basis() -> None:
         catalogue=catalogue,
         snapshot_fingerprint=snapshot.snapshot_fingerprint,
         captured_at=_CAPTURED,
+        legal_refs=_LEGAL_REFS,
+        source_refs=_SOURCE_REFS,
         manual_entries=(manual_entry,),
     )
 
@@ -201,6 +207,8 @@ def test_evidence_capture_preserves_rent_paid_net_of_withholding_substrate() -> 
         catalogue=catalogue,
         snapshot_fingerprint=snapshot.snapshot_fingerprint,
         captured_at=_CAPTURED,
+        legal_refs=_LEGAL_REFS,
+        source_refs=_SOURCE_REFS,
     )
 
     row = evidence.rows[0]
@@ -220,9 +228,27 @@ def test_manual_fact_basis_projection_skips_blank_inputs() -> None:
             _SKIPPED_MANUAL_FACT_CASILLA: " ",
             _EMPTY_MANUAL_FACT_CASILLA: "",
         },
+        legal_refs_by_casilla_id={_MANUAL_FACT_CASILLA: _LEGAL_REFS},
+        source_refs_by_casilla_id={_MANUAL_FACT_CASILLA: _SOURCE_REFS},
     )
 
-    assert entries == (ManualFactBasisEntry(casilla_id=_MANUAL_FACT_CASILLA, value="140000.00"),)
+    assert entries == (
+        ManualFactBasisEntry(
+            casilla_id=_MANUAL_FACT_CASILLA,
+            value="140000.00",
+            legal_refs=_LEGAL_REFS,
+            source_refs=_SOURCE_REFS,
+        ),
+    )
+
+
+def test_manual_fact_basis_projection_rejects_missing_grounding() -> None:
+    with pytest.raises(ModeloValidationError, match="legal_refs"):
+        project_manual_fact_basis_entries(
+            {_MANUAL_FACT_CASILLA: "140000.00"},
+            legal_refs_by_casilla_id={},
+            source_refs_by_casilla_id={_MANUAL_FACT_CASILLA: _SOURCE_REFS},
+        )
 
 
 def test_evidence_coverage_guard_refuses_missing_contributor() -> None:
@@ -248,6 +274,8 @@ def test_evidence_coverage_guard_refuses_missing_contributor() -> None:
         catalogue=catalogue,
         snapshot_fingerprint=snapshot.snapshot_fingerprint,
         captured_at=_CAPTURED,
+        legal_refs=_LEGAL_REFS,
+        source_refs=_SOURCE_REFS,
     )
     assert_evidence_covers_snapshot(snapshot, complete)
 

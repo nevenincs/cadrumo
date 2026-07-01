@@ -1,10 +1,15 @@
 """Encrypted SQL repository for the bucket-event-history catalogue.
 
 :class:`BucketEventHistoryRepository` persists
-:class:`BucketEventHistoryCatalogue` through :class:`SecureObjectRepository`,
-which handles encrypted BLOB storage and key management for the active profile
-bucket. Each stored record is wrapped in an :class:`Envelope` at
-:class:`SensitivityClass` ``FINANCIAL``.
+:class:`BucketEventHistoryCatalogue` through
+:class:`~aeat.adapters.persistence.storage.sql.SecureObjectRepository`, which
+handles encrypted BLOB storage and key management for the active profile
+bucket. Each stored record is wrapped in an
+:class:`~aeat.adapters.persistence.storage.Envelope` at
+:class:`~aeat.adapters.persistence.storage.SensitivityClass` ``FINANCIAL``.
+The storage contract is declared by
+:data:`aeat.adapters.persistence.storage.BUCKET_EVENT_HISTORY_NAMESPACE`; its
+default object key is the singleton ``catalogue`` row.
 """
 
 from __future__ import annotations
@@ -39,8 +44,17 @@ class BucketEventHistoryPersistenceError(BucketsError):
 class BucketEventHistoryRepository:
     """Repository over encrypted SQL-backed event-history catalogue storage.
 
-    The repository wraps a :class:`SecureObjectRepository` and exposes the
-    concrete load/save implementation behind
+    :data:`aeat.adapters.persistence.storage.BUCKET_EVENT_HISTORY_NAMESPACE`
+    is the central profile-local namespace, schema-version, sensitivity, and
+    singleton-key contract for the encrypted
+    :class:`BucketEventHistoryCatalogue`. The catalogue preserves the
+    append-only :class:`BucketEvent` history, is wrapped in
+    :class:`~aeat.adapters.persistence.storage.Envelope`, and is persisted
+    through :class:`~aeat.adapters.persistence.storage.sql.SecureObjectRepository`.
+    The same envelope can be emitted as a
+    :class:`~aeat.adapters.persistence.storage.SecureObjectWrite` when sibling
+    catalogue updates need one transaction. This class exposes the concrete
+    load/save implementation behind
     :class:`~aeat.domain.buckets._protocols.BucketEventHistoryRepositoryProtocol`.
     """
 
@@ -57,7 +71,9 @@ class BucketEventHistoryRepository:
         """Return the secure-object backend used by this catalogue.
 
         Returns:
-            The :class:`SecureObjectRepository` backing this repository.
+            The
+            :class:`~aeat.adapters.persistence.storage.sql.SecureObjectRepository`
+            backing this repository.
         """
         return self._objects
 
@@ -146,7 +162,8 @@ class BucketEventHistoryRepository:
         """Return the secure-object upsert for ``catalogue`` without committing it.
 
         The returned :class:`~aeat.adapters.persistence.storage.SecureObjectWrite`
-        carries the same :class:`Envelope` and :class:`SensitivityClass`
+        carries the same :class:`~aeat.adapters.persistence.storage.Envelope`
+        and :class:`~aeat.adapters.persistence.storage.SensitivityClass`
         classification that :meth:`save` would persist directly.
         """
         from ...adapters.persistence.storage import Envelope, SecureObjectWrite, SensitivityClass

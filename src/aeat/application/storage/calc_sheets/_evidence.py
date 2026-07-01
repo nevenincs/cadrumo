@@ -76,6 +76,8 @@ def sheet_evidence_from_ledger_filing(
             value=entry.value,
             kind=entry.kind,
             note=entry.note,
+            legal_refs=entry.legal_refs,
+            source_refs=entry.source_refs,
         )
         for entry in evidence.manual_entries
     )

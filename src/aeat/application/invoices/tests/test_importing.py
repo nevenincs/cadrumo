@@ -24,11 +24,20 @@ def _invoice_payload(invoice_number: str) -> dict[str, object]:
         "base_total": "100.00",
         "iva_total": "21.00",
         "grand_total": "121.00",
-        "iva_rate": "21",
+        "lines": [
+            {
+                "description": "Servicios",
+                "quantity": "1",
+                "unit_price": "100.00",
+                "subtotal": "100.00",
+                "iva_rate": "RATE_21",
+                "iva_amount": "21.00",
+            },
+        ],
     }
 
 
-def test_parse_json_payload_synthesises_valid_invoice_line() -> None:
+def test_parse_json_payload_accepts_line_level_invoice() -> None:
     invoices = parse_invoice_payload(json.dumps([_invoice_payload("INV-001")]), default_kind=InvoiceKind.ISSUED)
 
     assert len(invoices) == 1
@@ -41,7 +50,7 @@ def test_parse_json_payload_synthesises_valid_invoice_line() -> None:
     assert invoice.lines[0].iva_amount == Decimal("21.00")
 
 
-def test_parse_csv_payload_uses_same_backend_import_contract_as_json() -> None:
+def test_parse_csv_payload_is_rejected_as_removed_flat_import_shape() -> None:
     csv_payload = "\n".join(
         [
             "invoice_number,issued_at,counterparty_tax_id,base_total,iva_total,grand_total,iva_rate",
@@ -49,13 +58,23 @@ def test_parse_csv_payload_uses_same_backend_import_contract_as_json() -> None:
         ],
     )
 
-    invoices = parse_invoice_payload(csv_payload, default_kind="received")
+    with pytest.raises(InvoiceValidationError) as exc_info:
+        parse_invoice_payload(csv_payload, default_kind="received")
 
-    assert len(invoices) == 1
-    invoice = invoices[0]
-    assert invoice.kind is InvoiceKind.RECEIVED
-    assert invoice.lines[0].iva_rate.value == "RATE_10"
-    assert invoice.grand_total == Decimal("220.00")
+    assert exc_info.value.translated_message == "application.invoices.importing.errors.invalid_json_shape"
+    assert exc_info.value.context == {"payload_type": "csv"}
+
+
+def test_parse_json_payload_rejects_top_level_iva_rate_alias() -> None:
+    payload = _invoice_payload("INV-002")
+    payload.pop("lines")
+    payload["iva_rate"] = "21"
+
+    with pytest.raises(InvoiceValidationError) as exc_info:
+        parse_invoice_payload(json.dumps(payload), default_kind="received")
+
+    assert exc_info.value.translated_message == "application.invoices.importing.errors.invalid_json_shape"
+    assert exc_info.value.context == {"payload_type": "top-level-iva-rate"}
 
 
 def test_invoice_import_merge_is_idempotent_across_repeated_cycles() -> None:

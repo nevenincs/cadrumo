@@ -769,6 +769,7 @@ def test_convenio_rate_table_rejects_malformed_rate_string() -> None:
             tipo_renta="interest",
             rate="not-a-rate",
             legal_ref_anchor="convenio-es-ma-art-14",
+            legal_refs=("convenio-es-ma-art-14",),
             valid_from=date(2025, 1, 1),
             valid_to=date(2025, 12, 31),
         )
@@ -792,7 +793,7 @@ def test_convenio_rate_table_rejects_not_yet_authored_placeholder() -> None:
 def test_convenio_rate_table_rejects_concrete_rate_without_row_legal_refs() -> None:
     """A concrete Convenio override rate must cite the treaty article that grounds it."""
 
-    with pytest.raises(ValidationError, match="concrete rates must declare legal_refs"):
+    with pytest.raises(ValidationError, match="legal_refs"):
         ConvenioRateRow(
             country_code="MA",
             tipo_renta="interest",

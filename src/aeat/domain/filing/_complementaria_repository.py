@@ -2,10 +2,11 @@
 
 Filing amendments carry corrected casilla deltas and original
 submission references. They are stored as encrypted byte objects via
-:class:`SecureObjectRepository` at :class:`SensitivityClass`
-``AUDIT`` sensitivity; no plaintext amendment JSON or envelope file
-lands on disk. Each record is wrapped in an :class:`Envelope` before
-serialisation.
+:class:`~aeat.adapters.persistence.storage.SecureObjectRepository` at
+``AUDIT`` :class:`~aeat.adapters.persistence.storage.SensitivityClass`
+sensitivity; no plaintext amendment JSON or envelope file lands on disk. Each
+record is wrapped in an
+:class:`~aeat.adapters.persistence.storage.Envelope` before serialisation.
 
 See Also:
     :class:`BaseAmendment`
@@ -49,7 +50,19 @@ _AMENDMENT_NAMESPACE = "aeat.domain.filing.amendments"
 
 
 class ModeloAmendmentRepository:
-    """Repository over encrypted SQL-backed :class:`BaseAmendment` payloads."""
+    """Encrypted AUDIT repository for :class:`BaseAmendment` records.
+
+    Persists :class:`ModeloComplementaria` and :class:`ModeloSustitutiva`
+    payloads under
+    :data:`aeat.adapters.persistence.storage.FILING_AMENDMENTS_NAMESPACE`. The
+    repository wraps the amendment union in an
+    :class:`~aeat.adapters.persistence.storage.Envelope` before writing through
+    :class:`~aeat.adapters.persistence.storage.SecureObjectRepository`; the
+    amendment id is the natural key used for load, delete, and ordered
+    iteration. The namespace definition supplies the ``AUDIT``
+    :class:`~aeat.adapters.persistence.storage.SensitivityClass`, schema
+    version, object-key grammar, and custody contract.
+    """
 
     def __init__(self, *, bucket_id: str | None = None, objects: SecureObjectRepository | None = None) -> None:
         self._bucket_id = bucket_id.strip() if bucket_id is not None else None
@@ -111,7 +124,11 @@ class ModeloAmendmentRepository:
         return envelope.payload
 
     def save(self, amendment: BaseAmendment) -> None:
-        """Persist ``amendment`` in the encrypted database object store."""
+        """Persist ``amendment`` in the encrypted database object store.
+
+        The row is stored under
+        :data:`aeat.adapters.persistence.storage.FILING_AMENDMENTS_NAMESPACE`.
+        """
         from ...adapters.persistence.storage import Envelope, SensitivityClass, safe_repository_id
 
         safe_repository_id(amendment.amendment_id, context="amendment_id")

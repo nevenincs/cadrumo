@@ -17,7 +17,7 @@ from pathlib import Path
 import pytest
 
 from ....core import Period
-from ....core.aggregation import BindingAggregation, BindingAggregationOp, RowSetGroupingKind
+from ....core.aggregation import BindingAggregation, BindingAggregationOp, BindingSourceKind
 from ....core.resources import resources
 from ....domain.calculations.registry import DataBindingDefinition, ModeloRevision, WithholdingObservation
 from ....tests.secure_sql import isolated_runtime_profile
@@ -36,10 +36,10 @@ def _m190_revision() -> ModeloRevision:
 
 
 def _percepcion_binding() -> DataBindingDefinition:
-    base = next(b for b in _m190_revision().bindings if b.source == RowSetGroupingKind.WITHHOLDING)
+    base = next(b for b in _m190_revision().bindings if b.source == BindingSourceKind.WITHHOLDING)
     return base.model_copy(
         update={
-            "source": RowSetGroupingKind.WITHHOLDING,
+            "source": BindingSourceKind.WITHHOLDING,
             "selector": {"fact": "percepcion_count"},
             "aggregation": BindingAggregation(op=BindingAggregationOp.COUNT_DISTINCT),
         },

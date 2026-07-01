@@ -9,6 +9,7 @@ from __future__ import annotations
 
 from collections.abc import Iterable, Mapping
 from datetime import datetime
+from decimal import Decimal
 from types import MappingProxyType
 
 from pydantic import BaseModel, Field
@@ -90,8 +91,18 @@ def project_review_queue(
     source_kinds: Iterable[str] = (),
     state: ReviewState = ReviewState.PENDING,
     modelo: str | None = None,
+    confidence_below: Decimal | None = None,
 ) -> ReviewQueueReport:
-    """Return a :class:`ReviewQueueReport` using accepted source-kind vocabulary."""
+    """Return a :class:`ReviewQueueReport` using accepted source-kind vocabulary.
+
+    When ``confidence_below`` is set, the queue narrows to classified
+    transactions whose ``classification_confidence`` is non-None and
+    strictly below the threshold, so the operator can triage the
+    lowest-confidence classifications first (see
+    :meth:`~aeat.application.review.ReviewQueue.collect`). Invoice and
+    finding rows carry no decision-confidence and are excluded while the
+    filter is active.
+    """
     selected = _resolve_internal_kinds((*tuple(kinds), *tuple(source_kinds)))
     bucket_id = _active_bucket_id()
     from ...core.config import load_settings as _load_settings
@@ -102,6 +113,7 @@ def project_review_queue(
         kinds=selected,
         state=state,
         modelo=modelo,
+        confidence_below=confidence_below,
     )
     accepted_kinds = frozenset(kind.strip() for kind in kinds if kind.strip())
     accepted_source_kinds = frozenset(kind.strip() for kind in source_kinds if kind.strip())

@@ -308,6 +308,36 @@ def test_compare_registry_to_workbook_reports_mismatch(tmp_path: Path) -> None:
     assert report.comparisons[0].source_refs == ("aeat-dr-303-2026",)
 
 
+def test_compare_registry_to_workbook_rejects_missing_grounding(tmp_path: Path) -> None:
+    workbook_path = tmp_path / "modelo_303" / "files" / "303-test.xlsx"
+    _write_formula_workbook(workbook_path)
+    workbook = scan_workbook(workbook_path, root=tmp_path)
+    synthetic = SyntheticInputSet(
+        id="synthetic-303-basic",
+        modelo="303",
+        revision="2026",
+        values=(
+            SyntheticInputValue(
+                id="base",
+                value=Decimal("10"),
+                workbook_cell=WorkbookCellRef(sheet="Modelo", coordinate="A1"),
+                registry_binding="iva.base",
+            ),
+        ),
+    )
+
+    with pytest.raises(RegistryValidationError, match="missing legal_refs"):
+        compare_registry_to_workbook(
+            synthetic_input=synthetic,
+            workbook=workbook,
+            runner=verify_workbook_backend(tmp_path, scan_limit=1).runner,
+            expected_workbook_values={"result": Decimal("31")},
+            actual_registry_values={"result": Decimal("31")},
+            output_cells={"result": WorkbookCellRef(sheet="Modelo", coordinate="B1", formula="=A1+A2")},
+            registry_snapshot_id="303:2026:1T",
+        )
+
+
 def test_compare_registry_to_workbook_rejects_missing_registry_output(tmp_path: Path) -> None:
     workbook_path = tmp_path / "modelo_303" / "files" / "303-test.xlsx"
     _write_formula_workbook(workbook_path)

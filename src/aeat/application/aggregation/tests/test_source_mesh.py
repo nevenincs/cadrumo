@@ -99,11 +99,34 @@ def test_source_provenance_projects_canonical_binding_source() -> None:
     provenance = CalculationSourceProvenance(
         source_kind=BindingSourceKind.RELATION_PREFILL,
         source_ref="relation:modelo-100-rel-130",
+        relation_id="modelo-100-rel-130-pagos-fraccionados",
+        source_modelo="130",
+        source_filing_year=2026,
+        source_periods=("1T",),
+        source_casilla_ids=("19",),
+        legal_refs=("rd-439-2007:art-110",),
+        source_refs=("aeat-modelo-130-instructions",),
     )
 
     assert provenance.source_kind == BindingSourceKind.RELATION_PREFILL.value
     assert provenance.binding_source is BindingSourceKind.RELATION_PREFILL
     assert provenance.model_dump(mode="json")["binding_source"] == BindingSourceKind.RELATION_PREFILL.value
+    assert provenance.model_dump(mode="json")["source_casilla_ids"] == ["19"]
+
+
+def test_relation_source_provenance_rejects_incomplete_typed_trace() -> None:
+    with pytest.raises(ValidationError) as exc_info:
+        CalculationSourceProvenance(
+            source_kind=BindingSourceKind.RELATION_PREFILL,
+            source_ref="relation:modelo-100-rel-130",
+            relation_id="modelo-100-rel-130-pagos-fraccionados",
+        )
+
+    context = exc_info.value.errors()[0].get("ctx")
+    assert context is not None
+    error = context["error"]
+    assert isinstance(error, SourceMeshError)
+    assert str(error) == "aggregation.source_mesh.errors.relation_provenance_incomplete"
 
 
 def test_source_resolution_rejects_legacy_bound_casilla_inputs_key() -> None:

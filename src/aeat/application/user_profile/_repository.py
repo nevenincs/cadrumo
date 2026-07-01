@@ -1,19 +1,22 @@
 """Secure-DB persistence for user-profile lifecycle records and filing snapshots.
 
-Two namespaces are owned by this module:
+Two registry-owned storage contracts govern this module:
 
-- ``aeat.application.user_profile.value`` — live profile aggregate keyed
-  by the immutable ``profile_id`` (a UUIDv4). There is exactly one live
-  profile-value record per profile bucket.
-- ``aeat.application.user_profile.snapshot`` — immutable filing-time
-  snapshots keyed by ``(profile_id, snapshot_id)``: a profile owns many
-  filing snapshots.
+- :data:`aeat.adapters.persistence.storage.USER_PROFILE_VALUE_NAMESPACE` —
+  live profile aggregate keyed by the immutable ``profile_id`` (a UUIDv4).
+  There is exactly one live profile-value record per profile bucket.
+- :data:`aeat.adapters.persistence.storage.USER_PROFILE_SNAPSHOT_NAMESPACE` —
+  immutable filing-time snapshots keyed by ``(profile_id, snapshot_id)``:
+  a profile owns many filing snapshots.
 
-Both namespaces ride the active-bucket plumbing: every read and write
-resolves through a profile bucket so two operators never share profile
-storage. ``snapshot_id`` is deterministic in shape but globally
-unique within a bucket per ``new_profile_snapshot_id``. Records are
-stored as :class:`Envelope` objects encrypted at rest.
+Both namespace definitions provide the IDENTITY sensitivity, schema version,
+bucket-local scope, and object-key grammar. They ride the active-bucket
+plumbing: every read and write resolves through a profile bucket so two
+operators never share profile storage. ``snapshot_id`` is deterministic in
+shape but globally unique within a bucket per ``new_profile_snapshot_id``.
+Records are stored as :class:`~aeat.adapters.persistence.storage.Envelope`
+objects encrypted at rest by
+:class:`~aeat.adapters.persistence.storage.sql.SecureObjectRepository`.
 """
 
 from __future__ import annotations
@@ -92,8 +95,10 @@ def _clear_output_language_cache() -> None:
 def user_profile_value_object_key(profile_id: str) -> str:
     """Return the secure-object key for a profile's live aggregate.
 
-    A profile bucket holds exactly one live profile-value record, so
-    the key is single-segment: the immutable ``profile_id`` (UUIDv4).
+    The key shape is the object-key grammar declared by
+    :data:`aeat.adapters.persistence.storage.USER_PROFILE_VALUE_NAMESPACE`.
+    A profile bucket holds exactly one live profile-value record, so the
+    key is single-segment: the immutable ``profile_id`` (UUIDv4).
     """
     trimmed_profile = profile_id.strip()
     if not trimmed_profile:
@@ -104,9 +109,11 @@ def user_profile_value_object_key(profile_id: str) -> str:
 def user_profile_snapshot_object_key(profile_id: str, snapshot_id: str) -> str:
     """Return the secure-object key for one of a profile's filing snapshots.
 
-    A profile owns many immutable filing snapshots, so the key retains
-    the ``snapshot_id`` discriminator; the first segment is the
-    immutable ``profile_id`` (UUIDv4).
+    The key shape is the object-key grammar declared by
+    :data:`aeat.adapters.persistence.storage.USER_PROFILE_SNAPSHOT_NAMESPACE`.
+    A profile owns many immutable filing snapshots, so the key retains the
+    ``snapshot_id`` discriminator; the first segment is the immutable
+    ``profile_id`` (UUIDv4).
     """
     trimmed_profile = profile_id.strip()
     trimmed_snapshot = snapshot_id.strip()
@@ -140,7 +147,14 @@ class _BucketBoundRepository:
 
 
 class UserProfileLifecycleRepository(_BucketBoundRepository):
-    """Read and write live user-profile aggregates in the secure DB."""
+    """Read and write live user-profile aggregates in the secure DB.
+
+    Rows use
+    :data:`aeat.adapters.persistence.storage.USER_PROFILE_VALUE_NAMESPACE`,
+    wrap each :class:`UserProfileRecord` in an
+    :class:`~aeat.adapters.persistence.storage.Envelope`, and persist through
+    :class:`~aeat.adapters.persistence.storage.sql.SecureObjectRepository`.
+    """
 
     @property
     def bucket_id(self) -> str:
@@ -321,7 +335,14 @@ class UserProfileLifecycleRepository(_BucketBoundRepository):
 
 
 class UserProfileSnapshotRepository(_BucketBoundRepository):
-    """Read and write immutable filing-time profile snapshots in the secure DB."""
+    """Read and write immutable filing-time profile snapshots in the secure DB.
+
+    Rows use
+    :data:`aeat.adapters.persistence.storage.USER_PROFILE_SNAPSHOT_NAMESPACE`,
+    wrap each :class:`UserProfileSnapshot` in an
+    :class:`~aeat.adapters.persistence.storage.Envelope`, and persist through
+    :class:`~aeat.adapters.persistence.storage.sql.SecureObjectRepository`.
+    """
 
     @property
     def bucket_id(self) -> str:

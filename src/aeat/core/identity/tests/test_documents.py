@@ -64,14 +64,16 @@ class TestNif:
         assert context["expected"] == "Z"
         assert context["got"] == "A"
 
-    def test_too_short_rejected(self) -> None:
+    @pytest.mark.parametrize(
+        "candidate",
+        (
+            pytest.param("1234567Z", id="too-short"),
+            pytest.param("123456789Z", id="too-long"),
+        ),
+    )
+    def test_invalid_shape_rejected(self, candidate: str) -> None:
         with pytest.raises(IdentityError) as excinfo:
-            validate_identity("1234567Z")
-        assert excinfo.value.translated_message == "errors.identity.nif_invalid_shape"
-
-    def test_too_long_rejected(self) -> None:
-        with pytest.raises(IdentityError) as excinfo:
-            validate_identity("123456789Z")
+            validate_identity(candidate)
         assert excinfo.value.translated_message == "errors.identity.nif_invalid_shape"
 
 
@@ -198,23 +200,26 @@ class TestActionableMessages:
     malformed input).
     """
 
-    def test_nif_checksum_message_names_correct_letter(self) -> None:
+    @pytest.mark.parametrize(
+        ("candidate", "expected_body", "expected_letter"),
+        (
+            pytest.param("12345678A", "12345678", "Z", id="nif"),
+            pytest.param("X1234567Z", "X1234567", "L", id="nie"),
+        ),
+    )
+    def test_checksum_message_names_correct_letter(
+        self,
+        candidate: str,
+        expected_body: str,
+        expected_letter: str,
+    ) -> None:
         from ...errors import resolve_error_message
 
         with pytest.raises(IdentityError) as excinfo:
-            validate_identity("12345678A")
+            validate_identity(candidate)
         message = resolve_error_message(excinfo.value)
-        assert "12345678" in message
-        assert "Z" in message
-
-    def test_nie_checksum_message_names_correct_letter(self) -> None:
-        from ...errors import resolve_error_message
-
-        with pytest.raises(IdentityError) as excinfo:
-            validate_identity("X1234567Z")
-        message = resolve_error_message(excinfo.value)
-        assert "X1234567" in message
-        assert "L" in message
+        assert expected_body in message
+        assert expected_letter in message
 
     def test_malformed_nif_message_states_expected_shape(self) -> None:
         from ...errors import resolve_error_message
@@ -237,32 +242,30 @@ class TestActionableMessages:
         assert "X" in message
 
 
-class TestCifKindLetterSplit:
-    """Pin the intentional split between _CIF_KIND_LETTERS and _CIF_LEADERS.
+class TestCifKindCatalogue:
+    """Pin the distinction between NIF prefixes and CIF kind letters."""
 
-    ``_CIF_KIND_LETTERS`` is the AEAT current-spec closed catalogue (17
-    letters).  ``_tax_id._CIF_LEADERS`` is the historical-tolerance superset
-    (20 letters) that keeps K, L, and M so that ``validate_spanish_tax_id``
-    accepts legacy entities.  These tests prevent a future consolidation from
-    silently collapsing the two sets.
-    """
-
-    def test_k_l_m_absent_from_cif_kind_letters(self) -> None:
+    @pytest.mark.parametrize("nif_prefix", ("K", "L", "M"))
+    def test_nif_prefix_absent_from_cif_kind_letters(self, nif_prefix: str) -> None:
         from .._documents import _CIF_KIND_LETTERS
 
-        assert "K" not in _CIF_KIND_LETTERS
-        assert "L" not in _CIF_KIND_LETTERS
-        assert "M" not in _CIF_KIND_LETTERS
+        assert nif_prefix not in _CIF_KIND_LETTERS
 
-    def test_validate_spanish_tax_id_accepts_k_led_cif(self) -> None:
-        # Synthetic K-led CIF: K + 1234567 + check character.
-        # K is in _CIF_LETTER_CONTROL_LEADERS so the check must be a letter.
-        # Computed: even_sum=12, odd_sum_doubled=14, total=26,
-        # digit_control=4, letter_control=_CIF_CONTROL_LETTERS[4]='D'.
+    @pytest.mark.parametrize("candidate", ("K1234567L", "L1234567L", "M1234567L"))
+    def test_validate_spanish_tax_id_accepts_current_prefixed_nif(self, candidate: str) -> None:
         from .._tax_id import validate_spanish_tax_id
 
-        result = validate_spanish_tax_id("K1234567D")
-        assert result == "K1234567D"
+        assert validate_spanish_tax_id(candidate) == candidate
+
+    @pytest.mark.parametrize("candidate", ("K1234567L", "L1234567L", "M1234567L"))
+    def test_validate_identity_routes_current_prefixed_nif_to_nif(self, candidate: str) -> None:
+        assert validate_identity(candidate) is IdentityDocument.NIF
+
+    @pytest.mark.parametrize("candidate", ("K1234567D", "L1234567D", "M1234567D"))
+    def test_prefixed_nif_wrong_check_letter_rejected(self, candidate: str) -> None:
+        with pytest.raises(IdentityError) as excinfo:
+            validate_identity(candidate)
+        assert excinfo.value.translated_message == "errors.identity.nif_check_letter_mismatch"
 
 
 class TestErrorCodeBinding:

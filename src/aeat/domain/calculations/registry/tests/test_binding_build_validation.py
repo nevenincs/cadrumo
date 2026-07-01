@@ -29,7 +29,7 @@ from __future__ import annotations
 
 import pytest
 
-from .....core.aggregation import BindingAggregation, BindingAggregationOp
+from .....core.aggregation import BindingAggregation, BindingAggregationOp, BindingSourceKind
 from .....core.resources import bundled_path
 from .. import CasillaId, RegistryCatalogues, RegistryValidator, validated_casilla_id
 from .._bindings import _BINDING_VALIDATOR_REGISTRY, validate_binding_selector_shape
@@ -278,6 +278,7 @@ def test_renta_gasto_binding_rejects_legacy_target_casilla_key() -> None:
 
 def test_dispatch_table_covers_every_validated_family() -> None:
     """Every family case names a source the dispatch table validates (no silent gap)."""
+    assert all(isinstance(key, BindingSourceKind) for key in _BINDING_VALIDATOR_REGISTRY)
     covered = {str(key) for key in _BINDING_VALIDATOR_REGISTRY}
     for case in _FAMILY_CASES:
         source = case[1]

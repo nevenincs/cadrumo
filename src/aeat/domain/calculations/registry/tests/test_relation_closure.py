@@ -217,6 +217,30 @@ def test_registry_validator_rejects_relation_to_unknown_source_modelo() -> None:
         )
 
 
+def test_registry_validator_rejects_dependency_classification_to_unknown_source_modelo() -> None:
+    modelos, catalogues = _committed_tree()
+    modelo = _modelo(modelos, "100")
+    revision = modelo.revisions["2025"]
+    classification = next(
+        item for item in revision.dependency_classifications if item.source_modelo == "303" and not item.relation_refs
+    )
+    mutated_classification = classification.model_copy(update={"source_modelo": "999"})
+    mutated_revision = revision.model_copy(
+        update={
+            "dependency_classifications": tuple(
+                mutated_classification if item.id == classification.id else item
+                for item in revision.dependency_classifications
+            ),
+        },
+    )
+    mutated_modelo = _with_revision(modelo, mutated_revision)
+
+    with pytest.raises(RegistryValidationError, match=r"dependency classification .* unknown source modelo"):
+        RegistryValidator(catalogues, source_root=bundled_path()).validate_registry(
+            _replace_modelo(modelos, mutated_modelo),
+        )
+
+
 def test_registry_validator_rejects_relation_source_period_outside_source_revision() -> None:
     modelos, catalogues = _committed_tree()
     modelo = _modelo(modelos, "180")

@@ -2,9 +2,10 @@
 
 The three document shapes:
 
-* **NIF** (Número de Identificación Fiscal): 8 digits + 1 check letter.
-  Used by Spanish nationals. Check letter computed from the numeric
-  portion via ``"TRWAGMYFPDXBNJZSQVHLCKE"[number % 23]``.
+* **NIF** (Número de Identificación Fiscal): 8 digits, or a leading
+  K/L/M plus 7 digits for natural persons without DNI/NIE, followed by
+  1 check letter. Check letter computed from the numeric portion via
+  ``"TRWAGMYFPDXBNJZSQVHLCKE"[number % 23]``.
 * **NIE** (Número de Identidad de Extranjero): leading X / Y / Z + 7
   digits + 1 check letter. Used by foreigners resident in Spain. Check
   letter computed by replacing the leading letter with 0 / 1 / 2
@@ -36,13 +37,11 @@ _NIE_PREFIX_MAP = {"X": "0", "Y": "1", "Z": "2"}
 _CIF_KIND_LETTERS = "ABCDEFGHJNPQRSUVW"
 """Closed catalogue of CIF leading kind characters per AEAT current spec (17 letters).
 
-K, L, and M are deliberately excluded: they are historical-only forms that
-AEAT's validator tolerates for legacy entities but does not assign to new
-CIFs.  ``aeat.core.identity._tax_id._CIF_LEADERS`` retains all three as a
-historical-tolerance superset so that ``validate_spanish_tax_id`` keeps
-accepting K/L/M-led identifiers; this set is the authoritative shape gate
-for current-spec document classification via ``_CIF_PATTERN`` and
-:func:`validate_identity`.
+K, L, and M are excluded from CIF because they are current natural-person
+NIF prefixes, not legal-entity kind letters. This set is the authoritative
+shape gate for legal-entity CIF classification via ``_CIF_PATTERN`` and
+:func:`validate_identity`; the string-returning ``validate_spanish_tax_id``
+helper uses the same CIF catalogue.
 """
 
 # AEAT publishes a small lookup mapping the CIF kind letter to the
@@ -52,13 +51,14 @@ for current-spec document classification via ``_CIF_PATTERN`` and
 _CIF_KIND_DIGIT_ONLY = "ABEH"
 """Kinds whose check character MUST be a digit."""
 
-_CIF_KIND_LETTER_ONLY = "KPQRSNW"
+_CIF_KIND_LETTER_ONLY = "PQRSNW"
 """Kinds whose check character MUST be a letter."""
 
 _CIF_LETTER_TABLE = "JABCDEFGHI"
 """When the check character is a letter, it is the index-th entry of this table."""
 
 _NIF_PATTERN = re.compile(r"^(\d{8})([A-Z])$")
+_PREFIXED_NIF_PATTERN = re.compile(r"^([KLM])(\d{7})([A-Z])$")
 _NIE_PATTERN = re.compile(r"^([XYZ])(\d{7})([A-Z])$")
 _CIF_PATTERN = re.compile(rf"^([{_CIF_KIND_LETTERS}])(\d{{7}})([0-9A-J])$")
 
@@ -154,6 +154,24 @@ def _validate_nif(candidate: str) -> IdentityDocument:
     return IdentityDocument.NIF
 
 
+def _validate_prefixed_nif(candidate: str) -> IdentityDocument:
+    """Validate a K/L/M-prefixed NIF candidate."""
+    match = _PREFIXED_NIF_PATTERN.match(candidate)
+    if match is None:
+        raise IdentityError(
+            translated_message="errors.identity.nif_invalid_shape",
+            context={"candidate": candidate},
+        )
+    prefix, digits, letter = match.group(1), match.group(2), match.group(3)
+    expected = _compute_nif_check_letter(int(digits))
+    if letter != expected:
+        raise IdentityError(
+            translated_message="errors.identity.nif_check_letter_mismatch",
+            context={"digits": prefix + digits, "expected": expected, "got": letter},
+        )
+    return IdentityDocument.NIF
+
+
 def _validate_nie(candidate: str) -> IdentityDocument:
     """Validate a NIE candidate, raising :class:`IdentityError` on mismatch."""
     match = _NIE_PATTERN.match(candidate)
@@ -214,7 +232,8 @@ def _validate_cif(candidate: str) -> IdentityDocument:
 def validate_identity(candidate: object) -> IdentityDocument:
     """Parse and check-letter-validate a Spanish identity document.
 
-    Disambiguates by leading character: ``X``/``Y``/``Z`` route to NIE,
+    Disambiguates by leading character: ``K``/``L``/``M`` route to prefixed
+    NIF, ``X``/``Y``/``Z`` route to NIE,
     leading letters in :data:`_CIF_KIND_LETTERS` route to CIF, and
     everything else is attempted as NIF. The check-letter / check-digit
     algorithm is then applied for the chosen shape and the parsed
@@ -241,8 +260,10 @@ def validate_identity(candidate: object) -> IdentityDocument:
     normalised = candidate.strip().upper().replace("-", "").replace(" ", "")
     if not normalised:
         raise IdentityError(translated_message="errors.identity.document_empty")
-    # Try NIE first (it has the unambiguous X/Y/Z prefix); then CIF
-    # (also unambiguous on its leading letter set); then NIF.
+    # Try prefixed NIF and NIE first (they have unambiguous prefixes);
+    # then CIF (also unambiguous on its leading letter set); then NIF.
+    if normalised[0] in "KLM":
+        return _validate_prefixed_nif(normalised)
     if normalised[0] in "XYZ":
         return _validate_nie(normalised)
     if normalised[0] in _CIF_KIND_LETTERS:

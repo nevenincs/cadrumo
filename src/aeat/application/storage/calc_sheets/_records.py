@@ -263,7 +263,7 @@ class SheetRowSetColumn(BaseModel):
     binding: BindingId
     header_address: SheetCellAddress
     header_label: str = Field(min_length=1)
-    legal_refs: tuple[str, ...] = ()
+    legal_refs: tuple[str, ...] = Field(min_length=1)
 
 
 class SheetRowSet(BaseModel):
@@ -294,8 +294,8 @@ class SheetRowSet(BaseModel):
     header_row: int = Field(ge=1)
     first_data_row: int = Field(ge=2)
     columns: tuple[SheetRowSetColumn, ...] = Field(min_length=1)
-    legal_refs: tuple[str, ...] = ()
-    source_refs: tuple[str, ...] = ()
+    legal_refs: tuple[str, ...] = Field(min_length=1)
+    source_refs: tuple[str, ...] = Field(min_length=1)
 
 
 class SheetProtectedRange(BaseModel):
@@ -519,8 +519,8 @@ class SheetEvidenceContributorRow(BaseModel):
     counterparty: str | None = None
     attachment_ids: tuple[str, ...] = ()
     document_link_ids: tuple[str, ...] = ()
-    legal_refs: tuple[str, ...] = ()
-    source_refs: tuple[str, ...] = ()
+    legal_refs: tuple[str, ...] = Field(min_length=1)
+    source_refs: tuple[str, ...] = Field(min_length=1)
 
 
 class SheetEvidenceManualEntry(BaseModel):
@@ -532,8 +532,8 @@ class SheetEvidenceManualEntry(BaseModel):
     value: str = Field(min_length=1)
     kind: str = Field(min_length=1)
     note: str = ""
-    legal_refs: tuple[str, ...] = ()
-    source_refs: tuple[str, ...] = ()
+    legal_refs: tuple[str, ...] = Field(min_length=1)
+    source_refs: tuple[str, ...] = Field(min_length=1)
 
 
 class SheetEvidenceFacet(BaseModel):
@@ -689,8 +689,8 @@ class RelationValue(BaseModel):
     source_filing_year: int | None = Field(default=None, ge=2000, le=2099)
     source_periods: tuple[str, ...] = ()
     source_casilla_ids: tuple[CasillaId, ...] = ()
-    legal_refs: tuple[LegalRefId, ...] = ()
-    source_refs: tuple[SourceRefId, ...] = ()
+    legal_refs: tuple[LegalRefId, ...] = Field(min_length=1)
+    source_refs: tuple[SourceRefId, ...] = Field(min_length=1)
     resolved_at: datetime | None = None
     note: str | None = None
 

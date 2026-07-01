@@ -109,29 +109,30 @@ def test_binding_selector_registry_covers_typed_sources() -> None:
     """The discriminator registry must enumerate every map-backed typed selector."""
 
     expected = {
-        "previous_filing",
-        "relation_prefill",
+        BindingSourceKind.PREVIOUS_FILING,
+        BindingSourceKind.RELATION_PREFILL,
         # counterpart-aggregation family shares _InvoiceSelector
-        "ledger_transaction",
-        "purchase_invoice_evidence",
-        "payable_invoice",
-        "collectible_invoice",
-        "ledger_oss_aggregation",
-        "ledger_iva_aggregation",
-        "ledger_renta_expense_aggregation",
-        "ledger_renta_income_aggregation",
-        "ledger_renta_gasto_aggregation",
-        "retenciones_aggregation",
-        "withholding",
-        "related_party_operation",
-        "foreign_asset",
-        "atribucion_member",
-        "refund_operation",
-        "manual_input",
-        "profile",
-        "iva_compensation_annual_partition",
+        BindingSourceKind.LEDGER_TRANSACTION,
+        BindingSourceKind.PURCHASE_INVOICE_EVIDENCE,
+        BindingSourceKind.PAYABLE_INVOICE,
+        BindingSourceKind.COLLECTIBLE_INVOICE,
+        BindingSourceKind.LEDGER_OSS_AGGREGATION,
+        BindingSourceKind.LEDGER_IVA_AGGREGATION,
+        BindingSourceKind.LEDGER_RENTA_EXPENSE_AGGREGATION,
+        BindingSourceKind.LEDGER_RENTA_INCOME_AGGREGATION,
+        BindingSourceKind.LEDGER_RENTA_GASTO_AGGREGATION,
+        BindingSourceKind.RETENCIONES_AGGREGATION,
+        BindingSourceKind.WITHHOLDING,
+        BindingSourceKind.RELATED_PARTY_OPERATION,
+        BindingSourceKind.FOREIGN_ASSET,
+        BindingSourceKind.ATRIBUCION_MEMBER,
+        BindingSourceKind.REFUND_OPERATION,
+        BindingSourceKind.MANUAL_INPUT,
+        BindingSourceKind.PROFILE,
+        BindingSourceKind.IVA_COMPENSATION_ANNUAL_PARTITION,
     }
     assert set(_BINDING_SELECTOR_REGISTRY) == expected
+    assert all(isinstance(source, BindingSourceKind) for source in _BINDING_SELECTOR_REGISTRY)
 
 
 def test_construction_gate_dispatches_through_selector_model_for_source() -> None:

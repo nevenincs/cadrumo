@@ -398,6 +398,11 @@ def test_verify_grants_when_required_casillas_supplied_m130(repos: _Repos) -> No
     assert verified.ledger_filing_evidence is not None
     assert verified.ledger_filing_evidence.snapshot_fingerprint == verified.ledger_filing_snapshot.snapshot_fingerprint
     assert {entry.casilla_id for entry in verified.ledger_filing_evidence.manual_entries} >= set(casilla_inputs)
+    assert all(row.legal_refs and row.source_refs for row in verified.ledger_filing_evidence.rows)
+    assert all(
+        entry.legal_refs and entry.source_refs
+        for entry in verified.ledger_filing_evidence.manual_entries
+    )
 
 
 def test_tampered_revision_raises_drift_error(repos: _Repos) -> None:

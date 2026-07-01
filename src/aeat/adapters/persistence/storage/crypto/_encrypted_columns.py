@@ -144,23 +144,6 @@ def decrypt_encrypted_bytes_column(wire: bytes) -> bytes:
     return decrypt_record(blob, key=key, associated_data=_AAD_BYTES)
 
 
-def decrypt_encrypted_string_column(wire: bytes) -> str:
-    """Decrypt one ``EncryptedString`` on-wire payload.
-
-    New lookup columns should use :class:`HashedLookup`; the
-    secure-object repository uses this helper only to migrate rows
-    written by the randomized ``object_key`` mapper into
-    deterministic lookup digests.
-    """
-    blob = EncryptedBlob.from_wire(wire)
-    key = _resolve_master_key()
-    plaintext = decrypt_record(blob, key=key, associated_data=_AAD_STRING)
-    try:
-        return plaintext.decode("utf-8")
-    except UnicodeDecodeError as exc:
-        raise DecryptionError("EncryptedString payload is not valid UTF-8") from exc
-
-
 _HASHED_LOOKUP_DIGEST_SIZE = 32
 """HMAC-SHA256 digest size in bytes."""
 

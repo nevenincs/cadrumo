@@ -46,6 +46,8 @@ _EVIDENCE_INPUT_CASILLA: CasillaId = validated_casilla_id(
     "0001",
     surface="snapshot evidence coverage input casilla",
 )
+_LEGAL_REFS = ("ley-37-1992:art-99",)
+_SOURCE_REFS = ("boe-modelo-303-2025-form",)
 
 
 def _evidence_row(transaction_id: str) -> LedgerEvidenceRow:
@@ -58,6 +60,8 @@ def _evidence_row(transaction_id: str) -> LedgerEvidenceRow:
         direction="incoming",
         business_classification="business",
         lifecycle_state="confirmed",
+        legal_refs=_LEGAL_REFS,
+        source_refs=_SOURCE_REFS,
     )
 
 

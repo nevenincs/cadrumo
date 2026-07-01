@@ -6,6 +6,7 @@ import json
 
 import pytest
 
+from ....core.resources import resources
 from ....tests.cli_runner import invoke_cached_cli
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
@@ -51,19 +52,23 @@ def test_casillas_command_respects_language_flag(
 def test_casillas_command_explain_option_displays_localized_help() -> None:
     """Invoking casillas with `--explain` includes the help/hint column with translations."""
     result = invoke_cached_cli(
-        ["--language", "en", "app", "modelo", "casillas", "130", "--explain"],
+        ["--language", "en", "app", "modelo", "casillas", "130", "--year", "2026", "--period", "1T", "--explain"],
         env=_NO_FORCED_LANGUAGE_ENV,
     )
     assert result.exit_code == 0, result.output
     assert "help" in result.output
+    assert "legal_refs" in result.output
+    assert "source_refs" in result.output
     assert "Total cumulative business income for the tax year." in result.output
     assert "Total cumulative business expenses for the tax year." in result.output
+    assert "rd-439-2007:art-110" in result.output
+    assert "aeat-modelo-130-instructions" in result.output
 
 
 def test_casillas_json_envelope_carries_localized_attributes() -> None:
     """JSON output for casillas carries raw translation dictionaries in the envelope."""
     result = invoke_cached_cli(
-        ["--format", "json", "app", "modelo", "casillas", "130"],
+        ["--format", "json", "app", "modelo", "casillas", "130", "--year", "2026", "--period", "1T"],
         env=_NO_FORCED_LANGUAGE_ENV,
     )
     assert result.exit_code == 0, result.output
@@ -73,9 +78,13 @@ def test_casillas_json_envelope_carries_localized_attributes() -> None:
 
     rows = parsed["result"]["rows"]
     row_01 = next(r for r in rows if r["casilla_id"] == "01")
+    snapshot = resources().modelos.authority.snapshot("130", filing_year=2026, period="1T")
+    casilla_01 = next(casilla for casilla in snapshot.revision.casillas if casilla.id == "01")
 
     assert row_01["localized_labels"]["en"] == "Income"
     assert row_01["localized_labels"]["ca"] == "Ingressos"
     assert row_01["localized_labels"]["hu"] == "Bevételek"
 
     assert "Total cumulative business income for the tax year." in row_01["localized_help"]["en"]
+    assert row_01["legal_refs"] == [str(ref) for ref in casilla_01.legal_refs]
+    assert row_01["source_refs"] == [str(ref) for ref in casilla_01.source_refs]

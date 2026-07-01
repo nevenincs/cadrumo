@@ -1,7 +1,7 @@
 """Unit tests for :func:`aeat.domain.iva.classify_iva`.
 
-Walks every closed-table rule (R01 through R30) plus the R99 fallthrough,
-verifies the cross-field ``rate_tier`` requirements on
+Walks the closed-table rules plus the R99 fallthrough, verifies the cross-field
+``rate_tier`` requirements on
 :class:`aeat.domain.iva.IvaInvoiceClassificationCriteria`, and checks that rate
 resolution honours the transaction date.
 """
@@ -165,18 +165,18 @@ def test_r13_services_b2b_eu_inbound_reverse_charge() -> None:
     assert result.matched_rule_id == "R13_services_b2b_eu_inbound"
 
 
-def test_r14_digital_b2c_oss() -> None:
+def test_r19_oss_union_services() -> None:
     result = classify_iva(
         _criteria(
             customer_residency=IvaTerritorialScope.EU_MEMBER,
             customer_member_state=EUMemberState.IT,
             customer_tax_status=CustomerTaxStatus.B2C_CONSUMER,
-            kind=TransactionKind.SERVICES_DIGITAL_B2C_OSS,
+            kind=TransactionKind.OSS_UNION_SERVICES,
             direction=InvoiceKind.ISSUED,
         ),
     )
     assert result.category is IvaCategory.DOMESTIC_NOT_SUBJECT
-    assert result.matched_rule_id == "R14_digital_b2c_oss"
+    assert result.matched_rule_id == "R19_oss_union_services"
 
 
 def test_r20_export_goods() -> None:

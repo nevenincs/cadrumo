@@ -40,6 +40,8 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _TARGET_YEAR = 2026
 _M202_SOURCE_CASILLA_03: CasillaId = validated_casilla_id("03", surface="_M202_SOURCE_CASILLA_03")
+_M202_REQUIREMENT_LEGAL_REFS = ("ley-27-2014:art-40",)
+_M202_REQUIREMENT_SOURCE_REFS = ("aeat-modelo-202-instructions",)
 
 
 def _requirement(
@@ -55,6 +57,8 @@ def _requirement(
         source_casilla_ids=(_M202_SOURCE_CASILLA_03,),
         origin=CrossPeriodDependencyOrigin.PREVIOUS_FILING_BINDING,
         origin_ids=(f"binding-{source_modelo}",),
+        legal_refs=_M202_REQUIREMENT_LEGAL_REFS,
+        source_refs=_M202_REQUIREMENT_SOURCE_REFS,
     )
 
 

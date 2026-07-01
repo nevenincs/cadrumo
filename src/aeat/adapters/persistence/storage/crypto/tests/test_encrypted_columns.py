@@ -22,7 +22,7 @@ from ...errors import DecryptionError, StorageValidationError
 from ...master_key import EphemeralMasterKeyProvider
 from .. import KEY_SIZE, EncryptedBytes, EncryptedJSON, EncryptedPayload, EncryptedString, HashedLookup
 from .._crypto import encrypt_record
-from .._encrypted_columns import _AAD_JSON, _AAD_STRING, decrypt_encrypted_string_column
+from .._encrypted_columns import _AAD_JSON, _AAD_STRING
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 
@@ -208,16 +208,6 @@ class TestCrossTypeReplayPrevention:
             session.execute(
                 select(_CryptoRow.secret_bytes).where(_CryptoRow.secret_bytes.is_not(None)),
             ).all()
-
-    def test_legacy_string_helper_rejects_invalid_utf8_plaintext(self, fixed_master_key: bytes) -> None:
-        wire = encrypt_record(
-            b"\xff\xfe",
-            key=fixed_master_key,
-            associated_data=_AAD_STRING,
-        ).to_wire()
-
-        with pytest.raises(DecryptionError):
-            decrypt_encrypted_string_column(wire)
 
     def test_encrypted_string_result_rejects_invalid_utf8(self, engine: Engine, fixed_master_key: bytes) -> None:
         wire = encrypt_record(

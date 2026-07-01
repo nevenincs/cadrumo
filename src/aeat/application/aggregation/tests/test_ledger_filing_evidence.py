@@ -64,6 +64,8 @@ def _casilla_id(value: object) -> CasillaId:
 
 _MANUAL_FACT_CASILLA: CasillaId = _casilla_id("00501")
 _REVISION_CASILLA: CasillaId = _casilla_id("01")
+_LEGAL_REFS = ("ley-37-1992:art-99",)
+_SOURCE_REFS = ("boe-modelo-303-2025-form",)
 
 
 def _txn() -> Transaction:
@@ -117,7 +119,16 @@ def test_capture_projects_tax_facts_and_binds_fingerprint() -> None:
         catalogue=catalogue,
         snapshot_fingerprint=snapshot.snapshot_fingerprint,
         captured_at=_NOW,
-        manual_entries=(ManualFactBasisEntry(casilla_id=_MANUAL_FACT_CASILLA, value="140000.00"),),
+        legal_refs=_LEGAL_REFS,
+        source_refs=_SOURCE_REFS,
+        manual_entries=(
+            ManualFactBasisEntry(
+                casilla_id=_MANUAL_FACT_CASILLA,
+                value="140000.00",
+                legal_refs=_LEGAL_REFS,
+                source_refs=_SOURCE_REFS,
+            ),
+        ),
     )
     assert evidence.snapshot_fingerprint == snapshot.snapshot_fingerprint
     assert len(evidence.rows) == 1
@@ -190,8 +201,16 @@ def test_evidence_roundtrips_through_encrypted_revision(_objects: SecureObjectRe
         catalogue=catalogue,
         snapshot_fingerprint=snapshot.snapshot_fingerprint,
         captured_at=_NOW,
+        legal_refs=_LEGAL_REFS,
+        source_refs=_SOURCE_REFS,
         manual_entries=(
-            ManualFactBasisEntry(casilla_id=_MANUAL_FACT_CASILLA, value="140000.00", note="resultado contable"),
+            ManualFactBasisEntry(
+                casilla_id=_MANUAL_FACT_CASILLA,
+                value="140000.00",
+                note="resultado contable",
+                legal_refs=_LEGAL_REFS,
+                source_refs=_SOURCE_REFS,
+            ),
         ),
     )
     original = _revision_with_evidence(evidence=evidence, tx_id=txn.transaction_id)
@@ -239,6 +258,8 @@ def test_no_silent_omission_guard_refuses_uncovered_evidence() -> None:
         catalogue=catalogue,
         snapshot_fingerprint=snapshot.snapshot_fingerprint,
         captured_at=_NOW,
+        legal_refs=_LEGAL_REFS,
+        source_refs=_SOURCE_REFS,
     )
     _assert_evidence_covers_snapshot(snapshot, good)  # no raise
 
@@ -267,8 +288,8 @@ def test_evidence_row_strict_json_roundtrip_all_fields() -> None:
         counterparty="Proveedor SL",
         description="Compra",
         attachment_ids=("att-1",),
-        legal_refs=("lis-art-1",),
-        source_refs=("boe-1",),
+        legal_refs=_LEGAL_REFS,
+        source_refs=_SOURCE_REFS,
     )
     back = LedgerEvidenceRow.model_validate_json(row.model_dump_json())
     assert back == row

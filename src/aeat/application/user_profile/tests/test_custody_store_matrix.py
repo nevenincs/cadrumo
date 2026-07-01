@@ -993,6 +993,23 @@ def test_every_carried_store_round_trips_through_recovery(
     for case in _CASES:
         case.seed(bucket_id)
 
+    # Also populate a deliberately-excluded PROCESS_LOCAL store (as a real bucket
+    # does: workflow/credential state) so the full export proves it tolerates an
+    # excluded-but-populated namespace end to end rather than failing the gate.
+    from ....core.classification import SensitivityClass
+
+    source_runtime.repository.save(
+        namespace="aeat.workflow",
+        object_key="state",
+        classification=SensitivityClass.FINANCIAL,
+        schema_version=1,
+        written_at=_NOW,
+        payload=(
+            b'{"schema_version":1,"written_at":"2026-06-30T00:00:00Z",'
+            b'"classification":"financial","payload":{}}'
+        ),
+    )
+
     archive = tmp_path / "exports" / "matrix.aeat-bucket.tar.gz"
     BucketMaintenanceService().export(
         ExportBucketCommand(bucket_id=bucket_id, output_path=archive, recovery_wrap_passphrase=_RECOVERY),

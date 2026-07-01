@@ -64,7 +64,7 @@ class Topic(BaseModel):
     title_key: str = Field(min_length=1, max_length=128)
     body_key: str = Field(min_length=1, max_length=128)
     see_also: tuple[str, ...] = Field(default=())
-    legal_refs: tuple[str, ...] = Field(default=())
+    legal_refs: tuple[str, ...] = Field(min_length=1)
 
 
 class TopicCatalogue(BaseModel):
