@@ -161,42 +161,31 @@ def test_setup_answers_minimal_valid() -> None:
     assert sa.output_language == "es"
 
 
-@pytest.mark.parametrize(
-    ("field", "token", "expected"),
-    (
-        pytest.param("iva_regime", "GENERAL", "IVARegime.GENERAL", id="iva-regime"),
-        pytest.param("entity_type", "natural_person", "EntityType.NATURAL_PERSON", id="entity-type"),
-    ),
-)
-def test_setup_answers_string_enum_coercion(field: str, token: str, expected: str) -> None:
+def test_setup_answers_string_enum_coercion() -> None:
     """SetupAnswers coerces known string tokens to their enum members."""
     from ...domain.deadlines._models import EntityType, IVARegime
     from ..setup_answers import SetupAnswers
 
-    expected_member = {
-        "IVARegime.GENERAL": IVARegime.GENERAL,
-        "EntityType.NATURAL_PERSON": EntityType.NATURAL_PERSON,
-    }[expected]
+    for field, token, expected_member in (
+        ("iva_regime", "GENERAL", IVARegime.GENERAL),
+        ("entity_type", "natural_person", EntityType.NATURAL_PERSON),
+    ):
+        sa = SetupAnswers(tax_id="12345678A", **{field: token})
+        assert getattr(sa, field) == expected_member
 
-    sa = SetupAnswers(tax_id="12345678A", **{field: token})
-    assert getattr(sa, field) == expected_member
 
-
-@pytest.mark.parametrize(
-    "invalid_field",
-    (
-        pytest.param({"iva_regime": "NOT_A_REGIME"}, id="iva-regime"),
-        pytest.param({"activity_start_date": "31-12-2024"}, id="activity-start-date"),
-    ),
-)
-def test_setup_answers_invalid_fields_raise(invalid_field: dict[str, str]) -> None:
+def test_setup_answers_invalid_fields_raise() -> None:
     """SetupAnswers rejects malformed enum and date field values."""
     import pydantic
 
     from ..setup_answers import SetupAnswers
 
-    with pytest.raises(pydantic.ValidationError):
-        SetupAnswers(tax_id="12345678A", **invalid_field)
+    for invalid_field in (
+        {"iva_regime": "NOT_A_REGIME"},
+        {"activity_start_date": "31-12-2024"},
+    ):
+        with pytest.raises(pydantic.ValidationError):
+            SetupAnswers(tax_id="12345678A", **invalid_field)
 
 
 def test_setup_answers_valid_date_accepted() -> None:

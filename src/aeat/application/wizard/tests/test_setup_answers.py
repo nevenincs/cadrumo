@@ -41,9 +41,8 @@ def test_wizard_answer_type_error_round_trips_through_build_error_envelope() -> 
 # ── Per-field real coercion raises (public model boundary) ────────────────────
 
 
-@pytest.mark.parametrize(
-    ("field_name", "invalid_value", "message"),
-    (
+def test_setup_answer_model_rejects_invalid_answer_types() -> None:
+    for field_name, invalid_value, message in (
         ("iva_regime", 42, "iva_regime"),
         ("entity_type", 42, "entity_type"),
         ("legal_entity_form", 42, "legal_entity_form"),
@@ -63,12 +62,6 @@ def test_wizard_answer_type_error_round_trips_through_build_error_envelope() -> 
         ("taxpayer_disability_grade", 42, "disability grade"),
         ("spouse_disability_grade", object(), "disability grade"),
         ("tax_residence_ccaa", 42, "tax_residence_ccaa"),
-    ),
-)
-def test_setup_answer_model_rejects_invalid_answer_types(
-    field_name: str,
-    invalid_value: object,
-    message: str,
-) -> None:
-    with pytest.raises(ValidationError, match=message):
-        SetupAnswers.model_validate({"tax_id": "00000000T", field_name: invalid_value})
+    ):
+        with pytest.raises(ValidationError, match=message):
+            SetupAnswers.model_validate({"tax_id": "00000000T", field_name: invalid_value})

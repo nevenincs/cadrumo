@@ -23,19 +23,19 @@ _SUPPORTED_LOCALES: tuple[str, ...] = ("en", "es", "ca", "hu")
 _FLOW_DESCRIPTION_KEYS: frozenset[str] = frozenset(f"wizard.{flow.id}.description" for flow in WIZARD_FLOWS)
 
 
-@pytest.mark.parametrize("locale", _SUPPORTED_LOCALES)
-@pytest.mark.parametrize("key", sorted(_FLOW_DESCRIPTION_KEYS))
-def test_wizard_flow_description_key_resolves(key: str, locale: str) -> None:
-    """Assert the wizard flow description key resolves to a real string.
+def test_wizard_flow_description_key_resolves() -> None:
+    """Assert each wizard flow description key resolves to a real string.
 
     A self-referencing placeholder (resolved == key) means the key is
     absent from the catalogue — this would render as the raw dotted key
     in the CLI ``--help`` output.
     """
-    resolved = tr(key, locale=locale)
-    assert resolved != key, (
-        f"Wizard flow description key {key!r} is absent from the {locale!r} catalogue "
-        f"(resolved to self-referencing placeholder {resolved!r}). "
-        f"Add a translation via `python -m aeat.locales set {locale} {key!r} <value>`."
-    )
-    assert resolved, f"Wizard flow description key {key!r} resolved to empty string in {locale!r}."
+    for key in sorted(_FLOW_DESCRIPTION_KEYS):
+        for locale in _SUPPORTED_LOCALES:
+            resolved = tr(key, locale=locale)
+            assert resolved != key, (
+                f"Wizard flow description key {key!r} is absent from the {locale!r} catalogue "
+                f"(resolved to self-referencing placeholder {resolved!r}). "
+                f"Add a translation via `python -m aeat.locales set {locale} {key!r} <value>`."
+            )
+            assert resolved, f"Wizard flow description key {key!r} resolved to empty string in {locale!r}."

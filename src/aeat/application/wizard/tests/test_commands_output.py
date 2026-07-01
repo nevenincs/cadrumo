@@ -50,16 +50,7 @@ def test_wizard_success_text_accepts_non_resident_next_step(capsys: pytest.Captu
     assert "next\taeat app modelo work create" not in output
 
 
-@pytest.mark.parametrize(
-    ("mode", "command_path"),
-    [
-        pytest.param("create", "config.profile.create", id="create"),
-        pytest.param("edit", "config.profile.edit", id="edit"),
-    ],
-)
 def test_wizard_success_json_emits_shared_spine_and_next_step_notice(
-    mode: WizardPersistMode,
-    command_path: str,
     capsys: pytest.CaptureFixture[str],
     _json_context: None,
 ) -> None:
@@ -76,21 +67,27 @@ def test_wizard_success_json_emits_shared_spine_and_next_step_notice(
     gate; this application-layer test asserts the runtime emit contract
     without reaching up into the entrypoints registry.)
     """
-    _emit_wizard_success(mode, "probe-profile")
+    cases: tuple[tuple[WizardPersistMode, str], ...] = (
+        ("create", "config.profile.create"),
+        ("edit", "config.profile.edit"),
+    )
 
-    document = json.loads(capsys.readouterr().out)
+    for mode, command_path in cases:
+        _emit_wizard_success(mode, "probe-profile")
 
-    assert set(document) == {"schema_version", "command", "status", "result", "notices"}
-    assert document["command"] == command_path
-    assert document["status"] == "success"
+        document = json.loads(capsys.readouterr().out)
 
-    result = document["result"]
-    assert "next" not in result
-    assert "suggestion" not in result
+        assert set(document) == {"schema_version", "command", "status", "result", "notices"}
+        assert document["command"] == command_path
+        assert document["status"] == "success"
 
-    notices = document["notices"]
-    assert len(notices) == 1
-    notice = notices[0]
-    assert notice["severity"] == "info"
-    assert notice["code"] == f"{command_path}.next_step"
-    assert notice["suggestion"] == "aeat app modelo work create"
+        result = document["result"]
+        assert "next" not in result
+        assert "suggestion" not in result
+
+        notices = document["notices"]
+        assert len(notices) == 1
+        notice = notices[0]
+        assert notice["severity"] == "info"
+        assert notice["code"] == f"{command_path}.next_step"
+        assert notice["suggestion"] == "aeat app modelo work create"

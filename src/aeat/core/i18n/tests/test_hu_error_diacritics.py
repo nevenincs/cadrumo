@@ -77,18 +77,13 @@ _CASES: list[tuple[str, dict[str, object], tuple[str, ...], tuple[str, ...]]] = 
 ]
 
 
-@pytest.mark.parametrize(("key", "kwargs", "must_contain", "must_not_contain"), _CASES)
-def test_hu_error_strings_render_with_diacritics(
-    key: str,
-    kwargs: dict[str, object],
-    must_contain: tuple[str, ...],
-    must_not_contain: tuple[str, ...],
-) -> None:
+def test_hu_error_strings_render_with_diacritics() -> None:
     """The corrected Hungarian error strings render with proper diacritics."""
-    with override_settings(aeat_output_language="hu"):
-        rendered = tr(key, **kwargs)
+    for key, kwargs, must_contain, must_not_contain in _CASES:
+        with override_settings(aeat_output_language="hu"):
+            rendered = tr(key, **kwargs)
 
-    for fragment in must_contain:
-        assert fragment in rendered, f"{key}: missing accented fragment {fragment!r} in {rendered!r}"
-    for fragment in must_not_contain:
-        assert fragment not in rendered, f"{key}: ASCII-folded fragment {fragment!r} re-appeared in {rendered!r}"
+        for fragment in must_contain:
+            assert fragment in rendered, f"{key}: missing accented fragment {fragment!r} in {rendered!r}"
+        for fragment in must_not_contain:
+            assert fragment not in rendered, f"{key}: ASCII-folded fragment {fragment!r} re-appeared in {rendered!r}"

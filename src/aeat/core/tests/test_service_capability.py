@@ -27,18 +27,15 @@ def test_capability_schema_paths_are_dotted_under_capabilities() -> None:
         assert capability.schema_path == f"capabilities.{capability.value}"
 
 
-@pytest.mark.parametrize(
-    ("capability", "expected"),
-    (
-        pytest.param(ServiceCapability.CLOUD_EVIDENCE_UPLOAD, False, id="cloud-evidence-upload"),
-        pytest.param(ServiceCapability.LLM_VISION, True, id="llm-vision"),
-        pytest.param(ServiceCapability.GOOGLE_EXPORT, True, id="google-export"),
-    ),
-)
-def test_default_posture_is_conservative_for_cloud_only(capability: ServiceCapability, expected: bool) -> None:
+def test_default_posture_is_conservative_for_cloud_only() -> None:
     # Cloud evidence upload (the regulated, sensitive path) defaults OFF; the
     # on-host / offline-capable capabilities default ON.
-    assert capability.default_enabled is expected
+    for capability, expected in (
+        (ServiceCapability.CLOUD_EVIDENCE_UPLOAD, False),
+        (ServiceCapability.LLM_VISION, True),
+        (ServiceCapability.GOOGLE_EXPORT, True),
+    ):
+        assert capability.default_enabled is expected
 
 
 def test_every_capability_has_a_boolean_schema_field() -> None:

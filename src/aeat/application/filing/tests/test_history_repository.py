@@ -152,14 +152,11 @@ class TestClassificationGate:
 
 
 class TestUnsafeModelo:
-    @pytest.mark.parametrize(
-        "bad",
-        ["", "..", ".", ".hidden", "../escape", "a/b", "a\\b"],
-    )
-    def test_unsafe_modelo_rejected(self, bad: str) -> None:
+    def test_unsafe_modelo_rejected(self) -> None:
         repo = ModeloHistoryRepository()
-        with pytest.raises(ValueError):
-            repo.envelope_path_for(bad)
+        for bad in ("", "..", ".", ".hidden", "../escape", "a/b", "a\\b"):
+            with pytest.raises(ValueError):
+                repo.envelope_path_for(bad)
 
 
 class TestPerModeloLockIsolation:
