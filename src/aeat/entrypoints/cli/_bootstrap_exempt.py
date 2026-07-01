@@ -57,6 +57,9 @@ BOOTSTRAP_EXEMPT_VERB_PATHS: tuple[str, ...] = (
     # Diagnostic surface: must operate without a session so the
     # operator can recover from a torn workspace.
     "config repair",
+    # Bundled-registry discovery: lists public modelo metadata and must stay
+    # reachable before a profile has been unlocked.
+    "app modelo list",
     # Engineer surface: lives under a separate module entrypoint
     # and is not bound by the session-gate either, but the
     # registry includes it explicitly so the active-gate check at
