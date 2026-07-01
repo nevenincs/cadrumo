@@ -32,7 +32,7 @@ Author the LIS Disposicion Adicional Decimocuarta legal-catalogue entry and cons
 
 Add real-behaviour canary tests that assert the three documented non-guards (M202 c33 minimo, M714 base-imponible to base-liquidable, M714 total-cuota-integra to cuota-a-ingresar) remain unguarded, each citing the residuals research by name so a future prerequisite landing is forced to revisit the decision.
 
-- [ ] `P02.S02` - Add canary tests pinning the three documented non-guards, each citing the residuals research by name; `src/aeat/domain/calculations/registry/tests/test_modelo_202_registry.py, src/aeat/domain/calculations/registry/tests/test_modelo_714_registry.py`.
+- [x] `P02.S02` - Add canary tests pinning the three documented non-guards, each citing the residuals research by name; `src/aeat/domain/calculations/registry/tests/test_modelo_202_registry.py, src/aeat/domain/calculations/registry/tests/test_modelo_714_registry.py`.
 
 ## Description
 
