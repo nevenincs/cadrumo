@@ -1,13 +1,15 @@
 """Anthropic Messages API adapter for the LLM outbound port.
 
-Implements the :class:`aeat.adapters.outbound.llm._providers.base._ProviderAdapter`
-contract by translating a normalized :class:`aeat.adapters.outbound.llm._providers.base.ProviderRequest`
-into an :class:`anthropic.AsyncAnthropic` ``messages.create`` call and
-converting the response (or any provider error) into the substrate's
-typed completion / error envelope. Network I/O is async; all SDK
-exceptions are mapped to :exc:`aeat.adapters.outbound.llm._errors.LLMProviderError`,
-:exc:`aeat.adapters.outbound.llm._errors.LLMRateLimitError`, or
-:exc:`aeat.adapters.outbound.llm._errors.LLMConfigError`.
+Implements the
+:class:`~aeat.adapters.outbound.llm._providers.base._ProviderAdapter` contract
+by translating a normalized
+:class:`~aeat.adapters.outbound.llm._providers.base.ProviderRequest` into an
+:class:`anthropic.AsyncAnthropic` ``messages.create`` call and converting the
+response (or any provider error) into the substrate's typed completion / error
+envelope. Network I/O is async; all SDK exceptions are mapped to
+:exc:`~aeat.adapters.outbound.llm.LLMProviderError`,
+:exc:`~aeat.adapters.outbound.llm.LLMRateLimitError`, or
+:exc:`~aeat.adapters.outbound.llm.LLMConfigError`.
 """
 
 from __future__ import annotations
@@ -72,8 +74,8 @@ class AnthropicAdapter(_ProviderAdapter):
     factory.
 
     Attributes:
-        provider: The :class:`aeat.adapters.outbound.llm._models.LLMProvider`
-            tag selecting this adapter.
+        provider: The :class:`~aeat.adapters.outbound.llm.LLMProvider` tag
+            selecting this adapter.
     """
 
     provider = LLMProvider.ANTHROPIC
@@ -83,7 +85,7 @@ class AnthropicAdapter(_ProviderAdapter):
 
         Args:
             api_key: Anthropic API key. Empty string raises
-                :exc:`aeat.adapters.outbound.llm._errors.LLMConfigError`.
+                :exc:`~aeat.adapters.outbound.llm.LLMConfigError`.
             timeout_s: Default per-request timeout passed to the SDK.
 
         Raises:
