@@ -108,6 +108,7 @@ Already know the workflow? Go straight to the reference you need:
 
 how-to/index
 tutorials/index
+runbooks/index
 ```
 
 ```{toctree}
