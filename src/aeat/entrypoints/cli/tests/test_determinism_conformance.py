@@ -9,19 +9,22 @@ pytest warning enumerating the uncovered set) rather than silently passing, so t
 axis grows deliberately. The enrolled set only ratchets up: a stale enrolment (a
 command that no longer registers) fails loudly.
 
-The ledger-add retried-no-op is the first enrolled state-transition case: its
-envelope replays byte-identical, and the substrate optional ``db_sha256``
-post-state tier is identical after the idempotent second add against a hermetic
-synthetic ``var/`` root — the concrete proof that the clock-free idempotency id is
-a true no-op. The axis owns only payload-and-post-state determinism; the harness
-operator golden gate layers AEAT-oracle expected-value and trajectory assertions
-on top.
+Two commands are enrolled. The ledger-add retried-no-op is the state-transition
+case: its envelope replays byte-identical, and the bucket's committed at-rest
+fingerprint (the substrate's ``read_db_at_rest_bytes`` over the main ``.db`` plus
+committed ``-wal``, omitting the volatile ``-shm`` read-index) is identical after
+the idempotent second add against a hermetic synthetic ``var/`` root — the
+concrete proof the clock-free idempotency id is a true no-op. The ledger-evidence
+add is the D1 golden case: its ``--format json`` envelope is byte-identical across
+two fresh-bucket runs, with zero residual differing fields, proving the
+content-addressed ``evidence_id`` needs no mask. The axis owns only
+payload-and-post-state determinism; the harness operator golden gate layers
+AEAT-oracle expected-value and trajectory assertions on top.
 """
 
 from __future__ import annotations
 
 import io
-import shutil
 import warnings
 from datetime import UTC, date, datetime
 from decimal import Decimal
@@ -31,23 +34,25 @@ import pytest
 
 from ....application.ledger import (
     ManualLedgerTransactionCommand,
+    PurchaseInvoiceEvidenceService,
     create_manual_transaction,
     ledger_transaction_payload,
     ledger_transaction_review_status,
 )
+from ....core.hashing import sha256_hex
 from ....core.json_contract import SCHEMA_REGISTRY, Notice, NoticeSeverity, emit_json_success
 from ....core.observability import (
     canonicalise,
     capture_envelopes,
-    compute_db_sha256,
+    differing_field_names,
     differing_paths,
     mask_document,
 )
 from ....core.time import frozen_clock
 from ....domain.buckets import BucketEventHistoryRepository
 from ....domain.transactions import TransactionCatalogueRepository, TransactionDirection
-from ....tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
-from .._ledger_payloads import LedgerAddResult
+from ....tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile, read_db_at_rest_bytes
+from .._ledger_payloads import EvidenceAddResult, LedgerAddResult
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -57,7 +62,7 @@ _BUCKET = "28282828-2828-4828-8828-282828282828"
 #: Opt-in enrolment of replayable ``--format json`` commands. Grows deliberately;
 #: every entry MUST be a registered command (enforced below) and MUST have a
 #: determinism proof in this module.
-ENROLLED_REPLAYABLE_COMMANDS: frozenset[str] = frozenset({"ledger.add"})
+ENROLLED_REPLAYABLE_COMMANDS: frozenset[str] = frozenset({"ledger.add", "ledger.evidence.add"})
 
 
 def uncovered_replayable_commands() -> frozenset[str]:
@@ -65,24 +70,19 @@ def uncovered_replayable_commands() -> frozenset[str]:
     return frozenset(SCHEMA_REGISTRY) - ENROLLED_REPLAYABLE_COMMANDS
 
 
-def _committed_db_fingerprint(profile: TestRuntimeProfile, snapshot_dir: Path) -> str:
-    """Return the substrate ``compute_db_sha256`` over the bucket's committed state.
+def _committed_db_fingerprint(profile: TestRuntimeProfile) -> str:
+    """Return a SHA-256 over the bucket database's committed at-rest bytes.
 
-    Snapshots the committed database files — the main ``.db`` plus its committed
-    ``-wal`` frames — into ``snapshot_dir``, excluding the volatile ``-shm``
-    shared-memory WAL index, then fingerprints that snapshot with the substrate's
-    :func:`compute_db_sha256`. ``-shm`` carries no committed row payload and its
-    reader-marks flap on every read (not a state change), and it cannot be removed
-    in-session on Windows (its mmap handle outlives ``engine.dispose()``), so the
-    live var tree cannot be hashed directly in-process; the snapshot lets the
-    substrate fingerprint run over the committed bytes exactly as it would at a
+    Uses the substrate's own at-rest reader (:func:`read_db_at_rest_bytes`), which
+    concatenates the main ``.db`` file with its committed ``-wal`` frames and omits
+    the ``-shm`` shared-memory WAL index. ``-shm`` carries no committed row payload
+    and its reader-marks flap on every read (so it is not a state change), and it
+    cannot be reliably removed in-session on Windows (its mmap handle outlives
+    ``engine.dispose()``); this is the faithful in-session committed-state
+    fingerprint, while the whole-tree ``compute_db_sha256`` stays valid at a
     between-process replay boundary where no connection is open.
     """
-    snapshot_dir.mkdir(parents=True, exist_ok=True)
-    for source in sorted(profile.paths.db_dir.iterdir()):
-        if source.is_file() and not source.name.endswith("-shm"):
-            shutil.copy2(source, snapshot_dir / source.name)
-    return compute_db_sha256(snapshot_dir)
+    return sha256_hex(read_db_at_rest_bytes(profile.paths.db_dir / "aeat.db"))
 
 
 def _idempotent_command() -> ManualLedgerTransactionCommand:
@@ -135,6 +135,37 @@ def _emit_ledger_add(profile: TestRuntimeProfile) -> dict[str, object]:
     return sink[-1]
 
 
+def _emit_evidence_add(storage_root: Path, pdf: Path) -> dict[str, object]:
+    """Drive one real ``ledger evidence add`` in a fresh bucket and capture its envelope.
+
+    Builds the ``EvidenceAddResult`` exactly as the CLI leaf does (record dump plus
+    the ``bucket_event_ids`` appended at the emit site) and emits it through the
+    real success-envelope path under a capture sink. All storage ops stay inside one
+    ``frozen_clock`` block.
+    """
+    with isolated_runtime_profile(tmp_path=storage_root, bucket_id=_BUCKET) as profile, frozen_clock(_INSTANT):
+        service = PurchaseInvoiceEvidenceService(
+            settings=profile.settings,
+            bucket_event_repository=BucketEventHistoryRepository(objects=profile.repository),
+        )
+        result = service.add(
+            bucket_id=profile.bucket_id,
+            source_path=pdf,
+            supplier="Acme S.L.",
+            invoice_number="INV-001",
+            invoice_date="2026-01-15",
+            taxable_base=Decimal("100.00"),
+            iva_rate=Decimal("0.21"),
+            iva_amount=Decimal("21.00"),
+            notes="office supplies",
+        )
+        payload = result.record.model_dump(mode="json")
+        payload["bucket_event_ids"] = list(result.bucket_event_ids)
+        with capture_envelopes() as sink:
+            emit_json_success("ledger.evidence.add", EvidenceAddResult.model_validate(payload), stream=io.StringIO())
+        return sink[-1]
+
+
 class TestEnrolledCommandDeterminism:
     def test_ledger_add_retried_noop_envelope_replays_byte_identical(self, tmp_path: Path) -> None:
         with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET) as profile, frozen_clock(_INSTANT):
@@ -159,7 +190,7 @@ class TestEnrolledCommandDeterminism:
                 bucket_event_repository=events,
                 occurred_at=_INSTANT,
             )
-            db_after_create = _committed_db_fingerprint(profile, tmp_path / "db-snap-create")
+            db_after_create = _committed_db_fingerprint(profile)
 
             second = create_manual_transaction(
                 command,
@@ -168,12 +199,32 @@ class TestEnrolledCommandDeterminism:
                 occurred_at=_INSTANT,
             )
             assert second.bucket_event_ids == ()  # the guarded-idempotent no-op signal
-            db_after_retry = _committed_db_fingerprint(profile, tmp_path / "db-snap-retry")
+            db_after_retry = _committed_db_fingerprint(profile)
 
         # The idempotent second add wrote nothing: the hermetic var-root committed
         # fingerprint is identical, proving the clock-free identity is a true
         # post-state no-op.
         assert db_after_retry == db_after_create
+
+    def test_ledger_evidence_add_envelope_replays_byte_identical(self, tmp_path: Path) -> None:
+        """D1 golden case: the evidence-add envelope is deterministic across runs.
+
+        One synthetic PDF reused across both runs so ``source_path`` is identical;
+        each run is a fresh bucket, so the content-addressed ``evidence_id`` derives
+        with disambiguator 0 in both and matches. The content-addressed evidence id,
+        the content-addressed bucket-event id and the frozen-clock timestamps make
+        the whole ``--format json`` envelope deterministic — zero residual differing
+        fields, so no ``GOLDEN_MASK_FIELDS`` entry is warranted.
+        """
+        pdf = tmp_path / "receipt.pdf"
+        pdf.write_bytes(b"%PDF-1.4 determinism")
+
+        first = _emit_evidence_add(tmp_path / "run-a", pdf)
+        second = _emit_evidence_add(tmp_path / "run-b", pdf)
+
+        assert differing_paths(first, second) == frozenset()
+        assert differing_field_names(first, second) == frozenset()
+        assert canonicalise(first) == canonicalise(second)
 
 
 class TestCoverageDiscipline:
