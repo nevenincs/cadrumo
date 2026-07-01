@@ -1737,7 +1737,8 @@ cli:
         as_of_year_help: Any de referència per als càlculs d'antiguitat i caducitat
           del saldo arrossegat.
         balance_help: Mostra el saldo acumulat del crèdit IVA per compensació calculat
-          a partir de l'historial local del Model 303.
+          a partir de l'historial local del Model 303. Informa total_balance,
+          active_balance, expired_balance, lot_count i next_expiry_year.
         correct_amount_help: Import corregit del saldo a compensar en EUR (decimal,
           p. ex. 1200.50).
         correct_confirm_help: Indicador de confirmació obligatori. Reconeix que això
