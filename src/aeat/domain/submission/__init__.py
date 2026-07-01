@@ -39,15 +39,20 @@ Major declarations:
   exported narrow contracts that keep the domain free of live adapters.
 
 See Also:
-    - :func:`aeat.application.modelo.file_modelo_revision` for the local
-      work-unit filing action that creates :class:`aeat.domain.modelos.ModeloRecord`
-      entries without AEAT acceptance.
-    - :mod:`aeat.application.live` for read-only AEAT evidence capture and
-      justificante verification; it is not a live-submit path.
-    - :func:`aeat.application.filing.import_filing_from_justificante` for
-      importing historical filing evidence into the submission audit trail.
-    - :mod:`aeat.domain.filing` for draft construction and review records used
-      before preflight or evidence import.
+    :func:`aeat.application.modelo.file_modelo_revision`
+        Local work-unit filing action that creates
+        :class:`aeat.domain.modelos.ModeloRecord` entries without AEAT
+        acceptance.
+    :mod:`aeat.application.live`
+        Read-only AEAT evidence capture and justificante verification surface;
+        it is not a live-submit path.
+    :func:`aeat.application.filing.import_filing_from_justificante`
+        Historical filing-evidence import into the submission audit trail.
+    :mod:`aeat.domain.filing`
+        Draft construction and review records used before preflight or evidence
+        import.
+    :class:`aeat.core.access_gate.AeatAccessGate`
+        Core live-write refusal authority that keeps these audit records local.
 """
 
 from __future__ import annotations
