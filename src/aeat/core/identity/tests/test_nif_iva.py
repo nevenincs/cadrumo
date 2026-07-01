@@ -59,14 +59,13 @@ _VALID_AND_INVALID: list[tuple[str, str, str]] = [
     ("GR", "EL123456789", "EL12345678"),  # Greek prefix EL, 8 digits needs 9
 ]
 
-
-@pytest.mark.parametrize(("iso_country", "valid", "invalid"), _VALID_AND_INVALID)
-def test_nif_iva_pattern_accepts_valid_and_rejects_invalid(iso_country: str, valid: str, invalid: str) -> None:
+def test_nif_iva_pattern_accepts_valid_and_rejects_invalid() -> None:
     """Each Member State's pattern matches a well-formed number and rejects a malformed one."""
-    spec = nif_iva_format_for_country(iso_country)
-    assert spec is not None, f"no NIF-IVA spec resolved for {iso_country}"
-    assert spec.pattern.match(normalise_nif_iva(valid)) is not None
-    assert spec.pattern.match(normalise_nif_iva(invalid)) is None
+    for iso_country, valid, invalid in _VALID_AND_INVALID:
+        spec = nif_iva_format_for_country(iso_country)
+        assert spec is not None, f"no NIF-IVA spec resolved for {iso_country}"
+        assert spec.pattern.match(normalise_nif_iva(valid)) is not None, iso_country
+        assert spec.pattern.match(normalise_nif_iva(invalid)) is None, iso_country
 
 
 def test_every_table_example_matches_its_own_pattern() -> None:
