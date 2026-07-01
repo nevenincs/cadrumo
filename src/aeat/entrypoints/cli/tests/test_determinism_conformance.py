@@ -10,11 +10,12 @@ axis grows deliberately. The enrolled set only ratchets up: a stale enrolment (a
 command that no longer registers) fails loudly.
 
 Two commands are enrolled. The ledger-add retried-no-op is the state-transition
-case: its envelope replays byte-identical, and the bucket's committed at-rest
-fingerprint (the substrate's ``read_db_at_rest_bytes`` over the main ``.db`` plus
-committed ``-wal``, omitting the volatile ``-shm`` read-index) is identical after
-the idempotent second add against a hermetic synthetic ``var/`` root — the
-concrete proof the clock-free idempotency id is a true no-op. The ledger-evidence
+case: its envelope replays byte-identical, and the bucket's committed-state
+fingerprint (the substrate's ``compute_db_sha256`` over a committed-files snapshot
+— the main ``.db`` plus committed ``-wal``, excluding the volatile ``-shm``
+read-index) is identical after the idempotent second add against a hermetic
+synthetic ``var/`` root — the concrete proof the clock-free idempotency id is a
+true no-op. The ledger-evidence
 add is the D1 golden case: its ``--format json`` envelope is byte-identical across
 two fresh-bucket runs, with zero residual differing fields, proving the
 content-addressed ``evidence_id`` needs no mask. The axis owns only
