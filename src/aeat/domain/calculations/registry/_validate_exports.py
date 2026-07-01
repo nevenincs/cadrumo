@@ -59,6 +59,7 @@ def validate_export_layout_section(
                 casilla_by_id=casilla_by_id,
                 legal_refs=legal_refs,
                 source_refs=source_refs,
+                evidence=evidence,
             )
 
 
@@ -73,6 +74,7 @@ def _validate_export_record(
     casilla_by_id: Mapping[CasillaId, CasillaDefinition],
     legal_refs: Mapping[str, LegalReference],
     source_refs: Mapping[str, SourceReference],
+    evidence: EvidenceValidator,
 ) -> None:
     if record.binding_record is not None:
         _validate_export_record_binding_link(failures, prefix=prefix, revision=revision, record=record)
@@ -104,6 +106,7 @@ def _validate_export_record(
             casilla_by_id=casilla_by_id,
             legal_refs=legal_refs,
             source_refs=source_refs,
+            evidence=evidence,
         )
 
 
@@ -150,10 +153,12 @@ def _validate_export_field(
     casilla_by_id: Mapping[CasillaId, CasillaDefinition],
     legal_refs: Mapping[str, LegalReference],
     source_refs: Mapping[str, SourceReference],
+    evidence: EvidenceValidator,
 ) -> None:
     owner = f"export field {field.id}"
     failures.extend(_missing_refs(prefix, owner, field.legal_refs, legal_refs, "legal"))
     failures.extend(_missing_refs(prefix, owner, field.source_refs, source_refs, "source"))
+    failures.extend(evidence.require_source_tier(prefix, owner, field.source_refs, "layout_authority"))
     if field.casilla_id is not None and field.casilla_id not in casillas:
         failures.append(f"{prefix}: export field {field.id!r} references unknown casilla {field.casilla_id!r}")
     if (
