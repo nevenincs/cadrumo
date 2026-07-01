@@ -36,7 +36,15 @@ custody files; callers must invoke the exported operations explicitly.
 
 from __future__ import annotations
 
-from ._active_session import NoActiveBucketSessionError, activate_session, suspend_active_session
+from ._active_session import (
+    NoActiveBucketSessionError,
+    activate_session,
+    current_active_bucket_session,
+    get_active_master_key,
+    has_active_bucket_session,
+    suspend_active_session,
+)
+from ._idle_timeout import evaluate_idle
 from ._kdf_params import KdfParams
 from ._master_key import (
     EphemeralMasterKeyProvider,
@@ -96,11 +104,15 @@ __all__ = [
     "activate_master_key_provider",
     "activate_session",
     "atomic_write_secure_bytes",
+    "current_active_bucket_session",
     "decode_mnemonic",
     "derive_kek_with_params",
     "encode_mnemonic",
+    "evaluate_idle",
     "generate_recovery_key",
+    "get_active_master_key",
     "get_master_key_provider",
+    "has_active_bucket_session",
     "load_recovery_envelope",
     "load_wrapped_master_key",
     "looks_like_real_tax_id",
