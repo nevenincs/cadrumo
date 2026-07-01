@@ -116,22 +116,18 @@ def test_resolve_record_json_path_returns_under_root_even_with_relative_root(
 # ----------------------------------------------------------------- #
 
 
-def test_resolve_relative_subpath_rejects_backslashes(root: Path) -> None:
-    """Backslashes are forbidden so Windows separators do not bypass containment."""
-    with pytest.raises(ValueError, match=r"forward slashes only"):
-        resolve_relative_subpath(root, r"sub\dir\file.txt", context="path")
-
-
-def test_resolve_relative_subpath_rejects_parent_traversal(root: Path) -> None:
-    """`..` parts are forbidden even when forward-slashed."""
-    with pytest.raises(ValueError, match=r"stay within the owning root"):
-        resolve_relative_subpath(root, "../escape", context="path")
-
-
-def test_resolve_relative_subpath_rejects_absolute_paths(root: Path) -> None:
-    """Absolute relative-paths get rejected."""
-    with pytest.raises(ValueError, match=r"stay within the owning root"):
-        resolve_relative_subpath(root, "/abs/path", context="path")
+@pytest.mark.parametrize(
+    ("subpath", "error_match"),
+    (
+        pytest.param(r"sub\dir\file.txt", r"forward slashes only", id="backslash-separator"),
+        pytest.param("../escape", r"stay within the owning root", id="parent-traversal"),
+        pytest.param("/abs/path", r"stay within the owning root", id="absolute-path"),
+    ),
+)
+def test_resolve_relative_subpath_rejects_unsafe_paths(root: Path, subpath: str, error_match: str) -> None:
+    """Unsafe relative-path shapes fail closed before callers can escape the root."""
+    with pytest.raises(ValueError, match=error_match):
+        resolve_relative_subpath(root, subpath, context="path")
 
 
 def test_resolve_relative_subpath_accepts_nested_path(root: Path) -> None:
