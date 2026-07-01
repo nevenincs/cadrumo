@@ -71,7 +71,7 @@ from ....adapters.outbound.storage import (
     put_remote_mirror_namespace_manifest,
     remote_mirror_object_key_hmac,
 )
-from ....adapters.persistence.storage.runtime_repository import secure_object_repository_for_active_bucket
+from ....adapters.persistence.storage import secure_object_repository_for_active_bucket
 from ....adapters.persistence.storage.sql.secure_objects import SecureObjectRawRow, SecureObjectRepository
 from ....core.config import load_settings
 from ....core.hashing import sha256_hex
