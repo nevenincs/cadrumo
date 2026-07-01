@@ -126,19 +126,27 @@ def test_link_transaction_is_idempotent_on_duplicate() -> None:
     assert updated == catalogue
 
 
-def test_link_transaction_rejects_non_hex_transaction_id() -> None:
-    """Invalid transaction IDs must raise a typed link error."""
+@pytest.mark.parametrize(
+    ("invoice_id_override", "transaction_id", "expected_error", "match"),
+    [
+        (None, "not-hex", InvoiceLinkError, r"transaction_id|hex"),
+        ("nonexistent", "a" * 64, InvoiceNotFoundError, r"invoice|not|found"),
+    ],
+    ids=("non-hex-transaction-id", "missing-invoice"),
+)
+def test_link_transaction_rejects_invalid_request(
+    invoice_id_override: str | None,
+    transaction_id: str,
+    expected_error: type[Exception],
+    match: str,
+) -> None:
+    """Invalid link requests must raise the typed service error."""
     invoice = _valid_invoice()
     catalogue = InvoiceCatalogue.from_invoices([invoice])
-    with pytest.raises(InvoiceLinkError, match=r"transaction_id|hex"):
-        link_transaction(catalogue, invoice.invoice_id, "not-hex")
+    invoice_id = invoice.invoice_id if invoice_id_override is None else invoice_id_override
 
-
-def test_link_transaction_raises_typed_not_found() -> None:
-    """Missing invoice IDs must raise InvoiceNotFoundError."""
-    catalogue = InvoiceCatalogue.from_invoices([_valid_invoice()])
-    with pytest.raises(InvoiceNotFoundError, match=r"invoice|not|found"):
-        link_transaction(catalogue, "nonexistent", "a" * 64)
+    with pytest.raises(expected_error, match=match):
+        link_transaction(catalogue, invoice_id, transaction_id)
 
 
 def test_catalogue_rejects_mapping_with_mismatched_keys() -> None:
