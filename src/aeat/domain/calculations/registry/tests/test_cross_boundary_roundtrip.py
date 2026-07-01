@@ -47,7 +47,6 @@ from .._schema import LiveCrossReferenceDecision
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 
-
 def _casilla_id(value: object) -> CasillaId:
     try:
         return validated_casilla_id(value, surface="test casilla id")
@@ -457,7 +456,7 @@ def test_workbook_parity_reference_output_cells_roundtrip() -> None:
             "07": "'Modelo 130'!F22",
         },
         tolerance=Decimal("0.01"),
-        legal_refs=("lirpf.art-99",),
+        legal_refs=("ley-35-2006:art-99",),
         source_refs=("boe.modelo.130.workbook",),
     )
 
@@ -490,7 +489,7 @@ def test_workbook_parity_reference_rejects_malformed_output_identifier() -> None
             runner_required=True,
             output_cells={"bad output": "Modelo!A1"},
             tolerance=Decimal("0.01"),
-            legal_refs=("lirpf.art-99",),
+            legal_refs=("ley-35-2006:art-99",),
             source_refs=("boe.modelo.130.workbook",),
         )
 
