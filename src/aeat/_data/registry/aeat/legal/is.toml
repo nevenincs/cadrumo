@@ -1149,7 +1149,7 @@ source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Biblioteca
 review_status = "reviewed"
 
 [sources."boe-modelo-200-2025-form"]
-evidence_tier = "official_source_guidance"
+evidence_tier = "layout_authority"
 authority = "boe"
 kind = "form_spec"
 corpus_path = "corpus/normatives/html/orden-hac-657-2025.html"
