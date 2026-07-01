@@ -38,6 +38,9 @@ _M131_REVISION_ORDER_REFS: dict[str, LegalRefId] = {
     "2025": "orden-hac-1347-2024:art-4",
     "2026": "orden-hac-1425-2025:art-4",
 }
+_M131_LAYOUT_SOURCE = "boe-modelo-131-2007-form"
+_M131_PROCEDURE_SOURCE = "aeat-modelo-131-procedure"
+_M131_INSTRUCTIONS_SOURCE = "aeat-modelo-131-instructions"
 
 
 def _collect_legal_refs(value: object) -> set[LegalRefId]:
@@ -64,6 +67,44 @@ def _refs_by_id(items: tuple[Any, ...]) -> dict[str, tuple[LegalRefId, ...]]:
 @pytest.fixture(scope="module")
 def modelo_131_registry():
     return _committed_modelo("131")
+
+
+def test_modelo_131_guidance_and_layout_sources_are_separated(
+    modelo_131_registry: tuple[ModeloDefinition, RegistryCatalogues],
+) -> None:
+    modelo, catalogues = modelo_131_registry
+    procedure = catalogues.sources[_M131_PROCEDURE_SOURCE]
+    instructions = catalogues.sources[_M131_INSTRUCTIONS_SOURCE]
+    layout = catalogues.sources[_M131_LAYOUT_SOURCE]
+
+    assert _M131_PROCEDURE_SOURCE in modelo.source_refs
+    assert _M131_INSTRUCTIONS_SOURCE in modelo.source_refs
+    assert _M131_LAYOUT_SOURCE in modelo.source_refs
+    assert procedure.evidence_tier == "official_source_guidance"
+    assert procedure.authority == "aeat"
+    assert procedure.kind == "instructions"
+    assert (bundled_path() / procedure.corpus_path).is_file()
+    assert instructions.evidence_tier == "official_source_guidance"
+    assert instructions.authority == "aeat"
+    assert instructions.kind == "instructions"
+    assert (bundled_path() / instructions.corpus_path).is_file()
+    assert layout.evidence_tier == "layout_authority"
+    assert layout.authority == "boe"
+    assert layout.kind == "form_spec"
+
+    for revision in modelo.revisions.values():
+        assert _M131_LAYOUT_SOURCE in revision.source_refs
+        for source_ref in (_M131_PROCEDURE_SOURCE, _M131_INSTRUCTIONS_SOURCE):
+            assert source_ref in revision.source_refs
+        for parameter in revision.parameters:
+            for citation in parameter.source_citations:
+                assert catalogues.sources[citation.source_ref].evidence_tier == "official_source_guidance"
+        for formula in revision.formulas:
+            for citation in formula.source_citations:
+                assert catalogues.sources[citation.source_ref].evidence_tier == "official_source_guidance"
+        for binding in revision.bindings:
+            for citation in binding.source_citations:
+                assert catalogues.sources[citation.source_ref].evidence_tier == "official_source_guidance"
 
 
 @pytest.mark.parametrize(
