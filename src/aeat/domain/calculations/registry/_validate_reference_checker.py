@@ -9,7 +9,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from ._ids import CasillaId
+from ._ids import CasillaId, LegalRefId, SourceRefId
 
 if TYPE_CHECKING:
     from ._snapshot import RegistrySnapshot
@@ -92,7 +92,12 @@ class IdReferenceChecker:
             if value not in id_set:
                 self.failures.append(f"{self.prefix}: {field_path} references unknown id {value!r}")
 
-    def chk_legal_source_refs(self, owner: str, legal_refs: tuple[str, ...], source_refs: tuple[str, ...]) -> None:
+    def chk_legal_source_refs(
+        self,
+        owner: str,
+        legal_refs: tuple[LegalRefId, ...],
+        source_refs: tuple[SourceRefId, ...],
+    ) -> None:
         """Single-call helper for the (legal_refs, source_refs) pair every record carries."""
         self.chk_tuple(f"{owner}.legal_refs", legal_refs, self.legal_ids)
         self.chk_tuple(f"{owner}.source_refs", source_refs, self.source_ids)
