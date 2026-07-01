@@ -6,7 +6,9 @@ Protocols, not on the concrete adapter-backed repository classes. This keeps
 the domain layer free of adapter imports while still providing typed port surfaces.
 
 The filing-record protocol returns :class:`ModeloRecord` catalogues while
-keeping application code independent of concrete storage adapters.
+the verification-report protocol returns
+:class:`VerificationReportCatalogue` instances; both keep application code
+independent of concrete storage adapters.
 """
 
 from __future__ import annotations
@@ -169,9 +171,9 @@ class VerificationReportCatalogueRepositoryProtocol(Protocol):
     """Narrow domain-facing repository contract for verification reports.
 
     Any object that provides ``exists``, ``load``, and ``save`` over a
-    per-bucket verification-report catalogue satisfies this protocol.
-    The concrete secure-object-backed implementation lives in
-    ``_verification_repository.py``.
+    per-bucket :class:`VerificationReportCatalogue` satisfies this protocol.
+    The concrete secure-object-backed implementation is
+    :class:`VerificationReportCatalogueRepository`.
     """
 
     @property
