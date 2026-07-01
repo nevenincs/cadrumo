@@ -2,9 +2,9 @@
 
 :class:`~aeat.domain.modelos.WorkUnitCatalogueRepository` persists
 :class:`WorkUnit` records in a :class:`WorkUnitCatalogue` at
-:class:`~aeat.adapters.persistence.storage.SensitivityClass` ``FINANCIAL``
+``FINANCIAL`` :class:`~aeat.adapters.persistence.storage.SensitivityClass`
 through
-:class:`~aeat.adapters.persistence.storage.sql.SecureObjectRepository`. The
+:class:`~aeat.adapters.persistence.storage.SecureObjectRepository`. The
 catalogue is serialised as a single
 :class:`~aeat.adapters.persistence.storage.Envelope`-wrapped JSON payload keyed
 by a stable namespace and object key; the underlying column is encrypted so no
@@ -54,7 +54,7 @@ class WorkUnitCatalogueRepository:
     contract used by ``exists``, ``load``, and ``save``. The
     :class:`WorkUnitCatalogue` payload is wrapped in
     :class:`~aeat.adapters.persistence.storage.Envelope` before the
-    :class:`~aeat.adapters.persistence.storage.sql.SecureObjectRepository`
+    :class:`~aeat.adapters.persistence.storage.SecureObjectRepository`
     persists it, while this class exposes the concrete implementation behind
     :class:`~aeat.domain.modelos.WorkUnitCatalogueRepositoryProtocol`.
     """

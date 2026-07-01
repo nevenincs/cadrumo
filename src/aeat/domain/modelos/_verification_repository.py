@@ -3,8 +3,8 @@
 :class:`~aeat.domain.modelos.VerificationReportCatalogueRepository` persists
 and loads :class:`VerificationReport` entries in a
 :class:`VerificationReportCatalogue` via
-:class:`~aeat.adapters.persistence.storage.sql.SecureObjectRepository` at
-:class:`~aeat.adapters.persistence.storage.SensitivityClass` ``FINANCIAL``.
+:class:`~aeat.adapters.persistence.storage.SecureObjectRepository` at
+``FINANCIAL`` :class:`~aeat.adapters.persistence.storage.SensitivityClass`.
 The catalogue is stored as a single encrypted BLOB per profile bucket and
 wrapped in :class:`~aeat.adapters.persistence.storage.Envelope` before
 serialisation.
@@ -50,7 +50,7 @@ class VerificationReportCatalogueRepository:
     contract for the encrypted :class:`VerificationReportCatalogue` row. The
     catalogue payload is wrapped in
     :class:`~aeat.adapters.persistence.storage.Envelope` before
-    :class:`~aeat.adapters.persistence.storage.sql.SecureObjectRepository`
+    :class:`~aeat.adapters.persistence.storage.SecureObjectRepository`
     persists it, while this class exposes the concrete load/save implementation
     behind
     :class:`~aeat.domain.modelos.VerificationReportCatalogueRepositoryProtocol`.
@@ -76,7 +76,7 @@ class VerificationReportCatalogueRepository:
         bucket. The value is the trimmed bucket identifier resolved at
         construction, or ``None`` when the repository was built directly from
         an injected
-        :class:`~aeat.adapters.persistence.storage.sql.SecureObjectRepository`
+        :class:`~aeat.adapters.persistence.storage.SecureObjectRepository`
         and no bucket was named.
 
         Returns:

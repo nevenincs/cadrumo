@@ -3,8 +3,8 @@
 :class:`~aeat.domain.modelos.CalculationRevisionCatalogueRepository` persists
 and loads :class:`CalculationRevision` records in a
 :class:`CalculationRevisionCatalogue` via
-:class:`~aeat.adapters.persistence.storage.sql.SecureObjectRepository` at
-:class:`~aeat.adapters.persistence.storage.SensitivityClass` ``FINANCIAL``.
+:class:`~aeat.adapters.persistence.storage.SecureObjectRepository` at
+``FINANCIAL`` :class:`~aeat.adapters.persistence.storage.SensitivityClass`.
 Each catalogue is wrapped in
 :class:`~aeat.adapters.persistence.storage.Envelope` before being written to
 the encrypted BLOB per profile bucket.
@@ -54,7 +54,7 @@ class CalculationRevisionCatalogueRepository:
     contract for the encrypted :class:`CalculationRevisionCatalogue` row. The
     catalogue payload is wrapped in
     :class:`~aeat.adapters.persistence.storage.Envelope` before
-    :class:`~aeat.adapters.persistence.storage.sql.SecureObjectRepository`
+    :class:`~aeat.adapters.persistence.storage.SecureObjectRepository`
     persists it, and the same envelope can be returned as a
     :class:`~aeat.adapters.persistence.storage.SecureObjectWrite` for atomic
     co-writes. The class exposes the concrete load/save implementation behind
@@ -80,7 +80,7 @@ class CalculationRevisionCatalogueRepository:
         per filing profile, and each profile owns its own encrypted bucket. This
         property exposes the resolved bucket identifier, or ``None`` when the
         repository was constructed against a caller-supplied
-        :class:`~aeat.adapters.persistence.storage.sql.SecureObjectRepository`
+        :class:`~aeat.adapters.persistence.storage.SecureObjectRepository`
         rather than a resolved bucket.
 
         Returns:
