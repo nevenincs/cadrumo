@@ -69,7 +69,7 @@ from pydantic import BaseModel, Field
 
 from ..adapters.persistence.storage import inspect_bucket_storage_runtime
 from ..core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
-from ..core import Period, resolve_active_bucket_id
+from ..core import BindingSourceKind, Period, resolve_active_bucket_id
 from ..core.errors import AeatError
 from ..core.identity import ProfileId
 from ..core.logging import get_logger
@@ -972,7 +972,7 @@ def _missing_calculation_bindings_for_readiness(
             continue
         if binding.source in _LEDGER_PREFLIGHT_BINDING_SOURCES and ledger_sources_ready:
             continue
-        if source == "profile" and binding_id in profile_resolved:
+        if binding.source == BindingSourceKind.PROFILE and binding_id in profile_resolved:
             continue
         missing.append(
             ProjectionModeloBindingRequirement(

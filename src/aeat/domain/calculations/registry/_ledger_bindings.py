@@ -10,7 +10,7 @@ from typing import Literal, Protocol
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 from ....core import STRICT_FROZEN_CONFIG, Modelo
-from ....core.aggregation import LEDGER_BINDING_SOURCE_KINDS, BindingAggregationOp
+from ....core.aggregation import LEDGER_BINDING_SOURCE_KINDS, BindingAggregationOp, BindingSourceKind
 from ...iva import (
     CUOTA_LESS_M303_IVA_CATEGORIES,
     EUMemberState,
@@ -68,6 +68,7 @@ __all__ = [
 
 def _casilla_id_set(surface: str, *values: object) -> frozenset[CasillaId]:
     return frozenset(validated_casilla_id(value, surface=surface) for value in values)
+
 
 # Ledger OSS / IOSS aggregation source bindings.
 #
@@ -171,7 +172,7 @@ def validate_ledger_oss_aggregation_binding_definition(
             transaction kind), or if the aggregation operator is
             inconsistent with the declared fact.
     """
-    if binding.source != "ledger_oss_aggregation":
+    if binding.source != BindingSourceKind.LEDGER_OSS_AGGREGATION:
         raise RegistryValidationError(f"binding {binding.id!r} is not a ledger_oss_aggregation source")
     selector = _ledger_oss_selector(binding)
 
@@ -212,7 +213,7 @@ def resolve_ledger_oss_aggregation_binding_values(
     available = tuple(observations)
     resolved: dict[BindingId, Decimal] = {}
     for binding in revision.bindings:
-        if binding.source != "ledger_oss_aggregation":
+        if binding.source != BindingSourceKind.LEDGER_OSS_AGGREGATION:
             continue
         selector = _ledger_oss_selector(binding)
         kinds = set(selector.transaction_kinds)
@@ -260,7 +261,9 @@ def unsupported_ledger_oss_observations(
         ``ledger_oss_aggregation`` binding.
     """
     selectors = tuple(
-        _ledger_oss_selector(binding) for binding in revision.bindings if binding.source == "ledger_oss_aggregation"
+        _ledger_oss_selector(binding)
+        for binding in revision.bindings
+        if binding.source == BindingSourceKind.LEDGER_OSS_AGGREGATION
     )
     unsupported: list[OssIossLedgerObservation] = []
     for observation in observations:
@@ -389,7 +392,7 @@ def validate_ledger_iva_aggregation_binding_definition(
             tuple), if the aggregation operator is not "sum", or if
             the binding source is not "ledger_iva_aggregation".
     """
-    if binding.source != "ledger_iva_aggregation":
+    if binding.source != BindingSourceKind.LEDGER_IVA_AGGREGATION:
         raise RegistryValidationError(f"binding {binding.id!r} is not a ledger_iva_aggregation source")
     selector = _iva_ledger_selector(binding)
 
@@ -429,7 +432,7 @@ def resolve_ledger_iva_aggregation_binding_values(
     available = tuple(observations)
     resolved: dict[BindingId, Decimal] = {}
     for binding in revision.bindings:
-        if binding.source != "ledger_iva_aggregation":
+        if binding.source != BindingSourceKind.LEDGER_IVA_AGGREGATION:
             continue
         selector = _iva_ledger_selector(binding)
         cat_set = set(selector.categories)
@@ -485,7 +488,9 @@ def unsupported_ledger_iva_observations(
     binding selects.
     """
     selectors = tuple(
-        _iva_ledger_selector(binding) for binding in revision.bindings if binding.source == "ledger_iva_aggregation"
+        _iva_ledger_selector(binding)
+        for binding in revision.bindings
+        if binding.source == BindingSourceKind.LEDGER_IVA_AGGREGATION
     )
     unsupported: list[IvaLedgerObservation] = []
     for observation in observations:
@@ -575,7 +580,7 @@ def _renta_ledger_expense_selector(binding: DataBindingDefinition) -> _RentaLedg
 
 def validate_ledger_renta_expense_aggregation_binding_definition(binding: DataBindingDefinition) -> None:
     """Validate a ``ledger_renta_expense_aggregation`` binding definition."""
-    if binding.source != "ledger_renta_expense_aggregation":
+    if binding.source != BindingSourceKind.LEDGER_RENTA_EXPENSE_AGGREGATION:
         raise RegistryValidationError(f"binding {binding.id!r} is not a ledger_renta_expense_aggregation source")
     selector = _renta_ledger_expense_selector(binding)
     if selector.target_casilla_id not in _RENTA_100_FIRST_SLICE_CASILLAS:
@@ -610,7 +615,7 @@ def resolve_ledger_renta_expense_aggregation_binding_values(
     available = tuple(observations)
     resolved: dict[BindingId, Decimal] = {}
     for binding in revision.bindings:
-        if binding.source != "ledger_renta_expense_aggregation":
+        if binding.source != BindingSourceKind.LEDGER_RENTA_EXPENSE_AGGREGATION:
             continue
         selector = _renta_ledger_expense_selector(binding)
         matched = [
@@ -654,7 +659,7 @@ def unsupported_ledger_renta_expense_observations(
     selectors = tuple(
         _renta_ledger_expense_selector(binding)
         for binding in revision.bindings
-        if binding.source == "ledger_renta_expense_aggregation"
+        if binding.source == BindingSourceKind.LEDGER_RENTA_EXPENSE_AGGREGATION
     )
     unsupported: list[RentaExpenseObservationProtocol] = []
     for observation in observations:
@@ -735,7 +740,7 @@ _RENTA_130_INCOME_SUPPORTED_FACTS: frozenset[str] = frozenset(
 
 def validate_ledger_renta_income_aggregation_binding_definition(binding: DataBindingDefinition) -> None:
     """Validate a ``ledger_renta_income_aggregation`` binding definition."""
-    if binding.source != "ledger_renta_income_aggregation":
+    if binding.source != BindingSourceKind.LEDGER_RENTA_INCOME_AGGREGATION:
         raise RegistryValidationError(f"binding {binding.id!r} is not a ledger_renta_income_aggregation source")
     selector = _renta_ledger_income_selector(binding)
     allowed = _RENTA_INCOME_CASILLAS_BY_MODELO.get(selector.modelo, frozenset())
@@ -799,7 +804,7 @@ def resolve_ledger_renta_income_aggregation_binding_values(
     available = tuple(observations)
     resolved: dict[BindingId, Decimal] = {}
     for binding in revision.bindings:
-        if binding.source != "ledger_renta_income_aggregation":
+        if binding.source != BindingSourceKind.LEDGER_RENTA_INCOME_AGGREGATION:
             continue
         selector = _renta_ledger_income_selector(binding)
         matched = [
@@ -857,7 +862,7 @@ def unsupported_ledger_renta_income_observations(
     supported_casillas = frozenset(
         _renta_ledger_income_selector(binding).target_casilla_id
         for binding in revision.bindings
-        if binding.source == "ledger_renta_income_aggregation"
+        if binding.source == BindingSourceKind.LEDGER_RENTA_INCOME_AGGREGATION
     )
     unsupported: list[RentaIncomeObservationProtocol] = []
     for observation in observations:
@@ -935,7 +940,7 @@ def _renta_ledger_gasto_selector(binding: DataBindingDefinition) -> _RentaLedger
 
 def validate_ledger_renta_gasto_aggregation_binding_definition(binding: DataBindingDefinition) -> None:
     """Validate a ``ledger_renta_gasto_aggregation`` binding definition."""
-    if binding.source != "ledger_renta_gasto_aggregation":
+    if binding.source != BindingSourceKind.LEDGER_RENTA_GASTO_AGGREGATION:
         raise RegistryValidationError(f"binding {binding.id!r} is not a ledger_renta_gasto_aggregation source")
     selector = _renta_ledger_gasto_selector(binding)
     if selector.target_casilla_id not in _RENTA_130_GASTO_CASILLAS:
@@ -972,7 +977,7 @@ def resolve_ledger_renta_gasto_aggregation_binding_values(
     available = tuple(observations)
     resolved: dict[BindingId, Decimal] = {}
     for binding in revision.bindings:
-        if binding.source != "ledger_renta_gasto_aggregation":
+        if binding.source != BindingSourceKind.LEDGER_RENTA_GASTO_AGGREGATION:
             continue
         selector = _renta_ledger_gasto_selector(binding)
         matched = [
@@ -1005,7 +1010,7 @@ def unsupported_ledger_renta_gasto_observations(
     supported_casillas = frozenset(
         _renta_ledger_gasto_selector(binding).target_casilla_id
         for binding in revision.bindings
-        if binding.source == "ledger_renta_gasto_aggregation"
+        if binding.source == BindingSourceKind.LEDGER_RENTA_GASTO_AGGREGATION
     )
     unsupported: list[RentaGastoObservationProtocol] = []
     for observation in observations:
