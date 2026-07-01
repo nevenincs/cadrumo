@@ -8,7 +8,7 @@ from decimal import Decimal
 import pytest
 from pydantic import ValidationError
 
-from ...iva import InvoiceKind, IvaRateKind, OssIossRegime, TransactionKind
+from ...iva import EUMemberState, InvoiceKind, IvaRateKind, OssIossRegime, TransactionKind
 from .._enums import IvaRate, PaymentStatus, iva_rate_percentage, numeric_iva_rate_percentages
 from .._models import Invoice, InvoiceCatalogue, InvoiceLine, derive_invoice_id
 
@@ -119,48 +119,31 @@ def test_invoice_line_rejects_larger_rounding_drift() -> None:
         )
 
 
-def test_invoice_counterparty_eu_member_state_returns_typed_enum_for_eu_country() -> None:
-    """Promote the str counterparty_country into the substrate-typed
-    EUMemberState through the typed accessor — downstream consumers
-    (OSS / IOSS / intra-community routing) work against the closed enum
-    rather than a raw 2-letter string."""
-    from ...iva import EUMemberState
-
+@pytest.mark.parametrize(
+    ("raw_country", "tax_id", "stored_country", "expected_state", "expected_is_member"),
+    [
+        ("DE", "DE123456789", "DE", EUMemberState.DE, True),
+        ("US", "US123456789", "US", None, False),
+        ("fr", "FR12345678901", "FR", EUMemberState.FR, True),
+    ],
+    ids=("eu-member", "non-eu", "lowercase-eu"),
+)
+def test_invoice_counterparty_eu_member_state_accessor(
+    raw_country: str,
+    tax_id: str,
+    stored_country: str,
+    expected_state: EUMemberState | None,
+    expected_is_member: bool,
+) -> None:
+    """Counterparty country is normalized and exposed as a typed EU member when applicable."""
     invoice = _valid_invoice(
-        counterparty_country="DE",
-        counterparty_tax_id="DE123456789",
+        counterparty_country=raw_country,
+        counterparty_tax_id=tax_id,
     )
-    assert invoice.counterparty_country == "DE"
-    assert invoice.counterparty_eu_member_state is EUMemberState.DE
-    assert invoice.counterparty_is_eu_member is True
 
-
-def test_invoice_counterparty_eu_member_state_returns_none_for_non_eu_country() -> None:
-    """Non-EU counterparties resolve to None — Modelo 369 OSS bindings
-    and intra-community classifiers gate on
-    counterparty_is_eu_member to skip non-EU lines."""
-    invoice = _valid_invoice(
-        counterparty_country="US",
-        counterparty_tax_id="US123456789",
-    )
-    assert invoice.counterparty_country == "US"
-    assert invoice.counterparty_eu_member_state is None
-    assert invoice.counterparty_is_eu_member is False
-
-
-def test_invoice_counterparty_eu_member_state_handles_lowercase_input_via_uppercase_storage() -> None:
-    """counterparty_country normalises to uppercase at validation time
-    (validate_country_code). The eu_member_state accessor lowercases
-    again for substrate enum lookup. Round-trip works regardless of
-    input case."""
-    from ...iva import EUMemberState
-
-    invoice = _valid_invoice(
-        counterparty_country="fr",  # input lowercase
-        counterparty_tax_id="FR12345678901",
-    )
-    assert invoice.counterparty_country == "FR"  # stored uppercase
-    assert invoice.counterparty_eu_member_state is EUMemberState.FR
+    assert invoice.counterparty_country == stored_country
+    assert invoice.counterparty_eu_member_state is expected_state
+    assert invoice.counterparty_is_eu_member is expected_is_member
 
 
 def test_invoice_iva_category_is_typed_as_iva_category_substrate_enum() -> None:
