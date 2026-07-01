@@ -581,40 +581,38 @@ class TestMultiplePagadoresObligation:
     Modelo 100 filing.  No threshold values are hand-invented here.
     """
 
-    def test_single_pagador_no_obligation(self) -> None:
-        # One pagador, total income €18,000 — single-pagador exemption; no obligation.
-        assert evaluate_multiple_pagadores_obligation(1, Decimal("18000")) is False
-
-    def test_two_pagadores_secondary_above_threshold_obliged(self) -> None:
-        # Two pagadores, secondary income €1,600 > €1,500 threshold → obliged.
-        assert evaluate_multiple_pagadores_obligation(2, Decimal("1600")) is True
-
-    def test_three_pagadores_secondary_above_threshold_obliged(self) -> None:
-        # Three pagadores, secondary income €1,600 > €1,500 threshold → obliged.
-        assert evaluate_multiple_pagadores_obligation(3, Decimal("1600")) is True
-
-    def test_two_pagadores_secondary_exactly_threshold_not_obliged(self) -> None:
-        # Art. 96.3 threshold is strictly > 1500; exactly 1500 does NOT trigger.
-        assert evaluate_multiple_pagadores_obligation(2, Decimal("1500")) is False
-
-    def test_two_pagadores_secondary_one_cent_above_threshold_obliged(self) -> None:
-        # €1,500.01 crosses the strict > boundary.
-        assert evaluate_multiple_pagadores_obligation(2, Decimal("1500.01")) is True
-
-    def test_two_pagadores_secondary_below_threshold_not_obliged(self) -> None:
-        # Secondary income €1,499 — below threshold, no obligation.
-        assert evaluate_multiple_pagadores_obligation(2, Decimal("1499")) is False
-
-    def test_none_count_returns_false(self) -> None:
-        # Undeclared pagadores count → cannot assert obligation.
-        assert evaluate_multiple_pagadores_obligation(None, Decimal("2000")) is False
-
-    def test_none_secondary_income_returns_false(self) -> None:
-        # Undeclared secondary income → cannot assert obligation.
-        assert evaluate_multiple_pagadores_obligation(2, None) is False
-
-    def test_both_none_returns_false(self) -> None:
-        assert evaluate_multiple_pagadores_obligation(None, None) is False
+    @pytest.mark.parametrize(
+        ("pagadores_count", "secondary_income", "expected"),
+        (
+            (1, Decimal("18000"), False),
+            (2, Decimal("1600"), True),
+            (3, Decimal("1600"), True),
+            (2, Decimal("1500"), False),
+            (2, Decimal("1500.01"), True),
+            (2, Decimal("1499"), False),
+            (None, Decimal("2000"), False),
+            (2, None, False),
+            (None, None, False),
+        ),
+        ids=(
+            "single-pagador",
+            "two-secondary-above",
+            "three-secondary-above",
+            "secondary-at-threshold",
+            "secondary-cent-above",
+            "secondary-below",
+            "missing-count",
+            "missing-secondary-income",
+            "missing-both",
+        ),
+    )
+    def test_multiple_pagadores_threshold_cases(
+        self,
+        pagadores_count: int | None,
+        secondary_income: Decimal | None,
+        expected: bool,
+    ) -> None:
+        assert evaluate_multiple_pagadores_obligation(pagadores_count, secondary_income) is expected
 
     def test_taxpayer_profile_roundtrip_pagadores_fields(self) -> None:
         # TaxpayerProfile must carry the pagadores axes through construction unchanged.
