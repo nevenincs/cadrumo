@@ -613,6 +613,39 @@ def test_validator_rejects_export_field_not_declared_by_casilla() -> None:
         RegistryValidator(catalogues, source_root=bundled_path()).validate_modelo(_with_revision(modelo, mutated))
 
 
+def test_validator_rejects_export_field_without_layout_authority_source() -> None:
+    modelo, catalogues = _committed_registry()
+    revision = _revision(modelo)
+    target_layout = next(layout for layout in revision.export_layouts if any(record.fields for record in layout.records))
+    target_field = next(field for record in target_layout.records for field in record.fields)
+    export_layouts = tuple(
+        layout.model_copy(
+            update={
+                "records": tuple(
+                    record.model_copy(
+                        update={
+                            "fields": tuple(
+                                field.model_copy(update={"source_refs": ("aeat-modelo-130-instructions",)})
+                                if field.id == target_field.id
+                                else field
+                                for field in record.fields
+                            ),
+                        },
+                    )
+                    for record in layout.records
+                ),
+            },
+        )
+        if layout.id == target_layout.id
+        else layout
+        for layout in revision.export_layouts
+    )
+    mutated = revision.model_copy(update={"export_layouts": export_layouts})
+
+    with pytest.raises(RegistryValidationError, match="requires layout_authority source evidence"):
+        RegistryValidator(catalogues, source_root=bundled_path()).validate_modelo(_with_revision(modelo, mutated))
+
+
 def test_validator_rejects_submitted_file_profile_without_exported_casilla() -> None:
     modelo, catalogues = _committed_modelo("131")
     revision = modelo.revisions["2026"]

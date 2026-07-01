@@ -32,23 +32,19 @@ from dataclasses import dataclass
 from decimal import Decimal, InvalidOperation
 from typing import Literal
 
-from ...core import Modelo
+from ...core._modelo import Modelo
 from ...core.errors import AeatError
 from ...core.external_constants import M347_THRESHOLD_EUR
 from ...core.resources import resources
-from ...domain.calculations.registry import (
-    BindingId,
-    CasillaId,
-    DataBindingDefinition,
-    ModeloRevision,
-    RelationId,
-    boolean_binding_encoded_values,
+from ...domain.calculations.registry._binding_selector_utils import boolean_binding_encoded_values
+from ...domain.calculations.registry._casilla_membership import (
     casilla_noncanonical_reference_targets,
     casillas_by_id,
     declared_casilla_ids,
-    enum_consumed_binding_ids,
-    revision_date_binding_ids,
 )
+from ...domain.calculations.registry._ids import BindingId, CasillaId, RelationId
+from ...domain.calculations.registry._runtime_graph import enum_consumed_binding_ids, revision_date_binding_ids
+from ...domain.calculations.registry._schema import DataBindingDefinition, ModeloRevision
 from ...domain.contribuyente._deduccion_maternidad import compute_deduccion_maternidad_0611
 from ...domain.modelos._calculation_revision import CalculationRevision
 from ...domain.modelos._dt12_reduccion import compute_dt12_reduccion_plan_pensiones
@@ -65,7 +61,7 @@ from ...domain.modelos._row_models import (
 )
 from ...domain.modelos._sal_reserva_especial import compute_sal_reserva_especial_dotacion
 from ...domain.modelos._work_unit import WorkUnit
-from ..aggregation import CalculationSourceDiagnostic
+from ..aggregation._source_mesh import CalculationSourceDiagnostic
 from ._registry_helpers import validate_casilla_input_ids
 from ._semantic_role_resolution import (
     AmbiguousSemanticRoleCasillaError,
@@ -267,6 +263,7 @@ def calculate_modelo_work_revision(
         work_unit_id,
         actor=actor,
         casilla_inputs=inputs.casilla_inputs,
+        text_casilla_inputs=inputs.optional_text_casilla_inputs(),
         binding_values=inputs.optional_binding_values(),
         enum_binding_values=inputs.optional_enum_binding_values(),
         borrador_snapshot_id=inputs.borrador_snapshot_id,
@@ -618,9 +615,9 @@ def modelo_202_modality_for_work_unit(work_unit: WorkUnit) -> Modelo202ModalityS
     if str(work_unit.modelo) != Modelo.M202:
         return None
 
-    from ...application.user_profile import projection_for_taxpayer
-    from ...application.workflow import workflow_state_repository
-    from ...domain.calculations.registry.applicability import derive_modelo_202_modality
+    from ...application.user_profile._projections import projection_for_taxpayer
+    from ...domain.calculations.registry._applicability_modelo202 import derive_modelo_202_modality
+    from ..workflow._persistence import workflow_state_repository
 
     state = workflow_state_repository().load()
     record = state.active_profile_record()
