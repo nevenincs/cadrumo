@@ -644,6 +644,7 @@ def test_attribution_entity_pago_fraccionado_is_pass_through() -> None:
 _MODELO_390_CASES: tuple[tuple[_ProfileFactory, ApplicabilityVerdict, bool], ...] = (
     (_autonomo, ApplicabilityVerdict.APPLICABLE, True),
     (_sociedad_limitada, ApplicabilityVerdict.APPLICABLE, True),
+    (_attribution_entity, ApplicabilityVerdict.APPLICABLE, True),
     (_landlord, ApplicabilityVerdict.NOT_APPLICABLE, False),
 )
 
@@ -651,7 +652,7 @@ _MODELO_390_CASES: tuple[tuple[_ProfileFactory, ApplicabilityVerdict, bool], ...
 @pytest.mark.parametrize(
     ("profile_factory", "expected_verdict", "expected_applicable"),
     _MODELO_390_CASES,
-    ids=("autonomo", "legal-entity", "landlord"),
+    ids=("autonomo", "legal-entity", "attribution-entity", "landlord"),
 )
 def test_modelo_390_follows_iva_subject_activity_gate(
     profile_factory: _ProfileFactory,
@@ -669,7 +670,7 @@ def test_modelo_390_tracks_modelo_303_verdict() -> None:
     """Modelo 390 is the annual companion to Modelo 303: the two carry
     the same applicability gate for every core persona."""
 
-    for profile in (_landlord(), _salaried_only(), _autonomo(), _sociedad_limitada()):
+    for profile in (_landlord(), _salaried_only(), _autonomo(), _sociedad_limitada(), _attribution_entity()):
         m303 = derive_modelo_applicability(profile, "303")
         m390 = derive_modelo_applicability(profile, "390")
         assert m303.verdict is m390.verdict, profile.tax_id
@@ -737,8 +738,11 @@ def test_modelo_190_tracks_modelo_111_payer_fact() -> None:
         iva_regime=IVARegime.GENERAL,
         has_employees=True,
     )
+    attribution_paying = _attribution_entity().model_copy(update={"has_employees": True})
     assert derive_modelo_applicability(paying, "190").verdict is (ApplicabilityVerdict.APPLICABLE)
+    assert derive_modelo_applicability(attribution_paying, "190").verdict is (ApplicabilityVerdict.APPLICABLE)
     assert derive_modelo_applicability(_autonomo(), "190").verdict is (ApplicabilityVerdict.INCOMPLETE)
+    assert derive_modelo_applicability(_attribution_entity(), "190").verdict is (ApplicabilityVerdict.INCOMPLETE)
 
 
 def test_modelo_115_applicable_when_taxpayer_pays_rent() -> None:
@@ -811,13 +815,11 @@ def test_modelo_347_applicable_when_third_party_threshold_exceeded() -> None:
     assert result.verdict is ApplicabilityVerdict.APPLICABLE
 
 
-def test_payer_fact_modelos_not_applicable_for_wrong_entity_type() -> None:
-    """An attribution entity is outside the applicable entity set for the
-    payer-fact modelos — none of which are cuota-bearing — so the verdict
-    is a plain NOT_APPLICABLE even when the entity-type axis excludes it."""
+def test_payer_fact_modelos_without_attribution_scope_are_not_applicable() -> None:
+    """Payer-fact modelos not yet scoped to attribution entities stay excluded."""
 
     profile = _attribution_entity()
-    for modelo in ("111", "115", "190", "180", "349", "347"):
+    for modelo in ("115", "180", "349", "347"):
         result = derive_modelo_applicability(profile, modelo)
         assert result.verdict is ApplicabilityVerdict.NOT_APPLICABLE, modelo
 
