@@ -140,18 +140,19 @@ Dispatch vaultspec-code-review over the full campaign diff and run a fresh-conte
 
 #### `W03.P09` carry-forward hardening queue
 
-- `FUP-M202-B1-B2-XOR-VALIDATION` - decide and implement validation for
-  mutually exclusive M202 B1/B2 lanes. Today the calculation wiring can consume
-  both lanes additively if both are populated; the next wave should confirm the
-  official operator contract and refuse or normalize impossible dual-lane input.
-- `FUP-M210-ENUM-DISPATCH-ARG-INDEX` - correct and regress the
-  `_ENUM_DISPATCH_BINDING_ARG_INDEX["m210_resolve_rate"]` country argument
-  index so bucket-profile auto-resolution cannot route
-  `country_of_fiscal_residence` onto the Decimal channel.
-- `FUP-FILING-DRAFT-TEXT-CASILLA` - extend the post-verify filing-draft builder
-  to accept registry `data_type = "text"` casilla inputs such as M210
-  `tipo_renta`; the verify-stage guard is resolved, but draft generation still
-  needs the text channel.
+- `FUP-M202-B1-B2-XOR-VALIDATION` - RESOLVED by commit `af391159a`:
+  M202 now declares `at_most_one_positive(["18", "26"])` as a
+  `BLOCKING_RULE` for every active revision. The additive formula remains for
+  B1-only and B2-only cases; verification refuses the impossible both-positive
+  filing state grounded in the official `clave [18] (o clave [26])` wording.
+- `FUP-M210-ENUM-DISPATCH-ARG-INDEX` - RESOLVED by commit `556b93033`:
+  enum-dispatch binding collection is now shape-aware for `m210_resolve_rate`,
+  preserving the legacy 4-arg country binding at `args[3]` and collecting the
+  current 6-arg country binding at `args[5]`.
+- `FUP-FILING-DRAFT-TEXT-CASILLA` - RESOLVED by commit `1237c075c`:
+  the filing-draft builder splits registry `data_type = "text"` casillas out of
+  the Decimal channel, passes them to `calculate_registry_snapshot(text_inputs=...)`,
+  and preserves the literal `tipo_renta` value in the draft output.
 
 ### Phase `W03.P10` - Exec-record completeness and vault closeout
 
