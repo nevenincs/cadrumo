@@ -38,17 +38,15 @@ from ...adapters.persistence.storage import (
     WORKFLOW_STATE_NAMESPACE as WORKFLOW_STATE_STORAGE_NAMESPACE,
 )
 from ...adapters.persistence.storage import (
-    Envelope,
-    SecureObjectRepository,
-    SecureObjectWrite,
-    secure_object_repository_for_active_bucket,
-    secure_object_repository_for_cold_bootstrap_state,
-)
-from ...adapters.persistence.storage.errors import (
     ClassificationError,
+    Envelope,
     EnvelopeVersionError,
     SecretStoreError,
+    SecureObjectRepository,
+    SecureObjectWrite,
     StorageError,
+    secure_object_repository_for_active_bucket,
+    secure_object_repository_for_cold_bootstrap_state,
 )
 from ...core.config import Settings, StorageRouteKind, classify_storage_route, load_settings
 from ...core.logging import get_logger

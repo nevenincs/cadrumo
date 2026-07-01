@@ -44,7 +44,7 @@ from pathlib import Path
 
 from pydantic import ValidationError
 
-from ...adapters.persistence.storage import BUCKETS_DIRNAME
+from ...adapters.persistence.storage import BUCKETS_DIRNAME, StorageValidationError
 from ...adapters.persistence.storage.bucket import (
     BucketLifecycleStatus,
     BucketManifest,
@@ -53,7 +53,6 @@ from ...adapters.persistence.storage.bucket import (
     manifest_path,
     read_manifest,
 )
-from ...adapters.persistence.storage.errors import StorageValidationError
 from ...core.logging import get_logger
 from ._errors import ProfileLabelAmbiguousError
 from ._models import ProfileBucketPointer
