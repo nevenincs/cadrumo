@@ -55,26 +55,29 @@ from xml.etree import ElementTree
 from defusedxml import ElementTree as DefusedElementTree
 from pydantic import BaseModel, Field, field_validator
 
-from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
-from ...core import Period, ResultDisposition, result_disposition_is_refund
+from ...core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ...core._period import Period
+from ...core._result_disposition import ResultDisposition, result_disposition_is_refund
 from ...core.decimal import coerce_decimal
 from ...core.hashing import sha256_file, sha256_hex
 from ...core.logging import get_logger
 from ...core.money import round_to_cents
 from ...core.time import now
-from ...domain.calculations.registry import (
-    BindingId,
-    CasillaFieldKind,
-    CasillaId,
-    ExportFieldDefinition,
-    ExportLayoutDefinition,
-    ExportRecordDefinition,
-    RegistryValidationError,
-    SourceReference,
+from ...domain.calculations._export_field_kind import CasillaFieldKind
+from ...domain.calculations.registry._errors import RegistryValidationError
+from ...domain.calculations.registry._export_parse import (
     XmlDictionaryEntry,
     parse_export_payload,
     xml_dictionary_entries,
 )
+from ...domain.calculations.registry._ids import BindingId, CasillaId
+from ...domain.calculations.registry._schema_references import SourceReference
+from ...domain.calculations.registry._schema_surfaces import (
+    ExportFieldDefinition,
+    ExportLayoutDefinition,
+    ExportRecordDefinition,
+)
+from ...domain.contribuyente._renta_codes import modelo100_ecivil_export_code
 from ...domain.filing import (
     FilingExportError,
     FilingExportValidationError,
@@ -624,7 +627,13 @@ def _xml_dictionary_rendered_value(
         raw = _xml_dictionary_header_value(entry, draft=draft, headers=headers)
     if raw is None:
         return None
-    return _format_xml_dictionary_value(entry.data_type, raw)
+    rendered = _format_xml_dictionary_value(entry.data_type, raw)
+    if draft.modelo == "100" and entry.field_id == "ECIVIL":
+        try:
+            return modelo100_ecivil_export_code(rendered)
+        except ValueError as exc:
+            raise FilingExportValidationError(str(exc)) from exc
+    return rendered
 
 
 def _xml_dictionary_header_value(
