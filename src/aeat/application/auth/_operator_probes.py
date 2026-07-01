@@ -171,6 +171,49 @@ class _ProviderProbeOutcome(BaseModel):
     summary: str = ""
 
 
+class ProviderConfigurationProbe(BaseModel):
+    """Public per-provider local configuration readiness verdict.
+
+    Wraps the pure-local :func:`_probe_configured_provider` (no network,
+    no active-profile requirement) so the workstation doctor
+    (``aeat config check``) can render one certificate / Cl@ve Móvil
+    readiness row per :class:`~aeat.application.auth.AuthProviderKind`
+    directly from :class:`~aeat.core.config.Settings`. ``result`` is the
+    typed :class:`ProviderProbeResult`; ``summary`` is the localised
+    one-line operator-facing verdict.
+    """
+
+    model_config = _STRICT_FROZEN
+
+    provider: str
+    result: ProviderProbeResult | str = ""
+    summary: str = ""
+
+
+def probe_provider_configuration(
+    provider: str,
+    *,
+    settings: Settings | None = None,
+) -> ProviderConfigurationProbe:
+    """Run the pure-local per-provider configuration probe for ``provider``.
+
+    Resolves the certificate path or Cl@ve Móvil identity from
+    :class:`~aeat.core.config.Settings` and classifies the local
+    configuration health without any network call or active-profile
+    session. Returns a typed :class:`ProviderConfigurationProbe`; it
+    never raises for a missing or malformed configuration — an absent
+    provider surfaces as :attr:`ProviderProbeResult.NO_PATH_SET` /
+    :attr:`ProviderProbeResult.IDENTITY_UNSET`, a broken one as
+    ``expired`` / ``corrupt`` / ``invalid_identity``.
+    """
+    outcome = _probe_configured_provider(provider, "", settings=settings)
+    return ProviderConfigurationProbe(
+        provider=provider,
+        result=outcome.result,
+        summary=outcome.summary,
+    )
+
+
 def _probe_configured_provider(
     provider: str,
     certificate_path: str,
