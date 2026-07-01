@@ -35,6 +35,7 @@ if TYPE_CHECKING:
 MODELO_130_FIXTURE = FIXTURES_DIR / "justificantes" / "modelo_130_2026Q1.pdf"
 _EXP_130_1T = "202613000010001A"
 _AEAT = Settings.external_constants().aeat
+_WORK_UNIT_TIMESTAMP = datetime(2026, 5, 28, 15, 45, tzinfo=UTC)
 
 
 @contextmanager
@@ -78,8 +79,8 @@ def _seed_work_unit(*, modelo: str, filing_year: int, period: str) -> str:
         period=filing_period,
         revision_id=revision_id,
         name=f"{modelo}-{filing_year}-{period}",
-        created_at=datetime.now(UTC),
-        updated_at=datetime.now(UTC),
+        created_at=_WORK_UNIT_TIMESTAMP,
+        updated_at=_WORK_UNIT_TIMESTAMP,
     )
     repo = WorkUnitCatalogueRepository()
     repo.save(upsert_work_unit(repo.load(), work_unit))

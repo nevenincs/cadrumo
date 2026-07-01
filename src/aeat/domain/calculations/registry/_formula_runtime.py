@@ -1,10 +1,26 @@
 """Registry-backed formula runtime using typed operation graphs.
 
-Evaluates formula expressions declared on a :class:`ModeloRevision` against
-casilla inputs and binding values drawn from a :class:`RegistrySnapshot`.
+Evaluates
+:class:`~aeat.domain.calculations.registry.FormulaExpression` trees declared on
+a :class:`~aeat.domain.calculations.registry.ModeloRevision` against casilla
+inputs and binding values drawn from a
+:class:`~aeat.domain.calculations.registry.RegistrySnapshot`.
 The calculation entry point :func:`calculate_registry_snapshot` is the
-primary surface used by :class:`ValidatedRegistryAuthority`-backed callers
-to produce :class:`~._bindings.CasillaObservation` rows with full provenance.
+primary surface used by
+:class:`~aeat.domain.calculations.registry.ValidatedRegistryAuthority`-backed
+callers to produce
+:class:`~aeat.domain.calculations.registry.CasillaObservation` rows with full
+provenance.
+
+See Also:
+    :mod:`aeat.domain.calculations.registry._runtime_graph`
+        Produces formula evaluation order and dependency projections.
+    :mod:`aeat.domain.calculations.registry._formula_runtime_ops`
+        Arithmetic, rounding, and parameter lookup helpers called by this
+        evaluator.
+    :mod:`aeat.domain.calculations.registry._formula_initial_values`
+        Builds the initial casilla value map and materialised observation
+        envelope for this runtime.
 """
 
 from __future__ import annotations
@@ -75,6 +91,8 @@ class _UnresolvedFormulaDependencyError(RegistrySnapshotError):
 
 @dataclass(frozen=True, slots=True)
 class _IrnrResolveTipoGravamenArgs:
+    """Resolved registry ids for the M210 IRNR rate dispatcher."""
+
     tipo_casilla_id: CasillaId
     baseline_parameter: ParameterId
     country_binding: BindingId
@@ -84,6 +102,8 @@ class _IrnrResolveTipoGravamenArgs:
 
 @dataclass(frozen=True, slots=True)
 class _M210ResolveBaseArgs:
+    """Resolved registry ids for the M210 base-imponible dispatcher."""
+
     tipo_casilla_id: CasillaId
     gross_casilla_id: CasillaId
     deductible_expenses_casilla_id: CasillaId
@@ -100,6 +120,8 @@ class _M210ResolveBaseArgs:
 
 @dataclass(frozen=True, slots=True)
 class _M100ResolveImputedRentArgs:
+    """Resolved registry ids for the M100 imputed-rent dispatcher."""
+
     catastral_value_casilla_id: CasillaId
     revised_flag_casilla_id: CasillaId
     disposal_days_casilla_id: CasillaId
@@ -113,14 +135,11 @@ class _M100ResolveImputedRentArgs:
 class RegistryCalculationEntry(BaseModel):
     """One trace row emitted by the registry formula runtime.
 
-    Carries the per-formula provenance (``formula_id``, ``op``,
-    ``operand_refs``, ``operand_values``, ``legal_refs``,
-    ``source_refs``) for a single formula-computed casilla. Entries
-    cover ONLY the casillas that were computed by a registry formula
-    — input casillas and bound casillas are absent from the entries
-    tuple. Callers that need provenance for non-computed casillas
-    must look them up against
-    ``RegistrySnapshot.revision.casillas`` directly.
+    Carries the per-formula provenance for a single formula-computed
+    :class:`~aeat.domain.calculations.registry.CasillaId`. Entries cover only
+    casillas computed by a registry formula; input and bound casillas remain in
+    :class:`~aeat.domain.calculations.registry.CasillaObservation` storage and
+    must be read through :attr:`RegistryCalculationResult.observations`.
     """
 
     model_config = STRICT_FROZEN_CONFIG
@@ -139,8 +158,10 @@ class RegistryCalculationEntry(BaseModel):
 class RegistryCalculationResult(BaseModel):
     """Calculated outputs for one registry snapshot.
 
-    Canonical storage is :attr:`observations` — a typed tuple of
-    :class:`CasillaObservation` covering EVERY casilla on the revision
+    Canonical storage is :attr:`observations`: a typed tuple of
+    :class:`~aeat.domain.calculations.registry.CasillaObservation` covering
+    every casilla on the
+    :class:`~aeat.domain.calculations.registry.RegistrySnapshot` revision
     (inputs, bound, and formula-computed). Each observation carries
     its final Decimal ``value`` plus the legal / source provenance for
     that casilla pulled from the registry. Formula-computed
@@ -150,19 +171,19 @@ class RegistryCalculationResult(BaseModel):
 
     The :attr:`values` and :attr:`entries` views are derived convenience
     properties for readers that need the flat ``{casilla_id: Decimal}``
-    map or the formula-only entry tuple. The typed envelope is the
-    contract; the flat views never grow new fields.
+    map or the formula-only :class:`RegistryCalculationEntry` tuple. The typed
+    envelope is the contract; the flat views never grow new fields.
 
     Coverage asymmetry preserved by the derivation:
 
-    * :attr:`values` covers every observation (inputs, bound, computed)
-      — keyed by ``casilla_id`` → ``value``.
+    * :attr:`values` covers every observation (inputs, bound, computed), keyed
+      by ``casilla_id`` to ``value``.
     * :attr:`entries` covers ONLY observations where ``formula_id`` is
       set. ``len(entries) <= len(observations)`` always; equality holds
       only when every casilla is formula-computed (rare in practice).
 
     Consumers that need provenance for non-computed casillas must iterate
-    :attr:`observations` directly — the entries view drops them by design.
+    :attr:`observations` directly; the entries view drops them by design.
     """
 
     model_config = STRICT_FROZEN_CONFIG
@@ -189,7 +210,7 @@ class RegistryCalculationResult(BaseModel):
 
     @property
     def values(self) -> Mapping[CasillaId, Decimal]:
-        """Read-only view: casilla_id → final Decimal value.
+        """Read-only view from registry casilla id to final Decimal value.
 
         Deliberately a plain ``@property``, not a pydantic
         ``computed_field``: the typed ``observations`` envelope is
@@ -201,12 +222,12 @@ class RegistryCalculationResult(BaseModel):
 
     @property
     def entries(self) -> tuple[RegistryCalculationEntry, ...]:
-        """Read-only view: formula-computed observations as :class:`RegistryCalculationEntry` rows.
+        """Read-only view of formula-computed :class:`RegistryCalculationEntry` rows.
 
         Preserves the formula-only entry view with ``target_casilla_id`` and
         ``op`` fields for the application-layer indexers that build
         ``{target_casilla_id: entry}`` dictionaries. Insertion order from
-        ``observations`` is preserved — the engine emits in formula
+        ``observations`` is preserved; the engine emits in formula
         evaluation order, which matches the original ``entries`` shape.
         """
         return tuple(
@@ -239,7 +260,7 @@ def calculate_registry_snapshot[InputKey, InputValue, TextInputKey, TextInputVal
     date_binding_values: Mapping[BindingId, date] | None = None,
     text_inputs: Mapping[TextInputKey, TextInputValue] | None = None,
 ) -> RegistryCalculationResult:
-    """Evaluate all computed formulas and return a :class:`RegistryCalculationResult`.
+    """Evaluate all computed formulas for a registry snapshot.
 
     ``enum_binding_values`` carries string-valued bindings (typically
     profile-sourced enums like ``CCAA``) that the
@@ -252,16 +273,27 @@ def calculate_registry_snapshot[InputKey, InputValue, TextInputKey, TextInputVal
     cannot flow through the Decimal ``binding_values`` channel; keeping
     them in a dedicated channel preserves the Decimal-only invariant.
 
+    The returned :class:`RegistryCalculationResult` stores
+    :class:`~aeat.domain.calculations.registry.CasillaObservation` rows for all
+    materialised casillas. Input validation is delegated to
+    :mod:`aeat.domain.calculations.registry._formula_runtime_ops` and
+    :mod:`aeat.domain.calculations.registry._formula_text_inputs`; initial
+    casilla values and absent-by-design markers are delegated to
+    :mod:`aeat.domain.calculations.registry._formula_initial_values`.
+
     Args:
-        snapshot: The :class:`RegistrySnapshot` that supplies the revision,
-            casilla definitions, and formula graph to evaluate.
+        snapshot: The
+            :class:`~aeat.domain.calculations.registry.RegistrySnapshot` that
+            supplies the revision, casilla definitions, and formula graph to
+            evaluate.
         inputs: Operator-supplied input casilla values; rejected if any value
-            is not a :class:`Decimal`.
+            is not a :class:`decimal.Decimal`.
         date_context: Date-axis context (e.g. ``filing_period``) consumed by
             date-aware ops; ``filing_period`` defaults to the snapshot's
             year-end when absent.
         binding_values: Optional resolved numeric binding values keyed by
-            ``DataBindingDefinition.id``; Decimal-only.
+            :class:`~aeat.domain.calculations.registry.DataBindingDefinition`
+            id; Decimal-only.
         enum_binding_values: Optional string-valued bindings (e.g. profile
             CCAA) keyed by binding id; consumed by enum-routed ops.
         relation_values: Optional resolved relation values keyed by

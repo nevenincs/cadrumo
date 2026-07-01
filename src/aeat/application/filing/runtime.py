@@ -2,8 +2,8 @@
 
 Exposes concrete profile helpers used by the CLI and workflow surfaces.
 The production schema provider requires validated registry snapshots and
-projects them into the :class:`aeat.domain.filing.CasillaSchemaProvider`
-surface consumed by :func:`aeat.application.filing.build_draft`.
+projects them into the :class:`~aeat.domain.filing.CasillaSchemaProvider`
+surface consumed by :func:`~aeat.application.filing.build_draft`.
 
 The filing runtime must not depend on
 :mod:`aeat.application.filing.testing`; this module is the production
@@ -15,15 +15,18 @@ Key entry points:
 * :class:`ModeloOperatorProfile` — pydantic v2 record satisfying the
   filing-profile Protocol.
 * :func:`filing_profile_from_taxpayer` — projects taxpayer identity from a
-  domain :class:`aeat.domain.deadlines.TaxpayerProfile` into the runtime
+  domain :class:`~aeat.domain.deadlines.TaxpayerProfile` into the runtime
   profile shape without deriving legal filing obligations.
 * :func:`load_default_filing_profile` — loads the active profile bucket
   and returns a runtime profile.
 * :func:`build_runtime_schema_provider` — requires registry-backed snapshots.
 
-The schema provider consumes a :class:`RegistrySnapshot` built from a
-:class:`ModeloRevision` within a :class:`ModeloDefinition`, accessed through
-a :class:`ValidatedRegistryAuthority` loaded from the configured registry root.
+The schema provider consumes a
+:class:`~aeat.domain.calculations.registry.RegistrySnapshot` built from a
+:class:`~aeat.domain.calculations.registry.ModeloRevision` within a
+:class:`~aeat.domain.calculations.registry.ModeloDefinition`, accessed through
+a :class:`~aeat.domain.calculations.registry.ValidatedRegistryAuthority` loaded
+from the configured registry root.
 
 See Also:
     :func:`aeat.application.wizard._status.load_active_taxpayer_profile`
@@ -107,7 +110,8 @@ class RegistryCasillaSchema(BaseModel):
 
     Strict, frozen pydantic v2 projection preserving typed IDs,
     ``Decimal`` bounds, and the regulatory grounding (``legal_refs``,
-    ``source_refs``) from the authoritative :class:`CasillaDefinition`.
+    ``source_refs``) from the authoritative
+    :class:`~aeat.domain.calculations.registry.CasillaDefinition`.
     """
 
     model_config = _STRICT_FROZEN
@@ -209,8 +213,9 @@ class RegistrySchemaAccessor:
 
     The concrete registry-schema accessor (it provides casilla collections
     and modelo subviews from validated registry TOML); structurally
-    satisfies the :class:`CasillaSchemaProvider` protocol. Named an accessor
-    to stay distinct from the settled calculate-mesh resolver port.
+    satisfies the :class:`~aeat.domain.filing.CasillaSchemaProvider` protocol.
+    Named an accessor to stay distinct from the settled calculate-mesh resolver
+    port.
     """
 
     collections: dict[str, RegistryCasillaCollection]
@@ -221,8 +226,9 @@ class RegistrySchemaAccessor:
     def get_collection(self, modelo: str) -> CasillaCollection:
         """Return the casilla collection for ``modelo``.
 
-        Returns a :class:`CasillaCollection` for the modelo.
-        Raises :exc:`ModeloBuilderError` when the modelo is absent.
+        Returns a :class:`~aeat.domain.filing.CasillaCollection` for the modelo.
+        Raises :exc:`~aeat.domain.filing.ModeloBuilderError` when the modelo is
+        absent.
         """
         try:
             return self.collections[modelo]
@@ -252,11 +258,12 @@ def filing_profile_from_taxpayer(
 ) -> ModeloOperatorProfile:
     """Project taxpayer identity into a :class:`ModeloOperatorProfile`.
 
-    The common caller passes :class:`aeat.domain.deadlines.TaxpayerProfile`, but
-    the accepted contract is the narrower :class:`TaxpayerProfileIdentity`
-    Protocol. This helper deliberately copies only taxpayer identity. Modelo
-    applicability is legal filing truth and must come from validated registry
-    data, not a filing-runtime tuple or the deadline engine.
+    The common caller passes
+    :class:`~aeat.domain.deadlines.TaxpayerProfile`, but the accepted contract is
+    the narrower :class:`TaxpayerProfileIdentity` Protocol. This helper
+    deliberately copies only taxpayer identity. Modelo applicability is legal
+    filing truth and must come from validated registry data, not a filing-runtime
+    tuple or the deadline engine.
 
     Args:
         profile: Source identity object exposing ``tax_id``.
@@ -328,7 +335,7 @@ def build_runtime_schema_provider(
         registry_root: Optional registry root. Defaults to the bundled AEAT
             registry.
         source_root: Optional source-material root used by
-            :class:`ValidatedRegistryAuthority`.
+            :class:`~aeat.domain.calculations.registry.ValidatedRegistryAuthority`.
         filing_year: Optional filing year; must be paired with ``period``.
         period: Optional typed :class:`~aeat.core.Period`; must match
             ``filing_year``.
@@ -336,12 +343,12 @@ def build_runtime_schema_provider(
 
     Returns:
         A :class:`RegistrySchemaAccessor` implementing the filing
-        :class:`aeat.domain.filing.CasillaSchemaProvider` surface.
+        :class:`~aeat.domain.filing.CasillaSchemaProvider` surface.
 
     Raises:
-        ModeloBuilderError: When the registry is empty, a requested modelo is
-            missing, the period arguments are invalid, or no snapshot exists for
-            the requested filing context.
+        :class:`~aeat.domain.filing.ModeloBuilderError`: When the registry is
+            empty, a requested modelo is missing, the period arguments are
+            invalid, or no snapshot exists for the requested filing context.
     """
     validated_period = _validate_period_arguments(filing_year=filing_year, period=period)
     root = (registry_root or bundled_path("registry", "aeat")).resolve()
@@ -530,17 +537,19 @@ def collection_from_snapshot(snapshot: RegistrySnapshot) -> RegistryCasillaColle
     """Project a validated registry snapshot into a runtime casilla collection.
 
     Args:
-        snapshot: The :class:`RegistrySnapshot` whose
-            :class:`ModeloRevision` is projected into filing-runtime casilla
-            schemas.
+        snapshot: The
+            :class:`~aeat.domain.calculations.registry.RegistrySnapshot` whose
+            :class:`~aeat.domain.calculations.registry.ModeloRevision` is
+            projected into filing-runtime casilla schemas.
 
     Returns:
         A :class:`RegistryCasillaCollection` with the snapshot revision's
         casillas and ``registry:{modelo}:{revision}`` schema version.
 
     Raises:
-        :class:`ModeloBuilderError`: When the snapshot revision contains
-            ambiguous casilla references and cannot be projected safely.
+        :class:`~aeat.domain.filing.ModeloBuilderError`: When the snapshot
+            revision contains ambiguous casilla references and cannot be
+            projected safely.
     """
     modelo = snapshot.modelo
     revision = snapshot.revision

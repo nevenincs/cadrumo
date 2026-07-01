@@ -9,10 +9,11 @@ invariant that closes that gap: every
 exactly one disposition — surfaced, confidently excluded, advised (investigate),
 or explicitly out of scope — so nothing can vanish silently.
 
-The Modelo-190 regression is the canonical case: it has an applicability rule
-(it is positively known to apply to a withholding payer) but no deadline window,
-so the engine never emitted it and it was silently absent from every calendar.
-Here it MUST appear in the ``advised`` bucket.
+The original Modelo-190 regression is the canonical shape: an applicable
+obligation was missing from the surfaced calendar and therefore had to be
+advised rather than silently absent. Current Modelo 190 is now window-backed and
+must surface on the real calendar; the coverage diagnostic still protects the
+same failure mode for any applicable obligation omitted from the surfaced set.
 """
 
 from __future__ import annotations
@@ -149,13 +150,14 @@ def test_out_of_scope_cannot_silence_a_positively_decidable_obligation() -> None
         )
 
 
-def test_modelo_190_is_advised_not_silently_absent() -> None:
-    """M190 (applicable, but window-less) must be advised — the core regression.
+def test_applicable_but_unsurfaced_modelo_is_advised_not_silently_absent() -> None:
+    """An applicable modelo missing from the surfaced set must be advised.
 
-    M190 has an applicability rule keyed on the withholding payer fact but no
-    registered deadline window, so the deadline engine never emits it. Before
-    this invariant it was silently absent from every calendar; now it must be
-    advised with the window-missing reason.
+    The report receives the actual surface rows from calendar construction. If a
+    positively applicable modelo is absent from that set, the coverage layer must
+    classify it as an applicable-window gap rather than letting it disappear.
+    M190 remains a useful seeded example for this diagnostic, even though the
+    real calendar now surfaces it.
     """
     report = build_obligation_coverage(_paying_autonomo(), {"111", "100", "303"}, today=_TODAY)
     advised = {item.modelo: item.reason for item in report.advised}
@@ -195,7 +197,9 @@ def test_calendar_attaches_coverage_by_default() -> None:
     )
     _assert_total_partition(calendar.coverage)
     assert calendar.coverage.has_advisories
-    assert "190" in calendar.coverage.advised_modelos
+    assert "190" in {entry.modelo for entry in calendar.entries}
+    assert "190" in calendar.coverage.surfaced
+    assert "190" not in calendar.coverage.advised_modelos
 
 
 def test_agenda_and_backlog_inherit_calendar_coverage() -> None:
@@ -205,5 +209,7 @@ def test_agenda_and_backlog_inherit_calendar_coverage() -> None:
     backlog = build_overview_backlog(profile, as_of=_TODAY)
     _assert_total_partition(agenda.coverage)
     _assert_total_partition(backlog.coverage)
-    assert "190" in agenda.coverage.advised_modelos
-    assert "190" in backlog.coverage.advised_modelos
+    assert "190" in agenda.coverage.surfaced
+    assert "190" in backlog.coverage.surfaced
+    assert "190" not in agenda.coverage.advised_modelos
+    assert "190" not in backlog.coverage.advised_modelos

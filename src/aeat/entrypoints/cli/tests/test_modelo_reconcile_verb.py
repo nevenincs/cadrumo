@@ -35,6 +35,7 @@ MODELO_130_FIXTURE = FIXTURES_DIR / "justificantes" / "modelo_130_2026Q1.pdf"
 # resolve to ``matches`` (instead of a tax_id mismatch against the auto-derived
 # per-profile NIF ``register_minimal_profile`` would otherwise assign).
 _FIXTURE_PROFILE_TAX_ID = "00000000T"
+_WORK_UNIT_TIMESTAMP = datetime(2026, 5, 28, 15, 40, tzinfo=UTC)
 
 
 @pytest.fixture(autouse=True)
@@ -74,8 +75,8 @@ def _seed_work_unit(*, modelo: str, filing_year: int, period: str) -> str:
         period=filing_period,
         revision_id=revision_id,
         name=f"{modelo}-{filing_year}-{period}",
-        created_at=datetime.now(UTC),
-        updated_at=datetime.now(UTC),
+        created_at=_WORK_UNIT_TIMESTAMP,
+        updated_at=_WORK_UNIT_TIMESTAMP,
     )
     repo = WorkUnitCatalogueRepository()
     repo.save(upsert_work_unit(repo.load(), work_unit))

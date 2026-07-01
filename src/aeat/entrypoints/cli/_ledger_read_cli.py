@@ -75,6 +75,13 @@ _LEDGER_HISTORY_EVENT_TYPES: tuple[BucketEventType, ...] = (
     BucketEventType.LEDGER_TRANSACTION_SPLIT,
     BucketEventType.LEDGER_TRANSACTION_MERGED,
 )
+_LEDGER_EVIDENCE_HISTORY_EVENT_TYPES: tuple[BucketEventType, ...] = (
+    BucketEventType.PURCHASE_INVOICE_EVIDENCE_ATTACHED,
+    BucketEventType.PURCHASE_INVOICE_EVIDENCE_REPLACED,
+    BucketEventType.PURCHASE_INVOICE_EVIDENCE_DETACHED,
+    BucketEventType.ATTACHMENT_LINKED,
+    BucketEventType.ATTACHMENT_REMOVED,
+)
 
 
 def register_read_commands(app: typer.Typer, *, resolve_transaction_id: ResolveTransactionId) -> None:
@@ -1070,6 +1077,7 @@ def _history_object_ids(
 def _collect_ledger_history_events(object_ids: list[str]) -> list[BucketEvent]:
     """Return the chronological union of :class:`~aeat.domain.buckets.BucketEvent` rows across ``object_ids``."""
     event_catalogue = BucketEventHistoryRepository().load()
+    object_id_set = set(object_ids)
     matches: list[BucketEvent] = []
     for object_id in object_ids:
         matches.extend(
@@ -1080,6 +1088,12 @@ def _collect_ledger_history_events(object_ids: list[str]) -> list[BucketEvent]:
             )
             if event.event_type in _LEDGER_HISTORY_EVENT_TYPES
         )
+    matches.extend(
+        event
+        for event in event_catalogue.values()
+        if event.event_type in _LEDGER_EVIDENCE_HISTORY_EVENT_TYPES
+        and event.payload.get("transaction_id") in object_id_set
+    )
     matches.sort(key=lambda event: event.occurred_at)
     return matches
 

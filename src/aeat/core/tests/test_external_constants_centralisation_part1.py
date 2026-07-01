@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import ast
+from decimal import Decimal
 from pathlib import Path
 
 import pytest
@@ -11,18 +12,63 @@ from ..config import Settings
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
+_DECIMAL_CONSTANT_CASES = (
+    ("M347_THRESHOLD_EUR", "3005.06"),
+    ("MODELO_720_REPORTING_THRESHOLD_EUR", "50000.00"),
+    ("ART_7P_EXEMPTION_CAP_EUR", "60100"),
+    ("MULTIPLE_PAGADORES_SECONDARY_THRESHOLD_EUR", "1500"),
+    ("WORK_INCOME_GENERAL_DECLARATION_LIMIT_EUR", "22000"),
+)
+_DECIMAL_CONSTANT_IDS = tuple(name.lower() for name, _ in _DECIMAL_CONSTANT_CASES)
+
+_STRING_CONSTANT_CASES = (
+    ("BINARY_MIME_TYPE", "application/octet-stream"),
+    ("DEFAULT_CURRENCY", "EUR"),
+    ("CLASSIFIED_BY_MANUAL", "manual"),
+    ("JSON_MIME_TYPE", "application/json"),
+    ("CSV_MIME_TYPE", "text/csv"),
+    ("JSONL_MIME_TYPE", "application/x-ndjson"),
+    ("XLSX_MIME_TYPE", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"),
+)
+_STRING_CONSTANT_IDS = tuple(name.lower() for name, _ in _STRING_CONSTANT_CASES)
+_STRING_TYPE_CONSTANT_NAMES = tuple(
+    name for name, _ in _STRING_CONSTANT_CASES if name != "BINARY_MIME_TYPE"
+)
+_STRING_TYPE_CONSTANT_IDS = tuple(name.lower() for name in _STRING_TYPE_CONSTANT_NAMES)
+
+
+@pytest.mark.parametrize(("constant_name", "expected"), _STRING_CONSTANT_CASES, ids=_STRING_CONSTANT_IDS)
+def test_string_external_constant_values(constant_name: str, expected: str) -> None:
+    """String external constants carry their authoritative literal values."""
+
+    from .. import external_constants
+
+    assert getattr(external_constants, constant_name) == expected
+
+
+@pytest.mark.parametrize("constant_name", _STRING_TYPE_CONSTANT_NAMES, ids=_STRING_TYPE_CONSTANT_IDS)
+def test_string_external_constants_are_str(constant_name: str) -> None:
+    """String external constants remain plain ``str`` instances."""
+
+    from .. import external_constants
+
+    assert isinstance(getattr(external_constants, constant_name), str)
+
+
+@pytest.mark.parametrize(("constant_name", "expected"), _DECIMAL_CONSTANT_CASES, ids=_DECIMAL_CONSTANT_IDS)
+def test_decimal_external_constant_values_and_types(constant_name: str, expected: str) -> None:
+    """Decimal external constants carry their legal scalar values as ``Decimal`` instances."""
+
+    from .. import external_constants
+
+    value = getattr(external_constants, constant_name)
+    assert Decimal(expected) == value
+    assert isinstance(value, Decimal)
+
 
 # ---------------------------------------------------------------------------
 # contract — BINARY_MIME_TYPE centralisation tests
 # ---------------------------------------------------------------------------
-
-
-def test_binary_mime_type_value() -> None:
-    """``BINARY_MIME_TYPE`` equals the IANA-registered opaque-binary MIME type."""
-
-    from ..external_constants import BINARY_MIME_TYPE
-
-    assert BINARY_MIME_TYPE == "application/octet-stream"
 
 
 def test_google_drive_reads_binary_mime_from_external_constants() -> None:
@@ -44,22 +90,6 @@ def test_google_drive_reads_binary_mime_from_external_constants() -> None:
 # ---------------------------------------------------------------------------
 # contract / contract — DEFAULT_CURRENCY centralisation tests
 # ---------------------------------------------------------------------------
-
-
-def test_default_currency_value() -> None:
-    """``DEFAULT_CURRENCY`` equals the ISO 4217 Euro code."""
-
-    from ..external_constants import DEFAULT_CURRENCY
-
-    assert DEFAULT_CURRENCY == "EUR"
-
-
-def test_default_currency_is_final_str() -> None:
-    """``DEFAULT_CURRENCY`` is a ``str`` instance (typed ``Final[str]``)."""
-
-    from ..external_constants import DEFAULT_CURRENCY
-
-    assert isinstance(DEFAULT_CURRENCY, str)
 
 
 def test_ledger_transaction_command_reads_currency_from_external_constants() -> None:
@@ -152,22 +182,6 @@ def test_declarations_filed_artefact_uses_binary_mime_constant() -> None:
 # ---------------------------------------------------------------------------
 # contract / contract / contract — CLASSIFIED_BY_MANUAL single-source-of-truth tests
 # ---------------------------------------------------------------------------
-
-
-def test_classified_by_manual_value() -> None:
-    """``CLASSIFIED_BY_MANUAL`` equals the sentinel stored in persisted records."""
-
-    from ..external_constants import CLASSIFIED_BY_MANUAL
-
-    assert CLASSIFIED_BY_MANUAL == "manual"
-
-
-def test_classified_by_manual_is_final_str() -> None:
-    """``CLASSIFIED_BY_MANUAL`` is a ``str`` instance (typed ``Final[str]``)."""
-
-    from ..external_constants import CLASSIFIED_BY_MANUAL
-
-    assert isinstance(CLASSIFIED_BY_MANUAL, str)
 
 
 def test_application_ledger_imports_classified_by_manual_from_core() -> None:
@@ -280,70 +294,6 @@ def test_no_local_classified_by_manual_shadow_in_application_or_domain() -> None
 # ---------------------------------------------------------------------------
 
 
-def test_json_mime_type_value() -> None:
-    """``JSON_MIME_TYPE`` equals the IANA-registered JSON MIME type."""
-
-    from ..external_constants import JSON_MIME_TYPE
-
-    assert JSON_MIME_TYPE == "application/json"
-
-
-def test_csv_mime_type_value() -> None:
-    """``CSV_MIME_TYPE`` equals the IANA-registered CSV MIME type."""
-
-    from ..external_constants import CSV_MIME_TYPE
-
-    assert CSV_MIME_TYPE == "text/csv"
-
-
-def test_jsonl_mime_type_value() -> None:
-    """``JSONL_MIME_TYPE`` equals the newline-delimited JSON MIME type."""
-
-    from ..external_constants import JSONL_MIME_TYPE
-
-    assert JSONL_MIME_TYPE == "application/x-ndjson"
-
-
-def test_xlsx_mime_type_value() -> None:
-    """``XLSX_MIME_TYPE`` equals the Office Open XML workbook MIME type."""
-
-    from ..external_constants import XLSX_MIME_TYPE
-
-    assert XLSX_MIME_TYPE == "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-
-
-def test_json_mime_type_is_final_str() -> None:
-    """``JSON_MIME_TYPE`` is a ``str`` instance (typed ``Final[str]``)."""
-
-    from ..external_constants import JSON_MIME_TYPE
-
-    assert isinstance(JSON_MIME_TYPE, str)
-
-
-def test_csv_mime_type_is_final_str() -> None:
-    """``CSV_MIME_TYPE`` is a ``str`` instance (typed ``Final[str]``)."""
-
-    from ..external_constants import CSV_MIME_TYPE
-
-    assert isinstance(CSV_MIME_TYPE, str)
-
-
-def test_jsonl_mime_type_is_final_str() -> None:
-    """``JSONL_MIME_TYPE`` is a ``str`` instance (typed ``Final[str]``)."""
-
-    from ..external_constants import JSONL_MIME_TYPE
-
-    assert isinstance(JSONL_MIME_TYPE, str)
-
-
-def test_xlsx_mime_type_is_final_str() -> None:
-    """``XLSX_MIME_TYPE`` is a ``str`` instance (typed ``Final[str]``)."""
-
-    from ..external_constants import XLSX_MIME_TYPE
-
-    assert isinstance(XLSX_MIME_TYPE, str)
-
-
 def test_declarations_uses_json_mime_constant() -> None:
     """``_declarations.py`` imports ``JSON_MIME_TYPE`` rather than a bare literal.
 
@@ -431,26 +381,6 @@ def test_no_bare_json_mime_literal_in_declarations() -> None:
 # ---------------------------------------------------------------------------
 
 
-def test_m347_threshold_eur_value() -> None:
-    """``M347_THRESHOLD_EUR`` equals €3,005.06 per RD 1065/2007 art. 33.1."""
-
-    from decimal import Decimal
-
-    from ..external_constants import M347_THRESHOLD_EUR
-
-    assert Decimal("3005.06") == M347_THRESHOLD_EUR
-
-
-def test_m347_threshold_eur_is_final_decimal() -> None:
-    """``M347_THRESHOLD_EUR`` is a ``Decimal`` instance (typed ``Final[Decimal]``)."""
-
-    from decimal import Decimal
-
-    from ..external_constants import M347_THRESHOLD_EUR
-
-    assert isinstance(M347_THRESHOLD_EUR, Decimal)
-
-
 def test_counterpart_aggregator_reads_threshold_from_external_constants() -> None:
     """``_counterpart.py`` must import ``M347_THRESHOLD_EUR`` from core, not define it locally."""
 
@@ -497,26 +427,6 @@ def test_no_bare_threshold_347_literal_in_counterpart() -> None:
 # ---------------------------------------------------------------------------
 # contract — MODELO_720_REPORTING_THRESHOLD_EUR centralisation tests
 # ---------------------------------------------------------------------------
-
-
-def test_modelo_720_reporting_threshold_eur_value() -> None:
-    """``MODELO_720_REPORTING_THRESHOLD_EUR`` equals €50,000.00 per AEAT instrucciones."""
-
-    from decimal import Decimal
-
-    from ..external_constants import MODELO_720_REPORTING_THRESHOLD_EUR
-
-    assert Decimal("50000.00") == MODELO_720_REPORTING_THRESHOLD_EUR
-
-
-def test_modelo_720_reporting_threshold_eur_is_final_decimal() -> None:
-    """``MODELO_720_REPORTING_THRESHOLD_EUR`` is a ``Decimal`` instance."""
-
-    from decimal import Decimal
-
-    from ..external_constants import MODELO_720_REPORTING_THRESHOLD_EUR
-
-    assert isinstance(MODELO_720_REPORTING_THRESHOLD_EUR, Decimal)
 
 
 def test_foreign_assets_aggregator_reads_threshold_from_external_constants() -> None:
@@ -589,26 +499,6 @@ def test_no_bare_csv_mime_literal_in_tabular() -> None:
 # ---------------------------------------------------------------------------
 
 
-def test_art_7p_exemption_cap_eur_value() -> None:
-    """``ART_7P_EXEMPTION_CAP_EUR`` equals €60,100 per Art. 7.p) LIRPF (Ley 35/2006)."""
-
-    from decimal import Decimal
-
-    from ..external_constants import ART_7P_EXEMPTION_CAP_EUR
-
-    assert Decimal("60100") == ART_7P_EXEMPTION_CAP_EUR
-
-
-def test_art_7p_exemption_cap_eur_is_final_decimal() -> None:
-    """``ART_7P_EXEMPTION_CAP_EUR`` is a ``Decimal`` instance (typed ``Final[Decimal]``)."""
-
-    from decimal import Decimal
-
-    from ..external_constants import ART_7P_EXEMPTION_CAP_EUR
-
-    assert isinstance(ART_7P_EXEMPTION_CAP_EUR, Decimal)
-
-
 def test_maritime_exemption_imports_art_7p_cap_from_core() -> None:
     """``domain/renta/_maritime_exemption.py`` reads ``ART_7P_EXEMPTION_CAP_EUR`` from core."""
 
@@ -670,26 +560,6 @@ def test_no_bare_art_7p_cap_decimal_literal_in_maritime_exemption() -> None:
 # ---------------------------------------------------------------------------
 
 
-def test_multiple_pagadores_secondary_threshold_eur_value() -> None:
-    """``MULTIPLE_PAGADORES_SECONDARY_THRESHOLD_EUR`` equals €1,500 per Art. 96.3 LIRPF."""
-
-    from decimal import Decimal
-
-    from ..external_constants import MULTIPLE_PAGADORES_SECONDARY_THRESHOLD_EUR
-
-    assert Decimal("1500") == MULTIPLE_PAGADORES_SECONDARY_THRESHOLD_EUR
-
-
-def test_multiple_pagadores_secondary_threshold_eur_is_final_decimal() -> None:
-    """``MULTIPLE_PAGADORES_SECONDARY_THRESHOLD_EUR`` is a ``Decimal`` instance."""
-
-    from decimal import Decimal
-
-    from ..external_constants import MULTIPLE_PAGADORES_SECONDARY_THRESHOLD_EUR
-
-    assert isinstance(MULTIPLE_PAGADORES_SECONDARY_THRESHOLD_EUR, Decimal)
-
-
 def test_deadlines_models_imports_multiple_pagadores_threshold_from_core() -> None:
     """``domain/deadlines/_models.py`` imports ``MULTIPLE_PAGADORES_SECONDARY_THRESHOLD_EUR`` from core."""
 
@@ -739,17 +609,6 @@ def test_no_bare_multiple_pagadores_threshold_literal_in_deadlines_models() -> N
 # ---------------------------------------------------------------------------
 
 
-def test_work_income_general_declaration_limit_eur_value() -> None:
-    """General work-income exemption ceiling is €22,000 per Art. 96.2.a) LIRPF."""
-
-    from decimal import Decimal
-
-    from ..external_constants import WORK_INCOME_GENERAL_DECLARATION_LIMIT_EUR
-
-    assert Decimal("22000") == WORK_INCOME_GENERAL_DECLARATION_LIMIT_EUR
-    assert isinstance(WORK_INCOME_GENERAL_DECLARATION_LIMIT_EUR, Decimal)
-
-
 def test_multiple_pagadores_reduced_limit_per_year_values() -> None:
     """Reduced limit schedule matches the dated statutory amounts (Art. 96.3 LIRPF).
 
@@ -757,8 +616,6 @@ def test_multiple_pagadores_reduced_limit_per_year_values() -> None:
     BOE-A-2022-22128), 15.876 EUR for 2024 onward (RD-Ley 4/2024,
     BOE-A-2024-13066; confirmed by the bundled consolidated LIRPF art-96 corpus).
     """
-
-    from decimal import Decimal
 
     from ..external_constants import WORK_INCOME_MULTIPLE_PAGADORES_REDUCED_LIMIT_EUR_BY_YEAR
 
@@ -772,8 +629,6 @@ def test_multiple_pagadores_reduced_limit_per_year_values() -> None:
 
 def test_multiple_pagadores_reduced_limit_table_is_immutable() -> None:
     """The per-year schedule is a read-only mapping; it cannot be mutated in place."""
-
-    from decimal import Decimal
 
     from ..external_constants import WORK_INCOME_MULTIPLE_PAGADORES_REDUCED_LIMIT_EUR_BY_YEAR
 

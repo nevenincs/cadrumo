@@ -1,4 +1,20 @@
-"""Data binding helpers for registry-backed factual inputs."""
+"""Data binding helpers for registry-backed factual inputs.
+
+This module owns the
+:class:`~aeat.domain.calculations.registry.CasillaObservation` envelope emitted
+by the formula runtime and the
+:class:`~aeat.domain.calculations.registry.DataBindingDefinition` helper
+surface that turns factual binding values into bound casilla inputs.
+
+See Also:
+    :mod:`aeat.domain.calculations.registry._formula_runtime`
+        Runtime that emits typed observations and consumes resolved bound
+        casilla inputs.
+    :mod:`aeat.domain.calculations.registry._formula_initial_values`
+        Initial-value assembler that calls the bound-casilla helpers here.
+    :mod:`aeat.domain.calculations.registry._schema`
+        Registry schema definitions for casillas, bindings, and revisions.
+"""
 
 from __future__ import annotations
 
@@ -212,14 +228,16 @@ def _decimal_tuple_from_json_array(value: object) -> object:
 class CasillaObservation(BaseModel):
     """One typed casilla observation emitted by the formula runtime.
 
-    Carries the casilla id + final Decimal value plus optional formula
-    provenance: when ``formula_id`` is set, the runtime computed this
-    casilla and ``operand_refs`` / ``operand_values`` trace its inputs
-    while ``operand_casilla_refs`` carries the casilla-id-only projection;
-    when ``formula_id`` is ``None`` the casilla was supplied as input
-    (manual / bound) and the trace fields are empty.
+    Carries a :class:`~aeat.domain.calculations.registry.CasillaId`, final
+    :class:`decimal.Decimal` value, required legal/source provenance, and
+    optional formula lineage. When ``formula_id`` is set, the runtime computed
+    this casilla and ``operand_refs`` / ``operand_values`` trace its inputs
+    while ``operand_casilla_refs`` carries the casilla-id-only projection; when
+    ``formula_id`` is ``None`` the casilla was supplied as input (manual /
+    bound) and the trace fields are empty.
 
-    Used as the primary storage for :class:`RegistryCalculationResult`;
+    Used as the primary storage for
+    :class:`~aeat.domain.calculations.registry.RegistryCalculationResult`;
     derived ``values`` and ``entries`` views project from it.
     """
 
@@ -285,9 +303,10 @@ class CasillaObservation(BaseModel):
 class RegistryModeloObservation(BaseModel):
     """Observed casilla values from a filed declaration.
 
-    Storage is ``observations`` — a typed tuple of :class:`CasillaObservation`
-    carrying full formula provenance. The ``casilla_values`` computed field
-    provides a read-only mapping view for downstream consumers.
+    Storage is ``observations``: a typed tuple of
+    :class:`~aeat.domain.calculations.registry.CasillaObservation` carrying full
+    formula provenance. The :attr:`casilla_values` property provides a read-only
+    mapping view for downstream consumers.
     """
 
     model_config = STRICT_FROZEN_CONFIG
@@ -344,9 +363,10 @@ class RegistryModeloObservation(BaseModel):
 class OracleModeloObservation(RegistryModeloObservation):
     """Observed casilla values whose source is a live AEAT oracle adapter.
 
-    A subtype of :class:`RegistryModeloObservation` that marks the
-    observation tuple as oracle-originated rather than locally computed.
-    The ``oracle_id`` field anchors the observation to the
+    A subtype of :class:`RegistryModeloObservation` that marks the observation
+    tuple as oracle-originated rather than locally computed. The
+    :class:`~aeat.domain.calculations.registry.OracleId` field anchors the
+    observation to the
     ``LiveCrossReferenceDecision`` that produced it, so the application
     layer can route oracle-originated values through the
     cross-reference policy (synthetic-payload verification, replay
@@ -360,7 +380,12 @@ class OracleModeloObservation(RegistryModeloObservation):
 
 
 def bound_casilla_binding_ids(casilla: CasillaDefinition) -> tuple[BindingId, ...]:
-    """Return the primary plus reviewed equivalent bindings for one bound casilla."""
+    """Return primary plus reviewed equivalent bindings for one bound casilla.
+
+    The :class:`~aeat.domain.calculations.registry.CasillaDefinition` must be a
+    bound casilla; the returned :class:`~aeat.domain.calculations.registry.BindingId`
+    tuple drives bound-value resolution and equivalent-source conflict checks.
+    """
     if casilla.input_kind != InputKind.BOUND:
         return ()
     if casilla.binding is None:
@@ -374,10 +399,11 @@ def resolve_bound_casilla_binding_value(
 ) -> tuple[Decimal | None, tuple[BindingId, ...]]:
     """Resolve equivalent binding facts for one casilla, rejecting disagreements.
 
-    A bound casilla can declare reviewed alternate bindings when multiple registry
-    source paths represent the same factual amount. Supplying two equivalent
-    source values is legal only if they agree exactly; otherwise accepting either
-    one would silently over- or under-declare the downstream calculation.
+    A bound :class:`~aeat.domain.calculations.registry.CasillaDefinition` can
+    declare reviewed alternate bindings when multiple registry source paths
+    represent the same factual amount. Supplying two equivalent source values is
+    legal only if they agree exactly; otherwise accepting either one would
+    silently over- or under-declare the downstream calculation.
     """
     binding_ids = bound_casilla_binding_ids(casilla)
     present = tuple((binding_id, facts[binding_id]) for binding_id in binding_ids if binding_id in facts)
@@ -407,8 +433,12 @@ def resolve_bound_inputs_by_casilla_id(
     factual values; it does not own legal rates, thresholds, or casilla meaning.
 
     Args:
-        revision: The :class:`ModeloRevision` whose bindings to resolve against.
-        facts: Mapping of binding id to the factual Decimal value.
+        revision: The
+            :class:`~aeat.domain.calculations.registry.ModeloRevision` whose
+            bindings to resolve against.
+        facts: Mapping of
+            :class:`~aeat.domain.calculations.registry.BindingId` to the factual
+            :class:`decimal.Decimal` value.
     """
     for key, value in facts.items():
         if isinstance(value, bool) or not isinstance(value, Decimal):

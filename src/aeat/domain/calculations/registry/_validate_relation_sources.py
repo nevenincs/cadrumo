@@ -1,8 +1,17 @@
 """Cross-model relation and previous-filing source validation helpers.
 
-Validates cross-model relations declared on each :class:`ModeloRevision`
-against the source :class:`ModeloDefinition`, checking selector coverage,
-source-casilla-id existence, and period alignment.
+Validates cross-model relations declared on each
+:class:`~aeat.domain.calculations.registry.ModeloRevision` against the source
+:class:`~aeat.domain.calculations.registry.ModeloDefinition`, checking selector
+coverage, source-casilla-id existence, and period alignment.
+
+See Also:
+    :mod:`aeat.domain.calculations.registry._validate_source_casilla_ids`
+        Shared source-casilla membership and non-canonical token diagnostics.
+    :mod:`aeat.domain.calculations.registry._validate_relation_periods`
+        Source revision selection and period/year coverage gates.
+    :mod:`aeat.domain.calculations.registry._validate_previous_filing_sources`
+        Sibling closure check for previous-filing binding selectors.
 """
 
 from __future__ import annotations
@@ -46,6 +55,17 @@ def validate_relation_closure(
     modelos: Iterable[ModeloDefinition],
     modelos_by_id: Mapping[str, ModeloDefinition],
 ) -> list[str]:
+    """Validate cross-model relation closure for registry modelos.
+
+    Args:
+        modelos: Iterable of
+            :class:`~aeat.domain.calculations.registry.ModeloDefinition`
+            entries whose :class:`~aeat.domain.calculations.registry.ModeloRevision`
+            relations are checked.
+        modelos_by_id: Mapping of modelo id to
+            :class:`~aeat.domain.calculations.registry.ModeloDefinition`
+            used to resolve each relation's source modelo.
+    """
     failures: list[str] = []
     for modelo in modelos:
         for revision in modelo.revisions.values():
@@ -130,6 +150,9 @@ def _validate_single_relation(
 def _relation_is_prior_year_filing_carry(relation: RelationDefinition, revision: ModeloRevision) -> bool:
     """Return whether the relation is a prior-year carry of a historical filing.
 
+    The relation is a
+    :class:`~aeat.domain.calculations.registry.RelationDefinition` declared on
+    the supplied :class:`~aeat.domain.calculations.registry.ModeloRevision`.
     Two conditions, both required:
 
     - The relation's target binding has ``source = "previous_filing"`` — the
@@ -207,8 +230,11 @@ def validate_slot_source_hygiene(
         by the relation mesh, and is exempt from this gate.
 
     Args:
-        modelos: Iterable of :class:`ModeloDefinition` entries to validate.
-        modelos_by_id: Mapping of modelo id to :class:`ModeloDefinition` (unused
+        modelos: Iterable of
+            :class:`~aeat.domain.calculations.registry.ModeloDefinition` entries
+            to validate.
+        modelos_by_id: Mapping of modelo id to
+            :class:`~aeat.domain.calculations.registry.ModeloDefinition` (unused
             here; accepted for signature parity with the sibling closure gates).
     """
     del modelos_by_id  # signature parity with sibling closure validators

@@ -27,13 +27,15 @@ def test_committed_user_profile_schema_loads_with_canonical_sections() -> None:
     schema = load_user_profile_schema()
 
     assert schema.id == "aeat.user_profile"
-    assert schema.version == 2
+    assert schema.version == 3
     assert schema.snapshot_policy is ProfileSnapshotPolicy.IMMUTABLE_SECURE_SNAPSHOT_HASH
     assert schema.remove_policy is ProfileRemovePolicy.LIVE_PROFILE_TOMBSTONE_RETAIN_SNAPSHOTS
     assert {
         "identity",
         "tax_residence",
         "censo",
+        "attribution_entity",
+        "attribution_entity_socios",
         "activities",
         "irpf",
         "withholding",

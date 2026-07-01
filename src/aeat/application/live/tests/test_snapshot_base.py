@@ -142,7 +142,7 @@ class ProbeRepository:
     def save(self, snapshot: ProbeSnapshot) -> None:
         envelope = Envelope[ProbeSnapshot](
             schema_version=_PROBE_VERSION,
-            written_at=datetime.now(UTC),
+            written_at=snapshot.captured_at,
             classification=SensitivityClass.FINANCIAL,
             payload=snapshot,
         )

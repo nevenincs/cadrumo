@@ -334,14 +334,12 @@ def test_create_work_unit_is_idempotent_on_the_four_axis_key(repo: WorkUnitCatal
     assert catalogue.get(first.work_unit_id) is not None
 
 
-def test_create_work_unit_uses_default_name_when_no_name_supplied(repo: WorkUnitCatalogueRepository) -> None:
-    unit = _create_action_work_unit(repo)
-    assert unit.name == "303-2026-1T"
+def test_create_work_unit_applies_default_or_explicit_name(repo: WorkUnitCatalogueRepository) -> None:
+    default_named = _create_action_work_unit(repo)
+    explicit_named = _create_action_work_unit(repo, period=_P_2026_2T, name="renta-2t-2026-draft")
 
-
-def test_create_work_unit_honours_explicit_name(repo: WorkUnitCatalogueRepository) -> None:
-    unit = _create_action_work_unit(repo, name="renta-1t-2026-draft")
-    assert unit.name == "renta-1t-2026-draft"
+    assert default_named.name == "303-2026-1T"
+    assert explicit_named.name == "renta-2t-2026-draft"
 
 
 # ---------------------------------------------------------------------------
@@ -403,9 +401,21 @@ def test_list_work_units_filters_by_bucket_id(repo: WorkUnitCatalogueRepository)
     assert only_a[0].bucket_id == _WORK_UNIT_BUCKET_A_ID
 
 
-def test_get_work_unit_raises_when_id_is_absent(repo: WorkUnitCatalogueRepository) -> None:
+def test_missing_work_unit_actions_raise_not_found(repo: WorkUnitCatalogueRepository) -> None:
     with pytest.raises(WorkUnitNotFoundError) as excinfo:
         get_work_unit("missing", repository=repo)
+    assert excinfo.value.translated_message == "application.modelo.errors.work_unit_not_found"
+    assert isinstance(excinfo.value.context, dict)
+    assert excinfo.value.context["work_unit_id"] == "missing"
+
+    with pytest.raises(WorkUnitNotFoundError) as excinfo:
+        rename_work_unit("missing", "ignored", actor="test-operator", repository=repo)
+    assert excinfo.value.translated_message == "application.modelo.errors.work_unit_not_found"
+    assert isinstance(excinfo.value.context, dict)
+    assert excinfo.value.context["work_unit_id"] == "missing"
+
+    with pytest.raises(WorkUnitNotFoundError) as excinfo:
+        discard_work_unit("missing", actor="operator-A", repository=repo)
     assert excinfo.value.translated_message == "application.modelo.errors.work_unit_not_found"
     assert isinstance(excinfo.value.context, dict)
     assert excinfo.value.context["work_unit_id"] == "missing"
@@ -427,22 +437,15 @@ def test_rename_work_unit_preserves_work_unit_id_and_bumps_updated_at(repo: Work
     assert renamed.created_at == original.created_at
 
 
-def test_rename_work_unit_raises_when_id_is_absent(repo: WorkUnitCatalogueRepository) -> None:
-    with pytest.raises(WorkUnitNotFoundError) as excinfo:
-        rename_work_unit("missing", "ignored", actor="test-operator", repository=repo)
-    assert excinfo.value.translated_message == "application.modelo.errors.work_unit_not_found"
-    assert isinstance(excinfo.value.context, dict)
-    assert excinfo.value.context["work_unit_id"] == "missing"
-
-
 # ---------------------------------------------------------------------------
 # Application actions — discard + state transitions
 # ---------------------------------------------------------------------------
 
 
-def test_discard_work_unit_transitions_to_discarded_state(repo: WorkUnitCatalogueRepository) -> None:
+def test_discard_work_unit_transitions_and_allows_omitted_reason(repo: WorkUnitCatalogueRepository) -> None:
     """A fresh draft work unit is moved to DISCARDED with audit
-    metadata captured (actor + reason + timestamp)."""
+    metadata captured (actor + reason + timestamp), while omitted
+    reasons remain ``None`` instead of being synthesised."""
 
     original = _create_action_work_unit(repo)
     discard_time = datetime(2026, 3, 1, 12, 0, 0, tzinfo=UTC)
@@ -460,24 +463,14 @@ def test_discard_work_unit_transitions_to_discarded_state(repo: WorkUnitCatalogu
     assert discarded.discard_reason == "wrong-profile"
     assert discarded.updated_at == discard_time
 
-
-def test_discard_work_unit_accepts_omitted_reason(repo: WorkUnitCatalogueRepository) -> None:
-    original = _create_action_work_unit(repo)
-    discarded = discard_work_unit(
-        original.work_unit_id,
+    omitted_reason_unit = _create_action_work_unit(repo, modelo="130", revision_id="2019-y-siguientes")
+    omitted_reason_discard = discard_work_unit(
+        omitted_reason_unit.work_unit_id,
         actor="operator-A",
         repository=repo,
         clock=datetime(2026, 3, 1, 12, 0, 0, tzinfo=UTC),
     )
-    assert discarded.discard_reason is None
-
-
-def test_discard_work_unit_raises_on_missing_id(repo: WorkUnitCatalogueRepository) -> None:
-    with pytest.raises(WorkUnitNotFoundError) as excinfo:
-        discard_work_unit("missing", actor="operator-A", repository=repo)
-    assert excinfo.value.translated_message == "application.modelo.errors.work_unit_not_found"
-    assert isinstance(excinfo.value.context, dict)
-    assert excinfo.value.context["work_unit_id"] == "missing"
+    assert omitted_reason_discard.discard_reason is None
 
 
 def test_discard_work_unit_raises_when_already_discarded(repo: WorkUnitCatalogueRepository) -> None:
@@ -517,7 +510,7 @@ def test_rename_refuses_to_mutate_a_discarded_work_unit(repo: WorkUnitCatalogueR
         rename_work_unit(unit.work_unit_id, "new-name", actor="test-operator", repository=repo)
 
 
-def test_list_work_units_excludes_discarded_by_default(repo: WorkUnitCatalogueRepository) -> None:
+def test_list_work_units_respects_discarded_visibility_flag(repo: WorkUnitCatalogueRepository) -> None:
     unit_draft = _create_action_work_unit(repo)
     unit_to_discard = _create_action_work_unit(repo, modelo="130", revision_id="2019-y-siguientes")
     discard_work_unit(
@@ -529,18 +522,8 @@ def test_list_work_units_excludes_discarded_by_default(repo: WorkUnitCatalogueRe
     visible = list_work_units(repository=repo)
     assert {u.work_unit_id for u in visible} == {unit_draft.work_unit_id}
 
-
-def test_list_work_units_includes_discarded_when_flag_set(repo: WorkUnitCatalogueRepository) -> None:
-    unit_draft = _create_action_work_unit(repo)
-    unit_to_discard = _create_action_work_unit(repo, modelo="130", revision_id="2019-y-siguientes")
-    discard_work_unit(
-        unit_to_discard.work_unit_id,
-        actor="operator-A",
-        repository=repo,
-        clock=datetime(2026, 3, 1, 12, 0, 0, tzinfo=UTC),
-    )
-    visible = list_work_units(include_discarded=True, repository=repo)
-    assert {u.work_unit_id for u in visible} == {
+    including_discarded = list_work_units(include_discarded=True, repository=repo)
+    assert {u.work_unit_id for u in including_discarded} == {
         unit_draft.work_unit_id,
         unit_to_discard.work_unit_id,
     }
@@ -678,20 +661,23 @@ def test_rename_work_unit_emits_renamed_bucket_event_with_actor_and_names(
 # ---------------------------------------------------------------------------
 
 
-def test_causante_ccaa_roundtrips_through_repository(repo: WorkUnitCatalogueRepository) -> None:
+def test_causante_ccaa_roundtrips_and_defaults_through_repository(repo: WorkUnitCatalogueRepository) -> None:
     """causante_ccaa is persisted and reloaded without data loss.
 
     A non-default (non-None) value must survive the full save/load
-    cycle through the real encrypted repository so that the annotation
-    is not silently dropped at the persistence boundary.
+    cycle through the real encrypted repository, while unrelated modelos
+    default to ``None``.
     """
 
     from ...contribuyente._ccaa import CCAA
 
-    unit = _create_action_work_unit(repo, causante_ccaa=CCAA.MADRID)
-    assert unit.causante_ccaa is CCAA.MADRID
+    default_unit = _create_action_work_unit(repo)
+    annotated_unit = _create_action_work_unit(repo, period=_P_2026_2T, causante_ccaa=CCAA.MADRID)
 
-    reloaded = repo.load().get(unit.work_unit_id)
+    assert default_unit.causante_ccaa is None
+    assert annotated_unit.causante_ccaa is CCAA.MADRID
+
+    reloaded = repo.load().get(annotated_unit.work_unit_id)
     assert reloaded is not None
     assert reloaded.causante_ccaa is CCAA.MADRID
 
@@ -711,10 +697,3 @@ def test_causante_ccaa_does_not_affect_work_unit_identity(repo: WorkUnitCatalogu
     second = _create_action_work_unit(repo, causante_ccaa=CCAA.CATALUNA)
     # Idempotency: same work_unit_id, first creation wins.
     assert first.work_unit_id == second.work_unit_id
-
-
-def test_causante_ccaa_none_by_default(repo: WorkUnitCatalogueRepository) -> None:
-    """causante_ccaa defaults to None for modelos that do not require it."""
-
-    unit = _create_action_work_unit(repo)
-    assert unit.causante_ccaa is None

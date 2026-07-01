@@ -1,8 +1,23 @@
 """Per-revision registry section validation dispatch.
 
-Orchestrates all per-section validators for a single :class:`ModeloRevision`
-within its :class:`ModeloDefinition`, collecting every failure into a flat
-list returned to the registry-level validator.
+Orchestrates all per-section validators for a single
+:class:`~aeat.domain.calculations.registry.ModeloRevision` within its
+:class:`~aeat.domain.calculations.registry.ModeloDefinition`, collecting every
+failure into a flat list returned to the registry-level validator.
+
+The dispatcher builds a
+:class:`~aeat.domain.calculations.registry._validate_revision_context.RevisionValidationContext`
+once and reuses it across record, surface, dependency, algorithm, completeness,
+and closure validators. Legal/source refs are checked through the shared
+:class:`~aeat.domain.calculations.registry._validate_evidence.EvidenceValidator`.
+
+See Also:
+    :class:`aeat.domain.calculations.registry.RegistryValidator`
+        Registry-level validator that calls :func:`validate_revision_definition`.
+    :mod:`aeat.domain.calculations.registry._validate_record_sections`
+        Record-section validators dispatched from this module.
+    :mod:`aeat.domain.calculations.registry._validate_revision_closure`
+        Closure validators dispatched after section-level checks.
 """
 
 from __future__ import annotations
@@ -60,6 +75,14 @@ def _validate_revision_surface_sections(
     evidence: EvidenceValidator,
     justificante_corpus_root: Path | None,
 ) -> None:
+    """Append section-surface failures for one revision.
+
+    The :class:`~aeat.domain.calculations.registry.ModeloRevision` is validated
+    with a shared
+    :class:`~aeat.domain.calculations.registry._validate_revision_context.RevisionValidationContext`
+    so record, surface, dependency, algorithm, export, and extraction-profile
+    checks consume the same declared-id indexes.
+    """
     validate_casilla_section(
         failures,
         prefix=prefix,
@@ -221,6 +244,15 @@ def validate_revision_definition(
     evidence: EvidenceValidator,
     justificante_corpus_root: Path | None,
 ) -> list[str]:
+    """Return all registry validation failures for one modelo revision.
+
+    The :class:`~aeat.domain.calculations.registry.ModeloDefinition` supplies the
+    modelo scope and the
+    :class:`~aeat.domain.calculations.registry.ModeloRevision` supplies the
+    revision payload. The function applies revision-level reference/evidence
+    gates, builds the validation context, dispatches all section validators, then
+    runs closure validators before returning the accumulated failures.
+    """
     failures: list[str] = []
     prefix = f"modelo {modelo.id} revision {revision.id}"
     failures.extend(_missing_refs(prefix, "revision", revision.legal_refs, legal_refs, "legal"))

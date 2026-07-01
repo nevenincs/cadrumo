@@ -60,6 +60,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _ACTIVE_STORAGE_STACK: ExitStack | None = None
 _PROFILE_SPAN_OPEN = False
+_STAGED_MANIFEST_CREATED_AT = datetime(2026, 5, 28, 15, 30, tzinfo=UTC)
 
 
 @pytest.fixture(autouse=True)
@@ -123,7 +124,7 @@ def _stage_profile_manifest(root: Path, bucket_id: str) -> None:
         BucketManifest(
             bucket_id=bucket_id,
             label=bucket_id,
-            created_at=datetime.now(UTC),
+            created_at=_STAGED_MANIFEST_CREATED_AT,
             last_unlocked_at=None,
             kdf_params=ManifestKdfParams(
                 algorithm="argon2id",

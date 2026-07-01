@@ -30,6 +30,8 @@ from ....core.config import load_settings
 from ....core.identity import nif_check_letter
 from ....tests.cli_runner import invoke_cached_cli
 
+_STAGED_MANIFEST_CREATED_AT = datetime(2026, 5, 28, 15, 50, tzinfo=UTC)
+
 
 def _profile_id_for_label(label: str) -> str:
     digest = bytearray(hashlib.sha256(label.encode("utf-8")).digest()[:16])
@@ -66,7 +68,7 @@ def stage_bucket_manifest(bucket_id: str, *, label: str) -> None:
         BucketManifest(
             bucket_id=bucket_id,
             label=label,
-            created_at=datetime.now(UTC),
+            created_at=_STAGED_MANIFEST_CREATED_AT,
             last_unlocked_at=None,
             kdf_params=ManifestKdfParams(
                 algorithm="argon2id",

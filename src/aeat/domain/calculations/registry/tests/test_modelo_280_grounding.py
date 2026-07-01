@@ -53,6 +53,9 @@ def test_modelo_280_current_registry_uses_2025_sources_without_fake_calculation(
     assert set(revision.legal_refs) == _M280_LEGAL_REFS
     assert set(revision.source_refs) == _M280_SOURCE_REFS
     assert revision.casillas
+    roles_by_id = {casilla.id: casilla.semantic_role for casilla in revision.casillas}
+    assert roles_by_id["declarante-nif"] == "irpf_declarante_nif"
+    assert roles_by_id["ejercicio-declaracion"] == "filing_year"
     assert {casilla.input_kind for casilla in revision.casillas} == {"manual"}
     assert not revision.formulas
     assert revision.completeness_manifest is None

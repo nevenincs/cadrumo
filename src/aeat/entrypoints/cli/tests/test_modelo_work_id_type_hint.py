@@ -37,6 +37,8 @@ from ....tests.secure_sql import isolated_profile_storage_root
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
+_WORK_UNIT_CREATED_AT = datetime(2026, 5, 28, 15, 0, tzinfo=UTC)
+
 
 @pytest.fixture(autouse=True)
 def _isolated_backend(tmp_path: Path) -> Iterator[None]:
@@ -74,7 +76,6 @@ def _seed_work_unit_without_revision(*, modelo: str = "130", filing_year: int = 
         period=filing_period,
         revision_id=revision_id,
     )
-    now = datetime.now(UTC)
     work_unit = WorkUnit(
         work_unit_id=work_unit_id,
         bucket_id=bucket_id,
@@ -83,8 +84,8 @@ def _seed_work_unit_without_revision(*, modelo: str = "130", filing_year: int = 
         period=filing_period,
         revision_id=revision_id,
         name=f"{modelo}-{filing_year}-{period}",
-        created_at=now,
-        updated_at=now,
+        created_at=_WORK_UNIT_CREATED_AT,
+        updated_at=_WORK_UNIT_CREATED_AT,
     )
     repo = WorkUnitCatalogueRepository()
     repo.save(upsert_work_unit(repo.load(), work_unit))
@@ -141,4 +142,6 @@ def test_verify_with_unknown_id_keeps_plain_not_found() -> None:
 
     assert result.exit_code != 0, result.output
     collapsed = " ".join(result.output.split())
-    assert "work calculate" not in collapsed
+    lowered = collapsed.lower()
+    assert "this id is a work-unit-id" not in lowered
+    assert "verify/file need a calculation-revision-id" not in lowered

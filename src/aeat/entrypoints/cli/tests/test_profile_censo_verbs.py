@@ -28,6 +28,7 @@ pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
 _AEAT = Settings.external_constants().aeat
 _G313 = f"{_AEAT.domains.sede}{_AEAT.sede_paths.censo_g313_launcher}"
+_CAPTURED_AT = datetime(2026, 5, 28, 15, 35, tzinfo=UTC)
 
 
 def _invoke_profile(args: Sequence[str]) -> Result:
@@ -83,7 +84,7 @@ def _capture_snapshot(*, include_iae: bool = False) -> str:
         censo_facts["iva.regime"] = "GENERAL"
     snapshot = service.capture(
         profile_id=active,
-        captured_at=datetime.now(UTC),
+        captured_at=_CAPTURED_AT,
         source_url=_G313,
         censo_facts=censo_facts,
     )

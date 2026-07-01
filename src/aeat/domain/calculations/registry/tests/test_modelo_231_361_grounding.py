@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from datetime import date
+
 import pytest
 
 from .....core.resources import bundled_path, resources
@@ -81,7 +83,16 @@ def test_modelo_361_current_registry_uses_361_articles_without_fake_calculation(
     assert not revision.formulas
     assert revision.completeness_manifest is None
     assert {ref.workbook_source for ref in revision.workbook_parity_refs} == {"boe-modelo-361-form"}
-    assert {link.surface for link in revision.application_links} == {"filing"}
+    assert {link.surface for link in revision.application_links} == {"filing", "deadline"}
+    assert {schedule.id for schedule in revision.filing_schedules} == {"modelo-361-ad-hoc"}
+
+    windows = {window.id: window for window in revision.deadline_windows}
+    assert set(windows) == {"modelo-361-2024-ad-hoc", "modelo-361-2025-ad-hoc"}
+    assert windows["modelo-361-2024-ad-hoc"].opens_on == date(2025, 1, 1)
+    assert windows["modelo-361-2024-ad-hoc"].closes_on == date(2025, 9, 30)
+    assert windows["modelo-361-2025-ad-hoc"].opens_on == date(2026, 1, 1)
+    assert windows["modelo-361-2025-ad-hoc"].closes_on == date(2026, 9, 30)
+    assert all("orden-eha-789-2010:art-10" in window.legal_refs for window in windows.values())
 
     stale_refs = {
         "orden-eha-789-2010:art-1",

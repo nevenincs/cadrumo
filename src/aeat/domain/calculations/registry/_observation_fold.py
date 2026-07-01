@@ -2,14 +2,22 @@
 
 The single gather-and-fold primitive shared by both relation fold paths (the
 application-layer relation prefill and the domain-layer
-:func:`resolve_relation_values_from_observations`). It matches the source
-filings a :class:`RegistryFoldRequirement` declares and extracts the source
-casilla value per period, then folds the gathered values through the requirement's
-declared ``copy`` / ``sum`` aggregation to one :class:`~decimal.Decimal`.
+:func:`aeat.domain.calculations.registry.resolve_relation_values_from_observations`).
+It matches the source filings a
+:class:`~aeat.domain.calculations.registry.RegistryFoldRequirement` declares and
+extracts the source casilla value per period, then folds the gathered values
+through the requirement's declared ``copy`` / ``sum`` aggregation to one
+:class:`~decimal.Decimal`.
 
 Lives in the domain registry package (not the application source mesh) because
 the domain relation resolver consumes it and the hexagonal direction forbids a
 domain module importing the application layer.
+
+See Also:
+    :mod:`aeat.domain.calculations.registry._relations`
+        Domain relation resolver that gathers and folds requirements here.
+    :mod:`aeat.domain.calculations.registry._bindings_previous_filing`
+        Previous-filing binding resolver that reuses :func:`fold_sum_or_copy`.
 """
 
 from __future__ import annotations
@@ -30,10 +38,12 @@ def gather_observed_requirement_values(
 ) -> tuple[Decimal, ...]:
     """Return the source-casilla values matched for one fold requirement, per period.
 
-    Matches exactly one observed filing per declared source period (raising on a
-    zero or multiple match), and extracts the requirement's single source casilla
-    value from each. The returned tuple carries one value per ``requirement.periods``
-    entry, in declaration order, ready for :func:`fold_observed_requirement_values`.
+    Matches exactly one
+    :class:`~aeat.domain.calculations.registry.RegistryModeloObservation` per
+    declared source period and extracts the requirement's single source
+    :class:`~aeat.domain.calculations.registry.CasillaId` value from each. The
+    returned tuple carries one value per ``requirement.periods`` entry, in
+    declaration order, ready for :func:`fold_observed_requirement_values`.
     """
     source_casilla_id = requirement.source_casilla_ids[0]
     values: list[Decimal] = []
@@ -76,6 +86,9 @@ def fold_sum_or_copy(
     (a relation requirement's observation, or a binding's source casilla). An op
     that is neither ``sum`` nor ``copy`` is rejected; callers handle any other op
     (e.g. the Modelo 130 ``prior_pagos_fraccionados`` identity) before delegating.
+
+    Used by both :func:`fold_observed_requirement_values` and
+    :func:`aeat.domain.calculations.registry.resolve_previous_filing_binding_values`.
     """
     if op == "copy":
         if len(values) != 1:
@@ -93,8 +106,9 @@ def fold_observed_requirement_values(
     """Fold per-period source values through a requirement's ``copy`` / ``sum`` op.
 
     ``copy`` requires exactly one gathered value and returns it; ``sum`` adds the
-    gathered values. This is the one fold both relation paths apply; the period
-    match is :func:`gather_observed_requirement_values`.
+    gathered values. This is the one fold both relation paths apply to a
+    :class:`~aeat.domain.calculations.registry.RegistryFoldRequirement`; the
+    period match is :func:`gather_observed_requirement_values`.
     """
     return fold_sum_or_copy(
         requirement.aggregation_op,
@@ -108,7 +122,11 @@ def resolve_observed_requirement_value(
     requirement: RegistryFoldRequirement,
     observations: tuple[RegistryModeloObservation, ...],
 ) -> Decimal:
-    """Gather and fold one fold requirement to a single :class:`~decimal.Decimal`."""
+    """Gather and fold one requirement to a single :class:`~decimal.Decimal`.
+
+    Convenience wrapper for callers that already hold the normalized
+    :class:`~aeat.domain.calculations.registry.RegistryModeloObservation` rows.
+    """
     return fold_observed_requirement_values(
         requirement,
         gather_observed_requirement_values(requirement, observations),

@@ -1,7 +1,21 @@
 """Algorithm provider and binding validation helpers.
 
 Validates algorithm provider and binding sections declared on a
-:class:`ModeloRevision` for legal and source reference closure.
+:class:`~aeat.domain.calculations.registry.ModeloRevision` for legal and source
+reference closure.
+
+Provider declarations define deterministic callable contracts; binding
+declarations connect those contracts to
+:class:`~aeat.domain.calculations.registry.CasillaId` inputs and outputs. Both
+must carry :class:`~aeat.domain.calculations.registry.LegalReference` and
+:class:`~aeat.domain.calculations.registry.SourceReference` grounding enforced by
+the :class:`~aeat.domain.calculations.registry._validate_evidence.EvidenceValidator`.
+
+See Also:
+    :func:`aeat.domain.calculations.registry._validate_revision_sections.validate_revision_definition`
+        Per-revision dispatcher that calls these algorithm validators.
+    :func:`aeat.domain.calculations.registry._validate_reference_sections.check_algorithm_binding_refs`
+        General id-reference checker for algorithm-binding references.
 """
 
 from __future__ import annotations
@@ -27,6 +41,13 @@ def validate_algorithm_provider_section(
     source_refs: Mapping[str, SourceReference],
     evidence: EvidenceValidator,
 ) -> None:
+    """Append provider reference and source-tier failures.
+
+    The :class:`~aeat.domain.calculations.registry.ModeloRevision` contributes
+    :class:`~aeat.domain.calculations.registry._schema.AlgorithmProviderDefinition`
+    rows. Each provider must cite known legal/source refs and carry
+    ``official_source_guidance`` evidence.
+    """
     for provider in revision.algorithm_providers:
         owner = f"algorithm provider {provider.id}"
         failures.extend(_missing_refs(prefix, owner, provider.legal_refs, legal_refs, "legal"))
@@ -47,6 +68,16 @@ def validate_algorithm_binding_section(
     source_refs: Mapping[str, SourceReference],
     evidence: EvidenceValidator,
 ) -> None:
+    """Append binding reference, schema-shape, and source-tier failures.
+
+    The supplied :class:`~aeat.domain.calculations.registry.ModeloRevision`
+    provides the algorithm bindings. The validator checks each
+    :class:`~aeat.domain.calculations.registry._schema.AlgorithmBindingDefinition`
+    against its
+    :class:`~aeat.domain.calculations.registry._schema.AlgorithmProviderDefinition`,
+    declared :class:`~aeat.domain.calculations.registry.CasillaId` values,
+    resolvable input values, constants, and evidence-grounding requirements.
+    """
     for alg_binding in revision.algorithm_bindings:
         owner = f"algorithm binding {alg_binding.id}"
         failures.extend(_missing_refs(prefix, owner, alg_binding.legal_refs, legal_refs, "legal"))

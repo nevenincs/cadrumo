@@ -109,6 +109,7 @@ def test_modelo_190_validates_and_gates_workflow_surfaces_through_snapshot() -> 
     assert {
         "calculation",
         "filing",
+        "deadline",
         "review",
         "verification",
         "approval",
@@ -117,6 +118,54 @@ def test_modelo_190_validates_and_gates_workflow_surfaces_through_snapshot() -> 
         "portal",
         "workflow",
     } <= linked_surfaces
+
+
+def test_modelo_190_annual_deadline_is_grounded_to_current_revision() -> None:
+    modelo, catalogues = _committed_modelo("190")
+
+    RegistryValidator(catalogues, source_root=bundled_path()).validate_modelo(modelo)
+    snapshot = build_snapshot(
+        modelo,
+        catalogues,
+        source_root=bundled_path(),
+        filing_year=2026,
+        period="0A",
+    )
+    revision = snapshot.revision
+    construct = revision.constructs[0]
+    windows = {window.id: window for window in revision.deadline_windows}
+    schedule = next(item for item in revision.filing_schedules if item.id == "modelo-190-anual")
+    deadline_link = next(item for item in revision.application_links if item.id == "modelo-190-deadline")
+
+    assert deadline_link.surface == "deadline"
+    assert deadline_link.consumer == "aeat.domain.deadlines"
+    assert deadline_link.requires_snapshot is True
+    assert catalogues.legal["rd-439-2007:art-108"].evidence_tier == "legal_authority"
+    assert catalogues.legal["orden-eha-3127-2009:art-1"].evidence_tier == "legal_authority"
+    assert catalogues.sources["aeat-modelo-190-procedure"].evidence_tier == "official_source_guidance"
+    assert catalogues.sources["boe-modelo-190-2025-form"].evidence_tier == "layout_authority"
+
+    assert construct.deadline_windows == ("modelo-190-2024-0a", "modelo-190-2025-0a")
+    assert construct.filing_schedules == ("modelo-190-anual",)
+    assert schedule.period_kind == "annual"
+    assert schedule.periods == ("0A",)
+    assert schedule.legal_refs == ("rd-439-2007:art-108", "orden-eha-3127-2009:art-1")
+    assert schedule.source_refs == ("aeat-modelo-190-procedure", "boe-modelo-190-2025-form")
+
+    expected_windows = {
+        "modelo-190-2024-0a": (2025, "2024 0A", date(2025, 1, 1), date(2025, 1, 31)),
+        "modelo-190-2025-0a": (2026, "2025 0A", date(2026, 1, 1), date(2026, 1, 31)),
+    }
+    assert set(windows) == set(expected_windows)
+    for window_id, (filing_year, period, opens_on, closes_on) in expected_windows.items():
+        window = windows[window_id]
+        assert window.filing_year == filing_year
+        assert str(window.period) == period
+        assert window.period_kind == "annual"
+        assert window.opens_on == opens_on
+        assert window.closes_on == closes_on
+        assert window.legal_refs == ("rd-439-2007:art-108", "orden-eha-3127-2009:art-1")
+        assert window.source_refs == ("aeat-modelo-190-procedure", "boe-modelo-190-2025-form")
 
 
 def test_modelo_190_filed_declarations_read_allows_live_register_host() -> None:

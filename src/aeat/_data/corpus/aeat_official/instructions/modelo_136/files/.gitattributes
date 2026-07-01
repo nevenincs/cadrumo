@@ -1,0 +1,3 @@
+*.html -diff -text
+*.txt text eol=lf
+*.pdf -diff -text

@@ -64,6 +64,7 @@ pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 _REGISTRY_CLI_FIXTURES = (_isolated_registry_cli_backend, _isolated_secure_backend)
 
 _DECLARATIONS_LISTING_URL = aeat_url("www6", configured_path("sede_paths", "declarations_listing"))
+_EXPIRED_LIVE_SESSION_REFERENCE = datetime(2026, 5, 28, 16, 0, tzinfo=UTC)
 _M130_INGRESOS_CASILLA: CasillaId = validated_casilla_id("01", surface="_M130_INGRESOS_CASILLA")
 _M130_GASTOS_CASILLA: CasillaId = validated_casilla_id("02", surface="_M130_GASTOS_CASILLA")
 _M130_RETENCIONES_CASILLA: CasillaId = validated_casilla_id("06", surface="_M130_RETENCIONES_CASILLA")
@@ -647,12 +648,11 @@ _LIVE_GATE_CLI_CASES = (
 
 
 def _expired_live_session_env(tmp_path: Path) -> dict[str, str]:
-    now = datetime.now(UTC)
     _seed_session(
         tmp_path,
         AuthProviderKind.CLAVE_MOVIL,
-        authenticated_at=now - timedelta(hours=2),
-        idle_deadline=now - timedelta(minutes=1),
+        authenticated_at=_EXPIRED_LIVE_SESSION_REFERENCE - timedelta(hours=2),
+        idle_deadline=_EXPIRED_LIVE_SESSION_REFERENCE - timedelta(minutes=1),
     )
     return {
         "AEAT_TOKEN_DIR": str(tmp_path),
@@ -694,12 +694,11 @@ def test_live_cli_requires_live_gate_before_remote_read_or_local_writes(
 
 
 def test_capture_source_filed_data_requires_live_gate_before_local_writes(tmp_path: Path) -> None:
-    now = datetime.now(UTC)
     _seed_session(
         tmp_path,
         AuthProviderKind.CLAVE_MOVIL,
-        authenticated_at=now - timedelta(hours=2),
-        idle_deadline=now - timedelta(minutes=1),
+        authenticated_at=_EXPIRED_LIVE_SESSION_REFERENCE - timedelta(hours=2),
+        idle_deadline=_EXPIRED_LIVE_SESSION_REFERENCE - timedelta(minutes=1),
     )
     output_root = tmp_path / "captured-sources"
 

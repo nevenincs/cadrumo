@@ -1,8 +1,15 @@
 """Specialized snapshot-reference section walkers.
 
 Per-section walkers that traverse the typed-ID fields of a
-:class:`ModeloRevision` and call into an ``IdReferenceChecker`` to
-accumulate dangling-reference diagnostics.
+:class:`~aeat.domain.calculations.registry.ModeloRevision` and call into an
+:class:`~aeat.domain.calculations.registry._validate_reference_checker.IdReferenceChecker`
+to accumulate dangling-reference diagnostics.
+
+See Also:
+    :func:`aeat.domain.calculations.registry.check_all_id_references`
+        Snapshot-level referential-integrity gate that invokes these walkers.
+    :mod:`aeat.domain.calculations.registry._validate_reference_checker`
+        Accumulator that owns the per-kind typed-id sets used here.
 """
 
 from __future__ import annotations
@@ -37,6 +44,13 @@ _CONSTRUCT_MEMBER_AXES: tuple[tuple[str, str], ...] = (
 
 
 def check_construct_refs(checker: IdReferenceChecker, revision: ModeloRevision) -> None:
+    """Check construct member references for one revision.
+
+    The :class:`~aeat.domain.calculations.registry.ModeloRevision` supplies
+    construct declarations. The
+    :class:`~aeat.domain.calculations.registry._validate_reference_checker.IdReferenceChecker`
+    supplies the typed member-id sets and legal/source-ref closure checks.
+    """
     for construct in revision.constructs:
         ctp = f"construct {construct.id}"
         for attr, id_set_name in _CONSTRUCT_MEMBER_AXES:
@@ -45,6 +59,12 @@ def check_construct_refs(checker: IdReferenceChecker, revision: ModeloRevision) 
 
 
 def check_dependency_classification_refs(checker: IdReferenceChecker, revision: ModeloRevision) -> None:
+    """Check dependency-classification construct and relation refs.
+
+    The :class:`~aeat.domain.calculations.registry.ModeloRevision` supplies
+    dependency classifications. The checker verifies target constructs,
+    relation refs, and legal/source refs against the snapshot id sets.
+    """
     for classification in revision.dependency_classifications:
         dcp = f"dependency_classification {classification.id}"
         checker.chk_tuple(f"{dcp}.target_constructs", classification.target_constructs, checker.construct_ids)
@@ -53,12 +73,25 @@ def check_dependency_classification_refs(checker: IdReferenceChecker, revision: 
 
 
 def check_algorithm_provider_refs(checker: IdReferenceChecker, revision: ModeloRevision) -> None:
+    """Check algorithm-provider legal/source refs for one revision.
+
+    The :class:`~aeat.domain.calculations.registry.ModeloRevision` supplies
+    algorithm-provider declarations, while the checker verifies their legal and
+    source ids against the selected snapshot catalogues.
+    """
     for provider in revision.algorithm_providers:
         avp = f"algorithm_provider {provider.id}"
         checker.chk_legal_source_refs(avp, provider.legal_refs, provider.source_refs)
 
 
 def check_algorithm_binding_refs(checker: IdReferenceChecker, revision: ModeloRevision) -> None:
+    """Check algorithm-binding provider, input, output, and constant refs.
+
+    The :class:`~aeat.domain.calculations.registry.ModeloRevision` supplies
+    algorithm bindings and providers. Binding inputs may resolve through
+    casilla, binding, parameter, or relation ids; outputs and target casillas
+    must resolve through declared casilla ids.
+    """
     provider_ids = {p.id for p in revision.algorithm_providers}
     resolvable_ids = checker.casilla_ids | checker.binding_ids | checker.parameter_ids | checker.relation_ids
     for alg_binding in revision.algorithm_bindings:
@@ -78,6 +111,13 @@ def check_algorithm_binding_refs(checker: IdReferenceChecker, revision: ModeloRe
 
 
 def check_export_layout_refs(checker: IdReferenceChecker, revision: ModeloRevision) -> None:
+    """Check export-layout record and field references for one revision.
+
+    The :class:`~aeat.domain.calculations.registry.ModeloRevision` supplies
+    export layouts. The checker validates dictionary source refs, record
+    positive-casilla gates, row-field casillas, field casilla/binding refs, and
+    field legal/source refs.
+    """
     for layout in revision.export_layouts:
         lyp = f"export_layout {layout.id}"
         checker.chk_legal_source_refs(lyp, layout.legal_refs, layout.source_refs)
@@ -105,8 +145,9 @@ def check_binding_selector_shapes(checker: IdReferenceChecker, revision: ModeloR
     Args:
         checker: The reference checker whose failures list accumulates
             any selector-shape validation errors found.
-        revision: The :class:`ModeloRevision` whose binding selectors are
-            validated.
+        revision: The
+            :class:`~aeat.domain.calculations.registry.ModeloRevision` whose
+            binding selectors are validated.
     """
     from ._bindings import validate_binding_selector_shape
 
