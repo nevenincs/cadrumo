@@ -226,22 +226,14 @@ class TestHkdfDerivation:
         )
         assert len(derived) == length
 
-    def test_zero_length_rejected(self) -> None:
+    @pytest.mark.parametrize("length", (0, -1), ids=("zero", "negative"))
+    def test_non_positive_length_rejected(self, length: int) -> None:
         with pytest.raises(KeyDerivationError):
             derive_key(
                 key_material=b"ikm",
                 salt=b"salt",
                 context=b"aeat.context.v1",
-                length=0,
-            )
-
-    def test_negative_length_rejected(self) -> None:
-        with pytest.raises(KeyDerivationError):
-            derive_key(
-                key_material=b"ikm",
-                salt=b"salt",
-                context=b"aeat.context.v1",
-                length=-1,
+                length=length,
             )
 
     def test_invalid_context_type_is_wrapped_as_key_derivation_error(self) -> None:
