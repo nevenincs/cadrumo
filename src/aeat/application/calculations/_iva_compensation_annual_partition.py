@@ -14,7 +14,7 @@ from collections.abc import Mapping
 from decimal import Decimal
 from typing import Final
 
-from ...adapters.persistence.storage.errors import ClassificationError, DecryptionError, EnvelopeVersionError
+from ...adapters.persistence.storage import ClassificationError, DecryptionError, EnvelopeVersionError
 from ...core import BindingSourceKind, Modelo, Period
 from ...core.logging import get_logger
 from ...core.time import now
