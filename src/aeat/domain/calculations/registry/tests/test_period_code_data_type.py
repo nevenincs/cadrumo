@@ -93,23 +93,23 @@ class TestPeriodCodeRejects:
             # of regex-matching against the AD-HOC pattern;
             # this anti-tautology guard pins the fix and would
             # accept the literal back if the regression returns
+            1,
         ],
     )
-    def test_invalid_inputs_rejected_through_adapter(self, raw: str) -> None:
+    def test_invalid_inputs_rejected_through_adapter(self, raw: object) -> None:
         with pytest.raises(ValidationError):
             _PERIOD_ADAPTER.validate_python(raw)
 
-    def test_non_string_input_rejected(self) -> None:
-        with pytest.raises(ValidationError):
-            _PERIOD_ADAPTER.validate_python(1)
-
-    def test_blank_raises_registry_validation_error_at_validator(self) -> None:
+    @pytest.mark.parametrize(
+        "raw",
+        (
+            pytest.param("", id="blank"),
+            pytest.param(1, id="non-string"),
+        ),
+    )
+    def test_invalid_value_raises_registry_validation_error_at_validator(self, raw: object) -> None:
         with pytest.raises(RegistryValidationError):
-            _validate_period_code("")
-
-    def test_non_string_raises_registry_validation_error_at_validator(self) -> None:
-        with pytest.raises(RegistryValidationError):
-            _validate_period_code(1)
+            _validate_period_code(raw)
 
 
 class TestCasillaDefinitionDataType:
