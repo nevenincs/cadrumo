@@ -166,6 +166,13 @@ from ._llm_classification import (
     suggest_evidence_split,
     suggest_llm_classification,
 )
+from ._llm_diagnostics import (
+    DEFAULT_LOW_CONFIDENCE_THRESHOLD,
+    LlmConfidenceProviderMetrics,
+    LlmDiagnosticsReport,
+    LlmUsageProviderMetrics,
+    build_llm_diagnostics_report,
+)
 from ._models import (
     BULK_CLASSIFY_ALLOWED_COLUMNS,
     ApplyRulesAppliedRow,
@@ -228,6 +235,7 @@ from ._rule_repository import LedgerClassificationRuleRepository
 __all__ = [
     "BULK_CLASSIFY_ALLOWED_COLUMNS",
     "CLASSIFIED_BY_MANUAL",
+    "DEFAULT_LOW_CONFIDENCE_THRESHOLD",
     "MINIMUM_DISPLAY_ID_WIDTH",
     "ApplyRulesAppliedRow",
     "ApplyRulesResult",
@@ -278,6 +286,9 @@ __all__ = [
     "LedgerTransactionResultPayload",
     "LedgerTransactionReviewPayload",
     "LedgerTransactionTrackingPayload",
+    "LlmConfidenceProviderMetrics",
+    "LlmDiagnosticsReport",
+    "LlmUsageProviderMetrics",
     "ManualLedgerTransactionCommand",
     "ManualLedgerTransactionPatch",
     "ManualLedgerTransactionResult",
@@ -303,6 +314,7 @@ __all__ = [
     "archive_manual_transaction",
     "attach_manual_transaction_evidence",
     "available_llm_providers",
+    "build_llm_diagnostics_report",
     "bulk_classify_from_csv",
     "censo_business_pct_for",
     "censo_override_warning",
