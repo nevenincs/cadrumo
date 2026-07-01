@@ -646,29 +646,29 @@ class TestMultiplePagadoresReducedLimitSchedule:
     euros").
     """
 
-    def test_2022_reduced_limit_is_14000(self) -> None:
-        assert resolve_multiple_pagadores_reduced_limit(2022) == Decimal("14000")
-
-    def test_2023_reduced_limit_is_15000(self) -> None:
-        assert resolve_multiple_pagadores_reduced_limit(2023) == Decimal("15000")
-
-    def test_2024_reduced_limit_is_15876(self) -> None:
-        assert resolve_multiple_pagadores_reduced_limit(2024) == Decimal("15876")
-
-    def test_2025_reduced_limit_is_15876(self) -> None:
-        assert resolve_multiple_pagadores_reduced_limit(2025) == Decimal("15876")
-
-    def test_year_before_schedule_resolves_to_earliest(self) -> None:
-        # A year before the tabulated range uses the earliest known amount.
-        assert resolve_multiple_pagadores_reduced_limit(2015) == Decimal("14000")
-
-    def test_year_after_schedule_resolves_to_latest(self) -> None:
-        # Forward-compatible: a future year uses the latest known amount.
-        assert resolve_multiple_pagadores_reduced_limit(2099) == Decimal("15876")
-
-    def test_none_year_resolves_to_latest(self) -> None:
-        # Year-agnostic surface uses the current (latest) reduced limit.
-        assert resolve_multiple_pagadores_reduced_limit(None) == Decimal("15876")
+    @pytest.mark.parametrize(
+        ("year", "expected"),
+        (
+            (2022, Decimal("14000")),
+            (2023, Decimal("15000")),
+            (2024, Decimal("15876")),
+            (2025, Decimal("15876")),
+            (2015, Decimal("14000")),
+            (2099, Decimal("15876")),
+            (None, Decimal("15876")),
+        ),
+        ids=(
+            "2022-base",
+            "2023-pge",
+            "2024-rd-ley",
+            "2025-latest",
+            "before-schedule-earliest",
+            "after-schedule-latest",
+            "none-latest",
+        ),
+    )
+    def test_reduced_limit_schedule(self, year: int | None, expected: Decimal) -> None:
+        assert resolve_multiple_pagadores_reduced_limit(year) == expected
 
 
 class TestMultiplePagadoresObligationWithTotalIncome:
