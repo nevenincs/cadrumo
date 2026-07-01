@@ -1,9 +1,22 @@
-"""Formula-runtime operation helpers for :class:`ModeloRevision` calculations.
+"""Formula-runtime operation helpers for registry calculations.
 
-Input validation helpers inspect the registry revision before formula execution
-accepts casilla inputs. The public :func:`read_parameter` helper loads a
-:class:`ValidatedRegistryAuthority` so ad hoc parameter reads resolve through the
-same registry authority used by snapshot-backed runtime callers.
+The formula evaluator delegates arithmetic dispatch, dated parameter lookup,
+rounding, and input validation here while executing
+:class:`~aeat.domain.calculations.registry.ModeloRevision` formula graphs.
+Helpers raise :class:`~aeat.domain.calculations.registry.RegistryValidationError`
+so :func:`aeat.domain.calculations.registry._formula_runtime.calculate_registry_snapshot`
+reports contract failures through the registry error channel.
+
+See Also:
+    :mod:`aeat.domain.calculations.registry._formula_runtime`
+        Snapshot evaluator that calls these helpers while materialising
+        :class:`~aeat.domain.calculations.registry.RegistrySnapshot` outputs.
+    :mod:`aeat.domain.calculations.registry._runtime_graph`
+        Formula graph walkers that discover the casilla, binding, relation, and
+        parameter refs consumed before operation dispatch starts.
+    :class:`aeat.domain.calculations.registry.ValidatedRegistryAuthority`
+        Registry authority loaded by :func:`read_parameter` for ad hoc parameter
+        reads outside snapshot execution.
 """
 
 from __future__ import annotations
@@ -26,6 +39,13 @@ _UNARY_PASSTHROUGH_OPS = frozenset({"copy", "lookup_parameter", "previous_period
 
 
 def evaluate_args_op(op: str, args: list[Decimal]) -> Decimal:
+    """Evaluate a resolved formula operation over decimal operands.
+
+    Operation names mirror
+    :class:`~aeat.domain.calculations.registry.FormulaExpression` ``op`` values
+    consumed by
+    :func:`aeat.domain.calculations.registry._formula_runtime.calculate_registry_snapshot`.
+    """
     if op in {"add", "sum", "previous_period_sum"}:
         if op == "previous_period_sum":
             _require_non_empty(op, args)
@@ -40,6 +60,7 @@ def evaluate_args_op(op: str, args: list[Decimal]) -> Decimal:
 
 
 def _dispatch_named_arithmetic_op(op: str, args: list[Decimal]) -> Decimal:
+    """Dispatch non-comparison arithmetic operations for :func:`evaluate_args_op`."""
     match op:
         case "subtract":
             _require_arg_count(op, args, 2)
@@ -77,6 +98,7 @@ def _dispatch_named_arithmetic_op(op: str, args: list[Decimal]) -> Decimal:
 
 
 def _compare(op: str, left: Decimal, right: Decimal) -> bool:
+    """Evaluate a comparison operation from a registry formula expression."""
     if op == "less_than":
         return left < right
     if op == "less_equal":
@@ -95,6 +117,11 @@ def resolve_bracket(
     base: Decimal,
     date_context: Mapping[str, date],
 ) -> Decimal:
+    """Resolve a bracket-table :class:`ParameterDefinition` for a base amount.
+
+    The parameter's bracket date axis must be present in ``date_context`` so
+    registry-authored validity windows select exactly one bracket row.
+    """
     if parameter.data_type != "bracket_table":
         raise RegistryValidationError(
             f"parameter {parameter.id!r} must declare data_type='bracket_table' to use lookup_bracket",
@@ -136,6 +163,11 @@ def resolve_bracket(
 
 
 def resolve_parameter(parameter: ParameterDefinition, date_context: Mapping[str, date]) -> Decimal:
+    """Resolve one dated value from a :class:`ParameterDefinition`.
+
+    Exactly one :class:`~aeat.domain.calculations.registry.DatedValue` must match
+    the selected date axes for the parameter lookup to be deterministic.
+    """
     if not parameter.values:
         raise RegistryValidationError(f"parameter {parameter.id!r} has no dated values")
     matches: list[DatedValue] = []
@@ -153,6 +185,11 @@ def resolve_parameter(parameter: ParameterDefinition, date_context: Mapping[str,
 
 
 def apply_rounding(value: Decimal, rounding: str | None) -> Decimal:
+    """Apply a registry rounding rule to a decimal formula result.
+
+    ``money-2`` uses :func:`aeat.core.money.round_to_cents`; ``integer`` uses
+    half-up quantization for registry-authored integer targets.
+    """
     if rounding is None:
         return value
     if rounding == "money-2":
@@ -163,6 +200,7 @@ def apply_rounding(value: Decimal, rounding: str | None) -> Decimal:
 
 
 def reject_non_decimal[Key](items: Mapping[Key, Decimal], label: str) -> None:
+    """Reject non-decimal values before formula runtime consumption."""
     for key, value in items.items():
         if isinstance(value, bool) or not isinstance(value, Decimal):
             raise RegistryValidationError(f"{label} {key!r} must be a Decimal")
@@ -173,6 +211,12 @@ def validated_decimal_input_casilla_ids[InputKey, InputValue](
     *,
     revision: ModeloRevision,
 ) -> dict[CasillaId, Decimal]:
+    """Canonicalise decimal input keys against a :class:`ModeloRevision`.
+
+    Raw string keys become validated :class:`~aeat.domain.calculations.registry.CasillaId`
+    values, then :func:`aeat.domain.calculations.registry._casilla_membership.undeclared_casilla_ids`
+    rejects inputs outside the revision's declared casilla set.
+    """
     invalid = tuple(repr(key) for key in inputs if not isinstance(key, str))
     if invalid:
         raise RegistryValidationError(
@@ -205,23 +249,27 @@ def validated_decimal_input_casilla_ids[InputKey, InputValue](
 
 
 def reject_non_string[Key](values: Mapping[Key, str], label: str) -> None:
+    """Reject empty or non-string external values before registry validation."""
     for key, value in values.items():
         if not isinstance(value, str) or not value:
             raise RegistryValidationError(f"{label} {key!r} must be a non-empty string")
 
 
 def reject_unknown_external_values[Key](items: Mapping[Key, Decimal], known_ids: set[Key], label: str) -> None:
+    """Reject external ids not declared by the current registry snapshot."""
     unknown = sorted(set(items).difference(known_ids))
     if unknown:
         raise RegistryValidationError(f"unknown registry {label} ids: {unknown!r}")
 
 
 def _require_arg_count(op: str, args: list[Decimal], count: int) -> None:
+    """Require an exact operand count for a formula operation."""
     if len(args) != count:
         raise RegistryValidationError(f"formula op {op!r} expects {count} args, got {len(args)}")
 
 
 def _require_non_empty(op: str, args: list[Decimal]) -> None:
+    """Require at least one operand for aggregate formula operations."""
     if not args:
         raise RegistryValidationError(f"formula op {op!r} expects at least one arg")
 
@@ -234,6 +282,13 @@ def read_parameter(
     date_context: Mapping[str, date],
     registry_root: Path | None = None,
 ) -> Decimal:
+    """Read a registry parameter through :class:`ValidatedRegistryAuthority`.
+
+    The ad hoc public helper loads the same validated registry authority used by
+    snapshot callers, narrows to the selected
+    :class:`~aeat.domain.calculations.registry.ModeloRevision`, and delegates the
+    dated value lookup to :func:`resolve_parameter`.
+    """
     from ....core.resources import bundled_path
     from ._authority import ValidatedRegistryAuthority
 
