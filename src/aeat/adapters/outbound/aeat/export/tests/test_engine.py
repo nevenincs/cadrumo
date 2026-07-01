@@ -32,6 +32,8 @@ from ......tests.secure_sql import isolated_runtime_profile
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 
+_SUBMITTED_AT = datetime(2026, 5, 28, 12, 55, 0, tzinfo=UTC)
+
 
 @pytest.fixture(autouse=True)
 def _secure_database(tmp_path: Path) -> Iterator[None]:
@@ -101,7 +103,6 @@ def _build_engine(tmp_path: Path) -> SubmissionEngine:
 
 def _historical_filing(submission_id: str = "sub-1", modelo: str = "130") -> ModeloPresentado:
     """Build a synthetic :class:`ModeloPresentado` for historical-records tests."""
-    now = datetime.now(UTC)
     return ModeloPresentado(
         submission_id=submission_id,
         draft_id="draft-1",
@@ -109,12 +110,12 @@ def _historical_filing(submission_id: str = "sub-1", modelo: str = "130") -> Mod
         period=Period.from_year_and_code(2026, "1T"),
         profile_tax_id="X1234567L",
         status=SubmissionStatus.PENDIENTE_DE_PRESENTAR,
-        submitted_at=now,
+        submitted_at=_SUBMITTED_AT,
         attempts=(
             SubmissionAttempt(
                 attempt_id="attempt-1",
-                started_at=now,
-                ended_at=now,
+                started_at=_SUBMITTED_AT,
+                ended_at=_SUBMITTED_AT,
                 status=SubmissionStatus.PENDIENTE_DE_PRESENTAR,
             ),
         ),
