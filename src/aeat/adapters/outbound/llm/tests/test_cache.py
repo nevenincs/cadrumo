@@ -19,6 +19,8 @@ from .. import LLMCache, LLMProvider, LLMRequest, LLMResponse
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 
+_CREATED_AT = datetime(2026, 5, 28, 12, 20, 0, tzinfo=UTC)
+
 
 def _response() -> LLMResponse:
     return LLMResponse(
@@ -29,7 +31,7 @@ def _response() -> LLMResponse:
         output_tokens=2,
         cost_estimate_usd=Decimal("0.000060"),
         cache_hit=False,
-        created_at=datetime.now(UTC),
+        created_at=_CREATED_AT,
         request_id="request-id",
     )
 
