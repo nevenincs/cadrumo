@@ -3,15 +3,15 @@
 The bucket aggregation calculate path first resolves source-backed values,
 executes the registry formula engine, and persists the calculated revision. This
 module then fans out advisory-only checks over the loaded
-:class:`ModeloRevision` and the computed ``CasillaId`` value map, returning
+:class:`ModeloRevision` and the computed :class:`CasillaId` value map, returning
 non-blocking
-:class:`aeat.application.aggregation.CalculationSourceDiagnostic` rows for the
+:class:`~aeat.application.aggregation.CalculationSourceDiagnostic` rows for the
 caller to append to source mesh diagnostics. It does not compute, override, or
 persist casilla values.
 
 The prior-payment collectors need persisted filing observations, so the
 coordinator shares one
-:class:`aeat.application.calculations.CalculationObservationRepository` instance
+:class:`~aeat.application.calculations.CalculationObservationRepository` instance
 across them. The official-box and settlement collectors read only the revision
 structure and calculated casilla values. Together the collectors extend the
 source mesh's no-silent-under-declaration diagnostics with checks whose evidence
@@ -61,13 +61,14 @@ def collect_bucket_aggregation_advisory_diagnostics(
     130 prior-payment minoracion capture, and settlement-not-computed structure.
     These diagnostics are informational and non-blocking; the calculation result
     already exists, and the caller merely appends these rows to the source mesh's
-    existing :class:`aeat.application.aggregation.CalculationSourceDiagnostic`
+    existing
+    :class:`~aeat.application.aggregation.CalculationSourceDiagnostic`
     sequence.
 
     Args:
         revision: The :class:`ModeloRevision` whose predicates, casillas, and
             formulas are inspected.
-        casilla_values: Computed engine values keyed by ``CasillaId``.
+        casilla_values: Computed engine values keyed by :class:`CasillaId`.
         modelo: Target modelo identifier used by modelo-specific advisory
             collectors.
         period_token: Bare registry period token for the filing being
@@ -76,11 +77,12 @@ def collect_bucket_aggregation_advisory_diagnostics(
             inspected.
 
     Returns:
-        Tuple of :class:`aeat.application.aggregation.CalculationSourceDiagnostic`
+        Tuple of
+        :class:`~aeat.application.aggregation.CalculationSourceDiagnostic`
         advisory rows, or an empty tuple when no post-calculation advisory fires.
 
     See Also:
-        :class:`aeat.application.calculations.CalculationObservationRepository`:
+        :class:`~aeat.application.calculations.CalculationObservationRepository`:
             Supplies the prior-filing observation catalogue used by the Modelo
             130 prior-payment advisory collectors.
         :func:`aeat.application.modelo.calculate_modelo_revision_from_bucket_aggregation_with_diagnostics`:
