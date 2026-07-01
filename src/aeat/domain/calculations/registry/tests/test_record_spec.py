@@ -105,7 +105,7 @@ def _record(*, record_id: str, encoding: str) -> ExportRecordDefinition:
                 padding="none",
                 justification="none",
                 signed=False,
-                legal_refs=("liva.art-1",),
+                legal_refs=("ley-37-1992:art-1",),
                 source_refs=("aeat.src.1",),
             ),
         ),
@@ -119,7 +119,7 @@ def test_layout_accepts_latin_1_iso_8859_1_mix_via_alias_map() -> None:
     layout = ExportLayoutDefinition(
         id="test.layout",
         source_refs=("aeat.src.1",),
-        legal_refs=("liva.art-1",),
+        legal_refs=("ley-37-1992:art-1",),
         records=(
             _record(record_id="rec.a", encoding="latin-1"),
             _record(record_id="rec.b", encoding="iso-8859-1"),
@@ -138,7 +138,7 @@ def test_layout_rejects_mixed_canonical_encodings() -> None:
         ExportLayoutDefinition(
             id="test.layout.mixed",
             source_refs=("aeat.src.1",),
-            legal_refs=("liva.art-1",),
+            legal_refs=("ley-37-1992:art-1",),
             records=(
                 _record(record_id="rec.a", encoding="cp1252"),
                 _record(record_id="rec.b", encoding="iso-8859-15"),
