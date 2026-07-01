@@ -122,6 +122,36 @@ _MIN_CASILLA_LIST_ARITY: Mapping[str, int] = {
     "implies_any_nonzero": 2,
 }
 _CASILLA_LIST_OPERATORS = frozenset(_EXACT_CASILLA_LIST_ARITY) | frozenset(_MIN_CASILLA_LIST_ARITY)
+_APPLICATION_LINK_ALLOWED_SOURCE_TIERS: Mapping[str, tuple[str, ...]] = {
+    "export": ("layout_authority",),
+    "extractor": ("layout_authority", "official_source_guidance"),
+    "portal": ("official_source_guidance", "executable_parity_evidence"),
+}
+_DEFAULT_APPLICATION_LINK_SOURCE_TIERS = ("official_source_guidance",)
+
+
+def _allowed_application_link_source_tiers(surface: str) -> tuple[str, ...]:
+    return _APPLICATION_LINK_ALLOWED_SOURCE_TIERS.get(surface, _DEFAULT_APPLICATION_LINK_SOURCE_TIERS)
+
+
+def _application_link_source_tier_failures(
+    prefix: str,
+    owner: str,
+    refs: tuple[str, ...],
+    *,
+    surface: str,
+    source_refs: Mapping[str, SourceReference],
+) -> list[str]:
+    allowed_tiers = _allowed_application_link_source_tiers(surface)
+    for ref in refs:
+        source = source_refs.get(ref)
+        if source is not None and source.evidence_tier in allowed_tiers:
+            return []
+    if len(allowed_tiers) == 1:
+        requirement = f"{allowed_tiers[0]} source evidence"
+    else:
+        requirement = f"one of {', '.join(allowed_tiers)} source evidence"
+    return [f"{prefix}: {owner} requires {requirement}"]
 
 
 def _parse_predicate_casilla_id_tokens(ids_fragment: str) -> list[str]:
@@ -451,11 +481,22 @@ def validate_application_link_section(
     revision: ModeloRevision,
     legal_refs: Mapping[str, LegalReference],
     source_refs: Mapping[str, SourceReference],
+    evidence: EvidenceValidator,
 ) -> None:
     for link in revision.application_links:
         owner = f"application link {link.id}"
         failures.extend(_missing_refs(prefix, owner, link.legal_refs, legal_refs, "legal"))
         failures.extend(_missing_refs(prefix, owner, link.source_refs, source_refs, "source"))
+        failures.extend(evidence.require_legal_authority_refs(prefix, owner, link.legal_refs))
+        failures.extend(
+            _application_link_source_tier_failures(
+                prefix,
+                owner,
+                link.source_refs,
+                surface=link.surface,
+                source_refs=source_refs,
+            ),
+        )
 
 
 def validate_deadline_window_section(

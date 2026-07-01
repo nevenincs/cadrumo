@@ -788,6 +788,46 @@ def test_validator_rejects_application_link_legal_ref_without_legal_authority() 
         RegistryValidator(mutated_catalogues, source_root=bundled_path()).validate_modelo(modelo)
 
 
+def test_validator_rejects_application_link_without_required_official_guidance_source() -> None:
+    modelo, catalogues = _committed_registry()
+    revision = _revision(modelo)
+    link = next(item for item in revision.application_links if item.id == "modelo-130-calculation")
+    mutated_link = link.model_copy(update={"source_refs": ("aeat-dr-130-2019-v12",)})
+    mutated = revision.model_copy(
+        update={
+            "application_links": tuple(
+                mutated_link if item.id == link.id else item for item in revision.application_links
+            ),
+        },
+    )
+
+    with pytest.raises(
+        RegistryValidationError,
+        match=r"application link modelo-130-calculation requires official_source_guidance source evidence",
+    ):
+        RegistryValidator(catalogues, source_root=bundled_path()).validate_modelo(_with_revision(modelo, mutated))
+
+
+def test_validator_rejects_export_application_link_without_layout_source() -> None:
+    modelo, catalogues = _committed_registry()
+    revision = _revision(modelo)
+    link = next(item for item in revision.application_links if item.id == "modelo-130-export")
+    mutated_link = link.model_copy(update={"source_refs": ("aeat-modelo-130-instructions",)})
+    mutated = revision.model_copy(
+        update={
+            "application_links": tuple(
+                mutated_link if item.id == link.id else item for item in revision.application_links
+            ),
+        },
+    )
+
+    with pytest.raises(
+        RegistryValidationError,
+        match=r"application link modelo-130-export requires layout_authority source evidence",
+    ):
+        RegistryValidator(catalogues, source_root=bundled_path()).validate_modelo(_with_revision(modelo, mutated))
+
+
 def test_validator_rejects_casilla_export_ref_without_export_field() -> None:
     modelo, catalogues = _committed_registry()
     revision = _revision(modelo)
