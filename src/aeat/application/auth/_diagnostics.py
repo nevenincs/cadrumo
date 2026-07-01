@@ -3,7 +3,7 @@
 Diagnostic records are support evidence for failed Cl@ve/browser auth flows.
 They may include raw HTML, screenshot bytes, route metadata, and identity
 alignment hints, so they are stored only as encrypted objects through a
-:class:`~aeat.adapters.persistence.storage.sql.SecureObjectRepository` scoped to
+:class:`~aeat.adapters.persistence.storage.SecureObjectRepository` scoped to
 the active profile bucket.
 
 Public functions return redacted summaries, bounded body placeholders, and
@@ -21,9 +21,8 @@ from urllib.parse import urlsplit
 
 from pydantic import BaseModel, ConfigDict
 
-from ...adapters.persistence.storage import CLAVE_MOVIL_DIAGNOSTICS_NAMESPACE
+from ...adapters.persistence.storage import CLAVE_MOVIL_DIAGNOSTICS_NAMESPACE, SecureObjectRepository
 from ...adapters.persistence.storage.runtime_repository import secure_object_repository_for_active_bucket
-from ...adapters.persistence.storage.sql import SecureObjectRepository
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.external_constants import UTF_8_ENCODING, load_external_constants
 from ...core.hashing import sha256_hex

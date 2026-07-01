@@ -16,7 +16,7 @@ Operator verbs:
 
 Configuration is persisted per-bucket as an encrypted
 :class:`~aeat.adapters.persistence.storage.Envelope` row in the
-:class:`~aeat.adapters.persistence.storage.sql.SecureObjectRepository` under
+:class:`~aeat.adapters.persistence.storage.SecureObjectRepository` under
 :data:`aeat.adapters.persistence.storage.AUTH_APODERADO_CONFIGURATION_NAMESPACE`.
 The ``represented_nif`` is an
 identity-bearing tax identifier, so the record carries
