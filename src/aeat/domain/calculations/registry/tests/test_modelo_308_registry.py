@@ -26,13 +26,15 @@ def test_modelo_308_validator_accepts_committed_definition() -> None:
 
 
 def test_modelo_308_metadata_matches_orden_eha_3786_2008_art_2() -> None:
-    modelo, _ = _load_modelo_308()
+    modelo, catalogues = _load_modelo_308()
     assert modelo.tax_domain == "iva"
     assert modelo.cadence == "ad_hoc"
     assert modelo.jurisdiction == "ES-AEAT"
     assert "orden-eha-3786-2008:art-2" in modelo.legal_refs
     assert "orden-eha-3786-2008:art-11" in modelo.legal_refs
     assert "aeat-dr-308-2019" in modelo.source_refs
+    assert catalogues.sources["aeat-modelo-308-procedure"].evidence_tier == "official_source_guidance"
+    assert catalogues.sources["boe-modelo-308-2008-form"].evidence_tier == "layout_authority"
 
 
 def test_modelo_308_revision_starts_at_2009() -> None:
@@ -66,6 +68,7 @@ def test_modelo_308_snapshot_carries_legal_authority() -> None:
     assert snapshot.legal["orden-eha-3786-2008:art-11"].article == "11"
     assert "aeat-dr-308-2019" in snapshot.sources
     assert "aeat-modelo-308-procedure" in snapshot.sources
+    assert "boe-modelo-308-2008-form" in snapshot.sources
 
 
 def test_modelo_308_filing_schedule_is_ad_hoc() -> None:
