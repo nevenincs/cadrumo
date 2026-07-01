@@ -852,7 +852,7 @@ source_url = "https://sede.agenciatributaria.gob.es/Sede/procedimientoini/G420.s
 review_status = "reviewed"
 
 [sources."boe-modelo-369-2021-form"]
-evidence_tier = "official_source_guidance"
+evidence_tier = "layout_authority"
 authority = "boe"
 kind = "form_spec"
 corpus_path = "corpus/normatives/html/orden-hac-610-2021.html"
