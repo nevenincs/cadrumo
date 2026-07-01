@@ -47,7 +47,7 @@ ModeloActorLabel = Annotated[
 """Validated string identifying the operator who filed or triggered a filing event.
 
 Strips surrounding whitespace; must be 1–64 characters after stripping.
-Used as ``filed_by`` on :class:`ModeloRecord` and feeds into the
+Used as ``filed_by`` on :class:`~aeat.domain.modelos.ModeloRecord` and feeds into the
 content-addressed :func:`derive_filing_record_id`.
 """
 _Notes = Annotated[
@@ -77,11 +77,11 @@ class ModeloRecordStatus(StrEnum):
 class ExternalEvidenceKind(StrEnum):
     """Closed catalogue of external-evidence kinds.
 
-    A filing record marked with one of these kinds carries imported
-    official evidence (an AEAT justificante PDF, a CSV-attested
-    receipt) rather than a tool-computed calculation revision. This
-    is the gate the modelo-amend path requires before it accepts an
-    amendment baseline.
+    A :class:`~aeat.domain.modelos.ModeloRecord` marked with one of these kinds
+    carries imported official evidence (justificante, CSV register, or live
+    capture) rather than a tool-computed calculation revision. This is the gate
+    :func:`aeat.application.modelo.amend_modelo_revision` requires before it
+    accepts an amendment baseline.
     """
 
     AEAT_JUSTIFICANTE_PDF = "aeat_justificante_pdf"
@@ -126,7 +126,7 @@ def derive_filing_record_id(
     filings) the member NIF. ``filed_at`` is deliberately excluded from the
     identity so a re-file of the same revision by the same actor resolves to
     the same record (an idempotent re-file is a no-op, not a new time-stamped
-    duplicate); ``filed_at`` is retained on :class:`ModeloRecord` as a
+    duplicate); ``filed_at`` is retained on :class:`~aeat.domain.modelos.ModeloRecord` as a
     non-identity last-seen field. Member-scoped group filings include the
     member NIF in the identity; single-filer records omit it.
     """
@@ -242,10 +242,10 @@ class ModeloRecordCatalogue(BaseModel):
     """Immutable catalogue of every filing record in a bucket's storage.
 
     Keyed by ``filing_record_id``; the model validator enforces that every
-    key equals the id of the :class:`ModeloRecord` it maps to, and that at
+    key equals the id of the :class:`~aeat.domain.modelos.ModeloRecord` it maps to, and that at
     most one record per (bucket_id, modelo, filing_year, period,
     member_nif) tuple carries ``status=VIGENTE``. Iteration yields
-    :class:`ModeloRecord` values (not key–value pairs) — the override is
+    :class:`~aeat.domain.modelos.ModeloRecord` values (not key–value pairs) — the override is
     annotated with a suppression comment on ``__iter__``.
     """
 
@@ -281,7 +281,7 @@ class ModeloRecordCatalogue(BaseModel):
         return self
 
     def get(self, filing_record_id: str) -> ModeloRecord | None:
-        """Return the :class:`ModeloRecord` for ``filing_record_id``, or ``None``."""
+        """Return the :class:`~aeat.domain.modelos.ModeloRecord` for ``filing_record_id``, or ``None``."""
         return self.records.get(filing_record_id)
 
     def current_for(
@@ -293,7 +293,7 @@ class ModeloRecordCatalogue(BaseModel):
         period: Period,
         member_nif: str | None = None,
     ) -> ModeloRecord | None:
-        """Return the current (non-superseded) :class:`ModeloRecord` for a filing tuple.
+        """Return the current (non-superseded) :class:`~aeat.domain.modelos.ModeloRecord` for a filing tuple.
 
         Returns ``None`` when no filing has ever happened for the
         tuple. ``member_nif=None`` means the single-filer or aggregate
@@ -327,7 +327,7 @@ class ModeloRecordCatalogue(BaseModel):
         """Return every filing record for a tuple, ordered by filed_at.
 
         Returns:
-            Tuple of :class:`ModeloRecord` objects ordered by filing timestamp.
+            Tuple of :class:`~aeat.domain.modelos.ModeloRecord` objects ordered by filing timestamp.
         """
         expected_member_nif = member_nif.strip() if member_nif is not None else None
         matching = tuple(
@@ -342,12 +342,12 @@ class ModeloRecordCatalogue(BaseModel):
         return tuple(sorted(matching, key=lambda r: r.filed_at))
 
     def values(self):
-        """Return a view of all :class:`ModeloRecord` values in the catalogue."""
+        """Return a view of all :class:`~aeat.domain.modelos.ModeloRecord` values in the catalogue."""
         return self.records.values()
 
     @override
     def __iter__(self) -> Iterator[ModeloRecord]:  # pyright: ignore[reportIncompatibleMethodOverride]  # ty: ignore[invalid-method-override]  # pyrefly: ignore[bad-override]  # reason: intentional pydantic catalogue iteration adapter — yields domain items not field-value tuples
-        """Iterate over :class:`ModeloRecord` values (not ``(key, value)`` pairs)."""
+        """Iterate over :class:`~aeat.domain.modelos.ModeloRecord` values (not ``(key, value)`` pairs)."""
         return iter(self.records.values())
 
     def __len__(self) -> int:
@@ -355,7 +355,7 @@ class ModeloRecordCatalogue(BaseModel):
         return len(self.records)
 
     def __contains__(self, key: object) -> bool:
-        """Test membership by :class:`ModeloRecord` instance or ``filing_record_id`` string."""
+        """Test membership by :class:`~aeat.domain.modelos.ModeloRecord` instance or ``filing_record_id`` string."""
         if isinstance(key, ModeloRecord):
             return key.filing_record_id in self.records
         if isinstance(key, str):
