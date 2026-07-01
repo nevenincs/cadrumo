@@ -25,9 +25,17 @@ computed_casilla_ids = []
 # improcedente of a trabajador con discapacidad (see
 # corpus/manual_oracles/modelo-100-2024-rendimientos-trabajo-despido-improcedente.json
 # and test_m100_2024_rendimientos_trabajo_despido_manual_worked_example.py).
+# 0149 ("Rendimiento neto"), 0150 ("Reduccion por arrendamiento de vivienda,
+# art. 23.2") and 0154 ("Rendimiento neto reducido del capital inmobiliario")
+# reproduce 3.287,09 / 2.958,38 / 328,71 respectively, the three subtotals the
+# same manual (Parte 1, Cap. 4) states verbatim in its own caso practico
+# solution for a vivienda arrendada en zona de mercado residencial tensionado
+# (see
+# corpus/manual_oracles/modelo-100-2024-capital-inmobiliario-arrendamiento-vivienda-tensionada.json
+# and test_m100_2024_capital_inmobiliario_arrendamiento_vivienda_manual_worked_example.py).
 # The CI honesty gate (test_external_oracle_grounding_enrolled.py) cross-checks
 # both declarations symmetrically against the bundled corpus.
-externally_grounded_casilla_ids = ["0012", "0017", "0022", "0025", "0226"]
+externally_grounded_casilla_ids = ["0012", "0017", "0022", "0025", "0149", "0150", "0154", "0226"]
 reconcile_when_present_casilla_ids = [
     "0007",
     "0012",
