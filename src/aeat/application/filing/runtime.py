@@ -191,8 +191,8 @@ class RegistryModeloSubview:
     schema_version: str
     cadence: str
     period_selector_periods: tuple[str, ...]
-    legal_ref_ids: tuple[str, ...]
-    source_ref_ids: tuple[str, ...]
+    legal_ref_ids: tuple[LegalRefId, ...]
+    source_ref_ids: tuple[SourceRefId, ...]
     extraction_profile_ids: tuple[str, ...]
     verification_expectation_ids: tuple[str, ...]
     reconciliation_total_casilla_ids: Mapping[Literal["ingresar", "devolver"], CasillaId]
