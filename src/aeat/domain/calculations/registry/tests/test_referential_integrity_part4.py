@@ -53,6 +53,7 @@ _NONEXISTENT_CASILLA: CasillaId = validated_casilla_id("nonexistent-casilla", su
 _NUMERIC_CASILLA_01: CasillaId = validated_casilla_id("01", surface="_NUMERIC_CASILLA_01")
 _MISSING_LEGAL_ID = "ley-35-2006:art-9999"
 _LAYOUT_SOURCE_ID = "aeat-layout-source-test"
+_PARITY_SOURCE_ID = "aeat-open-parity-source"
 
 
 def _modelo_validation_failures(modelo: ModeloDefinition) -> list[str]:
@@ -76,6 +77,20 @@ def _catalogues_with_layout_source() -> RegistryCatalogues:
     return RegistryCatalogues(
         legal=catalogues.legal,
         sources={**catalogues.sources, _LAYOUT_SOURCE_ID: layout_source},
+    )
+
+
+def _catalogues_with_executable_parity_source() -> RegistryCatalogues:
+    parity_source = minimal_source_ref().model_copy(
+        update={
+            "id": _PARITY_SOURCE_ID,
+            "evidence_tier": "executable_parity_evidence",
+        },
+    )
+    catalogues = minimal_catalogues()
+    return RegistryCatalogues(
+        legal=catalogues.legal,
+        sources={**catalogues.sources, _PARITY_SOURCE_ID: parity_source},
     )
 
 
@@ -133,6 +148,29 @@ def test_dangling_support_removal_decision_legal_refs() -> None:
     )
     revision = minimal_revision(support_removal_decisions=(decision,))
     _assert_missing_legal_ref_rejected(revision, r"support_removal_decision srd.test.legal_refs")
+
+
+def test_modelo_validation_rejects_support_removal_sourced_only_by_executable_parity() -> None:
+    decision = SupportRemovalDecisionDefinition(
+        id="srd.test",
+        subject_type="application_link",
+        subject_id="al.removed",
+        decision="remove_from_filing_grade",
+        reason="out_of_scope",
+        evidence_note="Removed filing-grade support must be grounded in official source evidence.",
+        legal_refs=(REFERENCE_LEGAL_ID,),
+        source_refs=(_PARITY_SOURCE_ID,),
+    )
+    revision = minimal_revision(support_removal_decisions=(decision,))
+
+    with pytest.raises(
+        RegistryValidationError,
+        match=(
+            r"support removal decision srd\.test "
+            r"requires one of official_source_guidance, layout_authority source evidence"
+        ),
+    ):
+        RegistryValidator(_catalogues_with_executable_parity_source()).validate_modelo(minimal_modelo(revision))
 
 
 def test_dangling_construct_casilla_ref() -> None:
