@@ -115,7 +115,7 @@ def _schema_version(modelo: str = "130") -> str:
 
 def _raw(*, source_row_index: int = 1, description: str = "Office") -> RawTransaction:
     return RawTransaction(
-        transaction_id=f"prov-{source_row_index}",
+        provider_transaction_id=f"prov-{source_row_index}",
         booked_date=date(2026, 4, 10),
         value_date=date(2026, 4, 10),
         amount=Decimal("12.34"),

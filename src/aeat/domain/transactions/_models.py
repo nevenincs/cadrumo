@@ -86,7 +86,7 @@ def derive_transaction_id(raw: RawTransaction) -> str:
         {
             "amount": canonical_decimal_string(raw.amount),
             "narrative": raw.description,
-            "provider_id": raw.transaction_id,
+            "provider_id": raw.provider_transaction_id,
             "value_date": effective_value_date.isoformat(),
         }
     )

@@ -41,7 +41,7 @@ def seed_m130_income_transaction(
     income = Transaction.model_validate(
         {
             "raw": RawTransaction(
-                transaction_id=f"m130-income-{source_key}-{filing_year}",
+                provider_transaction_id=f"m130-income-{source_key}-{filing_year}",
                 booked_date=value_date,
                 value_date=value_date,
                 amount=amount,
@@ -104,7 +104,7 @@ def seed_m130_expense_transaction(
     expense = Transaction.model_validate(
         {
             "raw": RawTransaction(
-                transaction_id=f"m130-expense-{source_key}-{filing_year}",
+                provider_transaction_id=f"m130-expense-{source_key}-{filing_year}",
                 booked_date=value_date,
                 value_date=value_date,
                 amount=amount,

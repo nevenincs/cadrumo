@@ -102,7 +102,7 @@ def test_build_split_prompt_includes_evidence_and_no_numbers_guard() -> None:
     from .. import RawProvenance, RawTransaction, SourceFormat, Transaction, TransactionDirection, build_split_prompt
 
     raw = RawTransaction(
-        transaction_id="row-split",
+        provider_transaction_id="row-split",
         booked_date=date(2025, 3, 1),
         value_date=date(2025, 3, 1),
         amount=Decimal("121.00"),

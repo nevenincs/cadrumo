@@ -50,7 +50,7 @@ def _summary(text: str = "demo") -> tr:
 
 def _raw() -> RawTransaction:
     return RawTransaction(
-        transaction_id="prov-1",
+        provider_transaction_id="prov-1",
         booked_date=date(2026, 4, 10),
         value_date=date(2026, 4, 10),
         amount=Decimal("12.34"),

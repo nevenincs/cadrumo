@@ -72,7 +72,7 @@ _REVISION_CASILLA: CasillaId = _casilla_id("01")
 
 def _txn(*, taxable_base: Decimal) -> Transaction:
     raw = RawTransaction(
-        transaction_id="provider-row-stale",
+        provider_transaction_id="provider-row-stale",
         booked_date=date(2025, 2, 10),
         value_date=date(2025, 2, 10),
         amount=Decimal("121.00"),

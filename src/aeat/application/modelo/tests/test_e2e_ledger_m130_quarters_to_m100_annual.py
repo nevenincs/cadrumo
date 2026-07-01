@@ -204,6 +204,7 @@ _M130_MANUAL_INPUTS: dict[CasillaId, Decimal] = {
 # files no estimacion objetiva, so the M131 leg resolves as not-applicable zero
 # without any synthetic M131 filings.
 
+
 @pytest.fixture
 def secure_objects(tmp_path: Path) -> Iterator[SecureObjectRepository]:
     """Yield the active profile's real encrypted-SQLite object repository."""
@@ -216,7 +217,7 @@ def _income_transaction(period: str) -> Transaction:
     return Transaction.model_validate(
         {
             "raw": RawTransaction(
-                transaction_id=f"income-{period}",
+                provider_transaction_id=f"income-{period}",
                 booked_date=value_date,
                 value_date=value_date,
                 amount=amount,
@@ -262,7 +263,7 @@ def _expense_transaction(
     return Transaction.model_validate(
         {
             "raw": RawTransaction(
-                transaction_id=transaction_id,
+                provider_transaction_id=transaction_id,
                 booked_date=value_date,
                 value_date=value_date,
                 amount=taxable_base,
@@ -774,9 +775,6 @@ def test_verify_gate_blocks_chain_carrying_non_official_prior_year(
         f"for the non-official prior-year carry; got {report.findings}"
     )
     assert any(
-        "modelo=130 year=2024 period=1T" in finding.message
-        and "missing_current_filing_record" in finding.message
+        "modelo=130 year=2024 period=1T" in finding.message and "missing_current_filing_record" in finding.message
         for finding in unclean
-    ), (
-        f"the unclean finding must name the missing official M130 quarterly filing record; got {unclean}"
-    )
+    ), f"the unclean finding must name the missing official M130 quarterly filing record; got {unclean}"

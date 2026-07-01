@@ -174,7 +174,7 @@ class XlsxProvider(FinancialProvider):
                     path=path,
                     source_sha256=source_sha256,
                     source_row_index=source_row_index,
-                    transaction_id=parsed.transaction_id,
+                    provider_transaction_id=parsed.provider_transaction_id,
                     booked_date=parsed.booked_date,
                     value_date=parsed.value_date,
                     amount=parsed.amount,

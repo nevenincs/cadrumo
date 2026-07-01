@@ -192,7 +192,7 @@ def _transaction(
     description: str,
 ) -> Transaction:
     raw = RawTransaction(
-        transaction_id=provider_id,
+        provider_transaction_id=provider_id,
         booked_date=date(2026, 4, 10),
         value_date=date(2026, 4, 10),
         amount=amount,

@@ -112,6 +112,7 @@ def _casilla_id(value: object) -> CasillaId:
     except ValueError as exc:
         raise AssertionError(f"ledger M303/M390 E2E fixture casilla key {value!r} is not a CasillaId") from exc
 
+
 # M303 computed-output casillas the M390 reconciliation relations fold.
 _DEVENGADA_TOTAL: CasillaId = _casilla_id("iva.cuota-devengada-total")
 _DEDUCIBLE_TOTAL: CasillaId = _casilla_id("iva.cuota-deducible-total")
@@ -197,7 +198,7 @@ def _iva_transaction(
     booked = date(_YEAR, _QUARTER_MONTH[period], 10)
     payload: dict[str, object] = {
         "raw": RawTransaction(
-            transaction_id=provider_id,
+            provider_transaction_id=provider_id,
             booked_date=booked,
             value_date=booked,
             amount=amount if amount is not None else taxable_base + iva_amount,

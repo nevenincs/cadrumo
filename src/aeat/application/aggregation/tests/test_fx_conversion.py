@@ -98,7 +98,7 @@ def _ecb_provider(tmp_path: Path, *, usd_quote: Decimal | None = _ECB_2024_01_15
 
 def _usd_raw(provider_id: str, *, amount: Decimal = _USD_AMOUNT) -> RawTransaction:
     return RawTransaction(
-        transaction_id=provider_id,
+        provider_transaction_id=provider_id,
         booked_date=date(2024, 1, 15),
         value_date=date(2024, 1, 15),
         amount=amount,
@@ -267,7 +267,7 @@ def test_anti_tautology_mutated_rate_changes_value_in_eur(
     assert result_mutant.summary.imported == 1
 
     catalogue = repo_canonical.load()
-    txs = {tx.raw.transaction_id: tx for tx in catalogue.values()}
+    txs = {tx.raw.provider_transaction_id: tx for tx in catalogue.values()}
 
     canonical_eur = txs["usd-antitauto-canonical"].value_in_eur
     mutant_eur = txs["usd-antitauto-mutant"].value_in_eur

@@ -251,7 +251,7 @@ def _income_transaction(objects: SecureObjectRepository) -> None:
     transaction = Transaction.model_validate(
         {
             "raw": RawTransaction(
-                transaction_id="m130-prior-payment-income",
+                provider_transaction_id="m130-prior-payment-income",
                 booked_date=_INCOME_DATE,
                 value_date=_INCOME_DATE,
                 amount=_INCOME_AMOUNT,

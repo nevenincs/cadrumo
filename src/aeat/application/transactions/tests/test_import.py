@@ -66,7 +66,7 @@ def _raw_transaction(
     amount, description) — vary any of those to produce a distinct id.
     """
     return RawTransaction(
-        transaction_id=provider_id,
+        provider_transaction_id=provider_id,
         booked_date=booked_date,
         value_date=value_date,
         amount=amount,

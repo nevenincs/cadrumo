@@ -122,8 +122,11 @@ class RawTransaction(BaseModel):
     """Verbatim per-row transaction record emitted by an ingest parser.
 
     Attributes:
-        transaction_id: Provider-assigned identifier; never normalised
-            beyond a strip + non-blank check.
+        provider_transaction_id: Provider-assigned native identifier; never
+            normalised beyond a strip + non-blank check. This is the bank/feed's
+            own id for the row, distinct from the content-addressed
+            :attr:`aeat.domain.transactions.Transaction.transaction_id` hash the
+            domain derives from it.
         booked_date: Date the transaction posted to the account.
         value_date: Optional value date; falls back to ``booked_date``
             when ``None``.
@@ -142,7 +145,7 @@ class RawTransaction(BaseModel):
 
     model_config = _STRICT_FROZEN
 
-    transaction_id: str = Field(min_length=1)
+    provider_transaction_id: str = Field(min_length=1)
     booked_date: date
     value_date: date | None = None
     amount: Decimal
@@ -152,7 +155,7 @@ class RawTransaction(BaseModel):
     provenance: RawProvenance
     raw_fields: Mapping[str, str]
 
-    @field_validator("transaction_id", "description")
+    @field_validator("provider_transaction_id", "description")
     @classmethod
     def _reject_blank_strings(cls, value: str) -> str:
         """Trim and reject blank strings on identifier / narrative fields."""

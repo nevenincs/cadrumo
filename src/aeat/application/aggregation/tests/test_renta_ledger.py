@@ -85,7 +85,7 @@ def _raw_transaction(
     currency: str = "EUR",
 ) -> RawTransaction:
     return RawTransaction(
-        transaction_id=provider_id,
+        provider_transaction_id=provider_id,
         booked_date=booked_date,
         value_date=value_date,
         amount=amount,

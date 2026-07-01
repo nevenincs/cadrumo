@@ -38,7 +38,7 @@ def _sample_raw(
     counterparty: str | None = "Landlord SL",
 ) -> RawTransaction:
     return RawTransaction(
-        transaction_id=provider_id,
+        provider_transaction_id=provider_id,
         booked_date=date(2026, 4, 10),
         value_date=value_date,
         amount=amount,
@@ -431,7 +431,7 @@ def test_classification_history_entry_round_trips_through_json() -> None:
 def _ofx_sample_raw(*, provider_id: str, description: str = "Office rent") -> RawTransaction:
     """Return a sample row tagged as an OFX export of the same movement."""
     return RawTransaction(
-        transaction_id=provider_id,
+        provider_transaction_id=provider_id,
         booked_date=date(2026, 4, 10),
         value_date=date(2026, 4, 10),
         amount=Decimal("123.45"),
