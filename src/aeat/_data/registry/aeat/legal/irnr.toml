@@ -295,3 +295,30 @@ published_at = 2024-01-31
 applies_from = 2024-02-01
 source_url = "https://www.boe.es/buscar/act.php?id=BOE-A-2024-1772"
 review_status = "reviewed"
+
+# Modelo 296 sources - annual resumen (informativa) companion to Modelo 216,
+# governed by the same bundled Orden HAC/56/2024 (BOE-A-2024-1772).
+[sources."aeat-modelo-296-procedure"]
+evidence_tier = "official_source_guidance"
+authority = "aeat"
+kind = "instructions"
+corpus_path = "corpus/aeat_official/instructions/modelo_296/files/modelo-296-procedure.html"
+sha256 = "e45c1c7069db4c28a1c9fa3ca0037d197985e2626b7c772fec448a8441883be5"
+bytes = 54150
+retrieved_at = 2026-07-01
+applies_from = 2024-02-01
+source_url = "https://sede.agenciatributaria.gob.es/Sede/procedimientoini/GI22.shtml"
+review_status = "reviewed"
+
+[sources."boe-modelo-296-form-layout"]
+evidence_tier = "layout_authority"
+authority = "boe"
+kind = "form_spec"
+corpus_path = "corpus/normatives/html/orden-hac-56-2024.html"
+sha256 = "1adcf839bcda32e2aaf1cd2df49f27ea4925f85095b67b2ae7f035d69c015a3c"
+bytes = 141318
+retrieved_at = 2026-05-27
+published_at = 2024-01-31
+applies_from = 2024-02-01
+source_url = "https://www.boe.es/buscar/act.php?id=BOE-A-2024-1772"
+review_status = "reviewed"
