@@ -21,6 +21,7 @@ from pydantic import BaseModel
 
 from ...core import STRICT_FROZEN_CONFIG, Period
 from ...core.errors import FixtureProvisioningError
+from ...core.identity import SubjectTaxId
 from ._testing_registry import build_registry_filing_draft, build_registry_filing_draft_from_decimals
 
 
@@ -34,7 +35,7 @@ class ModeloTestProfile(BaseModel):
 
     model_config = STRICT_FROZEN_CONFIG
 
-    tax_id: str
+    tax_id: SubjectTaxId
     display_name: str
 
 
