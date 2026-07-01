@@ -13,6 +13,7 @@ from ....adapters.persistence.storage.sql import SecureObjectRepository
 from ....core import BindingSourceKind, Period
 from ....core.config import Settings
 from ....domain.categories import SpendingCategory
+from ....domain.iva import EUMemberState, IvaCategory
 from ....domain.transactions import (
     BusinessClassification,
     RawProvenance,
@@ -85,6 +86,8 @@ def _transaction(
     taxable_base: Decimal | None = Decimal("100.00"),
     iva_rate: Decimal | None = Decimal("0.21"),
     iva_amount: Decimal | None = Decimal("21.00"),
+    iva_category: IvaCategory | None = None,
+    counterparty_eu_member_state: EUMemberState | None = None,
     irpf_category: str | None = None,
     usage_ratio_id: str | None = None,
     booked_date: date = date(2026, 4, 5),
@@ -103,6 +106,8 @@ def _transaction(
             "taxable_base": taxable_base,
             "iva_rate": iva_rate,
             "iva_amount": iva_amount,
+            "iva_category": iva_category,
+            "counterparty_eu_member_state": counterparty_eu_member_state,
             "irpf_category": irpf_category,
             "usage_ratio_id": usage_ratio_id,
             "lifecycle_state": lifecycle_state,

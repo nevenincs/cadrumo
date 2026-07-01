@@ -7,7 +7,10 @@ from decimal import Decimal
 
 import pytest
 
+from ....core.config import override_settings
+from ....core.i18n import clear_output_language_cache
 from ....domain.categories import SpendingCategory
+from ....domain.iva import EUMemberState, IvaCategory
 from ....domain.transactions import (
     BusinessClassification,
     TransactionCatalogue,
@@ -180,3 +183,81 @@ def test_preflight_reports_unsupported_currency_before_modelo_aggregation() -> N
 
     assert report.ready is False
     assert [issue.reason for issue in report.issues] == [LedgerPreflightIssueReason.UNSUPPORTED_CURRENCY]
+
+
+def test_preflight_blocks_intracom_sale_with_domestic_counterparty_before_aggregation() -> None:
+    transaction = _transaction(
+        "row-intracom-es",
+        direction=TransactionDirection.INCOMING,
+        amount=Decimal("1000.00"),
+        taxable_base=Decimal("1000.00"),
+        iva_rate=Decimal("0"),
+        iva_amount=Decimal("0"),
+        iva_category=IvaCategory.INTRA_COMMUNITY_SUPPLY,
+        counterparty_eu_member_state=EUMemberState.ES,
+    )
+
+    report = preflight_transaction_catalogue(
+        bucket_id=_BUCKET_ID,
+        period=_Q2_2026,
+        transactions=TransactionCatalogue.from_transactions((transaction,)),
+    )
+
+    assert report.ready is False
+    assert [issue.reason for issue in report.issues] == [
+        LedgerPreflightIssueReason.DOMESTIC_COUNTERPARTY_ON_INTRA_COMMUNITY_TRANSACTION,
+    ]
+    assert not report.issues[0].detail.startswith("aggregation.")
+
+
+def test_preflight_renders_intracom_domestic_counterparty_detail_in_hungarian() -> None:
+    transaction = _transaction(
+        "row-intracom-es-hu",
+        direction=TransactionDirection.INCOMING,
+        amount=Decimal("1000.00"),
+        taxable_base=Decimal("1000.00"),
+        iva_rate=Decimal("0"),
+        iva_amount=Decimal("0"),
+        iva_category=IvaCategory.INTRA_COMMUNITY_SUPPLY,
+        counterparty_eu_member_state=EUMemberState.ES,
+    )
+
+    with override_settings(aeat_output_language="hu"):
+        clear_output_language_cache()
+        report = preflight_transaction_catalogue(
+            bucket_id=_BUCKET_ID,
+            period=_Q2_2026,
+            transactions=TransactionCatalogue.from_transactions((transaction,)),
+        )
+    clear_output_language_cache()
+
+    assert [issue.reason for issue in report.issues] == [
+        LedgerPreflightIssueReason.DOMESTIC_COUNTERPARTY_ON_INTRA_COMMUNITY_TRANSACTION,
+    ]
+    assert "Spanyol partner" in report.issues[0].detail
+    assert not report.issues[0].detail.startswith("aggregation.")
+
+
+def test_preflight_blocks_export_sale_with_eu_member_state_before_aggregation() -> None:
+    transaction = _transaction(
+        "row-export-de",
+        direction=TransactionDirection.INCOMING,
+        amount=Decimal("800.00"),
+        taxable_base=Decimal("800.00"),
+        iva_rate=Decimal("0"),
+        iva_amount=Decimal("0"),
+        iva_category=IvaCategory.EXPORT_THIRD_COUNTRY_ZERO_RATED,
+        counterparty_eu_member_state=EUMemberState.DE,
+    )
+
+    report = preflight_transaction_catalogue(
+        bucket_id=_BUCKET_ID,
+        period=_Q2_2026,
+        transactions=TransactionCatalogue.from_transactions((transaction,)),
+    )
+
+    assert report.ready is False
+    assert [issue.reason for issue in report.issues] == [
+        LedgerPreflightIssueReason.EU_MEMBER_STATE_ON_EXPORT_TRANSACTION,
+    ]
+    assert EUMemberState.DE.value in report.issues[0].detail

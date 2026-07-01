@@ -44,7 +44,11 @@ from ...domain.transactions import (
     TransactionValidationError,
 )
 from ...domain.usage_ratios import CensoRatioMismatchError, load_usage_ratios_with_censo_guard
-from ..aggregation import IvaLedgerAggregationIssueReason, iva_ledger_missing_fact_reasons
+from ..aggregation._iva_ledger import (
+    IvaLedgerAggregationIssueReason,
+    iva_ledger_missing_fact_reasons,
+    validate_iva_ledger_counterparty_category,
+)
 
 _CLASSIFIED_TAX_STATES = frozenset(
     {
@@ -64,6 +68,11 @@ class LedgerPreflightIssueReason(StrEnum):
     MISSING_IVA_AMOUNT = "missing_iva_amount"
     MISSING_IVA_RATE = "missing_iva_rate"
     MISSING_EUR_TAX_SUBSTRATE = "missing_eur_tax_substrate"
+    MISSING_COUNTERPARTY_EU_MEMBER_STATE = "missing_counterparty_eu_member_state"
+    DOMESTIC_COUNTERPARTY_ON_INTRA_COMMUNITY_TRANSACTION = (
+        "domestic_counterparty_on_intra_community_transaction"
+    )
+    EU_MEMBER_STATE_ON_EXPORT_TRANSACTION = "eu_member_state_on_export_transaction"
     MISSING_PROPORTIONALITY_REFERENCE = "missing_proportionality_reference"
     UNSUPPORTED_CURRENCY = "unsupported_currency"
     UNSUPPORTED_PERIOD = "unsupported_period"
@@ -425,6 +434,15 @@ def _issues_for_transaction(
                 detail=_preflight_detail_for_iva_issue(reason),
             ),
         )
+    d5_issue = validate_iva_ledger_counterparty_category(transaction)
+    if d5_issue is not None:
+        issues.append(
+            LedgerPreflightIssue(
+                **common,
+                reason=_preflight_reason_for_iva_issue(d5_issue.reason),
+                detail=d5_issue.detail,
+            ),
+        )
     return tuple(issues)
 
 
@@ -466,6 +484,15 @@ def _preflight_reason_for_iva_issue(reason: IvaLedgerAggregationIssueReason) -> 
         IvaLedgerAggregationIssueReason.MISSING_IVA_RATE: LedgerPreflightIssueReason.MISSING_IVA_RATE,
         IvaLedgerAggregationIssueReason.MISSING_EUR_TAX_SUBSTRATE: (
             LedgerPreflightIssueReason.MISSING_EUR_TAX_SUBSTRATE
+        ),
+        IvaLedgerAggregationIssueReason.MISSING_COUNTERPARTY_EU_MEMBER_STATE: (
+            LedgerPreflightIssueReason.MISSING_COUNTERPARTY_EU_MEMBER_STATE
+        ),
+        IvaLedgerAggregationIssueReason.DOMESTIC_COUNTERPARTY_ON_INTRA_COMMUNITY_TRANSACTION: (
+            LedgerPreflightIssueReason.DOMESTIC_COUNTERPARTY_ON_INTRA_COMMUNITY_TRANSACTION
+        ),
+        IvaLedgerAggregationIssueReason.EU_MEMBER_STATE_ON_EXPORT_TRANSACTION: (
+            LedgerPreflightIssueReason.EU_MEMBER_STATE_ON_EXPORT_TRANSACTION
         ),
     }[reason]
 
