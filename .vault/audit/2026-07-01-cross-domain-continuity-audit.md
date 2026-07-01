@@ -33,6 +33,9 @@ related:
 - Reviewed W09.P45.S295 changes to `src/aeat/entrypoints/cli/tests/test_profile_import_idempotency.py` and the four locale files.
 - Checked that the current D5 profile-import behavior remains identity-preserving, while operator text now distinguishes UUID collision from label collision and no longer describes `--label` as fresh-copy creation.
 - Checked validation evidence from focused profile-import integration tests, touched-file ruff, locale scaffold/audit, reviewer output, and RAG grounding.
+- Reviewed W09.P45.S239 changes to `src/aeat/entrypoints/cli/tests/test_ledger_period_grammar.py`.
+- Checked that the broader historical ledger-import period testimonial is closed against the current canonical grammar: `--period 1T --year 2024` accepts, historical combined forms refuse, and bare `1T` without `--year` refuses on `ledger import`.
+- Checked validation evidence from targeted ledger-import period tests, the full ledger period grammar file, touched-file ruff, reviewer output, and RAG grounding.
 
 ## Findings
 
@@ -63,6 +66,10 @@ No findings for the ledger import period-regression guard. Production already re
 ### w09-p45-s295 | low | resolved test-prose drift
 
 Initial review found no behavioral issue but identified stale test prose describing UUID-collision refusal as "already registered" while the new executable assertions require UUID/conflict wording and reject label-collision wording. The prose was corrected before closure. A final orchestration pass also removed stale fresh-copy wording from the `--label` help text. No findings remain for the locale wording or public-output tests.
+
+### w09-p45-s239 | low | no findings
+
+No findings for the ledger import period-regression closure. Production already uses the shared strict period parser for `ledger import`; the new real CLI tests pin the accepted canonical `1T` plus `--year` form and the intentional refusal of `2024-1T`, `2024/1T`, `2024Q1`, and bare `1T` without `--year`.
 
 ## Recommendations
 
