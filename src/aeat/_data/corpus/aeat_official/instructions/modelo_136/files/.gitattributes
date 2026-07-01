@@ -1,0 +1,2 @@
+*.html -diff -text
+*.pdf -diff -text
