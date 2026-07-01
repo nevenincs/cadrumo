@@ -80,29 +80,3 @@ published_at = 2011-12-12
 applies_from = 2011-12-13
 source_url = "https://www.boe.es/buscar/act.php?id=BOE-A-2011-19396"
 review_status = "reviewed"
-
-# Modelo 198 sources — operaciones con activos financieros (Orden EHA/3435/2007).
-[sources."aeat-modelo-198-procedure"]
-evidence_tier = "official_source_guidance"
-authority = "aeat"
-kind = "instructions"
-corpus_path = "corpus/aeat_official/instructions/modelo_198/files/modelo-198-procedure.html"
-sha256 = "015d6a325dcf13e4cfa5e522f4faaf31da8d4e8bfb0d79940ba62febee8443ef"
-bytes = 62814
-retrieved_at = 2026-07-01
-applies_from = 2019-01-01
-source_url = "https://sede.agenciatributaria.gob.es/Sede/procedimientoini/GI17.shtml"
-review_status = "reviewed"
-
-[sources."boe-modelo-198-form-layout"]
-evidence_tier = "layout_authority"
-authority = "boe"
-kind = "form_spec"
-corpus_path = "corpus/normatives/html/orden-eha-3435-2007.html"
-sha256 = "8e1bf71197d1eab6f75571bbb8dc3cdc4b7a83bf8725b72c3d3777b0295b3243"
-bytes = 150144
-retrieved_at = 2026-05-05
-published_at = 2007-11-30
-applies_from = 2007-12-01
-source_url = "https://www.boe.es/buscar/act.php?id=BOE-A-2007-20440"
-review_status = "reviewed"
