@@ -16,7 +16,7 @@ from ....application.user_profile._testing import register_minimal_profile
 from ....application.workflow._persistence import workflow_state_repository
 from ....core import Period
 from ....core.config import Settings, load_settings, override_settings
-from ....core.time import now as utc_now
+from ....core.time import frozen_clock
 from ....domain.buckets import BucketEventHistoryRepository, BucketEventType
 from ....domain.calculations.registry import RegistrySnapshotRef
 from ....domain.filing import ModeloDraft, ModeloDraftRepository
@@ -34,6 +34,10 @@ from .._sessions import (
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 _BUCKET_ID = "11111111-1111-4111-8111-111111111111"
 _PROFILE_LABEL = "operator"
+_DRAFT_STORAGE_WRITTEN_AT = datetime(2026, 5, 26, 10, 0, 0, tzinfo=UTC)
+_SESSION_PROBE_NOW = datetime(2026, 5, 26, 12, 0, 0, tzinfo=UTC)
+_EXPIRED_SESSION_AUTHENTICATED_AT = _SESSION_PROBE_NOW - timedelta(minutes=30)
+_LIVE_SESSION_AUTHENTICATED_AT = _SESSION_PROBE_NOW - timedelta(minutes=5)
 
 
 def _register_operator_profile():
@@ -69,7 +73,7 @@ def test_auth_status_is_not_blocked_by_unreadable_workspace_drafts() -> None:
 
     workflow_state_repository().update(_register_operator_profile())
     configure_operator_auth("certificate")
-    now = datetime.now(UTC)
+    now = _DRAFT_STORAGE_WRITTEN_AT
 
     draft_id = "unreadable-workspace-draft"
     repository = ModeloDraftRepository()
@@ -528,7 +532,7 @@ def test_live_auth_preflight_reports_expired_persisted_session_state() -> None:
     )
     with override_settings(aeat_clave_movil_dni_nie=SecretStr("12345678Z")):
         configure_operator_auth("clave_movil")
-        captured_at = utc_now() - timedelta(minutes=30)
+        captured_at = _EXPIRED_SESSION_AUTHENTICATED_AT
         path = storage_state_paths(AuthProviderKind.CLAVE_MOVIL).storage_state
         _session_store.save(
             path,
@@ -541,7 +545,8 @@ def test_live_auth_preflight_reports_expired_persisted_session_state() -> None:
             },
         )
 
-        report = build_live_auth_preflight_report("clave_movil")
+        with frozen_clock(_SESSION_PROBE_NOW):
+            report = build_live_auth_preflight_report("clave_movil")
 
     assert report.probe_result == "ok"
     assert report.persisted_session_present is True
@@ -675,7 +680,7 @@ def test_operator_auth_test_reports_profile_scoped_clave_session() -> None:
     )
     with override_settings(aeat_clave_movil_dni_nie=SecretStr("TEST-IDENTITY")):
         configure_operator_auth("clave_movil")
-        captured_at = utc_now()
+        captured_at = _LIVE_SESSION_AUTHENTICATED_AT
         path = storage_state_paths(AuthProviderKind.CLAVE_MOVIL).storage_state
         _session_store.save(
             path,
@@ -688,7 +693,8 @@ def test_operator_auth_test_reports_profile_scoped_clave_session() -> None:
             },
         )
 
-        result = run_operator_auth_test("clave_movil")
+        with frozen_clock(_SESSION_PROBE_NOW):
+            result = run_operator_auth_test("clave_movil")
 
     assert result.persisted_session_present is True
     assert result.persisted_session_expired is False
