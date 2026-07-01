@@ -1,11 +1,17 @@
-"""Currency normalization: convert foreign amounts to euro for tax use.
+"""Public facade for currency normalization to euro.
 
-Normalizes monetary amounts to euro through an injected exchange-rate
-provider, so downstream tax aggregation always works in a single currency.
-Pure value logic; the rate source is a boundary. The domain service consumes an
-:class:`ExchangeRateProvider` protocol and returns :class:`NormalizedAmount`
-records. Concrete ECB reference-rate loading lives in
-:mod:`aeat.adapters.outbound.fx`, not in this domain package.
+Normalizes :class:`MonetaryAmount` records to EUR through an injected
+:class:`ExchangeRateProvider`, so downstream tax aggregation works from a single
+currency while source currency evidence remains intact. The provider contract is
+``original_amount * rate = eur_amount``; ECB EUR-base quote inversion and
+most-recent-prior-publication fallback live in :mod:`aeat.adapters.outbound.fx`,
+not in this pure domain package.
+
+The service returns :class:`NormalizedAmount` with a
+:class:`CurrencyNormalizationStatus` rather than silently assuming EUR or writing
+zero into filing-grade facts. Ledger import persists successful normalization as
+``fx_rate`` / ``value_in_eur`` on :class:`~aeat.domain.transactions.Transaction`
+records before application aggregation consumes the row.
 
 Major declarations:
 
