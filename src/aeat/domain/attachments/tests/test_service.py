@@ -12,6 +12,7 @@ from ....adapters.persistence.storage.attachment import AttachmentStore
 from ....tests.secure_sql import isolated_runtime_profile
 from .._enums import AttachmentKind, AttachmentSource
 from .._errors import AttachmentNotFoundError
+from .._models import Attachment
 from .._service import (
     add_attachment,
     list_attachments,
@@ -19,6 +20,20 @@ from .._service import (
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+
+_CAPTURED_AT = datetime(2026, 6, 30, 9, 0, 0, tzinfo=UTC)
+
+
+def _add_text_attachment(store: AttachmentStore, path: Path, *, source_reference: str) -> Attachment:
+    return add_attachment(
+        store,
+        path=path,
+        kind=AttachmentKind.OTHER,
+        source=AttachmentSource.LOCAL_FILE,
+        source_reference=source_reference,
+        mime_type="text/plain",
+        captured_at=_CAPTURED_AT,
+    )
 
 
 def test_add_and_load_attachment_roundtrips_through_real_store(tmp_path: Path) -> None:
@@ -30,15 +45,7 @@ def test_add_and_load_attachment_roundtrips_through_real_store(tmp_path: Path) -
 
     with isolated_runtime_profile(tmp_path=tmp_path):
         store = AttachmentStore()
-        added = add_attachment(
-            store,
-            path=source_file,
-            kind=AttachmentKind.OTHER,
-            source=AttachmentSource.LOCAL_FILE,
-            source_reference="test-doc",
-            mime_type="text/plain",
-            captured_at=datetime.now(UTC),
-        )
+        added = _add_text_attachment(store, source_file, source_reference="test-doc")
         assert added.attachment_id
         expected = hashlib.sha256(payload).hexdigest()
         assert added.attachment_id == expected
@@ -68,24 +75,8 @@ def test_list_attachments_returns_every_persisted_record(tmp_path: Path) -> None
         second = tmp_path / "two.txt"
         second.write_bytes(b"second")
 
-        a = add_attachment(
-            store,
-            path=first,
-            kind=AttachmentKind.OTHER,
-            source=AttachmentSource.LOCAL_FILE,
-            source_reference="first",
-            mime_type="text/plain",
-            captured_at=datetime.now(UTC),
-        )
-        b = add_attachment(
-            store,
-            path=second,
-            kind=AttachmentKind.OTHER,
-            source=AttachmentSource.LOCAL_FILE,
-            source_reference="second",
-            mime_type="text/plain",
-            captured_at=datetime.now(UTC),
-        )
+        a = _add_text_attachment(store, first, source_reference="first")
+        b = _add_text_attachment(store, second, source_reference="second")
         rows = list_attachments(store)
         ids = {row.attachment_id for row in rows}
         assert a.attachment_id in ids
