@@ -13,32 +13,35 @@ typed column helpers) that every persisted record passes through.
 Throughout the package, "substrate" without a qualifier refers to
 this stack.
 
-The public surface is intentionally narrow:
+The public surface is grouped by contract:
 
-- Pydantic v2 record models — :class:`ModeloCatalogueRecord`, :class:`PortalRecord`,
-  :class:`CorpusArtifactRecord`, plus :class:`PortalAuthMethod`.
-- Errors — :class:`StorageError`, :class:`RepositoryError`.
-- Engine and session helpers — :func:`get_engine`, :func:`dispose_engine`,
-  :func:`session_scope`.
-- Typed repositories — :class:`ModeloRepository`, :class:`PortalRepository`,
-  :class:`CorpusArtifactRepository`, and the base :class:`SecureObjectRepository`.
-- Encryption substrate — :class:`Envelope`, :class:`EncryptedBlobStore`,
-  :class:`MasterKeyProvider`, :class:`SecretStore`, plus the column-level
-  helpers :class:`EncryptedString`, :class:`EncryptedBytes`,
-  :class:`EncryptedJSON`, and :class:`HashedLookup`.
-- Runtime and master-key session boundary — :class:`StorageRuntime`,
-  :class:`StorageRuntimeReadiness`, :func:`inspect_storage_runtime`,
-  :func:`inspect_bucket_storage_runtime`, :func:`activate_session`,
-  :func:`has_active_bucket_session`, :func:`get_active_master_key`,
+- SQL and secure-object persistence — engine/session helpers, typed catalogue
+  repositories, :class:`SecureObjectRepository`, and the secure-object work
+  records :class:`SecureObjectWrite`, :class:`SecureObjectDeletion`, and
+  :class:`SecureObjectNamespaceIntegrity`.
+- Encryption substrate — :class:`Envelope`, :class:`CipherEnvelope`,
+  :class:`EncryptedBlobStore`, :class:`SecretStore`, :class:`MasterKeyProvider`,
+  and the column-level helpers :class:`EncryptedString`,
+  :class:`EncryptedBytes`, :class:`EncryptedJSON`, and :class:`HashedLookup`.
+- Path-shaped SDK bridges — :func:`materialise_secret`,
+  :func:`export_to_temp_path`, and :func:`get_secret_store` for callers that
+  cannot consume in-memory secret bytes.
+- Runtime and custody boundary — :class:`StorageRuntime`,
+  :class:`StorageRuntimeReadiness`, runtime repository factories,
+  :func:`activate_session`, :func:`get_active_master_key`,
   :func:`activate_master_key_provider`, and :func:`get_master_key_provider`.
+- Recovery and rotation — :class:`RecoveryRecord`, :class:`MintedRecovery`,
+  BIP-39 recovery helpers, :class:`RotationPlanEntry`,
+  :class:`RotationSummary`, and master-key / blob-store rotation functions.
 - Secure-object hierarchy registry — :data:`STORAGE_NAMESPACE_REGISTRY`,
   :data:`STORAGE_PATH_DEFINITIONS`, namespace constants, and
   :func:`secure_object_logical_path` /
   :func:`secure_object_namespace_logical_path`; callers must use these
-  exported symbols instead of constructing persisted secure-storage
-  locations by hand.
-- Classification — :class:`SensitivityClass` tags every persisted record
-  and governs the at-rest treatment applied by the substrate.
+  exported symbols instead of constructing persisted secure-storage locations
+  by hand.
+- Governance helpers — :class:`SensitivityClass`, classification policies,
+  redaction helpers, corpus manifests, path-safety helpers, and file-lock
+  primitives.
 """
 
 from __future__ import annotations
