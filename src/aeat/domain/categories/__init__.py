@@ -24,6 +24,24 @@ BOE, AEAT help, or Manual práctico evidence. :func:`effective_usage_ratio`
 applies only the factual proportionality multiplier; modelo applicability,
 casilla routing, and filing-grade legal treatment remain in
 :mod:`aeat.domain.calculations.registry` and the application source mesh.
+
+See Also:
+    :mod:`aeat.domain.usage_ratios`
+        Stores operator overrides keyed by concrete
+        :class:`SpendingCategory` values whose proportionality kind permits a
+        user ratio.
+    :mod:`aeat.domain.renta`
+        Evaluates category profiles and citations into Renta deductible-expense
+        observations.
+    :mod:`aeat.application.ledger`
+        Validates ledger ``category_id`` / ``usage_ratio_id`` facts before the
+        application source mesh feeds modelo calculation.
+    :mod:`aeat.domain.invoices`
+        Carries the same stable category identifiers on invoice and purchase
+        evidence records used by aggregation.
+    :mod:`aeat.domain.calculations.registry`
+        Owns modelo applicability, binding declarations, formulas, and casilla
+        routing outside this taxonomy surface.
 """
 
 from __future__ import annotations
