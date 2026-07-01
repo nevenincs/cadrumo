@@ -41,6 +41,7 @@ from .._reconcile import (
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 MODELO_130_FIXTURE = FIXTURES_DIR / "justificantes" / "modelo_130_2026Q1.pdf"
+_WORK_UNIT_TIMESTAMP = datetime(2026, 5, 28, 13, 30, 0, tzinfo=UTC)
 
 
 @pytest.fixture(autouse=True)
@@ -84,8 +85,8 @@ def _seed_work_unit(*, modelo: str, filing_year: int, period: str, revision_suff
         period=typed_period,
         revision_id=revision_id,
         name=f"{modelo}-{filing_year}-{typed_period.registry_token}",
-        created_at=datetime.now(UTC),
-        updated_at=datetime.now(UTC),
+        created_at=_WORK_UNIT_TIMESTAMP,
+        updated_at=_WORK_UNIT_TIMESTAMP,
     )
     repo = WorkUnitCatalogueRepository()
     repo.save(upsert_work_unit(repo.load(), work_unit))
