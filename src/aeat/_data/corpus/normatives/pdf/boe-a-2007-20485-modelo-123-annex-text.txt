@@ -1,0 +1,72 @@
+Impuesto sobre la Renta de las Personas Físicas
+Retenciones e ingresos a cuenta sobre determinados rendimientos del capital mobiliario (*)
+
+Agencia Tributaria
+
+Impuesto sobre Sociedades e Impuesto sobre la Renta de no
+Residentes (establecimientos permanentes)
+
+MINISTERIO
+DE ECONOMIA
+Y HACIENDA
+
+Retenciones e ingresos a cuenta sobre determinadas rentas (*)
+
+Modelo
+
+123
+
+Declarante (1)
+
+Devengo
+(2)
+
+Autoliquidación periódica
+
+Ejercicio .....
+
+Período ...
+
+Retenciones e ingresos a cuenta:
+
+Nº de perceptores
+
+Retenciones e ingresos a cuenta
+
+Base retenciones e ingresos a cuenta
+
+02
+
+01
+
+03
+
+Liquidacion (3)
+
+Ingresos ejercicios anteriores
+
+Periodificación .............................................................................................................
+
+04
+
+Regularización
+
+05
+
+Total liquidación:
+Suma de retenciones e ingresos a cuenta y regularización, en su caso ( 03 + 05 ) ..........................................................
+
+06
+
+A deducir (exclusivamente en caso de declaración complementaria):
+Resultados a ingresar de anteriores declaraciones por el mismo concepto, ejercicio y período ........................................................
+
+07
+
+Importe del ingreso ......................
+(casilla 08 )
+
+Ingreso efectuado a favor del Tesoro público: Cuenta restringida de colaboración en la
+recaudación de la AEAT de declaraciones-liquidaciones o autoliquidaciones especiales.
+
+Resultado a ingresar ( 06 – 07 ) ......................................................................................................... 08

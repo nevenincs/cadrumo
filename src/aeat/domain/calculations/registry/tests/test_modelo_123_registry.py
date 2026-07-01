@@ -57,8 +57,29 @@ def test_modelo_123_guidance_and_layout_sources_are_separated() -> None:
 
     assert catalogues.sources["aeat-dr-123-2024-v20"].evidence_tier == "layout_authority"
     assert catalogues.sources["aeat-dr-123-2019-2023-v13"].evidence_tier == "layout_authority"
+    assert catalogues.sources["aeat-dr-123-2024-v20-form-text"].evidence_tier == "layout_authority"
+    assert catalogues.sources["aeat-dr-123-2019-2023-v13-form-text"].evidence_tier == "layout_authority"
     assert catalogues.sources["boe-modelo-123-2007-form"].evidence_tier == "layout_authority"
     assert catalogues.sources["boe-modelo-123-2024-form"].evidence_tier == "layout_authority"
+
+    formula_sources = {
+        "2019-2023": "boe-modelo-123-2007-form-text",
+        "2024-y-siguientes": "boe-modelo-123-2024-form-text",
+    }
+    for revision_id, source_ref in formula_sources.items():
+        source = catalogues.sources[source_ref]
+        assert source.evidence_tier == "official_source_guidance"
+        assert source.authority == "boe"
+        assert source.kind == "form_spec"
+        assert (bundled_path() / source.corpus_path).is_file()
+
+        revision = modelo.revisions[revision_id]
+        assert source_ref in revision.source_refs
+        for formula in revision.formulas:
+            assert source_ref in formula.source_refs
+            assert not any(str(ref).startswith("aeat-dr-123-") for ref in formula.source_refs)
+            for citation in formula.source_citations:
+                assert citation.source_ref == source_ref
 
 
 @pytest.mark.parametrize(
@@ -123,8 +144,8 @@ def test_modelo_123_validated_snapshot_owns_workflow_surfaces(
 # ---------------------------------------------------------------------------
 # Casilla 06 arithmetic oracle (Aitor #211)
 #
-# Authority: Orden HAC/56/2024 Anexo II + form text citation
-# "Base de retenciones e ingresos a cuenta. Totales [06]" = [04] + [05].
+# Authority: Orden HAC/56/2024 Anexo II + BOE annex form text.
+# "Base de retenciones e ingresos a cuenta" in the Totales column = [04] + [05].
 # Casilla 06 must equal the sum of the two base sub-totals only.
 # Perceptor counts (casillas 01, 02, 03) must NOT contribute to casilla 06.
 # ---------------------------------------------------------------------------
@@ -174,8 +195,8 @@ def _calculate_2024(
 def test_m123_casilla_06_equals_base_dividendos_plus_base_resto() -> None:
     """Casilla 06 = [04] + [05] (base total).
 
-    Oracle authority: Orden HAC/56/2024 form text, field label
-    "Base de retenciones e ingresos a cuenta. Totales [06]".
+    Oracle authority: Orden HAC/56/2024 BOE annex text, field label
+    "Base de retenciones e ingresos a cuenta" in the Totales column.
 
     With base_dividendos=42000 and base_resto=0, casilla 06 must be 42000.
     The perceptor count (nperceptores=7 split as 01=4, 02=3) must not
@@ -255,7 +276,7 @@ def test_m123_casilla_06_invariant_to_nperceptores() -> None:
 def test_m123_2019_2023_casilla_06_invariant_to_nperceptores_and_base() -> None:
     """2019-2023 revision: casilla 06 is retenciones+regularizacion, not base.
 
-    Authority: 2019-2023 form text citation "[03] + [05]".
+    Authority: BOE Modelo 123 annex text citation "( 03 + 05 )".
     Inputs 01 (nperceptores) and 02 (base retenciones) are
     manual pass-through casillas with no formula; they must not affect
     casilla 06 (Suma de retenciones y regularizacion = [03] + [05]).
