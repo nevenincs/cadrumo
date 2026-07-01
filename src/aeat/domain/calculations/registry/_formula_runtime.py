@@ -79,8 +79,8 @@ class _M210ResolveRateArgs:
     baseline_parameter: ParameterId
     convenio_parameter: ParameterId
     country_binding: BindingId
-    base_casilla_id: CasillaId | None = None
-    pension_tariff_parameter: ParameterId | None = None
+    base_casilla_id: CasillaId
+    pension_tariff_parameter: ParameterId
 
 
 @dataclass(frozen=True, slots=True)
@@ -852,11 +852,9 @@ def _m100_scalar_parameter_value(parameter_id: ParameterId, ctx: _EvalContext, *
 def _evaluate_m210_resolve_rate(expression: FormulaExpression, ctx: _EvalContext) -> Decimal:
     """Resolve the M210 IRNR tipo de gravamen rate from registry parameters.
 
-    Four leaf args keep the original flat-rate contract:
-    ``(tipo_renta_casilla, baseline_param, convenio_param,
-    country_binding)``. Six leaf args add ``base_imponible`` and the
-    Art. 25.1.b pension bracket table so the pension branch can expose
-    an effective rate whose downstream ``base * tipo`` equals the
+    The current six-leaf contract adds ``base_imponible`` and the Art.
+    25.1.b pension bracket table so the pension branch can expose an
+    effective rate whose downstream ``base * tipo`` equals the
     statutory progressive quota.
     """
     args = _m210_resolve_rate_args(expression)
@@ -873,7 +871,7 @@ def _evaluate_m210_resolve_rate(expression: FormulaExpression, ctx: _EvalContext
     baseline_rate = _m210_baseline_rate(baseline_param, tipo_renta=tipo_renta, year=ctx.filing_year)
     country = ctx.enum_binding_values.get(args.country_binding) or ""
 
-    if tipo_renta == "pension" and args.base_casilla_id is not None and args.pension_tariff_parameter is not None:
+    if tipo_renta == "pension":
         rate = _m210_pension_effective_rate(
             args,
             ctx,
@@ -908,36 +906,28 @@ def _evaluate_m210_resolve_rate(expression: FormulaExpression, ctx: _EvalContext
 
 def _m210_resolve_rate_args(expression: FormulaExpression) -> _M210ResolveRateArgs:
     op = "m210_resolve_rate"
-    if len(expression.args) == 4:
-        tipo_arg, baseline_arg, convenio_arg, country_arg = expression.args
-        base_arg = None
-        pension_tariff_arg = None
-    elif len(expression.args) == 6:
-        tipo_arg, base_arg, baseline_arg, convenio_arg, pension_tariff_arg, country_arg = expression.args
-    else:
-        raise RegistryValidationError(f"formula op {op!r} expects 4 or 6 args, got {len(expression.args)}")
+    if len(expression.args) != 6:
+        raise RegistryValidationError(f"formula op {op!r} expects 6 args, got {len(expression.args)}")
+    tipo_arg, base_arg, baseline_arg, convenio_arg, pension_tariff_arg, country_arg = expression.args
     if tipo_arg.casilla_id is None:
         raise RegistryValidationError(f"formula op {op!r} requires args[0] to be a casilla leaf")
-    if base_arg is not None and base_arg.casilla_id is None:
-        raise RegistryValidationError(f"formula op {op!r} requires args[1] to be a casilla leaf when present")
+    if base_arg.casilla_id is None:
+        raise RegistryValidationError(f"formula op {op!r} requires args[1] to be a casilla leaf")
     if baseline_arg.parameter is None:
-        position = "args[2]" if base_arg is not None else "args[1]"
-        raise RegistryValidationError(f"formula op {op!r} requires {position} to be a parameter leaf")
+        raise RegistryValidationError(f"formula op {op!r} requires args[2] to be a parameter leaf")
     if convenio_arg.parameter is None:
-        position = "args[3]" if base_arg is not None else "args[2]"
-        raise RegistryValidationError(f"formula op {op!r} requires {position} to be a parameter leaf")
-    if pension_tariff_arg is not None and pension_tariff_arg.parameter is None:
-        raise RegistryValidationError(f"formula op {op!r} requires args[4] to be a parameter leaf when present")
+        raise RegistryValidationError(f"formula op {op!r} requires args[3] to be a parameter leaf")
+    if pension_tariff_arg.parameter is None:
+        raise RegistryValidationError(f"formula op {op!r} requires args[4] to be a parameter leaf")
     if country_arg.binding is None:
-        position = "args[5]" if base_arg is not None else "args[3]"
-        raise RegistryValidationError(f"formula op {op!r} requires {position} to be a binding leaf")
+        raise RegistryValidationError(f"formula op {op!r} requires args[5] to be a binding leaf")
     return _M210ResolveRateArgs(
         tipo_casilla_id=tipo_arg.casilla_id,
         baseline_parameter=baseline_arg.parameter,
         convenio_parameter=convenio_arg.parameter,
         country_binding=country_arg.binding,
-        base_casilla_id=base_arg.casilla_id if base_arg is not None else None,
-        pension_tariff_parameter=(pension_tariff_arg.parameter if pension_tariff_arg is not None else None),
+        base_casilla_id=base_arg.casilla_id,
+        pension_tariff_parameter=pension_tariff_arg.parameter,
     )
 
 
@@ -998,8 +988,6 @@ def _m210_pension_effective_rate(
     convenio_param: ParameterDefinition | None,
     country: str,
 ) -> Decimal:
-    assert args.base_casilla_id is not None
-    assert args.pension_tariff_parameter is not None
     if country:
         matched_row = _m210_convenio_rate_row(
             convenio_param,
