@@ -49,6 +49,8 @@ from .._calculation_revision import (
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 _BUCKET_ID = "modelo-runtime"
+_CORRUPT_ENVELOPE_WRITTEN_AT = datetime(2026, 5, 28, 10, 45, 0, tzinfo=UTC)
+_FUTURE_ENVELOPE_WRITTEN_AT = datetime(2026, 5, 28, 10, 50, 0, tzinfo=UTC)
 _IVA_BASE_IMPONIBLE_CASILLA: CasillaId = validated_casilla_id(
     "iva.base-imponible",
     surface="_IVA_BASE_IMPONIBLE_CASILLA",
@@ -219,7 +221,7 @@ def test_calculation_revision_catalogue_wrong_inner_classification_is_localized(
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
         envelope = Envelope[CalculationRevisionCatalogue](
             schema_version=_CALCULATION_CATALOGUE_VERSION,
-            written_at=datetime.now(UTC).replace(microsecond=0),
+            written_at=_CORRUPT_ENVELOPE_WRITTEN_AT,
             classification=SensitivityClass.AUDIT,
             payload=CalculationRevisionCatalogue(),
         )
@@ -254,7 +256,7 @@ def test_calculation_revision_catalogue_unsupported_storage_version_is_localized
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
         envelope = Envelope[CalculationRevisionCatalogue](
             schema_version=stored_schema_version,
-            written_at=datetime.now(UTC).replace(microsecond=0),
+            written_at=_FUTURE_ENVELOPE_WRITTEN_AT,
             classification=SensitivityClass.FINANCIAL,
             payload=CalculationRevisionCatalogue(),
         )
