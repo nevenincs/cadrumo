@@ -88,36 +88,30 @@ class TestRunContextOutcome:
             trace = load_trace(run_id)
             assert trace.outcome is RunOutcome.OK
 
-    @pytest.mark.parametrize(
-        ("exception", "entrypoint"),
-        (
-            pytest.param(RuntimeError("boom"), "aeat test fail", id="runtime-error"),
-            pytest.param(KeyboardInterrupt(), "aeat test int", id="keyboard-interrupt"),
-        ),
-    )
-    def test_outcome_failed_when_body_raises(
-        self,
-        tmp_path: Path,
-        exception: BaseException,
-        entrypoint: str,
-    ) -> None:
+    def test_outcome_failed_when_body_raises(self, tmp_path: Path) -> None:
+        cases = (
+            (RuntimeError("boom"), "aeat test fail"),
+            (KeyboardInterrupt(), "aeat test int"),
+        )
+
         with override_settings(aeat_runs_dir=str(tmp_path)):
-            captured: dict[str, str] = {}
-            expected_error = (
-                pytest.raises(type(exception), match=str(exception))
-                if str(exception)
-                else pytest.raises(type(exception))
-            )
-            with (
-                expected_error,
-                run_context(entrypoint=entrypoint, arguments=()) as info,
-            ):
-                captured["run_id"] = info.run_id
-                raise exception
-            trace = load_trace(captured["run_id"])
-            # Pessimistic default: yield raised, so outcome must be FAILED
-            # even though the persisted trace was written from a finally.
-            assert trace.outcome is RunOutcome.FAILED
+            for exception, entrypoint in cases:
+                captured: dict[str, str] = {}
+                expected_error = (
+                    pytest.raises(type(exception), match=str(exception))
+                    if str(exception)
+                    else pytest.raises(type(exception))
+                )
+                with (
+                    expected_error,
+                    run_context(entrypoint=entrypoint, arguments=()) as info,
+                ):
+                    captured["run_id"] = info.run_id
+                    raise exception
+                trace = load_trace(captured["run_id"])
+                # Pessimistic default: yield raised, so outcome must be FAILED
+                # even though the persisted trace was written from a finally.
+                assert trace.outcome is RunOutcome.FAILED
 
     def test_trace_persistence_failure_surfaces_on_clean_exit(
         self,
@@ -152,20 +146,7 @@ class TestRunContextOutcome:
 
 
 class TestRunContextRunIdValidation:
-    @pytest.mark.parametrize(
-        "bad_run_id",
-        (
-            pytest.param("../escape", id="parent-traversal"),
-            pytest.param("not-hex", id="not-hex"),
-            pytest.param("0" * 17, id="too-long"),
-            pytest.param("ABCDEF0123456789", id="uppercase"),
-        ),
-    )
-    def test_caller_supplied_bad_run_id_rejected_before_fs(
-        self,
-        tmp_path: Path,
-        bad_run_id: str,
-    ) -> None:
+    def test_caller_supplied_bad_run_id_rejected_before_fs(self, tmp_path: Path) -> None:
         """A malicious run_id must never touch the filesystem.
 
         Before the fix, ``run_context(run_id="../etc")`` would create
@@ -176,15 +157,18 @@ class TestRunContextRunIdValidation:
         """
         from .. import RunTraceValidationError
 
+        bad_run_ids = ("../escape", "not-hex", "0" * 17, "ABCDEF0123456789")
+
         with override_settings(aeat_runs_dir=str(tmp_path)):
-            before = set(tmp_path.iterdir())
-            with (
-                pytest.raises(RunTraceValidationError, match=r"invalid run_id"),
-                run_context(entrypoint="aeat test", arguments=(), run_id=bad_run_id),
-            ):
-                pass
-            # No directory must have been created by the rejected enter.
-            assert set(tmp_path.iterdir()) == before, f"rejected run_id {bad_run_id!r} left debris under {tmp_path}"
+            for bad_run_id in bad_run_ids:
+                before = set(tmp_path.iterdir())
+                with (
+                    pytest.raises(RunTraceValidationError, match=r"invalid run_id"),
+                    run_context(entrypoint="aeat test", arguments=(), run_id=bad_run_id),
+                ):
+                    pass
+                # No directory must have been created by the rejected enter.
+                assert set(tmp_path.iterdir()) == before, f"rejected run_id {bad_run_id!r} left debris under {tmp_path}"
 
     def test_caller_supplied_valid_run_id_accepted(
         self,
