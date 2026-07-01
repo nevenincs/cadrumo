@@ -108,9 +108,9 @@ class TestDt12WindowCliff2010OrEarlierBranch:
 class TestDt12WindowInputGuards:
     """The predicate defends against implausible year inputs."""
 
-    @pytest.mark.parametrize("year", [0, 1899, 2201, -1])
-    def test_implausible_year_raises(self, year: int) -> None:
-        with pytest.raises(PensionReduccionError):
-            dt12_regime_window_eligibility(contingencia_year=year, rescate_year=2024)
-        with pytest.raises(PensionReduccionError):
-            dt12_regime_window_eligibility(contingencia_year=2024, rescate_year=year)
+    def test_implausible_year_raises(self) -> None:
+        for year in (0, 1899, 2201, -1):
+            with pytest.raises(PensionReduccionError):
+                dt12_regime_window_eligibility(contingencia_year=year, rescate_year=2024)
+            with pytest.raises(PensionReduccionError):
+                dt12_regime_window_eligibility(contingencia_year=2024, rescate_year=year)
