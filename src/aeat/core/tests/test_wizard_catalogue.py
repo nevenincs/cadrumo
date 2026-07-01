@@ -90,27 +90,24 @@ _UPWARD_PATTERN = "from ...application.wizard._catalogue import"
 _ALT_UPWARD_PATTERN = "from aeat.application.wizard._catalogue import"
 
 
-@pytest.mark.parametrize(
-    ("module_path", "replacement"),
-    (
-        pytest.param("aeat.domain.deadlines._profiles", "get_setup_flow()", id="deadlines-profiles"),
-        pytest.param("aeat.domain.contribuyente._keys", "get_wizard_flows()", id="profile-keys"),
-    ),
-)
-def test_no_deferred_upward_import_from_wizard_catalogue(module_path: str, replacement: str) -> None:
+def test_no_deferred_upward_import_from_wizard_catalogue() -> None:
     """Domain modules must not import from the application wizard catalogue."""
 
-    source = _source_of(module_path)
-    assert _UPWARD_PATTERN not in source, (
-        f"{module_path} still contains a direct import from "
-        f"aeat.application.wizard._catalogue. Remove it and use {replacement} from "
-        "aeat.core.wizard_catalogue instead."
-    )
-    assert _ALT_UPWARD_PATTERN not in source, (
-        f"{module_path} still contains an absolute import from "
-        f"aeat.application.wizard._catalogue. Remove it and use {replacement} from "
-        "aeat.core.wizard_catalogue instead."
-    )
+    for module_path, replacement in (
+        ("aeat.domain.deadlines._profiles", "get_setup_flow()"),
+        ("aeat.domain.contribuyente._keys", "get_wizard_flows()"),
+    ):
+        source = _source_of(module_path)
+        assert _UPWARD_PATTERN not in source, (
+            f"{module_path} still contains a direct import from "
+            f"aeat.application.wizard._catalogue. Remove it and use {replacement} from "
+            "aeat.core.wizard_catalogue instead."
+        )
+        assert _ALT_UPWARD_PATTERN not in source, (
+            f"{module_path} still contains an absolute import from "
+            f"aeat.application.wizard._catalogue. Remove it and use {replacement} from "
+            "aeat.core.wizard_catalogue instead."
+        )
 
 
 def test_wizard_catalogue_exports_are_callable() -> None:
