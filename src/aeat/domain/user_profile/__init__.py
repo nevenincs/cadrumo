@@ -6,6 +6,10 @@ user-profile backend. The primary runtime aggregate is
 :class:`UserProfileRecord`: TOML owns schema metadata and selector namespaces,
 while live profile facts and immutable snapshots are stored by the persistence
 layer.
+:func:`new_profile_id` mints the immutable UUID identity used as the profile
+and bucket id; ``display_name`` is the mutable operator label and is not a
+storage key. Active-bucket selection, pointer files, and storage sessions live
+in the application/workflow layers, not in these schema records.
 
 The :class:`UserProfilePortableExport` re-export is resolved on demand
 through a module-level ``__getattr__`` (PEP 562). The portable-export
@@ -31,9 +35,14 @@ See Also:
     :func:`~aeat.domain.user_profile.validate_user_profile_registry_contract`
         Registry-selector coverage check binding schema paths to modelo
         calculation requirements.
+    :func:`~aeat.domain.user_profile.new_profile_id`
+        Identity authority for UUID-backed profile and bucket ids.
     :mod:`aeat.application.user_profile`
         Application facade for lifecycle services, Censo sync, preflight,
         projections, custody, and portable-bundle serialisation.
+    :mod:`aeat.application.workflow`
+        Active-profile pointer and bucket-manifest readers that resolve the
+        current storage slice before application services load records.
 """
 
 from __future__ import annotations
