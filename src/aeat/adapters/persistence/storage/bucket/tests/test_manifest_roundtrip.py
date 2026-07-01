@@ -14,7 +14,6 @@ inequality or a load-time ValidationError.
 
 from __future__ import annotations
 
-import os
 from datetime import UTC, datetime
 from pathlib import Path
 
@@ -31,7 +30,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 def _populated_manifest(bucket_id: str) -> BucketManifest:
     """Build a BucketManifest with every field set to a non-default value.
 
-    The salt is a 32-byte random sequence so a base64 mis-encoding
+    The salt is a deterministic 16-byte sequence so a base64 mis-encoding
     surfaces as a salt-byte inequality. ``last_unlocked_at`` is set
     to a real UTC timestamp so the None-vs-absent code path on the
     read side does NOT mask its presence on the write side. ``status``
@@ -51,7 +50,7 @@ def _populated_manifest(bucket_id: str) -> BucketManifest:
             memory_cost=65536,
             time_cost=3,
             parallelism=4,
-            salt=os.urandom(16),
+            salt=bytes(range(16)),
             output_length=32,
         ),
         recovery_enrolled=True,
