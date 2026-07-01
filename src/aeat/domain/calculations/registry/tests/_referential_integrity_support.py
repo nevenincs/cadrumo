@@ -108,6 +108,7 @@ def _snapshot_for_revision(
 _REFERENCE_LEGAL_ID = "ley-35-2006:art-1"
 
 _REFERENCE_SOURCE_ID = "aeat-dr-130-2019-v12"
+_REFERENCE_WORKBOOK_SOURCE_ID = "aeat-dr-130-2019-v12-layout"
 _DEFAULT_MINIMAL_CASILLA_ID: CasillaId = validated_casilla_id("01", surface="_DEFAULT_MINIMAL_CASILLA_ID")
 _SINGLE_SEGMENT_CASILLA_ID: CasillaId = validated_casilla_id("00592", surface="_SINGLE_SEGMENT_CASILLA_ID")
 
@@ -144,10 +145,28 @@ def _minimal_source_ref() -> SourceReference:
     )
 
 
+def _minimal_workbook_source_ref() -> SourceReference:
+    return _minimal_source_ref().model_copy(
+        update={
+            "id": _REFERENCE_WORKBOOK_SOURCE_ID,
+            "evidence_tier": "layout_authority",
+            "kind": "record_design",
+            "corpus_path": "registry/aeat/sources/aeat-dr-130-2019-v12.xls",
+        },
+    )
+
+
+def _minimal_source_refs() -> dict[str, SourceReference]:
+    return {
+        _REFERENCE_SOURCE_ID: _minimal_source_ref(),
+        _REFERENCE_WORKBOOK_SOURCE_ID: _minimal_workbook_source_ref(),
+    }
+
+
 def _minimal_catalogues() -> RegistryCatalogues:
     return RegistryCatalogues(
         legal={_REFERENCE_LEGAL_ID: _minimal_legal_ref()},
-        sources={_REFERENCE_SOURCE_ID: _minimal_source_ref()},
+        sources=_minimal_source_refs(),
     )
 
 
@@ -163,7 +182,7 @@ def _minimal_casilla(casilla_id: CasillaId = _DEFAULT_MINIMAL_CASILLA_ID) -> Cas
     )
 
 
-def _minimal_workbook_ref(source_ref: str = _REFERENCE_SOURCE_ID) -> WorkbookParityReference:
+def _minimal_workbook_ref(source_ref: str = _REFERENCE_WORKBOOK_SOURCE_ID) -> WorkbookParityReference:
     from .._schema import WorkbookParityReference
 
     return WorkbookParityReference(
@@ -285,7 +304,7 @@ def _build_snapshot_with_missing_legal(revision: ModeloRevision, missing_legal_i
     extra_legal = _minimal_legal_ref().model_copy(update={"id": missing_legal_id})
     augmented_catalogues = RegistryCatalogues(
         legal={_REFERENCE_LEGAL_ID: _minimal_legal_ref(), missing_legal_id: extra_legal},
-        sources={_REFERENCE_SOURCE_ID: _minimal_source_ref()},
+        sources=_minimal_source_refs(),
     )
     modelo = _minimal_modelo(revision)
     snapshot = _snapshot_for_revision(modelo, augmented_catalogues, revision)
@@ -297,9 +316,11 @@ def _build_snapshot_with_missing_legal(revision: ModeloRevision, missing_legal_i
 def _build_snapshot_with_missing_source(revision: ModeloRevision, missing_source_id: str) -> RegistrySnapshot:
     """Build a snapshot whose `sources` map omits a ref that the revision content references."""
     extra_source = _minimal_source_ref().model_copy(update={"id": missing_source_id})
+    sources = _minimal_source_refs()
+    sources[missing_source_id] = extra_source
     augmented_catalogues = RegistryCatalogues(
         legal={_REFERENCE_LEGAL_ID: _minimal_legal_ref()},
-        sources={_REFERENCE_SOURCE_ID: _minimal_source_ref(), missing_source_id: extra_source},
+        sources=sources,
     )
     modelo = _minimal_modelo(revision)
     snapshot = _snapshot_for_revision(modelo, augmented_catalogues, revision)
