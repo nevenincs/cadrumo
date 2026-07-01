@@ -17,7 +17,7 @@ legal_refs = [
     "rd-1624-1992:art-30",
     "rd-1624-1992:art-71",
 ]
-source_refs = ["aeat-dr-390-2025", "boe-modelo-390-2009-form"]
+source_refs = ["aeat-dr-390-2025", "aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
 
 [[revisions."2010-y-siguientes".completeness_manifest.casillas]]
 casilla_id = "iva.anual.compensacion-generada-ejercicio-no-97"
