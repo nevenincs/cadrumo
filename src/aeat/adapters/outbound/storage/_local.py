@@ -263,7 +263,8 @@ class LocalFileSystemProvider:
             object_key_hmac: Full HMAC string identifying the object.
 
         Returns:
-            A two-tuple of ``(payload_bytes, :class:`ProviderObjectMetadata`)``.
+            A two-tuple containing payload bytes and
+            :class:`ProviderObjectMetadata`.
 
         Raises:
             :class:`OutboundStorageNotFoundError`: When the object file is
