@@ -90,7 +90,7 @@ def _plan() -> SheetExportPlan:
                     iva_rate=Decimal("0.21"),
                     iva_amount=Decimal("21.00"),
                     counterparty="Proveedor SL",
-                    legal_refs=("liva-art-99",),
+                    legal_refs=("ley-37-1992:art-99",),
                     source_refs=("boe-a-2026-1",),
                 ),
             ),
