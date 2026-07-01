@@ -6,13 +6,11 @@ from datetime import date
 from enum import StrEnum
 from typing import Protocol, Self
 
-from pydantic import BaseModel, ConfigDict, Field, model_validator
+from pydantic import BaseModel, Field, model_validator
 
-from ...core import Period
+from ...core import STRICT_FROZEN_CONFIG, Period
 from ...domain.calculations.registry import CasillaId, LegalRefId, RegistryModeloObservation, SourceRefId
 from ...domain.modelos import CalculationRevisionState, VerificationCompletenessStatus
-
-_STRICT_FROZEN = ConfigDict(strict=True, frozen=True, extra="forbid")
 
 
 def _require_period_year(period: Period, filing_year: int, *, field_name: str) -> None:
@@ -129,7 +127,7 @@ class NoPriorObligationProvenance(BaseModel):
     auditable outcome (``no-silent-under-declaration``), never a silent omission.
     """
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     facet_kind: NoPriorObligationProvenanceKind = NoPriorObligationProvenanceKind.NO_PRIOR_OBLIGATION_PRE_ACTIVITY
     activity_start_date: date
@@ -185,7 +183,7 @@ def _period_strictly_before_activity_start(period: Period, activity_start_date: 
 class CrossPeriodDependencyRequirement(BaseModel):
     """One upstream filed declaration required by a target registry snapshot."""
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     source_modelo: str = Field(min_length=1, max_length=8)
     filing_year: int = Field(ge=2000, le=2099)
@@ -210,7 +208,7 @@ class CrossPeriodDependencyRequirement(BaseModel):
 class CrossPeriodExpectedMemberSet(BaseModel):
     """Expected grupo-de-entidades members for one member fan-in dependency."""
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     source_modelo: str = Field(min_length=1, max_length=8)
     filing_year: int = Field(ge=2000, le=2099)
@@ -231,7 +229,7 @@ class CrossPeriodExpectedMemberSet(BaseModel):
 class CrossPeriodDependencyInventoryItem(BaseModel):
     """Registry-derived cross-period dependency coverage for one target snapshot."""
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     target_modelo: str = Field(min_length=1, max_length=8)
     target_revision_id: str = Field(min_length=1)
@@ -257,7 +255,7 @@ class CrossPeriodDependencyInventoryItem(BaseModel):
 class CrossPeriodDependencyInventory(BaseModel):
     """Registry-derived inventory of all cross-period target snapshots for a filing year."""
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     filing_year: int = Field(ge=2000, le=2099)
     items: tuple[CrossPeriodDependencyInventoryItem, ...] = ()
@@ -276,7 +274,7 @@ class CrossPeriodDependencyInventory(BaseModel):
 class CrossPeriodDependencyEvidence(BaseModel):
     """Observed filing-state evidence for one dependency requirement."""
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     requirement: CrossPeriodDependencyRequirement
     observation_source_kind: str | None = None
@@ -384,7 +382,7 @@ class CrossPeriodDependencyEvidence(BaseModel):
 class CrossPeriodCleanStateVerdict(BaseModel):
     """Clean-state result for every cross-period dependency in a target snapshot."""
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     bucket_id: str = Field(min_length=1)
     target_modelo: str = Field(min_length=1, max_length=8)

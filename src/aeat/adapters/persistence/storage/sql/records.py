@@ -5,8 +5,10 @@ These types are the boundary-crossing surface of
 always work with these records — never with the internal SQLAlchemy
 mapper classes from :mod:`aeat.adapters.persistence.storage.sql._orm`.
 
-Every record is declared with ``ConfigDict(strict=True, frozen=True)`` per
-the project pydantic mandate.
+Every record consumes the canonical :data:`~aeat.core.STRICT_FROZEN_CONFIG`
+(``strict=True``, ``frozen=True``, ``extra="forbid"``) per the project pydantic
+mandate, so an unexpected column projected from the ORM boundary is refused
+rather than silently dropped.
 
 Note:
     str string fields (``name``, ``label``) are plain :class:`str`
@@ -19,7 +21,9 @@ from __future__ import annotations
 from datetime import datetime
 from enum import StrEnum
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, Field
+
+from .....core import STRICT_FROZEN_CONFIG
 
 
 class PortalAuthMethod(StrEnum):
@@ -39,9 +43,9 @@ class PortalAuthMethod(StrEnum):
 
 
 class _StrictFrozen(BaseModel):
-    """Shared pydantic base enforcing strict parsing and immutability."""
+    """Shared pydantic base enforcing strict parsing, immutability, and no extras."""
 
-    model_config = ConfigDict(strict=True, frozen=True)
+    model_config = STRICT_FROZEN_CONFIG
 
 
 class ModeloCatalogueRecord(_StrictFrozen):
