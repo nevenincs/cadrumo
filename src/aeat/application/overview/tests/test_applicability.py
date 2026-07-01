@@ -761,7 +761,34 @@ def test_modelo_115_applicable_when_taxpayer_pays_rent() -> None:
     assert result.verdict is ApplicabilityVerdict.APPLICABLE
 
 
-@pytest.mark.parametrize("modelo", ("115", "349", "347"), ids=("rent-retention", "intracommunity", "third-party"))
+def test_modelo_123_applicable_when_taxpayer_pays_capital_income_with_retencion() -> None:
+    profile = TaxpayerProfile(
+        tax_id="B12345674",
+        entity_type=EntityType.LEGAL_ENTITY,
+        legal_entity_form=LegalEntityForm.SL,
+        iva_regime=IVARegime.GENERAL,
+        pays_capital_income_with_retencion=True,
+    )
+
+    result = derive_modelo_applicability(profile, "123")
+
+    assert result.verdict is ApplicabilityVerdict.APPLICABLE
+    assert result.legal_refs == (
+        "ley-35-2006:art-25",
+        "ley-35-2006:art-99",
+        "orden-eha-3435-2007:anexo-ii",
+        "orden-hac-56-2024:art-1",
+        "rd-439-2007:art-108",
+        "rd-439-2007:art-90",
+        "ley-35-2006:art-101",
+    )
+
+
+@pytest.mark.parametrize(
+    "modelo",
+    ("115", "123", "349", "347"),
+    ids=("rent-retention", "capital-income-retention", "intracommunity", "third-party"),
+)
 def test_payer_fact_modelos_are_incomplete_when_required_fact_not_declared(modelo: str) -> None:
     """Payer-fact modelos stay INCOMPLETE when their specific fact is not declared."""
 
@@ -820,10 +847,11 @@ def test_modelo_347_applicable_when_third_party_threshold_exceeded() -> None:
     (
         ("115", {"pays_rent_with_retencion": True}),
         ("180", {"pays_rent_with_retencion": True}),
+        ("123", {"pays_capital_income_with_retencion": True}),
         ("349", {"does_intracomunitario": True}),
         ("347", {"third_party_transactions_above_347_threshold": True}),
     ),
-    ids=("rent-retention", "rent-summary", "intracommunity", "third-party-threshold"),
+    ids=("rent-retention", "rent-summary", "capital-income-retention", "intracommunity", "third-party-threshold"),
 )
 def test_attribution_entity_with_required_fact_owes_fact_gated_modelos(
     modelo: str,
@@ -840,8 +868,8 @@ def test_attribution_entity_with_required_fact_owes_fact_gated_modelos(
 
 @pytest.mark.parametrize(
     "modelo",
-    ("115", "180", "349", "347"),
-    ids=("rent-retention", "rent-summary", "intracommunity", "third-party-threshold"),
+    ("115", "180", "123", "349", "347"),
+    ids=("rent-retention", "rent-summary", "capital-income-retention", "intracommunity", "third-party-threshold"),
 )
 def test_attribution_entity_without_required_fact_is_incomplete_for_fact_gated_modelos(modelo: str) -> None:
     """Undeclared payer/trade facts stay INCOMPLETE for attribution entities."""
