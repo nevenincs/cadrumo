@@ -251,7 +251,7 @@ class SheetCellConstraint(BaseModel):
     sign: Literal["any", "non_negative", "non_positive"] = "any"
     min_value: Decimal | None = None
     max_value: Decimal | None = None
-    legal_refs: tuple[str, ...] = Field(min_length=1)
+    legal_refs: tuple[LegalRefId, ...] = Field(min_length=1)
     casilla_id: CasillaId
 
 
@@ -263,7 +263,7 @@ class SheetRowSetColumn(BaseModel):
     binding: BindingId
     header_address: SheetCellAddress
     header_label: str = Field(min_length=1)
-    legal_refs: tuple[str, ...] = Field(min_length=1)
+    legal_refs: tuple[LegalRefId, ...] = Field(min_length=1)
 
 
 class SheetRowSet(BaseModel):
@@ -294,8 +294,8 @@ class SheetRowSet(BaseModel):
     header_row: int = Field(ge=1)
     first_data_row: int = Field(ge=2)
     columns: tuple[SheetRowSetColumn, ...] = Field(min_length=1)
-    legal_refs: tuple[str, ...] = Field(min_length=1)
-    source_refs: tuple[str, ...] = Field(min_length=1)
+    legal_refs: tuple[LegalRefId, ...] = Field(min_length=1)
+    source_refs: tuple[SourceRefId, ...] = Field(min_length=1)
 
 
 class SheetProtectedRange(BaseModel):
@@ -499,8 +499,8 @@ class SheetProvenanceRow(BaseModel):
     casilla_label: str
     formula_id: FormulaId | None = None
     rounding_rule: Literal["money", "integer", "none"]
-    legal_refs: tuple[str, ...] = Field(min_length=1)
-    source_refs: tuple[str, ...] = Field(min_length=1)
+    legal_refs: tuple[LegalRefId, ...] = Field(min_length=1)
+    source_refs: tuple[SourceRefId, ...] = Field(min_length=1)
     target_address: SheetCellAddress
 
 
@@ -519,8 +519,8 @@ class SheetEvidenceContributorRow(BaseModel):
     counterparty: str | None = None
     attachment_ids: tuple[str, ...] = ()
     document_link_ids: tuple[str, ...] = ()
-    legal_refs: tuple[str, ...] = Field(min_length=1)
-    source_refs: tuple[str, ...] = Field(min_length=1)
+    legal_refs: tuple[LegalRefId, ...] = Field(min_length=1)
+    source_refs: tuple[SourceRefId, ...] = Field(min_length=1)
 
 
 class SheetEvidenceManualEntry(BaseModel):
@@ -532,8 +532,8 @@ class SheetEvidenceManualEntry(BaseModel):
     value: str = Field(min_length=1)
     kind: str = Field(min_length=1)
     note: str = ""
-    legal_refs: tuple[str, ...] = Field(min_length=1)
-    source_refs: tuple[str, ...] = Field(min_length=1)
+    legal_refs: tuple[LegalRefId, ...] = Field(min_length=1)
+    source_refs: tuple[SourceRefId, ...] = Field(min_length=1)
 
 
 class SheetEvidenceFacet(BaseModel):

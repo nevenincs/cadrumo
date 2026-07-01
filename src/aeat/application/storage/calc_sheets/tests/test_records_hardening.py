@@ -160,6 +160,16 @@ def test_sheet_plan_records_reject_generic_casilla_key() -> None:
         )
 
 
+def test_sheet_cell_constraint_rejects_blank_legal_ref() -> None:
+    with pytest.raises(ValidationError, match="legal_refs"):
+        SheetCellConstraint(
+            address=SheetCellAddress.at(TabName.ENTRADAS, row=2, column=4),
+            sign="non_negative",
+            legal_refs=(" ",),
+            casilla_id=_IVA_DEVENGADO_BASE_CASILLA,
+        )
+
+
 def test_export_plan_rejects_duplicate_writable_cell_addresses() -> None:
     address = SheetCellAddress.at(TabName.ENTRADAS, row=2, column=3)
 
