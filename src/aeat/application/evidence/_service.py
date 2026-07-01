@@ -32,9 +32,9 @@ from pydantic import BaseModel, Field
 
 from ...adapters.persistence.storage import (
     APPLICATION_EVIDENCE_BUNDLE_NAMESPACE,
+    SecureBoundRepository,
+    secure_object_repository_for_bucket,
 )
-from ...adapters.persistence.storage.envelope import SecureBoundRepository
-from ...adapters.persistence.storage.runtime_repository import secure_object_repository_for_bucket
 from ...core import STRICT_FROZEN_CONFIG
 from ...core.config import Settings
 from ...core.external_constants import UTF_8_ENCODING
