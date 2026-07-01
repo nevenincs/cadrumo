@@ -217,6 +217,28 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
+        "aeat.core.observability._errors.GoldenCaptureError",
+        ErrorCode(
+            code="INTEGRITY_OBSERVABILITY_GOLDEN_CAPTURE",
+            category=ErrorCategory.INTEGRITY,
+            message_key="errors.integrity.integrity_observability_run_trace_validation",
+            default_suggestion=None,
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "aeat.core.observability._errors.GoldenReplayMismatchError",
+        ErrorCode(
+            code="INTEGRITY_OBSERVABILITY_GOLDEN_REPLAY_MISMATCH",
+            category=ErrorCategory.INTEGRITY,
+            message_key="errors.integrity.integrity_observability_run_trace_validation",
+            default_suggestion=None,
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
         "aeat.core.observability._errors.RunContextMissingError",
         ErrorCode(
             code="INTERNAL_OBSERVABILITY_RUN_CONTEXT_MISSING",
