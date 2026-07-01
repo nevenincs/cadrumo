@@ -17,7 +17,7 @@ synthetic_data_allowed = false
 requires_authentication = false
 requires_aeat_authorization = false
 legal_refs = ["orden-hac-2572-2003:apartado-1"]
-source_refs = ["boe-modelo-840-2003-form"]
+source_refs = ["aeat-modelo-840-procedure"]
 
 [[revisions."2003-y-siguientes".live_cross_references]]
 id = "modelo-840-filed-declarations-read"
@@ -40,5 +40,5 @@ synthetic_data_allowed = false
 requires_authentication = true
 requires_aeat_authorization = true
 legal_refs = ["orden-hac-2572-2003:apartado-1"]
-source_refs = ["boe-modelo-840-2003-form"]
+source_refs = ["aeat-modelo-840-procedure"]
 
