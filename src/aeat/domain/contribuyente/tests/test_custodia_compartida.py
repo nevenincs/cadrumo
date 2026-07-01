@@ -32,6 +32,28 @@ FILING_YEAR = 2024
 # Registry-authoritative Art. 58 amounts (2024 revision)
 _MINIMO_1 = Decimal("2400")
 _MENOR_TRES = Decimal("2800")
+_CUSTODIA_FACT_KEY = "renta_family.descendiente.0.custodia_compartida"
+_CUSTODIA_FIELD_CASES = (
+    ("default", DescendantInfo(birth_date=date(2020, 3, 15)), False),
+    ("explicit-true", DescendantInfo(birth_date=date(2020, 3, 15), custodia_compartida=True), True),
+)
+_CUSTODIA_COUNT_CASES = (
+    ("no-descendants", (), 0),
+    ("none-flagged", (DescendantInfo(birth_date=date(2020, 3, 15), custodia_compartida=False),), 0),
+    ("one-eligible", (DescendantInfo(birth_date=date(2020, 3, 15), custodia_compartida=True),), 1),
+    ("ineligible", (DescendantInfo(birth_date=date(1998, 1, 1), custodia_compartida=True),), 0),
+)
+_PRORRATA_FACTOR_CASES = (
+    ("custodia-eligible", DescendantInfo(birth_date=date(2020, 3, 15), custodia_compartida=True), Decimal("0.5")),
+    ("no-custodia", DescendantInfo(birth_date=date(2020, 3, 15), custodia_compartida=False), Decimal("1")),
+    ("ineligible-custodia", DescendantInfo(birth_date=date(1998, 1, 1), custodia_compartida=True), Decimal("1")),
+)
+_PARSE_CUSTODIA_CASES = (
+    ("true", "NACIMIENTO=2020-03-15,CUSTODIA=true", True),
+    ("false", "NACIMIENTO=2020-03-15,CUSTODIA=false", False),
+    ("absent", "NACIMIENTO=2020-03-15", False),
+    ("si", "NACIMIENTO=2020-03-15,CUSTODIA=si", True),
+)
 
 
 # ---------------------------------------------------------------------------
@@ -39,14 +61,9 @@ _MENOR_TRES = Decimal("2800")
 # ---------------------------------------------------------------------------
 
 
-def test_custodia_compartida_defaults_false() -> None:
-    d = DescendantInfo(birth_date=date(2020, 3, 15))
-    assert d.custodia_compartida is False
-
-
-def test_custodia_compartida_accepts_true() -> None:
-    d = DescendantInfo(birth_date=date(2020, 3, 15), custodia_compartida=True)
-    assert d.custodia_compartida is True
+def test_custodia_compartida_field_cases() -> None:
+    for case_id, descendant, expected in _CUSTODIA_FIELD_CASES:
+        assert descendant.custodia_compartida is expected, case_id
 
 
 # ---------------------------------------------------------------------------
@@ -54,26 +71,10 @@ def test_custodia_compartida_accepts_true() -> None:
 # ---------------------------------------------------------------------------
 
 
-def test_custodia_compartida_count_zero_when_no_descendants() -> None:
-    p = RentaFamilyProfile()
-    assert p.custodia_compartida_count(FILING_YEAR) == 0
-
-
-def test_custodia_compartida_count_zero_when_none_flagged() -> None:
-    p = RentaFamilyProfile(descendientes=(DescendantInfo(birth_date=date(2020, 3, 15), custodia_compartida=False),))
-    assert p.custodia_compartida_count(FILING_YEAR) == 0
-
-
-def test_custodia_compartida_count_one_when_one_flagged_eligible() -> None:
-    p = RentaFamilyProfile(descendientes=(DescendantInfo(birth_date=date(2020, 3, 15), custodia_compartida=True),))
-    assert p.custodia_compartida_count(FILING_YEAR) == 1
-
-
-def test_custodia_compartida_count_ignores_ineligible() -> None:
-    # A 26-year-old without discapacidad is not eligible for the ordinary mínimo,
-    # so custodia_compartida on such a descendant does not increment the count.
-    p = RentaFamilyProfile(descendientes=(DescendantInfo(birth_date=date(1998, 1, 1), custodia_compartida=True),))
-    assert p.custodia_compartida_count(FILING_YEAR) == 0
+def test_custodia_compartida_count_cases() -> None:
+    for case_id, descendants, expected in _CUSTODIA_COUNT_CASES:
+        p = RentaFamilyProfile(descendientes=descendants)
+        assert p.custodia_compartida_count(FILING_YEAR) == expected, case_id
 
 
 # ---------------------------------------------------------------------------
@@ -81,23 +82,10 @@ def test_custodia_compartida_count_ignores_ineligible() -> None:
 # ---------------------------------------------------------------------------
 
 
-def test_prorrata_factor_is_half_for_custodia_eligible() -> None:
-    d = DescendantInfo(birth_date=date(2020, 3, 15), custodia_compartida=True)
-    p = RentaFamilyProfile(descendientes=(d,))
-    assert p.custodia_compartida_prorrata_factor(d, FILING_YEAR) == Decimal("0.5")
-
-
-def test_prorrata_factor_is_one_for_no_custodia() -> None:
-    d = DescendantInfo(birth_date=date(2020, 3, 15), custodia_compartida=False)
-    p = RentaFamilyProfile(descendientes=(d,))
-    assert p.custodia_compartida_prorrata_factor(d, FILING_YEAR) == Decimal("1")
-
-
-def test_prorrata_factor_is_one_for_ineligible_with_custodia() -> None:
-    # Age 26, no discapacidad — not mínimo-eligible even with custodia_compartida.
-    d = DescendantInfo(birth_date=date(1998, 1, 1), custodia_compartida=True)
-    p = RentaFamilyProfile(descendientes=(d,))
-    assert p.custodia_compartida_prorrata_factor(d, FILING_YEAR) == Decimal("1")
+def test_prorrata_factor_cases() -> None:
+    for case_id, descendant, expected in _PRORRATA_FACTOR_CASES:
+        p = RentaFamilyProfile(descendientes=(descendant,))
+        assert p.custodia_compartida_prorrata_factor(descendant, FILING_YEAR) == expected, case_id
 
 
 # ---------------------------------------------------------------------------
@@ -156,19 +144,6 @@ def test_antitautology_without_custodia_full_minimo() -> None:
 # ---------------------------------------------------------------------------
 
 
-def test_advisory_none_when_no_custodia() -> None:
-    p = RentaFamilyProfile(descendientes=(DescendantInfo(birth_date=date(2020, 3, 15), custodia_compartida=False),))
-    assert p.custodia_compartida_advisory(FILING_YEAR) is None
-
-
-def test_advisory_returns_string_when_custodia_present() -> None:
-    p = RentaFamilyProfile(descendientes=(DescendantInfo(birth_date=date(2020, 3, 15), custodia_compartida=True),))
-    advisory = p.custodia_compartida_advisory(FILING_YEAR)
-    assert advisory is not None
-    assert isinstance(advisory, str)
-    assert len(advisory) > 0
-
-
 def test_advisory_antitautology_custodia_vs_no_custodia() -> None:
     """The advisory differs between a custodia and a non-custodia profile."""
     with_custodia = RentaFamilyProfile(
@@ -177,7 +152,10 @@ def test_advisory_antitautology_custodia_vs_no_custodia() -> None:
     without_custodia = RentaFamilyProfile(
         descendientes=(DescendantInfo(birth_date=date(2020, 3, 15), custodia_compartida=False),),
     )
-    assert with_custodia.custodia_compartida_advisory(FILING_YEAR) is not None
+    advisory = with_custodia.custodia_compartida_advisory(FILING_YEAR)
+    assert advisory is not None
+    assert isinstance(advisory, str)
+    assert len(advisory) > 0
     assert without_custodia.custodia_compartida_advisory(FILING_YEAR) is None
 
 
@@ -187,29 +165,24 @@ def test_advisory_antitautology_custodia_vs_no_custodia() -> None:
 
 
 class TestCustodiaCompartidaRoundtrip:
-    def test_custodia_true_persists_and_reloads(self) -> None:
+    def test_cases(self) -> None:
         d = DescendantInfo(birth_date=date(2020, 3, 15), custodia_compartida=True)
         facts = dict(descendant_facts_from_list((d,)))
         reloaded = descendant_list_from_facts(facts)
         assert len(reloaded) == 1
         assert reloaded[0].custodia_compartida is True
 
-    def test_custodia_false_omitted_from_facts(self) -> None:
         # When False, no fact key is written (the absent key defaults to False on reload).
         d = DescendantInfo(birth_date=date(2020, 3, 15), custodia_compartida=False)
         facts = dict(descendant_facts_from_list((d,)))
-        assert "renta_family.descendiente.0.custodia_compartida" not in facts
+        assert _CUSTODIA_FACT_KEY not in facts
 
-    def test_custodia_false_roundtrips_via_absent_key(self) -> None:
-        d = DescendantInfo(birth_date=date(2020, 3, 15), custodia_compartida=False)
-        facts = dict(descendant_facts_from_list((d,)))
         reloaded = descendant_list_from_facts(facts)
         assert reloaded[0].custodia_compartida is False
 
-    def test_anti_tautology_removing_custodia_fact_reloads_as_false(self) -> None:
         d = DescendantInfo(birth_date=date(2020, 3, 15), custodia_compartida=True)
         facts = dict(descendant_facts_from_list((d,)))
-        facts.pop("renta_family.descendiente.0.custodia_compartida")
+        facts.pop(_CUSTODIA_FACT_KEY)
         reloaded = descendant_list_from_facts(facts)
         assert reloaded[0].custodia_compartida is False
 
@@ -220,18 +193,7 @@ class TestCustodiaCompartidaRoundtrip:
 
 
 class TestParseDescendienteFlagCustodia:
-    def test_custodia_true_parsed(self) -> None:
-        d = parse_descendiente_flag("NACIMIENTO=2020-03-15,CUSTODIA=true")
-        assert d.custodia_compartida is True
-
-    def test_custodia_false_parsed(self) -> None:
-        d = parse_descendiente_flag("NACIMIENTO=2020-03-15,CUSTODIA=false")
-        assert d.custodia_compartida is False
-
-    def test_custodia_absent_defaults_false(self) -> None:
-        d = parse_descendiente_flag("NACIMIENTO=2020-03-15")
-        assert d.custodia_compartida is False
-
-    def test_custodia_si_accepted(self) -> None:
-        d = parse_descendiente_flag("NACIMIENTO=2020-03-15,CUSTODIA=si")
-        assert d.custodia_compartida is True
+    def test_cases(self) -> None:
+        for case_id, raw, expected in _PARSE_CUSTODIA_CASES:
+            d = parse_descendiente_flag(raw)
+            assert d.custodia_compartida is expected, case_id
