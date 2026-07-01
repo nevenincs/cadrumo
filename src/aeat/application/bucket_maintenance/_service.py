@@ -70,6 +70,7 @@ if TYPE_CHECKING:  # pragma: no cover - import-cycle guard
     from datetime import datetime
 
     from ...domain.buckets._protocols import BucketEventHistoryRepositoryProtocol
+    from ...domain.retention import RetentionFloorAssessment
     from ...domain.user_profile._portable_export import UserProfilePortableExport
 
 
@@ -223,8 +224,21 @@ class BucketMaintenanceService:
                 context={"bucket_id": command.bucket_id},
             )
         previous_label = pointer.label
+        assessment = self._assess_retention_floor(command.bucket_id)
+        override_used = self._enforce_retention_floor(command, assessment)
+        latest_safe_erase_date = assessment.latest_safe_erase_date
         delete_profile_with_lifecycle_span(command.bucket_id)
         occurred_at = now()
+        payload: dict[str, str] = {"previous_label": previous_label}
+        if override_used:
+            # The override is a legally-material operator decision (erasing a
+            # record the law still requires kept); record the acknowledgement,
+            # the operator's reason, and the bypassed safe-erase date so the
+            # append-only audit trail explains why the record was destroyed early.
+            payload["retention_override"] = "true"
+            payload["retention_override_reason"] = command.retention_override_reason or ""
+            if latest_safe_erase_date is not None:
+                payload["retention_safe_erase_date"] = latest_safe_erase_date.isoformat()
         event = BucketEvent(
             event_id=derive_bucket_event_id(
                 bucket_id=command.bucket_id,
@@ -233,7 +247,7 @@ class BucketMaintenanceService:
                 actor="bucket-maintenance",
                 object_type=BucketEventObjectType.BUCKET,
                 object_id=command.bucket_id,
-                payload={"previous_label": previous_label},
+                payload=payload,
             ),
             bucket_id=command.bucket_id,
             event_type=BucketEventType.BUCKET_DELETED,
@@ -242,7 +256,7 @@ class BucketMaintenanceService:
             object_type=BucketEventObjectType.BUCKET,
             object_id=command.bucket_id,
             payload_version=_DELETE_PAYLOAD_VERSION,
-            payload={"previous_label": previous_label},
+            payload=payload,
         )
         repository = self._event_repository or BucketEventHistoryRepository()
         repository.save(append_bucket_event(repository.load(), event))
@@ -251,6 +265,55 @@ class BucketMaintenanceService:
             bucket_id=command.bucket_id,
             previous_label=previous_label,
             occurred_at=occurred_at,
+            retention_override_used=override_used,
+            latest_safe_erase_date=latest_safe_erase_date,
+        )
+
+    @staticmethod
+    def _assess_retention_floor(bucket_id: str) -> RetentionFloorAssessment:
+        """Assess the target bucket's filed records against the legal retention floor.
+
+        Opens a storage session scoped to ``bucket_id`` (the target is never the
+        active bucket, so its master-key session is activated the same way the
+        export path activates it) and reads the encrypted filing catalogue, then
+        delegates the pure floor evaluation to
+        :func:`~aeat.domain.retention.assess_retention_floor`.
+        """
+        from ...domain.modelos._filing_repository import ModeloRecordCatalogueRepository
+        from ...domain.retention import assess_retention_floor
+
+        with profile_storage_session(bucket_id):
+            filing_records = tuple(ModeloRecordCatalogueRepository(bucket_id=bucket_id).load())
+        return assess_retention_floor(filing_records, as_of=now())
+
+    @staticmethod
+    def _enforce_retention_floor(
+        command: DeleteBucketCommand,
+        assessment: RetentionFloorAssessment,
+    ) -> bool:
+        """Refuse the erase when records are still retained, unless overridden.
+
+        Returns whether a still-retained record was erased under the explicit
+        legal-retention override. A record inside its window is erasable only
+        when the operator both acknowledges the override AND supplies a
+        non-empty reason; an acknowledgement without a reason is not a valid
+        override and the erase is refused.
+        """
+        if not assessment.blocks_erase:
+            return False
+        reason = (command.retention_override_reason or "").strip()
+        override_valid = command.acknowledge_retention_override and bool(reason)
+        if override_valid:
+            return True
+        from ...domain.retention import RetentionFloorError
+
+        safe_date = assessment.latest_safe_erase_date
+        raise RetentionFloorError(
+            context={
+                "bucket_id": command.bucket_id,
+                "retained_record_count": len(assessment.retained),
+                "earliest_safe_erase_date": safe_date.date().isoformat() if safe_date is not None else "",
+            },
         )
 
     def browse(self, command: BrowseBucketCommand) -> BrowseBucketResult:
