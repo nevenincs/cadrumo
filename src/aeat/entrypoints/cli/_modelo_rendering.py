@@ -563,6 +563,12 @@ def calculation_observation_lines(rev) -> list[str]:
 
 
 def filing_record_payload(record) -> ModeloRecordPayload:
+    """Project a :class:`~aeat.domain.modelos.ModeloRecord` into JSON payload form.
+
+    When the record carries :class:`~aeat.domain.modelos.ExternalEvidence`, the
+    evidence fields are nested in :class:`ExternalEvidencePayload`; local filing
+    records still render with ``live_submission=False``.
+    """
     external_evidence: ExternalEvidencePayload | None = None
     if record.external_evidence is not None:
         external_evidence = ExternalEvidencePayload(
@@ -593,6 +599,12 @@ def filing_record_payload(record) -> ModeloRecordPayload:
 
 
 def filing_record_lines(record) -> list[str]:
+    """Render a :class:`~aeat.domain.modelos.ModeloRecord` as stable text lines.
+
+    External evidence, when present, is printed as explicit
+    ``external_evidence.*`` fields rather than being folded into local filing
+    state.
+    """
     lines = [
         f"filing_record_id\t{record.filing_record_id}",
         f"work_unit_id\t{record.work_unit_id}",
