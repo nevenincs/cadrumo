@@ -7,7 +7,8 @@ helpers enforce the live-read gate, acquire an authenticated :class:`AeatSession
 then persist filed-history and wallet evidence before reconciliation consumes it.
 
 Encrypted acquisition manifests are stored through the active bucket's
-:class:`SecureObjectRepository` via the typed manifest repository under
+:class:`~aeat.adapters.persistence.storage.SecureObjectRepository` via the
+typed manifest repository under
 :data:`aeat.adapters.persistence.storage.LIVE_IVA_REMOTE_STATE_ACQUISITIONS_NAMESPACE`.
 The manifest is redacted operational evidence of the acquisition attempt; it is
 not a remote submission record.
@@ -48,11 +49,15 @@ from ...adapters.outbound.aeat.sede import shared_playwright as _shared_playwrig
 from ...adapters.persistence.storage import (
     LIVE_IVA_REMOTE_STATE_ACQUISITIONS_NAMESPACE as _LIVE_IVA_REMOTE_STATE_ACQUISITIONS_STORAGE_NAMESPACE,
 )
-from ...adapters.persistence.storage.envelope import SecureBoundRepository as _SecureBoundRepository
+from ...adapters.persistence.storage import (
+    SecureBoundRepository as _SecureBoundRepository,
+)
+from ...adapters.persistence.storage import (
+    SecureObjectRepository as _SecureObjectRepository,
+)
 from ...adapters.persistence.storage.runtime_repository import (
     secure_object_repository_for_active_bucket as _secure_object_repository_for_active_bucket,
 )
-from ...adapters.persistence.storage.sql import SecureObjectRepository as _SecureObjectRepository
 from ...application.auth import AuthenticatedAeatSessionResult as _AuthenticatedAeatSessionResult
 from ...application.auth import ensure_authenticated_aeat_session as _ensure_authenticated_aeat_session
 from ...application.calculations import CalculationObservationRepository as _CalculationObservationRepository
