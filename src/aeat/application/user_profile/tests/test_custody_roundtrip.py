@@ -85,6 +85,24 @@ def test_structured_profile_excludes_attachment_evidence_bytes(tmp_path: Path) -
         assert "aeat.domain.attachments.blobs" not in structured_namespaces
 
 
+def _seed_attachment_manifest(sha: str) -> None:
+    from ....domain.attachments._enums import AttachmentKind, AttachmentSource
+    from ....domain.attachments._models import Attachment
+
+    AttachmentStore().write_manifest(
+        Attachment(
+            attachment_id=sha,
+            kind=AttachmentKind.INVOICE_PDF,
+            source=AttachmentSource.LOCAL_FILE,
+            source_reference="invoice.pdf",
+            sha256=sha,
+            mime_type="application/pdf",
+            bytes_size=len(_EVIDENCE_BYTES),
+            captured_at=_INSTANT,
+        ),
+    )
+
+
 def _seed_justificante() -> str:
     from decimal import Decimal
 
@@ -117,9 +135,11 @@ def test_full_custody_carry_restores_evidence_bytes_and_audit_trail(tmp_path: Pa
         target_bucket = runtime.secondary.bucket_id
 
         # Seed previously-dropped stores in the source bucket: an attachment blob
-        # (byte store), an audit event (catalogue), and a justificante metadata
-        # record (SecureBoundRepository bound-resolver path).
+        # (byte store) AND its manifest (the manifest store strips attachment_id from
+        # the payload, so this exercises the sha256-field manifest resolver), an audit
+        # event (catalogue), and a justificante metadata record (bound-resolver path).
         sha = AttachmentStore().put_bytes(_EVIDENCE_BYTES)
+        _seed_attachment_manifest(sha)
         event_id = _seed_bucket_event(source_bucket)
         justificante_csv = _seed_justificante()
 
@@ -139,6 +159,9 @@ def test_full_custody_carry_restores_evidence_bytes_and_audit_trail(tmp_path: Pa
 
             # Evidence bytes survive and resolve under the recipient DEK.
             assert AttachmentStore().read_bytes(sha) == _EVIDENCE_BYTES
+            # The manifest survives and re-keys under the recipient DEK (the
+            # attachment_id, stripped from the payload, is re-injected on load).
+            assert AttachmentStore().load_manifest(sha).sha256 == sha
 
             # The audit trail survives with its content-addressed event id intact.
             restored = BucketEventHistoryRepository().load()
