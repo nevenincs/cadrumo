@@ -24,6 +24,9 @@ related:
 - Reviewed W09.P41.S297 changes to `src/aeat/application/modelo/_calculation_actions.py` and `src/aeat/application/modelo/tests/test_modelo_131_data_base_binding_projection.py`.
 - Checked that S297 projects only M131 datos-base fixed-record bindings into liquidation casillas `01` and `02`, preserves the official no-datos-base casilla `04` branch, and does not globally project arbitrary manual fixed-record bindings.
 - Checked validation evidence from focused Modelo 131 registry/advisory/application tests, touched-file ruff, reviewer output, and RAG/reference grounding.
+- Reviewed W09.P41.S292 current CLI provenance surfaces and `src/aeat/entrypoints/cli/tests/test_modelo_verification_report_view.py`.
+- Checked that persisted `CalculationRevision.observations` are already exposed with `formula_id`, `legal_refs`, and `source_refs` through JSON revision payloads and the dedicated `work observations` sibling command.
+- Checked validation evidence from focused CLI provenance integration tests, touched-file ruff, reviewer output, and RAG grounding.
 
 ## Findings
 
@@ -42,6 +45,10 @@ No findings for the M131 regulatory-floor predicate regression. The current regi
 ### w09-p41-s297 | low | no findings
 
 No findings for the M131 datos-base binding projection bridge. The change is scoped to Modelo 131, keeps explicit casilla inputs authoritative over projected backend values, leaves unrelated fixed-record bindings inert, and preserves liquidation casilla `04` as the no-datos-base computation from casilla `03`.
+
+### w09-p41-s292 | low | no findings
+
+No production-code findings for the CLI provenance surface. The row's sibling-command remedy is already present: `work observations` emits typed observation rows with `formula_id`, `legal_refs`, `source_refs`, and operand trace fields, while `work revision` and related JSON payloads carry the same typed observation envelope. One test fixture used a legal-ref-shaped value as a `source_ref`; it was corrected to a valid source id so the existing verification-report provenance test exercises the current schema contract.
 
 ## Recommendations
 
