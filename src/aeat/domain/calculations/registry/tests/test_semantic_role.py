@@ -125,9 +125,33 @@ class TestSemanticRoleFieldShape:
         assert rebuilt.semantic_role == "taxpayer_nif"
         assert rebuilt == c
 
-    def test_empty_role_string_rejected(self) -> None:
+    @pytest.mark.parametrize(
+        "updates",
+        (
+            {"semantic_role": ""},
+            {
+                "semantic_role_cardinality": "intentional_singleton",
+                "semantic_role_cardinality_reason": "2025-only legal slot",
+            },
+            {
+                "semantic_role": "is_pf_mod_40_3_b2_base_tipo_3",
+                "semantic_role_cardinality": "intentional_singleton",
+            },
+            {
+                "semantic_role": "is_pf_mod_40_3_b2_base_tipo_3",
+                "semantic_role_cardinality_reason": "2025-only legal slot",
+            },
+        ),
+        ids=(
+            "empty-role",
+            "singleton-without-role",
+            "singleton-without-reason",
+            "reason-without-singleton",
+        ),
+    )
+    def test_invalid_semantic_role_shape_rejected(self, updates: dict[str, object]) -> None:
         with pytest.raises(ValidationError):
-            _casilla(semantic_role="")
+            _casilla(**updates)
 
     def test_blank_primary_label_rejected(self) -> None:
         with pytest.raises(ValidationError, match="official Spanish text"):
@@ -139,27 +163,6 @@ class TestSemanticRoleFieldShape:
                 label="   ",
                 legal_refs=("ley-58-2003:art-29",),
                 source_refs=("aeat-manual",),
-            )
-
-    def test_intentional_singleton_role_requires_semantic_role(self) -> None:
-        with pytest.raises(ValidationError):
-            _casilla(
-                semantic_role_cardinality="intentional_singleton",
-                semantic_role_cardinality_reason="2025-only legal slot",
-            )
-
-    def test_intentional_singleton_role_requires_reason(self) -> None:
-        with pytest.raises(ValidationError):
-            _casilla(
-                semantic_role="is_pf_mod_40_3_b2_base_tipo_3",
-                semantic_role_cardinality="intentional_singleton",
-            )
-
-    def test_singleton_reason_requires_intentional_singleton_cardinality(self) -> None:
-        with pytest.raises(ValidationError):
-            _casilla(
-                semantic_role="is_pf_mod_40_3_b2_base_tipo_3",
-                semantic_role_cardinality_reason="2025-only legal slot",
             )
 
     def test_intentional_singleton_cardinality_round_trips(self) -> None:
