@@ -204,12 +204,14 @@ def validate_extraction_profile_section(
     exported_casillas: set[CasillaId],
     legal_refs: Mapping[str, LegalReference],
     source_refs: Mapping[str, SourceReference],
+    evidence: EvidenceValidator,
     corpus_root: Path | None = None,
 ) -> None:
     for profile in revision.extraction_profiles:
         owner = f"extraction profile {profile.id}"
         failures.extend(_missing_refs(prefix, owner, profile.legal_refs, legal_refs, "legal"))
         failures.extend(_missing_refs(prefix, owner, profile.source_refs, source_refs, "source"))
+        failures.extend(evidence.require_source_tier(prefix, owner, profile.source_refs, "layout_authority"))
         failures.extend(validate_dotted_callable(prefix, owner, profile.parser))
         target_casilla_ids = tuple(t.casilla_id for t in profile.target_casillas)
         for casilla_id in target_casilla_ids:

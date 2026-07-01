@@ -122,6 +122,22 @@ def test_validator_rejects_extraction_profile_parser_that_does_not_resolve() -> 
         RegistryValidator(catalogues, source_root=bundled_path()).validate_modelo(_with_revision(modelo, mutated))
 
 
+def test_validator_rejects_extraction_profile_without_layout_authority_source() -> None:
+    modelo, catalogues = _committed_registry()
+    revision = _revision(modelo)
+    profile = next(item for item in revision.extraction_profiles if item.source_refs)
+    sources = dict(catalogues.sources)
+    for source_ref in profile.source_refs:
+        sources[source_ref] = sources[source_ref].model_copy(update={"evidence_tier": "official_source_guidance"})
+    mutated_catalogues = catalogues.model_copy(update={"sources": sources})
+
+    with pytest.raises(
+        RegistryValidationError,
+        match=r"extraction profile .* requires layout_authority source evidence",
+    ):
+        RegistryValidator(mutated_catalogues, source_root=bundled_path()).validate_modelo(modelo)
+
+
 def test_validator_requires_application_link_for_extraction_profile() -> None:
     modelo, catalogues = _committed_registry()
     revision = _revision(modelo)
