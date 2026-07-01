@@ -152,9 +152,19 @@ class TestRunContextOutcome:
 
 
 class TestRunContextRunIdValidation:
+    @pytest.mark.parametrize(
+        "bad_run_id",
+        (
+            pytest.param("../escape", id="parent-traversal"),
+            pytest.param("not-hex", id="not-hex"),
+            pytest.param("0" * 17, id="too-long"),
+            pytest.param("ABCDEF0123456789", id="uppercase"),
+        ),
+    )
     def test_caller_supplied_bad_run_id_rejected_before_fs(
         self,
         tmp_path: Path,
+        bad_run_id: str,
     ) -> None:
         """A malicious run_id must never touch the filesystem.
 
@@ -167,15 +177,14 @@ class TestRunContextRunIdValidation:
         from .. import RunTraceValidationError
 
         with override_settings(aeat_runs_dir=str(tmp_path)):
-            for bad in ("../escape", "not-hex", "0" * 17, "ABCDEF0123456789"):
-                before = set(tmp_path.iterdir())
-                with (
-                    pytest.raises(RunTraceValidationError, match=r"invalid run_id"),
-                    run_context(entrypoint="aeat test", arguments=(), run_id=bad),
-                ):
-                    pass
-                # No directory must have been created by the rejected enter.
-                assert set(tmp_path.iterdir()) == before, f"rejected run_id {bad!r} left debris under {tmp_path}"
+            before = set(tmp_path.iterdir())
+            with (
+                pytest.raises(RunTraceValidationError, match=r"invalid run_id"),
+                run_context(entrypoint="aeat test", arguments=(), run_id=bad_run_id),
+            ):
+                pass
+            # No directory must have been created by the rejected enter.
+            assert set(tmp_path.iterdir()) == before, f"rejected run_id {bad_run_id!r} left debris under {tmp_path}"
 
     def test_caller_supplied_valid_run_id_accepted(
         self,
