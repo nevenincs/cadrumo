@@ -135,7 +135,8 @@ def test_proyecto_casilla_observations_carry_provenance() -> None:
 # Constants
 # ---------------------------------------------------------------------------
 
-_PROFILE_ID = "m130-projection-test-profile"
+_PROFILE_ID = "13013013-0130-4130-8130-130130130130"
+_PROFILE_LABEL = "M130 projection regression test profile"
 _M130_INGRESOS_CASILLA: CasillaId = validated_casilla_id("01", surface="_M130_INGRESOS_CASILLA")
 _M130_RENDIMIENTO_NETO_CASILLA: CasillaId = validated_casilla_id("03", surface="_M130_RENDIMIENTO_NETO_CASILLA")
 _M130_RETENCIONES_CASILLA: CasillaId = validated_casilla_id("06", surface="_M130_RETENCIONES_CASILLA")
@@ -220,7 +221,7 @@ def runtime_profile(
     with isolated_cli_runtime_profile(
         tmp_path=tmp_path,
         bucket_id=_PROFILE_ID,
-        label="M130 projection regression test profile",
+        label=_PROFILE_LABEL,
     ) as profile:
         yield profile
 
@@ -232,7 +233,7 @@ def _seed_autónomo_profile(runtime_profile: TestRuntimeProfile) -> None:
         schema_id="aeat.user_profile",
         schema_version=1,
         profile_id=_PROFILE_ID,
-        display_name="M130 projection regression test profile",
+        display_name=_PROFILE_LABEL,
         status=UserProfileStatus.ACTIVE,
         facts=(
             UserProfileFact(path="identity.name", value="Projection Test Autónomo"),
