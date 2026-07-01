@@ -294,30 +294,21 @@ def test_binding_export_selector_rejects_non_integer_offset() -> None:
 # ---------------------------------------------------------------------------
 
 
-def test_padding_for_binding_data_type_returns_left_zero_for_money() -> None:
+@pytest.mark.parametrize(
+    ("data_type", "padding"),
+    (
+        pytest.param("money", "left_zero", id="money"),
+        pytest.param("integer", "left_zero", id="integer"),
+        pytest.param("decimal", "left_zero", id="decimal"),
+        pytest.param("text", "right_space", id="text"),
+        pytest.param("date", "right_space", id="date"),
+        pytest.param("boolean", "right_space", id="boolean"),
+    ),
+)
+def test_padding_for_binding_data_type(data_type: str, padding: str) -> None:
     """Numeric fixed-width export fields pad with leading zeros so the
     parser can recover the magnitude unambiguously."""
-    assert _padding_for_binding_data_type("money") == "left_zero"
-
-
-def test_padding_for_binding_data_type_returns_left_zero_for_integer() -> None:
-    assert _padding_for_binding_data_type("integer") == "left_zero"
-
-
-def test_padding_for_binding_data_type_returns_left_zero_for_decimal() -> None:
-    assert _padding_for_binding_data_type("decimal") == "left_zero"
-
-
-def test_padding_for_binding_data_type_returns_right_space_for_text() -> None:
-    assert _padding_for_binding_data_type("text") == "right_space"
-
-
-def test_padding_for_binding_data_type_returns_right_space_for_date() -> None:
-    assert _padding_for_binding_data_type("date") == "right_space"
-
-
-def test_padding_for_binding_data_type_returns_right_space_for_boolean() -> None:
-    assert _padding_for_binding_data_type("boolean") == "right_space"
+    assert _padding_for_binding_data_type(data_type) == padding
 
 
 # ---------------------------------------------------------------------------
@@ -325,25 +316,16 @@ def test_padding_for_binding_data_type_returns_right_space_for_boolean() -> None
 # ---------------------------------------------------------------------------
 
 
-def test_justification_for_binding_data_type_returns_right_for_money() -> None:
-    assert _justification_for_binding_data_type("money") == "right"
-
-
-def test_justification_for_binding_data_type_returns_right_for_integer() -> None:
-    assert _justification_for_binding_data_type("integer") == "right"
-
-
-def test_justification_for_binding_data_type_returns_right_for_decimal() -> None:
-    assert _justification_for_binding_data_type("decimal") == "right"
-
-
-def test_justification_for_binding_data_type_returns_left_for_text() -> None:
-    assert _justification_for_binding_data_type("text") == "left"
-
-
-def test_justification_for_binding_data_type_returns_left_for_date() -> None:
-    assert _justification_for_binding_data_type("date") == "left"
-
-
-def test_justification_for_binding_data_type_returns_left_for_boolean() -> None:
-    assert _justification_for_binding_data_type("boolean") == "left"
+@pytest.mark.parametrize(
+    ("data_type", "justification"),
+    (
+        pytest.param("money", "right", id="money"),
+        pytest.param("integer", "right", id="integer"),
+        pytest.param("decimal", "right", id="decimal"),
+        pytest.param("text", "left", id="text"),
+        pytest.param("date", "left", id="date"),
+        pytest.param("boolean", "left", id="boolean"),
+    ),
+)
+def test_justification_for_binding_data_type(data_type: str, justification: str) -> None:
+    assert _justification_for_binding_data_type(data_type) == justification
