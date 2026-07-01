@@ -2,8 +2,8 @@
 
 The service persists :class:`InventoryLedgerDocument` through
 :class:`InventoryLedgerRepository`, whose runtime default is built by
-:func:`secure_object_repository_for_bucket`. It does not read or write
-plaintext inventory JSON side stores.
+:func:`~aeat.adapters.persistence.storage.secure_object_repository_for_bucket`.
+It does not read or write plaintext inventory JSON side stores.
 
 State-changing and audit-significant verbs append events to the
 per-bucket audit trail via :class:`BucketEventHistoryRepository`;
@@ -19,7 +19,7 @@ from decimal import Decimal
 from pydantic import BaseModel, Field
 
 from ...adapters.persistence.profile.inventory import InventoryLedgerRepository
-from ...adapters.persistence.storage.runtime_repository import secure_object_repository_for_bucket
+from ...adapters.persistence.storage import secure_object_repository_for_bucket
 from ...core import STRICT_FROZEN_CONFIG
 from ...core.config import Settings
 from ...core.external_constants import DEFAULT_IVA_GENERAL_RATE_PCT
@@ -189,9 +189,9 @@ class InventoryService:
     """Bucket-scoped CRUD over per-actividad :class:`InventoryLedger` records.
 
     Runtime construction routes the repository through
-    :func:`secure_object_repository_for_bucket`, so the requested
-    ``bucket_id`` is checked by the storage runtime instead of bypassing
-    custody with a local file path. Tests may inject an
+    :func:`~aeat.adapters.persistence.storage.secure_object_repository_for_bucket`,
+    so the requested ``bucket_id`` is checked by the storage runtime instead
+    of bypassing custody with a local file path. Tests may inject an
     :class:`InventoryLedgerRepository` factory or
     :class:`BucketEventHistoryRepository` protocol implementation.
     """
