@@ -7,7 +7,12 @@ from decimal import Decimal
 import pytest
 
 from ....core.resources import resources
-from ....domain.calculations.registry import CasillaId, VerificationPredicateDefinition, validated_casilla_id
+from ....domain.calculations.registry import (
+    CasillaId,
+    LegalRefId,
+    VerificationPredicateDefinition,
+    validated_casilla_id,
+)
 from ....domain.modelos._verification_report import (
     ModeloVerificationFindingKind,
     ModeloVerificationFindingSeverity,
@@ -16,6 +21,7 @@ from .._verification_actions import evaluate_verification_predicates
 from ._verification_substance_support import _workflow_profile
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+
 
 def _casilla_id(value: object) -> CasillaId:
     try:
@@ -90,7 +96,7 @@ def test_m390_reconciliation_predicates_ship_with_grounding(
     total_id: CasillaId,
     reconciliation_id: CasillaId,
     expression: str,
-    legal_refs: set[str],
+    legal_refs: set[LegalRefId],
 ) -> None:
     del total_id, reconciliation_id
     predicate = _predicate(predicate_id, expression)
@@ -104,7 +110,7 @@ def test_m390_reconciliation_blocks_when_annual_total_diverges_from_303_fold(
     total_id: CasillaId,
     reconciliation_id: CasillaId,
     expression: str,
-    legal_refs: set[str],
+    legal_refs: set[LegalRefId],
 ) -> None:
     predicate = _predicate(predicate_id, expression)
     casilla_values: dict[CasillaId, Decimal] = {
@@ -126,7 +132,7 @@ def test_m390_reconciliation_passes_when_annual_total_matches_303_fold(
     total_id: CasillaId,
     reconciliation_id: CasillaId,
     expression: str,
-    legal_refs: set[str],
+    legal_refs: set[LegalRefId],
 ) -> None:
     del legal_refs
     predicate = _predicate(predicate_id, expression)
