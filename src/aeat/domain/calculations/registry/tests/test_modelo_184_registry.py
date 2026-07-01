@@ -79,6 +79,8 @@ def test_modelo_184_snapshot_exposes_legal_and_source_grounding() -> None:
     assert "aeat-dr-184-2025" in snapshot.sources
     assert "aeat-modelo-184-procedure" in snapshot.sources
     assert "boe-modelo-184-2015-form" in snapshot.sources
+    assert snapshot.sources["aeat-modelo-184-procedure"].evidence_tier == "official_source_guidance"
+    assert snapshot.sources["boe-modelo-184-2015-form"].evidence_tier == "layout_authority"
 
 
 def test_modelo_184_february_deadline_windows_match_hap_2250_2015_art_4() -> None:
