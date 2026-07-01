@@ -131,6 +131,7 @@ from ._model_tier import ModelCapability, catalogue, profiles_for_provider, reso
 from ._models import (
     BucketTransactionRef,
     ClassificationHistoryEntry,
+    DecisionProvenance,
     SplitLineage,
     Transaction,
     TransactionCatalogue,
@@ -201,6 +202,7 @@ __all__ = [
     "CategoryChoice",
     "ClassificationChoice",
     "ClassificationHistoryEntry",
+    "DecisionProvenance",
     "ImportSummary",
     "IvaCategoryChoice",
     "LLMClassificationResponse",
