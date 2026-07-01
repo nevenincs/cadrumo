@@ -59,19 +59,17 @@ def _assert_output_language_registered(args: list[str]) -> None:
 # ---------------------------------------------------------------------------
 
 
-def test_auth_clear_accepts_output_language() -> None:
-    """``aeat config auth clear`` must accept ``--output-language`` (contract)."""
-    _assert_output_language_registered(["config", "auth", "clear"])
-
-
-def test_auth_providers_accepts_output_language() -> None:
-    """``aeat config auth providers`` must accept ``--output-language`` (contract)."""
-    _assert_output_language_registered(["config", "auth", "providers"])
-
-
-def test_auth_configure_accepts_output_language() -> None:
-    """``aeat config auth configure`` must accept ``--output-language`` (contract)."""
-    _assert_output_language_registered(["config", "auth", "configure"])
+@pytest.mark.parametrize(
+    "argv",
+    (
+        pytest.param(["config", "auth", "clear"], id="clear"),
+        pytest.param(["config", "auth", "providers"], id="providers"),
+        pytest.param(["config", "auth", "configure"], id="configure"),
+    ),
+)
+def test_auth_subcommand_accepts_output_language(argv: list[str]) -> None:
+    """Config auth subcommands must accept ``--output-language``."""
+    _assert_output_language_registered(argv)
 
 
 # ---------------------------------------------------------------------------
