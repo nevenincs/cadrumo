@@ -183,6 +183,7 @@ from ._m036_lifecycle import (
     M036DeclarationCommand,
     M036DeclarationResult,
     list_m036_declarations,
+    m036_declaration_object_key,
     read_m036_declaration,
     record_m036_declaration,
 )
@@ -562,6 +563,7 @@ __all__ = [
     "list_modelo_reconciliations",
     "list_verification_reports",
     "list_work_units",
+    "m036_declaration_object_key",
     "maritime_facts_from_active_profile",
     "mark_revision_verificado_completo",
     "modelo_202_modality_for_work_unit",

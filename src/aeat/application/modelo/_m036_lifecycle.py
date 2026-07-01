@@ -169,7 +169,7 @@ _EVENT_KIND_TO_BUCKET_EVENT: dict[CensoModeloEventKind, BucketEventType] = {
 }
 
 
-def _m036_declaration_object_key(bucket_id: str, declaration_id: str) -> str:
+def m036_declaration_object_key(bucket_id: str, declaration_id: str) -> str:
     return f"m036-declaration:{bucket_id}:{declaration_id}"
 
 
@@ -201,7 +201,7 @@ def _m036_declaration_repository(bucket_id: BucketId) -> SecureSnapshotRepositor
         bucket_id=bucket_id,
         payload_model=M036DeclarationResult,
         namespace_definition=LIVE_M036_DECLARATION_NAMESPACE,
-        object_key=_m036_declaration_object_key,
+        object_key=m036_declaration_object_key,
         not_found_factory=_m036_declaration_not_found,
         ambiguous_prefix_factory=_m036_declaration_ambiguous_prefix,
         domain_label="m036_declaration",
