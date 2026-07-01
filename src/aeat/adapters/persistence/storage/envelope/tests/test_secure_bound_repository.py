@@ -11,6 +11,7 @@ A throwaway ``_RoundtripPayload`` Pydantic model and throwaway concrete
 
 from __future__ import annotations
 
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import ClassVar, override
 
@@ -30,6 +31,8 @@ from .._envelope import Envelope
 from .._secure_repository import SecureBoundRepository
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
+
+_ENVELOPE_WRITTEN_AT = datetime(2026, 5, 27, 9, 30, 0, tzinfo=UTC)
 
 
 class _RoundtripPayload(BaseModel):
@@ -147,8 +150,6 @@ def test_secure_bound_repository_rejects_future_schema_version(
     in the base class load path.
     """
 
-    from datetime import UTC, datetime
-
     provider = EphemeralMasterKeyProvider()
     with provider:
         repo, engine = _bound_repo_with_engine(tmp_path)
@@ -156,7 +157,7 @@ def test_secure_bound_repository_rejects_future_schema_version(
             future_payload = _RoundtripPayload(id="future", value=7)
             future_envelope = Envelope[_RoundtripPayload](
                 schema_version=2,
-                written_at=datetime.now(UTC),
+                written_at=_ENVELOPE_WRITTEN_AT,
                 classification=SensitivityClass.AUDIT,
                 payload=future_payload,
             )
@@ -189,8 +190,6 @@ def test_secure_bound_repository_rejects_older_inner_envelope_version(
     loads and full-namespace enumeration.
     """
 
-    from datetime import UTC, datetime
-
     provider = EphemeralMasterKeyProvider()
     with provider:
         base_repo, engine = _bound_repo_with_engine(tmp_path)
@@ -199,7 +198,7 @@ def test_secure_bound_repository_rejects_older_inner_envelope_version(
             stale_payload = _RoundtripPayload(id="stale", value=7)
             stale_envelope = Envelope[_RoundtripPayload](
                 schema_version=1,
-                written_at=datetime.now(UTC),
+                written_at=_ENVELOPE_WRITTEN_AT,
                 classification=SensitivityClass.AUDIT,
                 payload=stale_payload,
             )
@@ -332,8 +331,6 @@ def test_envelope_for_payload_type_returns_correct_parameterised_class() -> None
     - ``model_validate_json`` on the returned class accepts valid JSON.
     - ``model_validate_json`` rejects JSON whose payload does not match.
     """
-    from datetime import UTC, datetime
-
     from pydantic import ValidationError
 
     env_cls = Envelope.for_payload_type(_RoundtripPayload)
@@ -347,7 +344,7 @@ def test_envelope_for_payload_type_returns_correct_parameterised_class() -> None
     valid_json = json.dumps(
         {
             "schema_version": 1,
-            "written_at": datetime.now(UTC).isoformat(),
+            "written_at": _ENVELOPE_WRITTEN_AT.isoformat(),
             "classification": SensitivityClass.AUDIT.value,
             "payload": {"id": "x", "value": 3},
             "encryption": None,
@@ -361,7 +358,7 @@ def test_envelope_for_payload_type_returns_correct_parameterised_class() -> None
     bad_json = json.dumps(
         {
             "schema_version": 1,
-            "written_at": datetime.now(UTC).isoformat(),
+            "written_at": _ENVELOPE_WRITTEN_AT.isoformat(),
             "classification": SensitivityClass.AUDIT.value,
             "payload": {"id": "x", "value": "not-an-int"},
             "encryption": None,
