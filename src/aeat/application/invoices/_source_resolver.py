@@ -23,7 +23,7 @@ from __future__ import annotations
 from datetime import date
 from decimal import Decimal
 
-from ...adapters.persistence.storage.errors import (
+from ...adapters.persistence.storage import (
     ClassificationError,
     DecryptionError,
     EnvelopeVersionError,

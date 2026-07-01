@@ -32,7 +32,7 @@ from decimal import Decimal
 
 from pydantic import BaseModel, Field, model_validator
 
-from ...adapters.persistence.storage.errors import ClassificationError, DecryptionError, EnvelopeVersionError
+from ...adapters.persistence.storage import ClassificationError, DecryptionError, EnvelopeVersionError
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core import BindingSourceKind, Period
 from ...core.hashing import sha256_hex
