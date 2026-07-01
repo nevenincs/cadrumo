@@ -37,6 +37,17 @@ def _citation() -> CategoryCitation:
     )
 
 
+def test_category_citation_rejects_blank_quote_at_schema_boundary() -> None:
+    with pytest.raises(ValidationError, match="authoritative Spanish text"):
+        CategoryCitation(
+            source=CategoryCitationSource.MANUAL_RENTA,
+            reference="Manual práctico Renta 2025",
+            locator="test",
+            url=parse_http_url("https://example.com/manual.pdf"),
+            quote=tr("   "),
+        )
+
+
 def _rule() -> ProportionalityRule:
     return ProportionalityRule(
         kind=ProportionalityKind.FULL_DEDUCTIBLE,

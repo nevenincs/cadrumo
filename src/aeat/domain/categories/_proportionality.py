@@ -65,6 +65,12 @@ class CategoryCitation(_ProportionalityStrictFrozenModel):
     url: AnyHttpUrl
     quote: tr = Field(description="Authoritative Spanish-language quote.")
 
+    @model_validator(mode="after")
+    def _validate_quote(self) -> CategoryCitation:
+        if not str(self.quote).strip():
+            raise CategoryValidationError("category citation quote must contain authoritative Spanish text")
+        return self
+
 
 _HTTP_URL_ADAPTER = TypeAdapter(AnyHttpUrl)
 
