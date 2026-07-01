@@ -2,12 +2,12 @@
 
 from __future__ import annotations
 
-from typing import Any
+from typing import Any, cast
 
 import pytest
 
 from .....core.resources import bundled_path
-from .. import ModeloDefinition, RegistryCatalogues, build_snapshot
+from .. import LegalRefId, ModeloDefinition, RegistryCatalogues, build_snapshot
 from .._text import normalise_corpus_text
 from ._registry_schema_support import _committed_modelo
 
@@ -25,27 +25,27 @@ _COMMON_SURFACES = {
     "verification",
     "workflow",
 }
-_EXTRACTION_PROFILE_TARGET_LEGAL_REFS = frozenset(
+_EXTRACTION_PROFILE_TARGET_LEGAL_REFS: frozenset[LegalRefId] = frozenset(
     [
         "rd-439-2007:art-110",
         "rd-439-2007:art-95",
     ]
 )
-_ORDEN_EHA_672_ART_1 = "orden-eha-672-2007:art-1"
-_ORDEN_EHA_672_ART_3 = "orden-eha-672-2007:art-3"
-_M131_REVISION_ORDER_REFS = {
+_ORDEN_EHA_672_ART_1: LegalRefId = "orden-eha-672-2007:art-1"
+_ORDEN_EHA_672_ART_3: LegalRefId = "orden-eha-672-2007:art-3"
+_M131_REVISION_ORDER_REFS: dict[str, LegalRefId] = {
     "2024": "orden-hfp-1359-2023:art-4",
     "2025": "orden-hac-1347-2024:art-4",
     "2026": "orden-hac-1425-2025:art-4",
 }
 
 
-def _collect_legal_refs(value: object) -> set[str]:
+def _collect_legal_refs(value: object) -> set[LegalRefId]:
     if isinstance(value, dict):
         collected = set()
         refs = value.get("legal_refs")
         if isinstance(refs, (list, tuple)):
-            collected.update(str(ref) for ref in refs)
+            collected.update(cast(LegalRefId, ref) for ref in refs if isinstance(ref, str))
         for child in value.values():
             collected.update(_collect_legal_refs(child))
         return collected
@@ -57,11 +57,8 @@ def _collect_legal_refs(value: object) -> set[str]:
     return set()
 
 
-def _refs_by_id(items: tuple[Any, ...]) -> dict[str, tuple[str, ...]]:
-    return {
-        str(item.id): tuple(str(ref) for ref in item.legal_refs)
-        for item in items
-    }
+def _refs_by_id(items: tuple[Any, ...]) -> dict[str, tuple[LegalRefId, ...]]:
+    return {str(item.id): tuple(item.legal_refs) for item in items}
 
 
 @pytest.fixture(scope="module")
@@ -189,9 +186,7 @@ def test_modelo_100_cross_modelo_131_refs_use_approval_article_3() -> None:
     assert {_ORDEN_EHA_672_ART_1, _ORDEN_EHA_672_ART_3}.issubset(
         formula_refs_2024["renta-2024-pagos-fraccionados-ingresados"]
     )
-    assert {_ORDEN_EHA_672_ART_1, _ORDEN_EHA_672_ART_3}.issubset(
-        construct_refs_2024["renta-2024-dependent-modelos"]
-    )
+    assert {_ORDEN_EHA_672_ART_1, _ORDEN_EHA_672_ART_3}.issubset(construct_refs_2024["renta-2024-dependent-modelos"])
 
     revision_2025 = modelo_100.revisions["2025"]
     binding_refs_2025 = _refs_by_id(revision_2025.bindings)
