@@ -238,6 +238,12 @@ adapters:
           load_amortizacion_ledger_failed: Unable to load the encrypted amortization
             ledger.
           load_asset_ledger_failed: Unable to load the encrypted asset ledger.
+      bienes_inversion:
+        errors:
+          load_register_failed: Unable to load the encrypted capital-goods IVA regularisation
+            register.
+          record_already_exists: That capital good already exists in the encrypted
+            regularisation register.
       inventory:
         errors:
           inventory_ledger_already_exists: That inventory ledger already exists.
@@ -331,7 +337,8 @@ aggregation:
   source_mesh:
     errors:
       ambiguous_source_disposition: aggregation.source_mesh.errors.ambiguous_source_disposition
-      binding_source_mismatch: 'source_kind and binding_source refer to different binding-source families.'
+      binding_source_mismatch: source_kind and binding_source refer to different binding-source
+        families.
       duplicate_binding_owner: 'Internal error: duplicate binding owner in source
         mesh.'
       duplicate_bound_casilla_owner: 'Internal error: duplicate bound-casilla owner
@@ -341,7 +348,8 @@ aggregation:
       owned_sources_blank: Source mesh owned sources must not contain blank source
         kinds.
       owned_sources_duplicate: Source mesh owned sources must be unique.
-      relation_provenance_incomplete: 'Relation provenance must include source modelo, filing year, periods, casillas, legal refs, and source refs.'
+      relation_provenance_incomplete: Relation provenance must include source modelo,
+        filing year, periods, casillas, legal refs, and source refs.
       source_transaction_ids_blank: Source mesh transaction ids must not contain blanks.
       source_transaction_ids_duplicate: Source mesh transaction ids must be unique.
       unresolved_binding_ids_blank: aggregation.source_mesh.errors.unresolved_binding_ids_blank
@@ -1243,6 +1251,22 @@ cli:
         {skills} skills.'
   app:
     ledger:
+      bienes_inversion:
+        acquisition_year_help: 'Year the good was acquired.'
+        art108_help: 'Whether the good qualifies as a bien de inversión under LIVA art. 108.'
+        asset_ref_help: 'Optional cross-reference to an AssetRecord identifier.'
+        cuota_soportada_help: 'Total input IVA borne on acquisition (positive).'
+        declare_help: 'Declare one capital good tracked for IVA regularización.'
+        description_help: 'Human description of the good.'
+        disposal_regime_help: 'Disposal regime (sujeta_no_exenta or exenta_o_no_sujeta); required with --disposal-year.'
+        disposal_requires_both: '--disposal-year and --disposal-regime must be supplied together.'
+        disposal_year_help: 'Optional art-110 disposal year.'
+        group_help: 'Capital-goods IVA deduction regularización register (LIVA arts. 107-110).'
+        identifier_help: 'Stable register identifier.'
+        kind_help: 'Regularisation window: mueble (4yr) or inmueble (9yr).'
+        list_help: 'List every tracked capital good on the active profile register.'
+        prorrata_inicial_help: 'Definitive deduction percentage of the acquisition year (0-100).'
+        unknown_disposal_regime: 'Unknown disposal regime {regime!r}; accepted: {accepted}'
       evidence:
         add_help: Register purchase invoice evidence from a PDF or image
         evidence_id_help: Evidence id (exact match)
@@ -1514,8 +1538,9 @@ cli:
           ({period}): {suggestion}.'
         year_help: Tax year of the modelo (e.g. 2026)
       casilla:
-        casilla_help: 'Casilla id or printed casilla number to describe (e.g. 0596).'
-        help: 'Show the label, legal grounding, input kind, and formula for one casilla on the resolved registry snapshot.'
+        casilla_help: Casilla id or printed casilla number to describe (e.g. 0596).
+        help: Show the label, legal grounding, input kind, and formula for one casilla
+          on the resolved registry snapshot.
       casillas:
         as_of_help: Resolve the modelo revision active on the supplied ISO date (YYYY-MM-DD)
         explain_help: Include localized help text in the text output.
@@ -1817,7 +1842,8 @@ cli:
         create_not_applicable_refused: 'Modelo %{modelo} does not apply to the active
           profile''s taxpayer type: %{reason} If you have a reason to create the work
           unit anyway, re-run the command with --allow-not-applicable.'
-        create_quiet_help: 'Skip human-readable confirmation output; the --format json envelope, notices, and exit code are unaffected.'
+        create_quiet_help: Skip human-readable confirmation output; the --format json
+          envelope, notices, and exit code are unaffected.
         create_reused: Existing work unit returned (idempotent on modelo/year/period/revision);
           nothing new was created. Rename it with `aeat app modelo work rename`.
         create_reused_name_match: Existing work unit returned (idempotent on modelo/year/period/revision);
@@ -2850,11 +2876,11 @@ cli:
       unknown_provider: 'Unknown import --provider {provider!r}. Recognised providers:
         {providers}.'
     exclude:
-      actor_help: 'Operator label.'
-      help: 'Mark one reviewed ledger transaction as deliberately excluded from filing.'
-      id_help: 'Ledger transaction id.'
-      reason_help: 'Optional note recording why the row is excluded.'
-      yes_help: 'Confirm the reviewed-excluded decision.'
+      actor_help: Operator label.
+      help: Mark one reviewed ledger transaction as deliberately excluded from filing.
+      id_help: Ledger transaction id.
+      reason_help: Optional note recording why the row is excluded.
+      yes_help: Confirm the reviewed-excluded decision.
     export:
       actor_help: Operator name recorded on the bucket event
       format_help: Export serialization format
@@ -3300,7 +3326,9 @@ cli:
       Run the warning fix command or pass --allow-incomplete to inspect the provisional
       calendar.'
     coverage:
-      investigate: '%{count} filing obligation(s) could not be positively scoped for this profile and may be under-reported: %{modelos}. Investigate each with ''aeat app overview explain <modelo>''.'
+      investigate: '%{count} filing obligation(s) could not be positively scoped for
+        this profile and may be under-reported: %{modelos}. Investigate each with
+        ''aeat app overview explain <modelo>''.'
     drafts: Drafts
     explain:
       help: Decompose a modelo's applicability against the active profile. Surfaces
@@ -3972,6 +4000,8 @@ errors:
     error_profile_amortization_ledger: A profile amortization ledger operation is
       not valid.
     error_profile_asset_record: A profile asset record is structurally invalid.
+    error_profile_bienes_inversion_record: A capital-goods IVA regularisation record
+      is structurally invalid.
     error_profile_cross_store_drift: A profile's physical stores disagree on its identity.
       The profile is not usable.
     error_profile_inventory_ledger: A profile inventory ledger operation is not valid.
@@ -4504,6 +4534,8 @@ errors:
     refused_profile_asset_validation: A profile asset record failed validation.
     refused_profile_basis_cap_exceeded: The cumulative amortization would exceed the
       asset's cost basis.
+    refused_profile_bienes_inversion_validation: A capital-goods IVA regularisation
+      record failed validation.
     refused_profile_binding_resolution: A profile fact required for the calculation
       could not be resolved into the correct binding channel.
     refused_profile_foral_regime: The foral regime selected is not modelled by this
