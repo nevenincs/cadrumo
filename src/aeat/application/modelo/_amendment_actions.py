@@ -1,23 +1,23 @@
 """Amendment actions for externally filed modelo baselines.
 
 :func:`~aeat.application.modelo.amend_modelo_revision` starts from a current, externally evidenced
-:class:`~aeat.domain.modelos.ModeloRecord`, builds a corrected
-:class:`~aeat.domain.modelos.CalculationRevision` with an explicit
-:class:`~aeat.domain.modelos.CalculationRevisionAmendmentKind`, supersedes the
+:class:`ModeloRecord`, builds a corrected
+:class:`CalculationRevision` with an explicit
+:class:`CalculationRevisionAmendmentKind`, supersedes the
 baseline filing, and stores the new amendment record as current.
 
 The side effects update the work-unit pointers and emit ``modelo.amended``
-through :class:`~aeat.domain.buckets.BucketEventHistoryRepository`, matching the
+through :class:`BucketEventHistoryRepository`, matching the
 event-history path used by imported and locally filed returns.
 
 Only filing records carrying
-:class:`~aeat.domain.modelos.ExternalEvidence` can enter this path. The standard
+:class:`ExternalEvidence` can enter this path. The standard
 local ``calculate -> verify -> file`` chain remains separate:
 locally filed records have no external evidence and must be corrected through
 their own re-file workflow. Amendment overrides are resolved against the target
 registry snapshot, rejected when they use printed or undeclared casilla tokens,
 and projected back onto the
-:class:`~aeat.domain.calculations.registry.CasillaObservation` contract so the
+:class:`CasillaObservation` contract so the
 new revision keeps legal/source provenance for both overridden and inherited
 casillas.
 
@@ -26,7 +26,7 @@ See Also:
         Creates the AEAT-attested baseline that this module amends.
     :func:`~aeat.application.modelo._calculation_helpers.amendment_observations`:
         Carries or rebuilds observation provenance for the corrected casilla map.
-    :class:`~aeat.domain.modelos.ExternalEvidence`:
+    :class:`ExternalEvidence`:
         Filing-record evidence marker required before this amendment path can run.
     :func:`~aeat.application.modelo._registry_helpers.reject_unknown_override_casillas`:
         Canonicalizes amendment override casilla ids against the registry.
@@ -150,15 +150,15 @@ def amend_modelo_revision[CasillaKey](
     """Build and file an amendment over an externally filed return.
 
     ``from_filing_record_id`` must identify the current
-    :class:`~aeat.domain.modelos.ModeloRecord` for an imported AEAT-attested
+    :class:`ModeloRecord` for an imported AEAT-attested
     baseline. The baseline's
-    :class:`~aeat.domain.modelos.CalculationRevision` supplies the full casilla
+    :class:`CalculationRevision` supplies the full casilla
     map; ``overrides`` replace only corrected casillas after registry validation,
     while unchanged casillas are inherited. The resulting revision records the
-    requested :class:`~aeat.domain.modelos.CalculationRevisionAmendmentKind`,
+    requested :class:`CalculationRevisionAmendmentKind`,
     stores the stripped ``reason``, receives registry-grounded observations,
     transitions through ``VERIFICADO_COMPLETO`` to ``PRESENTADO``, and becomes
-    the current filed revision for the :class:`~aeat.domain.modelos.WorkUnit`.
+    the current filed revision for the :class:`WorkUnit`.
 
     The baseline filing is marked ``SUPERSEDIDO`` and linked to the new current
     amendment record. The new filing record is an internal filing envelope:
@@ -168,7 +168,7 @@ def amend_modelo_revision[CasillaKey](
     work-unit id, and amended baseline id.
 
     Returns:
-        The new current :class:`~aeat.domain.modelos.ModeloRecord` for the
+        The new current :class:`ModeloRecord` for the
         amended return.
 
     See Also:
@@ -179,7 +179,7 @@ def amend_modelo_revision[CasillaKey](
             Production import path that creates accepted external-evidence
             baselines.
         :func:`~aeat.application.modelo._calculation_helpers.amendment_observations`:
-            Builds the :class:`~aeat.domain.calculations.registry.CasillaObservation`
+            Builds the :class:`CasillaObservation`
             rows persisted on the amendment revision.
     """
     wu_repo = work_unit_repository or WorkUnitCatalogueRepository()
