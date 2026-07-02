@@ -14,7 +14,7 @@ and CLI startup flows. The resolver returns the selected bucket id string; it
 does not prove a ``buckets/<id>/manifest.toml`` exists, scan profile display
 labels, or open encrypted state. Those registry/existence checks belong to
 application-layer manifest scanners that return
-:class:`~aeat.application.workflow.ProfileBucketPointer`.
+:class:`~application.workflow.ProfileBucketPointer`.
 
 Repository factories that need a hard bucket id use
 :func:`resolve_repository_bucket_id` so each domain can raise its own error type
@@ -51,7 +51,7 @@ def read_pointer(root: Path) -> BucketPointer | None:
     """Read and strict-validate the pointer file.
 
     Present files are parsed by
-    :meth:`~aeat.core._bucket_pointer.BucketPointer.from_toml`; invalid TOML,
+    :meth:`~core._bucket_pointer.BucketPointer.from_toml`; invalid TOML,
     unknown keys, and invalid scalar values propagate instead of being
     reclassified as an absent pointer.
 
@@ -84,7 +84,7 @@ def resolve_active_bucket_id() -> str | None:
 
     1. ``Settings.aeat_active_profile`` — surfaced from the
        ``AEAT_ACTIVE_PROFILE`` environment variable (or an active
-       :func:`~aeat.core.config.override_settings` block in tests).
+       :func:`~core.config.override_settings` block in tests).
        Per-shell override useful for CI, headless invocations, and the
        CLI ``--profile`` flag.
     2. ``<aeat-root>/active-profile`` plaintext pointer file written by
@@ -94,12 +94,12 @@ def resolve_active_bucket_id() -> str | None:
        first knowing which bucket to unlock.
 
     The CLI ``--profile`` flag, when supplied per-invocation, runs the
-    process under an :func:`~aeat.core.config.override_settings` block
+    process under an :func:`~core.config.override_settings` block
     that sets ``aeat_active_profile`` so rung one handles it without a
     fourth precedence rung.
 
     This resolver lives in the core layer: it reads only the settings
-    :class:`~aeat.core.config.Settings` object and the plaintext pointer file,
+    :class:`~core.config.Settings` object and the plaintext pointer file,
     both core-layer concerns. The
     at-rest crypto substrate (master-key provider) resolves the active
     bucket through this function, so it must sit at or below the adapter
@@ -130,7 +130,7 @@ def require_active_bucket_id() -> str:
     profile name, and bucket-scoped repositories all sit on flows that require a
     profile to be selected; a missing profile is a genuine refusal, not a degraded
     read. Reads env var > pointer file; raises
-    :class:`~aeat.core.errors.NoActiveProfileError` if neither rung resolves.
+    :class:`~core.errors.NoActiveProfileError` if neither rung resolves.
 
     Diagnostic surfaces (browser-connectivity probe, status flows) MUST NOT call
     this helper — they call :func:`resolve_active_bucket_id` and supply their own
@@ -160,7 +160,7 @@ def write_pointer(root: Path, pointer: BucketPointer) -> None:
     :func:`os.replace`; a crashed process therefore leaves either the
     previous good pointer or the new good pointer on disk, never a torn
     intermediate. The payload comes from
-    :meth:`~aeat.core._bucket_pointer.BucketPointer.to_toml`, and the AEAT root
+    :meth:`~core._bucket_pointer.BucketPointer.to_toml`, and the AEAT root
     is created lazily if absent.
 
     Args:
