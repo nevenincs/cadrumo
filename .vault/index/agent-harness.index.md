@@ -35,7 +35,16 @@ related:
   - '[[2026-07-02-agent-harness-P03-S06]]'
   - '[[2026-07-02-agent-harness-P04-S07]]'
   - '[[2026-07-02-agent-harness-P05-S08]]'
+  - '[[2026-07-02-agent-harness-P05-S09]]'
+  - '[[2026-07-02-agent-harness-P05-S10]]'
   - '[[2026-07-02-agent-harness-P06-S11]]'
+  - '[[2026-07-02-agent-harness-P06-S12]]'
+  - '[[2026-07-02-agent-harness-P06-S13]]'
+  - '[[2026-07-02-agent-harness-P06-S14]]'
+  - '[[2026-07-02-agent-harness-P06-S15]]'
+  - '[[2026-07-02-agent-harness-P06-S16]]'
+  - '[[2026-07-02-agent-harness-P06-S17]]'
+  - '[[2026-07-02-agent-harness-P06-S18]]'
   - '[[2026-07-02-agent-harness-P06-S19]]'
   - '[[2026-07-02-agent-harness-audit]]'
   - '[[2026-07-02-agent-harness-plan]]'
@@ -82,7 +91,16 @@ Auto-generated index of all documents tagged with `#agent-harness`.
 - `2026-07-02-agent-harness-P03-S06` - status:done (commit a0ea7d37e) - extend the verifier persona document to own export and the record-marker handoff
 - `2026-07-02-agent-harness-P04-S07` - status:done (commit 436e5c8ca) - state the verifier context-isolation invariant testably and runtime-agnostically, naming the degraded self-report fallback explicitly
 - `2026-07-02-agent-harness-P05-S08` - status:done (commit 198e6d6c7) - declare the runtime manifest-read persona-scope filter and its build-time pinning test asserting each persona's (family, mutability) ceiling resolves against the live contract
+- `2026-07-02-agent-harness-P05-S09` - status:done (commit 00349c998) - wire the persona-scope filter into the MCP PreToolUse dispatch path so the declared boundary actually gates the tool call, closing the critical dead-code finding
+- `2026-07-02-agent-harness-P05-S10` - status:done (commit 00349c998) - add the end-to-end wiring test exercising a persona's tool boundary through the live dispatch path
 - `2026-07-02-agent-harness-P06-S11` - status:done (pre-existing, commits 2c8020cf5/a375ed6ba/f87fff631) - anchor golden scenarios for modelo 130 and modelo 303 with AEAT numeric value-oracles
+- `2026-07-02-agent-harness-P06-S12` - status:done (commit df75c1b63) - category 1 golden scenario asserting verify MUST NOT return verified_complete plus zero findings on positive input with a zero base
+- `2026-07-02-agent-harness-P06-S13` - status:done (commit df75c1b63) - category 3 golden scenario dispatching a real modelo.work.calculate call and asserting legal_refs/source_refs on the response payload, not only the registry
+- `2026-07-02-agent-harness-P06-S14` - status:done (commit df75c1b63) - category 4 golden scenario asserting a readiness-true versus verify-NO_PENDING_OBLIGATION contradiction triggers stop-and-report, never retry-past
+- `2026-07-02-agent-harness-P06-S15` - status:done (commit df75c1b63) - category 5 golden scenario requiring an active-profile confirmation before the first mutating verb of a sequence
+- `2026-07-02-agent-harness-P06-S16` - status:done (commit df75c1b63) - category 7 golden scenario asserting a non-zero CLI exit code is read as a verdict payload plus a continuation verb, never an abort
+- `2026-07-02-agent-harness-P06-S17` - status:done (commit df75c1b63) - category 8 golden scenario wiring confirmation_for_tool into a run so a CONFIRM-tier step is not auto-approved even with an auto-yes flag
+- `2026-07-02-agent-harness-P06-S18` - status:done (commit df75c1b63) - category 9 golden scenario wiring faithfulness_check against a real captured calculate JSON, advisory off-handoff and hard-block at export, grounded against the M130 oracle figure to avoid false positives
 - `2026-07-02-agent-harness-P06-S19` - status:done (pre-existing) - determinism-replay pinning test confirming byte-identical trajectory replay excluding scenario-declared non-deterministic fields
 
 ### plan
