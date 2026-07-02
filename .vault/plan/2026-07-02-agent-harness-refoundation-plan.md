@@ -9,6 +9,15 @@ related:
   - '[[2026-07-02-agent-harness-refoundation-adr]]'
 ---
 
+<!-- LINK RULES:
+     - [[wiki-links]] are ONLY for .vault/ documents in the
+       related: field above.
+     - The related: field carries the AUTHORISING documents
+       (ADR, research, reference, prior plan) for every Step in
+       this plan. Steps inherit this chain; per-row reference
+       footers do not exist.
+     - NEVER use [[wiki-links]] or markdown links in the
+       document body. -->
 
 # `agent-harness-refoundation` plan
 
@@ -23,7 +32,7 @@ Replace the shared args bag with per-verb input schemas and group the manifest-d
 - [x] `W01.P01.S01` - Derive a per-verb input schema from the CLI command registry click parameters, replacing the shared args bag; `src/aeat/entrypoints/mcp/_input_schema.py`.
 - [x] `W01.P01.S02` - Consume per-verb input schemas in build_tool_descriptors and retire the _ARGS_INPUT_SCHEMA bag; `src/aeat/entrypoints/mcp/_tools.py`.
 - [x] `W01.P01.S03` - Add a domain-toolset grouping derived from the operator-surface manifest for renta, iva, ledger, censo, and modelo-lifecycle; `src/aeat/entrypoints/mcp/_toolsets.py`.
-- [ ] `W01.P01.S04` - Assert readOnlyHint and destructiveHint annotation coverage on every descriptor and close any gap; `src/aeat/entrypoints/mcp/_annotations.py`.
+- [x] `W01.P01.S04` - Assert readOnlyHint and destructiveHint annotation coverage on every descriptor and close any gap; `src/aeat/entrypoints/mcp/_annotations.py`.
 - [ ] `W01.P01.S05` - Extend the tool-descriptor tests for per-verb schemas, toolsets, and annotation coverage; `src/aeat/entrypoints/mcp/tests/test_tools_and_dispatch.py`.
 
 ### Phase `W01.P02` - Meta-tool fallback and capability registration
@@ -150,7 +159,7 @@ Move each existing skill prose selection predicate into the structured applies_w
 
 Author the six WHEN-layer skills, regularizar-atrasos first, each with a golden scenario.
 
-- [ ] `W05.P11.S65` - Author the regularizar-atrasos skill sequencing the overview backlog past-due and recargo extemporaneo surface; `src/aeat/_data/agent/skills/regularizar-atrasos/SKILL.md`.
+- [x] `W05.P11.S65` - Author the regularizar-atrasos skill sequencing the overview backlog past-due and recargo extemporaneo surface; `src/aeat/_data/agent/skills/regularizar-atrasos/SKILL.md`.
 - [ ] `W05.P11.S66` - Add the regularizar-atrasos golden scenario; `src/aeat/agent/eval/scenarios/regularizar_atrasos.toml`.
 - [ ] `W05.P11.S67` - Author the cierre-trimestre skill sequencing the quarter-boundary agenda obligations; `src/aeat/_data/agent/skills/cierre-trimestre/SKILL.md`.
 - [ ] `W05.P11.S68` - Add the cierre-trimestre golden scenario; `src/aeat/agent/eval/scenarios/cierre_trimestre.toml`.
