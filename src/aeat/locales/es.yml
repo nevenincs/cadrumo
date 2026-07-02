@@ -1968,6 +1968,34 @@ cli:
           importada de la AEAT
         amend_missing_options: 'Una rectificación requiere todas estas opciones: %{missing}.'
         amend_set_required: --set es obligatorio al menos una vez para una complementaria.
+        amend_wizard_export_next_action: Rectificación presentada como registro interno
+          en borrador. Exporta el fichero BOE compatible con la AEAT con `aeat app
+          modelo export %{work_unit_id} --output PATH`.
+        amend_wizard_help: 'Guía la corrección de una declaración ya presentada en
+          lenguaje sencillo: qué casillas cambiaron, los valores corregidos y el tipo
+          de rectificación, y la presenta'
+        amend_wizard_kind_help: complementaria añade a la cuota previamente declarada;
+          sustitutiva reemplaza por completo la declaración anterior; rectificativa
+          es el mecanismo unificado de corrección para los modelos cuya orden lo implementa
+          (p. ej. Modelo 303 desde 2023-y-siguientes).
+        amend_wizard_kind_prompt: Tipo de rectificación (%{choices})
+        amend_wizard_no_corrections: No se corrigió ninguna casilla; el asistente
+          de rectificación necesita al menos un valor modificado.
+        amend_wizard_no_current_filing: La unidad de trabajo %{work_unit_id} no tiene
+          ningún registro de presentación vigente que corregir. Importa primero la
+          evidencia acreditada de la AEAT con `aeat app modelo filing-record import`,
+          o preséntala localmente.
+        amend_wizard_reason_prompt: Motivo de esta rectificación (se conserva en el
+          registro de auditoría)
+        amend_wizard_reason_required: Se requiere un motivo para el registro de auditoría
+          de la rectificación.
+        amend_wizard_select_prompt: Presentado %{modelo} %{year} %{period} -- valores
+          actuales:\n%{summary}\n¿Qué números de casilla cambiaron? (separados por
+          comas o espacios, en blanco para ninguno)
+        amend_wizard_unknown_casilla: La casilla %{token} no forma parte de la declaración
+          %{modelo} %{year} %{period} presentada; elige una de las casillas listadas.
+        amend_wizard_value_prompt: Valor corregido para la casilla %{number} (%{label}),
+          actualmente %{previous_value}
         amendment_kind_help: Tipo legal de la amendación (complementaria o sustitutiva)
         amendment_reason_help: Motivo libre de la amendación (traza de auditoría del
           operador)
@@ -2319,7 +2347,10 @@ cli:
         wizard_prompt: Casilla %{number} (%{label})
         wizard_relation_help: Alimentado por la relacion de registro %{binding_id};
           introduce el valor entre periodos o entre modelos que aporta esta relacion.
-        wizard_retry_exhausted: 'El asistente no pudo resolver todas las entradas de calculo tras %{limit} preguntas de seguimiento. Ejecuta `aeat app modelo work calculate` directamente y aporta los valores --binding / --relation restantes a mano.'
+        wizard_retry_exhausted: El asistente no pudo resolver todas las entradas de
+          calculo tras %{limit} preguntas de seguimiento. Ejecuta `aeat app modelo
+          work calculate` directamente y aporta los valores --binding / --relation
+          restantes a mano.
         wizard_saved: 'Guardado como revision de calculo en borrador %{revision_id}
           (estado: %{state}). Esta persistido y puede retomarse mas tarde; lista las
           revisiones con `aeat app modelo work revisions --modelo %{modelo} --year
@@ -5198,6 +5229,20 @@ locales:
     scaffold_updated: locale scaffold updated
     set:
       updated: updated %{locale_file}:%{key}
+mcp:
+  elicitation:
+    confirm:
+      consequence_handoff: 'Esto genera el documento de presentación que el contribuyente presentará ante la AEAT por sí mismo. Confirmar no envía nada a ninguna parte.'
+      consequence_local: 'Esto modifica datos locales del perfil de contribuyente activo.'
+      field_description: '¿Ejecutar ''{command}'' ahora?'
+      message: 'Confirma la ejecución de ''{command}''. {consequence} Responde sí para continuar o no para detener.'
+    refusal:
+      blocked: '''{command}'' está bloqueado permanentemente: la presentación en línea ante la AEAT está prohibida por diseño. Exporta localmente; el contribuyente presenta por sí mismo.'
+      no_channel: '''{command}'' requiere confirmación humana y este cliente no admite la función de preguntas (elicitation). Ejecútalo desde un cliente que pueda hacerte preguntas, o ejecuta el comando aeat equivalente directamente en un terminal.'
+  faithfulness:
+    advisory: 'AVISO DE FIDELIDAD: los argumentos de la llamada citan importes [{values}] que ningún resultado de herramienta de esta sesión ha producido. Verifica la cifra con una lectura de calculate/revision antes de confiar en ella.'
+  persona:
+    handoff_denied: '''{command}'' es la frontera irreversible de entrega de la presentación, propiedad de la persona ''{owner}''; la persona ''{persona}'' la tiene denegada estructuralmente. Entrega la unidad de trabajo verificada a la sesión del verificador para producir la exportación o el marcador de registro.'
 profile:
   descendiente:
     custodia_compartida_prorrata_applied: Se ha aplicado prorrata 50 % (Art. 61 LIRPF)

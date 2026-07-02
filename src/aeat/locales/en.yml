@@ -1832,6 +1832,30 @@ cli:
         amend_missing_options: 'An amendment requires every one of these options:
           %{missing}.'
         amend_set_required: --set is required at least once for an amendment.
+        amend_wizard_export_next_action: Amendment filed as a draft internal record.
+          Export the AEAT-importable fichero-BOE with `aeat app modelo export %{work_unit_id}
+          --output PATH`.
+        amend_wizard_help: 'Walk an already-filed return''s amendment in plain language:
+          which casillas changed, the corrected values, and the amendment kind, then
+          file it'
+        amend_wizard_kind_help: complementaria adds to the prior tax due; sustitutiva
+          fully replaces the prior filing; rectificativa is the unified correction
+          mechanism for modelos whose orden implements it (e.g. Modelo 303 from 2023-y-siguientes).
+        amend_wizard_kind_prompt: Amendment kind (%{choices})
+        amend_wizard_no_corrections: No casilla was corrected; the amendment wizard
+          needs at least one changed value.
+        amend_wizard_no_current_filing: Work unit %{work_unit_id} has no current filing
+          record to amend. Import the AEAT-attested baseline first with `aeat app
+          modelo filing-record import`, or file it locally.
+        amend_wizard_reason_prompt: Reason for this amendment (kept in the audit trail)
+        amend_wizard_reason_required: A reason is required for the amendment audit
+          trail.
+        amend_wizard_select_prompt: Filed %{modelo} %{year} %{period} -- current values:\n%{summary}\nWhich
+          casilla numbers changed? (comma/space separated, blank for none)
+        amend_wizard_unknown_casilla: Casilla %{token} is not part of the filed %{modelo}
+          %{year} %{period} return; choose from the listed casilla numbers.
+        amend_wizard_value_prompt: Corrected value for casilla %{number} (%{label}),
+          currently %{previous_value}
         amendment_kind_help: Legal kind of the amendment (complementaria or sustitutiva)
         amendment_reason_help: Free-text reason for the amendment (operator audit
           trail)
@@ -2160,7 +2184,9 @@ cli:
         wizard_prompt: Casilla %{number} (%{label})
         wizard_relation_help: Fed by registry relation %{binding_id}; supply the cross-period
           or cross-modelo value this relation carries.
-        wizard_retry_exhausted: 'The wizard could not resolve every calculation input after %{limit} follow-up prompts. Run `aeat app modelo work calculate` directly and supply the remaining --binding / --relation values by hand.'
+        wizard_retry_exhausted: The wizard could not resolve every calculation input
+          after %{limit} follow-up prompts. Run `aeat app modelo work calculate` directly
+          and supply the remaining --binding / --relation values by hand.
         wizard_saved: 'Saved as draft calculation revision %{revision_id} (state:
           %{state}). It is persisted and can be resumed later; list revisions with
           `aeat app modelo work revisions --modelo %{modelo} --year %{year} --period
@@ -4863,6 +4889,20 @@ locales:
     scaffold_updated: locale scaffold updated
     set:
       updated: updated %{locale_file}:%{key}
+mcp:
+  elicitation:
+    confirm:
+      consequence_handoff: 'This produces the filing-grade artefact the taxpayer will file with AEAT themselves. Nothing is submitted anywhere by confirming.'
+      consequence_local: 'This changes local data for the active taxpayer profile.'
+      field_description: 'Run ''{command}'' now?'
+      message: 'Confirm running ''{command}''. {consequence} Answer yes to proceed or no to stop.'
+    refusal:
+      blocked: '''{command}'' is permanently blocked: live submission to AEAT is forbidden by design. Export locally; the taxpayer files themselves.'
+      no_channel: '''{command}'' needs a human confirmation, and this client does not support elicitation. Run it from a client that can ask you questions, or run the equivalent aeat CLI command directly in a terminal.'
+  faithfulness:
+    advisory: 'FAITHFULNESS ADVISORY: the call''s arguments cite amount(s) [{values}] that no tool result in this session produced. Verify the figure against a calculate/revision read before relying on it.'
+  persona:
+    handoff_denied: '''{command}'' is the irreversible filing-handoff boundary, owned by the ''{owner}'' persona; the ''{persona}'' persona is structurally denied it. Hand the verified work unit to the verifier session to produce the export or record marker.'
 profile:
   descendiente:
     custodia_compartida_prorrata_applied: 50 % prorrata (Art. 61 LIRPF) applied for

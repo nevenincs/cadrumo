@@ -1889,6 +1889,34 @@ cli:
         amend_missing_options: 'A módosításhoz minden alábbi beállítás szükséges:
           %{missing}.'
         amend_set_required: A --set legalább egyszer kötelező módosításhoz.
+        amend_wizard_export_next_action: A helyesbítés belső piszkozatként lett benyújtva.
+          Exportáld az AEAT-kompatibilis fichero-BOE fájlt a `aeat app modelo export
+          %{work_unit_id} --output PATH` paranccsal.
+        amend_wizard_help: 'Végigvezet egy már benyújtott bevallás önellenőrzésén
+          egyszerű nyelven: mely rovatok változtak, a javított értékek és a helyesbítés
+          típusa, majd benyújtja'
+        amend_wizard_kind_help: a complementaria hozzáadódik a korábban bevallott
+          adóhoz; a sustitutiva teljesen felváltja a korábbi bevallást; a rectificativa
+          az egységesített helyesbítési mechanizmus azoknál a nyomtatványoknál, amelyeknél
+          a rendelet ezt bevezette (pl. 303-as nyomtatvány a 2023-y-siguientes verziótól).
+        amend_wizard_kind_prompt: Helyesbítés típusa (%{choices})
+        amend_wizard_no_corrections: Egyetlen rovat sem lett javítva; az önellenőrzési
+          varázslóhoz legalább egy megváltozott érték szükséges.
+        amend_wizard_no_current_filing: A(z) %{work_unit_id} munkaegységnek nincs
+          érvényes benyújtási rekordja, amelyet módosítani lehetne. Előbb importáld
+          az AEAT által igazolt alapot a `aeat app modelo filing-record import` paranccsal,
+          vagy nyújtsd be helyben.
+        amend_wizard_reason_prompt: E helyesbítés indoka (megőrződik az ellenőrzési
+          naplóban)
+        amend_wizard_reason_required: A helyesbítés ellenőrzési naplójához indoklás
+          szükséges.
+        amend_wizard_select_prompt: Benyújtva %{modelo} %{year} %{period} -- jelenlegi
+          értékek:\n%{summary}\nMely rovatszámok változtak? (vesszővel vagy szóközzel
+          elválasztva, üresen ha egyik sem)
+        amend_wizard_unknown_casilla: A(z) %{token} rovat nem része a benyújtott %{modelo}
+          %{year} %{period} bevallásnak; válassz a felsorolt rovatszámok közül.
+        amend_wizard_value_prompt: Javított érték a(z) %{number} rovathoz (%{label}),
+          jelenleg %{previous_value}
         amendment_kind_help: A módosítás jogi típusa (complementaria vagy sustitutiva).
         amendment_reason_help: A módosítás szabad szöveges oka (üzemeltetői auditnaplóhoz).
         app_help: Nyomtatvány-munkaegységek életciklusának kezelése.
@@ -2238,7 +2266,10 @@ cli:
         wizard_prompt: '%{number}. sz. rovat (%{label})'
         wizard_relation_help: A(z) %{binding_id} regiszterkapcsolat tolti fel; add
           meg az idoszakok vagy modellek kozotti erteket, amit ez a kapcsolat hordoz.
-        wizard_retry_exhausted: 'A varazslo %{limit} kovetkezmenyi kerdes utan sem tudta feloldani az osszes szamitasi bemenetet. Futtasd kozvetlenul az `aeat app modelo work calculate` parancsot, es add meg kezzel a fennmarado --binding / --relation ertekeket.'
+        wizard_retry_exhausted: A varazslo %{limit} kovetkezmenyi kerdes utan sem
+          tudta feloldani az osszes szamitasi bemenetet. Futtasd kozvetlenul az `aeat
+          app modelo work calculate` parancsot, es add meg kezzel a fennmarado --binding
+          / --relation ertekeket.
         wizard_saved: 'Elmentve piszkozat szamitasi verziokent: %{revision_id} (allapot:
           %{state}). Tartosan tarolva van, kesobb folytathato; a verziok listazasa:
           `aeat app modelo work revisions --modelo %{modelo} --year %{year} --period
@@ -5044,6 +5075,20 @@ locales:
     scaffold_updated: locale scaffold updated
     set:
       updated: updated %{locale_file}:%{key}
+mcp:
+  elicitation:
+    confirm:
+      consequence_handoff: 'Ez elkészíti a benyújtásra szánt dokumentumot, amelyet az adózó saját maga nyújt be az AEAT-nál. A megerősítés semmit nem küld be sehová.'
+      consequence_local: 'Ez a művelet az aktív adózói profil helyi adatait módosítja.'
+      field_description: 'Futtatod most a(z) ''{command}'' parancsot?'
+      message: 'Erősítsd meg a(z) ''{command}'' futtatását. {consequence} Válaszolj igennel a folytatáshoz vagy nemmel a leállításhoz.'
+    refusal:
+      blocked: 'A(z) ''{command}'' véglegesen tiltott: az AEAT felé történő élő benyújtás tervezetten tilos. Exportálj helyben; az adózó maga nyújt be.'
+      no_channel: 'A(z) ''{command}'' emberi megerősítést igényel, és ez a kliens nem támogatja a kérdezés (elicitation) funkciót. Futtasd olyan kliensből, amely tud kérdezni, vagy futtasd a megfelelő aeat parancsot közvetlenül a terminálban.'
+  faithfulness:
+    advisory: 'HŰSÉGI FIGYELMEZTETÉS: a hívás argumentumai olyan összeg(ek)et [{values}] hivatkoznak, amelyeket ebben a munkamenetben egyetlen eszközeredmény sem állított elő. Ellenőrizd az összeget calculate/revision olvasással, mielőtt támaszkodnál rá.'
+  persona:
+    handoff_denied: 'A(z) ''{command}'' a benyújtás-átadás visszafordíthatatlan határa, amely a(z) ''{owner}'' personához tartozik; a(z) ''{persona}'' persona számára szerkezetileg tiltott. Add át az ellenőrzött munkaegységet a verifier munkamenetnek az export vagy a nyilvántartási jelölő elkészítéséhez.'
 profile:
   descendiente:
     custodia_compartida_prorrata_applied: 50%-os arányosítás alkalmazva (LIRPF 61.

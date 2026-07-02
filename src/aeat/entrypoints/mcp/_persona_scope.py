@@ -273,12 +273,20 @@ def is_handoff_denied(*, persona: AgentPersona, command_key: str) -> bool:
 
 
 def handoff_denial_message(*, persona: AgentPersona, command_key: str) -> str:
-    """The instructive refusal for a denied handoff call, naming the owning persona."""
-    return (
-        f"'{command_key}' is the irreversible filing-handoff boundary, owned by "
-        f"the '{AgentPersona.VERIFIER.value}' persona; the '{persona.value}' "
-        "persona is structurally denied it. Hand the verified work unit to the "
-        "verifier session to produce the export or record marker."
+    """The instructive refusal for a denied handoff call, naming the owning persona (client-relayed, localized)."""
+    from ...core.i18n import tr
+
+    return tr(
+        "mcp.persona.handoff_denied",
+        command=command_key,
+        persona=persona.value,
+        owner=AgentPersona.VERIFIER.value,
+        default=(
+            "'{command}' is the irreversible filing-handoff boundary, owned by "
+            "the '{owner}' persona; the '{persona}' persona is structurally "
+            "denied it. Hand the verified work unit to the verifier session to "
+            "produce the export or record marker."
+        ),
     )
 
 
