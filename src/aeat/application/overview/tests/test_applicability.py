@@ -339,17 +339,13 @@ def test_attribution_entity_owes_modelo_184() -> None:
     assert result.legal_refs
 
 
-@pytest.mark.parametrize(
-    "profile_factory",
-    (_landlord, _sociedad_limitada),
-    ids=("natural-person", "legal-entity"),
-)
-def test_non_attribution_entities_do_not_owe_modelo_184(profile_factory: _ProfileFactory) -> None:
+def test_non_attribution_entities_do_not_owe_modelo_184() -> None:
     """Modelo 184 is the attribution entity's own obligation only."""
 
-    result = derive_modelo_applicability(profile_factory(), "184")
-    assert result.verdict is ApplicabilityVerdict.NOT_APPLICABLE
-    assert result.applicable is False
+    for case_id, profile_factory in (("natural-person", _landlord), ("legal-entity", _sociedad_limitada)):
+        result = derive_modelo_applicability(profile_factory(), "184")
+        assert result.verdict is ApplicabilityVerdict.NOT_APPLICABLE, case_id
+        assert result.applicable is False, case_id
 
 
 def test_attribution_entity_modelo_100_reason_not_persona_fisica() -> None:
@@ -367,27 +363,20 @@ def test_attribution_entity_modelo_100_reason_not_persona_fisica() -> None:
 # ---------------------------------------------------------------------
 
 
-_TAX_ROUTE_CASES: tuple[tuple[_ProfileFactory, TaxRoute], ...] = (
-    (_landlord, TaxRoute.IRPF),
-    (_autonomo, TaxRoute.IRPF),
-    (_sociedad_limitada, TaxRoute.IMPUESTO_SOCIEDADES),
-    (_attribution_entity, TaxRoute.ATTRIBUTION_PASS_THROUGH),
-    (_undeclared, TaxRoute.INCOMPLETE),
+_TAX_ROUTE_CASES: tuple[tuple[str, _ProfileFactory, TaxRoute], ...] = (
+    ("landlord-irpf", _landlord, TaxRoute.IRPF),
+    ("autonomo-irpf", _autonomo, TaxRoute.IRPF),
+    ("legal-entity-is", _sociedad_limitada, TaxRoute.IMPUESTO_SOCIEDADES),
+    ("attribution-pass-through", _attribution_entity, TaxRoute.ATTRIBUTION_PASS_THROUGH),
+    ("undeclared", _undeclared, TaxRoute.INCOMPLETE),
 )
 
 
-@pytest.mark.parametrize(
-    ("profile_factory", "expected_route"),
-    _TAX_ROUTE_CASES,
-    ids=("landlord-irpf", "autonomo-irpf", "legal-entity-is", "attribution-pass-through", "undeclared"),
-)
-def test_entity_type_routes_to_expected_tax_branch(
-    profile_factory: _ProfileFactory,
-    expected_route: TaxRoute,
-) -> None:
+def test_entity_type_routes_to_expected_tax_branch() -> None:
     """The entity-type axis selects the tax route and never defaults a tax."""
 
-    assert derive_tax_route(profile_factory()) is expected_route
+    for case_id, profile_factory, expected_route in _TAX_ROUTE_CASES:
+        assert derive_tax_route(profile_factory()) is expected_route, case_id
 
 
 def test_no_seed_not_applicable_reason_asserts_excluded_taxpayer_type() -> None:
@@ -480,29 +469,21 @@ def test_pago_fraccionado_regime_matrix_routes_modelos_130_and_131() -> None:
 # ---------------------------------------------------------------------
 
 
-_MODELO_390_CASES: tuple[tuple[_ProfileFactory, ApplicabilityVerdict, bool], ...] = (
-    (_autonomo, ApplicabilityVerdict.APPLICABLE, True),
-    (_sociedad_limitada, ApplicabilityVerdict.APPLICABLE, True),
-    (_attribution_entity, ApplicabilityVerdict.APPLICABLE, True),
-    (_landlord, ApplicabilityVerdict.NOT_APPLICABLE, False),
+_MODELO_390_CASES: tuple[tuple[str, _ProfileFactory, ApplicabilityVerdict, bool], ...] = (
+    ("autonomo", _autonomo, ApplicabilityVerdict.APPLICABLE, True),
+    ("legal-entity", _sociedad_limitada, ApplicabilityVerdict.APPLICABLE, True),
+    ("attribution-entity", _attribution_entity, ApplicabilityVerdict.APPLICABLE, True),
+    ("landlord", _landlord, ApplicabilityVerdict.NOT_APPLICABLE, False),
 )
 
 
-@pytest.mark.parametrize(
-    ("profile_factory", "expected_verdict", "expected_applicable"),
-    _MODELO_390_CASES,
-    ids=("autonomo", "legal-entity", "attribution-entity", "landlord"),
-)
-def test_modelo_390_follows_iva_subject_activity_gate(
-    profile_factory: _ProfileFactory,
-    expected_verdict: ApplicabilityVerdict,
-    expected_applicable: bool,
-) -> None:
+def test_modelo_390_follows_iva_subject_activity_gate() -> None:
     """Modelo 390 follows the annual IVA-summary gate for each core persona."""
 
-    result = derive_modelo_applicability(profile_factory(), "390")
-    assert result.verdict is expected_verdict
-    assert result.applicable is expected_applicable
+    for case_id, profile_factory, expected_verdict, expected_applicable in _MODELO_390_CASES:
+        result = derive_modelo_applicability(profile_factory(), "390")
+        assert result.verdict is expected_verdict, case_id
+        assert result.applicable is expected_applicable, case_id
 
 
 def test_modelo_390_tracks_modelo_303_verdict() -> None:
@@ -626,16 +607,12 @@ def test_modelo_190_tracks_modelo_111_payer_fact() -> None:
     assert derive_modelo_applicability(_attribution_entity(), "190").verdict is (ApplicabilityVerdict.INCOMPLETE)
 
 
-@pytest.mark.parametrize(
-    "modelo",
-    ("115", "123", "349", "347"),
-    ids=("rent-retention", "capital-income-retention", "intracommunity", "third-party"),
-)
-def test_payer_fact_modelos_are_incomplete_when_required_fact_not_declared(modelo: str) -> None:
+def test_payer_fact_modelos_are_incomplete_when_required_fact_not_declared() -> None:
     """Payer-fact modelos stay INCOMPLETE when their specific fact is not declared."""
 
-    result = derive_modelo_applicability(_autonomo(), modelo)
-    assert result.verdict is ApplicabilityVerdict.INCOMPLETE
+    for modelo in ("115", "123", "349", "347"):
+        result = derive_modelo_applicability(_autonomo(), modelo)
+        assert result.verdict is ApplicabilityVerdict.INCOMPLETE, modelo
 
 
 def test_modelo_180_tracks_modelo_115_payer_fact() -> None:
@@ -653,41 +630,32 @@ def test_modelo_180_tracks_modelo_115_payer_fact() -> None:
     assert derive_modelo_applicability(_sociedad_limitada(), "180").verdict is (ApplicabilityVerdict.INCOMPLETE)
 
 
-@pytest.mark.parametrize(
-    ("modelo", "payer_fact_update"),
-    (
+def test_attribution_entity_with_required_fact_owes_fact_gated_modelos() -> None:
+    """Attribution entities can owe payer/informative modelos for their own facts."""
+
+    cases = (
         ("115", {"pays_rent_with_retencion": True}),
         ("180", {"pays_rent_with_retencion": True}),
         ("123", {"pays_capital_income_with_retencion": True}),
         ("349", {"does_intracomunitario": True}),
         ("347", {"third_party_transactions_above_347_threshold": True}),
-    ),
-    ids=("rent-retention", "rent-summary", "capital-income-retention", "intracommunity", "third-party-threshold"),
-)
-def test_attribution_entity_with_required_fact_owes_fact_gated_modelos(
-    modelo: str,
-    payer_fact_update: dict[str, bool],
-) -> None:
-    """Attribution entities can owe payer/informative modelos for their own facts."""
+    )
 
-    profile = _attribution_entity().model_copy(update=payer_fact_update)
+    for modelo, payer_fact_update in cases:
+        profile = _attribution_entity().model_copy(update=payer_fact_update)
 
-    result = derive_modelo_applicability(profile, modelo)
+        result = derive_modelo_applicability(profile, modelo)
 
-    assert result.verdict is ApplicabilityVerdict.APPLICABLE
+        assert result.verdict is ApplicabilityVerdict.APPLICABLE, modelo
 
 
-@pytest.mark.parametrize(
-    "modelo",
-    ("115", "180", "123", "349", "347"),
-    ids=("rent-retention", "rent-summary", "capital-income-retention", "intracommunity", "third-party-threshold"),
-)
-def test_attribution_entity_without_required_fact_is_incomplete_for_fact_gated_modelos(modelo: str) -> None:
+def test_attribution_entity_without_required_fact_is_incomplete_for_fact_gated_modelos() -> None:
     """Undeclared payer/trade facts stay INCOMPLETE for attribution entities."""
 
-    result = derive_modelo_applicability(_attribution_entity(), modelo)
+    for modelo in ("115", "180", "123", "349", "347"):
+        result = derive_modelo_applicability(_attribution_entity(), modelo)
 
-    assert result.verdict is ApplicabilityVerdict.INCOMPLETE
+        assert result.verdict is ApplicabilityVerdict.INCOMPLETE, modelo
 
 
 def test_undetermined_reason_distinct_from_undeclared_and_unruled() -> None:
