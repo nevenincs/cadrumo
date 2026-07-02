@@ -9,15 +9,6 @@ related:
   - '[[2026-07-02-agent-harness-refoundation-adr]]'
 ---
 
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the
-       related: field above.
-     - The related: field carries the AUTHORISING documents
-       (ADR, research, reference, prior plan) for every Step in
-       this plan. Steps inherit this chain; per-row reference
-       footers do not exist.
-     - NEVER use [[wiki-links]] or markdown links in the
-       document body. -->
 
 # `agent-harness-refoundation` plan
 
@@ -201,7 +192,7 @@ Add the runtime query embedder behind the capability-gated extra, brute-force nu
 Pin the search-stack dependencies in the capability-gated extra, record the third-party attribution, and assemble and sign the mcpb Desktop Extension behind the agent extra.
 
 - [x] `W06.P14.S89` - Pin the search-stack dependencies snowballstemmer, model2vec, and numpy in the capability-gated search extra with a lexical-only degraded default; `pyproject.toml`.
-- [ ] `W06.P14.S90` - Author the third-party notices attribution for the potion-multilingual-128M lineage distilled from BGE-m3 on the C4 ODC-BY corpus; `src/aeat/application/corpus_search/THIRD_PARTY_NOTICES.md`.
+- [x] `W06.P14.S90` - Author the third-party notices attribution for the potion-multilingual-128M lineage distilled from BGE-m3 on the C4 ODC-BY corpus; `src/aeat/application/corpus_search/THIRD_PARTY_NOTICES.md`.
 - [ ] `W06.P14.S85` - Author the mcpb Desktop Extension manifest; `packaging/mcpb/manifest.json`.
 - [ ] `W06.P14.S86` - Add the mcpb build-and-sign script behind the agent extra; `packaging/mcpb/build.py`.
 
