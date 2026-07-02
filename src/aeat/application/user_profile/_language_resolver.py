@@ -13,7 +13,7 @@ resolver body so registration cannot trigger an import cascade.
 
 from __future__ import annotations
 
-from ...core.i18n._render import register_profile_language_resolver
+from ...core.i18n import register_profile_language_resolver
 
 
 def resolve_active_profile_output_language() -> str | None:
@@ -26,12 +26,12 @@ def resolve_active_profile_output_language() -> str | None:
     bucket-local non-secret language hint instead of the encrypted
     profile envelope.
     """
-    from ...adapters.persistence.storage.master_key._active_session import has_active_bucket_session
+    from ...adapters.persistence.storage.master_key import has_active_bucket_session
 
     if not has_active_bucket_session():
         return resolve_active_profile_output_language_hint()
 
-    from ..workflow._persistence import workflow_state_repository
+    from ..workflow import workflow_state_repository
     from ._orchestration import fact_value
 
     record = workflow_state_repository().load().active_profile_record()
@@ -43,7 +43,7 @@ def resolve_active_profile_output_language() -> str | None:
 def resolve_active_profile_output_language_hint() -> str | None:
     """Return the active bucket's last-known output-language hint, if present."""
     try:
-        from ...core._bucket_pointer_io import resolve_active_bucket_id
+        from ...core import resolve_active_bucket_id
 
         bucket_id = resolve_active_bucket_id()
         if bucket_id is None:
@@ -56,7 +56,7 @@ def resolve_active_profile_output_language_hint() -> str | None:
 def resolve_profile_output_language_hint(bucket_id: str) -> str | None:
     """Return a named bucket's last-known output-language hint, if present."""
     try:
-        from ...adapters.persistence.storage.bucket._output_language_hint import read_bucket_output_language_hint
+        from ...adapters.persistence.storage.bucket import read_bucket_output_language_hint
         from ...core.config import load_settings
 
         trimmed = bucket_id.strip()

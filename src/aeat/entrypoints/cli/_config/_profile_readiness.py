@@ -70,9 +70,9 @@ def _activate_bucket_output_language_hint(ctx: typer.Context, *, bucket_id: str)
     if _settings_has_explicit_output_language():
         return
 
-    from ....application.user_profile._language_resolver import resolve_profile_output_language_hint
+    from ....application.user_profile import resolve_profile_output_language_hint
     from ....core.config import override_settings
-    from ....core.i18n._render import clear_output_language_cache
+    from ....core.i18n import clear_output_language_cache
 
     language = resolve_profile_output_language_hint(bucket_id)
     if language is None:
@@ -156,9 +156,9 @@ def _emit_profile_record_unreadable(
 
 def _read_profile_record(*, profile_id: str, bucket_id: str):
     """Read a profile record under a bucket session scoped to that profile."""
-    from ....adapters.persistence.storage.master_key._active_session import has_active_bucket_session
-    from ....application.user_profile._orchestration import build_lifecycle_service, profile_storage_session
-    from ....core._bucket_pointer_io import resolve_active_bucket_id as _resolve_active_bucket_id
+    from ....adapters.persistence.storage.master_key import has_active_bucket_session
+    from ....application.user_profile import build_lifecycle_service, profile_storage_session
+    from ....core import resolve_active_bucket_id as _resolve_active_bucket_id
 
     if bucket_id == _resolve_active_bucket_id() and has_active_bucket_session():
         return build_lifecycle_service(bucket_id=bucket_id).read(profile_id)
