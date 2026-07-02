@@ -52,6 +52,9 @@ related:
 - Reviewed W09.P45.S236 changes to `src/aeat/entrypoints/cli/tests/test_modelo_work_ux.py`.
 - Checked that fresh `modelo work create` without `--revision` binds through the live registry authority for the supplied Modelo 131 year and period, while adjacent coverage preserves visible-target reuse and explicit revision mismatch refusal.
 - Checked validation evidence from focused modelo work UX integration tests, touched-file ruff, reviewer output, and RAG grounding.
+- Reviewed W09.P45.S237 as a no-code closure against current ledger classify/list/view/review/status behavior.
+- Checked that current classify validation no longer falls through to the generic `config repair` boundary, status emits concrete `readiness_issue` rows, and the Taller Norte transcript shows same-profile status, list, review, classify, and follow-up ready status.
+- Checked validation evidence from focused ledger classify/review/list/view integration tests, reviewer output, and RAG grounding.
 
 ## Findings
 
@@ -106,6 +109,10 @@ No findings for the mixed hardcoded-string follow-up. The accepted patch is scop
 ### w09-p45-s236 | low | no findings
 
 No findings for the work-create registry-revision default regression. The live implementation already routes creation through `resolve_registry_revision_for_work_target`; the added CLI test pins the fresh-create no-`--revision` path against Modelo 131 and the registry authority's selected revision for the supplied year/period. The test uses the live registry authority as the expected-value source, so it proves CLI binding to the central resolver rather than acting as an independent legal oracle.
+
+### w09-p45-s237 | low | no findings
+
+No findings for the ledger silent-profile-gate row. The current code no longer shows a profile-completeness gate on ledger `list`, `view`, `status`, or `classify`; classify validation is caught at the ledger boundary and status emits a concrete readiness issue instead of a silent block. The Taller Norte transcript now shows the original journey succeeding on one profile: status names the unclassified-row issue, list and review read the row, classify succeeds, and status becomes ready. Residual risk is limited to lack of one single S237-named all-verb fixture; the focused tests and transcript cover the reported behavior.
 
 ## Recommendations
 
