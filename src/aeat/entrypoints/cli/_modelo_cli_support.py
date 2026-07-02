@@ -179,7 +179,7 @@ def unsupported_local_work_period_refusal(
 
     Some registry-visible modelos declare non-core event tokens such as census
     event names that are valid registry metadata but cannot become a local typed
-    :class:`aeat.core.Period`. Commands that require a local filing period must
+    :class:`Period`. Commands that require a local filing period must
     not report those tokens as both valid and invalid. If the modelo is
     centrally marked unsupported for local work, reuse that refusal.
     """
