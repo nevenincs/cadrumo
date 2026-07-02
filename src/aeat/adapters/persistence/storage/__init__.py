@@ -1,7 +1,7 @@
 """Persistence layer public API.
 
 Public API of the storage subpackage. Callers outside
-:mod:`aeat.adapters.persistence.storage` must import only from here; internal
+:mod:`adapters.persistence.storage` must import only from here; internal
 modules (``sql._orm``, ``sql.engine``, ``sql.session``, ``sql.repository``,
 and the encryption substrate under ``crypto``,
 ``envelope``, ``master_key``, ``blob_store``, ``secret_store``) are
