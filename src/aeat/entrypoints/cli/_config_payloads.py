@@ -1,8 +1,8 @@
 """Typed ``--json`` payload schemas for config CLI commands.
 
 Each class declared here is a strict
-:class:`~aeat.entrypoints.cli._schemas.OutputSchema` subclass and is decorated
-with :func:`~aeat.entrypoints.cli._schemas.register_schema` so the
+:class:`OutputSchema` subclass and is decorated
+with :func:`register_schema` so the
 JSON-contract test suite can enumerate every config-command surface this
 module covers.
 
@@ -21,7 +21,7 @@ repair semantics: :mod:`~aeat.application.user_profile`,
 :mod:`~aeat.application.repair_integrity`, and
 :mod:`~aeat.application.workflow`.
 These payload classes document and validate only the CLI transport shapes that
-enter :class:`~aeat.entrypoints.cli._schemas.SchemaEnvelope` through
+enter :class:`SchemaEnvelope` through
 :func:`~aeat.entrypoints.cli._common._emit_envelope`.
 """
 
@@ -45,7 +45,7 @@ class QuarantineNamespacePayload(OutputSchema):
     """One secure-object namespace row in a repair quarantine report.
 
     Projects the per-namespace counts carried by
-    :class:`~aeat.application.diagnostics.SecureObjectIntegrityReport` and its
+    :class:`SecureObjectIntegrityReport` and its
     secure-object integrity rows.  It reports only namespace and
     decryptability counts; object keys, ciphertext, plaintext payload bytes,
     taxpayer identifiers, and bucket identifiers stay out of the CLI payload.
@@ -59,11 +59,11 @@ class QuarantineNamespacePayload(OutputSchema):
 class WorkflowFingerprintPayload(OutputSchema):
     """Metadata fingerprint for encrypted workflow progress state.
 
-    Mirrors :class:`~aeat.application.workflow.WorkflowStateResetFingerprint`
+    Mirrors :class:`WorkflowStateResetFingerprint`
     for ``config repair reset-progress``.  The fingerprint identifies the
     stored envelope's schema, write time, byte length, read-status reason, and
     recoverable bucket context without serialising the
-    :class:`~aeat.application.workflow.WorkflowState` plaintext.
+    :class:`WorkflowState` plaintext.
     """
 
     schema_version: int | None = None
@@ -76,11 +76,11 @@ class WorkflowFingerprintPayload(OutputSchema):
 class ProfilePointerPayload(OutputSchema):
     """One active-profile pointer row in the config profile listing.
 
-    Mirrors the :class:`~aeat.application.workflow.ProfileBucketPointer`
+    Mirrors the :class:`ProfileBucketPointer`
     projection that links an operator-facing profile name to the immutable
     profile bucket id. The row deliberately carries no profile facts; detailed
     facts stay under
-    :class:`~aeat.entrypoints.cli._config_payloads.ProfileFactPayload` in the
+    :class:`ProfileFactPayload` in the
     profile-show envelope.
     """
 
@@ -90,10 +90,10 @@ class ProfilePointerPayload(OutputSchema):
 
 
 class ProfileIssuePayload(OutputSchema):
-    """One validation issue from :class:`~aeat.application.user_profile.ProfileValidationService`.
+    """One validation issue from :class:`ProfileValidationService`.
 
     The payload mirrors
-    :class:`~aeat.application.user_profile.ProfileValidationIssue` as plain JSON
+    :class:`ProfileValidationIssue` as plain JSON
     so ``profile show`` and ``profile validate`` expose the same readiness
     diagnostics without importing domain records into the CLI layer.
     """
@@ -108,7 +108,7 @@ class ProfileFactPayload(OutputSchema):
     """One schema-backed fact key/value pair in ``config profile show``.
 
     Values are the operator-display projection of profile facts, not the
-    encrypted :class:`~aeat.domain.user_profile.UserProfileRecord` itself.
+    encrypted :class:`UserProfileRecord` itself.
     """
 
     path: str
@@ -142,7 +142,7 @@ class RepairQuarantineResult(OutputSchema):
     and mutate nothing; confirmed rows come from
     :func:`~aeat.application.diagnostics.quarantine_unreadable_secure_objects`.
     Both branches expose aggregate
-    :class:`~aeat.entrypoints.cli._config_payloads.QuarantineNamespacePayload`
+    :class:`QuarantineNamespacePayload`
     counts
     rather than secure-object payload material.
     """
@@ -170,7 +170,7 @@ class RepairResetProgressResult(OutputSchema):
     :func:`~aeat.application.workflow.fingerprint_workflow_state`; confirmed
     reset calls :func:`~aeat.application.workflow.reset_workflow_state`.  The
     optional
-    :class:`~aeat.entrypoints.cli._config_payloads.WorkflowFingerprintPayload`
+    :class:`WorkflowFingerprintPayload`
     is a metadata summary of the
     encrypted progress envelope, not the saved workflow contents.
     """
@@ -189,7 +189,7 @@ class RepairConnectivityResult(OutputSchema):
 
     Wraps the browser/Sede status produced by
     :func:`~aeat.application.diagnostics.probe_browser_connectivity` for the
-    :class:`~aeat.entrypoints.cli._schemas.SchemaEnvelope` surface.  The
+    :class:`SchemaEnvelope` surface.  The
     command reports adapter health only; it does not authenticate, file, or
     mutate local configuration.
     """
@@ -210,7 +210,7 @@ class ConfigListResult(OutputSchema):
     Note: ``config_list`` is registered on the ``profile list`` sub-command
     which maps to the CLI path ``config.list`` (the profile sub-app carries
     the list verb). Each
-    :class:`~aeat.entrypoints.cli._config_payloads.ProfilePointerPayload` row
+    :class:`ProfilePointerPayload` row
     identifies a
     registered bucket, while ``active_profile`` names the current pointer.
     """
