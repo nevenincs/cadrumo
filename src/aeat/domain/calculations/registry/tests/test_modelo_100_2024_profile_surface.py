@@ -126,25 +126,41 @@ def test_modelo_100_2024_profile_family_rows_are_repeating_profile_collections()
         assert bindings[binding_id].source is BindingSourceKind.PROFILE
 
 
-def test_modelo_100_2024_descendientes_minimos_aggregate_binding_is_not_dangling() -> None:
-    """Regression for #515: no binding may point at the non-existent aggregate selector.
+def test_modelo_100_2024_descendientes_minimos_aggregate_binding_is_wired() -> None:
+    """Regression for #515 Option A: the aggregate selector is a live, consumed binding.
 
     ``renta-2024-profile-descendientes-minimos-aggregate`` used to select
     ``family.descendientes_minimos_aggregate_2024``, a profile-model attribute
     that :class:`~aeat.domain.contribuyente.family.RentaFamilyProfile` never
     declared (no formula or bound casilla consumed it either) -- a dangling
     selector per ``no-dormant-source-resolvers``. The Option B interim removed
-    the binding outright (Option A's computed engine, if it lands, wires a real
-    resolver instead of resurrecting this selector).
+    the binding outright. Option A's computed engine (the
+    ``modelo-100-minimo-descendientes-engine`` ADR) retires the gap for real:
+    the user-profile schema field ``renta_family.descendientes_minimos_aggregate_2024``
+    is now populated by
+    :func:`~aeat.application.modelo.inject_derived_minimo_descendientes_facts`
+    and consumed by the binding ``renta-2024-profile-minimo-descendientes-estatal``,
+    which feeds casillas 0513/0514 via a live formula.
     """
     snapshot = _modelo_100_2024_snapshot()
     bindings = {binding.id: binding for binding in snapshot.revision.bindings}
     assert "renta-2024-profile-descendientes-minimos-aggregate" not in bindings
-    for binding in bindings.values():
-        if binding.source is not BindingSourceKind.PROFILE:
-            continue
-        selector = _profile_selector(binding.selector)
-        assert selector.profile_key != "renta_family.descendientes_minimos_aggregate_2024"
+
+    binding = bindings["renta-2024-profile-minimo-descendientes-estatal"]
+    assert binding.source is BindingSourceKind.PROFILE
+    selector = _profile_selector(binding.selector)
+    assert selector.profile_key == "renta_family.descendientes_minimos_aggregate_2024"
+
+    casillas = {casilla.id: casilla for casilla in snapshot.revision.casillas}
+    estatal = casillas["0513"]
+    autonomico = casillas["0514"]
+    assert estatal.input_kind == InputKind.COMPUTED
+    assert autonomico.input_kind == InputKind.COMPUTED
+    formulas = {formula.id: formula for formula in snapshot.revision.formulas}
+    assert estatal.formula is not None
+    assert autonomico.formula is not None
+    assert formulas[estatal.formula].target_casilla_id == "0513"
+    assert formulas[autonomico.formula].target_casilla_id == "0514"
 
 
 def test_modelo_100_2024_taxpayer_birth_date_profile_binding_remains_available() -> None:

@@ -12,6 +12,7 @@ from the factual profile records.
 
 from __future__ import annotations
 
+from collections.abc import Sequence
 from datetime import date
 from decimal import Decimal
 from typing import Literal
@@ -29,10 +30,6 @@ from ...core.external_constants import (
 )
 from ...core.parsing._dates import _parse_iso8601_date
 from ._errors import ProfileValidationError
-
-# Art. 58.1 LIRPF: first-child cutoff for full-year eligibility is 1 July.
-_FULL_YEAR_CUTOFF_MONTH = 7
-_FULL_YEAR_CUTOFF_DAY = 1
 
 # Comunidad de Madrid "Por nacimiento o adopción de hijos" deducción autonómica
 # (DL 1/2010, de 21 octubre, arts. 4 y 18.1). Ámbito temporal: the deducción
@@ -192,19 +189,6 @@ class DescendantInfo(BaseModel):
         if not self.convive_con_contribuyente:
             return False
         return self.age_at_year_end(filing_year) < _MAX_AGE_MENOR_TRES
-
-    def joined_before_or_on_1_july(self, filing_year: int) -> bool:
-        """True when entry (birth or adoption) falls before 1 July of *filing_year*.
-
-        Used by Art. 58.4 prorrata: a descendant born / adopted before 1 July
-        counts for the full year. One born on or after 1 July counts half-year.
-        """
-        entry = self._entry_date()
-        if entry.year < filing_year:
-            return True
-        if entry.year > filing_year:
-            return False
-        return (entry.month, entry.day) < (_FULL_YEAR_CUTOFF_MONTH, _FULL_YEAR_CUTOFF_DAY)
 
     def entry_year(self) -> int:
         """Calendar year of the nacimiento/adopción event (deducción-window anchor)."""
@@ -376,19 +360,6 @@ class RentaFamilyProfile(BaseModel):
         """
         return sum(1 for d in self.descendientes if d.is_eligible_ordinary(filing_year))
 
-    def descendientes_full_year_minimum(self, filing_year: int) -> int:
-        """Count of eligible descendientes who joined before 1 July (full-year prorrata).
-
-        Used by Art. 58.4 prorrata: descendants born / adopted before 1 July
-        attract the full annual amount; those born on or after 1 July attract
-        the half-year amount (50 %).
-        """
-        return sum(
-            1
-            for d in self.descendientes
-            if d.is_eligible_ordinary(filing_year) and d.joined_before_or_on_1_july(filing_year)
-        )
-
     def custodia_compartida_count(self, filing_year: int) -> int:
         """Count of eligible descendientes with custodia_compartida=True.
 
@@ -407,6 +378,65 @@ class RentaFamilyProfile(BaseModel):
         if descendant.custodia_compartida and descendant.is_eligible_ordinary(filing_year):
             return CUSTODIA_COMPARTIDA_PRORRATA_FACTOR
         return Decimal("1")
+
+    def minimo_descendientes_estatal(
+        self,
+        filing_year: int,
+        *,
+        birth_order_amounts: Sequence[Decimal],
+        menor_tres_supplement: Decimal,
+    ) -> Decimal:
+        """Compute the Art. 58 mínimo por descendientes aggregate (casillas 0513/0514).
+
+        Ranks every Art. 58.1-eligible descendant (age < 25 at year-end, or any
+        discapacidad grade, and cohabiting) by ``birth_date`` ascending — the
+        eldest eligible descendant is "el primero", matching the AEAT Renta
+        manual's birth-order reading of Art. 58.1's "primero/segundo/tercero/
+        cuarto y siguientes" tranches. Each eligible descendant contributes:
+
+        * the birth-order tranche amount from *birth_order_amounts* (index 0
+          for the 1st, index 1 for the 2nd, ... the last entry repeats for the
+          4th and every subsequent descendant, per Art. 58.1's "cuarto y
+          siguientes" wording);
+        * plus *menor_tres_supplement* when the descendant is also
+          Art. 58.2-eligible (age < 3 at year-end);
+        * the sum is then multiplied by the descendant's Art. 61.1ª LIRPF
+          custodia-compartida prorrata factor (0.5 when
+          ``custodia_compartida=True`` and eligible, else 1 —
+          :meth:`custodia_compartida_prorrata_factor`).
+
+        No within-year temporal prorrateo is applied: Art. 58 (in force since
+        01/01/2015, BOE-A-2014-12327) declares only the two numbered
+        subsections above and no birth/adoption-date cutoff for descendientes;
+        Art. 61's temporal rules are scoped to a mid-year death (norma 4ª) and
+        to ascendientes' half-period residency (norma 5ª), neither of which
+        applies here (see ADR ``modelo-100-minimo-descendientes-engine``).
+
+        *birth_order_amounts* and *menor_tres_supplement* are registry
+        ``money`` parameters the caller resolves per filing year; this domain
+        method performs no euro-figure lookup of its own
+        (`aeat-schema-central-config`).
+
+        Returns ``Decimal("0")`` when no descendant is Art. 58.1-eligible
+        (including an empty ``descendientes`` tuple) — the legally correct
+        zero for a childless filer, not an under-declaration.
+        """
+        eligible = sorted(
+            (d for d in self.descendientes if d.is_eligible_ordinary(filing_year)),
+            key=lambda d: d.birth_date,
+        )
+        if not eligible:
+            return Decimal("0")
+        if not birth_order_amounts:
+            raise ProfileValidationError("birth_order_amounts must not be empty")
+        total = Decimal("0")
+        for ordinal, descendant in enumerate(eligible):
+            tranche_index = min(ordinal, len(birth_order_amounts) - 1)
+            amount = birth_order_amounts[tranche_index]
+            if descendant.is_eligible_menor_tres(filing_year):
+                amount += menor_tres_supplement
+            total += amount * self.custodia_compartida_prorrata_factor(descendant, filing_year)
+        return total
 
     def custodia_compartida_advisory(self, filing_year: int) -> str | None:
         """Return the translated Art. 61 prorrata advisory string, or ``None``.

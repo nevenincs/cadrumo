@@ -45,13 +45,20 @@ from ...core.parsing import parse_iso8601_date
 from ...domain.calculations.registry import (
     BindingId,
     DataBindingDefinition,
+    ParameterDefinition,
     RegistrySnapshot,
     enum_consumed_binding_ids,
     expression_binding_refs,
     expression_date_binding_refs,
+    resolve_parameter,
 )
-from ...domain.contribuyente import descendant_list_from_facts, marriage_full_year, marriage_month_start
-from ...domain.modelos._errors import ModeloError
+from ...domain.contribuyente import (
+    RentaFamilyProfile,
+    descendant_list_from_facts,
+    marriage_full_year,
+    marriage_month_start,
+)
+from ...domain.modelos import ModeloError
 from ...domain.user_profile import (
     ProfileNotFoundError,
     ProfileSchemaDefinition,
@@ -59,7 +66,7 @@ from ...domain.user_profile import (
     load_user_profile_schema,
     profile_binding_selectors,
 )
-from ..aggregation._source_mesh import (
+from ..aggregation import (
     CalculationSourceProvenance,
     CalculationSourceResolution,
 )
@@ -222,6 +229,161 @@ def _inject_derived_family_facts(
         idx += 1
 
     fact_index[menores_key] = Decimal(count_menores)
+
+
+_MINIMO_DESCENDIENTES_FILING_YEARS = frozenset({2020, 2021, 2022, 2023, 2024, 2025})
+_MINIMO_DESCENDIENTES_BIRTH_ORDER_SUFFIXES = (
+    "primer-hijo",
+    "segundo-hijo",
+    "tercer-hijo",
+    "cuarto-y-siguientes",
+)
+_MINIMO_DESCENDIENTES_MENOR_TRES_SUFFIX = "menor-tres-anos"
+
+
+def _minimo_descendientes_parameter(
+    snapshot: RegistrySnapshot,
+    *,
+    filing_year: int,
+    suffix: str,
+) -> ParameterDefinition | None:
+    """Return the Art. 58 mínimo-por-descendientes registry parameter for *suffix*.
+
+    Parameter ids follow the uniform ``renta-{year}-minimo-descendientes-
+    {suffix}-{year}`` shape across every 2020-2025 revision (e.g.
+    ``renta-2024-minimo-descendientes-primer-hijo-2024``). Returns ``None``
+    when the revision declares no such parameter (a revision outside the
+    engine's supported filing-year set).
+    """
+    parameter_id = f"renta-{filing_year}-minimo-descendientes-{suffix}-{filing_year}"
+    for parameter in snapshot.revision.parameters:
+        if parameter.id == parameter_id:
+            return parameter
+    return None
+
+
+def _inject_derived_minimo_descendientes_facts(
+    fact_index: dict[str, UserProfileFactValue],
+    snapshot: RegistrySnapshot,
+) -> None:
+    """Inject the Art. 58/61 LIRPF mínimo por descendientes aggregate (casillas 0513/0514).
+
+    Reads the existing ``renta_family.descendiente.{n}.*`` facts, ranks every
+    Art. 58.1-eligible descendant by ``birth_date``, and computes the aggregate
+    mínimo via :meth:`~aeat.domain.contribuyente.RentaFamilyProfile.minimo_descendientes_estatal`
+    using the revision's own ``renta-{year}-minimo-descendientes-*`` ``money``
+    parameters — never a hardcoded euro figure (`aeat-schema-central-config`).
+    Projects the result onto the Decimal key
+    ``renta_family.descendientes_minimos_aggregate_{year}`` — the user-profile
+    schema field the ``modelo-100-minimo-descendientes-engine`` ADR named as a
+    dangling selector (declared, never populated, its former binding deleted in
+    commit ``bc3b89594``); this injector retires that gap rather than minting a
+    new key. The registry binding
+    ``renta-{year}-profile-minimo-descendientes-estatal`` (``profile_key``
+    selector) feeds it into casillas 0513 (estatal) and 0514 (autonómico) — the
+    autonómico half mirrors the estatal base absent a published per-CCAA figure,
+    matching the existing mínimo-del-contribuyente 0511/0512 precedent.
+
+    Known limitation, deferred per the ADR's own scoping: at least the
+    Comunidad de Madrid publishes ITS OWN mínimo por descendientes figures for
+    the 3rd/4th-y-siguientes tranches (Decreto Legislativo 1/2010 Art. 2:
+    4.400 € / 4.950 €, replacing the general LIRPF Art. 58 4.000 € / 4.500 €)
+    that apply to the autonómico (0514) computation only — the 1º/2º/menor-3
+    amounts coincide with Art. 58. This mirror-estatal default under-computes
+    0514 for a Madrid-resident filer with 3+ descendientes until a per-CCAA
+    autonómica table is authored and this projection is made CCAA-conditional.
+
+    Always injects a value (``Decimal("0")`` for a profile with no eligible
+    descendant) so a genuinely childless filer's casilla resolves to the
+    legally correct zero rather than an unresolved binding failing the
+    calculation outright. Idempotent: a key already present (an explicit
+    profile fact written by an older tooling version) is not overwritten.
+    Only the 2020-2025 filing years are handled; other years are ignored until
+    the engine is extended.
+    """
+    if snapshot.filing_year not in _MINIMO_DESCENDIENTES_FILING_YEARS:
+        return
+
+    aggregate_key = f"renta_family.descendientes_minimos_aggregate_{snapshot.filing_year}"
+    if aggregate_key in fact_index:
+        return
+
+    birth_order_params = [
+        _minimo_descendientes_parameter(snapshot, filing_year=snapshot.filing_year, suffix=suffix)
+        for suffix in _MINIMO_DESCENDIENTES_BIRTH_ORDER_SUFFIXES
+    ]
+    menor_tres_param = _minimo_descendientes_parameter(
+        snapshot,
+        filing_year=snapshot.filing_year,
+        suffix=_MINIMO_DESCENDIENTES_MENOR_TRES_SUFFIX,
+    )
+    if any(param is None for param in birth_order_params) or menor_tres_param is None:
+        # The revision does not declare the full mínimo-por-descendientes
+        # parameter set; leave the aggregate unresolved rather than compute
+        # against a partial tranche table.
+        return
+
+    date_context = {"filing_period": date(snapshot.filing_year, 12, 31)}
+    resolved_birth_order_params: list[ParameterDefinition] = [
+        param for param in birth_order_params if param is not None
+    ]
+    birth_order_amounts = [resolve_parameter(param, date_context) for param in resolved_birth_order_params]
+    menor_tres_supplement = resolve_parameter(menor_tres_param, date_context)
+
+    descendant_facts = {
+        fact_key: str(value)
+        for fact_key, value in fact_index.items()
+        if fact_key.startswith("renta_family.descendiente.")
+    }
+    profile = RentaFamilyProfile(descendientes=descendant_list_from_facts(descendant_facts))
+    fact_index[aggregate_key] = profile.minimo_descendientes_estatal(
+        snapshot.filing_year,
+        birth_order_amounts=birth_order_amounts,
+        menor_tres_supplement=menor_tres_supplement,
+    )
+
+
+_ANUALIDADES_ELIGIBILITY_FILING_YEARS = frozenset({2020, 2021, 2022, 2023, 2024, 2025})
+
+
+def _inject_derived_anualidades_eligibility_facts(
+    fact_index: dict[str, UserProfileFactValue],
+    filing_year: int,
+) -> None:
+    """Inject the LIRPF art. 64/75 anualidades separate-escala eligibility flag.
+
+    Art. 64 grants judicial anualidades por alimentos a favor de los hijos the
+    separate-escala régimen only to a payer "sin derecho a la aplicación por
+    estos últimos del mínimo por descendientes previsto en el artículo 58". This
+    "no right to the mínimo por descendientes" fact is not derivable from any
+    other casilla; it is projected here onto the synthetic Decimal key
+    ``renta_family.anualidades_sin_minimo_descendientes_{year}`` the registry
+    régimen predicate consumes.
+
+    Form-faithful default: filling casilla 0527 (anualidades por decisión
+    judicial) implies the non-custodial payer without the mínimo, so the flag is
+    1 (eligible) unless custody is shared. When at least one eligible descendant
+    has ``custodia_compartida = true`` the mínimo por descendientes is split
+    50/50, the payer retains it, and the régimen does NOT apply (flag 0).
+
+    Idempotent: an explicit fact already present is not overwritten. Only the
+    revisions carrying the separate-escala régimen are handled.
+    """
+    if filing_year not in _ANUALIDADES_ELIGIBILITY_FILING_YEARS:
+        return
+    key = f"renta_family.anualidades_sin_minimo_descendientes_{filing_year}"
+    if key in fact_index:
+        return
+    descendant_facts = {
+        fact_key: str(value)
+        for fact_key, value in fact_index.items()
+        if fact_key.startswith("renta_family.descendiente.")
+    }
+    shared_custody = any(
+        descendant.custodia_compartida and descendant.is_eligible_ordinary(filing_year)
+        for descendant in descendant_list_from_facts(descendant_facts)
+    )
+    fact_index[key] = Decimal("0") if shared_custody else Decimal("1")
 
 
 _MADRID_CCAA_CODE = "madrid"
@@ -504,7 +666,9 @@ def resolve_profile_sourced_bindings(
     fact_index = _profile_fact_index(record, resolved_schema)
     _inject_derived_marriage_facts(fact_index, snapshot.filing_year)
     _inject_derived_family_facts(fact_index, snapshot.filing_year)
+    _inject_derived_anualidades_eligibility_facts(fact_index, snapshot.filing_year)
     _inject_derived_autonomic_deduccion_facts(fact_index, snapshot.filing_year)
+    _inject_derived_minimo_descendientes_facts(fact_index, snapshot)
     _inject_derived_state_attribution_facts(fact_index)
     enum_bindings = enum_consumed_binding_ids(snapshot.revision)
 
@@ -565,14 +729,18 @@ def _resolve_one(
 
 inject_derived_marriage_facts = _inject_derived_marriage_facts
 inject_derived_autonomic_deduccion_facts = _inject_derived_autonomic_deduccion_facts
+inject_derived_anualidades_eligibility_facts = _inject_derived_anualidades_eligibility_facts
+inject_derived_minimo_descendientes_facts = _inject_derived_minimo_descendientes_facts
 profile_fact_index = _profile_fact_index
 resolve_profile_binding_value = _resolve_one
 
 
 __all__ = [
     "ProfileBindingResolutionError",
+    "inject_derived_anualidades_eligibility_facts",
     "inject_derived_autonomic_deduccion_facts",
     "inject_derived_marriage_facts",
+    "inject_derived_minimo_descendientes_facts",
     "profile_fact_index",
     "resolve_profile_binding_value",
     "resolve_profile_sourced_bindings",
