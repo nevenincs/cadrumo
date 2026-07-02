@@ -54,6 +54,7 @@ from ...domain.calculations.registry import CasillaId, RegistryValidationError, 
 from ...domain.modelos import CalculationRevision, CalculationRevisionAmendmentKind, WorkUnit
 from ._common import activate_subcommand_output_language
 from ._modelo_aggregate_cli import register_aggregate_commands
+from ._modelo_amend_wizard_cli import register_amend_wizard_commands
 from ._modelo_audit_cli import audit_app as audit_app
 from ._modelo_audit_cli import register_audit_commands
 from ._modelo_cli_support import MISSING_INPUT_TRANSLATED_MESSAGES
@@ -1104,6 +1105,16 @@ def work_amend(
     ]
     lines.append("filing_disambiguation\t(internal only — does not submit to AEAT)")
     _emit_envelope(ctx, command="modelo.work.amend", result=result, lines=lines)
+
+
+register_amend_wizard_commands(
+    work_app,
+    activate_output_language=activate_subcommand_output_language,
+    require_active_profile=_require_active_profile,
+    resolve_work_unit_for_cli=_resolve_work_unit_for_cli,
+    resolve_default_actor=_resolve_default_actor,
+    bad_parameter_from_error=_bad_parameter_from_error,
+)
 
 
 register_record_commands(

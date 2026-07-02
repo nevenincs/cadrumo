@@ -1,16 +1,16 @@
 """Repository-backed IVA observation projection from ledger catalogues.
 
 This module classifies bucket-local
-:class:`~aeat.domain.transactions.TransactionCatalogue` rows into typed
-:class:`~aeat.domain.calculations.registry.IvaLedgerObservation` records and
+:class:`~domain.transactions.TransactionCatalogue` rows into typed
+:class:`~domain.calculations.registry.IvaLedgerObservation` records and
 binding-ready totals. The source-mesh resolver in :mod:`~._modelo_bindings`
 then applies the target
-:class:`~aeat.domain.calculations.registry.ModeloRevision`, resolves
+:class:`~domain.calculations.registry.ModeloRevision`, resolves
 ``ledger_iva_aggregation`` bindings, and surfaces source diagnostics for ledger
 rows that no declared binding consumes.
 
 The repository-backed entry point constructs a
-:class:`~aeat.domain.transactions.TransactionCatalogueRepository` for the active
+:class:`~domain.transactions.TransactionCatalogueRepository` for the active
 bucket when none is supplied. Pre-classified callers can use
 :class:`IvaLedgerCandidate` and :func:`aggregate_iva_ledger_candidate_bindings`
 to run the same validation and registry binding path.
@@ -86,7 +86,7 @@ class IvaLedgerAggregationIssueReason(StrEnum):
     """Machine-readable reasons why a ledger row did not produce IVA observations.
 
     The first five values are shared with
-    :class:`aeat.application.aggregation._renta_ledger.RentaLedgerAggregationIssueReason`
+    :class:`application.aggregation._renta_ledger.RentaLedgerAggregationIssueReason`
     through :mod:`._shared_issue_reasons` so cross-ledger telemetry can
     group upstream filter rejections under one key. The remaining values
     are IVA-specific.

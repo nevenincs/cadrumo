@@ -4,7 +4,7 @@ Projects the backend-owned :class:`OperatorSurfaceContract` together with the
 CLI's registered JSON command-result schema keys into a single machine-readable
 :class:`OperatorSurfaceManifest`. This is the capability catalogue an LLM
 operator reads to learn the two-root command tree, each command family's intent
-and :class:`~aeat.application.operator_surface.OperatorMutability`, the modelo
+and :class:`~application.operator_surface.OperatorMutability`, the modelo
 ``CALCULATE -> VERIFY -> FILE`` lifecycle, and the per-command result-schema
 reference. It is also the natural source a tool-exposure server consumes for its
 tool list.
@@ -29,9 +29,9 @@ _STRICT_FROZEN = ConfigDict(frozen=True, strict=True, validate_assignment=True, 
 class CommandSchemaRef(BaseModel):
     """One registered command-path to result-schema reference.
 
-    ``command`` is a stable :data:`~aeat.core.json_contract.SCHEMA_REGISTRY`
+    ``command`` is a stable :data:`~core.json_contract.SCHEMA_REGISTRY`
     key (e.g. ``"modelo.calculate"``); ``schema_name`` is the registered
-    :class:`~aeat.core.json_contract.OutputSchema` subclass name an operator (or
+    :class:`~core.json_contract.OutputSchema` subclass name an operator (or
     a tool-exposure server) resolves to read the command's result shape.
     """
 
@@ -68,7 +68,7 @@ def build_operator_surface_manifest(
     """Build the :class:`OperatorSurfaceManifest` from the cached contract.
 
     The contract is read from
-    :func:`~aeat.application.operator_surface.get_operator_surface_contract`.
+    :func:`~application.operator_surface.get_operator_surface_contract`.
     The ``envelope_schema_version`` and ``command_schemas`` are supplied by the
     CLI adapter, which owns the JSON-contract registry; this keeps the
     application layer free of any dependency on the entrypoint package.

@@ -1,13 +1,13 @@
 """SQLAlchemy engine factory for the storage subpackage.
 
 Provides a lazy singleton engine cache used by the rest of
-:mod:`aeat.adapters.persistence.storage`. Bucket-routed engines are cached
+:mod:`adapters.persistence.storage`. Bucket-routed engines are cached
 under their bucket identity (resolved storage root plus bucket id) so that
 engine lifetime can follow the bucket-session lifecycle; the database URL
 is an implementation detail of engine construction. Explicit database URLs
 and the root-fallback database keep their URL-keyed direct path. The
 factory normalises SQLite URLs against
-:data:`aeat.core.paths.PROJECT_ROOT`, ensures the parent directory exists,
+:data:`core.paths.PROJECT_ROOT`, ensures the parent directory exists,
 and attaches a ``connect`` listener that configures each SQLite
 connection: ``foreign_keys=ON`` (cascade enforcement) and a
 ``busy_timeout`` (so concurrent invocations on one bucket no longer fail
@@ -67,7 +67,7 @@ def _normalize_sqlite_url(url: str) -> str:
     Returns:
         The original ``url`` for non-SQLite or in-memory targets, otherwise an
         equivalent URL whose database path has been resolved through
-        :func:`aeat.core.paths.resolve_project_path`.
+        :func:`core.paths.resolve_project_path`.
     """
     parsed = make_url(url)
     if not parsed.drivername.startswith("sqlite"):
@@ -150,7 +150,7 @@ def create_engine_from_settings(settings: Settings) -> Engine:
     are enforced at runtime.
 
     Args:
-        settings: Application :class:`~aeat.core.config.Settings` carrying
+        settings: Application :class:`~core.config.Settings` carrying
             ``aeat_database_url``.
 
     Returns:
@@ -201,13 +201,13 @@ def get_engine(settings: Settings | None = None) -> Engine:
     Bucket-routed settings cache the engine under (storage root, bucket id);
     explicit-URL and root-fallback settings cache under the database URL.
     On first access, materialises every ORM table declared on
-    :class:`~aeat.adapters.persistence.storage.sql._orm.Base.metadata`
+    :class:`~adapters.persistence.storage.sql._orm.Base.metadata`
     against the new engine. The codebase is forward-only: there is no
     migration history; the schema is whatever the current ORM defines.
 
     Args:
-        settings: Optional :class:`~aeat.core.config.Settings` override.
-            When ``None``, a fresh :func:`aeat.core.config.load_settings`
+        settings: Optional :class:`~core.config.Settings` override.
+            When ``None``, a fresh :func:`core.config.load_settings`
             call is used.
 
     Returns:
@@ -237,7 +237,7 @@ def dispose_engine(settings: Settings | None = None) -> None:
     engine disposal is owned by the bucket-session lifecycle.
 
     Args:
-        settings: Optional :class:`~aeat.core.config.Settings` override.
+        settings: Optional :class:`~core.config.Settings` override.
             When ``None``, every cached engine is disposed.
     """
     with _lock:

@@ -12,6 +12,26 @@ value (that would be a tautological calculation test).
 
 from __future__ import annotations
 
+from ._live_harness import (
+    AnthropicPersonaDriver,
+    LiveCallTool,
+    LiveFinish,
+    LiveHarnessError,
+    LiveNarrate,
+    LiveToolSpec,
+    PersonaAction,
+    PersonaDriver,
+    ScriptedPersonaDriver,
+    accept_all_confirmations,
+    decline_all_elicitations,
+    run_live_session,
+    run_live_session_async,
+)
+from ._live_scoring import (
+    FaithfulnessCheckFn,
+    LiveScenarioScore,
+    score_live_trajectory,
+)
 from ._models import (
     ConfirmationGateCheck,
     ConfirmationTier,
@@ -50,6 +70,7 @@ from ._runner import (
 )
 
 __all__ = [
+    "AnthropicPersonaDriver",
     "ConfirmationGateCheck",
     "ConfirmationTier",
     "ContradictionScenario",
@@ -57,27 +78,42 @@ __all__ = [
     "ElicitationAction",
     "ExitCodeScenario",
     "ExitCodeVerdict",
+    "FaithfulnessCheckFn",
     "GoldenResult",
     "GoldenScenario",
     "GoldenToolCall",
+    "LiveCallTool",
     "LiveElicitationRecord",
+    "LiveFinish",
+    "LiveHarnessError",
     "LiveInvariantVerdict",
+    "LiveNarrate",
     "LiveNarrationRecord",
+    "LiveScenarioScore",
     "LiveToolCallRecord",
+    "LiveToolSpec",
     "LiveTrajectory",
     "NarrationFaithfulness",
+    "PersonaAction",
+    "PersonaDriver",
     "ProfileConfirmationScenario",
     "ProfileConfirmationVerdict",
+    "ScriptedPersonaDriver",
     "ToolCallResolver",
     "UnderDeclarationScenario",
     "UnderDeclarationVerdict",
+    "accept_all_confirmations",
     "check_contradiction_scenario",
     "check_exit_code_scenario",
     "check_profile_confirmation_scenario",
     "check_under_declaration_scenario",
+    "decline_all_elicitations",
     "divergent_replays",
     "load_scenario",
     "record_tool_call",
     "replay_tool_call",
     "run_golden_scenario",
+    "run_live_session",
+    "run_live_session_async",
+    "score_live_trajectory",
 ]

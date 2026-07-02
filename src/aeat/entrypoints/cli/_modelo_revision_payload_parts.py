@@ -88,6 +88,7 @@ class ResultSummaryRowPayload(OutputSchema):
     casilla_id: CasillaId
     value: str  # serialised Decimal
     label: str
+    localized_labels: dict[str, str] = Field(default_factory=dict)
 
 
 __all__ = ["DetailRowPayload", "ObservationPayload", "ResultSummaryRowPayload"]

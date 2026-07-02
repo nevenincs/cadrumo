@@ -7,8 +7,8 @@ parsed mapping so list values become tuples. These helpers are the
 single source of that behaviour.
 
 :func:`read_toml` and :func:`freeze_toml` are used by the registry
-loader in :mod:`aeat.domain.calculations.registry._loader` and the
-user-profile schema loader in :mod:`aeat.domain.user_profile._loader`.
+loader in :mod:`domain.calculations.registry._loader` and the
+user-profile schema loader in :mod:`domain.user_profile._loader`.
 :func:`parse_toml_text` gives the same decode-error wrapping to callers that
 already hold a TOML payload in memory, such as the secure bucket manifest
 reader. :func:`to_str_keyed_dict` is the narrow bridge from loosely typed

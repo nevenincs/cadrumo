@@ -2,9 +2,9 @@
 
 One canonical home for the :data:`IBAN_SHAPE_RE` pattern and
 :func:`iban_mod_97` check residue, consumed by
-:data:`aeat.domain.calculations.registry._schema.IbanString` for registry
+:data:`domain.calculations.registry._schema.IbanString` for registry
 casillas declaring ``data_type = "iban"`` and by the secure-storage
-:class:`~aeat.domain.deadlines.RefundAccount` model. Keeping the primitives in
+:class:`~domain.deadlines.RefundAccount` model. Keeping the primitives in
 ``core`` lets each domain validate an IBAN without importing the other.
 
 This module does not canonicalise operator input, decide whether a blank IBAN is
@@ -32,8 +32,8 @@ def iban_mod_97(canonical: str) -> int:
 
     Callers normalize separators and case before matching
     :data:`IBAN_SHAPE_RE`; see
-    :func:`aeat.domain.calculations.registry._schema._validate_iban_string` and
-    :meth:`aeat.domain.deadlines.RefundAccount._validate_iban`. This helper
+    :func:`domain.calculations.registry._schema._validate_iban_string` and
+    :meth:`domain.deadlines.RefundAccount._validate_iban`. This helper
     moves the leading four characters to the tail, replaces each letter with its
     ``A=10 ... Z=35`` numeric form, and returns the integer modulo 97. A valid
     IBAN yields a residue of 1.

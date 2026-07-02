@@ -226,7 +226,7 @@ def _resolve_command(
             return None, tuple(resolved)
         try:
             child = getter(context, token) or getter(context, token.replace("_", "-"))
-        except Exception:  # noqa: BLE001
+        except Exception:
             # Materialising a lazily-loaded subtree can raise when a command in it
             # declares a parameter type Typer cannot convert to click. Degrade to an
             # unresolved command so only that subtree's keys fall back to an

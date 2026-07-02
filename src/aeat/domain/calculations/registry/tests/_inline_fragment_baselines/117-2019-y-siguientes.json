@@ -1,0 +1,907 @@
+{
+  "modelo_id": "117",
+  "revision": {
+    "algorithm_bindings": [],
+    "algorithm_providers": [],
+    "application_links": [
+      {
+        "consumer": "aeat.domain.calculations.registry",
+        "id": "modelo-117-calculation",
+        "legal_refs": [
+          "ley-35-2006:art-99",
+          "rd-439-2007:art-108",
+          "orden-eha-3435-2007:anexo-i"
+        ],
+        "requires_snapshot": true,
+        "source_refs": [
+          "aeat-modelo-117-procedure",
+          "boe-modelo-117-form-text",
+          "boe-modelo-117-form-layout"
+        ],
+        "surface": "calculation"
+      },
+      {
+        "consumer": "aeat.domain.deadlines",
+        "id": "modelo-117-deadline",
+        "legal_refs": [
+          "orden-eha-3435-2007:anexo-i"
+        ],
+        "requires_snapshot": true,
+        "source_refs": [
+          "aeat-modelo-117-procedure"
+        ],
+        "surface": "deadline"
+      },
+      {
+        "consumer": "aeat.application.filing",
+        "id": "modelo-117-filing",
+        "legal_refs": [
+          "orden-eha-3435-2007:anexo-i"
+        ],
+        "requires_snapshot": true,
+        "source_refs": [
+          "aeat-modelo-117-procedure"
+        ],
+        "surface": "filing"
+      },
+      {
+        "consumer": "aeat.application.verification",
+        "id": "modelo-117-2019-y-siguientes-verification",
+        "legal_refs": [
+          "ley-35-2006:art-99",
+          "rd-439-2007:art-108",
+          "orden-eha-3435-2007:anexo-i"
+        ],
+        "requires_snapshot": true,
+        "source_refs": [
+          "boe-modelo-117-form-text",
+          "boe-modelo-117-form-layout"
+        ],
+        "surface": "verification"
+      },
+      {
+        "consumer": "aeat.application.filing.review",
+        "id": "modelo-117-review",
+        "legal_refs": [
+          "orden-eha-3435-2007:anexo-i"
+        ],
+        "requires_snapshot": true,
+        "source_refs": [
+          "aeat-modelo-117-procedure"
+        ],
+        "surface": "review"
+      },
+      {
+        "consumer": "aeat.application.workflow.approval",
+        "id": "modelo-117-approval",
+        "legal_refs": [
+          "orden-eha-3435-2007:anexo-i"
+        ],
+        "requires_snapshot": true,
+        "source_refs": [
+          "aeat-modelo-117-procedure"
+        ],
+        "surface": "approval"
+      },
+      {
+        "consumer": "aeat.application.reconciliation",
+        "id": "modelo-117-reconciliation",
+        "legal_refs": [
+          "orden-eha-3435-2007:anexo-i"
+        ],
+        "requires_snapshot": true,
+        "source_refs": [
+          "aeat-modelo-117-procedure"
+        ],
+        "surface": "reconciliation"
+      },
+      {
+        "consumer": "aeat.application.workflow",
+        "id": "modelo-117-workflow",
+        "legal_refs": [
+          "orden-eha-3435-2007:anexo-i"
+        ],
+        "requires_snapshot": true,
+        "source_refs": [
+          "aeat-modelo-117-procedure"
+        ],
+        "surface": "workflow"
+      }
+    ],
+    "bindings": [],
+    "casilla_continuidad_evolutions": [],
+    "casillas": [
+      {
+        "aliases": [],
+        "alternate_bindings": [],
+        "binding": null,
+        "constraints": null,
+        "continuidad_id": null,
+        "data_type": "integer",
+        "export_refs": [],
+        "form_number": null,
+        "formula": null,
+        "id": "01",
+        "input_kind": "manual",
+        "internal_only": false,
+        "label": "Numero de perceptores por transmisiones o reembolsos de acciones y participaciones de IIC",
+        "legal_refs": [
+          "ley-35-2006:art-99",
+          "rd-439-2007:art-108",
+          "orden-eha-3435-2007:anexo-i"
+        ],
+        "localized_help": {},
+        "localized_labels": {},
+        "number": "01",
+        "required": false,
+        "section": [
+          "liquidacion",
+          "iic_transmisiones_reembolsos"
+        ],
+        "segmento": null,
+        "semantic_role": "iic_transmision_perceptores",
+        "semantic_role_cardinality": "shared",
+        "semantic_role_cardinality_reason": null,
+        "source_refs": [
+          "boe-modelo-117-form-layout"
+        ]
+      },
+      {
+        "aliases": [],
+        "alternate_bindings": [],
+        "binding": null,
+        "constraints": null,
+        "continuidad_id": null,
+        "data_type": "money",
+        "export_refs": [],
+        "form_number": null,
+        "formula": null,
+        "id": "02",
+        "input_kind": "manual",
+        "internal_only": false,
+        "label": "Base de retenciones e ingresos a cuenta por transmisiones o reembolsos de acciones y participaciones de IIC",
+        "legal_refs": [
+          "ley-35-2006:art-99",
+          "rd-439-2007:art-108",
+          "orden-eha-3435-2007:anexo-i"
+        ],
+        "localized_help": {},
+        "localized_labels": {},
+        "number": "02",
+        "required": false,
+        "section": [
+          "liquidacion",
+          "iic_transmisiones_reembolsos"
+        ],
+        "segmento": null,
+        "semantic_role": "iic_transmision_base",
+        "semantic_role_cardinality": "shared",
+        "semantic_role_cardinality_reason": null,
+        "source_refs": [
+          "boe-modelo-117-form-layout"
+        ]
+      },
+      {
+        "aliases": [],
+        "alternate_bindings": [],
+        "binding": null,
+        "constraints": null,
+        "continuidad_id": null,
+        "data_type": "money",
+        "export_refs": [],
+        "form_number": null,
+        "formula": null,
+        "id": "03",
+        "input_kind": "manual",
+        "internal_only": false,
+        "label": "Retenciones e ingresos a cuenta por transmisiones o reembolsos de acciones y participaciones de IIC",
+        "legal_refs": [
+          "ley-35-2006:art-99",
+          "rd-439-2007:art-108",
+          "orden-eha-3435-2007:anexo-i"
+        ],
+        "localized_help": {},
+        "localized_labels": {},
+        "number": "03",
+        "required": false,
+        "section": [
+          "liquidacion",
+          "iic_transmisiones_reembolsos"
+        ],
+        "segmento": null,
+        "semantic_role": "iic_transmision_retenciones",
+        "semantic_role_cardinality": "shared",
+        "semantic_role_cardinality_reason": null,
+        "source_refs": [
+          "boe-modelo-117-form-layout"
+        ]
+      },
+      {
+        "aliases": [],
+        "alternate_bindings": [],
+        "binding": null,
+        "constraints": null,
+        "continuidad_id": null,
+        "data_type": "integer",
+        "export_refs": [],
+        "form_number": null,
+        "formula": null,
+        "id": "04",
+        "input_kind": "manual",
+        "internal_only": false,
+        "label": "Numero de perceptores por transmisiones de derechos de suscripcion",
+        "legal_refs": [
+          "ley-35-2006:art-99",
+          "rd-439-2007:art-108",
+          "orden-eha-3435-2007:anexo-i"
+        ],
+        "localized_help": {},
+        "localized_labels": {},
+        "number": "04",
+        "required": false,
+        "section": [
+          "liquidacion",
+          "derechos_suscripcion"
+        ],
+        "segmento": null,
+        "semantic_role": "derechos_suscripcion_perceptores",
+        "semantic_role_cardinality": "shared",
+        "semantic_role_cardinality_reason": null,
+        "source_refs": [
+          "boe-modelo-117-form-layout"
+        ]
+      },
+      {
+        "aliases": [],
+        "alternate_bindings": [],
+        "binding": null,
+        "constraints": null,
+        "continuidad_id": null,
+        "data_type": "money",
+        "export_refs": [],
+        "form_number": null,
+        "formula": null,
+        "id": "05",
+        "input_kind": "manual",
+        "internal_only": false,
+        "label": "Base de retenciones e ingresos a cuenta por transmisiones de derechos de suscripcion",
+        "legal_refs": [
+          "ley-35-2006:art-99",
+          "rd-439-2007:art-108",
+          "orden-eha-3435-2007:anexo-i"
+        ],
+        "localized_help": {},
+        "localized_labels": {},
+        "number": "05",
+        "required": false,
+        "section": [
+          "liquidacion",
+          "derechos_suscripcion"
+        ],
+        "segmento": null,
+        "semantic_role": "derechos_suscripcion_base",
+        "semantic_role_cardinality": "shared",
+        "semantic_role_cardinality_reason": null,
+        "source_refs": [
+          "boe-modelo-117-form-layout"
+        ]
+      },
+      {
+        "aliases": [],
+        "alternate_bindings": [],
+        "binding": null,
+        "constraints": null,
+        "continuidad_id": null,
+        "data_type": "money",
+        "export_refs": [],
+        "form_number": null,
+        "formula": null,
+        "id": "06",
+        "input_kind": "manual",
+        "internal_only": false,
+        "label": "Retenciones e ingresos a cuenta por transmisiones de derechos de suscripcion",
+        "legal_refs": [
+          "ley-35-2006:art-99",
+          "rd-439-2007:art-108",
+          "orden-eha-3435-2007:anexo-i"
+        ],
+        "localized_help": {},
+        "localized_labels": {},
+        "number": "06",
+        "required": false,
+        "section": [
+          "liquidacion",
+          "derechos_suscripcion"
+        ],
+        "segmento": null,
+        "semantic_role": "derechos_suscripcion_retenciones",
+        "semantic_role_cardinality": "shared",
+        "semantic_role_cardinality_reason": null,
+        "source_refs": [
+          "boe-modelo-117-form-layout"
+        ]
+      },
+      {
+        "aliases": [],
+        "alternate_bindings": [],
+        "binding": null,
+        "constraints": null,
+        "continuidad_id": null,
+        "data_type": "money",
+        "export_refs": [],
+        "form_number": null,
+        "formula": null,
+        "id": "07",
+        "input_kind": "manual",
+        "internal_only": false,
+        "label": "Base del pago a cuenta previsto en la disposicion adicional decimonovena de la Ley 35/2006",
+        "legal_refs": [
+          "ley-35-2006:art-99",
+          "rd-439-2007:art-108",
+          "orden-eha-3435-2007:anexo-i"
+        ],
+        "localized_help": {},
+        "localized_labels": {},
+        "number": "07",
+        "required": false,
+        "section": [
+          "liquidacion",
+          "pago_a_cuenta"
+        ],
+        "segmento": null,
+        "semantic_role": "pago_a_cuenta_base",
+        "semantic_role_cardinality": "shared",
+        "semantic_role_cardinality_reason": null,
+        "source_refs": [
+          "boe-modelo-117-form-layout"
+        ]
+      },
+      {
+        "aliases": [],
+        "alternate_bindings": [],
+        "binding": null,
+        "constraints": null,
+        "continuidad_id": null,
+        "data_type": "money",
+        "export_refs": [],
+        "form_number": null,
+        "formula": null,
+        "id": "08",
+        "input_kind": "manual",
+        "internal_only": false,
+        "label": "Pago a cuenta previsto en la disposicion adicional decimonovena de la Ley 35/2006",
+        "legal_refs": [
+          "ley-35-2006:art-99",
+          "rd-439-2007:art-108",
+          "orden-eha-3435-2007:anexo-i"
+        ],
+        "localized_help": {},
+        "localized_labels": {},
+        "number": "08",
+        "required": false,
+        "section": [
+          "liquidacion",
+          "pago_a_cuenta"
+        ],
+        "segmento": null,
+        "semantic_role": "pago_a_cuenta_importe",
+        "semantic_role_cardinality": "shared",
+        "semantic_role_cardinality_reason": null,
+        "source_refs": [
+          "boe-modelo-117-form-layout"
+        ]
+      },
+      {
+        "aliases": [],
+        "alternate_bindings": [],
+        "binding": null,
+        "constraints": null,
+        "continuidad_id": null,
+        "data_type": "money",
+        "export_refs": [],
+        "form_number": null,
+        "formula": "modelo-117-total-liquidacion",
+        "id": "09",
+        "input_kind": "computed",
+        "internal_only": false,
+        "label": "Total liquidacion: suma de retenciones, ingresos a cuenta, pagos a cuenta y regularizacion",
+        "legal_refs": [
+          "ley-35-2006:art-99",
+          "rd-439-2007:art-108",
+          "orden-eha-3435-2007:anexo-i"
+        ],
+        "localized_help": {},
+        "localized_labels": {},
+        "number": "09",
+        "required": false,
+        "section": [
+          "liquidacion",
+          "total_liquidacion"
+        ],
+        "segmento": null,
+        "semantic_role": "total_liquidacion",
+        "semantic_role_cardinality": "shared",
+        "semantic_role_cardinality_reason": null,
+        "source_refs": [
+          "boe-modelo-117-form-text",
+          "boe-modelo-117-form-layout"
+        ]
+      },
+      {
+        "aliases": [],
+        "alternate_bindings": [],
+        "binding": null,
+        "constraints": null,
+        "continuidad_id": null,
+        "data_type": "money",
+        "export_refs": [],
+        "form_number": null,
+        "formula": null,
+        "id": "10",
+        "input_kind": "manual",
+        "internal_only": false,
+        "label": "Resultados a ingresar de anteriores declaraciones por el mismo concepto, ejercicio y periodo",
+        "legal_refs": [
+          "ley-35-2006:art-99",
+          "rd-439-2007:art-108",
+          "orden-eha-3435-2007:anexo-i"
+        ],
+        "localized_help": {},
+        "localized_labels": {},
+        "number": "10",
+        "required": false,
+        "section": [
+          "liquidacion",
+          "complementaria"
+        ],
+        "segmento": null,
+        "semantic_role": "anteriores_declaraciones_resultado_ingresar",
+        "semantic_role_cardinality": "shared",
+        "semantic_role_cardinality_reason": null,
+        "source_refs": [
+          "boe-modelo-117-form-layout"
+        ]
+      },
+      {
+        "aliases": [],
+        "alternate_bindings": [],
+        "binding": null,
+        "constraints": {
+          "enum": null,
+          "legal_refs": [
+            "ley-35-2006:art-99",
+            "rd-439-2007:art-108",
+            "orden-eha-3435-2007:anexo-i"
+          ],
+          "max_length": null,
+          "max_value": null,
+          "min_length": null,
+          "min_value": null,
+          "pattern": null,
+          "sign": "non_negative",
+          "source_refs": [
+            "boe-modelo-117-form-text",
+            "boe-modelo-117-form-layout"
+          ]
+        },
+        "continuidad_id": null,
+        "data_type": "money",
+        "export_refs": [],
+        "form_number": null,
+        "formula": "modelo-117-resultado-ingresar",
+        "id": "11",
+        "input_kind": "computed",
+        "internal_only": false,
+        "label": "Resultado a ingresar",
+        "legal_refs": [
+          "ley-35-2006:art-99",
+          "rd-439-2007:art-108",
+          "orden-eha-3435-2007:anexo-i"
+        ],
+        "localized_help": {},
+        "localized_labels": {},
+        "number": "11",
+        "required": false,
+        "section": [
+          "liquidacion",
+          "resultado"
+        ],
+        "segmento": null,
+        "semantic_role": "cuota_a_ingresar",
+        "semantic_role_cardinality": "shared",
+        "semantic_role_cardinality_reason": null,
+        "source_refs": [
+          "boe-modelo-117-form-text",
+          "boe-modelo-117-form-layout"
+        ]
+      }
+    ],
+    "completeness_manifest": {
+      "casillas": [
+        {
+          "casilla_id": "03",
+          "number": "03",
+          "segmento": null
+        },
+        {
+          "casilla_id": "06",
+          "number": "06",
+          "segmento": null
+        },
+        {
+          "casilla_id": "08",
+          "number": "08",
+          "segmento": null
+        },
+        {
+          "casilla_id": "09",
+          "number": "09",
+          "segmento": null
+        },
+        {
+          "casilla_id": "10",
+          "number": "10",
+          "segmento": null
+        },
+        {
+          "casilla_id": "11",
+          "number": "11",
+          "segmento": null
+        }
+      ],
+      "legal_refs": [
+        "ley-35-2006:art-99",
+        "rd-439-2007:art-108",
+        "orden-eha-3435-2007:anexo-i"
+      ],
+      "manual_extraction": false,
+      "manual_extraction_reason": null,
+      "source_ref": "boe-modelo-117-form-layout",
+      "source_refs": [
+        "boe-modelo-117-form-text",
+        "boe-modelo-117-form-layout"
+      ]
+    },
+    "constructs": [
+      {
+        "algorithm_bindings": [],
+        "algorithm_providers": [],
+        "application_links": [
+          "modelo-117-calculation",
+          "modelo-117-deadline",
+          "modelo-117-filing",
+          "modelo-117-2019-y-siguientes-verification",
+          "modelo-117-review",
+          "modelo-117-approval",
+          "modelo-117-reconciliation",
+          "modelo-117-workflow"
+        ],
+        "bindings": [],
+        "casilla_ids": [
+          "09",
+          "11"
+        ],
+        "deadline_windows": [],
+        "dependency_classifications": [],
+        "export_layouts": [],
+        "extraction_profiles": [],
+        "filing_schedules": [],
+        "formulas": [
+          "modelo-117-total-liquidacion",
+          "modelo-117-resultado-ingresar"
+        ],
+        "id": "modelo-117-total-liquidacion-calculation",
+        "legal_refs": [
+          "ley-35-2006:art-99",
+          "rd-439-2007:art-108",
+          "orden-eha-3435-2007:anexo-i"
+        ],
+        "live_cross_references": [],
+        "parameters": [],
+        "relations": [],
+        "source_refs": [
+          "boe-modelo-117-form-text",
+          "boe-modelo-117-form-layout",
+          "aeat-modelo-117-procedure"
+        ],
+        "support_removal_decisions": [],
+        "title": "Modelo 117 total liquidación / resultado a ingresar",
+        "verification_expectations": [],
+        "workbook_parity_refs": []
+      }
+    ],
+    "continuidad_validation": "advisory",
+    "deadline_windows": [
+      {
+        "applicability_condition_mode": "all",
+        "applicability_conditions": [],
+        "closes_on": "2025-04-21",
+        "filing_year": 2025,
+        "id": "modelo-117-2025-1t",
+        "legal_refs": [
+          "orden-eha-3435-2007:anexo-i"
+        ],
+        "opens_on": "2025-04-01",
+        "payment_cutoff_on": null,
+        "period": {
+          "code": "1T",
+          "filing_year": 2025
+        },
+        "period_kind": "quarterly",
+        "source_refs": [
+          "aeat-modelo-117-procedure"
+        ]
+      },
+      {
+        "applicability_condition_mode": "all",
+        "applicability_conditions": [],
+        "closes_on": "2025-07-21",
+        "filing_year": 2025,
+        "id": "modelo-117-2025-2t",
+        "legal_refs": [
+          "orden-eha-3435-2007:anexo-i"
+        ],
+        "opens_on": "2025-07-01",
+        "payment_cutoff_on": null,
+        "period": {
+          "code": "2T",
+          "filing_year": 2025
+        },
+        "period_kind": "quarterly",
+        "source_refs": [
+          "aeat-modelo-117-procedure"
+        ]
+      },
+      {
+        "applicability_condition_mode": "all",
+        "applicability_conditions": [],
+        "closes_on": "2025-10-21",
+        "filing_year": 2025,
+        "id": "modelo-117-2025-3t",
+        "legal_refs": [
+          "orden-eha-3435-2007:anexo-i"
+        ],
+        "opens_on": "2025-10-01",
+        "payment_cutoff_on": null,
+        "period": {
+          "code": "3T",
+          "filing_year": 2025
+        },
+        "period_kind": "quarterly",
+        "source_refs": [
+          "aeat-modelo-117-procedure"
+        ]
+      },
+      {
+        "applicability_condition_mode": "all",
+        "applicability_conditions": [],
+        "closes_on": "2026-01-21",
+        "filing_year": 2025,
+        "id": "modelo-117-2025-4t",
+        "legal_refs": [
+          "orden-eha-3435-2007:anexo-i"
+        ],
+        "opens_on": "2026-01-01",
+        "payment_cutoff_on": null,
+        "period": {
+          "code": "4T",
+          "filing_year": 2025
+        },
+        "period_kind": "quarterly",
+        "source_refs": [
+          "aeat-modelo-117-procedure"
+        ]
+      }
+    ],
+    "dependency_classifications": [],
+    "export_layouts": [],
+    "extraction_profiles": [],
+    "filing_schedules": [],
+    "formulas": [
+      {
+        "expression": {
+          "args": [
+            {
+              "args": [],
+              "binding": null,
+              "casilla_id": "03",
+              "date_binding": null,
+              "dispatch_table": null,
+              "literal": null,
+              "op": null,
+              "parameter": null,
+              "relation": null
+            },
+            {
+              "args": [],
+              "binding": null,
+              "casilla_id": "06",
+              "date_binding": null,
+              "dispatch_table": null,
+              "literal": null,
+              "op": null,
+              "parameter": null,
+              "relation": null
+            },
+            {
+              "args": [],
+              "binding": null,
+              "casilla_id": "08",
+              "date_binding": null,
+              "dispatch_table": null,
+              "literal": null,
+              "op": null,
+              "parameter": null,
+              "relation": null
+            }
+          ],
+          "binding": null,
+          "casilla_id": null,
+          "date_binding": null,
+          "dispatch_table": null,
+          "literal": null,
+          "op": "add",
+          "parameter": null,
+          "relation": null
+        },
+        "id": "modelo-117-total-liquidacion",
+        "legal_refs": [
+          "ley-35-2006:art-99",
+          "rd-439-2007:art-108",
+          "orden-eha-3435-2007:anexo-i"
+        ],
+        "rounding": "money-2",
+        "source_citations": [
+          {
+            "required_text": [
+              "Suma de retenciones, ingresos a cuenta, pagos a cuenta y regularizacion, en su caso ([03] + [06] + [08])"
+            ],
+            "source_ref": "boe-modelo-117-form-text"
+          }
+        ],
+        "source_refs": [
+          "boe-modelo-117-form-text",
+          "boe-modelo-117-form-layout"
+        ],
+        "target_casilla_id": "09"
+      },
+      {
+        "expression": {
+          "args": [
+            {
+              "args": [],
+              "binding": null,
+              "casilla_id": "09",
+              "date_binding": null,
+              "dispatch_table": null,
+              "literal": null,
+              "op": null,
+              "parameter": null,
+              "relation": null
+            },
+            {
+              "args": [],
+              "binding": null,
+              "casilla_id": "10",
+              "date_binding": null,
+              "dispatch_table": null,
+              "literal": null,
+              "op": null,
+              "parameter": null,
+              "relation": null
+            }
+          ],
+          "binding": null,
+          "casilla_id": null,
+          "date_binding": null,
+          "dispatch_table": null,
+          "literal": null,
+          "op": "subtract",
+          "parameter": null,
+          "relation": null
+        },
+        "id": "modelo-117-resultado-ingresar",
+        "legal_refs": [
+          "ley-35-2006:art-99",
+          "rd-439-2007:art-108",
+          "orden-eha-3435-2007:anexo-i"
+        ],
+        "rounding": "money-2",
+        "source_citations": [
+          {
+            "required_text": [
+              "Resultado a ingresar ([09] - [10])"
+            ],
+            "source_ref": "boe-modelo-117-form-text"
+          }
+        ],
+        "source_refs": [
+          "boe-modelo-117-form-text",
+          "boe-modelo-117-form-layout"
+        ],
+        "target_casilla_id": "11"
+      }
+    ],
+    "id": "2019-y-siguientes",
+    "label": "Orden EHA/3435/2007, ejercicios 2019 y siguientes",
+    "legal_refs": [
+      "ley-35-2006:art-99",
+      "rd-439-2007:art-108",
+      "orden-eha-3435-2007:anexo-i"
+    ],
+    "live_cross_references": [],
+    "orden_aplicabilidad": [
+      "orden-eha-3435-2007:anexo-i"
+    ],
+    "parameters": [],
+    "period_selector": {
+      "periods": [
+        "1T",
+        "2T",
+        "3T",
+        "4T"
+      ],
+      "year_from": 2019,
+      "year_to": null,
+      "years": []
+    },
+    "relations": [],
+    "source_refs": [
+      "aeat-modelo-117-procedure",
+      "boe-modelo-117-form-text",
+      "boe-modelo-117-form-layout"
+    ],
+    "support_removal_decisions": [],
+    "valid_from": "2019-01-01",
+    "valid_to": null,
+    "verification_expectations": [
+      {
+        "computed_casilla_ids": [],
+        "discrepancy_causes": [
+          "extraction_unreliable",
+          "unmodelled_rule",
+          "rounding",
+          "correctness_divergence"
+        ],
+        "externally_grounded_casilla_ids": [],
+        "id": "modelo-117-2019-y-siguientes-reconcile-when-present",
+        "legal_refs": [
+          "ley-35-2006:art-99",
+          "rd-439-2007:art-108",
+          "orden-eha-3435-2007:anexo-i"
+        ],
+        "min_coverage": "0",
+        "reconcile_when_present_casilla_ids": [
+          "09",
+          "11"
+        ],
+        "reconciliation_total_casilla_ids": {},
+        "rounding": "money-2",
+        "source_refs": [
+          "boe-modelo-117-form-text",
+          "boe-modelo-117-form-layout"
+        ],
+        "tolerance": "0.01"
+      }
+    ],
+    "verification_predicates": [],
+    "workbook_parity_refs": [
+      {
+        "fixture_id": "modelo-117-record-design-layout",
+        "formula_coverage": "record_design_layout",
+        "id": "modelo-117-record-design",
+        "legal_refs": [
+          "orden-eha-3435-2007:anexo-i"
+        ],
+        "output_cells": {},
+        "runner_required": false,
+        "source_refs": [
+          "boe-modelo-117-form-layout"
+        ],
+        "tolerance": "0.00",
+        "workbook_source": "boe-modelo-117-form-layout"
+      }
+    ]
+  },
+  "revision_id": "2019-y-siguientes"
+}

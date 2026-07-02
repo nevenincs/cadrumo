@@ -36,8 +36,7 @@ from pathlib import Path
 
 import pytest
 
-from ....application.user_profile import profile_storage_session
-from ....application.user_profile import UserProfileLifecycleRepository
+from ....application.user_profile import UserProfileLifecycleRepository, profile_storage_session
 from ....core import resolve_active_bucket_id
 from ....domain.transactions import (
     BusinessClassification,

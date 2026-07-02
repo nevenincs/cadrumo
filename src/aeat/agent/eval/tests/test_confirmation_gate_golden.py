@@ -36,19 +36,15 @@ import pytest
 
 from ....application.operator_surface import OperatorMutability
 from ....entrypoints.cli import command_schema_refs
-from ....entrypoints.mcp import _server as _mcp_server
-from ....entrypoints.mcp import (
-    McpAnnotations,
-    annotations_for_command,
-)
 from ....entrypoints.mcp import (
     ConfirmationPolicy,
+    McpAnnotations,
+    McpToolDescriptor,
+    annotations_for_command,
+    build_tool_descriptors,
     confirmation_for_tool,
 )
-from ....entrypoints.mcp import (
-    McpToolDescriptor,
-    build_tool_descriptors,
-)
+from ....entrypoints.mcp import _server as _mcp_server
 from .. import ConfirmationGateCheck, ConfirmationTier, load_scenario, run_golden_scenario
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]

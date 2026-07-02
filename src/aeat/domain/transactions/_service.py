@@ -1,6 +1,6 @@
 """Service helpers for transaction catalogues.
 
-Pure functions over :class:`aeat.domain.transactions.TransactionCatalogue`:
+Pure functions over :class:`domain.transactions.TransactionCatalogue`:
 each helper returns a fresh immutable catalogue rather than mutating
 the input. The module brokers the classification/percentage coupling
 rules and history-chain bookkeeping that callers must not implement

@@ -27,6 +27,7 @@ from ._export_support import (
     _approved_modelo_111_registry_draft,
     _approved_modelo_115_registry_draft,
     _approved_modelo_123_registry_draft,
+    _approved_modelo_131_registry_draft,
     _approved_registry_draft,
     _modelo_111_export_headers,
     _modelo_115_export_headers,
@@ -38,17 +39,22 @@ from ._export_support import (
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 
+def _m131_headers() -> dict[str, str]:
+    return {"declaration_type": "I"}
+
+
 # (modelo, draft builder, headers builder) — fixed-width covered modelos that
 # declare a completeness manifest and have a reusable complete approved draft.
-# Modelo 131 (binding-derived, period-sensitive layout) is deferred: its required
-# result casillas are materialised from binding rows, and the value-presence
-# rendered set does not yet observe binding-materialised casillas (tracked as a
-# follow-up alongside the row_field dormancy lock below).
+# Modelo 131 (binding-derived) is covered: with the truth-grounded gate (required =
+# calculation results + schema-required, not optional inputs), its computed result
+# casillas are populated by the complete draft and reach disk, while its optional
+# inputs (02/08/09/12/14) are correctly excluded.
 _COVERED = [
     ("130", _approved_registry_draft, _modelo_130_export_headers),
     ("111", _approved_modelo_111_registry_draft, _modelo_111_export_headers),
     ("115", _approved_modelo_115_registry_draft, _modelo_115_export_headers),
     ("123", _approved_modelo_123_registry_draft, _modelo_123_export_headers),
+    ("131", _approved_modelo_131_registry_draft, _m131_headers),
 ]
 
 # Broader fixed-width, manifest-bearing set for the structural dormancy lock
@@ -77,12 +83,21 @@ def test_complete_draft_reaches_disk_for_every_required_casilla(
     assert manifest is not None, f"modelo {modelo} must declare a completeness manifest to ground the parity gate"
 
     representable = boe_representable_casilla_ids(layout, headers=headers, schema_provider=provider)
-    required_applicable = {casilla.casilla_id for casilla in manifest.casillas} & representable
     rendered = rendered_casilla_ids(layout, draft=draft, headers=headers, schema_provider=provider)
+    # Mirror the gate's required set: calculation RESULTS (formula) and
+    # schema-required casillas that are representable. Optional inputs are excluded
+    # (a blank optional input is a valid zero, not a thin file).
+    collection = provider.get_collection(modelo)
+    required_applicable = {
+        casilla.casilla_id
+        for casilla in manifest.casillas
+        if (schema := collection.get(casilla.casilla_id)) is not None
+        and (schema.formula is not None or schema.required)
+    } & representable
 
     # Non-vacuous: the gate is genuinely active for this modelo.
     assert required_applicable, f"modelo {modelo} has an empty required-applicable set; the gate would pass trivially"
-    # Parity: every required, representable casilla reaches disk for a complete draft.
+    # Parity: every required computed/schema-required casilla reaches disk for a complete draft.
     missing = sorted(required_applicable - rendered)
     assert not missing, f"modelo {modelo} complete draft omits required casillas: {missing}"
 

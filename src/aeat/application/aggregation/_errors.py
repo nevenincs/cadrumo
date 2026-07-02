@@ -79,13 +79,13 @@ class AggregationValidationError(AggregationError, CoreValidationError):
 
 
 def t(message: str) -> tr:
-    """Build a multilingual :class:`aeat.core.i18n.tr` message payload.
+    """Build a multilingual :class:`core.i18n.Translatable` message payload.
 
     Args:
         message: The translation key.
 
     Returns:
-        A :class:`aeat.core.i18n.tr` marker for the key.
+        A :class:`core.i18n.Translatable` marker for the key.
     """
     return tr(message)
 

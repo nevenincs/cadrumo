@@ -41,6 +41,7 @@ from pathlib import Path
 from types import MappingProxyType
 from typing import TYPE_CHECKING
 
+from ...adapters.persistence.profile.participation_index import TransactionParticipationIndexRepository
 from ...core import Modelo
 from ...core.config import Settings
 from ...core.i18n import tr
@@ -81,7 +82,6 @@ from ...domain.modelos import (
     ModeloVerificationFinding,
     ModeloVerificationFindingKind,
     ModeloVerificationFindingSeverity,
-    TransactionParticipationIndexRepository,
     TransactionRevisionParticipation,
     VerificationCompletenessStatus,
     VerificationReport,

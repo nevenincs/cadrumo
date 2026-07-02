@@ -89,10 +89,10 @@ def test_structured_profile_excludes_attachment_evidence_bytes(tmp_path: Path) -
 
 def _seed_attachment_manifest(sha: str) -> None:
     from ....domain.attachments import (
+        Attachment,
         AttachmentKind,
         AttachmentSource,
     )
-    from ....domain.attachments import Attachment
 
     AttachmentStore().write_manifest(
         Attachment(

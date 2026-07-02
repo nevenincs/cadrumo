@@ -16,18 +16,22 @@ failure, never a warning.
 
 The same registry-grounded completeness gate MUST bind the fixed-width
 fichero-BOE (`.boe`) export, not only the workbook transport. `export_draft` MUST,
-before it writes any bytes, assert that every casilla the official record files
-that the `CalculationCompletenessManifest` also requires (`manifest ∩
-representable`, for the draft's disposition) carries a real value on disk; a
-required, representable casilla the draft omits would render as a blank fixed-width
-slot behind a valid SHA-256 digest — the structurally-thin file — and MUST raise a
-hard `FilingExportError` that enumerates every missing casilla with its official
-number and segmento. The rendered set keys on value presence
-(`ModeloValue.value is not None`), never on casilla-id membership, because
-`build_draft` emits an `EMPTY` (`value=None`) row for every declared casilla. The
-gate is scoped to `format == "fixed_width"`; an `xml_dictionary` export omits an
-absent casilla as a legitimately-absent optional element, so the blank-slot
-thinness does not apply.
+before it writes any bytes, assert that every casilla that is a calculation RESULT
+(declares a formula) or is schema-required, and that the
+`CalculationCompletenessManifest` lists AND the official record files (`manifest ∩
+representable`, for the draft's disposition), carries a real value on disk; such a
+casilla rendered blank means the calculation did not populate it — a
+structurally-thin file behind a valid SHA-256 digest — and MUST raise a hard
+`FilingExportError` that enumerates every missing casilla with its official number
+and segmento. Optional operator-input casillas (retenciones, prior payments,
+deductions the taxpayer may legitimately not have — e.g. Modelo 131 casillas
+02/08/09/12/14) are NOT required to carry a value: a blank slot is a valid zero,
+not a thin file, so they are excluded from the required set. The rendered set keys
+on value presence (`ModeloValue.value is not None`), never on casilla-id
+membership, because `build_draft` emits an `EMPTY` (`value=None`) row for every
+declared casilla. The gate is scoped to `format == "fixed_width"`; an
+`xml_dictionary` export omits an absent casilla as a legitimately-absent optional
+element, so the blank-slot thinness does not apply.
 
 ## Why
 

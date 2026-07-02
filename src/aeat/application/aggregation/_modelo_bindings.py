@@ -2,10 +2,10 @@
 
 This module is the calculation-facing bridge from bucket-local stores to
 :class:`~._source_mesh.CalculationSourceResolution`. Each resolver owns one
-:class:`~aeat.core.aggregation.BindingSourceKind`, reads the active
+:class:`~core.BindingSourceKind`, reads the active
 :class:`~._source_mesh.CalculationSourceContext`, and materialises binding
 values declared on the snapshot's
-:class:`~aeat.domain.calculations.registry.ModeloRevision`.
+:class:`~domain.calculations.registry.ModeloRevision`.
 
 The IVA, Renta income, Renta expense, and M130 gasto resolvers delegate their
 ledger projection to :mod:`~._iva_ledger`, :mod:`~._renta_income_ledger`,
@@ -16,7 +16,7 @@ resolver reads the dedicated per-perceptor store through
 source-mesh contract for Modelo 369 and Modelo 190 detail counts.
 
 Invoice-backed checks use
-:class:`~aeat.domain.invoices.InvoiceCatalogueRepository` only as supporting
+:class:`~domain.invoices.InvoiceCatalogueRepository` only as supporting
 evidence: Modelo 303 domestic IVA remains ledger-owned, while Renta expense
 aggregation can attach purchase-invoice evidence to transaction rows before
 producing the shared :class:`~._source_mesh.CalculationSourceResolution`.

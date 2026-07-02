@@ -25,9 +25,9 @@ import pytest
 from ....core.resources import resources
 from ....domain.calculations.registry import (
     CasillaId,
+    VerificationPredicateDefinition,
     validated_casilla_id,
 )
-from ....domain.calculations.registry import VerificationPredicateDefinition
 from ....domain.modelos import (
     ModeloVerificationFindingKind,
     ModeloVerificationFindingSeverity,
