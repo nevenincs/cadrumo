@@ -1,12 +1,12 @@
 """Typed ``--json`` payload schemas for modelo command envelopes.
 
 Each command result is a strict
-:class:`~aeat.entrypoints.cli._schemas.OutputSchema` subclass registered by
-:func:`~aeat.entrypoints.cli._schemas.register_schema` for a stable command path
+:class:`OutputSchema` subclass registered by
+:func:`register_schema` for a stable command path
 and wrapped at emit time in
-:class:`~aeat.entrypoints.cli._schemas.SchemaEnvelope` through
-:func:`~aeat.entrypoints.cli._common._emit_envelope`. This file is the CLI-side
-projection boundary for :mod:`~aeat.application.modelo`: application and domain
+:class:`SchemaEnvelope` through
+:func:`_emit_envelope`. This file is the CLI-side
+projection boundary for :mod:`modelo`: application and domain
 results stay authoritative while these classes expose JSON-safe
 :class:`WorkUnit`,
 :class:`CalculationRevision`,
@@ -73,7 +73,7 @@ if TYPE_CHECKING:
 class WorkUnitPayload(OutputSchema):
     """Shared JSON projection of a bucket-scoped :class:`WorkUnit`.
 
-    Built by :func:`~aeat.entrypoints.cli._modelo_rendering.work_unit_payload`.
+    Built by :func:`work_unit_payload`.
     The payload carries the stable
     :obj:`WorkUnitId`, operator-facing short ids,
     current / filed
@@ -141,13 +141,13 @@ class CalculationRevisionPayload(OutputSchema):
     """Shared JSON projection of a persisted :class:`CalculationRevision`.
 
     Built by
-    :func:`~aeat.entrypoints.cli._modelo_rendering.calculation_revision_payload`.
+    :func:`calculation_revision_payload`.
     ``casilla_values`` is the flat convenience table keyed by
     :obj:`CasillaId`, while
     ``observations`` carries joinable :class:`ObservationPayload` rows projected
     from :class:`CasillaObservation`.
     ``result_summary`` carries :class:`ResultSummaryRowPayload` rows selected
-    from :class:`~aeat.application.modelo.ResultSummaryRow`. The binding and
+    from :class:`ResultSummaryRow`. The binding and
     relation override maps preserve the operator inputs that shaped the draft
     revision.
     """
@@ -263,7 +263,7 @@ class ExternalEvidencePayload(OutputSchema):
     """JSON projection of :class:`ExternalEvidence`.
 
     The evidence reference records the official AEAT source consumed by
-    :func:`~aeat.application.modelo.import_external_filing_evidence`; it is data
+    :func:`import_external_filing_evidence`; it is data
     observed outside the application, not proof that this CLI submitted the return.
     """
 
@@ -478,11 +478,11 @@ class WorkCalculateResult(OutputSchema):
     :class:`CalculationRevisionPayload`,
     then adds the presentation-only values
     carried by
-    :class:`~aeat.application.modelo.ModeloWorkCalculationServiceResult`: Modelo
+    :class:`ModeloWorkCalculationServiceResult`: Modelo
     202 modality, backend authorization state, and optional
     :class:`WorkPlazoDeadlinePayload`.
     Non-blocking authorization and source diagnostics are projected into the envelope's
-    :class:`~aeat.core.json_contract.Notice` rows, not bespoke result fields.
+    :class:`Notice` rows, not bespoke result fields.
     """
 
     operation: str = "modelo.work.calculate"
@@ -532,14 +532,14 @@ class WorkVerifyResult(OutputSchema):
     """Verification report returned by ``aeat app modelo work verify``.
 
     The command delegates to
-    :func:`~aeat.application.modelo.verify_modelo_revision` and returns the
+    :func:`verify_modelo_revision` and returns the
     resulting
     :class:`VerificationReportPayload`.
     On a successful
     verificado-completo verdict the revision transitions to
     ``verificado_completo``; on a refused verdict the revision is unchanged and
     ``findings`` names every blocking or advisory issue. Advisory findings also
-    ride the envelope's :class:`~aeat.core.json_contract.Notice` channel.
+    ride the envelope's :class:`Notice` channel.
     """
 
     operation: str = "modelo.work.verify"
@@ -574,7 +574,7 @@ class WorkFileResult(OutputSchema):
     """Internal-filing confirmation returned by ``aeat app modelo work file``.
 
     The command delegates to
-    :func:`~aeat.application.modelo.file_modelo_revision` and returns the
+    :func:`file_modelo_revision` and returns the
     resulting :class:`ModeloRecordPayload`. It records that the verified
     revision was marked as internally filed. It does not attach
     :class:`ExternalEvidencePayload`; ``live_submission`` is always ``False``.
@@ -606,7 +606,7 @@ class WorkAmendResult(OutputSchema):
     """Amendment filing confirmation returned by ``aeat app modelo work amend``.
 
     The command delegates to
-    :func:`~aeat.application.modelo.amend_modelo_revision` and returns the
+    :func:`amend_modelo_revision` and returns the
     resulting :class:`ModeloRecordPayload` with the amendment-specific pair
     (``amendment_kind``, ``amends_filing_record_id``). The source filing record
     must carry :class:`ExternalEvidence`; the new filing
@@ -730,11 +730,11 @@ class FilingRecordImportResult(OutputSchema):
     """Result emitted by ``aeat app modelo filing-record import``.
 
     The command delegates to
-    :func:`~aeat.application.modelo.import_external_filing_evidence` and returns
+    :func:`import_external_filing_evidence` and returns
     the resulting evidence-bearing :class:`ModeloRecordPayload` with
     :class:`ExternalEvidencePayload` data. Imported records are the
     :class:`ModeloRecord` baseline consumed by
-    :func:`~aeat.application.modelo.amend_modelo_revision`, not live submission.
+    :func:`amend_modelo_revision`, not live submission.
     """
 
     operation: str = "modelo.filing_record.import"
@@ -765,7 +765,7 @@ class FilingRecordLocalObservationResult(OutputSchema):
     """Result emitted by ``aeat app modelo filing-record observe-local``.
 
     The payload mirrors
-    :class:`~aeat.application.modelo._local_observation_actions.ModeloLocalObservationResult`:
+    :class:`ModeloLocalObservationResult`:
     values are stored in the calculation-observation repository for prefill, while
     ``official_evidence``, ``filing_record_created``, and ``aeat_accepted`` remain
     false so consumers cannot mistake operator-entered values for AEAT evidence.
@@ -792,11 +792,11 @@ class ModeloCasillaResult(OutputSchema):
     """Single-casilla semantic detail returned by ``aeat app modelo casilla``.
 
     Projects
-    :class:`~aeat.domain.calculations.registry.ModeloCasillaDetailReport`
+    :class:`ModeloCasillaDetailReport`
     into the JSON envelope: an operator can look up one casilla's official
     label, legal / source grounding, input kind, and, when the casilla is
     computed, the resolved formula ``expression`` from the authoritative
-    :class:`~aeat.domain.calculations.registry.CasillaId` definition on the
+    :class:`CasillaId` definition on the
     resolved registry snapshot, without running a calculation. ``legal_refs``
     and ``source_refs`` stay required so the grounding survives the boundary.
     """
@@ -851,7 +851,7 @@ class BindingEncodedOptionPayload(OutputSchema):
     """One accepted decimal encoding of a boolean-typed decimal-channel binding.
 
     Projection of
-    :class:`~aeat.domain.calculations.registry.BooleanBindingEncodedValue`.
+    :class:`BooleanBindingEncodedValue`.
     ``encoded_value`` is the decimal the operator types on ``--binding``,
     ``boolean_meaning`` is the affirmative/negative sense it carries, and
     ``registry_value`` is the underlying casilla token the boolean maps to. The
@@ -872,7 +872,7 @@ class BindingListRowPayload(OutputSchema):
     parity with the casilla half (``CasillaRowPayload``), per the
     operator-boundary provenance-parity decision of the
     bindings-interface-hardening ADR. ``source`` renders the typed
-    :class:`~aeat.core.BindingSourceKind` value as a string.
+    :class:`BindingSourceKind` value as a string.
     """
 
     modelo: str
@@ -893,7 +893,7 @@ class BindingListRowPayload(OutputSchema):
     Non-empty only for ``source = "relation_prefill"`` bindings, where the
     operator supplies each value through ``--relation RELATION_ID=VALUE``
     rather than ``--binding``. Derived from the resolved revision's
-    relations (:class:`~aeat.domain.calculations.registry.RelationDefinition`
+    relations (:class:`RelationDefinition`
     ``target_binding``), so a relation-fed binding's source is discoverable
     in this listing before a calculation is attempted, for any modelo.
     """
@@ -1248,11 +1248,11 @@ class WorkResumeResult(OutputSchema):
     """Workflow resume precondition and context result.
 
     Combines the resumable
-    :class:`~aeat.application.workflow.WorkflowResumeContext` with selector
+    :class:`WorkflowResumeContext` with selector
     metadata from
-    :class:`~aeat.application.workflow.WorkflowResumeTargetResolution`. The
+    :class:`WorkflowResumeTargetResolution`. The
     ``obligation`` payload is the serialized
-    :class:`~aeat.domain.deadlines.ModeloDeadline` the workflow engine would use
+    :class:`ModeloDeadline` the workflow engine would use
     for a fresh attempt.
     """
 
