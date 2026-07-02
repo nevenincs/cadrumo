@@ -18,8 +18,8 @@ from pathlib import Path
 import pytest
 
 from ....entrypoints.cli import command_schema_refs
-from ....entrypoints.mcp import faithfulness_check
-from ....entrypoints.mcp._hitl import _LIVE_WRITE_LEAVES, HANDOFF_LEAVES
+from ....entrypoints.mcp import HANDOFF_LEAVES, faithfulness_check
+from ....entrypoints.mcp._hitl import _LIVE_WRITE_LEAVES
 from .. import (
     GoldenScenario,
     LiveNarrationRecord,

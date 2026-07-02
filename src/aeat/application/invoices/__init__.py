@@ -58,6 +58,7 @@ from ._creation import (
 )
 from ._importing import (
     InvoiceImportResult,
+    InvoiceRowPayload,
     import_invoices_from_path,
     merge_invoice_import,
     parse_invoice_payload,
@@ -111,6 +112,7 @@ __all__ = [
     "InvoiceMatchRow",
     "InvoiceReconciliationResult",
     "InvoiceReviewProjection",
+    "InvoiceRowPayload",
     "InvoiceTransactionLinkResult",
     "ReconciliationSkippedSuggestion",
     "apply_manual_invoice_match",

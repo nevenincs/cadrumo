@@ -60,6 +60,7 @@ from ._models import (
     EvidenceBundleVerificationError,
     EvidenceRecordRef,
     VerificationCheck,
+    derive_bundle_id,
 )
 from ._service import (
     EvidenceBundleRepository,
@@ -78,4 +79,5 @@ __all__ = [
     "EvidenceBundleVerificationReport",
     "EvidenceRecordRef",
     "VerificationCheck",
+    "derive_bundle_id",
 ]

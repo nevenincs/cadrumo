@@ -67,9 +67,7 @@ def test_counterpart_source_kind_canonical_in_domain() -> None:
 
 def test_counterpart_source_kind_application_imports_from_domain() -> None:
     """The application _counterpart module must re-export the domain alias."""
-    from ..application.aggregation._counterpart import (
-        CounterpartSourceKind as app_csk,
-    )
+    from ..application.aggregation import CounterpartSourceKind as app_csk
     from ..domain.calculations.registry import CounterpartSourceKind as domain_csk
 
     assert app_csk is domain_csk, (
@@ -151,10 +149,10 @@ def test_financial_provider_init_subclass_rejects_missing_verification_source() 
 
     from ..adapters.inbound.financial.providers import (
         FinancialProvider,
+        FinancialProviderConfigError,
         ParsedLedgerRow,
         ProviderValidation,
     )
-    from ..adapters.inbound.financial.providers._base import FinancialProviderConfigError
     from ..domain.transactions import SourceFormat
 
     with pytest.raises(FinancialProviderConfigError, match="verification_source"):
@@ -180,10 +178,10 @@ def test_financial_provider_init_subclass_rejects_no_corpus_without_provisional(
 
     from ..adapters.inbound.financial.providers import (
         FinancialProvider,
+        FinancialProviderConfigError,
         ParsedLedgerRow,
         ProviderValidation,
     )
-    from ..adapters.inbound.financial.providers._base import FinancialProviderConfigError
     from ..domain.transactions import SourceFormat
 
     with pytest.raises(FinancialProviderConfigError, match="no_corpus"):

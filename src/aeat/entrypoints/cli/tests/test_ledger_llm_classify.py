@@ -31,8 +31,7 @@ from typing import Any
 import pytest
 from click.testing import Result
 
-from ....application.user_profile import profile_create_storage_span
-from ....application.user_profile._testing import register_minimal_profile
+from ....application.user_profile import profile_create_storage_span, register_minimal_profile
 from ....application.workflow import workflow_state_repository
 from ....core.config import override_settings
 from ....domain.categories import SpendingCategory

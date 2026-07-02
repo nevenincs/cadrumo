@@ -18,8 +18,7 @@ import mcp.types as mcp_types
 import pytest
 from mcp.shared.memory import create_connected_server_and_client_session as connect
 
-from ....agent.eval import ScriptedPersonaDriver, run_live_session
-from ....agent.eval._live_harness import LiveCallTool
+from ....agent.eval import LiveCallTool, ScriptedPersonaDriver, run_live_session
 from .._dispatch import tool_name_for_command
 from .._harness_tools import HARNESS_LOAD_TOOL
 from .._server import build_server

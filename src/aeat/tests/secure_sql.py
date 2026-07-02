@@ -19,12 +19,12 @@ from ..adapters.persistence.storage.bucket import (
     write_manifest,
 )
 from ..adapters.persistence.storage.master_key import (
+    BucketSession,
     KdfParams,
     activate_session,
     get_master_key_provider,
+    load_or_mint_bucket_dek,
 )
-from ..adapters.persistence.storage.master_key._bucket_session import BucketSession
-from ..adapters.persistence.storage.master_key._master_key_bucket_dek import load_or_mint_bucket_dek
 from ..adapters.persistence.storage.runtime import StorageRuntime, inspect_storage_runtime
 from ..adapters.persistence.storage.runtime_repository import secure_object_repository_for_active_bucket
 from ..adapters.persistence.storage.sql.engine import dispose_engine

@@ -70,10 +70,12 @@ from ._errors import (
     IvaCompensationReconciliationInputError,
     IvaCompensationSeedConflictError,
     IvaCompensationYearRangeError,
+    IvaWalletReconciliationError,
 )
 from ._reconciliation import (
     DEFAULT_MAX_WALLET_AGE_DAYS,
     IvaCompensationAuthoritySource,
+    IvaCompensationDivergence,
     IvaCompensationOverride,
     IvaCompensationReconciliationDecision,
     IvaCompensationWalletObservationProtocol,
@@ -90,6 +92,7 @@ __all__ = [
     "IvaCompensationCarryForwardReport",
     "IvaCompensationCasillaReferenceError",
     "IvaCompensationDecimalParseError",
+    "IvaCompensationDivergence",
     "IvaCompensationExpiryReviewState",
     "IvaCompensationOverride",
     "IvaCompensationPeriodState",
@@ -100,6 +103,7 @@ __all__ = [
     "IvaCompensationYearEndCarryPartition",
     "IvaCompensationYearRangeError",
     "IvaWalletBalanceReport",
+    "IvaWalletReconciliationError",
     "build_iva_compensation_carry_forward_report",
     "build_iva_wallet_balance_report",
     "derive_303_compensation_available",

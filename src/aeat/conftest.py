@@ -31,7 +31,7 @@ import pytest
 # guard. Documented in #158 entry 2 and ADR pending under
 # session-honest-followups P03.S19.
 from .core.external_constants import UTF_8_ENCODING
-from .tests._inventory import package_python_files
+from .tests import package_python_files
 
 _SRC_AEAT_ROOT: Path = Path(__file__).resolve().parent
 """Root of the ``src/aeat/`` source tree (the directory hosting this conftest)."""
@@ -81,10 +81,8 @@ def _isolate_registry_caches() -> Iterator[None]:
     prior non-pytest run, so the registry suite is deterministic regardless of
     leftover state.
     """
-    from .domain.calculations.registry._loader import (
-        _load_registry_tree_cached,
-        clear_fingerprint_cache,
-    )
+    from .domain.calculations.registry import clear_fingerprint_cache
+    from .domain.calculations.registry._loader import _load_registry_tree_cached
 
     def _reset(*, purge_disk: bool) -> None:
         _load_registry_tree_cached.cache_clear()

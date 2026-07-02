@@ -11,7 +11,7 @@ import pytest
 
 from .....core.errors import ERROR_REGISTRY, AeatError, get_registered_error_code
 from .....locales.manager import LocaleManager
-from .....tests._inventory import (
+from .....tests import (
     SRC_AEAT,
     ast_for_path,
     leaf_name,

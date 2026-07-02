@@ -22,7 +22,7 @@ from __future__ import annotations
 import pytest
 
 from ....core import BindingSourceKind
-from ...modelo._calculation_source_policy import (
+from ...modelo import (
     BUCKET_AGGREGATION_LOCK_SOURCES,
     CALLER_OVERRIDABLE_CARRY_SOURCES,
 )

@@ -10,8 +10,7 @@ import pytest
 
 from ..adapters.persistence.storage import has_active_bucket_session
 from ..adapters.persistence.storage.bucket import read_manifest
-from ..adapters.persistence.storage.master_key import activate_session
-from ..adapters.persistence.storage.master_key._bucket_session import BucketSession
+from ..adapters.persistence.storage.master_key import BucketSession, activate_session
 from ..adapters.persistence.storage.runtime import StorageRuntimeReadinessCode, inspect_storage_runtime
 from ..adapters.persistence.storage.sql.engine import dispose_engine, get_engine
 from ..adapters.persistence.storage.sql.secure_objects import SecureObjectRepository

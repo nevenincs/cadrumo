@@ -21,7 +21,7 @@ from __future__ import annotations
 from ._annotations import McpAnnotations, annotations_for_command
 from ._dispatch import command_key_for_tool, tool_name_for_command, tool_request_argv
 from ._faithfulness import FaithfulnessResult, faithfulness_check
-from ._hitl import ConfirmationPolicy, confirmation_for_tool
+from ._hitl import HANDOFF_LEAVES, ConfirmationPolicy, confirmation_for_tool
 from ._persona_scope import (
     PERSONA_TOOL_SCOPES,
     AgentPersona,
@@ -33,6 +33,7 @@ from ._persona_scope import (
 from ._tools import McpToolDescriptor, build_tool_descriptors
 
 __all__ = [
+    "HANDOFF_LEAVES",
     "PERSONA_TOOL_SCOPES",
     "AgentPersona",
     "ConfirmationPolicy",

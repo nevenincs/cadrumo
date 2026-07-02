@@ -75,6 +75,7 @@ from ._models import (
 )
 from ._recorder import record_event
 from ._replay import REPLAY_ACTIVE_ENV_VAR, replay_run
+from ._sink import JsonlRunSink
 from ._store import (
     iter_events,
     iter_runs,
@@ -104,6 +105,7 @@ __all__ = [
     "GenericPayload",
     "GoldenCaptureError",
     "GoldenReplayMismatchError",
+    "JsonlRunSink",
     "NavigationPayload",
     "RunContextInfo",
     "RunContextMissingError",

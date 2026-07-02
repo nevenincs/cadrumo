@@ -37,7 +37,10 @@ from ....domain.modelos import (
     derive_work_unit_id,
 )
 from ....domain.submission import ModeloDraftStatus
-from ....entrypoints.cli._modelo_rendering import calculation_revision_lines, calculation_revision_payload
+from ....entrypoints.cli import (
+    calculation_revision_lines,
+    calculation_revision_payload,
+)
 from .._calculation_actions import _detail_row_binding_values_for_calculation, _suppress_m349_row_field_template_outputs
 from .._calculation_helpers import build_typed_observations
 from .._revision_replay_inputs import _m349_detail_row_replay_inputs

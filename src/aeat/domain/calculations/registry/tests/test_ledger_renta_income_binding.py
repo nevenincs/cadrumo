@@ -24,7 +24,7 @@ from decimal import Decimal
 import pytest
 from pydantic import ValidationError
 
-from .....application.aggregation._renta_income_ledger import RentaIncomeObservation
+from .....application.aggregation import RentaIncomeObservation
 from .....core.aggregation import BindingAggregation, BindingAggregationOp, BindingSourceKind
 from .....core.resources import bundled_path
 from .. import (

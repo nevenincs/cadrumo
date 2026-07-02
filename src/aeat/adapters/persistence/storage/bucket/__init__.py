@@ -64,6 +64,7 @@ from ._output_language_hint import (
     read_bucket_output_language_hint,
     write_bucket_output_language_hint,
 )
+from ._sealed_archive_errors import SealedArchiveLayoutError
 from ._sealed_archive_reader import SealedArchiveContents, read_sealed_archive
 from ._sealed_archive_writer import write_sealed_archive
 
@@ -84,6 +85,7 @@ __all__ = [
     "RecoveryUnavailableError",
     "RecoveryVerificationError",
     "SealedArchiveContents",
+    "SealedArchiveLayoutError",
     "acquire_lock",
     "bucket_paths",
     "clear_bucket_output_language_hint",

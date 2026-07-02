@@ -66,6 +66,7 @@ from ._authenticator import (
     BrowserSessionLike,
     BrowserSessionProfileLike,
 )
+from ._authenticator_types import CertificateHealthCheck
 from ._certificate_backends._playwright_context import (
     build_client_certificates_kwarg,
 )
@@ -151,6 +152,7 @@ __all__ = [
     "CertificateExpiredError",
     "CertificateHandshakeError",
     "CertificateHealth",
+    "CertificateHealthCheck",
     "CertificateHealthSeverity",
     "CertificateLoadError",
     "CertificateLoginAssertionDetail",

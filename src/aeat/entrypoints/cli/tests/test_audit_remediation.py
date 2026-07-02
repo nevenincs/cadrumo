@@ -11,7 +11,7 @@ import click
 import pytest
 from click.testing import Result
 
-from ....tests._inventory import leaf_name
+from ....tests import leaf_name
 from ....tests.cli_runner import aeat_click_command, invoke_cached_cli
 from ....tests.secure_sql import isolated_profile_storage_root, isolated_runtime_profile
 

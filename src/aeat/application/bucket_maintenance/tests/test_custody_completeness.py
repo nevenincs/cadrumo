@@ -157,7 +157,10 @@ def test_carried_evidence_carry_is_not_tautological(tmp_path: Path) -> None:
 
     from ....adapters.persistence.storage import StorageCustodyProfile
     from ....tests.secure_sql import isolated_two_bucket_runtime
-    from ...user_profile._custody_carry import restore_carried_objects, serialize_carried_objects
+    from ...user_profile import (
+        restore_carried_objects,
+        serialize_carried_objects,
+    )
 
     with isolated_two_bucket_runtime(tmp_path=tmp_path) as multi:
         sha = AttachmentStore().put_bytes(_EVIDENCE)
@@ -240,10 +243,8 @@ def test_every_carried_namespace_has_a_natural_key_resolver() -> None:
     a build-time failure instead of an export-time surprise.
     """
     from ....adapters.persistence.storage import StorageCustodyProfile
-    from ...user_profile._custody_carry import (
-        _natural_key_resolvers,
-        carried_namespace_definitions,
-    )
+    from ...user_profile import carried_namespace_definitions
+    from ...user_profile._custody_carry import _natural_key_resolvers
 
     resolvers = set(_natural_key_resolvers())
     unresolved = [
