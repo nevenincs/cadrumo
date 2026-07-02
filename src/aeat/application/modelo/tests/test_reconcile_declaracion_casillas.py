@@ -354,13 +354,14 @@ def test_header_mismatch_and_casilla_mismatch_both_surface_together() -> None:
 
 
 def test_unenrolled_modelo_refuses_casilla_level_declaration_reconcile() -> None:
-    """Modelo 303 is not yet enrolled in casilla-level declaración reconcile;
-    the private seam itself refuses cleanly (defence in depth alongside the
-    public ``modelo_reconcile`` pre-check)."""
-    work_unit = _seed_work_unit(modelo="303")
+    """Modelo 200 declares no ``declaracion_pdf`` extraction profile at all and
+    is not enrolled in casilla-level declaración reconcile; the private seam
+    itself refuses cleanly (defence in depth alongside the public
+    ``modelo_reconcile`` pre-check)."""
+    work_unit = _seed_work_unit(modelo="200", filing_year=_FILING_YEAR, period="0A")
 
     with pytest.raises(ReconciliationDeclaracionSourceUnsupportedError):
         _reconcile(
             work_unit,
-            _synthetic_declaracion(work_unit, values={"27": Decimal("100.00")}, modelo="303"),
+            _synthetic_declaracion(work_unit, values={"00552": Decimal("100.00")}, modelo="200"),
         )
