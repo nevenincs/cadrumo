@@ -44,3 +44,10 @@ destructive un-bundling that a swept commit tempts).
   This is the `84f84166f` incident.
 - **Bad:** a no-pathspec `git commit` "because I only touched one file" — you did
   not stage the index; peers did, and the commit takes the whole index.
+- **Bad:** a broad `git add` (a directory, `-A`, or `.`) that sweeps peer-staged
+  files, then a `git reset -- <your files>` to "undo" it. `git reset` in any form
+  is categorically forbidden here (`aeat-git-worktree-safety`) — even an
+  index-only pathspec reset. The fix is to never over-stage: `git add -- <your
+  explicit files only>` then `git commit -- <the same explicit files>`. If you
+  ever find you need `git reset` to clean up a bad add, you added too broadly —
+  there is no reset escape hatch.
