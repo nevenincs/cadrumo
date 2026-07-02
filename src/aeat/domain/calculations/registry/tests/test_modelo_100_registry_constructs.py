@@ -106,7 +106,7 @@ def test_modelo_100_2025_member_grounded_constructs_do_not_declare_extra_legal_r
     assert not offenders
 
 
-def test_modelo_100_payments_retentions_construct_covers_classified_payment_bindings() -> None:
+def test_modelo_100_payments_retentions_construct_covers_classified_payment_members() -> None:
     """payments_retentions covers retention + pagos-a-cuenta filings only.
 
     Some previous_filing bindings are not payment/retention sources:
@@ -120,33 +120,29 @@ def test_modelo_100_payments_retentions_construct_covers_classified_payment_bind
         for classification in snapshot.revision.dependency_classifications
         if "renta-payments-retentions" in classification.target_constructs
     }
-    expected = {
+    expected_bindings = {
         binding.id
         for binding in snapshot.revision.bindings
         if binding.source in {"previous_filing", "relation_prefill"}
         and selector_as_dict(binding).get("source_modelo") in payment_source_modelos
     }
+    expected_relations = {
+        relation.id for relation in snapshot.revision.relations if relation.source_modelo in payment_source_modelos
+    }
+    expected_classifications = {
+        classification.id
+        for classification in snapshot.dependency_classifications.values()
+        if "renta-payments-retentions" in classification.target_constructs
+    }
 
-    assert set(payments_retentions.bindings) == expected
+    assert set(payments_retentions.bindings) == expected_bindings
+    assert set(payments_retentions.relations) == expected_relations
+    assert set(payments_retentions.dependency_classifications) == expected_classifications
     assert "renta-2025-base-liquidable-negativa-general-anterior" not in payments_retentions.bindings
     assert (
         "renta-2025-base-liquidable-negativa-general-anterior"
         in snapshot.constructs["renta-anexo-c-base-liquidable-negativa-general"].bindings
     )
-
-
-def test_modelo_100_payments_retentions_construct_excludes_atribucion_relations() -> None:
-    snapshot = _modelo_100_snapshot()
-    payments_retentions = snapshot.constructs["renta-payments-retentions"]
-    payment_source_modelos = {
-        classification.source_modelo
-        for classification in snapshot.revision.dependency_classifications
-        if "renta-payments-retentions" in classification.target_constructs
-    }
-    expected = {
-        relation.id for relation in snapshot.revision.relations if relation.source_modelo in payment_source_modelos
-    }
-    assert set(payments_retentions.relations) == expected
 
 
 def test_modelo_100_economic_activities_construct_pins_estimacion_directa_binding() -> None:
@@ -166,17 +162,6 @@ def test_modelo_100_dependent_modelos_construct_carries_every_dependency_classif
     snapshot = _modelo_100_snapshot()
     dependencies = snapshot.constructs["renta-dependent-modelos"]
     assert set(dependencies.dependency_classifications) == set(snapshot.dependency_classifications)
-
-
-def test_modelo_100_payments_retentions_construct_dependency_classifications_target_payments() -> None:
-    snapshot = _modelo_100_snapshot()
-    payments_retentions = snapshot.constructs["renta-payments-retentions"]
-    expected = {
-        classification.id
-        for classification in snapshot.dependency_classifications.values()
-        if "renta-payments-retentions" in classification.target_constructs
-    }
-    assert set(payments_retentions.dependency_classifications) == expected
 
 
 _CASILLA_TO_PROFILE_BINDING: Mapping[CasillaId, str] = _binding_map_by_casilla(
