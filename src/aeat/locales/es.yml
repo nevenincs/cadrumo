@@ -960,8 +960,19 @@ application:
       cross_casilla_invariant_violated: 'cross-casilla invariant %{predicate_id} violated:
         %{expression}'
       cross_period_modelo_not_applicable:
-        message: 'Las dependencias entre periodos de modelos origen que el contribuyente no presenta se excluyeron como no aplicables: {modelos}. Para retenciones soportadas, introduce el importe del certificado de ingresos con --binding CLAVE=VALOR, no con --casilla. CLAVE=VALOR significa que el id del binding va a la izquierda de un unico signo igual y el valor a la derecha. Para pagos fraccionados mutuamente excluyentes, confirma el regimen de estimacion de actividad en el perfil.'
-        next_action: 'Usa `aeat app modelo bindings list --missing` para identificar el binding de retenciones. Aporta el importe del certificado con --binding CLAVE=VALOR cuando corresponda: pon el id del binding a la izquierda de un unico signo igual y el importe a la derecha. Confirma el regimen de estimacion de IRPF del perfil si se excluyo un modelo de pago fraccionado mutuamente excluyente.'
+        message: 'Las dependencias entre periodos de modelos origen que el contribuyente
+          no presenta se excluyeron como no aplicables: {modelos}. Para retenciones
+          soportadas, introduce el importe del certificado de ingresos con --binding
+          CLAVE=VALOR, no con --casilla. CLAVE=VALOR significa que el id del binding
+          va a la izquierda de un unico signo igual y el valor a la derecha. Para
+          pagos fraccionados mutuamente excluyentes, confirma el regimen de estimacion
+          de actividad en el perfil.'
+        next_action: 'Usa `aeat app modelo bindings list --missing` para identificar
+          el binding de retenciones. Aporta el importe del certificado con --binding
+          CLAVE=VALOR cuando corresponda: pon el id del binding a la izquierda de
+          un unico signo igual y el importe a la derecha. Confirma el regimen de estimacion
+          de IRPF del perfil si se excluyo un modelo de pago fraccionado mutuamente
+          excluyente.'
       cross_period_non_official_local_chain:
         message: 'el arrastre entre periodos uso un periodo anterior presentado localmente
           en el mismo ejercicio sin evidencia externa de la AEAT: modelo=%{source_modelo}
@@ -2294,6 +2305,11 @@ cli:
         set_not_decimal: El valor de --set debe ser un decimal; se recibió {value}.
         set_override_help: Valor de casilla corregido con sintaxis CASILLA_ID=DECIMAL
           (repetible; al menos uno requerido)
+        state_label_borrador: Borrador
+        state_label_descartado: Descartado
+        state_label_presentado: Presentado
+        state_label_presentado_supersedido: Presentacion sustituida
+        state_label_verificado_completo: Verificado completo
         status_help: Mostrar los metadatos de una unidad de trabajo
         verify_help: Verificar una revisión draft contra el contrato verified-complete
         verify_selector_help: Selector de revision borrador (current, latest-draft
@@ -2303,11 +2319,6 @@ cli:
         year_help: Ejercicio fiscal de la unidad de trabajo (p. ej. 2026)
         year_out_of_range: El ejercicio fiscal %{year} está fuera de rango; indique
           un año entre %{minimum} y %{maximum}.
-        state_label_borrador: 'Borrador'
-        state_label_verificado_completo: 'Verificado completo'
-        state_label_presentado: 'Presentado'
-        state_label_presentado_supersedido: 'Presentacion sustituida'
-        state_label_descartado: 'Descartado'
   common:
     errors:
       draft_id_not_found: ID de borrador %{draft_id} no encontrado
@@ -2627,6 +2638,15 @@ cli:
       delete_requires_yes: La eliminación es destructiva. Vuelve a ejecutar 'aeat
         config profile delete %{name} --yes' para confirmar.
       delete_yes_help: Confirma explícitamente la eliminación
+      descendiente:
+        add_flag_help: 'NACIMIENTO=AAAA-MM-DD[,ADOPCION=AAAA-MM-DD][,DISCAPACIDAD=0|33|65][,CONVIVENCIA=true|false][,CUSTODIA=true|false][,MESES_TRABAJO=0..12][,GASTOS_GUARDERIA=N][,NIF=XXXXXXXXX]. Repetible.'
+        add_help: 'Añadir uno o varios descendientes al perfil activo.'
+        help: 'Declarar descendientes para el mínimo por descendientes del art. 58/61 LIRPF.'
+        index_out_of_range: 'Índice %{index} fuera de rango; el perfil tiene %{total} descendiente(s).'
+        invalid_flag: 'El indicador --descendiente %{flag} no es válido: %{detail}'
+        list_help: 'Listar los descendientes declarados en el perfil activo.'
+        remove_help: 'Eliminar un descendiente por índice (base 0) del perfil activo.'
+        remove_index_help: 'Índice (base 0) del descendiente a eliminar.'
       duplicate_display_name_help: Nombre visible para el nuevo perfil (por defecto
         el id de destino)
       duplicate_help: Copiar un perfil bajo un nuevo id y nombre visible
