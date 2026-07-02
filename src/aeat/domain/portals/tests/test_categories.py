@@ -11,46 +11,54 @@ from .._hosts import portal_host_name
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 
-def test_portal_category_has_exactly_7_members() -> None:
-    """The category enum exposes exactly 7 members."""
-    expected = {
-        PortalCategory.AUTH,
-        PortalCategory.FILING,
-        PortalCategory.CENSO,
-        PortalCategory.CONSULTATION,
-        PortalCategory.BORRADOR,
-        PortalCategory.PAYMENT,
-        PortalCategory.CALENDAR_REFERENCE,
-    }
-    assert set(PortalCategory) == expected
-    assert len(list(PortalCategory)) == 7
-
-
-def test_auth_method_has_exactly_7_members() -> None:
-    """The auth-method enum exposes exactly 7 members including ANONYMOUS and REFERENCE_NUMBER."""
-    expected = {
-        AuthMethod.ANONYMOUS,
-        AuthMethod.CLAVE_PIN,
-        AuthMethod.CLAVE_PERMANENTE,
-        AuthMethod.CLAVE_MOVIL,
-        AuthMethod.CERTIFICATE,
-        AuthMethod.DNIE,
-        AuthMethod.REFERENCE_NUMBER,
-    }
-    assert set(AuthMethod) == expected
-    assert len(list(AuthMethod)) == 7
-
-
-def test_url_stability_has_exactly_4_members() -> None:
-    """The URL-stability enum exposes exactly 4 tiers."""
-    expected = {
-        UrlStability.STABLE_PROTOCOL_GRADE,
-        UrlStability.STABLE_WITHIN_CAMPAIGN,
-        UrlStability.VOLATILE_APP_PATH,
-        UrlStability.RETIRED,
-    }
-    assert set(UrlStability) == expected
-    assert len(list(UrlStability)) == 4
+@pytest.mark.parametrize(
+    ("enum_cls", "expected_members"),
+    [
+        pytest.param(
+            PortalCategory,
+            {
+                PortalCategory.AUTH,
+                PortalCategory.FILING,
+                PortalCategory.CENSO,
+                PortalCategory.CONSULTATION,
+                PortalCategory.BORRADOR,
+                PortalCategory.PAYMENT,
+                PortalCategory.CALENDAR_REFERENCE,
+            },
+            id="portal-category",
+        ),
+        pytest.param(
+            AuthMethod,
+            {
+                AuthMethod.ANONYMOUS,
+                AuthMethod.CLAVE_PIN,
+                AuthMethod.CLAVE_PERMANENTE,
+                AuthMethod.CLAVE_MOVIL,
+                AuthMethod.CERTIFICATE,
+                AuthMethod.DNIE,
+                AuthMethod.REFERENCE_NUMBER,
+            },
+            id="auth-method",
+        ),
+        pytest.param(
+            UrlStability,
+            {
+                UrlStability.STABLE_PROTOCOL_GRADE,
+                UrlStability.STABLE_WITHIN_CAMPAIGN,
+                UrlStability.VOLATILE_APP_PATH,
+                UrlStability.RETIRED,
+            },
+            id="url-stability",
+        ),
+    ],
+)
+def test_category_family_enum_members(
+    enum_cls: type[PortalCategory | AuthMethod | UrlStability],
+    expected_members: set[PortalCategory | AuthMethod | UrlStability],
+) -> None:
+    """Category-family enums expose exactly the committed members."""
+    assert set(enum_cls) == expected_members
+    assert len(list(enum_cls)) == len(expected_members)
 
 
 def test_subdomain_has_exactly_7_members() -> None:
