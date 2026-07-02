@@ -334,8 +334,7 @@ def test_taxation_comparison_error_is_registered_and_envelopes() -> None:
     registry declaration in aeat.core.errors.registry._application, not
     hand-computed.
     """
-    from ....core.errors import ERROR_REGISTRY, build_error_envelope
-    from ....core.errors import get_registered_error_code
+    from ....core.errors import ERROR_REGISTRY, build_error_envelope, get_registered_error_code
     from .._taxation_comparison import TaxationComparisonError
 
     # Registry membership: the declared code must be present in ERROR_REGISTRY.

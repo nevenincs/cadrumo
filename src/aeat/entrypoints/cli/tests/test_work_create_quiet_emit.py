@@ -33,9 +33,7 @@ import typer
 import typer.main
 
 from ....core import Period
-from ....domain.modelos import WorkUnit
-from ....domain.modelos import ModeloCode
-from ....domain.modelos import derive_work_unit_id
+from ....domain.modelos import ModeloCode, WorkUnit, derive_work_unit_id
 from ....tests.cli_runner import invoke_cached_cli
 from .._common import _emit_envelope
 from .._modelo_payloads import WorkCreateResult

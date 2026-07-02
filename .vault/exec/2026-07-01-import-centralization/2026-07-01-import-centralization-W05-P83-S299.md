@@ -1,0 +1,64 @@
+---
+tags:
+  - '#exec'
+  - '#import-centralization'
+date: '2026-07-02'
+modified: '2026-07-02'
+step_id: 'S299'
+related:
+  - "[[2026-07-01-import-centralization-plan]]"
+---
+
+<!-- FRONTMATTER RULES:
+     tags: one directory tag (hardcoded #exec) and one feature tag.
+     Replace import-centralization with a kebab-case feature tag, e.g. #foo-bar.
+     Additional tags may be appended below the required pair.
+
+     modified: CLI-maintained last-modified stamp; set at scaffold time,
+     refreshed by mutating CLI verbs and vault check fix; never hand-edit.
+
+     step_id is the originating Step's canonical identifier, e.g. S01.
+     The S299 and 2026-07-01-import-centralization-plan placeholders are machine-filled by
+     `vaultspec-core vault add exec`; do not fill them by hand.
+
+     Related: use wiki-links as '[[yyyy-mm-dd-foo-bar-plan]]' and link the
+     parent plan.
+
+     DO NOT add fields beyond those scaffolded; metadata lives
+     only in the frontmatter. -->
+
+<!-- LINK RULES:
+     - [[wiki-links]] are ONLY for .vault/ documents in the related: field above.
+     - NEVER use [[wiki-links]] or markdown links in the document body.
+     - NEVER reference file paths in the body. If you must name a source file,
+       class, or function, use inline backtick code: `src/module.py`. -->
+
+<!-- STEP RECORD:
+     This file represents one Step from the originating plan. Identified
+     by its canonical leaf identifier (S##) and ancestor display path.
+     The Rewire the 427 test-only cross-package private import site(s) across 138 test file(s) reaching into `aeat.domain.modelos` onto its promoted top-level facade and ## Scope
+
+- `src/aeat/domain/modelos (test consumers)` placeholders below are machine-filled
+     by `vaultspec-core vault add exec` from the originating Step row;
+     do not fill them by hand. -->
+
+# Rewire the 427 test-only cross-package private import site(s) across 138 test file(s) reaching into `aeat.domain.modelos` onto its promoted top-level facade
+
+## Scope
+
+- `src/aeat/domain/modelos (test consumers)`
+
+## Description
+
+- Extend `dev/import_centralization_codemod.py` with `--include-tests` / `--tests-only` flags reusing the Wave W02 mixed-import, `TYPE_CHECKING`, relative-import, and alias-handling logic.
+- Run the codemod against every test module reaching into `aeat.domain.modelos`, rewriting resolvable private-submodule imports onto the package's promoted `__all__` facade.
+- Format and lint every touched test file with `ruff check --fix` and `ruff format`.
+- Isolate hunks entangled with concurrent peer working-tree edits via a HEAD-anchored `git apply --cached` drive rather than overwriting peer content.
+
+## Outcome
+
+Rewrote the resolvable subset of the 427 originally-scanned sites onto `aeat.domain.modelos`; `pytest --collect-only -q` stayed clean immediately after landing. A residual ~5 sites remain because they import symbols not yet promoted to the package's `__all__` facade (a Wave W01 facade-promotion precondition, out of this Step's mechanical-rewrite scope).
+
+## Notes
+
+None.
