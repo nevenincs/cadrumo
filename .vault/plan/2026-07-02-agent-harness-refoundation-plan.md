@@ -39,7 +39,7 @@ Replace the shared args bag with per-verb input schemas and group the manifest-d
 
 Add the search-plus-execute long-tail fallback and register the prompts and resources server capabilities the later delivery channels need.
 
-- [ ] `W01.P02.S06` - Add the search-plus-execute meta-tool pair for verbs outside the curated toolsets; `src/aeat/entrypoints/mcp/_meta_tools.py`.
+- [x] `W01.P02.S06` - Add the search-plus-execute meta-tool pair for verbs outside the curated toolsets; `src/aeat/entrypoints/mcp/_meta_tools.py`.
 - [ ] `W01.P02.S07` - Register the prompts and resources server capabilities on the stdio server; `src/aeat/entrypoints/mcp/_server.py`.
 - [ ] `W01.P02.S08` - Add tests for the meta-tool fallback and capability registration; `src/aeat/entrypoints/mcp/tests/test_meta_tools.py`.
 
