@@ -5,7 +5,8 @@ return in plain language, then calls the same
 :func:`~aeat.application.modelo.amend_modelo_revision` composition path
 :mod:`_modelo.py`'s ``work amend`` verb uses. This module documents the JSON
 transport shape only; the wizard's step-by-step prompting and amendment
-delegation live in :mod:`_modelo_amend_wizard_cli`.
+delegation live in :mod:`_modelo_amend_wizard_cli`. Every payload here is an
+:class:`OutputSchema` subclass registered on the JSON-contract surface.
 """
 
 from __future__ import annotations
