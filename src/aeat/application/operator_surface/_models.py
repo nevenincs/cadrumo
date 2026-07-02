@@ -3,10 +3,10 @@
 The records describe accepted :class:`RootSurface` values, curated
 :class:`HelpDocument` / :class:`RootLandingReport` presentation documents,
 mounted :class:`MountedCommandFamily` declarations, parser-only
-:class:`~aeat.core.BindingSourceKind` aliases, backend :class:`ServiceOwner`
+:class:`~core.BindingSourceKind` aliases, backend :class:`ServiceOwner`
 inventory, stable :class:`OperatorSurfaceLogFields`, and the aggregate
 :class:`OperatorSurfaceContract` built by
-:func:`~aeat.application.operator_surface.build_operator_surface_contract`.
+:func:`~application.operator_surface.build_operator_surface_contract`.
 They are data contracts only; builders and renderers live in sibling modules.
 
 S538 invariant-guard classification note
@@ -14,7 +14,7 @@ S538 invariant-guard classification note
 All :class:`ValueError` raises in this module appear inside Pydantic v2
 ``@field_validator`` / ``@model_validator`` methods. Pydantic wraps these into
 :class:`pydantic.ValidationError` automatically; raising any other exception
-type (including :class:`aeat.core.errors.AeatError`) would bypass that wrapping
+type (including :class:`core.errors.AeatError`) would bypass that wrapping
 and surface as an uncaught internal exception. These guards are therefore
 **developer-surface-only invariants** and must remain :class:`ValueError`. They
 are NOT operator-facing errors and do not require ``translated_message``.
@@ -90,7 +90,7 @@ class MountedCommandDomain(StrEnum):
 class RootSurface(BaseModel):
     """Backend ownership record for an accepted root surface.
 
-    Instances are declared in :data:`~aeat.application.operator_surface.ACCEPTED_ROOTS`
+    Instances are declared in :data:`~application.operator_surface.ACCEPTED_ROOTS`
     and validated into the aggregate :class:`OperatorSurfaceContract`. The
     ``required_children`` field names required command-family children, not an
     exhaustive command tree.
@@ -150,7 +150,7 @@ class HelpDocument(BaseModel):
 class RootLandingReport(BaseModel):
     """Bare-root landing report built from caller-projected profile state.
 
-    :func:`~aeat.application.operator_surface.build_root_landing_report` creates
+    :func:`~application.operator_surface.build_root_landing_report` creates
     this record from an already-resolved profile display label. The model carries
     the message and next command only; it does not perform profile discovery.
     """
@@ -201,7 +201,7 @@ class SourceKindAlias(BaseModel):
     """Input-only parser alias mapped to canonical :class:`BindingSourceKind`.
 
     Alias resolution is owned by
-    :func:`~aeat.application.operator_surface.resolve_source_kind_alias`; no
+    :func:`~application.operator_surface.resolve_source_kind_alias`; no
     operator-only source-kind enum is introduced here.
     """
 
@@ -280,7 +280,7 @@ class OperatorSurfaceLogFields(BaseModel):
 class OperatorSurfaceContract(BaseModel):
     """Complete backend-owned contract consumed by CLI adapters.
 
-    Built by :func:`~aeat.application.operator_surface.build_operator_surface_contract`,
+    Built by :func:`~application.operator_surface.build_operator_surface_contract`,
     this record ties together accepted roots, modelo lifecycle vocabulary,
     canonical :class:`BindingSourceKind` subset, parser aliases, mounted command
     families, backend ownership inventory, log metadata, and registered error
