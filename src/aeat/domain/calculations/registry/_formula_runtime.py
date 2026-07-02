@@ -58,7 +58,6 @@ from ._schema import FormulaExpression, ParameterDefinition, RegistrySnapshot
 
 _ZERO = Decimal("0")
 _ONE = Decimal("1")
-_M100_IMPUTATION_YEAR_DAYS = Decimal("365")
 read_parameter, _resolve_bracket = _ops.read_parameter, _ops.resolve_bracket
 
 
@@ -132,6 +131,7 @@ class _M100ResolveImputedRentArgs:
     mixed_use_days_casilla_id: CasillaId
     recent_rate_parameter: ParameterId
     old_rate_parameter: ParameterId
+    year_days_parameter: ParameterId
 
 
 class RegistryCalculationEntry(BaseModel):
@@ -798,9 +798,12 @@ def _evaluate_m100_resolve_renta_inmobiliaria_imputada(
         return _ZERO
 
     effective_days = mixed_use_days if mixed_use else disposal_days
+    year_days = _m100_scalar_parameter_value(args.year_days_parameter, ctx, op=op)
     _m100_validate_imputation_days(
         effective_days,
         casilla_id=args.mixed_use_days_casilla_id if mixed_use else args.disposal_days_casilla_id,
+        max_days=year_days,
+        max_days_parameter_id=args.year_days_parameter,
     )
     if not mixed_use and (mixed_use_days != _ZERO or disposal_percentage != _ZERO):
         raise RegistryValidationError(
@@ -828,13 +831,13 @@ def _evaluate_m100_resolve_renta_inmobiliaria_imputada(
     recent_rate = _m100_scalar_parameter_value(args.recent_rate_parameter, ctx, op=op)
     old_rate = _m100_scalar_parameter_value(args.old_rate_parameter, ctx, op=op)
     rate = recent_rate if is_revised else old_rate
-    return catastral_value * rate * (effective_days / _M100_IMPUTATION_YEAR_DAYS) * share
+    return catastral_value * rate * (effective_days / year_days) * share
 
 
 def _m100_resolve_imputed_rent_args(expression: FormulaExpression) -> _M100ResolveImputedRentArgs:
     op = "m100_resolve_renta_inmobiliaria_imputada"
-    if len(expression.args) != 8:
-        raise RegistryValidationError(f"formula op {op!r} expects 8 args, got {len(expression.args)}")
+    if len(expression.args) != 9:
+        raise RegistryValidationError(f"formula op {op!r} expects 9 args, got {len(expression.args)}")
     (
         catastral_value_arg,
         revised_flag_arg,
@@ -842,6 +845,7 @@ def _m100_resolve_imputed_rent_args(expression: FormulaExpression) -> _M100Resol
         mixed_use_flag_arg,
         disposal_percentage_arg,
         mixed_use_days_arg,
+        year_days_arg,
         recent_rate_arg,
         old_rate_arg,
     ) = expression.args
@@ -857,10 +861,12 @@ def _m100_resolve_imputed_rent_args(expression: FormulaExpression) -> _M100Resol
         raise RegistryValidationError(f"formula op {op!r} requires args[4] to be a casilla leaf")
     if mixed_use_days_arg.casilla_id is None:
         raise RegistryValidationError(f"formula op {op!r} requires args[5] to be a casilla leaf")
-    if recent_rate_arg.parameter is None:
+    if year_days_arg.parameter is None:
         raise RegistryValidationError(f"formula op {op!r} requires args[6] to be a parameter leaf")
-    if old_rate_arg.parameter is None:
+    if recent_rate_arg.parameter is None:
         raise RegistryValidationError(f"formula op {op!r} requires args[7] to be a parameter leaf")
+    if old_rate_arg.parameter is None:
+        raise RegistryValidationError(f"formula op {op!r} requires args[8] to be a parameter leaf")
     return _M100ResolveImputedRentArgs(
         catastral_value_casilla_id=catastral_value_arg.casilla_id,
         revised_flag_casilla_id=revised_flag_arg.casilla_id,
@@ -870,6 +876,7 @@ def _m100_resolve_imputed_rent_args(expression: FormulaExpression) -> _M100Resol
         mixed_use_days_casilla_id=mixed_use_days_arg.casilla_id,
         recent_rate_parameter=recent_rate_arg.parameter,
         old_rate_parameter=old_rate_arg.parameter,
+        year_days_parameter=year_days_arg.parameter,
     )
 
 
@@ -916,12 +923,24 @@ def _m100_boolean_casilla_value(casilla_id: CasillaId, ctx: _EvalContext, *, op:
     return value == _ONE
 
 
-def _m100_validate_imputation_days(days: Decimal, *, casilla_id: CasillaId) -> None:
-    if days != days.to_integral_value() or days <= _ZERO or days > _M100_IMPUTATION_YEAR_DAYS:
+def _m100_validate_imputation_days(
+    days: Decimal,
+    *,
+    casilla_id: CasillaId,
+    max_days: Decimal,
+    max_days_parameter_id: ParameterId,
+) -> None:
+    if max_days != max_days.to_integral_value() or max_days <= _ZERO or max_days > Decimal("366"):
         raise RegistryValidationError(
-            "M100 Art.85 imputation days must be an integer in [1, 365]",
+            "M100 Art.85 imputation year-days parameter must be an integer in [1, 366]",
             translated_message="errors.calc.m100_art85_imputation_days_invalid",
-            context={"casilla_id": casilla_id, "value": str(days), "max_days": str(_M100_IMPUTATION_YEAR_DAYS)},
+            context={"parameter_id": max_days_parameter_id, "value": str(max_days), "max_days": "366"},
+        )
+    if days != days.to_integral_value() or days <= _ZERO or days > max_days:
+        raise RegistryValidationError(
+            f"M100 Art.85 imputation days must be an integer in [1, {max_days}]",
+            translated_message="errors.calc.m100_art85_imputation_days_invalid",
+            context={"casilla_id": casilla_id, "value": str(days), "max_days": str(max_days)},
         )
 
 

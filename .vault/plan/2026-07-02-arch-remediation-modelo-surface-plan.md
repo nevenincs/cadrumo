@@ -47,7 +47,7 @@ Relocate per-modelo constants and exclusion sets out of the generic engine and o
 Move the M100 imputation-days constant to a registry parameter and collapse the iva-wallet ownership set plus previous-filing exclusion id to one declaration.
 
 - [x] `W02.P02.S07` - Declare the M100 imputation-year-days value as a registry parameter on the M100 revisions in the registry authoring tree so it rides the loader and compiler; `src/aeat/_data/registry/aeat/modelos/100`.
-- [ ] `W02.P02.S08` - Delete the _M100_IMPUTATION_YEAR_DAYS constant from the generic formula runtime and read the value from the compiled snapshot instead; `src/aeat/domain/calculations/registry/_formula_runtime.py`.
+- [x] `W02.P02.S08` - Delete the _M100_IMPUTATION_YEAR_DAYS constant from the generic formula runtime and read the value from the compiled snapshot instead; `src/aeat/domain/calculations/registry/_formula_runtime.py`.
 - [ ] `W02.P02.S09` - Confirm the existing grounded M100 calculation tests compute identical values before and after the parameter relocation, tolerating zero numeric drift; `src/aeat/domain/calculations/registry/tests`.
 - [ ] `W02.P02.S10` - Declare the iva-wallet owned relation-target binding set and the previous-filing exclusion binding id as one registry or core declaration; `src/aeat/domain/calculations/registry/_validate_relation_sources.py`.
 - [ ] `W02.P02.S11` - Consume the single iva-wallet ownership declaration from the registry relation-source validator, removing the inline _IVA_WALLET_OWNED_RELATION_TARGET_BINDINGS carve-out; `src/aeat/domain/calculations/registry/_validate_relation_sources.py`.
