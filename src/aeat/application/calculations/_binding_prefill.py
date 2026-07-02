@@ -2,21 +2,21 @@
 
 Used by :class:`~._multi_year.PreviousFilingSourceResolver` for the source-mesh
 calculation path and by
-:func:`~aeat.application.calculations._binding_prefill.extract_modelo_303_local_iva_compensation_recurrence`
+:func:`~application.calculations.extract_modelo_303_local_iva_compensation_recurrence`
 for the IVA wallet comparison path.
 
 One of three distinct prefill tiers, NOT to be merged: this is the
 PREVIOUS-FILING direct-carry tier. The other two are the relation tier
-(:mod:`~aeat.application.calculations._relation_prefill`) and the AEAT borrador
+(:mod:`~application.calculations._relation_prefill`) and the AEAT borrador
 pre-fill tier (the registry ``aeat_prefilled`` flag, an AEAT-live source). They
 share only the word "prefill"; each routes a different source through a
 different mechanism.
 
 Sister module to :mod:`~._relation_prefill`. The runtime distinguishes
 ``relation`` leaves (cross-revision aggregations declared as
-:class:`~aeat.domain.calculations.registry.RelationDefinition` records) from
+:class:`~domain.calculations.registry.RelationDefinition` records) from
 ``previous_filing`` bindings (declared as
-:class:`~aeat.domain.calculations.registry.DataBindingDefinition` with
+:class:`~domain.calculations.registry.DataBindingDefinition` with
 ``source = "previous_filing"``).
 Modelo 390 uses bindings — modelo 200 uses relations — both express
 "sum a prior modelo's casilla across periods" but route through
@@ -24,13 +24,13 @@ different schema entities.
 
 Prior-filing values are gathered as :class:`CasillaObservation` records and
 merged inside
-:class:`~aeat.domain.calculations.registry.RegistryModeloObservation` rows before
+:class:`~domain.calculations.registry.RegistryModeloObservation` rows before
 the binding is resolved.
 
 The strict registry boundary remains
-:func:`~aeat.domain.calculations.registry.previous_filing_observation_requirements`
+:func:`~domain.calculations.registry.previous_filing_observation_requirements`
 and
-:func:`~aeat.domain.calculations.registry.resolve_previous_filing_binding_values`;
+:func:`~domain.calculations.registry.resolve_previous_filing_binding_values`;
 this module is the application reader that supplies local observations from
 :class:`~._observations_repository.CalculationObservationRepository` and returns
 :class:`BindingPrefillReport` coverage.
@@ -125,7 +125,7 @@ def _revision_carry_outcome(payload: _ObservationEnvelopePayload) -> bool:
     """Return whether a payload's revision stamp must be refused.
 
     Thin adapter over the single shared
-    :func:`~aeat.application.calculations._revision_carry_gate.revision_carry_outcome`
+    :func:`~application.calculations._revision_carry_gate.revision_carry_outcome`
     gate (ADR 2026-06-10-period-revision-resolution-adr, Ruling 3 / R2): it
     extracts the source context off the payload's observation and delegates the
     refusal decision so the binding-prefill, cross-period
@@ -210,7 +210,7 @@ class PrefilledBinding(BaseModel):
 
     Emitted by :func:`resolve_bindings_from_local_store` and collected in
     :class:`BindingPrefillReport`. The ``source_*`` fields point back to the
-    :class:`~aeat.domain.calculations.registry.RegistryModeloObservation` rows
+    :class:`~domain.calculations.registry.RegistryModeloObservation` rows
     that satisfied the registry previous-filing requirement.
     """
 
@@ -230,7 +230,7 @@ class BindingPrefillReport(BaseModel):
     """Outcome of one direct previous-filing binding-prefill pass.
 
     ``binding_values`` is the mapping passed to
-    :func:`~aeat.domain.calculations.registry.calculate_registry_snapshot`;
+    :func:`~domain.calculations.registry.calculate_registry_snapshot`;
     ``prefilled`` keeps the :class:`PrefilledBinding` provenance used by
     :class:`~._multi_year.PreviousFilingSourceResolver` when stamping source-mesh
     results.
@@ -667,10 +667,10 @@ def resolve_bindings_from_local_store(
 
     The caller provides a :class:`RegistrySnapshot`; this function asks the
     registry for
-    :class:`~aeat.domain.calculations.registry.RegistryFoldRequirement` records,
+    :class:`~domain.calculations.registry.RegistryFoldRequirement` records,
     loads matching :class:`RegistryModeloObservation` rows, then delegates the
     final value calculation to
-    :func:`~aeat.domain.calculations.registry.resolve_previous_filing_binding_values`.
+    :func:`~domain.calculations.registry.resolve_previous_filing_binding_values`.
 
     Args:
         snapshot: The :class:`RegistrySnapshot` whose revision's ``previous_filing``
@@ -701,7 +701,7 @@ def resolve_bindings_from_local_store(
 
     See Also:
         :class:`~._multi_year.PreviousFilingSourceResolver` adapts this report
-        to :class:`~aeat.application.aggregation.CalculationSourceResolution`;
+        to :class:`~application.aggregation.CalculationSourceResolution`;
         :func:`~._relation_prefill.resolve_relations_from_local_store` resolves
         the separate ``relation_prefill`` source family over the same
         observation repository.
