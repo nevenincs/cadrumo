@@ -19,6 +19,7 @@ from ....application.user_profile._orchestration import profile_create_storage_s
 from ....application.user_profile._testing import register_minimal_profile
 from ....application.workflow._persistence import workflow_state_repository
 from ....core import Period
+from ....core.external_constants import SUPPORTED_OUTPUT_LANGUAGES
 from ....core.time import now
 from ....domain.justificante import JustificanteRepository
 from ....domain.modelos import (
@@ -36,6 +37,8 @@ from ._overview_calendar_support import (
 )
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
+
+_OUTPUT_LANGUAGE_CHOICE_LIST = f"[{'|'.join(SUPPORTED_OUTPUT_LANGUAGES)}]"
 
 
 def _invoke(args: Sequence[str]) -> Result:
@@ -219,9 +222,32 @@ def test_calendar_help_advertises_local_only() -> None:
 
     result = _invoke(["app", "overview", "calendar", "--help"])
     assert result.exit_code == 0, result.output
+    assert "--output-language" in result.output
+    assert _OUTPUT_LANGUAGE_CHOICE_LIST in result.output
     assert any(
         token in result.output.lower() for token in ("local-only", "local;", "nunca", "mai contacta", "csak helyi")
     ), result.output
+
+
+def test_calendar_output_language_applies_before_refusal_rendering() -> None:
+    result = _invoke(
+        [
+            "app",
+            "overview",
+            "calendar",
+            "--output-language",
+            "ca",
+            "--from",
+            "not-a-date",
+            "--to",
+            "2026-03-31",
+        ],
+    )
+
+    assert result.exit_code != 0, result.output
+    assert "No such option" not in result.output
+    assert "Format de data invàlid" in result.output
+    assert "Formato de fecha inválido" not in result.output
 
 
 def test_calendar_json_includes_local_live_snapshot_events() -> None:
