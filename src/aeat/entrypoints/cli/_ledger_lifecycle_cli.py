@@ -38,7 +38,7 @@ from ...core.external_constants import PDF_MIME_TYPE
 from ...core.i18n import tr
 from ...core.json_contract import Notice, NoticeSeverity
 from ...core.time import now
-from ...domain.attachments import DocumentLinkSource
+from ...domain.attachments import AttachmentSource, DocumentLinkSource
 from ...domain.transactions import (
     BusinessClassification,
     LLMClassifierError,
@@ -64,6 +64,16 @@ def register_lifecycle_commands(app: typer.Typer) -> None:
             default="Fetch a Drive document link and store its bytes as encrypted evidence on a ledger row.",
         ),
     )(ledger_doclink)
+    app.command(
+        "pull-folder",
+        help=tr(
+            "cli.ledger.pull_folder.help",
+            default=(
+                "Bulk-fetch every PDF/image invoice in a Drive folder and store each as encrypted "
+                "evidence (unlinked to any transaction; link with 'aeat app ledger attach' or 'link')."
+            ),
+        ),
+    )(ledger_pull_folder)
     app.command("archive", help=tr("cli.ledger.archive.help"))(ledger_archive)
     app.command("stash", help=tr("cli.ledger.stash.help"))(ledger_stash)
     app.command(
@@ -286,6 +296,215 @@ def ledger_doclink(
         result.bucket_event_ids,
         command="ledger.doclink",
         result_cls=LedgerAttachResult,
+    )
+
+
+def _parse_drive_folder_reference(reference: str) -> str:
+    """Resolve a Drive folder id/URL/reference to a bare folder id.
+
+    Reuses the same id-extraction grammar as a single Drive document link
+    (:func:`~aeat.adapters.outbound.google.parse_drive_file_id`); a Drive
+    folder id has the same shape as a file id, only the ``in parents`` query
+    disambiguates the two on the Drive side. Refuses a reference with no
+    recognisable Drive id rather than sending an unparsed string to the API.
+    """
+    from ...adapters.outbound.google import parse_drive_file_id
+
+    folder_id = parse_drive_file_id(reference)
+    if folder_id is None:
+        raise _bad(
+            tr(
+                "cli.ledger.pull_folder.errors.folder_id_unrecognised",
+                reference=reference,
+                default=(
+                    f"Google Drive folder reference {reference!r} does not contain a recognisable "
+                    "folder id. Pass a Drive folder URL or its bare folder id."
+                ),
+            ),
+        )
+    return folder_id
+
+
+def ledger_pull_folder(
+    ctx: typer.Context,
+    folder: str = typer.Option(
+        ...,
+        "--folder",
+        help=tr(
+            "cli.ledger.pull_folder.folder_help",
+            default="Drive folder URL or bare folder id to bulk-fetch invoice PDFs/images from.",
+        ),
+    ),
+    note: str = typer.Option(
+        "",
+        "--note",
+        help=tr("cli.ledger.pull_folder.note_help", default="Optional note recorded on every fetched attachment."),
+    ),
+) -> None:
+    """Bulk-fetch every PDF/image child of a Drive folder into encrypted evidence.
+
+    Lists the folder's children through
+    :func:`~aeat.adapters.outbound.google.list_drive_folder_documents` (the
+    same ``drive.file``-scoped minimal-scope posture
+    :func:`ledger_doclink` uses for a single document), then fetches and
+    encrypts each PDF/image child through
+    :func:`~aeat.adapters.outbound.google.resolve_document_link` and
+    :func:`~aeat.domain.attachments.add_attachment_bytes` — the identical
+    fetch-and-encrypt primitive ``doclink`` composes, never re-implemented
+    here. Fetched attachments are content-addressed and deduplicate by
+    SHA-256, so re-running the sweep is idempotent. Attachments are stored
+    unlinked to any transaction; bind them afterwards with
+    ``aeat app ledger attach --attachment-id`` or ``aeat app ledger link``.
+
+    A file the app cannot reach under the ``drive.file`` scope is refused
+    individually — evidence bytes are never stored as a link-only pointer,
+    and one refused file does not abort the rest of the sweep. Gmail bulk
+    fetch is out of scope pending a separate ``gmail.readonly``
+    scope-upgrade decision.
+    """
+    from ...adapters.outbound.google import (
+        list_drive_folder_documents,
+        resolve_active_profile,
+        resolve_document_link,
+    )
+    from ...adapters.outbound.storage import OutboundStorageError, build_google_credentials
+    from ...adapters.persistence.storage import AttachmentStore
+    from ...domain.attachments import AttachmentKind, add_attachment_bytes
+    from ._ledger_payloads import LedgerDocLinkPullFolderFilePayload, LedgerDocLinkPullFolderResult
+
+    folder_id = _parse_drive_folder_reference(folder)
+    state = _state()
+    transaction_repository = _tx_repo(state)
+    bucket_id = transaction_repository.bucket_id
+
+    profile = resolve_active_profile()
+    credentials = build_google_credentials(profile=profile)
+    try:
+        listing = list_drive_folder_documents(folder_id=folder_id, credentials=credentials)
+    except OutboundStorageError as exc:
+        required_scope = ""
+        if exc.context is not None:
+            required_scope = str(exc.context.get("required_scope", ""))
+        scope_hint = f" (requires the {required_scope} scope)" if required_scope else ""
+        raise _bad(
+            tr(
+                "cli.ledger.pull_folder.errors.folder_refused",
+                folder_id=folder_id,
+                scope_hint=scope_hint,
+                default=(
+                    f"Cannot list the Drive folder {folder_id!r}{scope_hint}: the folder must be "
+                    "reachable under the drive.file scope (created by the app or explicitly picked "
+                    "by the operator), or grant the required Google scope and retry."
+                ),
+            ),
+        ) from exc
+
+    store = AttachmentStore()
+    rows: list[LedgerDocLinkPullFolderFilePayload] = []
+    fetched_count = 0
+    refused_count = 0
+    for document in listing.documents:
+        reference = f"https://drive.google.com/file/d/{document.file_id}/view"
+        try:
+            data = resolve_document_link(
+                source=AttachmentSource.GOOGLE_DRIVE,
+                reference=reference,
+                credentials=credentials,
+            )
+        except OutboundStorageError as exc:
+            required_scope = ""
+            if exc.context is not None:
+                required_scope = str(exc.context.get("required_scope", ""))
+            refused_count += 1
+            rows.append(
+                LedgerDocLinkPullFolderFilePayload(
+                    file_id=document.file_id,
+                    name=document.name,
+                    mime_type=document.mime_type,
+                    fetched=False,
+                    refusal_reason=(
+                        f"not reachable under the drive.file scope"
+                        f"{f' (requires {required_scope})' if required_scope else ''}: {exc}"
+                    ),
+                ),
+            )
+            continue
+        attachment = add_attachment_bytes(
+            store,
+            data=data,
+            kind=AttachmentKind.DRIVE_DOCUMENT,
+            source=AttachmentSource.GOOGLE_DRIVE,
+            source_reference=reference,
+            mime_type=document.mime_type or _sniff_document_mime_type(document.name, data),
+            captured_at=now(),
+            bucket_id=bucket_id,
+            metadata={
+                "source": AttachmentSource.GOOGLE_DRIVE.value,
+                "source_reference": reference,
+                "drive_folder_id": folder_id,
+                "drive_file_name": document.name,
+            },
+            notes=note,
+        )
+        fetched_count += 1
+        rows.append(
+            LedgerDocLinkPullFolderFilePayload(
+                file_id=document.file_id,
+                name=document.name,
+                mime_type=document.mime_type,
+                fetched=True,
+                attachment_id=attachment.attachment_id,
+            ),
+        )
+
+    result = LedgerDocLinkPullFolderResult.model_validate(
+        {
+            "bucket_id": bucket_id,
+            "folder_id": folder_id,
+            "total_documents": len(listing.documents),
+            "fetched_count": fetched_count,
+            "refused_count": refused_count,
+            "skipped_non_document_count": listing.skipped_non_document_count,
+            "files": [row.model_dump(mode="json") for row in rows],
+        },
+    )
+    lines = [
+        f"{tr('cli.ledger.pull_folder.labels.folder_id', default='folder_id')}\t{folder_id}",
+        f"{tr('cli.ledger.pull_folder.labels.total', default='total_documents')}\t{len(listing.documents)}",
+        f"{tr('cli.ledger.pull_folder.labels.fetched', default='fetched_count')}\t{fetched_count}",
+        f"{tr('cli.ledger.pull_folder.labels.refused', default='refused_count')}\t{refused_count}",
+        f"{tr('cli.ledger.pull_folder.labels.skipped', default='skipped_non_document_count')}"
+        f"\t{listing.skipped_non_document_count}",
+    ]
+    lines.extend(
+        f"{row.name}\t{row.mime_type}\t{'fetched' if row.fetched else 'refused'}\t"
+        f"{row.attachment_id or row.refusal_reason or ''}"
+        for row in rows
+    )
+    notices: list[Notice] = []
+    if refused_count:
+        notices.append(
+            Notice(
+                severity=NoticeSeverity.WARNING,
+                code="ledger.pull_folder.files_refused",
+                message=tr(
+                    "cli.ledger.pull_folder.notices.files_refused",
+                    refused_count=refused_count,
+                    default=(
+                        f"{refused_count} file(s) in this folder could not be fetched under the "
+                        "drive.file scope; download them manually and attach with "
+                        "'aeat app ledger attach --attachment-id ...'."
+                    ),
+                ),
+                context={"folder_id": folder_id, "refused_count": refused_count},
+            ),
+        )
+    _emit_envelope(
+        ctx,
+        command="ledger.pull_folder",
+        result=result,
+        lines=lines,
+        notices=notices or None,
     )
 
 
@@ -890,6 +1109,7 @@ __all__ = [
     "ledger_doclink",
     "ledger_exclude",
     "ledger_merge",
+    "ledger_pull_folder",
     "ledger_remove",
     "ledger_reset",
     "ledger_restore",
