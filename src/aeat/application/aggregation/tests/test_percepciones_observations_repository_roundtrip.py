@@ -1,4 +1,4 @@
-"""Strict roundtrip across the WithholdingObservationRepository boundary (#28 P03).
+"""Strict roundtrip across the PercepcionObservationRepository boundary (#28 P03).
 
 Persists per-perceptor-clave :class:`WithholdingObservation` records at
 ``SensitivityClass.FINANCIAL`` keyed by ``(modelo, filing_year, period,
@@ -28,10 +28,10 @@ from ....core import Period
 from ....core.external_constants import UTF_8_ENCODING
 from ....domain.calculations.registry import WithholdingObservation
 from ....tests.secure_sql import isolated_runtime_profile
-from .._withholding_observations_repository import (
-    WithholdingObservationRepository,
-    persist_withholding_observations,
-    withholding_observation_key,
+from .._percepciones_observations_repository import (
+    PercepcionObservationRepository,
+    percepcion_observation_key,
+    persist_percepcion_observations,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -63,7 +63,7 @@ def test_withholding_observation_survives_encrypted_storage_roundtrip(tmp_path: 
     """A populated WithholdingObservation roundtrips byte-for-byte through the encrypted repo."""
     with isolated_runtime_profile(tmp_path=tmp_path):
         original = _observation(nif="11111111H", clave="A", subclave="01")
-        repo = WithholdingObservationRepository()
+        repo = PercepcionObservationRepository()
         period = Period.from_year_and_code(2024, "0A")
         repo.save_observation(
             modelo="190",
@@ -106,7 +106,7 @@ def test_corrupt_clave_or_subclave_refused_on_reload() -> None:
 def test_one_perceptor_two_claves_persist_as_distinct_percepciones(tmp_path: Path) -> None:
     """One perceptor under two claves persists as TWO distinct rows (percepciones key)."""
     with isolated_runtime_profile(tmp_path=tmp_path):
-        repo = WithholdingObservationRepository()
+        repo = PercepcionObservationRepository()
         period = Period.from_year_and_code(2024, "0A")
         records = (
             _observation(nif="11111111H", clave="A"),
@@ -137,7 +137,7 @@ def test_one_perceptor_two_claves_persist_as_distinct_percepciones(tmp_path: Pat
 
 def test_object_key_hashes_the_nif_never_cleartext() -> None:
     """The object key carries the sha256 of the NIF, never the plaintext; clave/subclave stay plain."""
-    key = withholding_observation_key("190", 2024, Period.from_year_and_code(2024, "0A"), "11111111H", "A", "01")
+    key = percepcion_observation_key("190", 2024, Period.from_year_and_code(2024, "0A"), "11111111H", "A", "01")
     assert "11111111H" not in key
     digest = hashlib.sha256("11111111H".encode(UTF_8_ENCODING)).hexdigest()
     assert digest in key
@@ -146,14 +146,14 @@ def test_object_key_hashes_the_nif_never_cleartext() -> None:
 
 def test_blank_subclave_keys_as_dash() -> None:
     """A blank subclave is keyed as '-' so the grammar segment is never empty."""
-    key = withholding_observation_key("190", 2024, Period.from_year_and_code(2024, "0A"), "11111111H", "B", "")
+    key = percepcion_observation_key("190", 2024, Period.from_year_and_code(2024, "0A"), "11111111H", "B", "")
     assert key.endswith(":B:-")
 
 
 def test_period_scoping_excludes_other_windows(tmp_path: Path) -> None:
     """load_observations returns only the requested (modelo, year, period)."""
     with isolated_runtime_profile(tmp_path=tmp_path):
-        repo = WithholdingObservationRepository()
+        repo = PercepcionObservationRepository()
         obs = _observation(nif="33333333P", clave="C")
         repo.save_observation(
             modelo="190",
@@ -170,7 +170,7 @@ def test_anti_tautology_strict_payload_rejects_dropped_field() -> None:
     """The envelope payload is strict: a dropped required field raises, never silently defaults."""
     from datetime import UTC, datetime
 
-    from .._withholding_observations_repository import _WithholdingObservationEnvelopePayload
+    from .._percepciones_observations_repository import _PercepcionObservationEnvelopePayload
 
     full = {
         "modelo": "190",
@@ -180,16 +180,16 @@ def test_anti_tautology_strict_payload_rejects_dropped_field() -> None:
         "captured_at": datetime.now(UTC),
         "source_kind": "aggregate_pull",
     }
-    _WithholdingObservationEnvelopePayload.model_validate(full)
+    _PercepcionObservationEnvelopePayload.model_validate(full)
     partial = {k: v for k, v in full.items() if k != "observation"}
     with pytest.raises(ValidationError):
-        _WithholdingObservationEnvelopePayload.model_validate(partial)
+        _PercepcionObservationEnvelopePayload.model_validate(partial)
 
 
 def test_replace_observations_drops_removed_percepcion_no_stale_row(tmp_path: Path) -> None:
     """Re-persisting a SHRUNK set removes the dropped percepción — no stale over-count."""
     with isolated_runtime_profile(tmp_path=tmp_path):
-        repo = WithholdingObservationRepository()
+        repo = PercepcionObservationRepository()
         period = Period.from_year_and_code(2024, "0A")
         full = (
             _observation(nif="11111111H", clave="A"),
@@ -225,6 +225,6 @@ def test_persist_helper_writes_set_readable_by_load(tmp_path: Path) -> None:
             _observation(nif="11111111H", clave="A"),
             _observation(nif="11111111H", clave="G"),
         )
-        persist_withholding_observations(modelo="190", filing_year=2024, period=period, observations=observations)
-        loaded = WithholdingObservationRepository().load_observations("190", period)
+        persist_percepcion_observations(modelo="190", filing_year=2024, period=period, observations=observations)
+        loaded = PercepcionObservationRepository().load_observations("190", period)
         assert set(loaded) == set(observations)

@@ -27,6 +27,7 @@ from ....core.resources import resources
 from ....domain.buckets._event_repository import BucketEventHistoryRepository
 from ....domain.user_profile._schema import ProfileSchemaDefinition
 from ....domain.user_profile._values import UserProfileFact
+from ....tests.aeat_literal_fixtures import aeat_url
 from ....tests.secure_sql import TestRuntimeProfile, isolated_profile_storage_root, isolated_runtime_profile
 from ...bucket_maintenance._contracts import ExportBucketCommand, ImportBucketCommand
 from ...bucket_maintenance._service import BucketMaintenanceService
@@ -75,6 +76,7 @@ def _verify_classification_rule(bucket_id: str) -> None:
 
 
 def _seed_submission(bucket_id: str) -> None:
+    from ....adapters.persistence.profile.submission import SubmissionRepository
     from ....core._period import Period
     from ....domain.submission._models import (
         ModeloPresentado,
@@ -82,7 +84,6 @@ def _seed_submission(bucket_id: str) -> None:
         SubmissionStatus,
         make_submission_id,
     )
-    from ....domain.submission._repository import SubmissionRepository
 
     attempt = SubmissionAttempt(
         attempt_id="draft-1.1",
@@ -105,7 +106,7 @@ def _seed_submission(bucket_id: str) -> None:
 
 
 def _verify_submission(bucket_id: str) -> None:
-    from ....domain.submission._repository import SubmissionRepository
+    from ....adapters.persistence.profile.submission import SubmissionRepository
 
     assert tuple(SubmissionRepository().iter_submissions()), "submission record lost"
 
@@ -724,7 +725,7 @@ def _seed_withholding(bucket_id: str) -> None:
     from ....core._period import Period
     from ....core.aggregation import RetencionClave
     from ....domain.calculations.registry._withholding_bindings import WithholdingObservation
-    from ...aggregation._withholding_observations_repository import WithholdingObservationRepository
+    from ...aggregation._percepciones_observations_repository import PercepcionObservationRepository
 
     obs = WithholdingObservation(
         source_id="wh-1",
@@ -734,7 +735,7 @@ def _seed_withholding(bucket_id: str) -> None:
         percibido_dinerario=Decimal("1000.00"),
         retencion_practicada=Decimal("190.00"),
     )
-    WithholdingObservationRepository().save_observation(
+    PercepcionObservationRepository().save_observation(
         modelo="190",
         filing_year=2024,
         period=Period.from_year_and_code(2024, "0A"),
@@ -745,9 +746,9 @@ def _seed_withholding(bucket_id: str) -> None:
 
 def _verify_withholding(bucket_id: str) -> None:
     from ....core._period import Period
-    from ...aggregation._withholding_observations_repository import WithholdingObservationRepository
+    from ...aggregation._percepciones_observations_repository import PercepcionObservationRepository
 
-    assert WithholdingObservationRepository().load_observations("190", Period.from_year_and_code(2024, "0A")), (
+    assert PercepcionObservationRepository().load_observations("190", Period.from_year_and_code(2024, "0A")), (
         "withholding observation lost"
     )
 
@@ -828,7 +829,7 @@ def _filed_artefact(body: bytes) -> object:
 
     return FiledDeclaracionArtefact(
         kind="register_row",
-        source_url="https://sede.agenciatributaria.gob.es/x",
+        source_url=aeat_url("sede", "/x"),
         content_type="text/html",
         byte_count=len(body),
         sha256=sha256_hex(body),
@@ -892,7 +893,7 @@ def _seed_iva_wallet_observation(bucket_id: str) -> None:
             ),
         ),
         total_pending=Decimal("50.00"),
-        source_url="https://sede.agenciatributaria.gob.es/cartera",
+        source_url=aeat_url("sede", "/cartera"),
         captured_at=_NOW,
     )
     _filed_declaration_store().persist_iva_wallet_observation(wobs)  # type: ignore[attr-defined]

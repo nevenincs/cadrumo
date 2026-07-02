@@ -16,7 +16,7 @@ from pathlib import Path
 
 import pytest
 
-from ....application.aggregation import WithholdingSourceResolver, persist_withholding_observations
+from ....application.aggregation import WithholdingSourceResolver, persist_percepcion_observations
 from ....application.aggregation._source_mesh import CalculationSourceContext
 from ....core import Period
 from ....core.resources import resources
@@ -48,7 +48,7 @@ def test_m190_percepciones_count_resolves_distinct_from_store_to_bound_casilla(t
     """3 percepciones (one perceptor under 2 claves + a second) -> decl.total-percepciones == 3."""
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID):
         period = Period.from_year_and_code(2024, "0A")
-        persist_withholding_observations(
+        persist_percepcion_observations(
             modelo="190",
             filing_year=2024,
             period=period,

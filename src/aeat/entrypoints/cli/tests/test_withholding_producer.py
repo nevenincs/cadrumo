@@ -17,10 +17,10 @@ import typer
 from pydantic import ValidationError
 
 from ....application.aggregation import (
+    PercepcionObservationRepository,
     PerModeloAggregationCommand,
     WithholdingObservation,
-    WithholdingObservationRepository,
-    persist_withholding_observations,
+    persist_percepcion_observations,
 )
 from ....core import Modelo, Period
 from ....tests.secure_sql import isolated_runtime_profile
@@ -77,11 +77,11 @@ def test_persisted_withholding_set_is_readable_by_the_store(tmp_path: Path) -> N
     with isolated_runtime_profile(tmp_path=tmp_path):
         parsed = _parse_typed_cli_observations([_RAW], model=WithholdingObservation, flag="--withholding-observation")
         period = Period.from_year_and_code(2024, "0A")
-        persist_withholding_observations(
+        persist_percepcion_observations(
             modelo=Modelo.M190.value,
             filing_year=2024,
             period=period,
             observations=parsed,
         )
-        loaded = WithholdingObservationRepository().load_observations(Modelo.M190.value, period)
+        loaded = PercepcionObservationRepository().load_observations(Modelo.M190.value, period)
         assert set(loaded) == set(parsed)

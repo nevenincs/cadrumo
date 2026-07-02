@@ -20,11 +20,13 @@ Submodules
    aeat.application.aggregation._evidence_advisory
    aeat.application.aggregation._foreign_assets
    aeat.application.aggregation._grouping
+   aeat.application.aggregation._impatriado_income_ledger
    aeat.application.aggregation._iva_ledger
    aeat.application.aggregation._ledger_filing_snapshot
    aeat.application.aggregation._modelo_bindings
    aeat.application.aggregation._models
    aeat.application.aggregation._oss_ioss
+   aeat.application.aggregation._percepciones_observations_repository
    aeat.application.aggregation._renta_gasto_ledger
    aeat.application.aggregation._renta_income_ledger
    aeat.application.aggregation._renta_ledger
@@ -35,5 +37,4 @@ Submodules
    aeat.application.aggregation._shared_issue_reasons
    aeat.application.aggregation._source_mesh
    aeat.application.aggregation._source_profile
-   aeat.application.aggregation._withholding_observations_repository
    aeat.application.aggregation._withholding_source
