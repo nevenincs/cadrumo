@@ -200,7 +200,7 @@ Add the runtime query embedder behind the capability-gated extra, brute-force nu
 
 Pin the search-stack dependencies in the capability-gated extra, record the third-party attribution, and assemble and sign the mcpb Desktop Extension behind the agent extra.
 
-- [ ] `W06.P14.S89` - Pin the search-stack dependencies snowballstemmer, model2vec, and numpy in the capability-gated search extra with a lexical-only degraded default; `pyproject.toml`.
+- [x] `W06.P14.S89` - Pin the search-stack dependencies snowballstemmer, model2vec, and numpy in the capability-gated search extra with a lexical-only degraded default; `pyproject.toml`.
 - [ ] `W06.P14.S90` - Author the third-party notices attribution for the potion-multilingual-128M lineage distilled from BGE-m3 on the C4 ODC-BY corpus; `src/aeat/application/corpus_search/THIRD_PARTY_NOTICES.md`.
 - [ ] `W06.P14.S85` - Author the mcpb Desktop Extension manifest; `packaging/mcpb/manifest.json`.
 - [ ] `W06.P14.S86` - Add the mcpb build-and-sign script behind the agent extra; `packaging/mcpb/build.py`.
