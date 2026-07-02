@@ -24,6 +24,8 @@ Major declarations:
 
 from __future__ import annotations
 
+from ._ast_scanner import scan_namespace_markers, scan_source_tree
+from ._fstring_registry import get_registered_keys
 from ._modelo_manager import (
     ModeloLocaleCoverageRecord,
     ModeloLocaleDriftKind,
@@ -52,4 +54,7 @@ __all__ = [
     "ModeloLocaleScope",
     "ModeloLocaleTranslationFile",
     "StrictUniqueKeyLoader",
+    "get_registered_keys",
+    "scan_namespace_markers",
+    "scan_source_tree",
 ]
