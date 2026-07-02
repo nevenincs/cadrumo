@@ -17,28 +17,22 @@ from pathlib import Path
 
 import pytest
 
+from ....adapters.persistence.profile.participation_index import TransactionParticipationIndexRepository
 from ....application.ledger._actions_common import _blocking_modelo_references
 from ....core import Period
 from ....domain.calculations.registry import CasillaId, CasillaObservation, validated_casilla_id
 from ....domain.modelos import (
-    CalculationRevisionCatalogueRepository,
-    upsert_calculation_revision,
-)
-from ....domain.modelos import (
     CalculationRevision,
+    CalculationRevisionCatalogueRepository,
     CalculationRevisionState,
-    derive_calculation_revision_id,
-)
-from ....domain.modelos import ModeloCode
-from ....domain.modelos import ModeloRecordCatalogueRepository
-from ....domain.modelos import TransactionParticipationIndexRepository
-from ....domain.modelos import (
-    WorkUnitCatalogueRepository,
-    upsert_work_unit,
-)
-from ....domain.modelos import (
+    ModeloCode,
+    ModeloRecordCatalogueRepository,
     WorkUnit,
+    WorkUnitCatalogueRepository,
+    derive_calculation_revision_id,
     derive_work_unit_id,
+    upsert_calculation_revision,
+    upsert_work_unit,
 )
 from ....tests.secure_sql import isolated_runtime_profile
 from .._revision_persistence import persist_filed_revision

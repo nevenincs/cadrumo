@@ -37,6 +37,7 @@ from datetime import datetime
 from decimal import Decimal
 from typing import TYPE_CHECKING
 
+from ...adapters.persistence.profile.participation_index import TransactionParticipationIndexRepository
 from ...core.hashing import sha256_hex
 from ...domain.buckets import (
     BucketEvent,
@@ -61,7 +62,6 @@ from ...domain.modelos import (
     ModeloRecord,
     ModeloRecordCatalogueRepositoryProtocol,
     ModeloRecordStatus,
-    TransactionParticipationIndexRepository,
     TransactionRevisionParticipation,
     WorkUnit,
     WorkUnitCatalogue,
