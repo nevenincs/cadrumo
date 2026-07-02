@@ -1,7 +1,7 @@
 """Registry-backed verification of imported declaracion drafts.
 
 This package compares an inbound
-:class:`adapters.inbound.declaracion.DeclaracionObservation` against the
+:class:`adapters.inbound.declaracion.InboundDeclaracionObservation` against the
 registry expectations for the same modelo and :class:`core.Period`.
 :func:`verify_declaracion` loads a
 :class:`domain.calculations.registry.RegistrySnapshot`, calculates the
