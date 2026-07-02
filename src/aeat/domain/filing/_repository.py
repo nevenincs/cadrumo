@@ -2,21 +2,21 @@
 
 :class:`ModeloDraft` records carry exact casilla arithmetic and tax due
 values. They are stored as encrypted byte objects via
-:class:`~aeat.adapters.persistence.storage.SecureObjectRepository` at
-``FINANCIAL`` :class:`~aeat.adapters.persistence.storage.SensitivityClass` and
-serialised through an :class:`~aeat.adapters.persistence.storage.Envelope` by
-:class:`~aeat.adapters.persistence.storage.SecureBoundRepository`; no plaintext
+:class:`~adapters.persistence.storage.SecureObjectRepository` at
+``FINANCIAL`` :class:`~adapters.persistence.storage.SensitivityClass` and
+serialised through an :class:`~adapters.persistence.storage.Envelope` by
+:class:`~adapters.persistence.storage.SecureBoundRepository`; no plaintext
 draft JSON or envelope file lands on disk.
 
 See Also:
     :class:`ModeloDraft`
         Strict filing payload persisted by this repository.
-    :class:`~aeat.adapters.persistence.storage.SecureBoundRepository`
+    :class:`~adapters.persistence.storage.SecureBoundRepository`
         Generic encrypted-envelope repository base used for the draft store.
-    :data:`aeat.adapters.persistence.storage.FILING_DRAFTS_NAMESPACE`
+    :data:`adapters.persistence.storage.FILING_DRAFTS_NAMESPACE`
         Namespace, sensitivity, schema-version, object-key, and custody
         contract for draft secure objects.
-    :mod:`aeat.application.filing._review`
+    :mod:`application.filing._review`
         Application review flow that reads and updates persisted drafts.
 """
 
@@ -36,14 +36,14 @@ if TYPE_CHECKING:  # pragma: no cover — import-cycle guard
 class ModeloDraftRepository(SecureBoundRepository[ModeloDraft]):
     """Encrypted FINANCIAL repository for :class:`ModeloDraft` payloads.
 
-    The :class:`~aeat.adapters.persistence.storage.SecureBoundRepository`
+    The :class:`~adapters.persistence.storage.SecureBoundRepository`
     base wraps each draft in an
-    :class:`~aeat.adapters.persistence.storage.Envelope` and writes it under
-    :data:`aeat.adapters.persistence.storage.FILING_DRAFTS_NAMESPACE`. The
+    :class:`~adapters.persistence.storage.Envelope` and writes it under
+    :data:`adapters.persistence.storage.FILING_DRAFTS_NAMESPACE`. The
     draft id is the natural key, so list and iteration APIs expose draft
     aggregates rather than submission or amendment records. The namespace
     definition supplies the ``FINANCIAL``
-    :class:`~aeat.adapters.persistence.storage.SensitivityClass`, schema
+    :class:`~adapters.persistence.storage.SensitivityClass`, schema
     version, object-key grammar, and custody contract.
     """
 
