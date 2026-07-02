@@ -26,14 +26,16 @@ from ....domain.filing import (
     ModeloValueKind,
     compute_modelo_draft_id,
 )
-from ....domain.modelos._calculation_revision import (
+from ....domain.modelos import (
     CalculationRevision,
     CalculationRevisionState,
+    Modelo349OperadorRow,
+    Modelo349RectificacionRow,
+    ModeloCode,
+    WorkUnit,
     derive_calculation_revision_id,
+    derive_work_unit_id,
 )
-from ....domain.modelos._codes import ModeloCode
-from ....domain.modelos._row_models import Modelo349OperadorRow, Modelo349RectificacionRow
-from ....domain.modelos._work_unit import WorkUnit, derive_work_unit_id
 from ....domain.submission import ModeloDraftStatus
 from ....entrypoints.cli._modelo_rendering import calculation_revision_lines, calculation_revision_payload
 from .._calculation_actions import _detail_row_binding_values_for_calculation, _suppress_m349_row_field_template_outputs

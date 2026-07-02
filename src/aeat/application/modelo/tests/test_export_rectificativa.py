@@ -26,20 +26,22 @@ import pytest
 
 from ....core import Period
 from ....domain.calculations.registry import CasillaId
-from ....domain.deadlines import TaxpayerProfile
-from ....domain.deadlines._models import IVARegime, ModeloIVAProfile, RefundAccount
-from ....domain.modelos._calculation_repository import (
-    CalculationRevisionCatalogueRepository,
-    upsert_calculation_revision,
+from ....domain.deadlines import (
+    IVARegime,
+    ModeloIVAProfile,
+    RefundAccount,
+    TaxpayerProfile,
 )
-from ....domain.modelos._calculation_revision import (
+from ....domain.modelos import (
     CalculationRevision,
     CalculationRevisionAmendmentKind,
+    CalculationRevisionCatalogueRepository,
     CalculationRevisionState,
+    ModeloValidationError,
+    WorkUnit,
     derive_calculation_revision_id,
+    upsert_calculation_revision,
 )
-from ....domain.modelos._errors import ModeloValidationError
-from ....domain.modelos._work_unit import WorkUnit
 from .._export import compose_export_headers
 from ._export_test_support import (
     _M303_RESULT_CASILLA,
@@ -244,7 +246,7 @@ def test_rectificativa_indicator_renders_in_fichero_page_3(isolated_backend: Non
     length-1 field does not overflow."""
     from ....application.filing import build_runtime_schema_provider, export_draft
     from ....domain.filing import ModeloDraft
-    from ....domain.submission._protocols import ModeloDraftStatus
+    from ....domain.submission import ModeloDraftStatus
 
     tax_id = "B12345674"
     bucket_id = _seed_profile(tax_id=tax_id)

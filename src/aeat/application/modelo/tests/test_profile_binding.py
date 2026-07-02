@@ -30,11 +30,10 @@ from ....domain.calculations.registry import (
     RegistrySnapshot,
     RelationId,
 )
-from ....domain.modelos._calculation_repository import CalculationRevisionCatalogueRepository
-from ....domain.modelos._repository import WorkUnitCatalogueRepository
+from ....domain.modelos import CalculationRevisionCatalogueRepository, WorkUnitCatalogueRepository
 from ....domain.user_profile import UserProfileFact, UserProfileRecord
 from ....tests.secure_sql import isolated_runtime_profile
-from ...aggregation._source_mesh import CalculationSourceResolution
+from ...aggregation import CalculationSourceResolution
 from ...user_profile import UserProfileLifecycleRepository
 from .. import ModeloError, calculate_modelo_revision, create_work_unit
 from .._profile_binding import (

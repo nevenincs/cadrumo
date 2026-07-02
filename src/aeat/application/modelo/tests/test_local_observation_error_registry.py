@@ -5,7 +5,7 @@ from __future__ import annotations
 import pytest
 
 from ....core.errors import ERROR_REGISTRY, AeatError, ErrorCategory, build_error_envelope, get_registered_error_code
-from ....domain.modelos._errors import ModeloError
+from ....domain.modelos import ModeloError
 from .._action_errors import ModeloLocalObservationError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]

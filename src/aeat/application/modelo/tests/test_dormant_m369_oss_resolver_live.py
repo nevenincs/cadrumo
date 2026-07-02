@@ -28,8 +28,7 @@ from ....domain.iva import (
     OssIossRegime,
     TransactionKind,
 )
-from ....domain.modelos._calculation_repository import CalculationRevisionCatalogueRepository
-from ....domain.modelos._repository import WorkUnitCatalogueRepository
+from ....domain.modelos import CalculationRevisionCatalogueRepository, WorkUnitCatalogueRepository
 from ....domain.transactions import TransactionCatalogueRepository
 from ....tests.secure_sql import isolated_runtime_profile
 from ...aggregation import (

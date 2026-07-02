@@ -71,18 +71,23 @@ from ....domain.calculations.registry import (
 )
 from ....domain.deadlines import IVARegime, TaxpayerProfile
 from ....domain.invoices import InvoiceCatalogueRepository
-from ....domain.modelos._calculation_repository import CalculationRevisionCatalogueRepository
-from ....domain.modelos._filing_repository import ModeloRecordCatalogueRepository
-from ....domain.modelos._repository import WorkUnitCatalogueRepository
-from ....domain.modelos._verification_repository import VerificationReportCatalogueRepository
+from ....domain.modelos import (
+    CalculationRevisionCatalogueRepository,
+    ModeloRecordCatalogueRepository,
+    VerificationReportCatalogueRepository,
+    WorkUnitCatalogueRepository,
+)
 from ....domain.transactions import TransactionCatalogueRepository
 from ....domain.user_profile import UserProfileFact, UserProfileRecord
 from ....tests.registry_observations import registry_grounded_observations
 from ....tests.secure_sql import isolated_runtime_profile
-from ...aggregation._percepciones_observations_repository import PercepcionObservationRepository
-from ...aggregation._retencion_observations_repository import RetencionObservationRepository
-from ...aggregation._retenciones import RetencionObservation, RetencionScheme
-from ...calculations._observations_repository import CalculationObservationRepository
+from ...aggregation import (
+    PercepcionObservationRepository,
+    RetencionObservation,
+    RetencionObservationRepository,
+    RetencionScheme,
+)
+from ...calculations import CalculationObservationRepository
 from ...user_profile import UserProfileLifecycleRepository
 from .. import (
     BucketAggregationCalculationResult,

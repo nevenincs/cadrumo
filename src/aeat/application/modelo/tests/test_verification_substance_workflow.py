@@ -9,27 +9,22 @@ from typing import Any
 
 import pytest
 
-from ....core._period import Period
+from ....core import Period
 from ....core.resources import resources
-from ....domain.buckets._event_repository import BucketEventHistoryRepository
-from ....domain.calculations.registry._ids import CasillaId
-from ....domain.calculations.registry._schema import KNOWN_VERIFICATION_PREDICATE_OPERATORS
-from ....domain.modelos._calculation_repository import (
+from ....domain.buckets import BucketEventHistoryRepository
+from ....domain.calculations.registry import KNOWN_VERIFICATION_PREDICATE_OPERATORS, CasillaId
+from ....domain.modelos import (
+    CalculationRevision,
     CalculationRevisionCatalogueRepository,
+    ModeloValidationError,
+    ModeloVerificationFindingKind,
+    VerificationReportCatalogueRepository,
+    WorkUnitCatalogueRepository,
+    derive_calculation_revision_id,
     upsert_calculation_revision,
 )
-from ....domain.modelos._calculation_revision import (
-    CalculationRevision,
-    derive_calculation_revision_id,
-)
-from ....domain.modelos._errors import ModeloValidationError
-from ....domain.modelos._repository import WorkUnitCatalogueRepository
-from ....domain.modelos._verification_report import (
-    ModeloVerificationFindingKind,
-)
-from ....domain.modelos._verification_repository import VerificationReportCatalogueRepository
 from ....tests.secure_sql import isolated_runtime_profile
-from ...user_profile._repository import UserProfileLifecycleRepository
+from ...user_profile import UserProfileLifecycleRepository
 from .._action_errors import StoredCalculationDriftError
 from .._calculation_actions import calculate_modelo_revision
 from .._verification_actions import verify_modelo_revision
@@ -472,7 +467,7 @@ def test_observation_tampering_is_detected_by_verify_path(repos: _Repos) -> None
     # injection of inconsistent state). The runtime check is a defense-in-depth
     # layer against raw storage corruption that bypasses pydantic. We bypass
     # model_validator here via model_construct to simulate that scenario.
-    from ....domain.calculations.registry._bindings import CasillaObservation
+    from ....domain.calculations.registry import CasillaObservation
     from .._registry_helpers import assert_revision_content_integrity as _assert_revision_content_integrity
 
     target_obs = revision.observations[0]

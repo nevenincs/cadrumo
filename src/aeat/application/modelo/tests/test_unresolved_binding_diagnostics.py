@@ -31,12 +31,11 @@ import pytest
 
 from ....core import BindingSourceKind
 from ....core.resources import resources
-from ....domain.calculations.registry._errors import RegistryValidationError
+from ....domain.calculations.registry import FormulaExpression, RegistryValidationError
 from ....domain.calculations.registry._formula_runtime import (
     _evaluate_expression,
     _UnresolvedFormulaDependencyError,
 )
-from ....domain.calculations.registry._schema import FormulaExpression
 from ...aggregation import CalculationSourceResolution, merge_source_resolutions
 from .._calculation_actions import _expected_but_missing_binding_ids
 

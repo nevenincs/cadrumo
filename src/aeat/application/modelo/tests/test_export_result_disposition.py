@@ -10,15 +10,19 @@ import pytest
 from ....core import Period
 from ....core.resources import resources
 from ....domain.calculations.registry import CasillaId, CasillaObservation
-from ....domain.deadlines import TaxpayerProfile
-from ....domain.deadlines._models import IVARegime, ModeloIVAProfile
-from ....domain.modelos._calculation_revision import (
+from ....domain.deadlines import (
+    IVARegime,
+    ModeloIVAProfile,
+    TaxpayerProfile,
+)
+from ....domain.modelos import (
     CalculationRevision,
     CalculationRevisionState,
+    ModeloCode,
+    WorkUnit,
     derive_calculation_revision_id,
+    derive_work_unit_id,
 )
-from ....domain.modelos._codes import ModeloCode
-from ....domain.modelos._work_unit import WorkUnit, derive_work_unit_id
 from .._result_disposition_resolution import resolve_modelo_result_disposition
 from ._export_test_support import (
     _M130_RESULT_CASILLA,

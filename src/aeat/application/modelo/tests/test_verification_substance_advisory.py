@@ -10,8 +10,8 @@ from ....domain.calculations.registry import (
     CasillaId,
     VerificationPredicateDefinition,
 )
-from ....domain.modelos._errors import ModeloError
-from ....domain.modelos._verification_report import (
+from ....domain.modelos import (
+    ModeloError,
     ModeloVerificationFindingKind,
     ModeloVerificationFindingSeverity,
 )

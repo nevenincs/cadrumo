@@ -20,11 +20,11 @@ from pydantic import ValidationError
 from ....core import Period
 from ....core.config import override_settings
 from ....domain.filing import ModeloCasillaProvenance
-from ....domain.iva_compensation._reconciliation import (
+from ....domain.iva_compensation import (
     IvaCompensationAuthoritySource,
     IvaCompensationReconciliationDecision,
 )
-from ....domain.modelos._calculation_revision import CalculationRevisionState
+from ....domain.modelos import CalculationRevisionState
 from .. import (
     CalculationRevisionNotFoundError,
     CalculationRevisionStateError,

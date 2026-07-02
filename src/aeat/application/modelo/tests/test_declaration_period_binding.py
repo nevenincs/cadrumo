@@ -25,12 +25,11 @@ from ....core import CasillaId, Period, validated_casilla_id
 from ....core.resources import resources
 from ....domain.buckets import BucketEventHistoryRepository
 from ....domain.calculations.registry import BindingId
-from ....domain.iva_compensation._reconciliation import IvaCompensationReconciliationDecision
-from ....domain.modelos._calculation_repository import CalculationRevisionCatalogueRepository
-from ....domain.modelos._repository import WorkUnitCatalogueRepository
+from ....domain.iva_compensation import IvaCompensationReconciliationDecision
+from ....domain.modelos import CalculationRevisionCatalogueRepository, WorkUnitCatalogueRepository
 from ....domain.user_profile import UserProfileFact, UserProfileRecord
 from ....tests.secure_sql import isolated_runtime_profile
-from ...calculations._observations_repository import IvaWalletDecisionRepository
+from ...calculations import IvaWalletDecisionRepository
 from ...user_profile import UserProfileLifecycleRepository
 from .. import calculate_modelo_revision, create_work_unit
 

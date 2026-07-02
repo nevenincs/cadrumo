@@ -44,11 +44,13 @@ from ....core import Period
 from ....domain.buckets import BucketEventHistoryRepository
 from ....domain.calculations.registry import CasillaId, RegistryValidationError, validated_casilla_id
 from ....domain.deadlines import IVARegime, TaxpayerProfile
-from ....domain.iva_compensation._reconciliation import IvaCompensationReconciliationDecision
-from ....domain.modelos._calculation_repository import CalculationRevisionCatalogueRepository
-from ....domain.modelos._repository import WorkUnitCatalogueRepository
-from ....domain.modelos._verification_report import ModeloVerificationFindingKind
-from ....domain.modelos._verification_repository import VerificationReportCatalogueRepository
+from ....domain.iva_compensation import IvaCompensationReconciliationDecision
+from ....domain.modelos import (
+    CalculationRevisionCatalogueRepository,
+    ModeloVerificationFindingKind,
+    VerificationReportCatalogueRepository,
+    WorkUnitCatalogueRepository,
+)
 from ....domain.transactions import (
     BusinessClassification,
     RawProvenance,

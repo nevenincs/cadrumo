@@ -10,8 +10,7 @@ import pytest
 
 from ....core import Period
 from ....domain.buckets import BucketEventType
-from ....domain.deadlines import TaxpayerProfile
-from ....domain.deadlines._models import IVARegime
+from ....domain.deadlines import IVARegime, TaxpayerProfile
 from .._export import ModeloExportCommand, ModeloExportOutputPathError, export_modelo_revision
 from ._export_modelo_303_support import _build_verified_modelo_303_revision
 from ._export_test_support import isolated_backend_context

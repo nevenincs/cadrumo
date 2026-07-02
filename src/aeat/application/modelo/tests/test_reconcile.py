@@ -11,14 +11,18 @@ import pytest
 from ....adapters.inbound.justificante import parse_justificante
 from ....core import Period
 from ....domain.buckets import BucketEventHistoryRepository, BucketEventType
-from ....domain.modelos._codes import ModeloCode
-from ....domain.modelos._repository import WorkUnitCatalogueRepository, upsert_work_unit
-from ....domain.modelos._work_unit import WorkUnit, derive_work_unit_id
+from ....domain.modelos import (
+    ModeloCode,
+    WorkUnit,
+    WorkUnitCatalogueRepository,
+    derive_work_unit_id,
+    upsert_work_unit,
+)
 from ....tests import FIXTURES_DIR
 from ....tests.secure_sql import isolated_profile_storage_root
-from ...user_profile._orchestration import profile_create_storage_span
+from ...user_profile import profile_create_storage_span
 from ...user_profile._testing import register_minimal_profile
-from ...workflow._persistence import workflow_state_repository
+from ...workflow import workflow_state_repository
 from .._reconcile import (
     ModeloReconciliationCommand,
     ModeloReconciliationEvidenceKind,
@@ -291,10 +295,8 @@ def test_modelo_reconcile_malformed_evidence_refusal_is_clean_and_instructive(
     Regression for audit reconcile m11 / docs-hardening m16: before the fix the
     refusal echoed the raw parser message verbatim.
     """
-    from ....core.errors._registry import (
-        get_error_suggestion,
-        resolve_error_message,
-    )
+    from ....core.errors import resolve_error_message
+    from ....core.errors._registry import get_error_suggestion
 
     work_unit_id = _seed_work_unit(modelo="130", filing_year=2026, period="1T")
     not_a_justificante = tmp_path / "garbage.pdf"

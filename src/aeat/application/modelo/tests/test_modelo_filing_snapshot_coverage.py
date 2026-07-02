@@ -17,12 +17,12 @@ import pytest
 from pydantic import ValidationError
 
 from ....core import Period
-from ....domain.modelos._calculation_revision import (
+from ....domain.modelos import (
     CalculationRevision,
     CalculationRevisionState,
     derive_calculation_revision_id,
+    derive_work_unit_id,
 )
-from ....domain.modelos._work_unit import derive_work_unit_id
 from ....domain.transactions import (
     BusinessClassification,
     RawProvenance,
@@ -33,11 +33,13 @@ from ....domain.transactions import (
     TransactionDirection,
     TransactionLifecycleState,
 )
+from ...aggregation import (
+    compute_ledger_filing_snapshot,
+    stale_filed_revisions,
+)
 from ...aggregation._ledger_filing_snapshot import (
     LedgerFilingSnapshot,
-    compute_ledger_filing_snapshot,
     evaluate_ledger_filing_staleness,
-    stale_filed_revisions,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]

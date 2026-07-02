@@ -22,11 +22,9 @@ from ....domain.buckets import (
     BucketEventType,
 )
 from ....domain.calculations.registry import CasillaId
-from ....domain.modelos._calculation_revision import (
+from ....domain.modelos import (
     CalculationRevisionAmendmentKind,
     CalculationRevisionState,
-)
-from ....domain.modelos._filing_record import (
     ExternalEvidenceKind,
     ModeloRecordStatus,
 )

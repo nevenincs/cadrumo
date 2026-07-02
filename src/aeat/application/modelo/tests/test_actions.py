@@ -24,23 +24,24 @@ from ....domain.calculations.registry import (
     CasillaId,
     DataBindingDefinition,
     InputKind,
+    ModeloRevision,
     RegistryValidationError,
+    VerificationPredicateDefinition,
     calculate_registry_snapshot,
     validated_casilla_id,
 )
-from ....domain.calculations.registry._schema import ModeloRevision, PeriodSelector, VerificationPredicateDefinition
+from ....domain.calculations.registry._schema import PeriodSelector
 from ....domain.deadlines import IVARegime, TaxpayerProfile
-from ....domain.iva_compensation._reconciliation import (
-    IvaCompensationDivergence,
-    IvaCompensationReconciliationDecision,
-)
-from ....domain.modelos._calculation_revision import (
+from ....domain.iva_compensation import IvaCompensationReconciliationDecision
+from ....domain.iva_compensation._reconciliation import IvaCompensationDivergence
+from ....domain.modelos import (
     CalculationRevision,
     CalculationRevisionState,
+    ModeloCode,
+    WorkUnit,
     derive_calculation_revision_id,
+    derive_work_unit_id,
 )
-from ....domain.modelos._codes import ModeloCode
-from ....domain.modelos._work_unit import WorkUnit, derive_work_unit_id
 from ...workflow import WorkflowInputMismatchError
 from .. import ModeloAggregationBindingError
 from .._calculation_actions import (

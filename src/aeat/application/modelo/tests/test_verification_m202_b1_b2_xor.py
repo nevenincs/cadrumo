@@ -6,11 +6,13 @@ from decimal import Decimal
 
 import pytest
 
-from ....core._casilla_id import CasillaId, validated_casilla_id
+from ....core import (
+    CasillaId,
+    validated_casilla_id,
+)
 from ....core.resources import bundled_path
-from ....domain.calculations.registry._loader import load_modelo_path
-from ....domain.calculations.registry._schema import VerificationPredicateDefinition
-from ....domain.modelos._verification_report import ModeloVerificationFindingKind
+from ....domain.calculations.registry import VerificationPredicateDefinition, load_modelo_path
+from ....domain.modelos import ModeloVerificationFindingKind
 from .._verification_actions import evaluate_verification_predicates
 from ._verification_substance_support import _workflow_profile
 
