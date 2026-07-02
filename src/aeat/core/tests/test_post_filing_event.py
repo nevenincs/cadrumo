@@ -91,46 +91,25 @@ def test_unknown_concepto_and_tipo_resolve_to_other() -> None:
     assert classify_post_filing_event_kind(concepto=None, tipo=None) is PostFilingEventKind.OTHER
 
 
-def test_actionable_set_covers_demand_and_enforcement_categories() -> None:
+def test_actionable_taxonomy_flags_only_operator_response_categories() -> None:
     # The actionable set is exactly the demand / liquidación / sancionador /
     # recaudación categories that require an operator response or signal
     # enforcement — not the informational notificación / comunicación / acuse.
-    assert (
-        frozenset(
-            {
-                PostFilingEventKind.REQUERIMIENTO,
-                PostFilingEventKind.COMPROBACION,
-                PostFilingEventKind.PROPUESTA_LIQUIDACION,
-                PostFilingEventKind.LIQUIDACION,
-                PostFilingEventKind.ACUERDO_SANCION,
-                PostFilingEventKind.PROVIDENCIA_APREMIO,
-                PostFilingEventKind.DILIGENCIA_EMBARGO,
-            },
-        )
-        == ACTIONABLE_POST_FILING_EVENT_KINDS
+    expected_actionable = frozenset(
+        {
+            PostFilingEventKind.REQUERIMIENTO,
+            PostFilingEventKind.COMPROBACION,
+            PostFilingEventKind.PROPUESTA_LIQUIDACION,
+            PostFilingEventKind.LIQUIDACION,
+            PostFilingEventKind.ACUERDO_SANCION,
+            PostFilingEventKind.PROVIDENCIA_APREMIO,
+            PostFilingEventKind.DILIGENCIA_EMBARGO,
+        },
     )
 
-
-def test_actionable_kinds_are_flagged() -> None:
-    for kind in (
-        PostFilingEventKind.REQUERIMIENTO,
-        PostFilingEventKind.PROPUESTA_LIQUIDACION,
-        PostFilingEventKind.DILIGENCIA_EMBARGO,
-        PostFilingEventKind.PROVIDENCIA_APREMIO,
-    ):
-        assert post_filing_event_is_actionable(kind) is True, kind
-
-
-def test_non_actionable_kinds_are_not_flagged() -> None:
-    for kind in (
-        PostFilingEventKind.DECLARACION_PRESENTADA,
-        PostFilingEventKind.NOTIFICACION,
-        PostFilingEventKind.COMUNICACION,
-        PostFilingEventKind.ACUSE_RECIBO,
-        PostFilingEventKind.PENDIENTE,
-        PostFilingEventKind.OTHER,
-    ):
-        assert post_filing_event_is_actionable(kind) is False, kind
+    assert expected_actionable == ACTIONABLE_POST_FILING_EVENT_KINDS
+    for kind in PostFilingEventKind:
+        assert post_filing_event_is_actionable(kind) is (kind in expected_actionable), kind
 
 
 def test_enum_values_are_stable_stored_tokens() -> None:
