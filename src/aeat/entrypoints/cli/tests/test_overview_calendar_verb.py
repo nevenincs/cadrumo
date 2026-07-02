@@ -36,6 +36,7 @@ from ....domain.modelos import (
     upsert_filing_record,
 )
 from ....tests.cli_runner import invoke_cached_cli
+from .._overview import _calendar_shift_reason_text
 from ._overview_calendar_support import (
     _SOURCE_URL,
     _justificante_metadata,
@@ -43,7 +44,6 @@ from ._overview_calendar_support import (
     _stamp_calendar_enrolment_from_censo,
     isolated_calendar_backend,
 )
-from .._overview import _calendar_shift_reason_text
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -236,6 +236,17 @@ def test_calendar_shift_formatter_localizes_weekend_tokens() -> None:
     assert rendered == "Dissabte + Todos los Santos + Diumenge"
     assert "sabado" not in rendered
     assert "domingo" not in rendered
+
+    with override_settings(aeat_output_language="es"):
+        clear_output_language_cache()
+        try:
+            accented = _calendar_shift_reason_text("sabado + business_day")
+        finally:
+            clear_output_language_cache()
+
+    assert accented == "Sábado + Día hábil"
+    assert "Sabado" not in accented
+    assert "Dia habil" not in accented
 
 
 def _store_corrupt_local_filing_evidence() -> None:
