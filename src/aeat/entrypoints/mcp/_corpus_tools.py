@@ -13,7 +13,7 @@ functions over typed models: :func:`corpus_search_payload_from_response` and
 directly, while :func:`build_corpus_search_tool` lazily adapts onto the MCP
 SDK's ``Tool`` type so the module still imports (and the server refuses
 gracefully) when the ``aeat[agent]`` extra is absent. The retrieval itself is
-owned by the application service (:func:`~aeat.application.corpus_search.search_corpus`),
+owned by the application service (:func:`~application.corpus_search.search_corpus`),
 consumed through the package facade per ``service-imports-via-top-level-reexports``.
 """
 
