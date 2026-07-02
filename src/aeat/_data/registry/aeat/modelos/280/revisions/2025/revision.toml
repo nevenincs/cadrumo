@@ -1,0 +1,263 @@
+[revisions."2025"]
+label = "Modelo 280 ejercicio 2025 (Orden HAP/2118/2015; Ordenes HFP/1822/2016, HAC/1276/2019 y HFP/1192/2022)"
+valid_from = 2025-01-01
+period_selector = { years = [2025], periods = ["0A"] }
+orden_aplicabilidad = [
+    "orden-hap-2118-2015:art-1",
+    "orden-hfp-1822-2016:art-sexto",
+    "orden-hac-1276-2019:art-quinto",
+    "orden-hfp-1192-2022:art-cuarto",
+]
+legal_refs = [
+    "orden-hap-2118-2015:art-1",
+    "orden-hap-2118-2015:art-2",
+    "orden-hap-2118-2015:art-4",
+    "orden-hap-2118-2015:art-5",
+    "orden-hfp-1822-2016:art-sexto",
+    "orden-hac-1276-2019:art-quinto",
+    "orden-hfp-1192-2022:art-cuarto",
+]
+source_refs = [
+    "aeat-modelo-280-procedure",
+    "aeat-dr-280-2022",
+    "boe-modelo-280-base-order",
+    "boe-modelo-280-2016-amendment-hfp-1822",
+    "boe-modelo-280-2019-amendment-hac-1276",
+    "boe-modelo-280-2022-amendment-hfp-1192",
+]
+
+[[revisions."2025".casillas]]
+id = "declarante-nif"
+number = "tipo1.nif-declarante"
+label = "NIF del declarante"
+section = ["identificacion_declaracion"]
+data_type = "nif"
+semantic_role = "irpf_declarante_nif"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hap-2118-2015:art-1"]
+source_refs = ["boe-modelo-280-base-order", "aeat-dr-280-2022"]
+
+[[revisions."2025".casillas]]
+id = "ejercicio-declaracion"
+number = "tipo1.ejercicio"
+label = "Ejercicio de declaracion"
+section = ["identificacion_declaracion"]
+data_type = "year"
+semantic_role = "filing_year"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hap-2118-2015:art-1", "orden-hap-2118-2015:art-4"]
+source_refs = ["boe-modelo-280-base-order", "aeat-modelo-280-procedure", "aeat-dr-280-2022"]
+
+[[revisions."2025".casillas]]
+id = "declarado-nif"
+number = "tipo2.nif-declarado"
+label = "NIF del declarado"
+section = ["declarado"]
+data_type = "nif"
+semantic_role = "m280_declarado_nif"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hap-2118-2015:art-1", "orden-hap-2118-2015:art-2"]
+source_refs = ["boe-modelo-280-base-order", "aeat-dr-280-2022"]
+
+[[revisions."2025".casillas]]
+id = "declarado-nombre"
+number = "tipo2.apellidos-nombre-declarado"
+label = "Apellidos y nombre del declarado"
+section = ["declarado"]
+data_type = "name"
+semantic_role = "m280_declarado_nombre"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hap-2118-2015:art-1", "orden-hap-2118-2015:art-2"]
+source_refs = ["boe-modelo-280-base-order", "aeat-dr-280-2022"]
+
+[[revisions."2025".casillas]]
+id = "clave-alta"
+number = "tipo2.110"
+label = "Clave de alta"
+section = ["plan_ahorro_largo_plazo", "estado"]
+data_type = "text"
+semantic_role = "m280_clave_alta"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hap-2118-2015:art-1"]
+source_refs = ["boe-modelo-280-base-order", "aeat-dr-280-2022"]
+
+[[revisions."2025".casillas]]
+id = "aportaciones-ejercicio"
+number = "tipo2.111-116"
+label = "Aportaciones efectuadas en el ejercicio"
+section = ["plan_ahorro_largo_plazo", "aportaciones"]
+data_type = "money"
+semantic_role = "m280_aportaciones_ejercicio"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hfp-1822-2016:art-sexto"]
+source_refs = [
+    "boe-modelo-280-base-order",
+    "boe-modelo-280-2016-amendment-hfp-1822",
+    "aeat-dr-280-2022",
+]
+
+[[revisions."2025".casillas]]
+id = "rendimientos-positivos-ejercicio"
+number = "tipo2.117-126"
+label = "Rendimientos positivos obtenidos durante el ejercicio"
+section = ["plan_ahorro_largo_plazo", "rendimientos"]
+data_type = "money"
+semantic_role = "m280_rendimientos_positivos_ejercicio"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hfp-1822-2016:art-sexto"]
+source_refs = [
+    "boe-modelo-280-base-order",
+    "boe-modelo-280-2016-amendment-hfp-1822",
+    "aeat-dr-280-2022",
+]
+
+[[revisions."2025".casillas]]
+id = "rendimientos-negativos-ejercicio"
+number = "tipo2.127-136"
+label = "Rendimientos negativos obtenidos durante el ejercicio"
+section = ["plan_ahorro_largo_plazo", "rendimientos"]
+data_type = "money"
+semantic_role = "m280_rendimientos_negativos_ejercicio"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hfp-1822-2016:art-sexto"]
+source_refs = [
+    "boe-modelo-280-base-order",
+    "boe-modelo-280-2016-amendment-hfp-1822",
+    "aeat-dr-280-2022",
+]
+
+[[revisions."2025".casillas]]
+id = "extincion-plan"
+number = "tipo2.137"
+label = "Extincion del Plan de Ahorro a Largo Plazo"
+section = ["plan_ahorro_largo_plazo", "extincion"]
+data_type = "text"
+semantic_role = "m280_extincion_plan"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hfp-1192-2022:art-cuarto"]
+source_refs = [
+    "boe-modelo-280-base-order",
+    "boe-modelo-280-2022-amendment-hfp-1192",
+    "aeat-dr-280-2022",
+]
+
+[[revisions."2025".casillas]]
+id = "fecha-extincion"
+number = "tipo2.138-145"
+label = "Fecha de extincion"
+section = ["plan_ahorro_largo_plazo", "extincion"]
+data_type = "text"
+semantic_role = "m280_fecha_extincion"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hap-2118-2015:art-1", "orden-hfp-1192-2022:art-cuarto"]
+source_refs = [
+    "boe-modelo-280-base-order",
+    "boe-modelo-280-2022-amendment-hfp-1192",
+    "aeat-dr-280-2022",
+]
+
+[[revisions."2025".casillas]]
+id = "rendimientos-positivos-acumulados"
+number = "tipo2.146-155"
+label = "Rendimientos positivos acumulados"
+section = ["plan_ahorro_largo_plazo", "rendimientos_acumulados"]
+data_type = "money"
+semantic_role = "m280_rendimientos_positivos_acumulados"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hfp-1822-2016:art-sexto"]
+source_refs = [
+    "boe-modelo-280-base-order",
+    "boe-modelo-280-2016-amendment-hfp-1822",
+    "aeat-dr-280-2022",
+]
+
+[[revisions."2025".casillas]]
+id = "rendimientos-negativos-acumulados"
+number = "tipo2.156-165"
+label = "Rendimientos negativos acumulados"
+section = ["plan_ahorro_largo_plazo", "rendimientos_acumulados"]
+data_type = "money"
+semantic_role = "m280_rendimientos_negativos_acumulados"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hfp-1822-2016:art-sexto"]
+source_refs = [
+    "boe-modelo-280-base-order",
+    "boe-modelo-280-2016-amendment-hfp-1822",
+    "aeat-dr-280-2022",
+]
+
+[[revisions."2025".workbook_parity_refs]]
+id = "modelo-280-2022-static-layout"
+workbook_source = "aeat-dr-280-2022"
+fixture_id = "modelo-280-2022-record-design-layout"
+formula_coverage = "static_layout"
+runner_required = false
+tolerance = "0.00"
+legal_refs = [
+    "orden-hap-2118-2015:art-1",
+    "orden-hfp-1822-2016:art-sexto",
+    "orden-hac-1276-2019:art-quinto",
+    "orden-hfp-1192-2022:art-cuarto",
+]
+source_refs = [
+    "aeat-dr-280-2022",
+    "boe-modelo-280-base-order",
+    "boe-modelo-280-2016-amendment-hfp-1822",
+    "boe-modelo-280-2019-amendment-hac-1276",
+    "boe-modelo-280-2022-amendment-hfp-1192",
+]
+
+[[revisions."2025".application_links]]
+id = "modelo-280-filing"
+surface = "filing"
+consumer = "aeat.application.filing"
+requires_snapshot = true
+legal_refs = [
+    "orden-hap-2118-2015:art-1",
+    "orden-hap-2118-2015:art-5",
+    "orden-hac-1276-2019:art-quinto",
+]
+source_refs = [
+    "aeat-modelo-280-procedure",
+    "aeat-dr-280-2022",
+    "boe-modelo-280-base-order",
+    "boe-modelo-280-2019-amendment-hac-1276",
+]
+
+[[revisions."2025".application_links]]
+id = "modelo-280-deadline"
+surface = "deadline"
+consumer = "aeat.domain.deadlines"
+requires_snapshot = true
+legal_refs = ["orden-hap-2118-2015:art-4"]
+source_refs = ["aeat-modelo-280-procedure", "boe-modelo-280-base-order"]
+
+[[revisions."2025".deadline_windows]]
+id = "modelo-280-2025-0a"
+filing_year = 2025
+period = "2025 0A"
+period_kind = "annual"
+opens_on = 2026-02-01
+closes_on = 2026-02-28
+legal_refs = ["orden-hap-2118-2015:art-4"]
+source_refs = ["aeat-modelo-280-procedure", "boe-modelo-280-base-order"]
+
+[[revisions."2025".filing_schedules]]
+id = "modelo-280-anual"
+period_kind = "annual"
+periods = ["0A"]
+profile_condition_mode = "all"
+legal_refs = ["orden-hap-2118-2015:art-4"]
+source_refs = ["aeat-modelo-280-procedure", "boe-modelo-280-base-order"]
