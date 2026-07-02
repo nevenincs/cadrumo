@@ -83,20 +83,20 @@ def test_export_handoff_confirms_and_is_argument_independent() -> None:
        ``arguments``/``args`` parameter at all, so no call-supplied argument value
        can be threaded into the decision by construction.
     3. Structural (source order): the real ``_server.py::_call_tool`` computes the
-       BLOCK/CONFIRM decision BEFORE it ever reads ``arguments.get("args", ...)`` to
-       build the dispatched argv - proving the gate sits in front of the call, not
-       merely that the pure function happens to ignore an argument it was never
-       given in this test.
+       BLOCK/CONFIRM decision BEFORE it ever dispatches the tool's ``arguments``
+       to build the CLI argv (``_run_subprocess_tool(descriptor, arguments)``) -
+       proving the gate sits in front of the call, not merely that the pure
+       function happens to ignore an argument it was never given in this test.
     """
     descriptor = _descriptors_by_command_key()[_EXPORT_STEP]
 
     # Two MCP call-tool `arguments` payloads an agent optimising for task
-    # completion could plausibly send: a plain call, and one carrying an
-    # auto-yes-equivalent flag riding along in the tool's own `args` array (the
-    # CLI exposes `--yes` for a human operator to skip a confirmation prompt; an
+    # completion could plausibly send under the per-verb schema: a plain call, and
+    # one carrying an auto-yes-equivalent named argument riding along (the CLI
+    # exposes a confirmation flag for a human operator to skip a prompt; an
     # autonomous agent could supply it to itself just as easily).
-    plain_arguments: dict[str, object] = {"args": []}
-    auto_yes_arguments: dict[str, object] = {"args": ["--yes"]}
+    plain_arguments: dict[str, object] = {}
+    auto_yes_arguments: dict[str, object] = {"yes": True}
 
     assert set(inspect.signature(confirmation_for_tool).parameters) == {"command_key", "annotations"}, (
         "confirmation_for_tool must not accept a call-arguments parameter; the "
@@ -107,20 +107,25 @@ def test_export_handoff_confirms_and_is_argument_independent() -> None:
     # The (unread) arguments payloads are irrelevant to the call above by
     # construction - demonstrated, not merely asserted, by resolving the SAME
     # decision a second time after "receiving" the auto-yes payload.
-    assert plain_arguments.get("args") != auto_yes_arguments.get("args")
+    assert plain_arguments != auto_yes_arguments
     decision_auto_yes = confirmation_for_tool(command_key=descriptor.command_key, annotations=descriptor.annotations)
 
     assert decision_plain is ConfirmationPolicy.CONFIRM
     assert decision_auto_yes is ConfirmationPolicy.CONFIRM
     assert decision_plain is decision_auto_yes
 
+    # The schema-driven serving path consumes the call's `arguments` only inside
+    # `_run_subprocess_tool(descriptor, arguments)`, which `_call_tool` reaches
+    # strictly after the confirmation gate. Anchoring on that dispatch call site
+    # re-expresses the original ordering proof over the new argv construction (the
+    # retired `arguments.get("args")` bag is gone).
     server_source = inspect.getsource(_mcp_server)
     gate_offset = server_source.index("confirmation_for_tool(command_key=key")
-    args_read_offset = server_source.index('arguments.get("args"')
-    assert gate_offset < args_read_offset, (
-        "the PreToolUse confirmation gate must be evaluated before the tool call's "
-        "own `arguments` are ever read in _server.py::_call_tool, so no argument "
-        "value (including an auto-yes-equivalent flag) can influence it"
+    dispatch_offset = server_source.index("envelope, is_error = _run_subprocess_tool(descriptor, arguments)")
+    assert gate_offset < dispatch_offset, (
+        "the PreToolUse confirmation gate must be evaluated before the direct call's "
+        "arguments are ever consumed to build the CLI argv in _server.py::_call_tool, "
+        "so no argument value (including an auto-yes-equivalent flag) can influence it"
     )
 
 
