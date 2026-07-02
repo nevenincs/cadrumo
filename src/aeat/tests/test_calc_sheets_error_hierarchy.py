@@ -25,60 +25,42 @@ from ..application.storage.calc_sheets._errors import (
     CalcSheetsParityError,
     CalcSheetsRecordError,
 )
-from ..core.errors import AeatError, build_error_envelope
+from ..core.errors import AeatError, build_error_envelope, get_registered_error_code
 from ..core.errors._registry import ErrorEnvelope
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
 
-# ---------------------------------------------------------------------------
-# calc_sheets error class hierarchy
-# ---------------------------------------------------------------------------
-
-
-def test_calc_sheets_error_is_aeat_error() -> None:
-    for error_cls in (
+_CALC_SHEETS_ERROR_CASES: tuple[tuple[type[AeatError], str, AeatError], ...] = (
+    (
         CalcSheetsEngineError,
+        "ERROR_CALC_SHEETS_ENGINE",
+        CalcSheetsEngineError("unsupported rounding code 'bad'"),
+    ),
+    (
         CalcSheetsRecordError,
+        "ERROR_CALC_SHEETS_RECORD",
+        CalcSheetsRecordError("column index must be 1-based"),
+    ),
+    (
         CalcSheetsParityError,
-    ):
-        assert issubclass(error_cls, AeatError)
+        "ERROR_CALC_SHEETS_PARITY",
+        CalcSheetsParityError("unknown casilla ids [999]"),
+    ),
+)
 
 
-# ---------------------------------------------------------------------------
-# calc_sheets error code registration and envelope roundtrip
-# ---------------------------------------------------------------------------
-
-
-def test_calc_sheets_error_code_registered() -> None:
-    """Each calc_sheets error must be bound to its declared ErrorCode."""
-    from ..core.errors import get_registered_error_code
-
-    cases: tuple[tuple[type[AeatError], str], ...] = (
-        (CalcSheetsEngineError, "ERROR_CALC_SHEETS_ENGINE"),
-        (CalcSheetsRecordError, "ERROR_CALC_SHEETS_RECORD"),
-        (CalcSheetsParityError, "ERROR_CALC_SHEETS_PARITY"),
-    )
-
-    for error_cls, expected_code in cases:
+def test_calc_sheets_error_contracts_are_registered_and_serializable() -> None:
+    """Each calc_sheets error keeps its hierarchy, registry, and envelope contract."""
+    for error_cls, expected_code, instance in _CALC_SHEETS_ERROR_CASES:
+        assert issubclass(error_cls, AeatError), error_cls.__name__
         ec = get_registered_error_code(error_cls)
         assert ec is not None, f"{error_cls.__name__} has no registered ErrorCode"
         assert ec.code == expected_code
-
-
-def test_calc_sheets_error_envelope_roundtrip() -> None:
-    """Envelope construction and JSON roundtrip must not raise."""
-    instances: tuple[AeatError, ...] = (
-        CalcSheetsEngineError("unsupported rounding code 'bad'"),
-        CalcSheetsRecordError("column index must be 1-based"),
-        CalcSheetsParityError("unknown casilla ids [999]"),
-    )
-
-    for instance in instances:
         envelope = build_error_envelope(instance)
         assert isinstance(envelope, ErrorEnvelope)
-        json_bytes = envelope.model_dump_json()
-        reloaded = ErrorEnvelope.model_validate_json(json_bytes)
+        json_text = envelope.model_dump_json()
+        reloaded = ErrorEnvelope.model_validate_json(json_text)
         assert reloaded == envelope
 
 
