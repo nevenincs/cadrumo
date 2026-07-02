@@ -3,14 +3,14 @@ tags:
   - '#adr'
   - '#modelo-100-minimo-descendientes-engine'
 date: '2026-07-01'
-modified: '2026-07-01'
+modified: '2026-07-02'
 related:
-  - "[[2026-07-01-modelo-100-trabajo-casilla-compute-adr]]"
-  - "[[2026-06-15-art20-trabajo-reduccion-compute-adr]]"
-  - "[[2026-05-27-descendant-profile-axis-adr]]"
+  - '[[2026-07-01-modelo-100-trabajo-casilla-compute-adr]]'
+  - '[[2026-06-15-art20-trabajo-reduccion-compute-adr]]'
+  - '[[2026-05-27-descendant-profile-axis-adr]]'
 ---
 
-# `modelo-100-minimo-descendientes-engine` adr: `Modelo 100 minimo por descendientes engine: compute 0513/0514 vs manual` | (**status:** `proposed`)
+# `modelo-100-minimo-descendientes-engine` adr: `Modelo 100 minimo por descendientes engine: compute 0513/0514 vs manual` | (**status:** `accepted`)
 
 ## Problem Statement
 
@@ -255,3 +255,60 @@ as blocking-for-compute rather than asserted.
   is a trap for a future agent who assumes the aggregate binding already resolves;
   the plan must either build the property or delete the binding, and must not leave
   the half-wired state that exists today.
+
+## Implementation status (2026-07-02)
+
+**Option B landed** (commit `bc3b89594`, `feat(modelo): M100 custodia-compartida
+minimo advisory + fix dangling descendientes selector (#515)`):
+
+- The `custodia_compartida_advisory` (Art. 61.1a LIRPF — corrected citation, see
+  below) now surfaces as a non-blocking `CalculationSourceDiagnostic` /
+  operator-facing `Notice` on the M100 calculate path whenever the active
+  profile carries at least one Art. 58.1-eligible descendant flagged
+  `custodia_compartida=true`. A companion advisory fires when eligible
+  descendientes are present but casilla 0513 (parte estatal, located by its
+  stable `semantic_role` across every revision year) resolved to zero.
+- The dangling `renta-2024-profile-descendientes-minimos-aggregate` binding
+  (selector `family.descendientes_minimos_aggregate_2024`, never implemented,
+  never consumed) was deleted per `no-dormant-source-resolvers`. The sibling
+  `descendientes-count` binding (a real, resolvable selector, simply
+  unconsumed) was left in place as harmless future Option A fuel.
+- New module `src/aeat/application/modelo/_minimo_descendientes_advisory.py`,
+  wired into the post-calculation advisory coordinator
+  (`_calculation_diagnostics.py`) with real-adapter tests (encrypted bucket,
+  loaded registry snapshot, real domain eligibility logic — no mocks) in
+  `src/aeat/application/modelo/tests/test_minimo_descendientes_advisory.py`.
+
+**Citation correction found during implementation:** the custodia-compartida
+prorrateo is Art. **61.1ª** LIRPF ("Cuando dos o más contribuyentes tengan
+derecho a la aplicación del mínimo por descendientes... su importe se
+prorrateará entre ellos por partes iguales"), not Art. 61.4ª as stated
+elsewhere in this ADR and in the pre-existing
+`CUSTODIA_COMPARTIDA_PRORRATA_FACTOR` constant comment
+(`src/aeat/core/external_constants.py`). Norm 4ª of Art. 61 covers a
+completely different case (the fixed reduced amount on a descendant/ascendant's
+mid-year death). This pre-existing citation error was corrected in the new
+module's own docstrings and messages; the constant's comment and any other
+call sites still carrying "61.4ª" are a separate, out-of-scope follow-up.
+
+**Art. 58.4 grounding resolved: the mechanism does not exist.** Cross-checked
+directly against the bundled consolidated LIRPF
+(`src/aeat/_data/corpus/normatives/html/ley-35-2006.html`, Art. 58, last
+updated 28/11/2014, in force from 01/01/2015 — the same version the registry
+params already cite): Art. 58 has exactly two numbered subsections (58.1
+ordinary birth-order amounts, 58.2 menor-3-años supplement) and NO within-year
+birth/adoption temporal prorrateo of any kind for descendientes. Art. 61
+(normas comunes) fixes personal/family circumstances as of the devengo date
+(norm 3ª — a year-end snapshot rule, not a prorrata), prorrates only for a
+mid-year DEATH (norm 4ª — a fixed reduced amount, unrelated to birth/adoption
+timing), and its half-period residency prorrata (norm 5ª) is scoped explicitly
+to ascendientes, never descendientes. No AEAT Renta manual is bundled in this
+corpus that states such a rule either. Per the bundled-corpus-cross-check
+discipline, absent a grounded mechanism the compute flip (Option A) stays
+deferred — this closes only the interim safeguard, not #515 itself. Issue
+#515 remains OPEN pending either (a) a grounded temporal mechanism sourced
+from a live AEAT Renta manual / BOE consolidation the operator supplies, or
+(b) a decision that no temporal prorrateo applies to descendientes at all (in
+which case Option A's per-descendant amount is simply the full annual
+birth-order figure regardless of entry date within the year, and Option A can
+proceed without further grounding blockers on this axis).
