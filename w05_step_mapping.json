@@ -1,0 +1,457 @@
+[
+  {
+    "step": "W05.P83.S299",
+    "before_sites": 427,
+    "before_files": 138,
+    "owner": "aeat.domain.modelos",
+    "remaining_sites": 5
+  },
+  {
+    "step": "W05.P83.S300",
+    "before_sites": 69,
+    "before_files": 43,
+    "owner": "aeat.domain.calculations.registry",
+    "remaining_sites": 8
+  },
+  {
+    "step": "W05.P83.S301",
+    "before_sites": 37,
+    "before_files": 31,
+    "owner": "aeat.domain.deadlines",
+    "remaining_sites": 0
+  },
+  {
+    "step": "W05.P83.S302",
+    "before_sites": 44,
+    "before_files": 29,
+    "owner": "aeat.domain.iva_compensation",
+    "remaining_sites": 2
+  },
+  {
+    "step": "W05.P83.S303",
+    "before_sites": 26,
+    "before_files": 20,
+    "owner": "aeat.domain.transactions",
+    "remaining_sites": 1
+  },
+  {
+    "step": "W05.P83.S304",
+    "before_sites": 21,
+    "before_files": 12,
+    "owner": "aeat.domain.user_profile",
+    "remaining_sites": 0
+  },
+  {
+    "step": "W05.P83.S305",
+    "before_sites": 15,
+    "before_files": 10,
+    "owner": "aeat.domain.contribuyente",
+    "remaining_sites": 0
+  },
+  {
+    "step": "W05.P83.S306",
+    "before_sites": 21,
+    "before_files": 10,
+    "owner": "aeat.domain.filing",
+    "remaining_sites": 3
+  },
+  {
+    "step": "W05.P83.S307",
+    "before_sites": 11,
+    "before_files": 8,
+    "owner": "aeat.domain.buckets",
+    "remaining_sites": 0
+  },
+  {
+    "step": "W05.P83.S308",
+    "before_sites": 12,
+    "before_files": 7,
+    "owner": "aeat.domain.submission",
+    "remaining_sites": 0
+  },
+  {
+    "step": "W05.P83.S309",
+    "before_sites": 6,
+    "before_files": 6,
+    "owner": "aeat.domain",
+    "remaining_sites": 0
+  },
+  {
+    "step": "W05.P83.S310",
+    "before_sites": 6,
+    "before_files": 6,
+    "owner": "aeat.domain.iva",
+    "remaining_sites": 0
+  },
+  {
+    "step": "W05.P83.S311",
+    "before_sites": 7,
+    "before_files": 4,
+    "owner": "aeat.domain.invoices",
+    "remaining_sites": 1
+  },
+  {
+    "step": "W05.P83.S312",
+    "before_sites": 6,
+    "before_files": 3,
+    "owner": "aeat.domain.attachments",
+    "remaining_sites": 0
+  },
+  {
+    "step": "W05.P83.S313",
+    "before_sites": 7,
+    "before_files": 3,
+    "owner": "aeat.domain.portals",
+    "remaining_sites": 3
+  },
+  {
+    "step": "W05.P83.S314",
+    "before_sites": 4,
+    "before_files": 2,
+    "owner": "aeat.domain.usage_ratios",
+    "remaining_sites": 0
+  },
+  {
+    "step": "W05.P83.S315",
+    "before_sites": 1,
+    "before_files": 1,
+    "owner": "aeat.domain.justificante",
+    "remaining_sites": 0
+  },
+  {
+    "step": "W05.P83.S316",
+    "before_sites": 1,
+    "before_files": 1,
+    "owner": "aeat.domain.retention",
+    "remaining_sites": 0
+  },
+  {
+    "step": "W05.P83.S317",
+    "before_sites": 2,
+    "before_files": 1,
+    "owner": "aeat.domain.renta",
+    "remaining_sites": 0
+  },
+  {
+    "step": "W05.P83.S318",
+    "before_sites": 1,
+    "before_files": 1,
+    "owner": "aeat.domain.calculations",
+    "remaining_sites": 3
+  },
+  {
+    "step": "W05.P83.S319",
+    "before_sites": 1,
+    "before_files": 1,
+    "owner": "aeat.domain.calculations.registry.tests",
+    "remaining_sites": 1
+  },
+  {
+    "step": "W05.P83.S320",
+    "before_sites": 1,
+    "before_files": 1,
+    "owner": "aeat.domain.manuals",
+    "remaining_sites": 0
+  },
+  {
+    "step": "W05.P83.S321",
+    "before_sites": 1,
+    "before_files": 1,
+    "owner": "aeat.domain.auth.apoderamientos",
+    "remaining_sites": 0
+  },
+  {
+    "step": "W05.P83.S322",
+    "before_sites": 1,
+    "before_files": 1,
+    "owner": "aeat.domain.fincas",
+    "remaining_sites": 1
+  },
+  {
+    "step": "W05.P84.S323",
+    "before_sites": 232,
+    "before_files": 113,
+    "owner": "aeat.application.user_profile",
+    "remaining_sites": 93
+  },
+  {
+    "step": "W05.P84.S324",
+    "before_sites": 140,
+    "before_files": 106,
+    "owner": "aeat.application.workflow",
+    "remaining_sites": 3
+  },
+  {
+    "step": "W05.P84.S325",
+    "before_sites": 41,
+    "before_files": 30,
+    "owner": "aeat.application.calculations",
+    "remaining_sites": 2
+  },
+  {
+    "step": "W05.P84.S326",
+    "before_sites": 39,
+    "before_files": 19,
+    "owner": "aeat.application.aggregation",
+    "remaining_sites": 10
+  },
+  {
+    "step": "W05.P84.S327",
+    "before_sites": 39,
+    "before_files": 14,
+    "owner": "aeat.application.live",
+    "remaining_sites": 8
+  },
+  {
+    "step": "W05.P84.S328",
+    "before_sites": 18,
+    "before_files": 14,
+    "owner": "aeat.application.modelo",
+    "remaining_sites": 13
+  },
+  {
+    "step": "W05.P84.S329",
+    "before_sites": 18,
+    "before_files": 7,
+    "owner": "aeat.application.auth",
+    "remaining_sites": 8
+  },
+  {
+    "step": "W05.P84.S330",
+    "before_sites": 5,
+    "before_files": 5,
+    "owner": "aeat.application.storage.calc_sheets",
+    "remaining_sites": 3
+  },
+  {
+    "step": "W05.P84.S331",
+    "before_sites": 10,
+    "before_files": 5,
+    "owner": "aeat.application.ledger",
+    "remaining_sites": 2
+  },
+  {
+    "step": "W05.P84.S332",
+    "before_sites": 7,
+    "before_files": 5,
+    "owner": "aeat.application.wizard",
+    "remaining_sites": 4
+  },
+  {
+    "step": "W05.P84.S333",
+    "before_sites": 5,
+    "before_files": 3,
+    "owner": "aeat.application.filing",
+    "remaining_sites": 1
+  },
+  {
+    "step": "W05.P84.S334",
+    "before_sites": 3,
+    "before_files": 3,
+    "owner": "aeat.application.review",
+    "remaining_sites": 1
+  },
+  {
+    "step": "W05.P84.S335",
+    "before_sites": 2,
+    "before_files": 1,
+    "owner": "aeat.application.bucket_maintenance",
+    "remaining_sites": 1
+  },
+  {
+    "step": "W05.P84.S336",
+    "before_sites": 3,
+    "before_files": 1,
+    "owner": "aeat.application.evidence",
+    "remaining_sites": 1
+  },
+  {
+    "step": "W05.P84.S337",
+    "before_sites": 2,
+    "before_files": 1,
+    "owner": "aeat.application.overview",
+    "remaining_sites": 1
+  },
+  {
+    "step": "W05.P84.S338",
+    "before_sites": 3,
+    "before_files": 1,
+    "owner": "aeat.application.invoices",
+    "remaining_sites": 2
+  },
+  {
+    "step": "W05.P85.S339",
+    "before_sites": 42,
+    "before_files": 23,
+    "owner": "aeat.adapters.persistence.storage.bucket",
+    "remaining_sites": 1
+  },
+  {
+    "step": "W05.P85.S340",
+    "before_sites": 24,
+    "before_files": 21,
+    "owner": "aeat.adapters.persistence.storage.crypto",
+    "remaining_sites": 0
+  },
+  {
+    "step": "W05.P85.S341",
+    "before_sites": 24,
+    "before_files": 21,
+    "owner": "aeat.adapters.persistence.storage.sql",
+    "remaining_sites": 1
+  },
+  {
+    "step": "W05.P85.S342",
+    "before_sites": 24,
+    "before_files": 15,
+    "owner": "aeat.adapters.persistence.storage.master_key",
+    "remaining_sites": 14
+  },
+  {
+    "step": "W05.P85.S343",
+    "before_sites": 20,
+    "before_files": 12,
+    "owner": "aeat.adapters.outbound.aeat.sede",
+    "remaining_sites": 0
+  },
+  {
+    "step": "W05.P85.S344",
+    "before_sites": 7,
+    "before_files": 7,
+    "owner": "aeat.adapters.inbound.pdf",
+    "remaining_sites": 1
+  },
+  {
+    "step": "W05.P85.S345",
+    "before_sites": 7,
+    "before_files": 7,
+    "owner": "aeat.adapters.outbound.storage",
+    "remaining_sites": 3
+  },
+  {
+    "step": "W05.P85.S346",
+    "before_sites": 10,
+    "before_files": 6,
+    "owner": "aeat.adapters.outbound.google",
+    "remaining_sites": 6
+  },
+  {
+    "step": "W05.P85.S347",
+    "before_sites": 8,
+    "before_files": 6,
+    "owner": "aeat.adapters.inbound.financial.providers",
+    "remaining_sites": 2
+  },
+  {
+    "step": "W05.P85.S348",
+    "before_sites": 8,
+    "before_files": 5,
+    "owner": "aeat.adapters.outbound.aeat.browser",
+    "remaining_sites": 1
+  },
+  {
+    "step": "W05.P85.S349",
+    "before_sites": 7,
+    "before_files": 4,
+    "owner": "aeat.adapters.persistence.storage",
+    "remaining_sites": 0
+  },
+  {
+    "step": "W05.P85.S350",
+    "before_sites": 12,
+    "before_files": 3,
+    "owner": "aeat.adapters.outbound.aeat.auth",
+    "remaining_sites": 2
+  },
+  {
+    "step": "W05.P85.S351",
+    "before_sites": 6,
+    "before_files": 2,
+    "owner": "aeat.adapters.outbound.llm",
+    "remaining_sites": 0
+  },
+  {
+    "step": "W05.P85.S352",
+    "before_sites": 2,
+    "before_files": 2,
+    "owner": "aeat.adapters.inbound.declaracion",
+    "remaining_sites": 1
+  },
+  {
+    "step": "W05.P85.S353",
+    "before_sites": 1,
+    "before_files": 1,
+    "owner": "aeat.adapters.persistence.storage.blob_store",
+    "remaining_sites": 0
+  },
+  {
+    "step": "W05.P85.S354",
+    "before_sites": 1,
+    "before_files": 1,
+    "owner": "aeat.adapters.inbound.borrador",
+    "remaining_sites": 0
+  },
+  {
+    "step": "W05.P86.S355",
+    "before_sites": 14,
+    "before_files": 14,
+    "owner": "aeat.tests",
+    "remaining_sites": 15
+  },
+  {
+    "step": "W05.P86.S356",
+    "before_sites": 13,
+    "before_files": 13,
+    "owner": "aeat.core.errors",
+    "remaining_sites": 1
+  },
+  {
+    "step": "W05.P86.S357",
+    "before_sites": 37,
+    "before_files": 13,
+    "owner": "aeat.core",
+    "remaining_sites": 1
+  },
+  {
+    "step": "W05.P86.S358",
+    "before_sites": 12,
+    "before_files": 11,
+    "owner": "aeat.core.i18n",
+    "remaining_sites": 3
+  },
+  {
+    "step": "W05.P86.S359",
+    "before_sites": 9,
+    "before_files": 5,
+    "owner": "aeat.entrypoints.cli",
+    "remaining_sites": 7
+  },
+  {
+    "step": "W05.P86.S360",
+    "before_sites": 5,
+    "before_files": 3,
+    "owner": "aeat.core.observability",
+    "remaining_sites": 3
+  },
+  {
+    "step": "W05.P86.S361",
+    "before_sites": 8,
+    "before_files": 2,
+    "owner": "aeat.locales",
+    "remaining_sites": 8
+  },
+  {
+    "step": "W05.P86.S362",
+    "before_sites": 2,
+    "before_files": 1,
+    "owner": "aeat.entrypoints.mcp",
+    "remaining_sites": 0
+  },
+  {
+    "step": "W05.P86.S363",
+    "before_sites": 1,
+    "before_files": 1,
+    "owner": "aeat.core.decimal",
+    "remaining_sites": 0
+  }
+]

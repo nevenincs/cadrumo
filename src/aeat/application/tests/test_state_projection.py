@@ -28,13 +28,13 @@ from pathlib import Path
 import pytest
 from pydantic import SecretStr
 
-from ...adapters.persistence.storage.bucket import provision_bucket_directory
 from ...adapters.persistence.storage.bucket import (
     BucketLifecycleStatus,
     BucketManifest,
     ManifestKdfParams,
+    provision_bucket_directory,
+    write_manifest,
 )
-from ...adapters.persistence.storage.bucket import write_manifest
 from ...adapters.persistence.storage.sql.engine import dispose_engine
 from ...core import Period
 from ...core.config import SecretStoreBackend, override_settings
@@ -53,8 +53,7 @@ from ..state_projection import (
 )
 from ..user_profile._testing import register_minimal_profile
 from ..wizard import WIZARD_FLOWS
-from ..workflow import WorkflowState
-from ..workflow import workflow_state_repository
+from ..workflow import WorkflowState, workflow_state_repository
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

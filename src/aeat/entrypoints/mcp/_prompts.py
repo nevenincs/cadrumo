@@ -166,9 +166,7 @@ def prompt_document(name: str) -> PromptDocument:
         return PromptDocument(
             prompt=catalogue[ORIENTATION_PROMPT_NAME],
             brief_text=_orientation_brief(),
-            embedded=(
-                EmbeddedDocument(uri=_RULES_URI, text=operator_rules_text()),
-            ),
+            embedded=(EmbeddedDocument(uri=_RULES_URI, text=operator_rules_text()),),
         )
     texts = _skill_texts()
     if name not in texts:
@@ -186,9 +184,7 @@ def prompt_document(name: str) -> PromptDocument:
     return PromptDocument(
         prompt=prompt,
         brief_text=_workflow_brief(metadata.name, metadata.description),
-        embedded=(
-            EmbeddedDocument(uri=f"{_SKILL_URI_PREFIX}{name}", text=text),
-        ),
+        embedded=(EmbeddedDocument(uri=f"{_SKILL_URI_PREFIX}{name}", text=text),),
     )
 
 

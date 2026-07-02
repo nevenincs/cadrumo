@@ -6,10 +6,8 @@ from decimal import Decimal
 
 import pytest
 
-from ....domain.calculations.registry import CasillaId
-from ....domain.calculations.registry import VerificationPredicateDefinition
-from ....domain.modelos import ModeloError
-from ....domain.modelos import ModeloVerificationFindingKind
+from ....domain.calculations.registry import CasillaId, VerificationPredicateDefinition
+from ....domain.modelos import ModeloError, ModeloVerificationFindingKind
 from .._verification_actions import (
     evaluate_advisory_predicate_fires,
     evaluate_predicate_expression,
