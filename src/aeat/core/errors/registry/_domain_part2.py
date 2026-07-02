@@ -184,7 +184,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.domain.calculations.registry._formula_runtime._UnresolvedFormulaDependencyError",
+        "aeat.domain.calculations.registry._formula_runtime_ops.UnresolvedFormulaDependencyError",
         ErrorCode(
             code="ERROR_CALCULATIONS_REGISTRY_UNRESOLVED_FORMULA_DEPENDENCY",
             category=ErrorCategory.ERROR,
@@ -195,7 +195,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.domain.calculations.registry._formula_runtime._UnresolvedFormulaOutcomeError",
+        "aeat.domain.calculations.registry._formula_runtime_ops.UnresolvedFormulaOutcomeError",
         ErrorCode(
             code="ERROR_CALCULATIONS_REGISTRY_UNRESOLVED_FORMULA_OUTCOME",
             category=ErrorCategory.ERROR,

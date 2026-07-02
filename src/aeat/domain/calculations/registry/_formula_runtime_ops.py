@@ -24,7 +24,9 @@ from __future__ import annotations
 from collections.abc import Mapping
 from datetime import date
 from decimal import ROUND_HALF_UP, Decimal
+from enum import StrEnum
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 from ....core.money import round_to_cents as _round_to_cents
 from ._casilla_membership import undeclared_casilla_ids
@@ -32,10 +34,71 @@ from ._errors import RegistrySnapshotError, RegistryValidationError
 from ._ids import CasillaId, validated_casilla_id
 from ._schema import DatedValue, ModeloRevision, ParameterDefinition
 
+if TYPE_CHECKING:
+    from ._formula_runtime import _EvalContext
+
 _ZERO = Decimal("0")
 _ONE = Decimal("1")
 _COMPARISON_OPS = frozenset({"less_than", "less_equal", "greater_than", "greater_equal", "equal"})
 _UNARY_PASSTHROUGH_OPS = frozenset({"copy", "lookup_parameter", "previous_period_value", "cross_model_sum"})
+
+
+class UnresolvedFormulaDependencyError(RegistrySnapshotError):
+    """Raised internally when a non-blocking source gap makes a formula unresolved.
+
+    Shared between :mod:`~aeat.domain.calculations.registry._formula_runtime`
+    and its per-family op-evaluator siblings (e.g.
+    :mod:`~aeat.domain.calculations.registry._formula_runtime_irnr`) so a
+    family module can signal a deferred dependency without importing back
+    into the dispatcher module.
+    """
+
+    def __init__(self, dependency_ids: tuple[str, ...]) -> None:
+        super().__init__(", ".join(dependency_ids))
+        self.dependency_ids = dependency_ids
+
+
+class RegistryUnresolvedOutcomeReason(StrEnum):
+    """Closed reason catalogue for typed formula outcomes with no Decimal value."""
+
+    M210_BASELINE_TIPO_DEFERRED = "m210-baseline-tipo-deferred"
+    M210_CONVENIO_RATE_MISSING = "m210-convenio-rate-missing"
+
+
+class UnresolvedFormulaOutcomeError(RegistrySnapshotError):
+    """Raised internally when a formula emits a typed unresolved outcome."""
+
+    def __init__(
+        self,
+        reason: RegistryUnresolvedOutcomeReason,
+        *,
+        context: Mapping[str, str],
+    ) -> None:
+        super().__init__(reason.value)
+        self.reason = reason
+        self.context = dict(context)
+
+
+def numeric_casilla_value(casilla_id: CasillaId, ctx: _EvalContext) -> Decimal:
+    """Read a resolved numeric casilla value from the evaluation context.
+
+    Generic accessor shared by the M210/IRNR, M131 módulos, and M303 módulos
+    IVA formula-op families; each raises :class:`UnresolvedFormulaDependencyError`
+    the same way for a casilla deferred by a non-blocking source gap.
+    """
+    if casilla_id not in ctx.values:
+        if casilla_id in ctx.unresolved_casilla_ids:
+            raise UnresolvedFormulaDependencyError((casilla_id,))
+        raise RegistryValidationError(
+            f"casilla {casilla_id!r} referenced before evaluation",
+            translated_message="errors.calc.casilla_referenced_before_evaluation",
+            context={"casilla_id": casilla_id},
+        )
+    value = ctx.values[casilla_id]
+    ctx.operand_refs.append(casilla_id)
+    ctx.operand_casilla_refs.append(casilla_id)
+    ctx.operand_values.append(value)
+    return value
 
 
 def evaluate_args_op(op: str, args: list[Decimal]) -> Decimal:
