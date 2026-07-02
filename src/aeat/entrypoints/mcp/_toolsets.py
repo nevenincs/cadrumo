@@ -9,7 +9,7 @@ meta-tool fallback, so a toolset is a curated subset, never a full partition.
 
 Membership is DERIVED, never hand-listed. ``ledger`` and ``modelo-lifecycle`` map
 directly onto their live operator-surface manifest domains
-(:class:`~aeat.application.operator_surface.MountedCommandDomain`). The three
+(:class:`~application.operator_surface.MountedCommandDomain`). The three
 tax-concept toolsets are finer than the family-granular manifest can express, so
 they key on the command tree's own stable segment tokens - the census surface
 (Modelo 036 plus the ``censo`` profile sync), the IVA wallet surface, and the
