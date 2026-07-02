@@ -3,7 +3,7 @@
 Diagnostic records are support evidence for failed Cl@ve/browser auth flows.
 They may include raw HTML, screenshot bytes, route metadata, and identity
 alignment hints, so they are stored only as encrypted objects through a
-:class:`~aeat.adapters.persistence.storage.SecureObjectRepository` scoped to
+:class:`adapters.persistence.storage.SecureObjectRepository` scoped to
 the active profile bucket.
 
 Public functions return redacted summaries, bounded body placeholders, and
