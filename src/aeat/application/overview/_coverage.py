@@ -8,7 +8,7 @@ the calendar keeps it). A modelo that lacks either is otherwise dropped without 
 default-visible trace, so an operator — or the autonomous agent the CLI targets —
 trusting the surface would under-file.
 
-This module reconciles the full :func:`~aeat.application.modelo.registry_modelo_codes`
+This module reconciles the full :func:`~application.modelo.registry_modelo_codes`
 set against what the calendar positively resolved and classifies every registry
 modelo into exactly one disposition:
 
@@ -20,12 +20,12 @@ modelo into exactly one disposition:
   applicability is undetermined (``INCOMPLETE``): an unanswered question the
   operator MUST investigate;
 * **out of scope** — it is listed in
-  :data:`~aeat.core.OUT_OF_SCOPE_OBLIGATIONS` with a recorded product-scope
+  :data:`~core.OUT_OF_SCOPE_OBLIGATIONS` with a recorded product-scope
   reason.
 
 The classification is total by construction, so no registry modelo can be
 silently absent. The **advised** set is projected into a default-visible
-:class:`~aeat.core.json_contract.Notice` by the CLI, closing the
+:class:`~core.json_contract.Notice` by the CLI, closing the
 ``no-silent-under-declaration`` gap one layer up, at obligation determination.
 """
 
@@ -60,7 +60,7 @@ class CoverageAdviceReason(StrEnum):
             seed rule, or a payer/enrolment fact left undeclared). The
             operator must investigate whether it applies.
         REGISTRY_UNMODELED: The modelo is a recognized AEAT obligation
-            (:data:`~aeat.core.UNMODELED_OBLIGATIONS`) that the registry does
+            (:data:`~core.UNMODELED_OBLIGATIONS`) that the registry does
             not model at all, so neither a window nor an applicability rule
             exists. It surfaces as advised — "AEAT may expect this; the app
             cannot yet scope it" — rather than being invisible.
@@ -83,7 +83,7 @@ class AdvisedObligation(BaseModel):
 class ObligationCoverageReport(BaseModel):
     """Total partition of the registry modelo set by coverage disposition.
 
-    Every :func:`~aeat.application.modelo.registry_modelo_codes` code lands in
+    Every :func:`~application.modelo.registry_modelo_codes` code lands in
     exactly one of the four tuples. ``advised`` is the load-bearing field: a
     non-empty ``advised`` means the default surface would otherwise have hidden a
     filing obligation the operator must investigate.
@@ -97,7 +97,7 @@ class ObligationCoverageReport(BaseModel):
             applicability-undetermined), each with its
             :class:`CoverageAdviceReason`.
         out_of_scope: Modelos declared out of scope in
-            :data:`~aeat.core.OUT_OF_SCOPE_OBLIGATIONS`.
+            :data:`~core.OUT_OF_SCOPE_OBLIGATIONS`.
     """
 
     model_config = _STRICT_FROZEN
@@ -131,14 +131,14 @@ def build_obligation_coverage(
 ) -> ObligationCoverageReport:
     """Reconcile surfaced obligations against the full registry modelo set.
 
-    Walks every :func:`~aeat.application.modelo.registry_modelo_codes` code and
+    Walks every :func:`~application.modelo.registry_modelo_codes` code and
     assigns it to exactly one disposition (see :class:`ObligationCoverageReport`).
     The classification is total, so a modelo can never be silently absent: one
     that is neither surfaced, nor confidently excluded, nor explicitly out of
     scope is ``advised``, and the CLI raises a default-visible advisory for it.
 
     Args:
-        profile: The operator's three-axis :class:`~aeat.domain.deadlines.TaxpayerProfile`.
+        profile: The operator's three-axis :class:`~domain.deadlines.TaxpayerProfile`.
         surfaced_modelos: The modelo codes positively resolved by a registry
             deadline window and an applicable verdict for the queried schedule
             horizon. They need not have an entry inside the UI date range; an
