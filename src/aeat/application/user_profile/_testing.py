@@ -18,9 +18,9 @@ from ...adapters.persistence.storage import SecureObjectRepository
 from ...core.external_constants import PROVENANCE_SOURCE_MANUAL_CLI as _PROVENANCE_SOURCE_MANUAL_CLI
 from ...core.hashing import sha256_hex
 from ...core.identity import nif_check_letter
-from ...domain.deadlines._models import IVARegime
+from ...domain.deadlines import IVARegime
 from ...domain.user_profile import ProfileAlreadyExistsError, UserProfileFact
-from ..workflow._models import WorkflowState
+from ..workflow import WorkflowState
 from ._orchestration import register_active_profile, select_profile, set_active_fields
 
 

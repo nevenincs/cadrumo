@@ -21,8 +21,7 @@ from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.external_constants import PROVENANCE_SOURCE_MANUAL_CLI as _PROVENANCE_SOURCE_MANUAL_CLI
 from ...core.hashing import sha256_hex
 from ...core.identity import ProfileId as _ProfileId
-from ...core.parsing._dates import _parse_iso8601_date
-from ...core.parsing._utils import _parse_bool
+from ...core.parsing import parse_bool, parse_iso8601_date
 from ...core.time import now as utc_now
 from ._errors import UserProfileValidationError
 
@@ -69,7 +68,7 @@ def _coerce_profile_fact_value(value: object) -> object:
     """
     if isinstance(value, str) and _DATE_STRING_RE.fullmatch(value):
         try:
-            return _parse_iso8601_date(value) or value
+            return parse_iso8601_date(value) or value
         except ValueError:
             return value
     # JSON has no boolean primitive distinct from integer — pydantic encodes
@@ -81,7 +80,7 @@ def _coerce_profile_fact_value(value: object) -> object:
     # model_dump(mode="json"). Broader token sets (e.g. "0"/"1") must
     # not be promoted to bool here because "0" is also a valid Decimal fact.
     if isinstance(value, str) and value in ("true", "false"):
-        _bool_candidate = _parse_bool(value)
+        _bool_candidate = parse_bool(value)
         if isinstance(_bool_candidate, bool):
             return _bool_candidate
     if isinstance(value, str) and _DECIMAL_STRING_RE.fullmatch(value):

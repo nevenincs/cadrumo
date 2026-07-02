@@ -33,9 +33,8 @@ from collections.abc import Iterable
 from contextlib import contextmanager
 from datetime import date
 
-from ...adapters.persistence.storage._namespace_registry import BUCKET_DEK_FILENAME
-from ...adapters.persistence.storage.bucket._keystore_paths import keystore_path
-from ...adapters.persistence.storage.bucket._layout import bucket_paths
+from ...adapters.persistence.storage import BUCKET_DEK_FILENAME
+from ...adapters.persistence.storage.bucket import bucket_paths, keystore_path
 from ...adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
 from ...core import BucketPointer, write_pointer
 from ...core.config import load_settings
@@ -46,13 +45,16 @@ from ...core.time import now
 from ...domain.user_profile import (
     ProfileNotFoundError,
     ProfileSchemaDefinition,
+    UserProfileError,
     UserProfileFact,
     UserProfileRecord,
     load_user_profile_schema,
 )
-from ...domain.user_profile._errors import UserProfileError
-from ..workflow._models import WorkflowEvent, WorkflowState
-from ..workflow._utils import utc_now
+from ..workflow import (
+    WorkflowEvent,
+    WorkflowState,
+    utc_now,
+)
 from . import (
     EditProfileFieldCommand,
     ProfileValidationService,
@@ -153,7 +155,7 @@ def profile_create_storage_span(profile_id: str):
         MasterKeyMaterialMissingError,
         SecretAlreadyExistsError,
     )
-    from ...adapters.persistence.storage.master_key._master_key import (
+    from ...adapters.persistence.storage.master_key import (
         activate_master_key_provider,
         get_master_key_provider,
     )
@@ -236,7 +238,7 @@ def profile_storage_session(profile_id: str):
     :class:`~aeat.core.BucketPointer` route and master-key session before
     repositories open encrypted bucket-local storage.
     """
-    from ...adapters.persistence.storage.master_key._master_key import (
+    from ...adapters.persistence.storage.master_key import (
         activate_master_key_provider,
         get_master_key_provider,
     )
@@ -403,7 +405,7 @@ def select_profile_with_lifecycle_span(profile_id: str) -> None:
     :func:`select_profile`, then appends the bucket-level activation event.
     """
     from ...core import resolve_active_bucket_id
-    from ..workflow._persistence import workflow_state_repository
+    from ..workflow import workflow_state_repository
 
     with profile_storage_session(profile_id):
         workflow_state_repository().update(lambda current: select_profile(current, profile_id=profile_id))
@@ -484,7 +486,7 @@ def refuse_duplicate_label(
     the operator is routed to ``switch`` or ``delete``. The live-label
     lookup is :func:`~aeat.application.workflow.read_profile_bucket`.
     """
-    from ..workflow._profile_bucket_scan import read_profile_bucket
+    from ..workflow import read_profile_bucket
 
     if read_profile_bucket(display_name) is None:
         return
@@ -503,7 +505,7 @@ def require_registered_label(display_name: str) -> None:
     label authority is
     :func:`~aeat.application.workflow.read_profile_bucket`.
     """
-    from ..workflow._profile_bucket_scan import read_profile_bucket
+    from ..workflow import read_profile_bucket
 
     if read_profile_bucket(display_name) is None:
         raise ProfileNotFoundError(
@@ -533,6 +535,7 @@ def remove_profile_bucket_directory(profile_id: str) -> None:
     import gc
     import shutil
 
+    from ...adapters.persistence.storage.master_key import current_active_bucket_session
     from ...adapters.persistence.storage.sql.engine import dispose_engines_for_bucket
 
     root = load_settings().aeat_local_storage_root
@@ -547,6 +550,17 @@ def remove_profile_bucket_directory(profile_id: str) -> None:
     # engine re-creates lazily on next use, so the bucket-scoped dispose is safe
     # and leaves other buckets' engines untouched.
     dispose_engines_for_bucket(profile_id)
+    # The process-wide dispose above does not reach a still-open
+    # BucketSession's own cached engine handle (acquire_engine caches per
+    # session, not only in the process-wide pool). A caller that removes this
+    # bucket's directory while its session is the currently active one — the
+    # config-reset PROFILE/ALL path unlocks and resets within the same
+    # session — must invalidate that session-level handle too, or the next
+    # storage access through the session reuses a handle bound to a directory
+    # that no longer exists.
+    active_session = current_active_bucket_session()
+    if active_session is not None and active_session.bucket_id == profile_id:
+        active_session.invalidate_engine()
     gc.collect()
     trash = target.with_name(f".trash-{profile_id}-{secrets.token_hex(4)}")
     try:
