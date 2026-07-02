@@ -25,7 +25,7 @@ related:
 
 ## Outcome
 
-An increase (a new import beyond the ceiling) fails until the ceiling is raised in the same commit; a decrease passes freely. Verified by probe: adding one APPLICATION-layer site pushed the count to 917 > 916 and failed the ratchet. All five module tests green; ruff clean.
+An increase (a new import beyond the ceiling) fails until the ceiling is raised in the same commit; a decrease passes freely. Verified by probe: a throwaway module with one unsanctioned import failed the edge-subset gate (naming the site path and the five sanctioned classes) and the ratchet, then passed once removed. All five module tests green; ruff clean.
 
 ## Notes
 

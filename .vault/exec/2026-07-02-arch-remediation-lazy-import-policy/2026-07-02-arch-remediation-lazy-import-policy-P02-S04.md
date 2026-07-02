@@ -25,7 +25,7 @@ related:
 
 ## Outcome
 
-Baseline: 655 edges / 1181 sites. Per-class edge counts -- APPLICATION_DEFERRAL 505, ADAPTER_INTERNAL_DEFERRAL 72, DOMAIN_CYCLE_BREAK 33, CORE_INTERNAL_DEFERRAL 27, PORTS_INVERSION_PENDING 14, ERROR_REGISTRY_BOOTSTRAP 3, NAMED_CYCLE_BREAK 1. `test_every_allowlisted_edge_is_classified_where_filed` confirms every edge sits under the class its consumer/target imply.
+Baseline refreshed to HEAD-at-commit: 451 edges / 727 sites. Per-class edge counts -- APPLICATION_DEFERRAL 301, ADAPTER_INTERNAL_DEFERRAL 74, DOMAIN_CYCLE_BREAK 33, CORE_INTERNAL_DEFERRAL 27, PORTS_INVERSION_PENDING 12, ERROR_REGISTRY_BOOTSTRAP 3, NAMED_CYCLE_BREAK 1. The start-of-execution HEAD held 655 edges / 1181 sites; the concurrent import-centralization and ports-inversion campaigns removed ~200 function-local first-party edges during execution (free decreases under the subset ratchet), and the submission-repository relocation added the adapter edges, so the committed baseline is the current-HEAD snapshot regenerated from the gate's own discovery. `test_every_allowlisted_edge_is_classified_where_filed` confirms every edge sits under the class its consumer/target imply.
 
 ## Notes
 
