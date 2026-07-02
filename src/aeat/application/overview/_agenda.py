@@ -2,8 +2,8 @@
 
 :func:`build_overview_agenda` is the application service backing
 ``aeat app overview agenda``. It accepts a
-:class:`~aeat.domain.deadlines.TaxpayerProfile` and composes
-:func:`aeat.application.overview.build_overview_calendar` over a window anchored
+:class:`~domain.deadlines.TaxpayerProfile` and composes
+:func:`application.overview.build_overview_calendar` over a window anchored
 on the operator's ``as_of`` date, then partitions the resulting
 :class:`OverviewCalendarEntry` rows into ``overdue`` / ``due_today`` /
 ``due_soon`` cohorts. The earliest future obligation becomes ``next_due`` so
@@ -46,7 +46,7 @@ class OverviewAgenda(BaseModel):
     """Outcome of ``build_overview_agenda``.
 
     The model is the agenda-shaped projection of
-    :class:`aeat.application.overview.OverviewCalendar`: cohorts retain the
+    :class:`application.overview.OverviewCalendar`: cohorts retain the
     original :class:`OverviewCalendarEntry` rows, warnings are
     :class:`CalendarWarning` values inherited from the calendar build, and
     completeness is the same :class:`CalendarCompleteness` report.
@@ -104,17 +104,17 @@ def build_overview_agenda(
     """Rank upcoming and past-due obligations around ``as_of``.
 
     Args:
-        profile: The :class:`~aeat.domain.deadlines.TaxpayerProfile` whose
+        profile: The :class:`~domain.deadlines.TaxpayerProfile` whose
             obligations are ranked.
         as_of: Anchor date for the lookback / lookahead window.
         horizon_days: Number of days after ``as_of`` to include in the
             lookahead window.
-        engine: Optional :class:`~aeat.domain.deadlines.DeadlineEngine`
+        engine: Optional :class:`~domain.deadlines.DeadlineEngine`
             override; defaults to the registry-backed engine when ``None``.
         raw_values: Optional mapping of registry binding raw values forwarded
             to the deadline engine for context-sensitive deadlines.
 
-    Composes :func:`aeat.application.overview.build_overview_calendar` over a
+    Composes :func:`application.overview.build_overview_calendar` over a
     window that spans ``as_of - 90 days`` (so overdue obligations from the
     prior quarter surface) through ``as_of + horizon_days`` (so the lookahead
     matches the operator's requested ``--horizon``).
