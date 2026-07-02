@@ -131,16 +131,12 @@ _DIAGNOSTIC_CHECK_INVALID_CASES: tuple[tuple[str, dict[str, object], str], ...] 
 )
 
 
-@pytest.mark.parametrize(
-    "fields",
-    [fields for _, fields, _ in _DIAGNOSTIC_CHECK_INVALID_CASES],
-    ids=[case_id for case_id, _, _ in _DIAGNOSTIC_CHECK_INVALID_CASES],
-)
-def test_diagnostic_check_invalid_recovery_fields_raise_validation_error(fields: dict[str, object]) -> None:
+def test_diagnostic_check_invalid_recovery_fields_raise_validation_error() -> None:
     """Invalid recovery-field combinations are rejected by the real Pydantic model."""
 
-    with pytest.raises(ValidationError):
-        DiagnosticCheck.model_validate(fields)
+    for _case_id, fields, _message_fragment in _DIAGNOSTIC_CHECK_INVALID_CASES:
+        with pytest.raises(ValidationError):
+            DiagnosticCheck.model_validate(fields)
 
 
 def test_diagnostic_check_ok_row_with_both_recovery_fields_none_constructs() -> None:
@@ -841,20 +837,13 @@ def _assert_validation_error_caused_by_diagnostic_model_error(
     assert matching, f"Expected a DiagnosticModelError cause matching {match!r}; got causes: {causes!r}"
 
 
-@pytest.mark.parametrize(
-    ("fields", "message_fragment"),
-    [(fields, message_fragment) for _, fields, message_fragment in _DIAGNOSTIC_CHECK_INVALID_CASES],
-    ids=[case_id for case_id, _, _ in _DIAGNOSTIC_CHECK_INVALID_CASES],
-)
-def test_diagnostic_check_invariant_errors_raise_diagnostic_model_error(
-    fields: dict[str, object],
-    message_fragment: str,
-) -> None:
+def test_diagnostic_check_invariant_errors_raise_diagnostic_model_error() -> None:
     """Invalid recovery fields raise ValidationError caused by DiagnosticModelError."""
 
-    with pytest.raises(ValidationError) as exc_info:
-        DiagnosticCheck.model_validate(fields)
-    _assert_validation_error_caused_by_diagnostic_model_error(exc_info, message_fragment)
+    for _case_id, fields, message_fragment in _DIAGNOSTIC_CHECK_INVALID_CASES:
+        with pytest.raises(ValidationError) as exc_info:
+            DiagnosticCheck.model_validate(fields)
+        _assert_validation_error_caused_by_diagnostic_model_error(exc_info, message_fragment)
 
 
 def test_diagnostic_model_error_is_pydantic_validator_value_error() -> None:
