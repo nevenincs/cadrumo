@@ -9,15 +9,6 @@ related:
   - '[[2026-07-02-agent-harness-refoundation-adr]]'
 ---
 
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the
-       related: field above.
-     - The related: field carries the AUTHORISING documents
-       (ADR, research, reference, prior plan) for every Step in
-       this plan. Steps inherit this chain; per-row reference
-       footers do not exist.
-     - NEVER use [[wiki-links]] or markdown links in the
-       document body. -->
 
 # `agent-harness-refoundation` plan
 
@@ -103,7 +94,7 @@ Prove a real MCP client can initialize, list tools, and round-trip a call over s
 
 Drive the real console with live subagent personas, score observed calls, enforce the hard invariants, and feed the flywheel and measurement report.
 
-- [ ] `W04.P08.S28` - Build the live subagent-persona harness substrate that starts the real server, drives a real client session, and captures the trajectory; `src/aeat/agent/eval/_live_harness.py`.
+- [x] `W04.P08.S28` - Build the live subagent-persona harness substrate that starts the real server, drives a real client session, and captures the trajectory; `src/aeat/agent/eval/_live_harness.py`.
 - [ ] `W04.P08.S29` - Score observed calls against golden scenarios plus faithfulness and confirmation with the zero-live-submit and zero-handoff-faithfulness invariants; `src/aeat/agent/eval/_live_scoring.py`.
 - [ ] `W04.P08.S30` - Extend the golden-scenario models for live-persona trajectory capture and scoring; `src/aeat/agent/eval/_models.py`.
 - [ ] `W04.P08.S31` - Add the flywheel that promotes live failures into new golden scenarios; `src/aeat/agent/eval/_flywheel.py`.
@@ -180,10 +171,10 @@ Behind a blocking licence gate, build the on-host hybrid corpus index from the b
 
 Build the FTS5 lexical index, the structured citation lookup over registry citation data, and the corpus embeddings precomputed at build time and shipped as data, and confirm the query-model footprint before the download UX lands. The R3 licence gate is resolved in the research doc; these are concrete build steps against the decided stack, not a research gate.
 
-- [ ] `W06.P12.S77` - Build the FTS5 lexical index with unicode61 remove_diacritics 2 plus a snowballstemmer Spanish stemmed column from the bundled extracted corpus triples; `src/aeat/application/corpus_search/_lexical_index.py`.
-- [ ] `W06.P12.S78` - Build the structured citation lookup keyed on citation id over the registry typed legal_refs, corpus_ref, and BOE permalink data; `src/aeat/application/corpus_search/_citation_lookup.py`.
-- [ ] `W06.P12.S79` - Precompute the corpus embeddings at build time with model2vec potion-multilingual-128M and ship the numpy matrix as bundled data; `src/aeat/application/corpus_search/_embed_build.py`.
-- [ ] `W06.P12.S87` - Confirm the potion-multilingual-128M packaged footprint and that the wheel ships the precomputed vectors but no model weights, onnxruntime, or caches; `src/aeat/application/corpus_search/tests/test_search_shippability.py`.
+- [x] `W06.P12.S77` - Build the FTS5 lexical index with unicode61 remove_diacritics 2 plus a snowballstemmer Spanish stemmed column from the bundled extracted corpus triples; `src/aeat/application/corpus_search/_lexical_index.py`.
+- [x] `W06.P12.S78` - Build the structured citation lookup keyed on citation id over the registry typed legal_refs, corpus_ref, and BOE permalink data; `src/aeat/application/corpus_search/_citation_lookup.py`.
+- [x] `W06.P12.S79` - Precompute the corpus embeddings at build time with model2vec potion-multilingual-128M and ship the numpy matrix as bundled data; `src/aeat/application/corpus_search/_embed_build.py`.
+- [x] `W06.P12.S87` - Confirm the potion-multilingual-128M packaged footprint and that the wheel ships the precomputed vectors but no model weights, onnxruntime, or caches; `src/aeat/application/corpus_search/tests/test_search_shippability.py`.
 
 ### Phase `W06.P13` - Runtime hybrid retrieval and console grounding tools
 
