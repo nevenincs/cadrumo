@@ -17,40 +17,24 @@ from .. import BaseSeverity
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
 
-def test_member_names_are_uppercase() -> None:
-    assert BaseSeverity.INFO.name == "INFO"
-    assert BaseSeverity.WARNING.name == "WARNING"
-    assert BaseSeverity.ERROR.name == "ERROR"
+def test_base_severity_members_are_closed_strenum_tokens() -> None:
+    cases = (
+        (BaseSeverity.INFO, "INFO", "info"),
+        (BaseSeverity.WARNING, "WARNING", "warning"),
+        (BaseSeverity.ERROR, "ERROR", "error"),
+    )
+
+    assert tuple(BaseSeverity) == tuple(member for member, _, _ in cases)
+    for member, expected_name, expected_value in cases:
+        assert member.name == expected_name
+        assert member.value == expected_value
+        assert member == expected_value
 
 
-def test_string_values_are_lowercase() -> None:
-    assert BaseSeverity.INFO.value == "info"
-    assert BaseSeverity.WARNING.value == "warning"
-    assert BaseSeverity.ERROR.value == "error"
+def test_base_severity_lookup_round_trips_and_rejects_unknown_values() -> None:
+    for member in BaseSeverity:
+        assert BaseSeverity(member.value) is member
+        assert BaseSeverity[member.name] is member
 
-
-def test_strenum_equates_to_underlying_string() -> None:
-    assert BaseSeverity.ERROR == "error"
-    assert BaseSeverity.WARNING == "warning"
-    assert BaseSeverity.INFO == "info"
-
-
-def test_value_lookup_round_trips() -> None:
-    assert BaseSeverity("error") is BaseSeverity.ERROR
-    assert BaseSeverity("warning") is BaseSeverity.WARNING
-    assert BaseSeverity("info") is BaseSeverity.INFO
-
-
-def test_name_lookup_round_trips() -> None:
-    assert BaseSeverity["ERROR"] is BaseSeverity.ERROR
-    assert BaseSeverity["WARNING"] is BaseSeverity.WARNING
-    assert BaseSeverity["INFO"] is BaseSeverity.INFO
-
-
-def test_unknown_value_raises() -> None:
     with pytest.raises(ValueError):
         BaseSeverity("HUGE")
-
-
-def test_set_of_members_is_closed() -> None:
-    assert {member.value for member in BaseSeverity} == {"info", "warning", "error"}
