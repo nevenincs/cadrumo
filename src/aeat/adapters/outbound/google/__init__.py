@@ -30,6 +30,10 @@ Major declarations:
 * :func:`parse_drive_file_id` and
   :func:`resolve_document_link` — the
   minimal-scope Drive document-link helpers.
+* :func:`list_drive_folder_documents`, returning a
+  :class:`DriveFolderListing` of
+  :class:`DriveFolderDocument` rows — the
+  minimal-scope Drive folder bulk-listing helper.
 * :exc:`GoogleAuthError` and its subclasses —
   the Google auth failure taxonomy.
 * :func:`run_login_flow` — the interactive OAuth
@@ -72,7 +76,13 @@ from ._calc_sheets_pull import (
     compute_from_pull,
     pull_operator_edits,
 )
-from ._document_link_resolver import parse_drive_file_id, resolve_document_link
+from ._document_link_resolver import (
+    DriveFolderDocument,
+    DriveFolderListing,
+    list_drive_folder_documents,
+    parse_drive_file_id,
+    resolve_document_link,
+)
 from ._errors import (
     GoogleAuthBrowserOpenError,
     GoogleAuthClientNotRegisteredError,
@@ -119,6 +129,8 @@ __all__ = [
     "CalcSheetsApplyResult",
     "DriveAppProperties",
     "DriveConfig",
+    "DriveFolderDocument",
+    "DriveFolderListing",
     "GoogleApiResponseBody",
     "GoogleAuthBrowserOpenError",
     "GoogleAuthClientNotRegisteredError",
@@ -146,6 +158,7 @@ __all__ = [
     "apply_export_plan",
     "compute_from_pull",
     "delete_session",
+    "list_drive_folder_documents",
     "load_client",
     "load_drive_config",
     "load_metadata",

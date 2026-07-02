@@ -7,6 +7,10 @@ stored as evidence by itself.
 Drive content as bytes so the caller can persist those bytes through
 :func:`~aeat.domain.attachments.add_attachment_bytes`; the original link remains
 provenance metadata on that byte-bearing attachment.
+:func:`~aeat.adapters.outbound.google.list_drive_folder_documents` extends the
+same minimal-scope posture to a *folder*: it lists the PDF/image children of a
+``drive.file``-reachable folder so a caller can bulk-fetch every invoice in one
+sweep instead of resolving one document link at a time.
 
 The resolver stays inside the integration's deliberate minimal-scope posture:
 ``drive.file`` can download Drive files the app created or the operator picked,
@@ -20,8 +24,12 @@ of being silently stored as links.
 from __future__ import annotations
 
 import re
-from typing import Final, Protocol, cast
+from dataclasses import dataclass
+from typing import Any, Final, Protocol, cast
 
+from pydantic import BaseModel, ConfigDict
+
+from ....core.external_constants import PDF_MIME_TYPE
 from ....domain.attachments import AttachmentSource
 from ..storage import (
     OutboundStorageError,
@@ -29,6 +37,7 @@ from ..storage import (
     OutboundStoragePermissionError,
     OutboundStorageValidationError,
 )
+from ._api import GoogleDriveFile, execute_request
 
 # .../d/<ID>/... (file, spreadsheets, document) | ...?id=<ID> | bare <ID>.
 # The bare form requires >=25 chars so a hyphenated English token (e.g.
@@ -44,17 +53,68 @@ _DRIVE_ID_PATTERNS: Final[tuple[re.Pattern[str], ...]] = (
 _GMAIL_SCOPE: Final[str] = "https://www.googleapis.com/auth/gmail.readonly"
 _DRIVE_READONLY_SCOPE: Final[str] = "https://www.googleapis.com/auth/drive.readonly"
 
+# The bulk folder sweep filters to the document kinds an invoice PDF/scan can
+# take. This mirrors the CLI's ``_sniff_document_mime_type`` fallback set for
+# consistency between the single-doclink and folder-sweep paths.
+_INVOICE_MIME_TYPES: Final[frozenset[str]] = frozenset(
+    {PDF_MIME_TYPE, "image/png", "image/jpeg"},
+)
+_DRIVE_FOLDER_MIME_TYPE: Final[str] = "application/vnd.google-apps.folder"
+_DRIVE_LIST_PAGE_SIZE: Final[int] = 100
+
 
 class _DriveMediaRequest(Protocol):
     def execute(self) -> object: ...
 
 
+class _DriveFilesListRequest(Protocol):
+    def execute(self, num_retries: int = ...) -> dict[str, Any]: ...
+
+
 class _DriveFilesResource(Protocol):
     def get_media(self, *, fileId: str) -> _DriveMediaRequest: ...  # noqa: N803
+
+    def list(
+        self,
+        *,
+        q: str,
+        fields: str,
+        pageSize: int,  # noqa: N803
+        pageToken: str | None = None,  # noqa: N803
+    ) -> _DriveFilesListRequest: ...
 
 
 class _DriveService(Protocol):
     def files(self) -> _DriveFilesResource: ...
+
+
+class DriveFolderDocument(BaseModel):
+    """One PDF/image child of a ``drive.file``-reachable Drive folder.
+
+    Returned by :func:`list_drive_folder_documents`; carries just enough
+    metadata for a caller to fetch the file (:attr:`file_id`) and report it
+    to the operator (:attr:`name`, :attr:`mime_type`).
+    """
+
+    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+
+    file_id: str
+    name: str
+    mime_type: str
+
+
+@dataclass(frozen=True)
+class DriveFolderListing:
+    """The result of listing one Drive folder's invoice-shaped children.
+
+    ``documents`` carries the PDF/image files the sweep will fetch;
+    ``skipped_non_document_count`` records how many folder children were
+    filtered out for carrying a non-invoice MIME type (e.g. a nested folder
+    or an unrelated file), so the caller can report an honest total.
+    """
+
+    documents: tuple[DriveFolderDocument, ...]
+    skipped_non_document_count: int
 
 
 def parse_drive_file_id(reference: str) -> str | None:
@@ -178,7 +238,89 @@ def _download_drive_file_from_service(file_id: str, service: _DriveService) -> b
     return bytes(payload)
 
 
+def list_drive_folder_documents(
+    *,
+    folder_id: str,
+    credentials: object,
+    service: _DriveService | None = None,
+) -> DriveFolderListing:
+    """List the PDF/image children of a ``drive.file``-reachable Drive folder.
+
+    Stays inside the same minimal-scope posture as
+    :func:`resolve_document_link`: ``drive.file`` only lists files the app
+    created or the operator explicitly picked, so a folder the operator has
+    not shared with the app (or does not own under this scope) surfaces no
+    children rather than a permission escalation. A non-existent or
+    unreachable ``folder_id`` maps Google's 403/404 to the same
+    :exc:`~aeat.adapters.outbound.storage.OutboundStoragePermissionError`
+    scope-named refusal :func:`resolve_document_link` uses, so the two
+    fetch surfaces read the same way.
+
+    Args:
+        folder_id: The Drive folder id (parsed the same way a document
+            reference is via :func:`parse_drive_file_id`, or passed as a bare id).
+        credentials: Google OAuth credentials carrying the granted scopes.
+        service: Optional pre-built Drive ``v3`` service (test seam).
+
+    Returns:
+        A :class:`DriveFolderListing` naming every PDF/image child plus a
+        count of filtered-out non-document children.
+
+    Raises:
+        :exc:`~aeat.adapters.outbound.storage.OutboundStoragePermissionError`:
+            When the folder is not reachable under the ``drive.file`` scope.
+        :exc:`~aeat.adapters.outbound.storage.OutboundStorageNetworkError`:
+            On any other transport or unmapped Drive failure.
+    """
+    drive_service = service if service is not None else _drive_service(credentials)
+    documents: list[DriveFolderDocument] = []
+    skipped = 0
+    page_token: str | None = None
+    query = f"'{folder_id}' in parents and trashed = false"
+    while True:
+        request = drive_service.files().list(
+            q=query,
+            fields="nextPageToken, files(id, name, mimeType)",
+            pageSize=_DRIVE_LIST_PAGE_SIZE,
+            pageToken=page_token,
+        )
+        try:
+            response = execute_request(cast("Any", request), action="drive.files.list")
+        except OutboundStoragePermissionError as exc:
+            context = dict(exc.context or {})
+            if "required_scope" in context:
+                raise
+            raise OutboundStoragePermissionError(
+                f"Drive folder {folder_id!r} is not reachable under the drive.file scope "
+                "(the app can only list files/folders it created or the operator picked); "
+                "reading an arbitrary operator folder requires drive.readonly",
+                context={"required_scope": _DRIVE_READONLY_SCOPE, "folder_id": folder_id, **context},
+            ) from exc
+        raw_files = cast("list[GoogleDriveFile]", response.get("files", []))
+        for raw_file in raw_files:
+            mime_type = raw_file.get("mimeType", "")
+            if mime_type == _DRIVE_FOLDER_MIME_TYPE:
+                continue
+            if mime_type not in _INVOICE_MIME_TYPES:
+                skipped += 1
+                continue
+            documents.append(
+                DriveFolderDocument(
+                    file_id=raw_file["id"],
+                    name=raw_file.get("name", raw_file["id"]),
+                    mime_type=mime_type,
+                ),
+            )
+        page_token = cast("str | None", response.get("nextPageToken"))
+        if not page_token:
+            break
+    return DriveFolderListing(documents=tuple(documents), skipped_non_document_count=skipped)
+
+
 __all__ = [
+    "DriveFolderDocument",
+    "DriveFolderListing",
+    "list_drive_folder_documents",
     "parse_drive_file_id",
     "resolve_document_link",
 ]
