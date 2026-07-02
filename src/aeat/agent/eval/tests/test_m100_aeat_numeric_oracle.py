@@ -1,4 +1,4 @@
-"""S56: the operator numeric value-oracle is grounded in real AEAT figures.
+"""The operator numeric value-oracle is grounded in real AEAT figures.
 
 The operator relays computed casilla values; whether those values are correct is
 reconciled against an authoritative external oracle, never hand-computed from the
