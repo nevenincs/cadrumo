@@ -1265,6 +1265,25 @@ description = "EU/EEA descendant deduction flag for Modelo 100."
 model_selectors = ["family.descendants_eu_eea_deduction"]
 
 [[sections.fields]]
+key = "descendiente"
+type = "object"
+required = false
+sensitivity = "identity"
+effective_dated = true
+description = "One repeated descendant row, addressed as renta_family.descendiente.{n}.{subfield} (0-based index). Subfields: birth_date (required), adoption_date, discapacidad (0|33|65), convivencia (default true), custodia_compartida (default false, Art. 61.1a prorrateo), meses_madre_trabajo (0..12, Art. 81 maternidad cap), gastos_guarderia (euros, Art. 81 bis 0613), nif. Consumed by RentaFamilyProfile.minimo_descendientes_estatal (Art. 58/61 LIRPF, casillas 0513/0514)."
+model_selectors = [
+  "DescendantInfo.birth_date",
+  "DescendantInfo.adoption_date",
+  "DescendantInfo.discapacidad_grado",
+  "DescendantInfo.convive_con_contribuyente",
+  "DescendantInfo.custodia_compartida",
+  "DescendantInfo.meses_madre_trabajo_2024",
+  "DescendantInfo.gastos_guarderia_euros",
+  "DescendantInfo.nif",
+]
+legal_refs = ["ley-35-2006:art-58", "ley-35-2006:art-61"]
+
+[[sections.fields]]
 key = "situacion_familiar"
 type = "enum"
 required = false

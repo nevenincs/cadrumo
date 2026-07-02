@@ -73,7 +73,7 @@ class PortalsService:
     """Local-only portal-registry read surface.
 
     No remote contact, no bucket events, no mutation. Pure projection
-    over the immutable :data:`aeat.domain.portals.PORTAL_REGISTRY`.
+    over the immutable :data:`domain.portals.PORTAL_REGISTRY`.
     Injecting a registry supports tests and alternate catalogue snapshots
     while preserving the same :class:`Portal` to :class:`PortalMetadata`
     contract.

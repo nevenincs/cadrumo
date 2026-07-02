@@ -79,9 +79,9 @@ from ....domain.transactions import TransactionCatalogueRepository
 from ....domain.user_profile import UserProfileFact, UserProfileRecord
 from ....tests.registry_observations import registry_grounded_observations
 from ....tests.secure_sql import isolated_runtime_profile
+from ...aggregation._percepciones_observations_repository import PercepcionObservationRepository
 from ...aggregation._retencion_observations_repository import RetencionObservationRepository
 from ...aggregation._retenciones import RetencionObservation, RetencionScheme
-from ...aggregation._withholding_observations_repository import WithholdingObservationRepository
 from ...calculations._observations_repository import CalculationObservationRepository
 from ...user_profile import UserProfileLifecycleRepository
 from .. import (
@@ -436,7 +436,7 @@ def _m190_seed_value(output: CasillaId, period: str) -> Decimal:
 
 
 def _seed_m190_withholding_detail() -> None:
-    WithholdingObservationRepository().replace_observations(
+    PercepcionObservationRepository().replace_observations(
         modelo="190",
         filing_year=_YEAR,
         period=Period.from_year_and_code(_YEAR, _ANNUAL_PERIOD),

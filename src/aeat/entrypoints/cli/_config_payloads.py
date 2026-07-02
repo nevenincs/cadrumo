@@ -976,3 +976,52 @@ class AuthDiagnosticsReportResult(OutputSchema):
     diagnostic_id: str
     phone_state: str
     reported_at: str
+
+
+# ---------------------------------------------------------------------------
+# Descendiente verb result schemas
+# ---------------------------------------------------------------------------
+
+
+class ProfileDescendientePayload(OutputSchema):
+    """One declared descendant row in the ``config profile descendiente`` surface.
+
+    Mirrors :class:`~aeat.domain.contribuyente.DescendantInfo` as plain JSON;
+    ``index`` is the 0-based position :func:`~aeat.domain.contribuyente.descendant_list_from_facts`
+    assigns, the same index ``descendiente remove`` addresses.
+    """
+
+    index: int
+    birth_date: str
+    adoption_date: str | None = None
+    discapacidad_grado: int | None = None
+    convive_con_contribuyente: bool
+    custodia_compartida: bool
+    nif: str | None = None
+
+
+@register_schema("config.profile.descendiente.add")
+class ConfigProfileDescendienteAddResult(OutputSchema):
+    """JSON envelope for ``aeat config profile descendiente add``."""
+
+    profile: str
+    added: int
+    total: int
+
+
+@register_schema("config.profile.descendiente.list")
+class ConfigProfileDescendienteListResult(OutputSchema):
+    """JSON envelope for ``aeat config profile descendiente list``."""
+
+    profile: str
+    total: int
+    descendientes: list[ProfileDescendientePayload] = []
+
+
+@register_schema("config.profile.descendiente.remove")
+class ConfigProfileDescendienteRemoveResult(OutputSchema):
+    """JSON envelope for ``aeat config profile descendiente remove``."""
+
+    profile: str
+    removed_index: int
+    total: int

@@ -15,12 +15,12 @@ Operator verbs:
     offline configuration read.
 
 Configuration is persisted per-bucket as an encrypted
-:class:`~aeat.adapters.persistence.storage.Envelope` row in the
-:class:`~aeat.adapters.persistence.storage.SecureObjectRepository` under
-:data:`aeat.adapters.persistence.storage.AUTH_APODERADO_CONFIGURATION_NAMESPACE`.
+:class:`adapters.persistence.storage.Envelope` row in the
+:class:`adapters.persistence.storage.SecureObjectRepository` under
+:data:`adapters.persistence.storage.AUTH_APODERADO_CONFIGURATION_NAMESPACE`.
 The ``represented_nif`` is an
 identity-bearing tax identifier, so the record carries
-:class:`~aeat.adapters.persistence.storage.SensitivityClass` ``IDENTITY`` and
+:class:`adapters.persistence.storage.SensitivityClass` ``IDENTITY`` and
 is encrypted at rest; the service never writes plaintext to disk. Live mutation
 of AEAT-side apoderamiento state (registrar, ampliar, revocar, confirmar,
 renunciar, presentar-en-representacion) is permanently refused at this boundary;
@@ -88,14 +88,14 @@ class ApoderadoStatus(BaseModel):
 class _ApoderadoConfigRepository(SecureBoundRepository[ApoderadoConfiguration]):
     """Encrypted per-bucket apoderado configuration store.
 
-    Records carry :class:`~aeat.adapters.persistence.storage.SensitivityClass`
+    Records carry :class:`adapters.persistence.storage.SensitivityClass`
     ``IDENTITY`` as declared by
-    :data:`aeat.adapters.persistence.storage.AUTH_APODERADO_CONFIGURATION_NAMESPACE`:
+    :data:`adapters.persistence.storage.AUTH_APODERADO_CONFIGURATION_NAMESPACE`:
     the ``represented_nif`` is an identity-bearing tax identifier. The
-    :class:`~aeat.adapters.persistence.storage.SecureBoundRepository`
+    :class:`adapters.persistence.storage.SecureBoundRepository`
     base serialises each
     :class:`ApoderadoConfiguration` through an
-    :class:`~aeat.adapters.persistence.storage.Envelope`. The natural key is
+    :class:`adapters.persistence.storage.Envelope`. The natural key is
     the ``bucket_id``, so each bucket holds at most one apoderado configuration.
     """
 

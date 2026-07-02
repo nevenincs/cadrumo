@@ -20,6 +20,7 @@ from pathlib import Path
 import pytest
 from pydantic import ValidationError
 
+from ....adapters.persistence.profile.submission import SubmissionRepository
 from ....core import Period
 from ....tests.secure_sql import isolated_runtime_profile
 from .._models import (
@@ -28,7 +29,6 @@ from .._models import (
     SubmissionStatus,
     make_submission_id,
 )
-from .._repository import SubmissionRepository
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

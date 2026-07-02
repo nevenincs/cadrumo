@@ -12,8 +12,10 @@ on deadline and auth-provider probes; :class:`ModeloDraftLoader` remains an
 exported adapter contract, not a dependency consumed by :class:`SubmissionEngine`.
 
 :class:`ModeloPresentado` is a strict local-only historical/imported audit
-record stored by :class:`SubmissionRepository` as encrypted AUDIT data under
-``aeat.domain.submission.records``. It is distinct from
+record persisted through the :class:`SubmissionRepositoryProtocol` port —
+implemented by the adapter
+:class:`~aeat.adapters.persistence.profile.submission.SubmissionRepository` — as
+encrypted AUDIT data under ``aeat.domain.submission.records``. It is distinct from
 :class:`domain.modelos.ModeloRecord`:
 :func:`application.modelo.file_modelo_revision` creates a local work-unit filing
 record with ``aeat_accepted=False`` and no external evidence, while
@@ -33,7 +35,8 @@ Major declarations:
 * :class:`ModeloPresentado`, :class:`SubmissionAttempt`, and
   :class:`SubmissionStatus` — the persisted lifecycle records, keyed by
   :func:`make_submission_id`.
-* :class:`SubmissionRepository` — the persistence boundary.
+* :class:`SubmissionRepositoryProtocol` — the read-side persistence port
+  (the concrete repository lives in the persistence adapter).
 * The :class:`ModeloDraftLoader`, :class:`ModeloDraftLike`,
   :class:`DeadlineWindowChecker`, and :class:`AuthProviderProbe` protocols —
   exported narrow contracts that keep the domain free of live adapters.
@@ -76,9 +79,7 @@ from ._protocols import (
     ModeloDraftLoader,
     ModeloDraftStatus,
     ModeloFinding,
-)
-from ._repository import (
-    SubmissionRepository,
+    SubmissionRepositoryProtocol,
 )
 
 __all__ = [
@@ -95,7 +96,7 @@ __all__ = [
     "SubmissionEngine",
     "SubmissionError",
     "SubmissionPreflightError",
-    "SubmissionRepository",
+    "SubmissionRepositoryProtocol",
     "SubmissionStatus",
     "make_submission_id",
 ]

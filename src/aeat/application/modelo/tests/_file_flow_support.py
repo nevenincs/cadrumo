@@ -11,6 +11,7 @@ from pathlib import Path
 
 import pytest
 
+from ....adapters.persistence.profile.submission import SubmissionRepository
 from ....core import Period
 from ....core.config import Settings
 from ....core.resources import resources
@@ -622,6 +623,7 @@ def _workflow_gate(
         auth_provider=provider,
         deadline_checker=_DeadlineWindowChecker(profile=profile, engine=deadline_engine),
         settings=Settings(),
+        repository=SubmissionRepository(),
     )
     return _WorkflowGate(
         profile=profile,

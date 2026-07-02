@@ -7,35 +7,31 @@ summaries. They are stored as encrypted byte objects in the primary SQL backend
 at ``AUDIT`` :class:`~aeat.adapters.persistence.storage.SensitivityClass`; no
 plaintext submission JSON or envelope file lands on disk.
 
+This concrete repository is the persistence adapter behind the read-side
+:class:`aeat.domain.submission.SubmissionRepositoryProtocol`. It lives in the
+persistence adapter (not in :mod:`aeat.domain.submission`) because its base
+:class:`~aeat.adapters.persistence.storage.SecureBoundRepository` is
+SQL/crypto-coupled; the domain package depends only on the structural port.
+
 See Also:
     :class:`aeat.domain.submission.ModeloPresentado`
         Payload model encrypted by this repository.
-    :data:`aeat.adapters.persistence.storage.SUBMISSION_RECORDS_NAMESPACE`
-        AUDIT namespace, schema-version, object-key, and custody contract for
-        submission audit records.
+    :class:`aeat.domain.submission.SubmissionRepositoryProtocol`
+        Domain-facing read port this repository satisfies structurally.
     :class:`aeat.adapters.persistence.storage.SecureObjectRepository`
         SQL object store underlying the bound repository.
-    :mod:`aeat.application.filing._import`
-        Offline justificante import path that can create companion submission
-        audit records.
-    :mod:`aeat.application.live`
-        Read-only live-evidence capture surface; it does not create live
-        submission attempts.
 """
 
 from __future__ import annotations
 
 from collections.abc import Iterator
-from typing import TYPE_CHECKING, ClassVar, cast, override
+from typing import ClassVar, cast, override
 
 from pydantic import ValidationError
 
-from ...adapters.persistence.storage import SecureBoundRepository, SensitivityClass
-from ...core.logging import get_logger
-from ._models import ModeloPresentado
-
-if TYPE_CHECKING:  # pragma: no cover — import-cycle guard
-    pass
+from ....core.logging import get_logger
+from ....domain.submission import ModeloPresentado
+from ..storage import SecureBoundRepository, SensitivityClass
 
 _log = get_logger(__name__)
 
@@ -45,15 +41,14 @@ class SubmissionRepository(SecureBoundRepository[ModeloPresentado]):
 
     The :class:`~aeat.adapters.persistence.storage.SecureBoundRepository` base
     stores each :class:`ModeloPresentado` in a
-    :class:`~aeat.adapters.persistence.storage.Envelope` row under
-    :data:`aeat.adapters.persistence.storage.SUBMISSION_RECORDS_NAMESPACE`.
-    The natural key is the submission id, so the list and iteration APIs expose
-    historical filing attempts rather than any live submission capability.
+    :class:`~aeat.adapters.persistence.storage.Envelope` row under the AUDIT
+    submission-records namespace. The natural key is the submission id, so the
+    list and iteration APIs expose historical filing attempts rather than any
+    live submission capability.
 
     See Also:
-        :mod:`aeat.application.filing._import`
-            Offline justificante import path that can create submission audit
-            records.
+        :class:`aeat.domain.submission.SubmissionRepositoryProtocol`
+            Domain read port this class satisfies.
         :class:`~aeat.adapters.persistence.storage.SecureObjectRepository`
             SQL object store composed by the bound repository base.
     """
@@ -87,7 +82,7 @@ class SubmissionRepository(SecureBoundRepository[ModeloPresentado]):
         Returns:
             Iterator over :class:`ModeloPresentado` records.
         """
-        from ...adapters.persistence.storage.sql import SecureObjectRecord
+        from ..storage.sql import SecureObjectRecord
 
         envelope_cls = self._envelope_cls()
         records: list[tuple[str, ModeloPresentado]] = []

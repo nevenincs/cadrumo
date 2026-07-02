@@ -1,4 +1,4 @@
-"""Encrypted persistence for per-perceptor-clave withholding records (Modelo 190).
+"""Encrypted persistence for per-perceptor-clave percepciones records (Modelo 190).
 
 The DEDICATED store the percepciones-count resolver reads to count percepciones
 DISTINCTLY. Modelo 190 casilla ``decl.total-percepciones`` ("Número total de
@@ -33,6 +33,15 @@ calc-mesh resolver reads here and calls the distinct-count primitive. This is th
 percepciones counterpart of :mod:`._retencion_observations_repository` (the
 perceptores store); the two stores are intentionally distinct — different distinct
 keys (NIF+clave+subclave vs NIF), different models, different modelos.
+
+This module was renamed from ``_withholding_observations_repository.py`` per the
+``import-centralization`` ADR ruling 4: the "withholding" stem collided with the
+project's Spanish-stem naming convention (``retencion`` already names the
+sibling Modelo 180/193 store), so this module — and the repository symbols it
+owns locally — follow the ``percepciones`` stem instead. The
+:class:`~aeat.domain.calculations.registry.WithholdingObservation` domain
+type it wraps is an unrelated, widely shared registry taxonomy type and is
+out of scope for this rename.
 """
 
 from __future__ import annotations
@@ -57,7 +66,7 @@ from ...domain.calculations.registry import WithholdingObservation
 from ._errors import AggregationValidationError, t
 
 
-class _WithholdingObservationEnvelopePayload(BaseModel):
+class _PercepcionObservationEnvelopePayload(BaseModel):
     """Serialisable wrapper around one per-perceptor-clave :class:`WithholdingObservation`.
 
     Carries the (modelo, filing_year, period) keying the registry resolver needs
@@ -88,7 +97,7 @@ def _hashed_perceptor_token(perceptor_tax_id: str) -> str:
     return hashlib.sha256(token.encode(UTF_8_ENCODING)).hexdigest()
 
 
-def withholding_observation_key(
+def percepcion_observation_key(
     modelo: str,
     filing_year: int,
     period: Period,
@@ -118,7 +127,7 @@ def withholding_observation_key(
     return f"{modelo}:{filing_year}:{period_token}:{_hashed_perceptor_token(perceptor_tax_id)}:{clave}:{subclave_token}"
 
 
-class WithholdingObservationRepository(SecureBoundRepository[_WithholdingObservationEnvelopePayload]):
+class PercepcionObservationRepository(SecureBoundRepository[_PercepcionObservationEnvelopePayload]):
     """Encrypted repository for per-perceptor-clave :class:`WithholdingObservation` payloads.
 
     The :class:`~aeat.adapters.persistence.storage.SecureBoundRepository` base
@@ -131,21 +140,21 @@ class WithholdingObservationRepository(SecureBoundRepository[_WithholdingObserva
     See Also:
         :data:`aeat.adapters.persistence.storage.WITHHOLDING_OBSERVATIONS_NAMESPACE`
             Secure-object namespace and hashed object-key contract.
-        :func:`withholding_observation_key`
+        :func:`percepcion_observation_key`
             Deterministic key builder that hashes the NIF and preserves
             clave/subclave identity.
-        :func:`persist_withholding_observations`
+        :func:`persist_percepcion_observations`
             Shared producer write path for pull and calculate parity.
     """
 
     namespace: ClassVar[str] = WITHHOLDING_OBSERVATIONS_NAMESPACE.namespace
     sensitivity: ClassVar[SensitivityClass] = WITHHOLDING_OBSERVATIONS_NAMESPACE.sensitivity
     schema_version: ClassVar[int] = WITHHOLDING_OBSERVATIONS_NAMESPACE.schema_version
-    payload_type: ClassVar[type[BaseModel]] = _WithholdingObservationEnvelopePayload
+    payload_type: ClassVar[type[BaseModel]] = _PercepcionObservationEnvelopePayload
 
     @override
-    def extract_identifier(self, payload: _WithholdingObservationEnvelopePayload) -> str:
-        return withholding_observation_key(
+    def extract_identifier(self, payload: _PercepcionObservationEnvelopePayload) -> str:
+        return percepcion_observation_key(
             payload.modelo,
             payload.filing_year,
             payload.period,
@@ -166,7 +175,7 @@ class WithholdingObservationRepository(SecureBoundRepository[_WithholdingObserva
         source_metadata: Mapping[str, str] | None = None,
     ) -> None:
         """Persist one per-perceptor-clave row keyed by (modelo, year, period, NIF, clave, subclave)."""
-        payload = _WithholdingObservationEnvelopePayload(
+        payload = _PercepcionObservationEnvelopePayload(
             modelo=modelo,
             filing_year=filing_year,
             period=period,
@@ -241,7 +250,7 @@ class WithholdingObservationRepository(SecureBoundRepository[_WithholdingObserva
             and payload.period.registry_token == period.registry_token
         )
 
-    def iter_modelo(self, modelo: str) -> Iterator[_WithholdingObservationEnvelopePayload]:
+    def iter_modelo(self, modelo: str) -> Iterator[_PercepcionObservationEnvelopePayload]:
         """Yield every persisted per-perceptor-clave payload for `modelo` in unspecified order."""
         safe_repository_id(modelo, context="modelo")
         for payload in self.iter_records():
@@ -249,7 +258,7 @@ class WithholdingObservationRepository(SecureBoundRepository[_WithholdingObserva
                 yield payload
 
 
-def persist_withholding_observations(
+def persist_percepcion_observations(
     *,
     modelo: str,
     filing_year: int,
@@ -266,7 +275,7 @@ def persist_withholding_observations(
     encrypted store with SET-REPLACE semantics so pull and calculate read one
     source.
     """
-    WithholdingObservationRepository().replace_observations(
+    PercepcionObservationRepository().replace_observations(
         modelo=modelo,
         filing_year=filing_year,
         period=period,
@@ -276,7 +285,7 @@ def persist_withholding_observations(
 
 
 __all__ = [
-    "WithholdingObservationRepository",
-    "persist_withholding_observations",
-    "withholding_observation_key",
+    "PercepcionObservationRepository",
+    "percepcion_observation_key",
+    "persist_percepcion_observations",
 ]

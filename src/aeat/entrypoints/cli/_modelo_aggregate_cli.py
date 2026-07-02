@@ -16,8 +16,8 @@ from ...application.aggregation import (
     RetencionObservation,
     WithholdingObservation,
     aggregate_per_modelo,
+    persist_percepcion_observations,
     persist_retencion_observations,
-    persist_withholding_observations,
 )
 from ...core import Modelo, Period
 from ...core.external_constants import RETENCIONES_MODELOS
@@ -103,7 +103,7 @@ def register_aggregate_commands(app: typer.Typer, *, resolve_year_period: Resolv
         )
         if command.modelo == Modelo.M190.value:
             # The CLI entrypoint owns the durable write; aggregate_per_modelo stays pure.
-            persist_withholding_observations(
+            persist_percepcion_observations(
                 modelo=command.modelo,
                 filing_year=command.period.filing_year,
                 period=command.period,

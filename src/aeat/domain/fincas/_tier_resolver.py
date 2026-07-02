@@ -16,7 +16,7 @@ Effective-date dispatch:
   - Otherwise → four-tier dispatch.
 
 LAU art. 17.6 non-compliance forfeits the reducción entirely
-(:attr:`aeat.domain.fincas.ReduccionTier.FORFEIT_LAU_17_6`) — checked
+(:attr:`domain.fincas.ReduccionTier.FORFEIT_LAU_17_6`) — checked
 before any tier evaluation per the closing paragraph of the rewritten
 apartado 2.
 

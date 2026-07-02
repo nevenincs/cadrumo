@@ -1,7 +1,7 @@
 """Workstation preflight health probes for ``aeat config check``.
 
 This module is the read-only doctor surface for the health dimensions that sit
-*beside* the external-dependency probes in :mod:`aeat.application.provisioning`:
+*beside* the external-dependency probes in :mod:`application.provisioning`:
 per-auth-provider certificate / Cl@ve Móvil configuration health, secure-storage
 and bundled-corpus reachability, key configuration sanity, registry referential
 integrity, and portal-registry assembly health with any recorded portal drift.
@@ -11,15 +11,15 @@ data (an ``error`` severity row with a concrete remediation), not an exception
 path, so the doctor reports status rather than crashing on a red row.
 
 The certificate / Cl@ve Móvil rows reuse
-:func:`~aeat.application.auth.probe_provider_configuration` (the pure-local
+:func:`~application.auth.probe_provider_configuration` (the pure-local
 per-provider probe that opens the ``.p12`` and classifies expiry via
-:func:`~aeat.adapters.outbound.aeat.auth.evaluate_loaded_certificate_health`, or
+:func:`~adapters.outbound.aeat.auth.evaluate_loaded_certificate_health`, or
 classifies the configured DNI/NIE). The registry row reuses the same
 referential-integrity gate the registry runs at snapshot build
 (``check_all_id_references``) by driving
-:meth:`~aeat.domain.calculations.registry.ValidatedRegistryAuthority.snapshot`
+:meth:`~domain.calculations.registry.ValidatedRegistryAuthority.snapshot`
 over every bundled revision. ``aeat config check`` renders these rows through
-:class:`~aeat.entrypoints.cli._config._check_payloads.CheckPreflightPayload`
+:class:`~entrypoints.cli._config._check_payloads.CheckPreflightPayload`
 beside the capability posture and dependency probes.
 """
 
@@ -54,7 +54,7 @@ class _RegistryAuthorityLike(Protocol):
     Declared as a :class:`typing.Protocol` so
     :func:`probe_registry_referential_integrity` accepts an injected
     authority in tests without importing the concrete
-    :class:`~aeat.domain.calculations.registry.ValidatedRegistryAuthority`
+    :class:`~domain.calculations.registry.ValidatedRegistryAuthority`
     at module load and without a mock: any object exposing the real
     ``modelos`` iterable of :class:`ModeloDefinition` records and a
     ``snapshot`` builder returning a :class:`RegistrySnapshot` satisfies it.
@@ -135,9 +135,9 @@ def probe_auth_providers(*, settings: Settings | None = None) -> tuple[Preflight
     """Probe each auth provider's local certificate / Cl@ve Móvil configuration.
 
     Runs the pure-local per-provider probe for every
-    :class:`~aeat.application.auth.AuthProviderKind` (no network, no
+    :class:`~application.auth.AuthProviderKind` (no network, no
     active-profile session) and maps its typed
-    :class:`~aeat.application.auth.ProviderProbeResult` onto a
+    :class:`~application.auth.ProviderProbeResult` onto a
     :class:`PreflightCheck`. A not-configured optional provider is ``OK``
     (not a fault); an expired / corrupt / unreadable certificate or an
     invalid Cl@ve identity is ``ERROR``; a certificate inside its
@@ -209,7 +209,7 @@ def probe_storage_corpus_env(*, settings: Settings | None = None) -> tuple[Prefl
     Returns one :class:`PreflightCheck` per dimension: the local
     secure-storage root is writable (an existing ancestor accepts
     writes), the bundled legal-normatives and Manual-práctico corpora are
-    present, and the deployment :class:`~aeat.core.config.Settings`
+    present, and the deployment :class:`~core.config.Settings`
     loaded with a coherent master-key posture. Each probe is a read-only
     filesystem / configuration inspection — it never writes into the
     operator's storage root and never raises.
@@ -300,8 +300,8 @@ def _probe_corpus(check_id: str, root: Path, label: str) -> PreflightCheck:
 def _probe_config_sanity(settings: Settings) -> PreflightCheck:
     """Report whether the deployment configuration loaded with a coherent key posture.
 
-    Reaching this row means :func:`~aeat.core.config.load_settings`
-    already produced a validated :class:`~aeat.core.config.Settings`, so
+    Reaching this row means :func:`~core.config.load_settings`
+    already produced a validated :class:`~core.config.Settings`, so
     the env-var / config parse is sane. The remaining signal is the
     master-key passphrase posture: an absent passphrase is a non-blocking
     advisory (the store is merely locked and prompts interactively), a
@@ -339,17 +339,17 @@ def _probe_windows_long_path_support(settings: Settings) -> PreflightCheck:
     Windows workstation that already carries the ``LongPathsEnabled``
     opt-in) returns ``OK``. On a Windows workstation without the opt-in,
     the row grades on
-    :func:`~aeat.core.paths.windows_storage_root_long_path_margin` — the
+    :func:`~core.paths.windows_storage_root_long_path_margin` — the
     character headroom left before the deepest object the bucket / blob
     layout can produce
     (``<root>\buckets\<uuid>\blobs\<hmac>--<label>.meta.json``) would
-    meet or exceed :data:`~aeat.core.paths.WINDOWS_MAX_PATH`. Zero or
+    meet or exceed :data:`~core.paths.WINDOWS_MAX_PATH`. Zero or
     negative margin is an ``ERROR`` (a real object write can fail
     mid-campaign); a thin positive margin is a ``WARN`` advisory so the
     operator can relocate the root before it runs out. This probe never
     writes to disk and never raises — a registry read failure degrades to
     the conservative "not enabled" assumption inside
-    :func:`~aeat.core.paths.windows_long_paths_enabled`.
+    :func:`~core.paths.windows_long_paths_enabled`.
     """
     if sys.platform != "win32":
         return PreflightCheck(
@@ -416,9 +416,9 @@ def probe_registry_referential_integrity(
     registry runs at snapshot build (casilla / formula / binding / legal
     / source ID references) by building a snapshot for every revision of
     every bundled modelo through
-    :meth:`~aeat.domain.calculations.registry.ValidatedRegistryAuthority.snapshot`.
+    :meth:`~domain.calculations.registry.ValidatedRegistryAuthority.snapshot`.
     A dangling reference surfaces as a
-    :class:`~aeat.domain.calculations.registry.RegistryValidationError`,
+    :class:`~domain.calculations.registry.RegistryValidationError`,
     which is caught and reported as an ``error`` row naming the count of
     failing revisions — the probe never raises. ``authority`` overrides
     the default bundled authority so the sweep can be exercised against a
@@ -518,12 +518,12 @@ def probe_portal_registry_health(
     """Report portal-registry assembly health and any recorded portal drift.
 
     Read-only and offline: this probe never contacts AEAT. It confirms the
-    bundled :data:`~aeat.domain.portals.PORTAL_REGISTRY` assembled (a
-    :class:`~aeat.domain.portals.PortalIntegrityError` at import is caught and
+    bundled :data:`~domain.portals.PORTAL_REGISTRY` assembled (a
+    :class:`~domain.portals.PortalIntegrityError` at import is caught and
     reported as an ``error`` row) and reports the count of any *recorded*
-    :class:`~aeat.domain.portals.PortalDriftEvent` passed in. The events are
+    :class:`~domain.portals.PortalDriftEvent` passed in. The events are
     produced elsewhere, under the live-read access gate, by
-    :func:`~aeat.domain.portals.evaluate_portal_drift`; this row reports the
+    :func:`~domain.portals.evaluate_portal_drift`; this row reports the
     registered / recorded state, it does not perform a live probe.
 
     With no recorded drift (the offline default) the row is ``OK``. A recorded

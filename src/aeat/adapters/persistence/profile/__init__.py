@@ -15,6 +15,9 @@ consume the child modules directly:
 * :mod:`adapters.persistence.profile.usage_ratios` for the FINANCIAL
   secure-object :class:`domain.usage_ratios.UsageRatioProfile` load / save
   helpers and the censo refuse-load guard.
+* :mod:`adapters.persistence.profile.submission` for the AUDIT secure-object
+  :class:`domain.submission.ModeloPresentado` repository behind the
+  :class:`domain.submission.SubmissionRepositoryProtocol` port.
 """
 
 __all__: list[str] = []

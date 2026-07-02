@@ -40,6 +40,7 @@ from ._auth_diagnostics import auth_diagnostics_app
 from ._bucket_archive import register_bucket_archive_commands
 from ._bucket_history import _parse_bucket_event_types, register_bucket_history_commands
 from ._custody import register_custody_commands
+from ._descendiente import register_descendiente_commands
 from ._errors import ConfigBoundaryError as _ConfigBoundaryError
 from ._profile_bundle import register_profile_bundle_commands
 from ._profile_readiness import (
@@ -1203,6 +1204,10 @@ register_custody_commands(
     resolve_profile_by_label=_resolve_profile_by_label,
     assert_profile_record_present=_assert_profile_record_present,
 )
+register_descendiente_commands(
+    profile_app,
+    resolve_active_profile_pointer=_resolve_active_profile_pointer,
+)
 app.add_typer(repair_app, name="repair")
 app.add_typer(profile_app, name="profile")
 register_apoderado_commands(auth_app, resolve_active_profile_pointer=_resolve_active_profile_pointer)
@@ -1214,7 +1219,6 @@ from ._google import google_app as _google_app
 app.add_typer(_google_app, name="google")
 
 __all__ = [
-    "OutputLanguage",
     "_parse_bucket_event_types",
     "apoderado_app",
     "app",
@@ -1225,6 +1229,7 @@ __all__ = [
     "register_bucket_archive_commands",
     "register_bucket_history_commands",
     "register_custody_commands",
+    "register_descendiente_commands",
     "register_profile_bundle_commands",
     "register_repair_maintenance_commands",
     "register_repair_profile_command",

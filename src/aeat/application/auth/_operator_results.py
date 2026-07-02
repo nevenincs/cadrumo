@@ -6,17 +6,17 @@ results, and preflight state through :class:`AuthProvidersReport`,
 :class:`LiveAuthPreflightReport`.
 
 See Also:
-    :mod:`aeat.application.auth._operator`
+    :mod:`application.auth._operator`
         Application services that construct these result contracts for CLI
         commands.
-    :mod:`aeat.application.state_projection`
+    :mod:`application.state_projection`
         Canonical readiness projection consumed by status and test results.
-    :class:`~aeat.application.workflow.WorkflowState`
+    :class:`application.workflow.WorkflowState`
         Encrypted state envelope carrying the persisted
-        :class:`~aeat.application.auth.AuthState`.
-    :class:`~aeat.application.auth.AuthProviderDescription`
+        :class:`application.auth.AuthState`.
+    :class:`application.auth.AuthProviderDescription`
         Provider-readiness description that feeds provider catalogue output.
-    :class:`~aeat.application.auth.AuthenticatedAeatSessionResult`
+    :class:`application.auth.AuthenticatedAeatSessionResult`
         Live-session result consumed by :class:`AuthLoginResult`.
 """
 
@@ -61,8 +61,8 @@ class AuthConfigureResult(BaseModel):
     """Result of configuring an auth provider in workflow state.
 
     The provider selection has already been written to
-    :class:`~aeat.application.auth.AuthState` inside
-    :class:`~aeat.application.workflow.WorkflowState` when this result is
+    :class:`application.auth.AuthState` inside
+    :class:`application.workflow.WorkflowState` when this result is
     returned.
 
     ``complete`` reports whether the provider is now operationally
@@ -91,11 +91,11 @@ class AuthStatusResult(BaseModel):
     """Current local auth readiness state.
 
     Built from
-    :class:`~aeat.application.state_projection.OperatorStateProjection`.
+    :class:`application.state_projection.OperatorStateProjection`.
     Provider readiness mirrors
-    :class:`~aeat.application.state_projection.ProjectionAuthReadiness`;
+    :class:`application.state_projection.ProjectionAuthReadiness`;
     active-profile fields mirror
-    :class:`~aeat.application.state_projection.ProjectionActiveProfile`.
+    :class:`application.state_projection.ProjectionActiveProfile`.
     """
 
     model_config = _STRICT_FROZEN
@@ -161,7 +161,7 @@ class LiveAuthPreflightReport(BaseModel):
 
     Combines the :class:`AuthTestResult` readiness fields with live-auth
     identity-alignment settings before
-    :class:`~aeat.core.access_gate.AeatAccessGate` can allow an authenticated
+    :class:`core.access_gate.AeatAccessGate` can allow an authenticated
     read.
     """
 
@@ -196,7 +196,7 @@ class AuthLoginResult(BaseModel):
     """Result of an operator-triggered live authentication attempt.
 
     Summarises the
-    :class:`~aeat.application.auth.AuthenticatedAeatSessionResult` produced by
+    :class:`application.auth.AuthenticatedAeatSessionResult` produced by
     the provider-session lifecycle without exposing session material.
     """
 
@@ -216,8 +216,8 @@ class AuthClearResult(BaseModel):
     """Result of clearing local auth metadata and persisted state.
 
     Reports the local side effects after
-    :func:`~aeat.application.auth.clear_operator_auth` resets
-    :class:`~aeat.application.auth.AuthState`, deletes persisted sessions, and
+    :func:`application.auth.clear_operator_auth` resets
+    :class:`application.auth.AuthState`, deletes persisted sessions, and
     removes acquisition locks for the requested provider scope.
     """
 

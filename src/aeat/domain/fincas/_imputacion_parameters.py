@@ -2,7 +2,7 @@
 
 The LIRPF art. 85 imputación-de-rentas-inmobiliarias rates and the
 catastral-revision lookback window are no longer Python literals on
-:mod:`aeat.domain.fincas._aggregates`. They live in
+:mod:`domain.fincas._aggregates`. They live in
 ``registry/aeat/legal/irpf.toml`` under ``[parameters."lirpf-art-85:*"]``
 entries with explicit BOE citations and review metadata, and the
 rental aggregator imports them from this module.
@@ -10,7 +10,7 @@ rental aggregator imports them from this module.
 The loader is deliberately small: it reads the TOML file once at
 import time, validates the three expected parameter ids, and exposes
 their values as a frozen pydantic record. The full registry parameter
-loader at :mod:`aeat.domain.calculations.registry._loader` is scoped
+loader at :mod:`domain.calculations.registry._loader` is scoped
 to modelo revisions; LIRPF art. 85 imputación is a cross-cutting
 LIRPF authority consumed by the rental package directly, so a
 narrow loader here keeps the substrate boundary clean without
@@ -121,7 +121,7 @@ def load_imputacion_parameters() -> LirpfArt85ImputacionParameters:
     parameter catalogue and returns the typed
     :class:`LirpfArt85ImputacionParameters` record. Callers that
     want the raw parameter mapping should use
-    :func:`aeat.domain.calculations.registry.load_legal_parameters_only`
+    :func:`domain.calculations.registry.load_legal_parameters_only`
     or the ``resources().legal_parameters`` Repository instead.
     """
     return _load_parameters()
