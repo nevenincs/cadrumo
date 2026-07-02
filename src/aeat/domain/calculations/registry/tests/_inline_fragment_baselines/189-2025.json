@@ -1,0 +1,458 @@
+{
+  "modelo_id": "189",
+  "revision_id": "2025",
+  "revision": {
+    "id": "2025",
+    "label": "Modelo 189 ejercicio 2025 (Orden EHA/3481/2008; Ordenes HFP/1180/2023, HFP/1284/2023 y HAC/132/2026)",
+    "valid_from": "2025-01-01",
+    "valid_to": null,
+    "period_selector": {
+      "years": [
+        2025
+      ],
+      "year_from": null,
+      "year_to": null,
+      "periods": [
+        "0A"
+      ]
+    },
+    "legal_refs": [
+      "orden-eha-3481-2008:art-1",
+      "orden-eha-3481-2008:art-5",
+      "orden-hfp-1180-2023:art-primero",
+      "orden-hfp-1284-2023:art-11",
+      "orden-hac-132-2026:art-unico"
+    ],
+    "source_refs": [
+      "aeat-modelo-189-procedure",
+      "boe-modelo-189-base-order",
+      "boe-modelo-189-2023-amendment-hfp-1180",
+      "boe-modelo-189-2023-amendment-hfp-1284",
+      "boe-modelo-189-2025-values"
+    ],
+    "orden_aplicabilidad": [
+      "orden-eha-3481-2008:art-1",
+      "orden-hfp-1180-2023:art-primero",
+      "orden-hfp-1284-2023:art-11",
+      "orden-hac-132-2026:art-unico"
+    ],
+    "parameters": [],
+    "casillas": [
+      {
+        "id": "declarante-nif",
+        "number": "tipo1.nif-declarante",
+        "segmento": null,
+        "label": "NIF del declarante",
+        "localized_labels": {},
+        "localized_help": {},
+        "section": [
+          "identificacion_declaracion"
+        ],
+        "data_type": "nif",
+        "required": false,
+        "input_kind": "manual",
+        "formula": null,
+        "binding": null,
+        "alternate_bindings": [],
+        "export_refs": [],
+        "constraints": null,
+        "form_number": null,
+        "continuidad_id": null,
+        "semantic_role": "irpf_declarante_nif",
+        "semantic_role_cardinality": "shared",
+        "semantic_role_cardinality_reason": null,
+        "aliases": [],
+        "internal_only": false,
+        "legal_refs": [
+          "orden-eha-3481-2008:art-1"
+        ],
+        "source_refs": [
+          "boe-modelo-189-base-order"
+        ]
+      },
+      {
+        "id": "ejercicio-declaracion",
+        "number": "tipo1.ejercicio",
+        "segmento": null,
+        "label": "Ejercicio de declaracion",
+        "localized_labels": {},
+        "localized_help": {},
+        "section": [
+          "identificacion_declaracion"
+        ],
+        "data_type": "year",
+        "required": false,
+        "input_kind": "manual",
+        "formula": null,
+        "binding": null,
+        "alternate_bindings": [],
+        "export_refs": [],
+        "constraints": null,
+        "form_number": null,
+        "continuidad_id": null,
+        "semantic_role": "filing_year",
+        "semantic_role_cardinality": "shared",
+        "semantic_role_cardinality_reason": null,
+        "aliases": [],
+        "internal_only": false,
+        "legal_refs": [
+          "orden-eha-3481-2008:art-1",
+          "orden-eha-3481-2008:art-5"
+        ],
+        "source_refs": [
+          "boe-modelo-189-base-order",
+          "aeat-modelo-189-procedure"
+        ]
+      },
+      {
+        "id": "declarado-nif",
+        "number": "tipo2.nif-declarado",
+        "segmento": null,
+        "label": "NIF del declarado",
+        "localized_labels": {},
+        "localized_help": {},
+        "section": [
+          "declarado"
+        ],
+        "data_type": "nif",
+        "required": false,
+        "input_kind": "manual",
+        "formula": null,
+        "binding": null,
+        "alternate_bindings": [],
+        "export_refs": [],
+        "constraints": null,
+        "form_number": null,
+        "continuidad_id": null,
+        "semantic_role": "m189_declarado_nif",
+        "semantic_role_cardinality": "shared",
+        "semantic_role_cardinality_reason": null,
+        "aliases": [],
+        "internal_only": false,
+        "legal_refs": [
+          "orden-eha-3481-2008:art-1"
+        ],
+        "source_refs": [
+          "boe-modelo-189-base-order"
+        ]
+      },
+      {
+        "id": "declarado-nombre",
+        "number": "tipo2.nombre-declarado",
+        "segmento": null,
+        "label": "Apellidos y nombre, razon social o denominacion del declarado",
+        "localized_labels": {},
+        "localized_help": {},
+        "section": [
+          "declarado"
+        ],
+        "data_type": "name",
+        "required": false,
+        "input_kind": "manual",
+        "formula": null,
+        "binding": null,
+        "alternate_bindings": [],
+        "export_refs": [],
+        "constraints": null,
+        "form_number": null,
+        "continuidad_id": null,
+        "semantic_role": "m189_declarado_nombre",
+        "semantic_role_cardinality": "shared",
+        "semantic_role_cardinality_reason": null,
+        "aliases": [],
+        "internal_only": false,
+        "legal_refs": [
+          "orden-eha-3481-2008:art-1"
+        ],
+        "source_refs": [
+          "boe-modelo-189-base-order"
+        ]
+      },
+      {
+        "id": "codigo-pais",
+        "number": "tipo2.78-79",
+        "segmento": null,
+        "label": "Codigo pais",
+        "localized_labels": {},
+        "localized_help": {},
+        "section": [
+          "declarado",
+          "localizacion"
+        ],
+        "data_type": "country_code",
+        "required": false,
+        "input_kind": "manual",
+        "formula": null,
+        "binding": null,
+        "alternate_bindings": [],
+        "export_refs": [],
+        "constraints": null,
+        "form_number": null,
+        "continuidad_id": null,
+        "semantic_role": "m189_codigo_pais",
+        "semantic_role_cardinality": "shared",
+        "semantic_role_cardinality_reason": null,
+        "aliases": [],
+        "internal_only": false,
+        "legal_refs": [
+          "orden-hfp-1284-2023:art-11"
+        ],
+        "source_refs": [
+          "boe-modelo-189-base-order",
+          "boe-modelo-189-2023-amendment-hfp-1284"
+        ]
+      },
+      {
+        "id": "clave-valor",
+        "number": "tipo2.81",
+        "segmento": null,
+        "label": "Clave de valor",
+        "localized_labels": {},
+        "localized_help": {},
+        "section": [
+          "valores_seguros_rentas",
+          "identificacion_valor"
+        ],
+        "data_type": "text",
+        "required": false,
+        "input_kind": "manual",
+        "formula": null,
+        "binding": null,
+        "alternate_bindings": [],
+        "export_refs": [],
+        "constraints": null,
+        "form_number": null,
+        "continuidad_id": null,
+        "semantic_role": "m189_clave_valor",
+        "semantic_role_cardinality": "shared",
+        "semantic_role_cardinality_reason": null,
+        "aliases": [],
+        "internal_only": false,
+        "legal_refs": [
+          "orden-hfp-1180-2023:art-primero"
+        ],
+        "source_refs": [
+          "boe-modelo-189-base-order",
+          "boe-modelo-189-2023-amendment-hfp-1180"
+        ]
+      },
+      {
+        "id": "valoracion",
+        "number": "tipo2.108-123",
+        "segmento": null,
+        "label": "Valoracion",
+        "localized_labels": {},
+        "localized_help": {},
+        "section": [
+          "valores_seguros_rentas",
+          "valoracion"
+        ],
+        "data_type": "money",
+        "required": false,
+        "input_kind": "manual",
+        "formula": null,
+        "binding": null,
+        "alternate_bindings": [],
+        "export_refs": [],
+        "constraints": null,
+        "form_number": null,
+        "continuidad_id": null,
+        "semantic_role": "m189_valoracion",
+        "semantic_role_cardinality": "shared",
+        "semantic_role_cardinality_reason": null,
+        "aliases": [],
+        "internal_only": false,
+        "legal_refs": [
+          "orden-hfp-1180-2023:art-primero",
+          "orden-hac-132-2026:art-unico"
+        ],
+        "source_refs": [
+          "boe-modelo-189-base-order",
+          "boe-modelo-189-2023-amendment-hfp-1180",
+          "boe-modelo-189-2025-values"
+        ]
+      },
+      {
+        "id": "numero-valores",
+        "number": "tipo2.130-146",
+        "segmento": null,
+        "label": "Numero de valores",
+        "localized_labels": {},
+        "localized_help": {},
+        "section": [
+          "valores_seguros_rentas",
+          "detalle_valor"
+        ],
+        "data_type": "decimal",
+        "required": false,
+        "input_kind": "manual",
+        "formula": null,
+        "binding": null,
+        "alternate_bindings": [],
+        "export_refs": [],
+        "constraints": null,
+        "form_number": null,
+        "continuidad_id": null,
+        "semantic_role": "m189_numero_valores",
+        "semantic_role_cardinality": "shared",
+        "semantic_role_cardinality_reason": null,
+        "aliases": [],
+        "internal_only": false,
+        "legal_refs": [
+          "orden-hfp-1284-2023:art-11",
+          "orden-hac-132-2026:art-unico"
+        ],
+        "source_refs": [
+          "boe-modelo-189-base-order",
+          "boe-modelo-189-2023-amendment-hfp-1284",
+          "boe-modelo-189-2025-values"
+        ]
+      },
+      {
+        "id": "nominal-unitario-valores",
+        "number": "tipo2.147-164",
+        "segmento": null,
+        "label": "Nominal unitario de los valores",
+        "localized_labels": {},
+        "localized_help": {},
+        "section": [
+          "valores_seguros_rentas",
+          "detalle_valor"
+        ],
+        "data_type": "money",
+        "required": false,
+        "input_kind": "manual",
+        "formula": null,
+        "binding": null,
+        "alternate_bindings": [],
+        "export_refs": [],
+        "constraints": null,
+        "form_number": null,
+        "continuidad_id": null,
+        "semantic_role": "m189_nominal_unitario_valores",
+        "semantic_role_cardinality": "shared",
+        "semantic_role_cardinality_reason": null,
+        "aliases": [],
+        "internal_only": false,
+        "legal_refs": [
+          "orden-hfp-1284-2023:art-11",
+          "orden-hac-132-2026:art-unico"
+        ],
+        "source_refs": [
+          "boe-modelo-189-base-order",
+          "boe-modelo-189-2023-amendment-hfp-1284",
+          "boe-modelo-189-2025-values"
+        ]
+      }
+    ],
+    "formulas": [],
+    "bindings": [],
+    "algorithm_providers": [],
+    "algorithm_bindings": [],
+    "relations": [],
+    "export_layouts": [],
+    "extraction_profiles": [],
+    "live_cross_references": [],
+    "workbook_parity_refs": [
+      {
+        "id": "modelo-189-current-static-layout",
+        "workbook_source": "boe-modelo-189-2023-amendment-hfp-1284",
+        "fixture_id": "modelo-189-2025-static-layout",
+        "formula_coverage": "static_layout",
+        "runner_required": false,
+        "output_cells": {},
+        "tolerance": "0.00",
+        "legal_refs": [
+          "orden-hfp-1180-2023:art-primero",
+          "orden-hfp-1284-2023:art-11"
+        ],
+        "source_refs": [
+          "boe-modelo-189-base-order",
+          "boe-modelo-189-2023-amendment-hfp-1180",
+          "boe-modelo-189-2023-amendment-hfp-1284"
+        ]
+      }
+    ],
+    "verification_expectations": [],
+    "application_links": [
+      {
+        "id": "modelo-189-filing",
+        "surface": "filing",
+        "consumer": "aeat.application.filing",
+        "requires_snapshot": true,
+        "legal_refs": [
+          "orden-eha-3481-2008:art-1",
+          "orden-hfp-1180-2023:art-primero",
+          "orden-hfp-1284-2023:art-11"
+        ],
+        "source_refs": [
+          "aeat-modelo-189-procedure",
+          "boe-modelo-189-base-order",
+          "boe-modelo-189-2023-amendment-hfp-1180",
+          "boe-modelo-189-2023-amendment-hfp-1284"
+        ]
+      },
+      {
+        "id": "modelo-189-deadline",
+        "surface": "deadline",
+        "consumer": "aeat.domain.deadlines",
+        "requires_snapshot": true,
+        "legal_refs": [
+          "orden-eha-3481-2008:art-5"
+        ],
+        "source_refs": [
+          "aeat-modelo-189-procedure",
+          "boe-modelo-189-base-order"
+        ]
+      }
+    ],
+    "deadline_windows": [
+      {
+        "id": "modelo-189-2025-0a",
+        "filing_year": 2025,
+        "period": {
+          "filing_year": 2025,
+          "code": "0A"
+        },
+        "period_kind": "annual",
+        "opens_on": "2026-03-01",
+        "closes_on": "2026-03-31",
+        "payment_cutoff_on": null,
+        "applicability_condition_mode": "all",
+        "applicability_conditions": [],
+        "legal_refs": [
+          "orden-eha-3481-2008:art-5"
+        ],
+        "source_refs": [
+          "aeat-modelo-189-procedure",
+          "boe-modelo-189-base-order"
+        ]
+      }
+    ],
+    "filing_schedules": [
+      {
+        "id": "modelo-189-anual",
+        "period_kind": "annual",
+        "periods": [
+          "0A"
+        ],
+        "profile_condition_mode": "all",
+        "profile_conditions": [],
+        "legal_refs": [
+          "orden-eha-3481-2008:art-5"
+        ],
+        "source_refs": [
+          "aeat-modelo-189-procedure",
+          "boe-modelo-189-base-order"
+        ]
+      }
+    ],
+    "support_removal_decisions": [],
+    "constructs": [],
+    "dependency_classifications": [],
+    "completeness_manifest": null,
+    "verification_predicates": [],
+    "continuidad_validation": "advisory",
+    "casilla_continuidad_evolutions": []
+  }
+}
