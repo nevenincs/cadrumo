@@ -38,27 +38,27 @@ from datetime import UTC, date, datetime
 from types import MappingProxyType
 from typing import TYPE_CHECKING
 
-from ...core._period import Period as _Period
-from ...core._post_filing_event import PostFilingEventKind as _PostFilingEventKind
-from ...core._post_filing_event import classify_post_filing_event_kind as _classify_post_filing_event_kind
-from ...core._post_filing_event import post_filing_event_is_actionable as _post_filing_event_is_actionable
+from ...core import Period as _Period
+from ...core import PostFilingEventKind as _PostFilingEventKind
+from ...core import classify_post_filing_event_kind as _classify_post_filing_event_kind
+from ...core import post_filing_event_is_actionable as _post_filing_event_is_actionable
 from ...core.external_constants import IVA_REGIME_MODELOS
 from ...core.i18n import tr as _tr
 from ...core.logging import get_logger as _get_logger
 from ...core.time import now
 from ...domain.calculations.registry.applicability import ApplicabilityVerdict, derive_modelo_applicability
 from ...domain.calculations.registry.applicability import taxpayer_model_is_declared as _taxpayer_model_is_declared
-from ...domain.deadlines._engine import DeadlineEngine as _DeadlineEngine
-from ...domain.deadlines._engine import ScheduleProducer as _ScheduleProducer
-from ...domain.deadlines._errors import NoDeadlineWindowsError as _NoDeadlineWindowsError
-from ...domain.deadlines._festivos import DeadlineValidationError as _DeadlineValidationError
-from ...domain.deadlines._festivos import shift_deadline as _shift_deadline
-from ...domain.deadlines._models import ModeloDeadline as _ModeloDeadline
-from ...domain.deadlines._models import ObligationStatus as _ObligationStatus
-from ...domain.deadlines._models import Schedule as _Schedule
-from ...domain.deadlines._models import TaxpayerProfile as _TaxpayerProfile
-from ...domain.modelos._work_unit import WorkUnit as _WorkUnit
-from ...domain.modelos._work_unit import WorkUnitState as _WorkUnitState
+from ...domain.deadlines import DeadlineEngine as _DeadlineEngine
+from ...domain.deadlines import ScheduleProducer as _ScheduleProducer
+from ...domain.deadlines import NoDeadlineWindowsError as _NoDeadlineWindowsError
+from ...domain.deadlines import DeadlineValidationError as _DeadlineValidationError
+from ...domain.deadlines import shift_deadline as _shift_deadline
+from ...domain.deadlines import ModeloDeadline as _ModeloDeadline
+from ...domain.deadlines import ObligationStatus as _ObligationStatus
+from ...domain.deadlines import Schedule as _Schedule
+from ...domain.deadlines import TaxpayerProfile as _TaxpayerProfile
+from ...domain.modelos import WorkUnit as _WorkUnit
+from ...domain.modelos import WorkUnitState as _WorkUnitState
 from ._calendar_models import (
     CalendarCompleteness,
     OverviewAeatSubmissionState,
@@ -101,12 +101,12 @@ from ._calendar_warnings import (
 from ._coverage import build_obligation_coverage
 
 if TYPE_CHECKING:
-    from ...adapters.outbound.aeat.sede._schema import FiledDeclaracionObservation
-    from ...domain.justificante._schema import Justificante
-    from ...domain.modelos._filing_record import ModeloRecord
-    from ..live._expedientes import PersistedExpedientesSnapshot
-    from ..live._justificante import JustificanteCaptureSnapshot
-    from ..live._notifications import PersistedNotificationsSnapshot
+    from ...adapters.outbound.aeat.sede import FiledDeclaracionObservation
+    from ...domain.justificante import Justificante
+    from ...domain.modelos import ModeloRecord
+    from ..live import PersistedExpedientesSnapshot
+    from ..live import JustificanteCaptureSnapshot
+    from ..live import PersistedNotificationsSnapshot
 
 _log = _get_logger(__name__)
 _IVA_REGIME_MODELOS = IVA_REGIME_MODELOS
@@ -174,7 +174,7 @@ def _work_unit_window_matches(unit: _WorkUnit, window: object) -> bool:
 def _registry_window_for_work_unit(unit: _WorkUnit) -> object | None:
     """Return a registry deadline window for ``unit`` when one is bundled."""
     from ...core.resources import resources
-    from ...domain.calculations.registry._errors import RegistryError
+    from ...domain.calculations.registry import RegistryError
 
     authority = resources().modelos.authority
     for query_year in (unit.filing_year, unit.filing_year + 1):
@@ -605,7 +605,7 @@ def build_overview_calendar_events(
 def actionable_post_filing_events(
     events: tuple[OverviewCalendarEvent, ...],
 ) -> tuple[OverviewCalendarEvent, ...]:
-    """Return the observed events that demand operator attention.
+    """Return the observed :class:`OverviewCalendarEvent` rows that demand operator attention.
 
     An event is actionable when its
     :attr:`~aeat.application.overview.OverviewCalendarEvent.post_filing_kind`

@@ -63,14 +63,17 @@ from ...core import (
 )
 from ...core.identity import BucketId
 from ...core.logging import get_logger
-from ..auth._models import AuthState
+from ..auth import AuthState
 from ._utils import utc_now
 
 if TYPE_CHECKING:
     from ...adapters.persistence.storage import SecureObjectRepository
     from ...domain.transactions import TransactionCatalogueRepository
     from ...domain.user_profile import UserProfileRecord
-    from ..review._models import InvoiceReviewRecord, LedgerReviewRecord
+    from ..review import (
+        InvoiceReviewRecord,
+        LedgerReviewRecord,
+    )
 
 _log = get_logger(__name__)
 
@@ -274,7 +277,7 @@ class WorkflowState(BaseModel):
         if bucket_id is None:
             return None
         from ...domain.user_profile import ProfileNotFoundError
-        from ..user_profile._orchestration import build_lifecycle_service
+        from ..user_profile import build_lifecycle_service
 
         service = build_lifecycle_service(bucket_id=bucket_id)
         try:
@@ -374,8 +377,15 @@ def update_declaration_pointer(
 # already present in sys.modules['aeat.application.workflow._models'].
 # ---------------------------------------------------------------------------
 
-from ...adapters.outbound.aeat.browser._site_health import SiteHealthStatus
+from ...adapters.outbound.aeat.browser import SiteHealthStatus
 from ...domain.deadlines import ModeloDeadline
+
+# CYCLE-BREAK-RATIONALE-WORKFLOW-REVIEW: importing the ``application.review``
+# facade here re-enters this same partially-initialised ``workflow`` package
+# whenever ``application.review`` is the import chain's entry point (its
+# ``_actions``/``_models`` submodules import ``application.workflow`` at
+# their own module level). Import the submodule directly to avoid triggering
+# ``application.review.__init__`` during that chain.
 from ..review._models import (
     InvoiceReviewRecord,
     LedgerReviewRecord,

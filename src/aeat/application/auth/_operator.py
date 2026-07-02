@@ -72,8 +72,7 @@ from ._sessions import (
 
 if TYPE_CHECKING:
     from ..state_projection import OperatorStateProjection
-    from ..workflow._models import WorkflowState
-    from ..workflow._persistence import WorkflowStateRepository
+    from ..workflow import WorkflowState, WorkflowStateRepository
 
 
 def list_operator_auth_providers() -> AuthProvidersReport:
@@ -129,8 +128,7 @@ def configure_operator_auth(provider: str, *, certificate_path: Path | None = No
         append_bucket_event,
         derive_bucket_event_id,
     )
-    from ..workflow._persistence import workflow_state_repository
-    from ..workflow._profile_health import assess_active_profile_health
+    from ..workflow import assess_active_profile_health, workflow_state_repository
 
     listing = _implemented_provider(provider)
 
@@ -277,7 +275,7 @@ def _auth_configure_result(
     certificate_path: Path | None,
 ) -> AuthConfigureResult:
     """Build a redacted configuration result that exposes identity readiness."""
-    from ..user_profile._projections import record_to_path_values
+    from ..user_profile import record_to_path_values
 
     active_profile = state.active_profile_bucket_id() or ""
     record = state.active_profile_record()
@@ -612,7 +610,7 @@ async def login_operator_auth(
             target_url=target_url,
         )
 
-        from ..workflow._persistence import workflow_state_repository
+        from ..workflow import workflow_state_repository
 
         repository = workflow_state_repository()
         repository.update(
@@ -684,7 +682,7 @@ def clear_operator_auth(
     )
 
     with _active_profile_storage_span(resolved_settings):
-        from ..workflow._persistence import workflow_state_repository
+        from ..workflow import workflow_state_repository
 
         repository = workflow_state_repository()
         current_provider = repository.load().auth.provider
@@ -792,7 +790,7 @@ def _assert_login_precondition(settings: Settings, provider_kind: AuthProviderKi
     if provider_kind is AuthProviderKind.CERTIFICATE:
         cert_path = settings.aeat_certificate_path
         if cert_path is None:
-            from ..workflow._persistence import workflow_state_repository
+            from ..workflow import workflow_state_repository
 
             recorded = workflow_state_repository().load().auth.certificate_path or ""
             cert_path = Path(recorded) if recorded else None
@@ -832,7 +830,7 @@ def _provider_kind_or_none(provider: str | None) -> AuthProviderKind | None:
 
 
 def _configured_or_default_provider(settings: Settings) -> AuthProviderKind:
-    from ..workflow._persistence import workflow_state_repository
+    from ..workflow import workflow_state_repository
 
     state = workflow_state_repository().load()
     if state.auth.provider:
@@ -848,7 +846,7 @@ def _append_bucket_event(
     action: str,
     object_id: str,
 ) -> WorkflowState:
-    from ..workflow._models import WorkflowEvent
+    from ..workflow import WorkflowEvent
 
     # Auth flows can run before a profile is bound (e.g. `auth configure`
     # during initial setup). Falling back to the literal "default" silently

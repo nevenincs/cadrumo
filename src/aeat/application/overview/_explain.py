@@ -25,17 +25,20 @@ from typing import Protocol
 
 from pydantic import BaseModel, Field
 
-from ...core._modelo import UNMODELED_OBLIGATIONS as _UNMODELED_OBLIGATIONS
-from ...core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ...core import UNMODELED_OBLIGATIONS as _UNMODELED_OBLIGATIONS
 from ...core.time import now
-from ...domain.calculations.registry._ids import LegalRefId
+from ...domain.calculations.registry import LegalRefId
 from ...domain.calculations.registry.applicability import (
     ApplicabilityVerdict,
     derive_modelo_applicability,
 )
-from ...domain.deadlines._engine import DeadlineEngine
-from ...domain.deadlines._errors import DeadlineValidationError, NoDeadlineWindowsError
-from ...domain.deadlines._models import TaxpayerProfile
+from ...domain.deadlines import (
+    DeadlineEngine,
+    DeadlineValidationError,
+    NoDeadlineWindowsError,
+    TaxpayerProfile,
+)
 from ._errors import OverviewExplainError
 
 _ProfileFactValue = str | bool | int
@@ -176,8 +179,7 @@ def _modelo_is_registered(modelo: str) -> bool:
     a registry-data gap the CLI should degrade gracefully around rather
     than crash on.
     """
-    from ...core.resources import resources
-    from ...core.resources._errors import ResourceNotFoundError
+    from ...core.resources import ResourceNotFoundError, resources
 
     try:
         resources().modelos.get(modelo)
