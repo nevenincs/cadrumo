@@ -54,6 +54,17 @@ two checks mirror the production Family-1 shape (count ratchet plus named-set
 equality) but are governed entirely SEPARATELY from the production baseline:
 a production (non-test) violation is NEVER tolerated by the test-debt file,
 and the production assertions above are unaffected by its contents.
+
+A fifth, hard-zero check (**Family 4: underscore-named entries in
+``__all__``**) asserts the live ``src/aeat`` tree carries no facade export
+whose name starts with an underscore (a leading ``_``, not a dunder). A public
+facade exporting a private-named symbol contradicts the single-canonical-
+source policy the naming convention signals everywhere else in the codebase.
+Unlike Families 1 and 3 this check has no ratchet or named-tolerance set: it
+was closed to zero after every one of the 8 pre-existing hits was disposed of
+(promoted to a public name with consumers swept, or dropped from ``__all__``
+because the symbol had zero cross-package consumers), so any new hit is a
+straight failure with no allowlist escape hatch.
 """
 
 from __future__ import annotations
@@ -70,6 +81,7 @@ from dev.import_hygiene_scan import (
     find_multi_sourced_symbols,
     find_private_import_violations,
     find_shim_modules,
+    find_underscore_in_all_violations,
     walk_module_imports,
 )
 
@@ -366,4 +378,27 @@ def test_family3_genuine_duplicate_symbols_are_exactly_the_pinned_set() -> None:
         "new genuine Family-3 multi-facade duplicate symbol(s) found (declared in >1 owning "
         f"package's __all__): {untolerated}. Either retire the redundant re-export in favour of "
         f"the sole canonical source, or add a named, justified entry to {repo_relative(_BASELINE_PATH)}."
+    )
+
+
+def test_family4_no_underscore_named_entries_in_any_facade_all() -> None:
+    """No package facade's ``__all__`` may export a private-named (leading ``_``) symbol.
+
+    Hard-zero check, no ratchet and no named-tolerance allowlist: a public
+    facade exporting a private-named symbol contradicts the single-canonical-
+    source policy. Every symbol previously found this way was disposed of by
+    either promoting it to a public name (with every consumer swept in the
+    same commit) or dropping it from ``__all__`` (it stayed importable
+    intra-package, just not on the public facade). A new hit must be resolved
+    the same way, not silenced by an allowlist entry.
+    """
+    facades = discover_facades()
+    violations = find_underscore_in_all_violations(facades)
+
+    offenders = sorted(f"{v.package}.{v.name} ({v.path})" for v in violations)
+    assert offenders == [], (
+        "underscore-named __all__ entr(y/ies) found -- a public facade must not export a "
+        f"private-named symbol: {offenders}. Promote the symbol to a public name (rename + "
+        "sweep every consumer in one commit) or drop it from __all__ (it stays importable "
+        "intra-package via its owning private submodule)."
     )
