@@ -60,28 +60,22 @@ def _seed_modelo_130_ready_profile(bucket_id: str) -> None:
 # ---------------------------------------------------------------------------
 
 
-@pytest.mark.parametrize(
-    ("group_args", "verb", "resolved_hint"),
-    [
-        (["app", "modelo"], "describe", "MODELO"),
-        (["app", "ledger"], "preflight", None),
-    ],
-    ids=["modelo-describe", "ledger-preflight"],
-)
-def test_documented_subverb_is_listed_in_help_and_resolves(
-    group_args: list[str],
-    verb: str,
-    resolved_hint: str | None,
-) -> None:
+def test_documented_subverb_is_listed_in_help_and_resolves() -> None:
     """Documented app subverbs appear in help and resolve to real commands."""
-    listing = invoke_cached_cli([*group_args, "--help"])
-    assert listing.exit_code == 0, listing.output
-    assert verb in listing.output
+    cases = (
+        ("modelo-describe", ["app", "modelo"], "describe", "MODELO"),
+        ("ledger-preflight", ["app", "ledger"], "preflight", None),
+    )
 
-    resolved = invoke_cached_cli([*group_args, verb, "--help"])
-    assert resolved.exit_code == 0, resolved.output
-    if resolved_hint is not None:
-        assert resolved_hint in resolved.output
+    for case_id, group_args, verb, resolved_hint in cases:
+        listing = invoke_cached_cli([*group_args, "--help"])
+        assert listing.exit_code == 0, f"{case_id}: {listing.output}"
+        assert verb in listing.output, case_id
+
+        resolved = invoke_cached_cli([*group_args, verb, "--help"])
+        assert resolved.exit_code == 0, f"{case_id}: {resolved.output}"
+        if resolved_hint is not None:
+            assert resolved_hint in resolved.output, case_id
 
 
 def test_no_modelo_preflight_verb_is_signposted() -> None:
@@ -102,29 +96,28 @@ def test_no_modelo_preflight_verb_is_signposted() -> None:
 # ---------------------------------------------------------------------------
 
 
-@pytest.mark.parametrize(
-    "command",
-    [
+def test_modelo_period_help_uses_canonical_registry_tokens() -> None:
+    """Every modelo `--period` help advertises the canonical registry
+    token set (0A / 1T-4T / 01-12) and never the misleading 'Q1, annual'
+    or ledger-style 'YYYYQn' examples that diverged across surfaces."""
+    commands = (
         ["app", "modelo", "describe", "--help"],
         ["app", "modelo", "casillas", "--help"],
         ["app", "modelo", "formulas", "--help"],
         ["app", "modelo", "history", "--help"],
         ["app", "modelo", "readiness", "--help"],
         ["app", "modelo", "work", "create", "--help"],
-    ],
-)
-def test_modelo_period_help_uses_canonical_registry_tokens(command: list[str]) -> None:
-    """Every modelo `--period` help advertises the canonical registry
-    token set (0A / 1T-4T / 01-12) and never the misleading 'Q1, annual'
-    or ledger-style 'YYYYQn' examples that diverged across surfaces."""
-    result = invoke_cached_cli(command)
-    assert result.exit_code == 0, result.output
-    ascii_only = "".join(c for c in result.output if c.isascii())
-    collapsed = " ".join(ascii_only.split())
-    assert "1T-4T" in collapsed, collapsed
-    # The misleading tokens that previously diverged must be gone.
-    assert "Q1, annual" not in collapsed
-    assert "2026Q1" not in collapsed
+    )
+
+    for command in commands:
+        result = invoke_cached_cli(command)
+        assert result.exit_code == 0, result.output
+        ascii_only = "".join(c for c in result.output if c.isascii())
+        collapsed = " ".join(ascii_only.split())
+        assert "1T-4T" in collapsed, (command, collapsed)
+        # The misleading tokens that previously diverged must be gone.
+        assert "Q1, annual" not in collapsed, command
+        assert "2026Q1" not in collapsed, command
 
 
 def test_invalid_modelo_period_surfaces_accepted_set() -> None:
@@ -137,76 +130,65 @@ def test_invalid_modelo_period_surfaces_accepted_set() -> None:
     assert "1T" in result.output and "4T" in result.output
 
 
-@pytest.mark.parametrize(
-    ("command", "expected_fragments"),
-    [
+def test_registry_discovery_accepts_explicit_year_period_scope() -> None:
+    cases = (
         (
+            "describe",
             ["app", "modelo", "describe", "303", "--year", "2026", "--period", "1T"],
             ("303", "2009-y-siguientes"),
         ),
         (
+            "casillas",
             ["app", "modelo", "casillas", "303", "--year", "2026", "--period", "1T", "--input-kind", "computed"],
             ("iva.resultado-regimen-general",),
         ),
         (
+            "formulas",
             ["app", "modelo", "formulas", "303", "--year", "2026", "--period", "1T"],
             ("formula_id",),
         ),
-    ],
-    ids=("describe", "casillas", "formulas"),
-)
-def test_registry_discovery_accepts_explicit_year_period_scope(
-    command: list[str],
-    expected_fragments: tuple[str, ...],
-) -> None:
-    result = invoke_cached_cli(command)
+    )
 
-    assert result.exit_code == 0, result.output
-    for fragment in expected_fragments:
-        assert fragment in result.output
+    for case_id, command, expected_fragments in cases:
+        result = invoke_cached_cli(command)
+
+        assert result.exit_code == 0, f"{case_id}: {result.output}"
+        for fragment in expected_fragments:
+            assert fragment in result.output, case_id
 
 
-@pytest.mark.parametrize(
-    "command",
-    [
+def test_registry_discovery_rejects_combined_period_scope() -> None:
+    commands = (
         ["app", "modelo", "describe", "303", "--period", "2026Q1"],
         ["app", "modelo", "casillas", "303", "--period", "2026Q1"],
         ["app", "modelo", "formulas", "303", "--period", "2026Q1"],
-    ],
-)
-def test_registry_discovery_rejects_combined_period_scope(command: list[str]) -> None:
-    result = invoke_cached_cli(command)
+    )
 
-    assert result.exit_code != 0
-    assert "bare registry token" in result.output or "1T" in result.output
+    for command in commands:
+        result = invoke_cached_cli(command)
+
+        assert result.exit_code != 0, command
+        assert "bare registry token" in result.output or "1T" in result.output
 
 
-@pytest.mark.parametrize(
-    ("modelo", "alias", "expected_token"),
-    [
-        ("303", "Q1", "1T"),
-        ("100", "annual", "0A"),
-    ],
-)
-@pytest.mark.parametrize(
-    "command_prefix",
-    [
+def test_registry_discovery_rejects_aliases_for_explicit_scope() -> None:
+    command_prefixes = (
         ["app", "modelo", "describe"],
         ["app", "modelo", "casillas"],
         ["app", "modelo", "formulas"],
-    ],
-)
-def test_registry_discovery_rejects_aliases_for_explicit_scope(
-    command_prefix: list[str],
-    modelo: str,
-    alias: str,
-    expected_token: str,
-) -> None:
-    result = invoke_cached_cli([*command_prefix, modelo, "--year", "2026", "--period", alias])
+    )
+    aliases = (
+        ("303", "Q1", "1T"),
+        ("100", "annual", "0A"),
+    )
 
-    assert result.exit_code != 0
-    assert "Traceback" not in result.output
-    assert expected_token in result.output
+    for command_prefix in command_prefixes:
+        for modelo, alias, expected_token in aliases:
+            result = invoke_cached_cli([*command_prefix, modelo, "--year", "2026", "--period", alias])
+
+            assert result.exit_code != 0, (command_prefix, modelo, alias)
+            assert "Traceback" not in result.output
+            assert expected_token in result.output, (command_prefix, modelo, alias)
 
 
 def test_modelo_bad_parameter_helper_renders_registered_errors() -> None:
@@ -217,21 +199,20 @@ def test_modelo_bad_parameter_helper_renders_registered_errors() -> None:
     assert str(error) != "''"
 
 
-@pytest.mark.parametrize(
-    "command",
-    [
+def test_malformed_period_surfaces_as_bad_parameter() -> None:
+    commands = (
         ["app", "modelo", "describe", "303", "--period", "garbage"],
         ["app", "modelo", "casillas", "303", "--period", "2026-Quarter1"],
         ["app", "modelo", "bindings", "list", "--modelo", "303", "--year", "2026", "--period", "not-a-period"],
         ["app", "modelo", "formulas", "303", "--period", "2026-13"],
-    ],
-)
-def test_malformed_period_surfaces_as_bad_parameter(command: list[str]) -> None:
-    result = invoke_cached_cli(command)
-    assert result.exit_code != 0
-    assert "Traceback" not in result.output
-    output_lower = result.output.lower()
-    assert "period must be" in output_lower or "invalid value" in output_lower
+    )
+
+    for command in commands:
+        result = invoke_cached_cli(command)
+        assert result.exit_code != 0, command
+        assert "Traceback" not in result.output
+        output_lower = result.output.lower()
+        assert "period must be" in output_lower or "invalid value" in output_lower
 
 
 def test_unknown_modelo_surfaces_as_bad_parameter() -> None:
@@ -242,21 +223,20 @@ def test_unknown_modelo_surfaces_as_bad_parameter() -> None:
     assert "999" in output_lower or "not present" in output_lower
 
 
-@pytest.mark.parametrize(
-    "command_prefix",
-    [
+def test_unknown_modelo_with_explicit_period_scope_surfaces_as_bad_parameter() -> None:
+    command_prefixes = (
         ["app", "modelo", "describe"],
         ["app", "modelo", "casillas"],
         ["app", "modelo", "formulas"],
-    ],
-)
-def test_unknown_modelo_with_explicit_period_scope_surfaces_as_bad_parameter(command_prefix: list[str]) -> None:
-    result = invoke_cached_cli([*command_prefix, "999", "--year", "2026", "--period", "1T"])
+    )
 
-    assert result.exit_code != 0
-    assert "Traceback" not in result.output
-    output_lower = result.output.lower()
-    assert "999" in output_lower or "not present" in output_lower
+    for command_prefix in command_prefixes:
+        result = invoke_cached_cli([*command_prefix, "999", "--year", "2026", "--period", "1T"])
+
+        assert result.exit_code != 0, command_prefix
+        assert "Traceback" not in result.output
+        output_lower = result.output.lower()
+        assert "999" in output_lower or "not present" in output_lower
 
 
 # ---------------------------------------------------------------------------
@@ -305,7 +285,9 @@ def test_work_create_revision_help_points_at_describe() -> None:
 
     result = invoke_cached_cli(["app", "modelo", "work", "create", "--help"])
     assert result.exit_code == 0, result.output
-    assert "modelo describe" in result.output
+    ascii_only = "".join(c for c in result.output if c.isascii())
+    collapsed = " ".join(ascii_only.split())
+    assert "modelo describe" in collapsed
 
 
 def test_work_calculate_binding_help_points_at_bindings_list() -> None:
@@ -616,18 +598,7 @@ def test_casillas_form_number_filter_no_match_returns_empty_table() -> None:
     assert not data_rows, result.output
 
 
-@pytest.mark.parametrize(
-    "raw,expected",
-    [
-        ("aeat_justificante_pdf", "aeat_justificante_pdf"),
-        ("aeat-justificante-pdf", "aeat_justificante_pdf"),
-        ("aeat_csv_register", "aeat_csv_register"),
-        ("aeat-csv-register", "aeat_csv_register"),
-        ("aeat_live_capture", "aeat_live_capture"),
-        ("aeat-live-capture", "aeat_live_capture"),
-    ],
-)
-def test_evidence_kind_accepts_canonical_and_hyphenated_values(raw: str, expected: str) -> None:
+def test_evidence_kind_accepts_canonical_and_hyphenated_values() -> None:
     """``--evidence-kind`` accepts both canonical underscore values and
     their hyphenated aliases (``aeat-justificante-pdf`` ↔ ``aeat_justificante_pdf``).
     The import command parses the alias and normalises it before
@@ -635,8 +606,18 @@ def test_evidence_kind_accepts_canonical_and_hyphenated_values(raw: str, expecte
 
     from ....domain.modelos import ExternalEvidenceKind
 
-    normalised = raw.strip().replace("-", "_")
-    assert ExternalEvidenceKind(normalised) is ExternalEvidenceKind(expected)
+    cases = (
+        ("aeat_justificante_pdf", "aeat_justificante_pdf"),
+        ("aeat-justificante-pdf", "aeat_justificante_pdf"),
+        ("aeat_csv_register", "aeat_csv_register"),
+        ("aeat-csv-register", "aeat_csv_register"),
+        ("aeat_live_capture", "aeat_live_capture"),
+        ("aeat-live-capture", "aeat_live_capture"),
+    )
+
+    for raw, expected in cases:
+        normalised = raw.strip().replace("-", "_")
+        assert ExternalEvidenceKind(normalised) is ExternalEvidenceKind(expected)
 
 
 def test_evidence_kind_rejects_unrelated_token() -> None:
@@ -655,41 +636,38 @@ def test_evidence_kind_rejects_unrelated_token() -> None:
 # ---------------------------------------------------------------------------
 
 
-@pytest.mark.parametrize(
-    ("raw", "expected"),
-    [
-        ("a" * 64, "a" * 64),
-        (f"  {'b' * 64}  ", "b" * 64),
-    ],
-    ids=("plain", "trimmed"),
-)
-def test_validate_work_unit_id_accepts_valid_hex64_and_strips_whitespace(raw: str, expected: str) -> None:
+def test_validate_work_unit_id_accepts_valid_hex64_and_strips_whitespace() -> None:
     from .._modelo import _validate_work_unit_id
 
-    result = _validate_work_unit_id(raw)
-    assert result == expected
-    assert isinstance(result, str)
+    cases = (
+        ("plain", "a" * 64, "a" * 64),
+        ("trimmed", f"  {'b' * 64}  ", "b" * 64),
+    )
+
+    for case_id, raw, expected in cases:
+        result = _validate_work_unit_id(raw)
+        assert result == expected, case_id
+        assert isinstance(result, str), case_id
 
 
-@pytest.mark.parametrize(
-    "bad",
-    [
+def test_validate_work_unit_id_rejects_malformed() -> None:
+    """Malformed work_unit_id values raise ``typer.BadParameter``."""
+    import typer as _typer
+
+    from .._modelo import _validate_work_unit_id
+
+    malformed = (
         "short",
         "G" * 64,  # uppercase -- not lowercase hex
         "z" * 64,  # non-hex character
         "a" * 63,  # one char short
         "a" * 65,  # one char long
         "",
-    ],
-)
-def test_validate_work_unit_id_rejects_malformed(bad: str) -> None:
-    """Malformed work_unit_id values raise ``typer.BadParameter``."""
-    import typer as _typer
+    )
 
-    from .._modelo import _validate_work_unit_id
-
-    with pytest.raises(_typer.BadParameter):
-        _validate_work_unit_id(bad)
+    for bad in malformed:
+        with pytest.raises(_typer.BadParameter):
+            _validate_work_unit_id(bad)
 
 
 # ---------------------------------------------------------------------------
@@ -697,84 +675,74 @@ def test_validate_work_unit_id_rejects_malformed(bad: str) -> None:
 # ---------------------------------------------------------------------------
 
 
-@pytest.mark.parametrize(
-    "spec",
-    [
+def test_parse_casilla_override_accepts_valid_keys() -> None:
+    """Valid CasillaId keys are accepted by ``_parse_casilla_override``."""
+    from .._modelo import _parse_casilla_override
+
+    specs = (
         "A=1",
         "casilla01=2",
         "A.B:C-D=3",
         "x" * 64 + "=0",  # exactly 64-char key
-    ],
-)
-def test_parse_casilla_override_accepts_valid_keys(spec: str) -> None:
-    """Valid CasillaId keys are accepted by ``_parse_casilla_override``."""
-    from .._modelo import _parse_casilla_override
+    )
 
-    key, _ = _parse_casilla_override(spec)
-    assert key
+    for spec in specs:
+        key, _ = _parse_casilla_override(spec)
+        assert key, spec
 
 
-@pytest.mark.parametrize(
-    "spec",
-    [
-        "=value",  # empty key
-        " A=1",  # casilla.id must be accepted exactly as supplied
-        "A =1",  # key-side whitespace must not be stripped into a valid id
-        ".starts-with-dot=1",  # dot at start (fails _CASILLA_RE)
-        ("x" * 65) + "=0",  # key exceeds 64-char max
-    ],
-)
-def test_parse_casilla_override_rejects_invalid_keys(spec: str) -> None:
+def test_parse_casilla_override_rejects_invalid_keys() -> None:
     """Invalid CasillaId keys raise ``typer.BadParameter``."""
     import typer as _typer
 
     from .._modelo import _parse_casilla_override
 
-    with pytest.raises(_typer.BadParameter):
-        _parse_casilla_override(spec)
+    specs = (
+        "=value",  # empty key
+        " A=1",  # casilla.id must be accepted exactly as supplied
+        "A =1",  # key-side whitespace must not be stripped into a valid id
+        ".starts-with-dot=1",  # dot at start (fails _CASILLA_RE)
+        ("x" * 65) + "=0",  # key exceeds 64-char max
+    )
+
+    for spec in specs:
+        with pytest.raises(_typer.BadParameter):
+            _parse_casilla_override(spec)
 
 
-@pytest.mark.parametrize("spec", [" 01=1.00", "01 =1.00"])
-def test_parse_amendment_casilla_rejects_whitespace_padded_keys(spec: str) -> None:
+def test_parse_amendment_casilla_rejects_whitespace_padded_keys() -> None:
     """Amendment ``--set`` casilla keys are validated without key coercion."""
     import typer as _typer
 
     from .._modelo import _parse_amendment_casilla
 
-    with pytest.raises(_typer.BadParameter):
-        _parse_amendment_casilla(spec)
+    for spec in (" 01=1.00", "01 =1.00"):
+        with pytest.raises(_typer.BadParameter):
+            _parse_amendment_casilla(spec)
 
 
-@pytest.mark.parametrize(
-    "spec",
-    [
-        "binding-id=1",
-        "a=v",
-        "modelo-303-iva-repercutido=100",
-    ],
-)
-def test_parse_binding_override_accepts_valid_keys(spec: str) -> None:
+def test_parse_binding_override_accepts_valid_keys() -> None:
     """Valid BindingId keys are accepted by ``_parse_binding_override``."""
     from .._modelo import _parse_binding_override
 
-    key, _ = _parse_binding_override(spec)
-    assert key
+    for spec in ("binding-id=1", "a=v", "modelo-303-iva-repercutido=100"):
+        key, _ = _parse_binding_override(spec)
+        assert key, spec
 
 
-@pytest.mark.parametrize(
-    "spec",
-    [
-        "=value",  # empty key
-        "UPPERCASE=1",  # uppercase not in _REF_RE
-        ".starts-dot=1",  # starts with dot
-        ("x" * 129) + "=0",  # key exceeds 128-char max
-    ],
-)
-def test_parse_binding_override_rejects_invalid_keys(spec: str) -> None:
+def test_parse_binding_override_rejects_invalid_keys() -> None:
     """Invalid BindingId keys raise ``typer.BadParameter``."""
     import typer as _typer
 
     from .._modelo import _parse_binding_override
 
-    with pytest.raises(_typer.BadParameter):
-        _parse_binding_override(spec)
+    specs = (
+        "=value",  # empty key
+        "UPPERCASE=1",  # uppercase not in _REF_RE
+        ".starts-dot=1",  # starts with dot
+        ("x" * 129) + "=0",  # key exceeds 128-char max
+    )
+
+    for spec in specs:
+        with pytest.raises(_typer.BadParameter):
+            _parse_binding_override(spec)
