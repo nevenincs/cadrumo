@@ -12,26 +12,33 @@ entry carries the ``filing_record_id``, and that the lifecycle write-guard
 from __future__ import annotations
 
 from datetime import UTC, datetime, timedelta
+from decimal import Decimal
 from pathlib import Path
 
 import pytest
 
 from ....application.ledger._actions_common import _blocking_modelo_references
 from ....core import Period
-from ....domain.calculations.registry import CasillaId, validated_casilla_id
+from ....domain.calculations.registry import CasillaId, CasillaObservation, validated_casilla_id
+from ....domain.modelos import (
+    CalculationRevisionCatalogueRepository,
+    upsert_calculation_revision,
+)
 from ....domain.modelos import (
     CalculationRevision,
-    CalculationRevisionCatalogueRepository,
     CalculationRevisionState,
-    ModeloCode,
-    ModeloRecordCatalogueRepository,
-    TransactionParticipationIndexRepository,
-    WorkUnit,
-    WorkUnitCatalogueRepository,
     derive_calculation_revision_id,
-    derive_work_unit_id,
-    upsert_calculation_revision,
+)
+from ....domain.modelos import ModeloCode
+from ....domain.modelos import ModeloRecordCatalogueRepository
+from ....domain.modelos import TransactionParticipationIndexRepository
+from ....domain.modelos import (
+    WorkUnitCatalogueRepository,
     upsert_work_unit,
+)
+from ....domain.modelos import (
+    WorkUnit,
+    derive_work_unit_id,
 )
 from ....tests.secure_sql import isolated_runtime_profile
 from .._revision_persistence import persist_filed_revision
@@ -84,11 +91,12 @@ def _seed_borrador(
 
     source_transaction_ids = (_TX_A, _TX_B)
     input_values_by_casilla_id = {_IVA_BASE_IMPONIBLE_CASILLA: "1000.00"}
+    casilla_values = {_IVA_BASE_IMPONIBLE_CASILLA: Decimal("1000.00")}
     calculation_revision_id = derive_calculation_revision_id(
         work_unit_id=work_unit_id,
         input_values_by_casilla_id=input_values_by_casilla_id,
         binding_overrides={},
-        casilla_values={},
+        casilla_values=casilla_values,
         source_transaction_ids=source_transaction_ids,
     )
     revision = CalculationRevision(
@@ -97,6 +105,15 @@ def _seed_borrador(
         state=CalculationRevisionState.BORRADOR,
         input_values_by_casilla_id=input_values_by_casilla_id,
         source_transaction_ids=source_transaction_ids,
+        casilla_values=casilla_values,
+        observations=(
+            CasillaObservation(
+                casilla_id=_IVA_BASE_IMPONIBLE_CASILLA,
+                value=Decimal("1000.00"),
+                legal_refs=("ley-37-1992:art-164",),
+                source_refs=("participation-co-emission-test",),
+            ),
+        ),
         created_at=_T0,
         updated_at=_T0,
     )

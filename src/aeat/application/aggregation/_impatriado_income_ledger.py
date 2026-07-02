@@ -346,8 +346,7 @@ def _classify_impatriado_income_transaction(
             transaction_id=transaction_id,
             reason=reason,
             detail=(
-                f"business classification {transaction.business_classification.value!r} "
-                "cannot feed the impatriado base"
+                f"business classification {transaction.business_classification.value!r} cannot feed the impatriado base"
             ),
         )
 

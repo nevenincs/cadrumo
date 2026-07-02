@@ -26,6 +26,7 @@ from ....domain.buckets import (
     BucketEventType,
     derive_bucket_event_id,
 )
+from ....tests.aeat_literal_fixtures import aeat_url
 from ....tests.secure_sql import isolated_two_bucket_runtime
 from .._custody_carry import restore_carried_objects, serialize_carried_objects
 
@@ -88,10 +89,10 @@ def test_structured_profile_excludes_attachment_evidence_bytes(tmp_path: Path) -
 
 def _seed_attachment_manifest(sha: str) -> None:
     from ....domain.attachments import (
-        Attachment,
         AttachmentKind,
         AttachmentSource,
     )
+    from ....domain.attachments import Attachment
 
     AttachmentStore().write_manifest(
         Attachment(
@@ -123,7 +124,7 @@ def _seed_justificante() -> str:
         presented_at=_INSTANT,
         tax_id="12345678Z",
         total_a_ingresar=Decimal("100.00"),
-        verification_url="https://sede.agenciatributaria.gob.es/verifica",
+        verification_url=aeat_url("sede", "/verifica"),
         source_pdf_path=Path("db://blobs") / ("a" * 64),
         source_pdf_sha256="a" * 64,
         parsed_at=_INSTANT,

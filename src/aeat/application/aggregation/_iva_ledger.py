@@ -45,6 +45,7 @@ from ...domain.iva import (
     EUMemberState,
     InvoiceKind,
     IvaCategory,
+    IvaExemptionArticle,
     IvaFlowDirection,
     IvaRateKind,
     IvaRateNotFoundError,
@@ -54,7 +55,6 @@ from ...domain.iva import (
     lookup_rate,
     validate_prorrata_reference,
 )
-from ...domain.iva import IvaExemptionArticle
 from ...domain.transactions import (
     BusinessClassification,
     Transaction,

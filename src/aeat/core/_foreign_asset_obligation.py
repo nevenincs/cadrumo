@@ -182,7 +182,7 @@ binding article.
 
 
 def foreign_asset_obligation_group(asset_class: ForeignAssetClass) -> ForeignAssetObligationGroup:
-    """Return the RGAT obligation bloque a foreign-asset clave belongs to.
+    """Return the RGAT :class:`ForeignAssetObligationGroup` bloque a foreign-asset clave belongs to.
 
     Total over :class:`ForeignAssetClass`. Use it to surface a Modelo 720
     ``foreign_asset`` row's opaque ``asset_class_code`` clave as its typed
@@ -195,14 +195,14 @@ def foreign_asset_obligation_group(asset_class: ForeignAssetClass) -> ForeignAss
 def foreign_asset_declaration_threshold(
     group: ForeignAssetObligationGroup,
 ) -> ForeignAssetDeclarationThreshold:
-    """Return the grounded declaration thresholds for an obligation bloque."""
+    """Return the grounded :class:`ForeignAssetDeclarationThreshold` for an obligation bloque."""
     return FOREIGN_ASSET_DECLARATION_THRESHOLDS[group]
 
 
 def foreign_asset_class_declaration_threshold(
     asset_class: ForeignAssetClass,
 ) -> ForeignAssetDeclarationThreshold:
-    """Return the declaration thresholds for the bloque a clave belongs to.
+    """Return the :class:`ForeignAssetDeclarationThreshold` for the bloque a clave belongs to.
 
     Convenience composition of :func:`foreign_asset_obligation_group` and
     :func:`foreign_asset_declaration_threshold`; the returned threshold is the

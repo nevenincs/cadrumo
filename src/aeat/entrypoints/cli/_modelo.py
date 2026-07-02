@@ -56,6 +56,7 @@ from ._common import activate_subcommand_output_language
 from ._modelo_aggregate_cli import register_aggregate_commands
 from ._modelo_audit_cli import audit_app as audit_app
 from ._modelo_audit_cli import register_audit_commands
+from ._modelo_cli_support import MISSING_INPUT_TRANSLATED_MESSAGES
 from ._modelo_cli_support import (
     bad_parameter_from_error as _bad_parameter_from_error,
 )
@@ -133,6 +134,7 @@ from ._modelo_work_lifecycle_cli import register_work_lifecycle_commands
 from ._modelo_work_revision_cli import register_work_revision_commands
 from ._modelo_work_runs_cli import register_work_run_commands
 from ._modelo_work_verification_cli import register_work_verification_commands
+from ._modelo_work_wizard_cli import register_work_wizard_commands
 
 _log = get_logger(__name__)
 
@@ -415,21 +417,6 @@ work_app = create_work_app()
 app.add_typer(work_app, name="work")
 
 
-#: Registry-validation translated-message keys that signal an
-#: unsatisfied calculation input the operator can supply with
-#: ``--binding`` / ``--relation``. The first ``work calculate`` of a
-#: modelo that consumes a binding fails with one of these; the guidance
-#: helper turns the bare refusal into a self-correcting message.
-_MISSING_INPUT_TRANSLATED_MESSAGES: frozenset[str] = frozenset(
-    {
-        "errors.calc.binding_value_missing",
-        "errors.calc.bound_casilla_binding_value_missing",
-        "errors.calc.date_binding_value_missing",
-        "errors.calc.enum_binding_value_missing",
-        "errors.calc.relation_value_missing",
-    },
-)
-
 _M200_M202_PAGOS_RELATION_IDS: frozenset[str] = frozenset(
     {
         "modelo-200-2024-rel-202-pagos-fraccionados",
@@ -550,7 +537,7 @@ def _missing_binding_guidance(error: RegistryValidationError, work_unit_id: str)
     Non-input registry-validation errors fall through unchanged.
     """
     base = tr(error.translated_message, **(error.context or {})) if error.translated_message is not None else str(error)
-    if error.translated_message not in _MISSING_INPUT_TRANSLATED_MESSAGES:
+    if error.translated_message not in MISSING_INPUT_TRANSLATED_MESSAGES:
         return base
 
     # Loading the work unit refines the discovery command with the concrete
@@ -633,6 +620,16 @@ register_work_calculate_commands(
     calculate_input_bundle_from_cli=_work_calculate_input_bundle_from_cli,
     bad_parameter_from_error=_bad_parameter_from_error,
     missing_binding_guidance=_missing_binding_guidance,
+)
+
+
+register_work_wizard_commands(
+    work_app,
+    activate_output_language=activate_subcommand_output_language,
+    require_active_profile=_require_active_profile,
+    resolve_work_unit_for_cli=_resolve_work_unit_for_cli,
+    resolve_default_actor=_resolve_default_actor,
+    bad_parameter_from_error=_bad_parameter_from_error,
 )
 
 

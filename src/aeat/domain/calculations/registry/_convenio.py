@@ -166,11 +166,11 @@ class ConvenioAuthority(RegistryModel):
 
     @classmethod
     def empty(cls) -> ConvenioAuthority:
-        """Return an authority with no treaties (the no-override default)."""
+        """Return a :class:`ConvenioAuthority` with no treaties (the no-override default)."""
         return cls(treaties={})
 
     def resolve(self, country_code: str, tipo_renta: TipoRentaIrnr, year: int) -> ConvenioOverride | None:
-        """Return the treaty override for ``(country_code, tipo_renta, year)``, or ``None``.
+        """Return the :class:`ConvenioOverride` for ``(country_code, tipo_renta, year)``, or ``None``.
 
         ``None`` means no treaty row applies — the caller keeps the domestic
         baseline (no country declared) or raises the missing-row BLOCKING

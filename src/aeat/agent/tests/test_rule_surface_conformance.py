@@ -289,8 +289,7 @@ def test_no_operator_document_names_a_package_internal() -> None:
 
     - A **data-sourced** check: no document may contain, anywhere in its text,
       one of the live contract's ``service_owner`` / ``owner`` dotted module
-      paths (e.g. ``aeat.application.modelo``). This is the mechanism the ADR
-      requires - the blocklist is read from
+      paths (e.g. ``aeat.application.modelo``). The blocklist is read from
       :func:`~aeat.application.operator_surface.get_operator_surface_contract`,
       not hand-authored, so it grows automatically as new backend modules are
       registered as command-family owners.
@@ -327,7 +326,7 @@ def test_no_operator_document_names_a_package_internal() -> None:
 def test_no_service_owner_value_collides_with_operator_prose() -> None:
     """Empirical proof the data-sourced blocklist cannot false-positive today.
 
-    The ADR requires this be verified empirically, not merely asserted: every
+    This must be verified empirically, not merely asserted: every
     live ``service_owner`` / ``owner`` value must be a full dotted
     ``aeat.<layer>.<module>`` string that does not equal (nor get accidentally
     substring-matched by) any bare CLI-domain noun the shipped corpus already

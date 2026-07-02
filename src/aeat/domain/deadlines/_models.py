@@ -24,8 +24,8 @@ from ...core.external_constants import (
     WORK_INCOME_MULTIPLE_PAGADORES_REDUCED_LIMIT_EUR_BY_YEAR,
 )
 from ..contribuyente import (
-    FiscalResidency,
     UE_EEA_COUNTRY_CODES,
+    FiscalResidency,
 )
 from ._errors import DeadlineValidationError
 

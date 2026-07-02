@@ -35,7 +35,12 @@ _COVERED = [
     ("111", 2025, "1T", date(2025, 4, 1)),  # retenciones trabajo
     ("115", 2025, "1T", date(2025, 4, 1)),  # retenciones arrendamientos
     ("200", 2025, "0A", date(2026, 7, 1)),  # sociedades (bracket-by-entity-type translated)
-    ("100", 2025, "0A", date(2025, 5, 1)),  # renta IRPF anual (age_at_year_end translated)
+    # M100 2025 is NOT covered: formula 0197 (Art. 85 renta inmobiliaria imputada,
+    # casillas 0083-0089) evaluates through the custom
+    # ``m100_resolve_renta_inmobiliaria_imputada`` op, which raises registry
+    # validation errors on out-of-range inputs and has no closed-form Sheets
+    # equivalent — the same closed-form gap as M210's ``irnr_resolve_tipo_gravamen``
+    # / ``m210_resolve_base_imponible``, neither of which is covered either.
 ]
 
 

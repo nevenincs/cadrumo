@@ -16,7 +16,7 @@
 
 [revisions."2025-y-siguientes".completeness_manifest]
 source_ref = "aeat-dr-202-2025"
-legal_refs = ["ley-27-2014:art-105", "ley-27-2014:art-25", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-40"]
+legal_refs = ["ley-27-2014:art-105", "ley-27-2014:art-25", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-40", "ley-27-2014:art-40-3", "ley-27-2014:da-14"]
 source_refs = ["aeat-dr-202-2025", "aeat-modelo-202-instructions"]
 
 [[revisions."2025-y-siguientes".completeness_manifest.casillas]]

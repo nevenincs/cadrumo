@@ -311,7 +311,7 @@ def test_m123_2019_2023_casilla_06_invariant_to_nperceptores_and_base() -> None:
 
 # ---------------------------------------------------------------------------
 # No-silent-under-declaration advisory: casilla 06 (base total) implies
-# casilla 09 (retenciones total) -- modelo-verify-nonzero-guards W01.P02.
+# casilla 09 (retenciones total) -- modelo verify nonzero guards.
 # ---------------------------------------------------------------------------
 
 

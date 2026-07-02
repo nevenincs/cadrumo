@@ -2,15 +2,15 @@
 
 Modelo 100 casilla ``0019`` ("Otros gastos deducibles") is the art. 19.2.f
 LIRPF automatic EUR 2.000 "otros gastos" deduction that the AEAT program
-applies for any contribuyente with rendimientos del trabajo. Prior to the
-``modelo-100-trabajo-casilla-compute`` ADR it was a bare MANUAL input in every
+applies for any contribuyente with rendimientos del trabajo. It was
+previously a bare MANUAL input in every
 revision 2021-2025, so a filer who left it blank was over-taxed by a
-determinable EUR 2.000 (issue #568). The net-trabajo formula ``0022`` carried
+determinable EUR 2.000. The net-trabajo formula ``0022`` carried
 no ``max(0, ...)`` clamp either, so an over-entry of the otros-gastos boxes drove
 the net rendimiento negative and the art. 19.2.f letter-f joint cap was
 unenforced.
 
-This gate asserts the two Phase-2a compute flips across all five in-scope
+This gate asserts the two compute flips across all five in-scope
 revisions:
 
 - ``0019 = min(2.000, max(0, 0018))`` — the EUR 2.000 auto-apply, capped at the

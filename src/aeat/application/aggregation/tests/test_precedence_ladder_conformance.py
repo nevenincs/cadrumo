@@ -1,8 +1,7 @@
 """Conformance: the caller-override guard sets are the declared precedence ladder.
 
-The calculate-path caller-override precedence ladder (aggregation-taxonomy ADR
-ruling D2) is declared once as ordered tier data,
-``CALLER_OVERRIDE_PRECEDENCE_LADDER`` in
+The calculate-path caller-override precedence ladder is declared once as
+ordered tier data, ``CALLER_OVERRIDE_PRECEDENCE_LADDER`` in
 :mod:`aeat.application.aggregation._source_mesh`. The two caller-override guard
 invocations in the calculate orchestrator consume the lock / carry source sets
 exported by :mod:`aeat.application.modelo._calculation_source_policy`, which are
@@ -10,11 +9,12 @@ DERIVED from that declaration via :func:`precedence_ladder_sources`.
 
 This gate binds the guard's sets to the declaration so the two cannot silently
 diverge: if the policy re-hand-lists a set, or the ladder's tier membership
-drifts from the ADR-frozen behaviour, one of these assertions fails. The frozen
-memberships asserted here are the aggregation-taxonomy behaviour W03 preserves
-(the deterministic ledger / invoice resolvers are LOCK; the carry sources —
-previous_filing, relation_prefill, iva-compensation annual partition — are
-CARRY); they are the behavioural anchor, not a restatement of the ladder literal.
+drifts from the frozen aggregation-taxonomy behaviour, one of these assertions
+fails. The frozen memberships asserted here are the aggregation-taxonomy
+behaviour this suite preserves (the deterministic ledger / invoice resolvers
+are LOCK; the carry sources — previous_filing, relation_prefill,
+iva-compensation annual partition — are CARRY); they are the behavioural
+anchor, not a restatement of the ladder literal.
 """
 
 from __future__ import annotations
@@ -65,30 +65,36 @@ def test_ladder_is_ordered_named_and_covers_both_dispositions() -> None:
 
 
 def test_frozen_disposition_membership_matches_aggregation_taxonomy() -> None:
-    """Behavioural anchor: the LOCK / CARRY memberships are the ADR-frozen sets.
+    """Behavioural anchor: the LOCK / CARRY memberships are the frozen sets.
 
     Deterministic bucket-owned resolvers (the ledger aggregations and the two
     invoice families) are caller-locked; the three carry sources are
     caller-overridable. A membership change here is behavioural drift, not a
-    representation change, and must be a conscious ADR update rather than an
-    accidental edit.
+    representation change, and must be a conscious, reviewed decision rather
+    than an accidental edit.
     """
-    assert frozenset(
-        {
-            BindingSourceKind.LEDGER_IVA_AGGREGATION,
-            BindingSourceKind.LEDGER_RENTA_EXPENSE_AGGREGATION,
-            BindingSourceKind.LEDGER_RENTA_INCOME_AGGREGATION,
-            BindingSourceKind.LEDGER_RENTA_GASTO_AGGREGATION,
-            BindingSourceKind.LEDGER_IMPATRIADO_INCOME_AGGREGATION,
-            BindingSourceKind.LEDGER_OSS_AGGREGATION,
-            BindingSourceKind.COLLECTIBLE_INVOICE,
-            BindingSourceKind.PAYABLE_INVOICE,
-        },
-    ) == BUCKET_AGGREGATION_LOCK_SOURCES
-    assert frozenset(
-        {
-            BindingSourceKind.PREVIOUS_FILING,
-            BindingSourceKind.RELATION_PREFILL,
-            BindingSourceKind.IVA_COMPENSATION_ANNUAL_PARTITION,
-        },
-    ) == CALLER_OVERRIDABLE_CARRY_SOURCES
+    assert (
+        frozenset(
+            {
+                BindingSourceKind.LEDGER_IVA_AGGREGATION,
+                BindingSourceKind.LEDGER_RENTA_EXPENSE_AGGREGATION,
+                BindingSourceKind.LEDGER_RENTA_INCOME_AGGREGATION,
+                BindingSourceKind.LEDGER_RENTA_GASTO_AGGREGATION,
+                BindingSourceKind.LEDGER_IMPATRIADO_INCOME_AGGREGATION,
+                BindingSourceKind.LEDGER_OSS_AGGREGATION,
+                BindingSourceKind.COLLECTIBLE_INVOICE,
+                BindingSourceKind.PAYABLE_INVOICE,
+            },
+        )
+        == BUCKET_AGGREGATION_LOCK_SOURCES
+    )
+    assert (
+        frozenset(
+            {
+                BindingSourceKind.PREVIOUS_FILING,
+                BindingSourceKind.RELATION_PREFILL,
+                BindingSourceKind.IVA_COMPENSATION_ANNUAL_PARTITION,
+            },
+        )
+        == CALLER_OVERRIDABLE_CARRY_SOURCES
+    )

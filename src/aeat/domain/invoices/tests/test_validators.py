@@ -64,7 +64,6 @@ def test_validate_spanish_tax_id_accepts_cif_digit_control(value: str) -> None:
     "value",
     [
         # body 1234567 → letter-control 'D' ("JABCDEFGHI"[4]).
-        "K1234567D",
         "P1234567D",
         "Q1234567D",
         "R1234567D",
@@ -74,7 +73,11 @@ def test_validate_spanish_tax_id_accepts_cif_digit_control(value: str) -> None:
     ],
 )
 def test_validate_spanish_tax_id_accepts_cif_letter_control(value: str) -> None:
-    """CIF leaders in KPQRSNW must require a letter control from the control table."""
+    """CIF leaders in PQRSNW must require a letter control from the control table.
+
+    ``K`` is excluded: it is a current-spec natural-person NIF prefix, not a
+    CIF kind letter (see ``aeat.core.identity._currentize klm nif validation``).
+    """
     assert validate_spanish_tax_id(value) == value
 
 

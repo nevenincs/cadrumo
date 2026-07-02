@@ -154,6 +154,34 @@ requires_snapshot = true
 legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "rd-439-2007:art-108", "orden-eha-3435-2007:anexo-v"]
 source_refs = ["boe-modelo-128-form-text", "boe-modelo-128-form-layout"]
 
+[[revisions."2019-y-siguientes".application_links]]
+id = "modelo-128-review"
+surface = "review"
+consumer = "aeat.application.filing.review"
+requires_snapshot = true
+legal_refs = ["orden-eha-3435-2007:anexo-v"]
+source_refs = ["aeat-modelo-128-procedure"]
+[[revisions."2019-y-siguientes".application_links]]
+id = "modelo-128-approval"
+surface = "approval"
+consumer = "aeat.application.workflow.approval"
+requires_snapshot = true
+legal_refs = ["orden-eha-3435-2007:anexo-v"]
+source_refs = ["aeat-modelo-128-procedure"]
+[[revisions."2019-y-siguientes".application_links]]
+id = "modelo-128-reconciliation"
+surface = "reconciliation"
+consumer = "aeat.application.reconciliation"
+requires_snapshot = true
+legal_refs = ["orden-eha-3435-2007:anexo-v"]
+source_refs = ["aeat-modelo-128-procedure"]
+[[revisions."2019-y-siguientes".application_links]]
+id = "modelo-128-workflow"
+surface = "workflow"
+consumer = "aeat.application.workflow"
+requires_snapshot = true
+legal_refs = ["orden-eha-3435-2007:anexo-v"]
+source_refs = ["aeat-modelo-128-procedure"]
 [[revisions."2019-y-siguientes".deadline_windows]]
 id = "modelo-128-2025-1t"
 filing_year = 2025
@@ -193,3 +221,11 @@ opens_on = 2026-01-01
 closes_on = 2026-01-21
 legal_refs = ["orden-eha-3435-2007:anexo-v"]
 source_refs = ["aeat-modelo-128-procedure"]
+
+[[revisions."2019-y-siguientes".constructs]]
+id = "modelo-128-calculation-construct"
+title = "Modelo 128 calculation construct"
+legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "rd-439-2007:art-108", "orden-eha-3435-2007:anexo-v"]
+source_refs = ["boe-modelo-128-form-text", "boe-modelo-128-form-layout", "aeat-modelo-128-procedure"]
+formulas = ["modelo-128-resultado-ingresar"]
+application_links = ["modelo-128-calculation", "modelo-128-deadline", "modelo-128-filing", "modelo-128-2019-y-siguientes-verification", "modelo-128-review", "modelo-128-approval", "modelo-128-reconciliation", "modelo-128-workflow"]

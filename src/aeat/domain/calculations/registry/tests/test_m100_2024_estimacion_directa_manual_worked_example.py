@@ -319,7 +319,7 @@ def test_0226_anti_tautology_modalidad_switch_changes_value() -> None:
 
 
 def test_0226_manual_grounding_is_enrolled_and_raises_independently_grounded_fraction() -> None:
-    """W2.3: the manual-oracle grounding of 0226 is enrolled, not just computed.
+    """The manual-oracle grounding of 0226 is enrolled, not just computed.
 
     A companion registry-honesty gate
     (``test_external_oracle_grounding_enrolled.py``) already proves the

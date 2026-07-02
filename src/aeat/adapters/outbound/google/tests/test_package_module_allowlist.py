@@ -25,6 +25,7 @@ _ALLOWED_MODULES: frozenset[str] = frozenset(
         "_api.py",
         "_calc_sheets_apply.py",
         "_calc_sheets_pull.py",
+        "_calc_sheets_support.py",  # shared modelo-130 registry snapshot fixture builder
         "_document_link_resolver.py",  # follow-up contract: scope-compatible Drive doclink resolution
         "_drive_media_server.py",  # contract: real local Drive media endpoint for resolver roundtrips
         "_errors.py",

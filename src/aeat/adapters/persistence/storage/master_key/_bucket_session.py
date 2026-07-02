@@ -209,6 +209,33 @@ class BucketSession:
             self._engine = get_engine(settings)
         return self._engine
 
+    def invalidate_engine(self) -> None:
+        """Drop this session's cached engine handle without sealing the session.
+
+        :meth:`acquire_engine` caches its resolved handle for the life of
+        the session, so a caller that destroys and later re-materialises
+        this bucket's on-disk database out from under a still-open session
+        (the profile-reset / bucket-removal path) must invalidate the
+        session-level cache too, or the next :meth:`acquire_engine` call
+        returns the stale handle bound to a directory that no longer
+        exists. This is the session-scoped counterpart of
+        :func:`~aeat.adapters.persistence.storage.sql.engine.dispose_engines_for_bucket`,
+        which only evicts the process-wide engine cache; callers that
+        remove a bucket directory while its session may still be active
+        must call both. A no-op when no engine has been acquired yet or
+        the session is already sealed.
+        """
+        if self._sealed or self._engine is None:
+            return
+        from ..sql.engine import dispose_engine_handle
+
+        engine = self._engine
+        self._engine = None
+        try:
+            dispose_engine_handle(engine)
+        except SQLAlchemyError as exc:
+            _log.debug("bucket session engine invalidation failed error_type=%s", type(exc).__name__)
+
     def close(self) -> None:
         """Zeroise key buffers, dispose the bucket's engine, and seal the session.
 

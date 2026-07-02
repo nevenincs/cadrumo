@@ -127,15 +127,14 @@ def test_modelo_100_2024_profile_family_rows_are_repeating_profile_collections()
 
 
 def test_modelo_100_2024_descendientes_minimos_aggregate_binding_is_wired() -> None:
-    """Regression for #515 Option A: the aggregate selector is a live, consumed binding.
+    """Regression: the descendientes-minimos aggregate selector is a live, consumed binding.
 
     ``renta-2024-profile-descendientes-minimos-aggregate`` used to select
     ``family.descendientes_minimos_aggregate_2024``, a profile-model attribute
     that :class:`~aeat.domain.contribuyente.family.RentaFamilyProfile` never
     declared (no formula or bound casilla consumed it either) -- a dangling
     selector per ``no-dormant-source-resolvers``. The Option B interim removed
-    the binding outright. Option A's computed engine (the
-    ``modelo-100-minimo-descendientes-engine`` ADR) retires the gap for real:
+    the binding outright. Option A's computed engine retires the gap for real:
     the user-profile schema field ``renta_family.descendientes_minimos_aggregate_2024``
     is now populated by
     :func:`~aeat.application.modelo.inject_derived_minimo_descendientes_facts`

@@ -32,11 +32,11 @@ import pytest
 from ....core import Period
 from ....domain.calculations.registry import (
     BindingId,
-    RegistryValidationError,
-    load_modelo_directory,
     resolve_ledger_impatriado_income_aggregation_binding_values,
     validate_ledger_impatriado_income_aggregation_binding_definition,
 )
+from ....domain.calculations.registry import RegistryValidationError
+from ....domain.calculations.registry import load_modelo_directory
 from ....domain.transactions import (
     BusinessClassification,
     RawProvenance,

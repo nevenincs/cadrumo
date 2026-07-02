@@ -528,6 +528,9 @@ def compute_prorrata_definitiva_anual(
     a single quarter's volume is a correctness defect (a single period computes
     neither the provisional nor the annual-regularised percentage), so the
     definitive percentage MUST come from the full-year rollup.
+
+    Returns:
+        The definitive :class:`ProrrataResult` for the year.
     """
     return compute_prorrata_general(
         inputs,

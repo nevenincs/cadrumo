@@ -15,6 +15,7 @@ source_refs = [
 ]
 formulas = [
     "renta-2024-trabajo-especie-importe-integro",
+    "renta-2024-trabajo-otros-gastos",
     "renta-2024-trabajo-rendimiento-neto",
     "renta-2024-trabajo-rendimiento-neto-previo",
     "renta-2024-trabajo-rendimiento-neto-reducido",

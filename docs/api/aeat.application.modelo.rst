@@ -39,6 +39,7 @@ Submodules
    aeat.application.modelo._iva_wallet_seed
    aeat.application.modelo._ledger_evidence_gate
    aeat.application.modelo._local_observation_actions
+   aeat.application.modelo._local_observation_spreadsheet
    aeat.application.modelo._m036_lifecycle
    aeat.application.modelo._m210_rate
    aeat.application.modelo._m303_m349_reconcile

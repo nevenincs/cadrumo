@@ -2,7 +2,7 @@
 
 Usage ratios carry business / personal split percentages. The encrypted
 :class:`Envelope`-wrapped persistence lives in the adapter
-(:mod:`aeat.adapters.persistence.profile.usage_ratios`); this module owns
+(:mod:`adapters.persistence.profile.usage_ratios`); this module owns
 only the persistence-substrate-free pieces: the secure-object key
 convention, the per-bucket read-modify-write lock, and the censo-derived
 HOME_OFFICE ratio computation.
@@ -90,7 +90,7 @@ def usage_ratio_bucket_lock(bucket_id: str) -> Iterator[None]:
     persists.
 
     This context manager acquires the project's OS-level
-    :func:`aeat.core.locks.exclusive_file_lock` on a per-bucket sidecar so the
+    :func:`core.locks.exclusive_file_lock` on a per-bucket sidecar so the
     whole load-modify-save runs under mutual exclusion. Because the lock is held
     across both the load and the save, concurrent writers serialise and every
     update survives — there is no silent overwrite. The lock is scoped to the

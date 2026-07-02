@@ -68,7 +68,7 @@ from aeat.domain.modelos._calculation_repository import CalculationRevisionCatal
 from aeat.domain.modelos._repository import WorkUnitCatalogueRepository
 from aeat.domain.transactions import TransactionCatalogueRepository
 from aeat.domain.user_profile import UserProfileFact, UserProfileRecord
-from aeat-tests.secure_sql import isolated_runtime_profile
+from aeat.tests.secure_sql import isolated_runtime_profile
 from aeat.application.user_profile import UserProfileLifecycleRepository
 from aeat.application.modelo import (
     calculate_modelo_revision_from_bucket_aggregation_with_diagnostics,

@@ -2155,6 +2155,16 @@ cli:
         verify_help: Verify a draft calculation revision against the verified-complete
           contract
         verify_selector_help: Draft revision selector (current, latest-draft, or explicit).
+        wizard_help: Walk the work unit's outstanding manual inputs one at a time,
+          in plain language, then calculate
+        wizard_prompt: Casilla %{number} (%{label})
+        wizard_relation_help: Fed by registry relation %{binding_id}; supply the cross-period
+          or cross-modelo value this relation carries.
+        wizard_retry_exhausted: 'The wizard could not resolve every calculation input after %{limit} follow-up prompts. Run `aeat app modelo work calculate` directly and supply the remaining --binding / --relation values by hand.'
+        wizard_saved: 'Saved as draft calculation revision %{revision_id} (state:
+          %{state}). It is persisted and can be resumed later; list revisions with
+          `aeat app modelo work revisions --modelo %{modelo} --year %{year} --period
+          %{period}` and re-inspect this one with `aeat app modelo work revision %{revision_id}`.'
         work_unit_id_help: Stable 64-character SHA-256 identifier of the work unit
         year_help: Tax year of the work unit (e.g. 2026)
         year_out_of_range: Filing year %{year} is out of range; supply a year between
@@ -2457,14 +2467,16 @@ cli:
         %{name} --yes' to confirm.
       delete_yes_help: Explicitly confirm the delete operation
       descendiente:
-        add_flag_help: 'NACIMIENTO=YYYY-MM-DD[,ADOPCION=YYYY-MM-DD][,DISCAPACIDAD=0|33|65][,CONVIVENCIA=true|false][,CUSTODIA=true|false][,MESES_TRABAJO=0..12][,GASTOS_GUARDERIA=N][,NIF=XXXXXXXXX]. Repeatable.'
-        add_help: 'Add one or more descendants to the active profile.'
-        help: 'Declare descendants for the Art. 58/61 LIRPF minimo por descendientes.'
-        index_out_of_range: 'Index %{index} is out of range; the profile has %{total} descendant(s).'
+        add_flag_help: NACIMIENTO=YYYY-MM-DD[,ADOPCION=YYYY-MM-DD][,DISCAPACIDAD=0|33|65][,CONVIVENCIA=true|false][,CUSTODIA=true|false][,MESES_TRABAJO=0..12][,GASTOS_GUARDERIA=N][,NIF=XXXXXXXXX].
+          Repeatable.
+        add_help: Add one or more descendants to the active profile.
+        help: Declare descendants for the Art. 58/61 LIRPF minimo por descendientes.
+        index_out_of_range: Index %{index} is out of range; the profile has %{total}
+          descendant(s).
         invalid_flag: 'The --descendiente flag %{flag} is invalid: %{detail}'
-        list_help: 'List descendants declared on the active profile.'
-        remove_help: 'Remove one descendant by 0-based index from the active profile.'
-        remove_index_help: '0-based index of the descendant to remove.'
+        list_help: List descendants declared on the active profile.
+        remove_help: Remove one descendant by 0-based index from the active profile.
+        remove_index_help: 0-based index of the descendant to remove.
       duplicate_display_name_help: Display name for the new profile (defaults to the
         target id)
       duplicate_help: Copy a profile under a new id and display name

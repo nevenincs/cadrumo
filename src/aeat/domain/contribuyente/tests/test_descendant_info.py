@@ -185,7 +185,7 @@ class TestRentaFamilyProfileDerivedProperties:
 # ---------------------------------------------------------------------------
 # Oracle tests — Art. 58/61 mínimo por descendientes engine (registry-authoritative)
 #
-# The modelo-100-minimo-descendientes-engine ADR resolved Art. 58.4 grounding:
+# The Art. 58.4 grounding is resolved:
 # no within-year birth/adoption temporal prorrateo exists in the LIRPF for
 # descendientes (Art. 58 has only the two numbered subsections above; Art. 61's
 # temporal rules cover only a mid-year death (norma 4a, unrelated to entry
@@ -249,7 +249,7 @@ class TestArt58MinimoDescendientesEstatalOracleCases:
     def test_oracle_late_year_birth_gets_full_annual_amount(self) -> None:
         """Descendant born 2024-07-01 (late in the ejercicio) gets the FULL annual amount.
 
-        Confirms the ADR's grounding resolution: Art. 58 declares no
+        Confirms the grounding resolution: Art. 58 declares no
         within-year birth-date cutoff, so a late-year birth is not halved.
         Age 0 at year-end is also menor-3 eligible, so the total stacks the
         1er-hijo tranche with the menor-3 supplement, both at full value.

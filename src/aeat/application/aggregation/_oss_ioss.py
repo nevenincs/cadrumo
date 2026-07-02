@@ -1,12 +1,12 @@
 """Modelo 369 OSS/IOSS source-mesh resolver and candidate validator.
 
 The ``ledger_oss_aggregation`` source projects OSS/IOSS-tagged issued invoices
-from the bucket's :class:`~aeat.domain.invoices.InvoiceCatalogueRepository` into
+from the bucket's :class:`~domain.invoices.InvoiceCatalogueRepository` into
 substrate-classified :class:`OssIossLedgerCandidate` rows. Pre-classified callers
 can also pass candidates directly. Each candidate is validated against the
 destination Member State's published IVA rate through
-:func:`aeat.domain.iva.lookup_rate` and becomes a registry-ready
-:class:`~aeat.domain.calculations.registry.OssIossLedgerObservation`.
+:func:`domain.iva.lookup_rate` and becomes a registry-ready
+:class:`~domain.calculations.registry.OssIossLedgerObservation`.
 
 Per the OSS / IOSS regulation suite, the IVA amount on each line MUST
 match the destination Member State's published rate for the chosen
@@ -85,7 +85,7 @@ class OssIossLedgerCandidate(BaseModel):
         invoice_direction: Whether the autónomo issued or received the
             invoice.
         transaction_kind: Substrate
-            :class:`aeat.domain.iva.TransactionKind` the line resolves
+            :class:`domain.iva.TransactionKind` the line resolves
             to.
         base_amount: Taxable base in EUR. Must be non-negative.
         iva_amount: IVA amount in EUR persisted on the ledger. Must

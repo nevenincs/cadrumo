@@ -144,7 +144,7 @@ def _profile_keys() -> tuple[ProfileKey, ...]:
 
 
 def profile_keys() -> tuple[ProfileKey, ...]:
-    """Return the full registered profile-key tuple, resolved at call time.
+    """Return the full registered :class:`ProfileKey` tuple, resolved at call time.
 
     Unlike the :data:`PROFILE_KEYS` module attribute (resolved once, at
     whatever moment a caller's ``from ... import PROFILE_KEYS`` statement

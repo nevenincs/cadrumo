@@ -210,6 +210,9 @@ def live_family_mutability() -> dict[str, OperatorMutability]:
     fresh on every call rather than caching a snapshot, so a manifest change
     (a family added, removed, or re-mounted) is observed immediately - the
     single-authority discipline D1 requires.
+
+    Returns:
+        A mapping of family child token to its :class:`OperatorMutability`.
     """
     contract = build_operator_surface_manifest(
         envelope_schema_version=ENVELOPE_SCHEMA_VERSION,

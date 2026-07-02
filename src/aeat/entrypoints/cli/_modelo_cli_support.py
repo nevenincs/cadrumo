@@ -53,6 +53,23 @@ from ._modelo_rendering import short_id
 
 _log = get_logger(__name__)
 
+#: Registry-validation translated-message keys that signal an unsatisfied
+#: calculation input the operator can supply with ``--binding`` / ``--relation``
+#: (or, on the guided ``work wizard`` path, an interactive follow-up prompt).
+#: Shared by ``_modelo.py`` (the ``work calculate`` missing-binding guidance)
+#: and ``_modelo_work_wizard_cli.py`` (the wizard's retry-on-missing-input
+#: loop), so the two surfaces agree on exactly which registry refusals are
+#: "ask the operator for one more value" versus every other refusal.
+MISSING_INPUT_TRANSLATED_MESSAGES: frozenset[str] = frozenset(
+    {
+        "errors.calc.binding_value_missing",
+        "errors.calc.bound_casilla_binding_value_missing",
+        "errors.calc.date_binding_value_missing",
+        "errors.calc.enum_binding_value_missing",
+        "errors.calc.relation_value_missing",
+    },
+)
+
 # Shared ``--output-language`` / ``--language`` option for all modelo work
 # commands. Centralised here so the five-line block does not repeat across
 # every command function in the _modelo_work_*_cli modules.
@@ -739,6 +756,7 @@ def resolve_default_actor() -> str:
 
 
 __all__ = [
+    "MISSING_INPUT_TRANSLATED_MESSAGES",
     "OutputLanguageOpt",
     "bad_parameter_from_error",
     "bad_parameter_from_localized_context",

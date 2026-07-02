@@ -150,7 +150,7 @@ def _scenario() -> ProfileConfirmationScenario:
 
 
 def test_confirmation_command_resolves_and_mutating_commands_are_non_read_only_on_the_live_manifest() -> None:
-    """Anti-hand-wave: the confirmation command is real and idempotent; mutating commands are not.
+    """Anti-rubber-stamp: the confirmation command is real and idempotent; mutating commands are not.
 
     Cross-checks ``_CONFIRMATION_COMMAND`` and ``_MUTATING_COMMANDS`` against the REAL MCP
     tool-descriptor classification (the same classification the ``PreToolUse`` confirmation

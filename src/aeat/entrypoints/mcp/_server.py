@@ -8,11 +8,13 @@ browser, and Anthropic integrations follow. The tool list, annotations, and the
 forbidden-live-write block are sourced from the SDK-independent core in this
 package; ``call_tool`` runs the deterministic CLI in a subprocess and returns its
 JSON envelope as structured content. Alongside the per-verb tools the server
-advertises the ``search`` / ``execute`` meta-tools and registers empty-but-valid
-prompt and resource handlers, so the ``prompts`` and ``resources`` capabilities
-are negotiated now and W02 can populate their bodies. :func:`build_server` owns
-that registration and is unit-tested against the real SDK without the stdio
-transport.
+advertises the ``search`` / ``execute`` meta-tools and the ``harness.load`` floor
+tool (the universal operating-layer channel of ADR R4), and serves the operating
+layer through real ``resources`` handlers - the concrete ``aeat://`` skill / rule
+/ persona set, the three ``aeat://<kind>/{name}`` templates, and a ``read``
+resolver. The ``prompts`` capability stays registered empty until W02.P04 (S14)
+populates it from ``_prompts.py``. :func:`build_server` owns that registration
+and is unit-tested against the real SDK without the stdio transport.
 
 Per D1 of ``2026-07-01-agent-harness-adr``, the server also enforces the
 persona-scoped tool boundary declared in ``_persona_scope.py``:
@@ -36,10 +38,22 @@ import subprocess
 import sys
 
 from ._dispatch import command_key_for_tool
+from ._harness_tools import (
+    HARNESS_LOAD_TOOL,
+    build_harness_floor_payload,
+    build_harness_floor_tool,
+    render_harness_floor_text,
+)
 from ._hitl import ConfirmationPolicy, confirmation_for_tool
 from ._input_schema import cli_argv_for
 from ._meta_tools import meta_execute, search_commands
 from ._persona_scope import AgentPersona, active_persona, is_tool_in_persona_scope
+from ._resources import (
+    HarnessResourceNotFoundError,
+    list_harness_resource_templates,
+    list_harness_resources,
+    read_harness_resource,
+)
 from ._tools import McpToolDescriptor, build_tool_descriptors
 
 _INSTALL_HINT = "the MCP server requires the agent extra: pip install 'aeat[agent]'"
@@ -238,24 +252,45 @@ def build_server(
         The configured :class:`mcp.server.Server`.
     """
     from mcp.server import Server
-    from mcp.types import CallToolResult, GetPromptResult, Prompt, Resource, TextContent, Tool
+    from mcp.server.lowlevel.helper_types import ReadResourceContents
+    from mcp.types import (
+        CallToolResult,
+        GetPromptResult,
+        Prompt,
+        Resource,
+        ResourceTemplate,
+        TextContent,
+        Tool,
+    )
+    from pydantic import AnyUrl
 
     scoped_descriptors = filter_descriptors_for_persona(descriptors, persona=persona)
     by_name = {descriptor.name: descriptor for descriptor in descriptors}
     sdk_tools = build_sdk_tools(scoped_descriptors)
     meta_tools = build_meta_sdk_tools()
+    floor_tool = build_harness_floor_tool()
 
     server: Server = Server(_SERVER_NAME)
 
     @server.list_tools()
     async def _list_tools() -> list[Tool]:
-        # TYPE-IGNORE-RATIONALE-SDK-TOOL-LIST: build_sdk_tools / build_meta_sdk_tools
-        # return the MCP SDK's real Tool type; the stub package this module
-        # type-checks against declares a narrower parameter type.
-        return [*sdk_tools, *meta_tools]  # type: ignore[list-item]
+        # TYPE-IGNORE-RATIONALE-SDK-TOOL-LIST: build_sdk_tools / build_meta_sdk_tools /
+        # build_harness_floor_tool return the MCP SDK's real Tool type; the stub
+        # package this module type-checks against declares a narrower parameter type.
+        # The harness.load floor tool is advertised first and is never persona-scoped
+        # away: per ADR R4 it is the universal operating-layer channel that must reach
+        # any client, including a minimal tools-only one.
+        return [floor_tool, *sdk_tools, *meta_tools]  # type: ignore[list-item]
 
     @server.call_tool()
     async def _call_tool(name: str, arguments: dict[str, object]) -> CallToolResult:
+        if name == HARNESS_LOAD_TOOL:
+            floor_payload = build_harness_floor_payload(persona=persona)
+            return CallToolResult(
+                content=[TextContent(type="text", text=render_harness_floor_text(floor_payload))],
+                structuredContent=floor_payload.model_dump(mode="json"),
+                isError=False,
+            )
         if name == _META_SEARCH_TOOL:
             results = search_commands(str(arguments.get("query", "") or ""), descriptors=descriptors)
             payload: dict[str, object] = {"results": [result.model_dump() for result in results]}
@@ -303,11 +338,10 @@ def build_server(
             isError=is_error,
         )
 
-    # Empty-but-valid prompt and resource handlers: registering them makes the
-    # server advertise the ``prompts`` and ``resources`` capabilities during
-    # negotiation; W02 populates the handler bodies with the operating-layer
-    # documents. Registering an empty ``list`` and a not-found ``get`` / ``read``
-    # is the minimal valid surface until then.
+    # Empty-but-valid prompt handlers: registering them makes the server
+    # advertise the ``prompts`` capability during negotiation; W02.P04 (S14)
+    # populates their bodies from ``_prompts.py``. Registering an empty ``list``
+    # and a not-found ``get`` is the minimal valid surface until then.
     @server.list_prompts()
     async def _list_prompts() -> list[Prompt]:
         return []
@@ -316,13 +350,41 @@ def build_server(
     async def _get_prompt(name: str, arguments: dict[str, str] | None = None) -> GetPromptResult:
         raise ValueError(f"unknown prompt: {name}")
 
+    # Operating-layer resource channel (ADR R4): the concrete ``aeat://`` resource
+    # set and the three ``aeat://<kind>/{name}`` templates are derived from the
+    # shipped harness tree in ``_resources.py``; ``read`` resolves a URI to the
+    # document text as ``text/markdown``.
     @server.list_resources()
     async def _list_resources() -> list[Resource]:
-        return []
+        return [
+            Resource(
+                uri=AnyUrl(ref.uri),
+                name=ref.name,
+                description=ref.description,
+                mimeType=ref.mime_type,
+            )
+            for ref in list_harness_resources()
+        ]
+
+    @server.list_resource_templates()
+    async def _list_resource_templates() -> list[ResourceTemplate]:
+        return [
+            ResourceTemplate(
+                uriTemplate=template.uri_template,
+                name=template.name,
+                description=template.description,
+                mimeType=template.mime_type,
+            )
+            for template in list_harness_resource_templates()
+        ]
 
     @server.read_resource()
-    async def _read_resource(uri: object) -> str:
-        raise ValueError(f"unknown resource: {uri}")
+    async def _read_resource(uri: AnyUrl) -> list[ReadResourceContents]:
+        try:
+            content = read_harness_resource(str(uri))
+        except HarnessResourceNotFoundError as exc:
+            raise ValueError(str(exc)) from exc
+        return [ReadResourceContents(content=content.text, mime_type=content.ref.mime_type)]
 
     return server
 

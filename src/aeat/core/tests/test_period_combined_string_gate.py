@@ -181,7 +181,7 @@ ALLOWLIST: tuple[AllowlistRule, ...] = (
     ),
     AllowlistRule(
         path=_path(
-            r"^src/aeat/application/modelo/tests/test_(?:export|history|iva_wallet_engine_integration|iva_wallet_engine_overrides|justificante_reconcile_from_persisted|participation_co_emission|reconcile|reconciliation_history|revision_id_d1_contract|simplificado_ledger_bypass)\.py$"
+            r"^src/aeat/application/modelo/tests/test_(?:export|history|iva_wallet_engine_integration|iva_wallet_engine_overrides|justificante_reconcile_from_persisted|participation_co_emission|reconcile|reconcile_value_comparison|reconciliation_history|revision_id_d1_contract|simplificado_ledger_bypass)\.py$"
         ),
         reason="modelo workflow tests preserve external work-unit, justificante, and review labels",
     ),
@@ -300,6 +300,18 @@ ALLOWLIST: tuple[AllowlistRule, ...] = (
         path=_path(r"^docs/how-to/(?:quickstart|modelo-390)\.md$"),
         reason="docs preserve justificante/export filename examples, not period input grammar",
         pattern_names=frozenset({"year-qualified quarterly token"}),
+    ),
+    AllowlistRule(
+        path=_path(r"^src/aeat/entrypoints/cli/tests/test_app_quickfile\.py$"),
+        reason="quickfile invoice tests use an opaque operator-facing invoice_number display label, not a period input",
+        pattern_names=frozenset({"year-qualified quarterly token"}),
+        text=_text(r"invoice_number="),
+    ),
+    AllowlistRule(
+        path=_path(r"^src/aeat/entrypoints/cli/tests/test_modelo_(?:kv_format_localization|state_text_labels)\.py$"),
+        reason="work-unit fixtures use an opaque display-name label, not a period input",
+        pattern_names=frozenset({"year-qualified quarterly token"}),
+        text=_text(r"name="),
     ),
 )
 

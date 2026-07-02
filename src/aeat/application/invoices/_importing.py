@@ -189,7 +189,7 @@ def _decode_invoice_payload(raw: str) -> tuple[InvoiceRowPayload, ...]:
     )
 
 
-def _reject_top_level_iva_rate(payload: Mapping[str, Any]) -> None:
+def _reject_top_level_iva_rate(payload: Mapping[str, object]) -> None:
     if "iva_rate" not in payload:
         return
     raise InvoiceValidationError(

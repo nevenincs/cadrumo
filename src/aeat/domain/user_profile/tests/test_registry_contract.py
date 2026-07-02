@@ -34,6 +34,28 @@ def test_schema_selector_index_contains_modelo_profile_namespaces() -> None:
     assert "profile_tax_id" in index.export_headers
 
 
+@pytest.mark.parametrize("year", (2021, 2022, 2023))
+def test_modelo_100_anualidades_selector_is_declared_for_each_separate_escala_year(year: int) -> None:
+    schema = load_user_profile_schema()
+    selector = f"renta_family.anualidades_sin_minimo_descendientes_{year}"
+
+    assert selector in schema.field_paths
+    assert selector in build_user_profile_selector_index(schema).profile_selectors
+
+
+@pytest.mark.parametrize("year", (2021, 2022, 2023))
+def test_missing_modelo_100_anualidades_selector_is_rejected_for_each_year(year: int) -> None:
+    schema = load_user_profile_schema()
+    model = resources().modelos.authority.modelo("100")
+    broken_schema = _schema_without_field(schema, f"renta_family.anualidades_sin_minimo_descendientes_{year}")
+
+    report = validate_user_profile_registry_contract((model,), broken_schema)
+
+    selector = f"renta_family.anualidades_sin_minimo_descendientes_{year}"
+    assert not report.valid
+    assert any(issue.selector == selector for issue in report.errors), selector
+
+
 def test_profile_binding_selectors_is_public_and_deduplicates_supported_selector_forms() -> None:
     selectors = profile_binding_selectors(
         {
@@ -101,3 +123,15 @@ def test_user_profile_imports_before_registry_barrel() -> None:
     )
 
     assert result.returncode == 0, result.stderr
+
+
+def _schema_without_field(schema, path: str):
+    section_key, field_key = path.split(".", 1)
+    sections = []
+    for section in schema.sections:
+        if section.key != section_key:
+            sections.append(section)
+            continue
+        fields = tuple(field for field in section.fields if field.key != field_key)
+        sections.append(section.model_copy(update={"fields": fields}))
+    return schema.model_copy(update={"sections": tuple(sections)})

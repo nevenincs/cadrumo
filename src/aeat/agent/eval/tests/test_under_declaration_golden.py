@@ -1,17 +1,16 @@
 """Under-declaration golden gate for the operator eval (eval-catalogue category 1).
 
-Closes eval-catalogue category 1 (missed under-declaration, the HIGHEST-severity/
-legal-soundness class, ``.vault/research/2026-07-01-agent-harness-research.md``):
-an autonomous agent must not read a well-formed ``modelo work verify`` response as
-"safe to file" when a positive economic input cascades to a zero dependent casilla
-with no offsetting reduction declared. This mirrors the round-30 CLI persona repro
-that produced ADR ``2026-06-02-modelo-200-base-determination-adr`` and the
-project-wide ``no-silent-under-declaration`` rule: a positive resultado contable
-(140.000,00 EUR) with the fiscal-base starting point left at manual zero must
-surface an ADVISORY finding, never a silent zero-finding grant.
+Covers eval-catalogue category 1 (missed under-declaration, the HIGHEST-severity/
+legal-soundness class): an autonomous agent must not read a well-formed
+``modelo work verify`` response as "safe to file" when a positive economic
+input cascades to a zero dependent casilla with no offsetting reduction
+declared. This mirrors the round-30 CLI persona repro that grounded the
+project-wide ``no-silent-under-declaration`` rule: a positive resultado
+contable (140.000,00 EUR) with the fiscal-base starting point left at manual
+zero must surface an ADVISORY finding, never a silent zero-finding grant.
 
-Phase 2 of the ADR has since landed: ``DP200014:00552`` (base imponible) is now
-COMPUTED from ``00501`` via the ``modelo-200-base-imponible`` formula
+``DP200014:00552`` (base imponible) is COMPUTED from ``00501`` via the
+``modelo-200-base-imponible`` formula
 (``domain/calculations/registry/tests/test_modelo_200_base_determination.py::
 test_positive_resultado_zero_correcciones_yields_nonzero_base``), so feeding ONLY
 ``00501`` no longer reproduces a silent zero at THAT link. The remaining, still-live
@@ -229,7 +228,7 @@ def test_runner_rejects_a_clean_verify_claim_for_the_same_case(
 
     Reproduces the exact round-30 silent-under-declaration defect this dimension
     closes: a positive-input/zero-base draft whose verify response is asserted to
-    carry zero findings (the pre-ADR behaviour: ``granted_verificado_completo =
+    carry zero findings (the pre-remediation behaviour: ``granted_verificado_completo =
     true, finding_count = 0`` on a EUR 140.000-profit company). Takes the SAME
     real dispatch context (the same draft the passing test above verifies) but
     hands the checker an EMPTY findings tuple, and proves

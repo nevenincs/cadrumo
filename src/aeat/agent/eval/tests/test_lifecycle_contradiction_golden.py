@@ -191,7 +191,7 @@ def _scenario() -> ContradictionScenario:
 
 
 def test_mutating_commands_are_confirmed_non_read_only_on_the_live_manifest() -> None:
-    """Anti-hand-wave: every declared mutating command genuinely resolves non-read-only.
+    """Anti-rubber-stamp: every declared mutating command genuinely resolves non-read-only.
 
     Cross-checks ``_MUTATING_COMMANDS`` against the REAL MCP tool-descriptor mutability
     classification (the same classification the ``PreToolUse`` confirmation gate reads

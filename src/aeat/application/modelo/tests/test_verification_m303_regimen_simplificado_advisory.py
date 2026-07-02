@@ -1,6 +1,6 @@
 """M303 régimen simplificado silent-under-declaration verification advisory tests.
 
-Phase 1 (2026-07-01-modelo-303-regimen-simplificado-adr, Option C) of the
+The first slice (Option C) of the
 modulos-based IVA cuota engine: casillas 47-58 (the régimen simplificado
 apartado, LIVA arts. 122-124) are all authored ``input_kind = "manual"`` with
 no binding or formula, so an estimación-objetiva filer who declares the 1T-3T
@@ -20,9 +20,9 @@ import pytest
 from ....core.resources import resources
 from ....domain.calculations.registry import (
     CasillaId,
-    VerificationPredicateDefinition,
     validated_casilla_id,
 )
+from ....domain.calculations.registry import VerificationPredicateDefinition
 from ....domain.modelos import (
     ModeloVerificationFindingKind,
     ModeloVerificationFindingSeverity,

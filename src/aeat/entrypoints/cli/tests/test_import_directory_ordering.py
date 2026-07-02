@@ -1,6 +1,6 @@
 """Regression: the ledger-import directory scan feeds sorted, deterministic order.
 
-Decision 3 of the determinism-replay-residual ADR: a directory scan that feeds
+A directory scan that feeds
 ordered output (here, the order statement files are imported, which affects
 created-row order) must be sorted at the boundary rather than left in
 OS-dependent ``iterdir`` order. ``_resolve_import_paths`` already sorts; this gate

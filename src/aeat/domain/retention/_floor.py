@@ -156,6 +156,9 @@ def assess_retention_floor(
     A record is retained (blocking) when ``as_of`` precedes its
     :func:`earliest_safe_erase_date`. A record whose window has elapsed is safe
     to erase and is excluded from the assessment's ``retained`` set.
+
+    Returns:
+        The :class:`RetentionFloorAssessment` for ``records``.
     """
     retained: list[RetentionBlockingRecord] = []
     for record in records:

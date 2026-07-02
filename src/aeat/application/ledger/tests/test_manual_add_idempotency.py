@@ -247,7 +247,7 @@ def test_keyed_retry_is_clock_free_across_boundary_timestamps(secure_objects: Se
 
 
 def test_manual_row_carries_content_fingerprint_surviving_reload(secure_objects: SecureObjectRepository) -> None:
-    """Roundtrip a created manual row's content fingerprint across the encrypted boundary (P02.S05, P05.S16).
+    """Roundtrip a created manual row's content fingerprint across the encrypted boundary.
 
     Strengthened beyond a presence check: the full row is compared for strict
     equality across a FRESH repository over the same store (so the non-default

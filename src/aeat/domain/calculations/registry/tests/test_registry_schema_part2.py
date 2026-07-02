@@ -475,7 +475,7 @@ def test_validator_accepts_committed_m210_casilla_equals_implies_nonzero_predica
 
     Pins that the registry-build validator accepts the new operator's mixed
     casilla-id/literal/casilla-id argument shape for the predicate the
-    m210-categorical-conditional-predicate ADR authored
+    m210 categorical-conditional predicate decision authored
     (modelo-210-2025-inmobiliaria-implica-base-imponible, expression
     casilla_equals_implies_nonzero(["tipo_renta", "inmobiliaria",
     "base_imponible"])). A future operator-set reduction that drops
@@ -649,30 +649,25 @@ def test_validator_rejects_advisory_when_positive_unknown_casilla() -> None:
         RegistryValidator(catalogues, source_root=bundled_path()).validate_modelo(_with_revision(modelo, mutated))
 
 
-def test_validator_accepts_committed_m100_advisory_when_positive_predicate() -> None:
-    """The committed M100 anualidades cuota-review advisory validates cleanly.
+def test_committed_m100_anualidades_advisory_retired_after_separate_escala_compute() -> None:
+    """The interim M100 anualidades cuota-review advisory is retired on 2024/2025 (#532).
 
-    Pins that the registry-build validator accepts the single-casilla
-    advisory_when_positive shape shipped on the 2024 and 2025 M100 revisions
-    (LIRPF art. 64 / art. 75 anualidades separate-escala review advisory,
-    interim to issue #532). A future operator-set reduction that drops
-    advisory_when_positive from the known set would surface here.
+    The LIRPF art. 64 / art. 75 anualidades separate-escala détermination now
+    computes the correct cuota (escala(0527)+escala(0505-0527) minus
+    escala(mínimo+1.980), floored at 0), superseding the interim
+    advisory_when_positive(["0527"]) safeguard. Pins that the predicate is gone
+    from both revisions so it cannot silently re-appear alongside the compute,
+    and that the registry still validates cleanly without it.
     """
 
     modelo, catalogues = _committed_modelo("100")
     for year in ("2024", "2025"):
-        predicate = next(
-            p
-            for p in modelo.revisions[year].verification_predicates
-            if p.predicate_id == f"modelo-100-{year}-anualidades-alimentos-hijos-revisar-cuota-escala-separada"
+        predicate_ids = {p.predicate_id for p in modelo.revisions[year].verification_predicates}
+        assert f"modelo-100-{year}-anualidades-alimentos-hijos-revisar-cuota-escala-separada" not in predicate_ids, (
+            f"the interim anualidades advisory must stay retired on the {year} revision now the compute has landed"
         )
-        assert predicate.expression == 'advisory_when_positive(["0527"])'
-        assert predicate.finding_kind == "ADVISORY"
-        legal_refs = tuple(str(r) for r in predicate.legal_refs)
-        assert "ley-35-2006:art-64" in legal_refs
-        assert "ley-35-2006:art-75" in legal_refs
 
-    # No mutation — committed M100 carries the predicate on both revisions.
+    # The committed M100 revisions validate cleanly with the advisory retired.
     RegistryValidator(catalogues, source_root=bundled_path()).validate_modelo(modelo)
 
 
@@ -965,19 +960,47 @@ def test_validator_requires_reconciliation_total_to_be_computed() -> None:
         RegistryValidator(catalogues, source_root=bundled_path()).validate_modelo(_with_revision(modelo, mutated))
 
 
+def _corrupt_first_ccaa_dispatch(expression: object, bad_parameter: str) -> tuple[object, bool]:
+    """Return a copy of *expression* with the first lookup_bracket_by_ccaa's
+    dispatch_table pointing 'madrid' at *bad_parameter*.
+
+    From the 2024/2025 M100 revisions the autonomic escala formula wraps its
+    lookup_bracket_by_ccaa operators in the LIRPF art. 64/75 separate-escala
+    if_then_else predicate (#532), so the dispatch leaf is no longer at the top
+    level; the tree is walked to corrupt the first reachable dispatch table.
+    """
+    if getattr(expression, "op", None) == "lookup_bracket_by_ccaa":
+        leaf = expression.args[2]
+        mutated_dispatch = {**leaf.dispatch_table, "madrid": bad_parameter}
+        mutated_leaf = leaf.model_copy(update={"dispatch_table": mutated_dispatch})
+        mutated_args = (expression.args[0], expression.args[1], mutated_leaf)
+        return expression.model_copy(update={"args": mutated_args}), True
+    new_args = []
+    changed = False
+    for arg in getattr(expression, "args", ()) or ():
+        if not changed:
+            new_arg, did = _corrupt_first_ccaa_dispatch(arg, bad_parameter)
+            new_args.append(new_arg)
+            changed = changed or did
+        else:
+            new_args.append(arg)
+    if changed:
+        return expression.model_copy(update={"args": tuple(new_args)}), True
+    return expression, False
+
+
 def test_validator_rejects_dispatch_table_referencing_unknown_parameter() -> None:
     """The lookup_bracket_by_ccaa dispatch_table leaf must resolve every value
     to a declared parameter; otherwise the registry would only fault at runtime."""
     modelo, catalogues = _committed_modelo("100")
     revision = modelo.revisions["2025"]
     formula = next(item for item in revision.formulas if item.target_casilla_id == "0529")
-    dispatch_leaf = formula.expression.args[2]
-    assert dispatch_leaf.dispatch_table is not None, "fixture must expose a dispatch_table leaf"
+    mutated_expression, corrupted = _corrupt_first_ccaa_dispatch(
+        formula.expression,
+        "renta-2025-not-a-declared-parameter",
+    )
+    assert corrupted, "fixture must expose a dispatch_table leaf"
 
-    mutated_dispatch = {**dispatch_leaf.dispatch_table, "madrid": "renta-2025-not-a-declared-parameter"}
-    mutated_leaf = dispatch_leaf.model_copy(update={"dispatch_table": mutated_dispatch})
-    mutated_args = (formula.expression.args[0], formula.expression.args[1], mutated_leaf)
-    mutated_expression = formula.expression.model_copy(update={"args": mutated_args})
     mutated_formula = formula.model_copy(update={"expression": mutated_expression})
     mutated_formulas = tuple(mutated_formula if item.id == formula.id else item for item in revision.formulas)
     mutated_revision = revision.model_copy(update={"formulas": mutated_formulas})

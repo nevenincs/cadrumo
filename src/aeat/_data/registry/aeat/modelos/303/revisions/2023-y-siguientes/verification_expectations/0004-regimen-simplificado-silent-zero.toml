@@ -29,3 +29,27 @@ predicate_id = "modelo-303-regimen-simplificado-cuota-determinada-cuando-ingreso
 expression = 'implies_nonzero(["47", "48"])'
 finding_kind = "ADVISORY"
 legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123"]
+
+# Table-driven-engine-vs-operator-declared discrepancy (M303 régimen-
+# simplificado de IVA módulos engine, Phase 2,
+# 2026-07-01-modelo-303-regimen-simplificado-adr). Casilla 48 ("RS - 4T -
+# Suma cuotas derivadas régimen simplificado conjunto actividades") stays a
+# manual operator input; for a tabled IAE activity (see
+# parameters/0001-modulos-coeficientes.toml for the current phased coverage)
+# the units×coefficient engine now produces a computed reference figure
+# (modulos-iva-cuota-derivada, cuota devengada por operaciones corrientes
+# menos el 1 por ciento de difícil justificación, con el suelo de la cuota
+# mínima). When the engine has coverage (computed casilla > 0) and the
+# operator's declared casilla 48 differs from it by more than one cent, this
+# ADVISORY prompts a review — it does not assume the engine is authoritative
+# over the operator's declared figure (real cuotas soportadas por
+# adquisiciones concretas, which the taxpayer may legitimately claim beyond
+# the 1 por ciento forfait, are intentionally not modelled yet), so it stays
+# a prompt, never a BLOCKING_RULE. Mirrors the M131 estimación-objetiva
+# módulos engine advisory
+# (modelo-131-2025-modulos-computed-diverges-de-c01).
+[[revisions.2023-y-siguientes.verification_predicates]]
+predicate_id = "modelo-303-2023-modulos-iva-computed-diverges-de-c48"
+expression = 'advisory_when_computed_diverges(["48", "modulos-iva-cuota-derivada"])'
+finding_kind = "ADVISORY"
+legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123", "orden-hac-1347-2024:anexo-i-iva-instrucciones"]

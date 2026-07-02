@@ -25,13 +25,14 @@ import pytest
 
 from ....core.config import override_settings
 from ....core.external_constants import OUTPUT_LANGUAGE_ENV_VAR
-from ....core.i18n import SUPPORTED_OUTPUT_LANGUAGES, clear_output_language_cache, tr
+from ....core.i18n import SUPPORTED_OUTPUT_LANGUAGES, tr
+from ....core.i18n import clear_output_language_cache
 from ....tests.env_scope import scoped_env_var
 from ....tests.secure_sql import isolated_sessionless_storage_root
 from .._catalogue import SETUP_FLOW
 from .._commands import _SETUP_OPTION_INFOS
 
-pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
+pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
 
 _TITLE_KEY = str(SETUP_FLOW.title)
 _PROMPT_KEY = str(SETUP_FLOW.sections[0].questions[0].prompt)

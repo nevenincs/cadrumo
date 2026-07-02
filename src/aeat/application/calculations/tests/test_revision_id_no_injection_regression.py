@@ -50,6 +50,13 @@ _BENIGN_EXEMPTIONS: frozenset[str] = frozenset(
         #    by the structural non-overlap property the pin either equals the
         #    law-determined revision or the run refuses.
         "domain/calculations/registry/_scenarios.py",
+        # 4. Registry-derived enumeration: the referential-integrity preflight
+        #    probe builds a snapshot for EVERY revision of EVERY bundled modelo,
+        #    pinning each revision.id to itself while iterating
+        #    authority.modelos / modelo.revisions.values() directly. The pin is
+        #    consistent-by-construction (it names the very revision the loop is
+        #    on), never a stored/operator-supplied value.
+        "application/preflight.py",
     },
 )
 

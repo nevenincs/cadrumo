@@ -60,12 +60,16 @@ read-only: it is the zeroth move, not a pipeline phase, and produces no artifact
   or MCPs
 - `vaultspec-core spec mcps status --json` - verify MCP config health
 - `vaultspec-core spec system show` - inspect the assembled system prompt
-- `vaultspec-core sync` - propagate edits under `.vaultspec/rules/...`
+- `vaultspec-core sync` - propagate edits under `.vaultspec/...`
 - `vaultspec-core spec doctor` - diagnose overall workspace health
 - `vaultspec-core migrations status` / `vaultspec-core migrations run` - inspect or run
   pending schema migrations
 - `vaultspec-core vault feature archive <tag>` - archive a feature so it no longer
   exists in the active project
+- `vaultspec-core vault feature rename <old> <new>` - rename a feature tag across every
+  binding surface (document filenames, the exec folder, the `#feature` tag, `related:`
+  wiki-links, and the regenerated feature index); rolls back on failure during apply,
+  and `--force` merges the source into an existing target feature
 - `vaultspec-core vault rule promote --from <audit-stem> --as <rule-name>` - promote an
   audit finding to a project rule
 
@@ -96,9 +100,9 @@ propagation command after source-side changes.
 Permitted:
 
 - Edit body prose of a `.vault/` document scaffolded by `vaultspec-core vault add`.
-- Edit source files under `.vaultspec/rules/rules/`, `.vaultspec/rules/skills/`,
-  `.vaultspec/rules/agents/`, `.vaultspec/rules/hooks/`, or `.vaultspec/rules/mcps/`,
-  then run `vaultspec-core sync`.
+- Edit source files under `.vaultspec/rules/`, `.vaultspec/skills/`,
+  `.vaultspec/agents/`, `.vaultspec/hooks/`, or `.vaultspec/mcps/`, then run
+  `vaultspec-core sync`.
 
 Forbidden:
 
@@ -108,6 +112,6 @@ Forbidden:
 
 ## References
 
-- `.vaultspec/rules/reference/cli.md` - locally-resident machine-facing CLI reference:
-  command inventory, options, argument enumerations, exit codes, and environment
-  variables. Read this first; no network round-trip needed.
+- `.vaultspec/reference/cli.md` - locally-resident machine-facing CLI reference: command
+  inventory, options, argument enumerations, exit codes, and environment variables. Read
+  this first; no network round-trip needed.

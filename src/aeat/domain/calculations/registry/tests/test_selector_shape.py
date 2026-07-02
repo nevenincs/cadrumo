@@ -121,6 +121,7 @@ def test_binding_selector_registry_covers_typed_sources() -> None:
         BindingSourceKind.LEDGER_RENTA_EXPENSE_AGGREGATION,
         BindingSourceKind.LEDGER_RENTA_INCOME_AGGREGATION,
         BindingSourceKind.LEDGER_RENTA_GASTO_AGGREGATION,
+        BindingSourceKind.LEDGER_IMPATRIADO_INCOME_AGGREGATION,
         BindingSourceKind.RETENCIONES_AGGREGATION,
         BindingSourceKind.WITHHOLDING,
         BindingSourceKind.RELATED_PARTY_OPERATION,

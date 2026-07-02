@@ -1,10 +1,9 @@
 """Modelo 131 módulos-engine-vs-declared-C01 ADVISORY predicate.
 
-Phase 1 of the estimación-objetiva módulos engine
-(``2026-07-01-modelo-131-eo-modulos-engine-adr``) keeps casilla 01 ("Suma de
-rendimientos netos") a manual operator input while wiring a computed
-reference figure (``modulos-rendimiento-neto-actividad``) for a bounded
-first-slice of tabled IAE activities. The
+The first slice of the estimación-objetiva módulos engine keeps casilla 01
+("Suma de rendimientos netos") a manual operator input while wiring a
+computed reference figure (``modulos-rendimiento-neto-actividad``) for a
+bounded first-slice of tabled IAE activities. The
 ``advisory_when_computed_diverges(["01", "modulos-rendimiento-neto-actividad"])``
 predicate surfaces a discrepancy between the two without ever blocking the
 filing — the computed reference intentionally omits fases 2ª/3ª correcting

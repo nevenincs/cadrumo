@@ -14,6 +14,7 @@ from pathlib import Path
 
 from pydantic import BaseModel, ConfigDict, Field
 
+from ..core.external_constants import UTF_8_ENCODING as _UTF_8
 from . import harness_root, iter_operator_rules, iter_personas
 
 _STRICT_FROZEN = ConfigDict(frozen=True, strict=True, validate_assignment=True, extra="forbid")
@@ -32,7 +33,7 @@ class WorkspaceManifest(BaseModel):
 
 def _write(dest_dir: Path, name: str, text: str) -> None:
     dest_dir.mkdir(parents=True, exist_ok=True)
-    (dest_dir / name).write_text(text, encoding="utf-8")
+    (dest_dir / name).write_text(text, encoding=_UTF_8)
 
 
 def materialise_workspace(output_dir: Path) -> WorkspaceManifest:
@@ -47,13 +48,13 @@ def materialise_workspace(output_dir: Path) -> WorkspaceManifest:
     rules_dir = output_dir / "rules"
     rules = 0
     for rule in iter_operator_rules():
-        _write(rules_dir, rule.name, rule.read_text(encoding="utf-8"))
+        _write(rules_dir, rule.name, rule.read_text(encoding=_UTF_8))
         rules += 1
 
     personas_dir = output_dir / "personas"
     personas = 0
     for persona in iter_personas():
-        _write(personas_dir, persona.name, persona.read_text(encoding="utf-8"))
+        _write(personas_dir, persona.name, persona.read_text(encoding=_UTF_8))
         personas += 1
 
     skills = 0
@@ -80,8 +81,8 @@ def _copy_skill(skill_dir: Traversable, dest_dir: Path) -> None:
     """
     for child in skill_dir.iterdir():
         if child.is_file():
-            _write(dest_dir, child.name, child.read_text(encoding="utf-8"))
+            _write(dest_dir, child.name, child.read_text(encoding=_UTF_8))
         elif child.is_dir():
             for leaf in child.iterdir():
                 if leaf.is_file():
-                    _write(dest_dir / child.name, leaf.name, leaf.read_text(encoding="utf-8"))
+                    _write(dest_dir / child.name, leaf.name, leaf.read_text(encoding=_UTF_8))

@@ -1,21 +1,20 @@
-"""Pinning tests for the D1 persona-scoped tool boundary.
+"""Pinning tests for the persona-scoped tool boundary.
 
-Per ``2026-07-01-agent-harness-adr`` decision D1, the persona -> ``(family,
-mutability)`` declaration in ``_persona_scope.py`` is not itself the source of
-truth - the live operator-surface manifest is. These tests assert every
-declared persona scope still RESOLVES against the live manifest, so a manifest
-change (a family renamed, retired, or its mutability changed) fails here
-loudly instead of silently widening or narrowing a stale persona boundary.
+The persona -> ``(family, mutability)`` declaration in ``_persona_scope.py``
+is not itself the source of truth - the live operator-surface manifest is.
+These tests assert every declared persona scope still RESOLVES against the
+live manifest, so a manifest change (a family renamed, retired, or its
+mutability changed) fails here loudly instead of silently widening or
+narrowing a stale persona boundary.
 
 Every family named below already exists on the live manifest at HEAD (verified
 by ``test_every_declared_family_resolves_against_the_live_manifest``), so no
-persona scope is pending on the in-flight Track-1 ``#1`` manifest-completeness
-brief today. If a future persona document names a family the manifest does not
-yet expose, that gap must be visible as a named, commented pending item in
-``_persona_scope.py`` (never a bare ``xfail``/``skip``) and this test module
-must assert against the FAMILIES THE CONTRACT CURRENTLY EXPOSES, carving the
-pending family out explicitly with a comment - not weakening the assertion for
-every family.
+persona scope is pending today. If a future persona document names a family
+the manifest does not yet expose, that gap must be visible as a named,
+commented pending item in ``_persona_scope.py`` (never a bare
+``xfail``/``skip``) and this test module must assert against the FAMILIES THE
+CONTRACT CURRENTLY EXPOSES, carving the pending family out explicitly with a
+comment - not weakening the assertion for every family.
 """
 
 from __future__ import annotations

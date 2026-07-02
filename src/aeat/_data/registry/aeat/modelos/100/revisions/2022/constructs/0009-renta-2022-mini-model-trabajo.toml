@@ -13,6 +13,7 @@ source_refs = [
 ]
 formulas = [
     "renta-2022-trabajo-especie-importe-integro",
+    "renta-2022-trabajo-otros-gastos",
     "renta-2022-trabajo-rendimiento-neto",
     "renta-2022-trabajo-rendimiento-neto-previo",
     "renta-2022-trabajo-rendimiento-neto-reducido",

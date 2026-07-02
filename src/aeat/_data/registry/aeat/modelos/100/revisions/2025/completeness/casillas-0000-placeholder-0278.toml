@@ -323,6 +323,30 @@ casilla_id = "0060"
 number = "0060"
 
 [[revisions."2025".completeness_manifest.casillas]]
+casilla_id = "0083"
+number = "0083"
+
+[[revisions."2025".completeness_manifest.casillas]]
+casilla_id = "0084"
+number = "0084"
+
+[[revisions."2025".completeness_manifest.casillas]]
+casilla_id = "0085"
+number = "0085"
+
+[[revisions."2025".completeness_manifest.casillas]]
+casilla_id = "0086"
+number = "0086"
+
+[[revisions."2025".completeness_manifest.casillas]]
+casilla_id = "0087"
+number = "0087"
+
+[[revisions."2025".completeness_manifest.casillas]]
+casilla_id = "0088"
+number = "0088"
+
+[[revisions."2025".completeness_manifest.casillas]]
 casilla_id = "0089"
 number = "0089"
 

@@ -73,8 +73,8 @@ _BASE_INPUTS: dict[CasillaId, Decimal] = _casilla_values(
         "0501": Decimal("0"),
         "0506": Decimal("0"),
         "0507": Decimal("0"),
-        # 0513/0514 (mínimo por descendientes) are computed (Option A engine,
-        # modelo-100-minimo-descendientes-engine ADR); the zero for these
+        # 0513/0514 (mínimo por descendientes) are computed (Option A engine);
+        # the zero for these
         # childless test couples is supplied via the
         # renta-2025-profile-minimo-descendientes-estatal binding in
         # _BASE_BINDINGS below, not as a manual casilla input.
@@ -130,7 +130,7 @@ _BASE_BINDINGS = {
     # No Madrid nacimiento/adopción-eligible descendants in these scenarios.
     "renta-2025-profile-madrid-nacimiento-adopcion-eligible-count": Decimal("0"),
     # Childless couple: Art. 58/61 LIRPF mínimo por descendientes aggregate is
-    # zero (modelo-100-minimo-descendientes-engine ADR, Option A engine).
+    # zero (Option A engine).
     "renta-2025-profile-minimo-descendientes-estatal": Decimal("0"),
 }
 
@@ -334,7 +334,8 @@ def test_taxation_comparison_error_is_registered_and_envelopes() -> None:
     registry declaration in aeat.core.errors.registry._application, not
     hand-computed.
     """
-    from ....core.errors import ERROR_REGISTRY, build_error_envelope, get_registered_error_code
+    from ....core.errors import ERROR_REGISTRY, build_error_envelope
+    from ....core.errors import get_registered_error_code
     from .._taxation_comparison import TaxationComparisonError
 
     # Registry membership: the declared code must be present in ERROR_REGISTRY.

@@ -13,6 +13,7 @@ source_refs = [
 ]
 formulas = [
     "renta-2021-trabajo-especie-importe-integro",
+    "renta-2021-trabajo-otros-gastos",
     "renta-2021-trabajo-rendimiento-neto",
     "renta-2021-trabajo-rendimiento-neto-previo",
     "renta-2021-trabajo-rendimiento-neto-reducido",

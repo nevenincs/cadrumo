@@ -59,8 +59,7 @@ def test_bindings_list_warns_when_period_scope_filters_are_missing() -> None:
     assert text.exit_code == 0, text.output
     assert "binding_count\t" in text.output
     assert (
-        "notice\twarning\tmodelo.bindings.list.unscoped_revision\t"
-        "The binding list is not scoped by --year, --period;"
+        "notice\twarning\tmodelo.bindings.list.unscoped_revision\tThe binding list is not scoped by --year, --period;"
     ) in text.output
     assert "rerun with --modelo MODELO --year YEAR --period PERIOD" in text.output
 

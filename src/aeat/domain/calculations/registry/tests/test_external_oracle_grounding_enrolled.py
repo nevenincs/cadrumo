@@ -82,8 +82,7 @@ def _casilla_ids_by_modelo_year_from_dir(directory: Path) -> dict[tuple[str, int
             f"{filename_modelo_id!r}"
         )
         assert declared_year == filename_year, (
-            f"{payload_path.name}: payload filing_year {declared_year!r} does not match filename year "
-            f"{filename_year!r}"
+            f"{payload_path.name}: payload filing_year {declared_year!r} does not match filename year {filename_year!r}"
         )
         by_modelo_year.setdefault((declared_modelo_id, declared_year), set()).update(
             payload.get("expected_by_casilla_id", {}),

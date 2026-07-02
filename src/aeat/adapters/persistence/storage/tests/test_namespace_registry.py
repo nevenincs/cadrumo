@@ -201,7 +201,7 @@ def test_every_registered_namespace_declares_explicit_custody_disposition() -> N
     )
 
 
-def test_custody_profile_projection_matches_bucket_custody_adr_examples() -> None:
+def test_custody_profile_projection_matches_bucket_custody_worked_examples() -> None:
     full_namespaces = STORAGE_NAMESPACE_REGISTRY.namespaces_for_custody_profile(StorageCustodyProfile.FULL)
     structured_namespaces = STORAGE_NAMESPACE_REGISTRY.namespaces_for_custody_profile(
         StorageCustodyProfile.STRUCTURED,

@@ -59,6 +59,7 @@ from ._modelo_aux_payloads import (
 )
 from ._modelo_revision_payload_parts import DetailRowPayload, ObservationPayload, ResultSummaryRowPayload
 from ._modelo_work_revision_payloads import WorkObservationsResult, WorkRevisionResult
+from ._modelo_work_wizard_payloads import WizardPromptedCasillaPayload, WorkWizardResult
 from ._payloads_modelo_reconcile import (
     ModeloReconcileResult,
     ModeloReconciliationDiffPayload,
@@ -1365,6 +1366,7 @@ __all__ = [
     "VerificationReportPayload",
     "VerificationReportShowResult",
     "WithholdingClaveBreakdownPayload",
+    "WizardPromptedCasillaPayload",
     "WorkAmendResult",
     "WorkCalculateResult",
     "WorkCompareTaxationResult",
@@ -1385,5 +1387,6 @@ __all__ = [
     "WorkUnitHistoryEventPayload",
     "WorkUnitPayload",
     "WorkVerifyResult",
+    "WorkWizardResult",
     "WorkflowRunPayload",
 ]

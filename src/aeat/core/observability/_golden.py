@@ -257,6 +257,9 @@ def validate_captured_envelope(
     # schema. ``__class_getitem__`` is the runtime hook behind ``[...]``;
     # calling it explicitly keeps the dynamic parametrisation out of a
     # static type-expression position (which no type checker can express).
+    # CAST-RATIONALE-GOLDEN-ENVELOPE-PARAMETRISE: `__class_getitem__` returns
+    # `types.GenericAlias`, not the runtime-resolved parametrised class; the
+    # cast restores the declared generic type for the constructor call below.
     envelope_model = cast(
         "type[SchemaEnvelope[OutputSchema]]",
         SchemaEnvelope.__class_getitem__(schema),

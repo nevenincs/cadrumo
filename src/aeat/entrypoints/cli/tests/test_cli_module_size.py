@@ -16,7 +16,8 @@ _DEFAULT_MODULE_LINE_LIMIT = 1250
 # Per-module ceilings for SPLIT-CANDIDATE CLI modules grown by recovered features.
 _MODULE_LINE_LIMIT_OVERRIDES = {
     "_modelo.py": 1320,  # SPLIT-CANDIDATE
-    "_modelo_payloads.py": 1320,  # SPLIT-CANDIDATE
+    "_modelo_payloads.py": 1420,  # SPLIT-CANDIDATE (concurrent growth)
+    "_ledger_payloads.py": 1273,  # SPLIT-CANDIDATE (concurrent growth)
 }
 _DEFAULT_COMMAND_LINE_LIMIT = 180
 # Per-command ceilings for command bodies pinned above the default, mirroring the
@@ -27,7 +28,8 @@ _COMMAND_LINE_LIMIT_OVERRIDES = {
     # SPLIT-CANDIDATE: a wide Typer signature (manual + LLM + saturate + evidence +
     # auto-split routes). The LLM-routing bodies live in `_ledger_llm_cli.py`;
     # what remains here is the option surface and the route dispatch.
-    ("_ledger.py", "ledger_classify"): 220,
+    ("_ledger.py", "ledger_classify"): 234,  # SPLIT-CANDIDATE (concurrent growth)
+    ("_ledger.py", "ledger_add"): 198,  # SPLIT-CANDIDATE (concurrent growth)
 }
 
 

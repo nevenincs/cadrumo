@@ -67,7 +67,7 @@ class PreviousFilingSourceReference:
 
 
 def previous_filing_source_reference(binding: DataBindingDefinition) -> PreviousFilingSourceReference:
-    """Return the source reference for a ``previous_filing`` binding.
+    """Return the :class:`PreviousFilingSourceReference` for a ``previous_filing`` binding.
 
     The supplied
     :class:`~aeat.domain.calculations.registry.DataBindingDefinition` is parsed

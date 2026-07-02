@@ -12,6 +12,7 @@ from ...application.review import (
     project_review_item,
     project_review_queue,
 )
+from ...core.decimal import coerce_decimal_strict
 from ...core.errors import resolve_error_message
 from ...core.external_constants import OutputLanguage
 from ...core.i18n import tr
@@ -58,7 +59,7 @@ def _resolve_confidence_threshold(value: float | None) -> Decimal | None:
     """
     if value is None:
         return None
-    threshold = Decimal(str(value))
+    threshold = coerce_decimal_strict(value)
     if threshold < 0 or threshold > 1:
         raise _bad(
             tr(

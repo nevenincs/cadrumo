@@ -21,6 +21,7 @@ formulas = [
     "renta-2024-atribucion-capital-inmobiliario-suma",
     "renta-2024-capital-inmobiliario-rendimiento-neto",
     "renta-2024-capital-inmobiliario-rendimiento-neto-reducido",
+    "renta-2024-capital-inmobiliario-reduccion-arrendamiento-vivienda-art-23-2",
     "renta-2024-inmobiliario-renta-imputada-art-85",
     "renta-2024-capital-inmobiliario-suma-rendimientos-reducidos",
     "renta-2024-inmobiliario-suma-rentas-imputadas",

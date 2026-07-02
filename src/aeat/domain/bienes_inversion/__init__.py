@@ -48,11 +48,19 @@ from pydantic import BaseModel, Field, field_validator, model_validator
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN_CONFIG
 from ...core.errors import AeatError as _AeatError
 from ...core.external_constants import (
-    IVA_BIEN_INVERSION_INMUEBLE_DIVISOR,
-    IVA_BIEN_INVERSION_INMUEBLE_VENTANA_ANOS,
-    IVA_BIEN_INVERSION_MUEBLE_DIVISOR,
-    IVA_BIEN_INVERSION_MUEBLE_VENTANA_ANOS,
-    IVA_BIEN_INVERSION_REGULARIZACION_UMBRAL_PUNTOS,
+    IVA_BIEN_INVERSION_INMUEBLE_DIVISOR as _IVA_BIEN_INVERSION_INMUEBLE_DIVISOR,
+)
+from ...core.external_constants import (
+    IVA_BIEN_INVERSION_INMUEBLE_VENTANA_ANOS as _IVA_BIEN_INVERSION_INMUEBLE_VENTANA_ANOS,
+)
+from ...core.external_constants import (
+    IVA_BIEN_INVERSION_MUEBLE_DIVISOR as _IVA_BIEN_INVERSION_MUEBLE_DIVISOR,
+)
+from ...core.external_constants import (
+    IVA_BIEN_INVERSION_MUEBLE_VENTANA_ANOS as _IVA_BIEN_INVERSION_MUEBLE_VENTANA_ANOS,
+)
+from ...core.external_constants import (
+    IVA_BIEN_INVERSION_REGULARIZACION_UMBRAL_PUNTOS as _IVA_BIEN_INVERSION_REGULARIZACION_UMBRAL_PUNTOS,
 )
 from ...core.money import round_to_cents as _quantize
 
@@ -90,15 +98,15 @@ class BienInversionKind(StrEnum):
     def ventana_anos(self) -> int:
         """Count of following calendar years in the art-107 regularisation window."""
         if self is BienInversionKind.INMUEBLE:
-            return IVA_BIEN_INVERSION_INMUEBLE_VENTANA_ANOS
-        return IVA_BIEN_INVERSION_MUEBLE_VENTANA_ANOS
+            return _IVA_BIEN_INVERSION_INMUEBLE_VENTANA_ANOS
+        return _IVA_BIEN_INVERSION_MUEBLE_VENTANA_ANOS
 
     @property
     def divisor(self) -> Decimal:
         """Art-109 per-year regularisation divisor (5 mueble / 10 inmueble)."""
         if self is BienInversionKind.INMUEBLE:
-            return IVA_BIEN_INVERSION_INMUEBLE_DIVISOR
-        return IVA_BIEN_INVERSION_MUEBLE_DIVISOR
+            return _IVA_BIEN_INVERSION_INMUEBLE_DIVISOR
+        return _IVA_BIEN_INVERSION_MUEBLE_DIVISOR
 
 
 class BienInversionDisposalRegime(StrEnum):
@@ -294,7 +302,7 @@ def compute_regularizacion_anual(
 
     diferencia_puntos = abs(prorrata_anio_pct - prorrata_inicial_pct)
     divisor = kind.divisor
-    if diferencia_puntos <= IVA_BIEN_INVERSION_REGULARIZACION_UMBRAL_PUNTOS:
+    if diferencia_puntos <= _IVA_BIEN_INVERSION_REGULARIZACION_UMBRAL_PUNTOS:
         return RegularizacionAnualResult(
             aplica=False,
             diferencia_puntos=diferencia_puntos,
