@@ -28,69 +28,31 @@ def _p(code: str, year: int = 2024) -> Period:
     return Period.from_year_and_code(year, code)
 
 
-class TestRedemeCompanyMonthlyRefund:
-    """Persona 1 — REDEME-inscribed company filing monthly: refund available every period."""
+def test_refund_eligibility_reason_matrix() -> None:
+    """REDEME wins every period; otherwise only last periods can refund."""
+    cases: tuple[tuple[str, bool, str, bool, bool, RefundEligibilityReason], ...] = (
+        ("redeme-month-01", True, "01", False, True, RefundEligibilityReason.REDEME_INSCRIBED),
+        ("redeme-month-02", True, "02", False, True, RefundEligibilityReason.REDEME_INSCRIBED),
+        ("redeme-month-03", True, "03", False, True, RefundEligibilityReason.REDEME_INSCRIBED),
+        ("redeme-month-06", True, "06", False, True, RefundEligibilityReason.REDEME_INSCRIBED),
+        ("redeme-month-11", True, "11", False, True, RefundEligibilityReason.REDEME_INSCRIBED),
+        ("redeme-month-12", True, "12", True, True, RefundEligibilityReason.REDEME_INSCRIBED),
+        ("redeme-early-quarter", True, "1T", False, True, RefundEligibilityReason.REDEME_INSCRIBED),
+        ("redeme-last-quarter", True, "4T", True, True, RefundEligibilityReason.REDEME_INSCRIBED),
+        ("ordinary-last-quarter", False, "4T", True, True, RefundEligibilityReason.LAST_PERIOD_OF_YEAR),
+        ("ordinary-last-month", False, "12", True, True, RefundEligibilityReason.LAST_PERIOD_OF_YEAR),
+        ("ordinary-annual", False, "0A", True, True, RefundEligibilityReason.LAST_PERIOD_OF_YEAR),
+        ("ordinary-quarter-1", False, "1T", False, False, RefundEligibilityReason.NOT_ELIGIBLE),
+        ("ordinary-quarter-2", False, "2T", False, False, RefundEligibilityReason.NOT_ELIGIBLE),
+        ("ordinary-quarter-3", False, "3T", False, False, RefundEligibilityReason.NOT_ELIGIBLE),
+        ("ordinary-month-01", False, "01", False, False, RefundEligibilityReason.NOT_ELIGIBLE),
+        ("ordinary-month-05", False, "05", False, False, RefundEligibilityReason.NOT_ELIGIBLE),
+        ("ordinary-month-06", False, "06", False, False, RefundEligibilityReason.NOT_ELIGIBLE),
+        ("ordinary-month-11", False, "11", False, False, RefundEligibilityReason.NOT_ELIGIBLE),
+    )
 
-    def test_redeme_refund_available_in_every_monthly_period(self) -> None:
-        for code in ("01", "02", "03", "06", "11", "12"):
-            period = _p(code)
-            assert refund_disposition_available(redeme_enrolled=True, period=period) is True, code
-            assert (
-                refund_eligibility_reason(redeme_enrolled=True, period=period)
-                is RefundEligibilityReason.REDEME_INSCRIBED
-            ), code
-
-    def test_redeme_refund_available_even_in_an_early_quarter(self) -> None:
-        assert refund_disposition_available(redeme_enrolled=True, period=_p("1T")) is True
-        assert (
-            refund_eligibility_reason(redeme_enrolled=True, period=_p("1T")) is RefundEligibilityReason.REDEME_INSCRIBED
-        )
-
-
-class TestLastPeriodRefund:
-    """Persona 2 — non-REDEME autónomo: refund available only in the last period of the year."""
-
-    def test_refund_available_in_last_period_without_redeme(self) -> None:
-        for code in ("4T", "12", "0A"):
-            period = _p(code)
-            assert is_last_filing_period_of_year(period) is True, code
-            assert refund_disposition_available(redeme_enrolled=False, period=period) is True, code
-            assert (
-                refund_eligibility_reason(redeme_enrolled=False, period=period)
-                is RefundEligibilityReason.LAST_PERIOD_OF_YEAR
-            ), code
-
-    def test_non_last_period_is_not_last(self) -> None:
-        for code in ("1T", "2T", "3T", "01", "06", "11"):
-            assert is_last_filing_period_of_year(_p(code)) is False, code
-
-
-class TestOrdinaryMidPeriodRefused:
-    """Persona 3 (regression control) — ordinary non-REDEME mid-period: refund unavailable, only carry-forward."""
-
-    def test_refund_unavailable(self) -> None:
-        for code in ("1T", "2T", "3T", "01", "05", "11"):
-            period = _p(code)
-            assert refund_disposition_available(redeme_enrolled=False, period=period) is False, code
-            assert (
-                refund_eligibility_reason(redeme_enrolled=False, period=period) is RefundEligibilityReason.NOT_ELIGIBLE
-            ), code
-
-
-class TestCrossEntityAndInvariants:
-    """Persona 4 — the gate is entity-agnostic: REDEME eligibility is open to every entity type,
-    decided solely by the redeme axis and the period (no entity-type input)."""
-
-    def test_gate_depends_only_on_redeme_and_period(self) -> None:
-        # Identical inputs -> identical verdict, regardless of which entity type's
-        # profile supplied `redeme_enrolled` (natural_person / legal_entity /
-        # attribution_entity all flow the same boolean here).
-        assert refund_disposition_available(redeme_enrolled=True, period=_p("1T")) is True
-        assert refund_disposition_available(redeme_enrolled=False, period=_p("1T")) is False
-
-    def test_redeme_takes_precedence_over_last_period_reason(self) -> None:
-        # A REDEME taxpayer in the last period is eligible; REDEME is the reported reason.
-        assert refund_disposition_available(redeme_enrolled=True, period=_p("4T")) is True
-        assert (
-            refund_eligibility_reason(redeme_enrolled=True, period=_p("4T")) is RefundEligibilityReason.REDEME_INSCRIBED
-        )
+    for label, redeme_enrolled, period_code, expected_last, expected_available, expected_reason in cases:
+        period = _p(period_code)
+        assert is_last_filing_period_of_year(period) is expected_last, label
+        assert refund_disposition_available(redeme_enrolled=redeme_enrolled, period=period) is expected_available, label
+        assert refund_eligibility_reason(redeme_enrolled=redeme_enrolled, period=period) is expected_reason, label
