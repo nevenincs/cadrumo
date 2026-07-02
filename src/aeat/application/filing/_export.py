@@ -1161,21 +1161,24 @@ def assert_export_mirrors_manifest(
 ) -> None:
     """Panic if the ``.boe`` would not mirror the manifest-required structure.
 
-    The completeness gate: every casilla the official record files that the
-    calculation-completeness manifest also requires (``manifest ∩ representable``
-    for this :class:`ModeloDraft`'s disposition) MUST carry a value on disk. A required,
-    representable casilla the draft omits would render as a blank fixed-width slot
-    (or an omitted xml element) while the SHA-256 digest stays valid -- the
-    structurally-thin file this gate refuses. A shortfall raises a hard
-    :class:`FilingExportError` naming every missing casilla with its official
-    record number and segmento, so the panic is loud and explicit rather than a
-    silently thin export.
+    The completeness gate: every casilla that is a calculation RESULT (declares a
+    formula) or is schema-required, and that the calculation-completeness manifest
+    lists AND the official record files (``representable`` for this
+    :class:`ModeloDraft`'s disposition), MUST carry a value on disk. Such a casilla
+    rendered blank means the calculation did not populate it -- a structurally-thin
+    file behind a valid SHA-256 digest, which this gate refuses with a hard
+    :class:`FilingExportError` naming every missing casilla with its official record
+    number and segmento, so the panic is loud and explicit.
 
-    A manifest casilla absent from the representable set is a calculation-closure
-    casilla the official record does not file; it is out of scope and never
-    flagged. Callers pass ``manifest`` only when the revision declares one; a
-    revision without a manifest is handled by the coverage-advisory path, not
-    here.
+    Optional operator-input casillas -- retenciones, prior payments, deductions the
+    taxpayer may legitimately not have -- are NOT required to carry a value: a blank
+    slot for them is a valid zero, not a thin file (grounded in the AEAT casilla
+    semantics; e.g. Modelo 131 casillas 02/08/09/12/14 are optional inputs), so they
+    are excluded from the required set. A manifest casilla absent from the
+    representable set is a calculation-closure casilla the official record does not
+    file and is likewise out of scope. Callers pass ``manifest`` only when the
+    revision declares one; a revision without a manifest is handled by the
+    coverage-advisory path, not here.
 
     The gate applies only to the fixed-width fichero-BOE. In that format every
     field occupies its byte slot always, so an omitted required casilla renders a
@@ -1188,7 +1191,19 @@ def assert_export_mirrors_manifest(
         return
     representable = boe_representable_casilla_ids(layout, headers=headers, schema_provider=schema_provider)
     rendered = rendered_casilla_ids(layout, draft=draft, headers=headers, schema_provider=schema_provider)
-    required_applicable = {casilla.casilla_id for casilla in manifest.casillas} & representable
+    # Require a value on disk only for calculation RESULTS (casillas declaring a
+    # formula) and schema-required casillas. Optional operator inputs -- retenciones,
+    # prior payments, deductions the taxpayer may legitimately not have -- render a
+    # blank slot that is a valid zero, not a thin file, so they are excluded from the
+    # required set (grounded in the AEAT casilla semantics, e.g. Modelo 131 casillas
+    # 02/08/09/12/14).
+    collection = schema_provider.get_collection(draft.modelo)
+    required_applicable = {
+        casilla.casilla_id
+        for casilla in manifest.casillas
+        if (schema := collection.get(casilla.casilla_id)) is not None
+        and (schema.formula is not None or schema.required)
+    } & representable
     missing = sorted(required_applicable - rendered)
     if not missing:
         return
