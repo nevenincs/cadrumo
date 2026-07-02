@@ -40,6 +40,7 @@ from ...application.overview._calendar_models import (
     OverviewCalendarEvent,
     OverviewCalendarRange,
 )
+from ...core.external_constants import OutputLanguage
 from ...core.hashing import sha256_hex
 from ...core.i18n import tr
 from ...core.json_contract import Notice
@@ -52,6 +53,7 @@ from ._common import (
     _parse_iso_date,
     _profile_to_taxpayer,
     _state,
+    activate_subcommand_output_language,
 )
 from ._overview_payloads import (
     OverviewAgendaResult,
@@ -597,6 +599,12 @@ def overview_calendar(
             ),
         ),
     ),
+    output_language: OutputLanguage | None = typer.Option(
+        None,
+        "--output-language",
+        "--language",
+        help=tr("cli.config.auth.output_language_help"),
+    ),
 ) -> None:
     """Emit the overview calendar payload over the supplied date window.
 
@@ -607,6 +615,8 @@ def overview_calendar(
     :func:`~aeat.application.overview.build_overview_calendar`.
     """
     from ...application.user_profile._projections import record_to_values
+
+    activate_subcommand_output_language(ctx, output_language)
 
     rng = OverviewCalendarRange(
         from_date=_parse_iso_date(from_date, label="--from"),

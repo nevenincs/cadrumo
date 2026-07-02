@@ -61,6 +61,12 @@ related:
 - Reviewed W09.P45.S293 as a no-production closure against current missing-required verification finding language behavior and `src/aeat/application/modelo/tests/test_verification_finding_language.py`.
 - Checked that current `_missing_required_casilla_finding` already renders through `tr()` and that the new regression switches a real active-profile language from Catalan to Spanish against a real Modelo 130 registry casilla definition.
 - Checked validation evidence from the new focused application test, existing missing-required localization/provenance tests, touched-file ruff, reviewer output, and RAG grounding.
+- Reviewed W09.P45.S231 as a no-production closure against current `--retencion-observation` schema validation behavior and focused CLI boundary tests.
+- Checked that `_parse_typed_cli_observations` already catches pydantic validation and raises `typer.BadParameter` with flag and field detail before the generic command boundary can suggest `aeat config repair`.
+- Checked validation evidence from focused Modelo typed-observation and error-boundary integration tests, touched-file ruff, reviewer output, and RAG grounding.
+- Reviewed W09.P45.S229 changes to `src/aeat/entrypoints/cli/_overview.py` and `src/aeat/entrypoints/cli/tests/test_overview_calendar_verb.py`.
+- Checked that `overview calendar` now registers `--output-language` and `--language` using the real `OutputLanguage` authority and activates the override before date parsing, active-profile lookup, and all-profiles dispatch.
+- Checked validation evidence from focused overview calendar CLI integration tests, touched-file ruff, reviewer output, and RAG grounding.
 
 ## Findings
 
@@ -127,6 +133,14 @@ No findings for the Modelo bindings unscoped-list warning. The implementation pr
 ### w09-p45-s293 | low | no findings
 
 No findings for the missing-required-casilla Catalan drift closure. Production already uses `tr("application.modelo.findings.missing_required_casilla")` in the live verification-finding helper, and the new regression proves active-profile Catalan renders `La casella obligatòria` while Spanish renders `La casilla requerida` for the same real Modelo 130 casilla. Residual risk is limited to substring-level language assertions; existing tests cover key fallback, casilla interpolation, and registry provenance.
+
+### w09-p45-s231 | low | no findings
+
+No findings for the `--retencion-observation` input-validation closure. Production already uses the typed observation parser to convert malformed JSON object schemas into a `BadParameter` argument refusal; the new real CLI regression pins the missing-`scheme` testimonial path and asserts the flag name, field detail, and absence of `config repair` or stored-schema drift wording. Residual risk is limited to Typer's stable `Invalid value` prefix and existing mixed line endings in `test_errors_boundary.py`; `git diff --check` passed.
+
+### w09-p45-s229 | low | no findings
+
+No findings for the overview calendar output-language parity fix. The CLI verb now takes `--output-language` and `--language`, activates the override before any refusal path renders, and leaves application overview calendar internals untouched. Residual risk is limited to the alias not having a separate dedicated assertion; the help assertion and code review confirmed the alias is registered from the same Typer option declaration.
 
 ## Recommendations
 

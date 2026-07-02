@@ -38,7 +38,7 @@ from ....tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
 # Profile id / bucket id used throughout; must be a valid bucket identifier.
-_PROFILE_ID = "test-boundary-profile"
+_PROFILE_ID = "11111111-1111-4111-8111-111111111111"
 
 
 @pytest.fixture
