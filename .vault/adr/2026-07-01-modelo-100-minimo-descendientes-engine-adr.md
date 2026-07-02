@@ -312,3 +312,64 @@ from a live AEAT Renta manual / BOE consolidation the operator supplies, or
 which case Option A's per-descendant amount is simply the full annual
 birth-order figure regardless of entry date within the year, and Option A can
 proceed without further grounding blockers on this axis).
+
+## Implementation status (2026-07-02, Option A landed)
+
+**Option A landed** across all six revisions (2020-2025). Ruling (b) above is
+confirmed: the bundled AEAT Renta manuals contain no within-year temporal
+prorrateo for descendientes, so `RentaFamilyProfile.minimo_descendientes_estatal`
+applies the full annual birth-order amount regardless of the descendant's entry
+date within the ejercicio.
+
+- New domain method `RentaFamilyProfile.minimo_descendientes_estatal` (
+  `src/aeat/domain/contribuyente/family.py`) ranks Art. 58.1-eligible
+  descendants by `birth_date` ascending, sums the birth-order tranche (1º/2º/3º/
+  4º-y-siguientes) plus the Art. 58.2 menor-3 supplement, and applies the
+  Art. 61.1ª custodia-compartida 0.5 factor per descendant. Amounts are passed
+  in by the caller from the revision's own registry `money` parameters — the
+  domain method contains no hardcoded euro figure.
+- New application-layer injector
+  `inject_derived_minimo_descendientes_facts` (`src/aeat/application/modelo/_profile_binding.py`)
+  reads `snapshot.revision.parameters` for the per-year tranche/menor-3 params,
+  computes the aggregate, and projects it onto the (previously-dangling)
+  user-profile schema field `renta_family.descendientes_minimos_aggregate_{year}`
+  — retiring the exact dangling selector this ADR flagged, rather than minting
+  a new key. A genuinely childless profile resolves to the legally correct
+  zero; the fail-direction concern (a computed zero over-writing a correct
+  manual entry) does not apply on this unreleased pre-beta app, which carries
+  no prior manual `0513`/`0514` data to protect (`no-legacy-compatibility`).
+- Casillas 0513/0514 are `input_kind = "computed"` with a dedicated formula
+  (`renta-{year}-minimo-descendientes-estatal` /
+  `-autonomico`) in every revision 2020-2025, projecting the binding's
+  aggregate via a trivial `{ op = "copy", args = [{ binding = ... }] }`
+  expression.
+- The interim Option B advisory module
+  (`_minimo_descendientes_advisory.py`) is retired: its two checks (confirm
+  the hand-entered figure was halved; flag a blank entry) are structurally
+  unreachable now that the casillas are computed and the engine itself applies
+  the custodia-compartida halving.
+- New legal catalogue entry `ley-35-2006:art-61` (previously absent — no prior
+  `legal_refs` citation actually pointed a registry value at Art. 61) grounds
+  the custodia-compartida prorrata, sourced from a new dedicated corpus excerpt
+  `ley-35-2006-art-61.html` extracted verbatim from the bundled consolidated
+  LIRPF (`ley-35-2006.html`, en vigor 01/01/2015).
+
+**Known limitation, deferred per this ADR's own scoping (not closed by this
+landing): the autonómico half (0514) mirrors the estatal aggregate (0513) for
+every CCAA.** A RAG discovery pass over the bundled AEAT Renta manuals
+surfaced that at least the Comunidad de Madrid publishes its OWN mínimo por
+descendientes figures for the 3rd and 4th-y-siguientes tranches (Decreto
+Legislativo 1/2010, Art. 2: 4.400 € / 4.950 €, vs the general LIRPF Art. 58
+figures of 4.000 € / 4.500 €) that SUBSTITUTE the general figures for the
+autonómico (0514) computation only — the 1º/2º/menor-3 amounts coincide with
+Art. 58 and are unaffected. This ADR already named "per-CCAA autonómica minimo
+divergence" as an open grounding item deferred from Option A's initial
+landing, and the mirror-estatal default is this ADR's sanctioned fallback
+for that gap, not a silent omission — but it is confirmed now, not merely
+hypothetical, and is recorded here as a scoped follow-up: a Madrid-resident
+filer with 3+ descendientes will see an UNDER-computed 0514 until a per-CCAA
+autonómica mínimo-por-descendientes table is authored and the engine's
+autonómico projection is made CCAA-conditional (mirroring the dispatch shape
+the Madrid nacimiento/adopción deducción already establishes for casilla
+1039). Tracked as a follow-up; not blocking for closing #515, which is scoped
+to the estatal-half compute-flip and the standard-case autonómico mirror.
