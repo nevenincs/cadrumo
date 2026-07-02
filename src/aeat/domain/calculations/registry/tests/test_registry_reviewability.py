@@ -19,7 +19,10 @@ _MAX_BASELINE_TOML_LINES = 1_400
 _MAX_BASELINE_TOML_LINE_CHARS = 520
 _MAX_NEW_VALIDATOR_MODULE_LINES = 300
 _VALIDATOR_MODULE_LINE_BASELINES = {
-    "_validate_surfaces.py": 560,
+    # +1 line from the M131 EO modulos engine dataset commit (#516), which
+    # added one workbook-layout-authority-source guidance line; re-pinned to
+    # the present size.
+    "_validate_surfaces.py": 561,
     "_validate_cross_revision.py": 424,
     "_validate_record_sections.py": 305,
     "_validate_references.py": 312,
@@ -30,6 +33,11 @@ _VALIDATOR_MODULE_LINE_BASELINES = {
     "_validate.py": 250,
     "_validate_relation_periods.py": 209,
     "_validate_semantic_role_axes.py": 188,
+    # +10 lines from the M303 iva-wallet compensación-binding single-source
+    # ownership relocation (commit e353111d84), which added the named
+    # carve-out constant and its registry-gate comment; re-pinned to the
+    # present size.
+    "_validate_relation_sources.py": 310,
 }
 _WORKBOOK_PARITY_MODULE_LINE_BASELINE = 1_336
 

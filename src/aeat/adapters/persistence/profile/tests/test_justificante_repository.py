@@ -22,7 +22,7 @@ from ...storage import (
 from ...storage.errors import ClassificationError
 from ..justificante import JustificanteRepository
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 
 _FOREIGN_CLASS_WRITTEN_AT = datetime(2026, 5, 26, 16, 0, 0, tzinfo=UTC)
 

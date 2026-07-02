@@ -1,4 +1,4 @@
-"""Real-behavior tests for the structured citation lookup (W06.P12.S78)."""
+"""Real-behavior tests for the structured citation lookup."""
 
 from __future__ import annotations
 

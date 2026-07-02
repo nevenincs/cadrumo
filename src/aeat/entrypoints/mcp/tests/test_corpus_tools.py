@@ -1,4 +1,4 @@
-"""Real-behavior tests for the corpus grounding tool (W06.P13.S81)."""
+"""Real-behavior tests for the corpus grounding tool."""
 
 from __future__ import annotations
 
