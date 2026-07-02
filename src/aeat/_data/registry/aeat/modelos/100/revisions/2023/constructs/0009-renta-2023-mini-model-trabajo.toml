@@ -13,6 +13,7 @@ source_refs = [
 ]
 formulas = [
     "renta-2023-trabajo-especie-importe-integro",
+    "renta-2023-trabajo-otros-gastos",
     "renta-2023-trabajo-rendimiento-neto",
     "renta-2023-trabajo-rendimiento-neto-previo",
     "renta-2023-trabajo-rendimiento-neto-reducido",

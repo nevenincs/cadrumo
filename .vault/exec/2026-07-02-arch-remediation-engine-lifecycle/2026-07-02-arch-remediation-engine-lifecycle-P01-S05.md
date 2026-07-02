@@ -9,9 +9,6 @@ related:
   - "[[2026-07-02-arch-remediation-engine-lifecycle-plan]]"
 ---
 
-
-
-
 # Confirm the settings-driven explicit-database-URL route keeps its current direct engine path unchanged
 
 ## Scope
@@ -30,4 +27,3 @@ The explicit-URL route is unchanged and verified; close no longer derives a rout
 Landed in commit `38e62c216`.
 
 ## Notes
-

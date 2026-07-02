@@ -9,42 +9,6 @@ related:
   - "[[2026-05-26-cross-domain-continuity-plan]]"
 ---
 
-<!-- FRONTMATTER RULES:
-     tags: one directory tag (hardcoded #exec) and one feature tag.
-     Replace cross-domain-continuity with a kebab-case feature tag, e.g. #foo-bar.
-     Additional tags may be appended below the required pair.
-
-     modified: CLI-maintained last-modified stamp; set at scaffold time,
-     refreshed by mutating CLI verbs and vault check fix; never hand-edit.
-
-     step_id is the originating Step's canonical identifier, e.g. S01.
-     The S224 and 2026-05-26-cross-domain-continuity-plan placeholders are machine-filled by
-     `vaultspec-core vault add exec`; do not fill them by hand.
-
-     Related: use wiki-links as '[[yyyy-mm-dd-foo-bar-plan]]' and link the
-     parent plan.
-
-     DO NOT add fields beyond those scaffolded; metadata lives
-     only in the frontmatter. -->
-
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the related: field above.
-     - NEVER use [[wiki-links]] or markdown links in the document body.
-     - NEVER reference file paths in the body. If you must name a source file,
-       class, or function, use inline backtick code: `src/module.py`. -->
-
-<!-- STEP RECORD:
-     This file represents one Step from the originating plan. Identified
-     by its canonical leaf identifier (S##) and ancestor display path.
-     The R7-A fix ledger list and ledger view CliValidationBoundaryError on CSV-imported transactions and ## Scope
-
-- `LedgerTransactionPayload currency Field min_length 3 max_length 3 rejects empty or short currency strings`
-- `ledger review uses LedgerReviewRow without currency and succeeds`
-- `relax currency validation OR default to EUR on CSV import OR provide explicit operator-readable error pointing to the CSV currency column not config repair`
-- `src/aeat/application/ledger/_actions.py` placeholders below are machine-filled
-     by `vaultspec-core vault add exec` from the originating Step row;
-     do not fill them by hand. -->
-
 # R7-A fix ledger list and ledger view CliValidationBoundaryError on CSV-imported transactions
 
 ## Scope
@@ -55,8 +19,6 @@ related:
 - `src/aeat/application/ledger/_actions.py`
 
 ## Description
-
-<!-- Succinct line-by-line list of steps executed. Use imperative language, mirroring git commit summary lines. -->
 
 - Ground the testimonial with `vaultspec-rag` against the ledger CSV import, read payload, and list/view validation surfaces.
 - Trace the live path through `CsvProvider._parse_tabular_transaction_row`, `build_raw_transaction`, and `RawTransaction`.
@@ -72,8 +34,6 @@ related:
 - Closed. `RawTransaction.currency` and `LedgerTransactionPayload.currency` remain strict three-letter fields; the fix moved invalid input rejection earlier rather than relaxing the read contract.
 
 ## Notes
-
-<!-- Incidents. Data loss. Difficulties; persistent failures. Skipped work. Scaffolds left in code. Failures. -->
 
 - The live owner was `src/aeat/adapters/inbound/financial/providers/_csv.py`, not the stale plan-row pointer to `src/aeat/application/ledger/_actions.py`.
 - Review found no code issues. Residual risk: the provider-level currency detail is English text embedded inside the localized ledger-import wrapper, matching existing provider diagnostics but leaving mixed-language output for this specific malformed-source reason.

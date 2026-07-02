@@ -15,6 +15,7 @@ from pydantic import BaseModel, Field, StringConstraints, field_validator, model
 
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.classification import SensitivityClass
+from ...core.decimal import coerce_decimal_strict
 from ._errors import UserProfileNotFoundError, UserProfileValidationError
 
 _SchemaId = Annotated[
@@ -128,7 +129,7 @@ class ProfileFieldDefinition(BaseModel):
             return value
         if isinstance(value, str | int):
             try:
-                return Decimal(str(value))
+                return coerce_decimal_strict(value)
             except (InvalidOperation, ValueError) as exc:
                 raise UserProfileValidationError(f"invalid decimal bound {value!r}") from exc
         return value

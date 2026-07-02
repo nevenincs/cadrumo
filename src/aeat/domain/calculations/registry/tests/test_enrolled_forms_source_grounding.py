@@ -5,6 +5,7 @@ from __future__ import annotations
 import pytest
 
 from .....core.resources import bundled_path
+from .....tests.aeat_literal_fixtures import PROCEDIMIENTOINI_PATH_PREFIX_FIXTURE
 from .. import RegistryValidator
 from ._registry_schema_support import _committed_modelo, _committed_registry_tree
 
@@ -41,7 +42,7 @@ def test_capital_mobiliario_summary_guidance_and_layout_sources_are_separated(
         f"corpus/aeat_official/instructions/modelo_{modelo_id}/files/modelo-{modelo_id}-procedure.html"
     )
     assert (bundled_path() / procedure.corpus_path).is_file()
-    assert procedure.source_url.endswith(f"/Sede/procedimientoini/{procedure_code}.shtml")
+    assert procedure.source_url.endswith(f"{PROCEDIMIENTOINI_PATH_PREFIX_FIXTURE}{procedure_code}.shtml")
     assert layout.evidence_tier == "layout_authority"
     assert layout.authority == "boe"
     assert layout.kind == "form_spec"
@@ -132,7 +133,7 @@ def test_current_retention_autoliquidaciones_use_current_grounded_sources(
         f"corpus/aeat_official/instructions/modelo_{modelo_id}/files/modelo-{modelo_id}-procedure.html"
     )
     assert (bundled_path() / procedure.corpus_path).is_file()
-    assert procedure.source_url.endswith(f"/Sede/procedimientoini/{procedure_code}.shtml")
+    assert procedure.source_url.endswith(f"{PROCEDIMIENTOINI_PATH_PREFIX_FIXTURE}{procedure_code}.shtml")
     assert text.evidence_tier == "official_source_guidance"
     assert text.authority == "boe"
     assert text.kind == "form_spec"

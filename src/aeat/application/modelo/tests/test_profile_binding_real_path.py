@@ -490,8 +490,7 @@ def test_binding_count_is_exactly_37() -> None:
     unidad_familiar_otros_miembros_base added for casilla 1039 / DL 1/2010,
     the anualidades_sin_minimo_descendientes eligibility flag for the
     Art. 64/75 separate-escala régimen, and the Art. 58/61 LIRPF mínimo por
-    descendientes aggregate added by the
-    ``modelo-100-minimo-descendientes-engine`` ADR's Option A engine)
+    descendientes aggregate added by the Option A engine)
     plus 11 family-repeating-collection bindings (per-dependent / per-spouse
     / per-child arrays whose cardinality follows the operator's declared
     family composition).

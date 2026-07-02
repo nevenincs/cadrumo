@@ -1,4 +1,4 @@
-"""Idempotent re-file application tests (P06.S23).
+"""Idempotent re-file application tests.
 
 A re-file of a revision already in PRESENTADO state is a guarded-idempotent
 no-op: ``file_modelo_revision`` returns the existing VIGENTE filing record

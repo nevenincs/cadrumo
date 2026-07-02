@@ -4,7 +4,7 @@ Expected values are the load-bearing regulatory figures read verbatim from the
 bundled consolidated LIVA corpus — the over-10-point gate (art. 107.Uno "una
 diferencia superior a diez puntos"), the /5 and /10 divisors (art. 109.3.º "se
 dividirá por cinco o … por diez"), and the 4/9-year windows (art. 107.Uno / .Tres)
-— together with worked cases whose arithmetic is derived STEP BY STEP from the
+— together with worked cases whose arithmetic is derived term by term from the
 art-109 ordinal procedure, not by re-running the function under test.
 """
 

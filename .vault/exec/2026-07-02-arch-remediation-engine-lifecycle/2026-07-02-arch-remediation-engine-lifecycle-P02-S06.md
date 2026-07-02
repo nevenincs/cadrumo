@@ -9,9 +9,6 @@ related:
   - "[[2026-07-02-arch-remediation-engine-lifecycle-plan]]"
 ---
 
-
-
-
 # Sweep the shared secure-SQL harness ephemeral and synthetic-session path onto the unified lifecycle so engine routing follows the session through the harness teardown
 
 ## Scope
@@ -31,4 +28,3 @@ The harness routes engine disposal through the session lifecycle; URL-keyed help
 Landed in commit `38e62c216`.
 
 ## Notes
-

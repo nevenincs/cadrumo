@@ -9,9 +9,6 @@ related:
   - "[[2026-07-02-arch-remediation-engine-lifecycle-plan]]"
 ---
 
-
-
-
 # Delete the now-unnecessary scattered dispose_engine calls from the CLI lifecycle, rename, and navigation tests whose choreography the unified lifecycle makes redundant
 
 ## Scope
@@ -30,4 +27,3 @@ The scattered `dispose_engine` choreography is gone; the guard tracks the rename
 Landed in commit `38e62c216`.
 
 ## Notes
-

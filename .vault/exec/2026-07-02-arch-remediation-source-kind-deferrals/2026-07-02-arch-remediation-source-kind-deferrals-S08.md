@@ -9,9 +9,6 @@ related:
   - "[[2026-07-02-arch-remediation-source-kind-deferrals-plan]]"
 ---
 
-
-
-
 # Extend the enrollment-status gate to assert every DEFERRED member carries both an owning ADR and a trigger annotation
 
 ## Scope

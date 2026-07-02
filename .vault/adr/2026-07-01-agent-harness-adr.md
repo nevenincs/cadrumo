@@ -9,7 +9,7 @@ related:
   - "[[2026-06-30-agent-harness-adr]]"
 ---
 
-# `agent-harness` adr: `harness content: rules, personas, skills` | (**status:** `proposed`)
+# `agent-harness` adr: `harness content: rules, personas, skills` | (**status:** `accepted`)
 
 ## Problem Statement
 

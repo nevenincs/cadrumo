@@ -126,7 +126,8 @@ class QuickfileResult:
     ``completed`` is ``True`` only when the export stage succeeded and a local
     fichero-BOE artefact was written. ``stopped_at_stage`` names the stage that
     refused when the chain halted early. The intermediate domain records
-    (``work_unit``, ``calculation_revision``, ``verification_report``,
+    (``work_unit``, ``calculation_revision`` — a :class:`CalculationRevision`
+    when the calculate stage ran —, ``verification_report``,
     ``export_result``) are surfaced so the transport can render each stage's
     detail, and are ``None`` for stages that never ran.
     """
@@ -214,6 +215,12 @@ def run_modelo_quickfile(
     :class:`~aeat.application.modelo.WorkCalculateInputBundle`; the input bundle
     can only be validated once the work unit (and therefore its registry
     revision) is known, so the factory is invoked after the create stage.
+
+    Args:
+        command: The resolved quickfile target.
+        workflow_profile: The active :class:`TaxpayerProfile` the readiness and
+            calculate stages are evaluated against.
+        build_calculation_inputs: Factory producing the calculate-stage inputs.
 
     Returns:
         A :class:`QuickfileResult` whose ``completed`` flag is ``True`` only when

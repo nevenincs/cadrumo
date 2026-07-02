@@ -9,9 +9,6 @@ related:
   - "[[2026-07-02-arch-remediation-data-budget-plan]]"
 ---
 
-
-
-
 # Declare the corpus-split escape hatch as a named constant beside the budget carrying its target condition so the option is discoverable in code
 
 ## Scope
@@ -27,4 +24,3 @@ related:
 The ADR Option B escape hatch is discoverable in code, not only in prose.
 
 ## Notes
-

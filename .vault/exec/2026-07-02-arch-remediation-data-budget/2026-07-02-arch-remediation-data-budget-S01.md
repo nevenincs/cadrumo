@@ -9,9 +9,6 @@ related:
   - "[[2026-07-02-arch-remediation-data-budget-plan]]"
 ---
 
-
-
-
 # Add hatchling wheel excludes for src/aeat/**/tests/** and src/aeat/tests/** so no test module or fixture ships in the installed wheel
 
 ## Scope

@@ -62,12 +62,12 @@ _SCALAR_PROFILE_BINDING_VALUES: Mapping[str, object] = {
     "renta-2024-profile-tax-id": "12345678Z",
     "renta-2024-profile-tax-residence-ccaa": "madrid",
     "renta-2024-profile-declaration-type": Decimal("2"),
-    "renta-2024-profile-taxpayer-sex": "1",
+    "renta-2024-profile-taxpayer-sex": Decimal("1"),
     "renta-2024-profile-marital-status": Decimal("2"),
     "renta-2024-profile-taxpayer-birth-date": date(1980, 3, 15),
     "renta-2024-profile-spouse-tax-id": "98765432B",
     "renta-2024-profile-spouse-birth-date": date(1978, 7, 22),
-    "renta-2024-profile-spouse-sex": "2",
+    "renta-2024-profile-spouse-sex": Decimal("2"),
     "renta-2024-profile-taxpayer-disability-grade": Decimal("0"),
     "renta-2024-profile-taxpayer-death-date": date(2024, 11, 3),
     "renta-2024-profile-spouse-disability-grade": Decimal("0"),
@@ -144,8 +144,7 @@ def test_modelo_100_2024_personal_family_construct_is_profile_backed() -> None:
         binding = bindings[binding_id]
         assert binding.source is BindingSourceKind.PROFILE
         selector = binding.selector
-        assert isinstance(selector, dict)
-        assert selector["dictionary_field"] == casilla_id
+        assert selector.dictionary_field == casilla_id
 
 
 def test_modelo_100_2024_profile_binding_selectors_target_real_profile_schema() -> None:
@@ -180,8 +179,7 @@ def test_modelo_100_2024_family_row_bindings_address_repeating_profile_collectio
 
     for binding_id, (collection, field) in _ROW_BINDINGS.items():
         selector = bindings[binding_id].selector
-        assert isinstance(selector, dict)
-        assert selector["profile_model"] == "RentaFamilyProfile"
-        assert selector["collection"] == collection
-        assert selector["field"] == field
-        assert selector["repeating"] is True
+        assert selector.profile_model == "RentaFamilyProfile"
+        assert selector.collection == collection
+        assert selector.field == field
+        assert selector.repeating is True

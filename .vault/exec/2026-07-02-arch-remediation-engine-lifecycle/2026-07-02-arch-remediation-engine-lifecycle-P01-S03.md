@@ -9,9 +9,6 @@ related:
   - "[[2026-07-02-arch-remediation-engine-lifecycle-plan]]"
 ---
 
-
-
-
 # Re-key the engine cache on bucket identity rather than raw database URL, keeping the URL an implementation detail of engine construction
 
 ## Scope
@@ -30,4 +27,3 @@ Bucket-routed engines cache by identity; the database URL is an engine-construct
 Landed in commit `38e62c216`.
 
 ## Notes
-

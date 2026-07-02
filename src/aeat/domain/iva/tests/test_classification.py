@@ -235,9 +235,14 @@ _CLASSIFICATION_CASES = (
 
 
 def test_classification_rule_cases() -> None:
-    for case_id, overrides, expected_category, expected_rule_id, expected_reverse_charge, expected_rate_pct in (
-        _CLASSIFICATION_CASES
-    ):
+    for (
+        case_id,
+        overrides,
+        expected_category,
+        expected_rule_id,
+        expected_reverse_charge,
+        expected_rate_pct,
+    ) in _CLASSIFICATION_CASES:
         result = classify_iva(_criteria(**overrides))
         assert result.category is expected_category, case_id
         if expected_rule_id is not None:

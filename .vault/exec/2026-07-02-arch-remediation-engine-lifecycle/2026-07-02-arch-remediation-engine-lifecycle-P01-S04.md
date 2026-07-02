@@ -9,9 +9,6 @@ related:
   - "[[2026-07-02-arch-remediation-engine-lifecycle-plan]]"
 ---
 
-
-
-
 # Narrow dispose_engine to an internal seam invoked by the session owner and the harness teardown only
 
 ## Scope
@@ -30,4 +27,3 @@ No production caller disposes engines broadly; `dispose_engine` is an internal s
 Landed in commit `38e62c216`.
 
 ## Notes
-

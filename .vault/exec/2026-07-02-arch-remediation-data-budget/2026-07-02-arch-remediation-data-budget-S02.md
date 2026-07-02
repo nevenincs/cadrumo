@@ -9,9 +9,6 @@ related:
   - "[[2026-07-02-arch-remediation-data-budget-plan]]"
 ---
 
-
-
-
 # Add a packaging content-boundary gate that builds the wheel and asserts no tests member is present
 
 ## Scope
@@ -27,4 +24,3 @@ related:
 The wheel-content boundary is an executable contract: the tests exclude is proven to take effect (3-test module, green; wheel builds in ~20s).
 
 ## Notes
-

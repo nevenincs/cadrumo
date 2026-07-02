@@ -9,9 +9,6 @@ related:
   - "[[2026-07-02-arch-remediation-source-kind-deferrals-plan]]"
 ---
 
-
-
-
 # Migrate the foreign_asset deferral to a structured annotation citing this deferrals ADR with no promotion date and the M720 next-hardening-campaign review trigger
 
 ## Scope
@@ -27,4 +24,3 @@ related:
 M720 foreign-asset is governed.
 
 ## Notes
-

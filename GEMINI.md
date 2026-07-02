@@ -791,13 +791,15 @@ Run the multi-agent audit swarm on the event triggers below, not only when somet
 
 Trigger the swarm under three conditions. First, before any release cut that has crossed a domain boundary or persisted a new record type. Second, after any major structural refactor that touches more than two domain subpackages. Third, every 6–8 commits on a long-running branch when no other trigger has fired in the interim, to surface drift before it accumulates.
 
-Cover the seven standard axes. Dispatch one agent per axis: calculation-engine grounding, persistence-boundary identity, cross-domain handoffs, export/import fidelity, workflow + CLI surface, selector + binding drift, and semantic functionality-cluster overlap. Give each agent a focused scope plus an explicit reference to the established roundtrip-test pattern so findings come back as actionable structural deltas rather than open-ended commentary.
+Cover the eight standard axes. Dispatch one agent per axis: calculation-engine grounding, persistence-boundary identity, cross-domain handoffs, export/import fidelity, workflow + CLI surface, selector + binding drift, semantic functionality-cluster overlap, and runtime import-graph coupling. Give each agent a focused scope plus an explicit reference to the established roundtrip-test pattern so findings come back as actionable structural deltas rather than open-ended commentary.
 
 Run the seventh axis — semantic functionality-cluster overlap and canonical-definition enrollment — through the resident vaultspec-rag service. This axis discovers, by meaning rather than by symbol, every site that implements a given functional concept; classifies the set as a true duplication cluster or a constraint-shape-divergent set; and confirms that consumers import the canonical implementation rather than re-deriving it. Where no canonical home exists but two or more substitutable sites do, it nominates one. It exists because text search cannot cluster lexically different but semantically identical code: two modules that both round a Decimal to cents never co-occur in a grep result.
 
 Query the service by functional concept, never by domain jargon. Always pass `--port 8766` and `--max-results 20`. Treat a score floor around 0.50 as the signal threshold. Use RAG for discovery, then `rg` to verify the exact sites. Filter locale and test-docstring rows and treat the same string across four locales as one signal. RAG is a clustering instrument, not a symbol locator: pair every sweep with a targeted `rg` pass for known canonical symbols so a single-site authority is not misread as having no cluster. Apply the substitutability pre-filter below — it is mandatory for this axis. RAG goes stale during active remediation; run an incremental `index --type all --port 8766` after major commits and before each sweep rather than relying on the filesystem watcher alone.
 
-Match the model to the axis. Use sonnet for the four axes that need deeper structural analysis: calculation engine, cross-domain handoffs, selector / binding drift, semantic functionality-cluster overlap. Use haiku for the three breadth-oriented axes: persistence identity inventory, export/import fidelity, workflow + CLI surface. The cost / latency profile rewards model selection that matches the cognitive shape of each axis.
+Run the eighth axis — runtime import-graph coupling — through a grimp pass over the executed import graph, not the static import-time graph the layered-contract linter audits. The layered contracts read the import-TIME graph while the runtime graph is materially denser, because the codebase defers hundreds of function-local imports to break module-load cycles and soften layer edges; a cycle "fixed" by deferring an import is hidden from the static linter, not removed. Build the runtime graph with grimp (`grimp.build_graph("aeat", include_external_packages=False)`), then diff its cross-layer and cycle edges against the static picture: a cross-layer edge or module cycle present in the grimp graph but absent from the import-linter graph is a hidden coupling to report. Ground the read against the D7 lazy-import policy gate (`src/aeat/tests/test_lazy_import_policy.py`): that gate's allowlist is the declared inventory of unsanctioned function-local first-party edges, so a grimp-discovered runtime edge with no allowlist entry — or a new module cycle the allowlist does not explain — is the actionable finding this axis exists to surface. This axis is breadth-oriented; run it on haiku alongside the other inventory axes.
+
+Match the model to the axis. Use sonnet for the four axes that need deeper structural analysis: calculation engine, cross-domain handoffs, selector / binding drift, semantic functionality-cluster overlap. Use haiku for the four breadth-oriented axes: persistence identity inventory, export/import fidelity, workflow + CLI surface, runtime import-graph coupling. The cost / latency profile rewards model selection that matches the cognitive shape of each axis.
 
 Persist every finding in the vault. Each agent writes a single .vault/audit/yyyy-mm-dd-<axis>-swarm-audit.md document with frontmatter following the vaultspec template. Write findings as third-level headings with pathway label, file:line, data lost, and a concrete remediation. Reports must not modify production code; they exist to drive subsequent action commits.
 
@@ -2265,6 +2267,21 @@ and pass the registry-grounded parity gate (casilla set, numbering, section
 order). A structural divergence from the official AEAT modelo layout is a hard
 failure, never a warning.
 
+The same registry-grounded completeness gate MUST bind the fixed-width
+fichero-BOE (`.boe`) export, not only the workbook transport. `export_draft` MUST,
+before it writes any bytes, assert that every casilla the official record files
+that the `CalculationCompletenessManifest` also requires (`manifest ∩
+representable`, for the draft's disposition) carries a real value on disk; a
+required, representable casilla the draft omits would render as a blank fixed-width
+slot behind a valid SHA-256 digest — the structurally-thin file — and MUST raise a
+hard `FilingExportError` that enumerates every missing casilla with its official
+number and segmento. The rendered set keys on value presence
+(`ModeloValue.value is not None`), never on casilla-id membership, because
+`build_draft` emits an `EMPTY` (`value=None`) row for every declared casilla. The
+gate is scoped to `format == "fixed_width"`; an `xml_dictionary` export omits an
+absent casilla as a legitimately-absent optional element, so the blank-slot
+thinness does not apply.
+
 ## Why
 
 The `modelo-export-workbook-parity` research (finding A) found the calc-sheets
@@ -2298,6 +2315,18 @@ not a separate hand-maintained spec. This is the export-surface companion to
 - **Good:** the gate reports coverage honestly — a modelo whose completeness
   manifest is incomplete yields a weaker gate that says so, rather than implying
   full parity.
+- **Good:** `assert_export_mirrors_manifest` runs inside `export_draft` after the
+  rendered set is known and before `output_path.write_bytes`; a fixed-width `.boe`
+  that would omit a required, representable casilla panics with an enumerated
+  `FilingExportError` naming each casilla's number and segmento, and no file is
+  written.
+- **Bad:** computing the rendered set from `{v.casilla_id for v in draft.values}`
+  (id membership) instead of filtering `v.value is not None` — every declared
+  casilla, including the `EMPTY` ones, then counts as rendered and the gate never
+  fires on the real thin draft.
+- **Bad:** letting a fixed-width `.boe` export write a structurally-thin file (a
+  required casilla rendered blank) because the digest is valid — the digest is a
+  byte-integrity lock, not a completeness signal.
 - **Bad:** writing formatting, start/final, or evidence in one transport but not
   the other, or computing them at apply time instead of in the plan — offline
   and online then drift.
@@ -2312,7 +2341,14 @@ not a separate hand-maintained spec. This is the export-surface companion to
 ADR `2026-06-03-modelo-export-workbook-parity-adr` (accepted); research
 `2026-06-03-modelo-export-workbook-parity-research`; plan
 `2026-06-03-modelo-export-evidence-parity-plan` (W03/W04/W05). Promoted per the
-[[vaultspec-codify]] discipline.
+[[vaultspec-codify]] discipline. The fichero-BOE transport binding was added by
+ADR `2026-07-01-fichero-boe-parity-gate-adr` (accepted) after the gate completed a
+full implement→review→fix→validate cycle: an independent code review found the
+rendered set keyed on casilla-id membership rather than value presence (so the gate
+never fired on the real `EMPTY` thin state), which was fixed and locked with a test
+that reproduces the production state. Enforced by
+`test_export_completeness_gate.py`, `test_export_completeness_sets.py`, and
+`test_fichero_boe_completeness_parity.py`.
 
 ---
 name: modelo-identifiers-use-core-enum
@@ -3297,6 +3333,60 @@ in one full execution cycle. Companion rules:
 `cli-notices-are-the-only-diagnostic-channel`, `no-silent-under-declaration`.
 
 ---
+name: subagent-commits-require-explicit-pathspec
+trigger: always_on
+---
+
+# Rule
+
+A dispatched agent (or coordinator) committing in this shared worktree MUST pass
+an explicit pathspec to `git commit -- <path>...` naming only files it authored,
+and MUST verify (`git diff --cached`) that the staged set carries zero foreign
+markers immediately before committing. A bare `git commit` with no pathspec is
+forbidden: the shared index routinely holds peer campaigns' staged work, and a
+no-pathspec commit sweeps all of it under your SHA and message.
+
+## Why
+
+During the DAE-80 agent-harness rollout a subagent tasked with a one-line change
+verified its own file was clean, then ran `git add -- <its file>` followed by a
+`git commit` with NO pathspec. The shared index already held 35 staged files from
+the unrelated `cross-domain-continuity` campaign, and the no-pathspec commit
+bundled all of them into commit `84f84166f` under the subagent's message. This
+was not benign: it left the M100 anualidades regime (LIRPF art. 64/75) broken at
+committed HEAD — a deleted derivation function still referenced by
+`schema.toml`/registry bindings, a silent-under-declaration-class defect — and it
+mis-attributed a peer campaign's work to a foreign SHA. `git add` being
+path-scoped is not enough; the commit itself must be path-scoped, because
+`git commit` with no pathspec commits the entire index. This is the enforcement
+teeth behind `uncommitted-wip-is-not-orphaned` (which governs how to LAND your own
+change amid live peer WIP) and `aeat-git-worktree-safety` (which forbids the
+destructive un-bundling that a swept commit tempts).
+
+## How
+
+- **Good:** `git commit -m "..." -- src/aeat/foo.py src/aeat/tests/test_foo.py`
+  after `git diff --cached -- src/aeat/foo.py src/aeat/tests/test_foo.py` confirms
+  only your hunks are staged; a pathspec commit ignores every other staged path.
+- **Good:** for a file entangled with a peer's uncommitted hunks, use the
+  apply-cached gated drive from `uncommitted-wip-is-not-orphaned` (stage a
+  HEAD-anchored own-edits-only patch, verify zero foreign markers, then a
+  verified-index commit) rather than a pathspec commit that would re-stage the
+  peer's interleaved lines.
+- **Bad:** `git add -- my_file.py && git commit -m "..."` (no pathspec on the
+  commit) — sweeps every other file staged in the shared index under your SHA.
+  This is the `84f84166f` incident.
+- **Bad:** a no-pathspec `git commit` "because I only touched one file" — you did
+  not stage the index; peers did, and the commit takes the whole index.
+- **Bad:** a broad `git add` (a directory, `-A`, or `.`) that sweeps peer-staged
+  files, then a `git reset -- <your files>` to "undo" it. `git reset` in any form
+  is categorically forbidden here (`aeat-git-worktree-safety`) — even an
+  index-only pathspec reset. The fix is to never over-stage: `git add -- <your
+  explicit files only>` then `git commit -- <the same explicit files>`. If you
+  ever find you need `git reset` to clean up a bad add, you added too broadly —
+  there is no reset escape hatch.
+
+---
 name: terminology-scaffold-preserve-contract
 trigger: always_on
 ---
@@ -3492,12 +3582,16 @@ read-only: it is the zeroth move, not a pipeline phase, and produces no artifact
   or MCPs
 - `vaultspec-core spec mcps status --json` - verify MCP config health
 - `vaultspec-core spec system show` - inspect the assembled system prompt
-- `vaultspec-core sync` - propagate edits under `.vaultspec/rules/...`
+- `vaultspec-core sync` - propagate edits under `.vaultspec/...`
 - `vaultspec-core spec doctor` - diagnose overall workspace health
 - `vaultspec-core migrations status` / `vaultspec-core migrations run` - inspect or run
   pending schema migrations
 - `vaultspec-core vault feature archive <tag>` - archive a feature so it no longer
   exists in the active project
+- `vaultspec-core vault feature rename <old> <new>` - rename a feature tag across every
+  binding surface (document filenames, the exec folder, the `#feature` tag, `related:`
+  wiki-links, and the regenerated feature index); rolls back on failure during apply,
+  and `--force` merges the source into an existing target feature
 - `vaultspec-core vault rule promote --from <audit-stem> --as <rule-name>` - promote an
   audit finding to a project rule
 
@@ -3528,9 +3622,9 @@ propagation command after source-side changes.
 Permitted:
 
 - Edit body prose of a `.vault/` document scaffolded by `vaultspec-core vault add`.
-- Edit source files under `.vaultspec/rules/rules/`, `.vaultspec/rules/skills/`,
-  `.vaultspec/rules/agents/`, `.vaultspec/rules/hooks/`, or `.vaultspec/rules/mcps/`,
-  then run `vaultspec-core sync`.
+- Edit source files under `.vaultspec/rules/`, `.vaultspec/skills/`,
+  `.vaultspec/agents/`, `.vaultspec/hooks/`, or `.vaultspec/mcps/`, then run
+  `vaultspec-core sync`.
 
 Forbidden:
 
@@ -3540,9 +3634,9 @@ Forbidden:
 
 ## References
 
-- `.vaultspec/rules/reference/cli.md` - locally-resident machine-facing CLI reference:
-  command inventory, options, argument enumerations, exit codes, and environment
-  variables. Read this first; no network round-trip needed.
+- `.vaultspec/reference/cli.md` - locally-resident machine-facing CLI reference: command
+  inventory, options, argument enumerations, exit codes, and environment variables. Read
+  this first; no network round-trip needed.
 
 ---
 name: vaultspec-codify.builtin
@@ -3672,6 +3766,40 @@ discretionary sixth step. Most features end at review; the features whose lesson
 outlast the feature itself end at codify.
 
 ---
+name: vaultspec-discovery.builtin
+trigger: always_on
+---
+
+# Codebase and intent discovery
+
+Begin every pipeline phase - Research, ADR, Plan, Execute - by grounding in what the
+project already decided and built. The project's own benchmarking is unambiguous: a
+semantic-search-led hybrid sweep finds a feature fastest and at the lowest context cost
+\- roughly 1.3-2x cheaper than broad keyword search on a large tree - and recalls
+governing decisions with near-zero noise. Lead with it. The validated sequence is locate
+by meaning, read the epicenter whole, confirm with grep:
+
+1. **Locate by meaning.** For code, lead with
+   `vaultspec-rag search "<concept and domain nouns>" --type code` (narrow with
+   `--language`/`--path`); it reaches the right file in about one call where broad
+   globbing floods context. For decisions and intent,
+   `vaultspec-rag search "<intent>" --type vault --doc-type adr` - the directed ADR
+   filter, sharper than catch-all `--type vault`. `vaultspec-core status [target]`,
+   `vaultspec-core vault list`, and `vaultspec-core vault graph` are first-class for
+   orientation, in-flight plan state, and project health - reach for them to get your
+   bearings on intent. For a small, well-named module, list the directory.
+1. **Read** the epicenter file - or, when extending a feature, the nearest existing
+   analogue - in full. This whole-file read is the breakthrough in nearly every run.
+1. **Confirm** exact symbols and insertion points with a targeted grep, which is sharper
+   than semantic search at exact-symbol lookup.
+1. For decision discovery, round out recall by listing `.vault/adr/` and filtering by
+   feature - semantic search alone can miss lower-ranked or opaquely-named records.
+
+Do not lead with broad `Glob`/grep sweeps; their context cost scales badly on large
+codebases, and grep earns its place at the confirmation step. Where `vaultspec-rag` is
+not installed, the `vaultspec-core` discovery verbs and grep carry the same sequence.
+
+---
 name: vaultspec-dry-run-discipline.builtin
 trigger: always_on
 ---
@@ -3790,63 +3918,66 @@ name: vaultspec-rag.builtin
 trigger: always_on
 ---
 
-# vaultspec-rag — semantic search
+# vaultspec-rag — semantic search for code and decisions
 
-Use semantic search for codebase discovery and implementation discovery. When you need
-to find where or how something is done and don't know the exact name, search by meaning
-instead of grepping keywords or guessing identifiers.
+Discover by MEANING when you do not know the exact name, instead of grepping keywords or
+guessing identifiers. vaultspec-rag does two jobs: find the CODE, and find the DECISIONS -
+the ADRs (architecture decision records) that govern it.
 
-## Write good queries
+Server mode is the default backend. If a search reports the service is down, start it with
+`uvx vaultspec-rag server start` (small or offline projects opt into the on-disk local
+backend with `--local-only`). The running service auto-reindexes on file changes.
+DO NOT manually reindex during normal work.
 
-The index is hybrid: dense embeddings match meaning, sparse vectors match exact terms,
-and a cross-encoder reranks the top hits. A good query feeds both halves. So:
+## Discover code by meaning
 
-- Describe the concept or behavior in a short phrase - this drives the dense, semantic
-  half.
-- In that same phrase, name the concrete domain nouns the target code or docs would use
-  - these drive the sparse, exact-match half. A query of pure natural language leaves
-    the sparse half nothing to match.
-- One concept per query. Narrow with filters; don't paste bare keywords or a guessed
-  function name.
+`--type code` searches source by meaning. Phrase the query as a short behaviour plus the
+concrete domain nouns the target code would use: the behaviour drives semantic matching, the
+nouns drive exact matching, so a bare keyword or pure prose finds less than both together.
 
 ```
-vaultspec-rag search "file lock acquired around incremental index write" --type code
-vaultspec-rag search "retry policy backoff for failed webhook delivery" --type code --language python
-vaultspec-rag search "decision on gpu_lock scope around forward pass" --type vault --doc-type adr
+uvx vaultspec-rag search "retry backoff around failed webhook delivery" --type code
 ```
 
-Code filters: `--language --path --function-name --class-name --include-path GLOB`.
-Vault filters: `--doc-type --feature --date --tag`. Filters also work inline in the
-query: `type:adr lang:python func:main`.
+## Discover architecture decisions
 
-## Run the server
-
-If the server is not running, start it:
+When you need the WHY - the rationale, constraints, or decision behind code - search the
+vault's ADRs, not the source. `--type vault --doc-type adr` returns the governing records.
 
 ```
-vaultspec-rag server start
+uvx vaultspec-rag search "decision on gpu lock scope around the forward pass" --type vault --doc-type adr
 ```
 
-Server mode is the default backend: `server start` supervises the managed Qdrant
-server and loads the GPU models. The server is the only workable backend at codebase
-scale - local mode is orders of magnitude slower - so it is the assumed default, not an
-opt-in. Provision the binary and models once with `vaultspec-rag install` (it fetches
-torch, the models, and the Qdrant binary by default).
+`--doc-type` also accepts `audit`, `plan`, `reference`, `research`, and `exec` (comma-separate
+to union several).
 
-Local mode is a first-class explicit opt-out for small projects, CI, or air-gapped
-hosts: `vaultspec-rag server start --local-only` (or `VAULTSPEC_RAG_LOCAL_ONLY=1`, or
-`vaultspec-rag install --local-only` which persists the choice). It uses the on-disk
-store and needs no server binary.
+## Cut noise with filters
 
-Check dependency readiness any time with `vaultspec-rag server doctor` (`--json` for the
-machine-readable snapshot): it reports torch CUDA, model presence, and the Qdrant binary
-and supervised-server state.
+Semantic search competes production code against its own noise - overlapping tests, parallel
+locale files, generated and vendored trees, worktree clones. Code search is production-biased
+by default: it hides duplicate/derivative domains (`generated`, `worktree`) and demotes
+`tests`, `docs`, `locale`, and `vendored` beneath production. When noise still crowds a page,
+narrow by DOMAIN rather than raising `--max-results`. The domains are `prod`, `tests`, `docs`,
+`locale`, `generated`, `vendored`, `worktree`.
 
-The running service auto-reindexes on file changes - DO NOT manually reindex during
-normal work.
+Steer with inline query tokens (comma-separated, repeatable):
 
-The same search is available through MCP as the `search_vault` and `search_codebase`
-tools.
+```
+uvx vaultspec-rag search "fixture setup helpers exclude:tests" --type code
+uvx vaultspec-rag search "auth token validation only:prod" --type code
+uvx vaultspec-rag search "translation table lookup include:locale" --type code
+```
+
+`exclude:` hides a domain, `only:` keeps just the named domains, and `include:` re-admits a
+domain the default profile hides or demotes. Compose with path and category filters:
+
+```
+uvx vaultspec-rag search "request handler" --type code --include-path "src/**" --exclude-path "**/legacy/**"
+uvx vaultspec-rag search "encode batch" --type code --prefer production
+```
+
+The full option set is `uvx vaultspec-rag search --help`. The same search is available through
+MCP as the `search_codebase` and `search_vault` tools.
 
 ---
 name: vaultspec.builtin

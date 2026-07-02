@@ -11,7 +11,6 @@ related:
   - '[[2026-07-02-arch-remediation-engine-lifecycle-adr]]'
 ---
 
-
 # `arch-remediation-engine-lifecycle` plan
 
 ### Phase `P01` - session-owner takeover

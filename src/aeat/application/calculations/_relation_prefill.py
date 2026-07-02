@@ -61,10 +61,6 @@ from decimal import Decimal
 from typing import TYPE_CHECKING, Final
 
 from ...adapters.persistence.storage import ClassificationError, DecryptionError, EnvelopeVersionError
-from ..storage.calc_sheets import (
-    RelationValue,
-    RelationValues,
-)
 from ...core import BindingSourceKind, Modelo, Period
 from ...core.logging import get_logger
 from ...core.parsing import parse_iso8601_date
@@ -87,6 +83,10 @@ from ..aggregation import (
     CalculationSourceProvenance,
     CalculationSourceResolution,
     storage_degradation_resolution,
+)
+from ..storage.calc_sheets import (
+    RelationValue,
+    RelationValues,
 )
 from ._m111_no_retenciones import (
     is_m111_no_retenciones_period,
@@ -216,8 +216,7 @@ def _profile_path_values_for_bucket(bucket_id: str) -> dict[str, str] | None:
     Returns ``None`` only when there is genuinely no profile for the bucket.
     """
     from ...domain.user_profile import ProfileNotFoundError
-    from ..user_profile import ProfileRepository
-    from ..user_profile import record_to_path_values
+    from ..user_profile import ProfileRepository, record_to_path_values
 
     try:
         aggregate = ProfileRepository().load(bucket_id)

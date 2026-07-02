@@ -395,7 +395,7 @@ def test_modelo_210_2025_verification_predicates_guard_representante_fiscal_and_
 def test_modelo_210_2025_inmobiliaria_branch_carries_categorical_conditional_advisory() -> None:
     """The 2025 revision carries the inmobiliaria-branch categorical-conditional advisory.
 
-    Per the m210-categorical-conditional-predicate ADR: the inmobiliaria
+    Per the m210 categorical-conditional predicate decision: the inmobiliaria
     branch's silent-zero risk (tipo_renta == "inmobiliaria" implies a
     non-zero base_imponible) is gated on a categorical casilla condition the
     implies_nonzero operator cannot express, so it uses the

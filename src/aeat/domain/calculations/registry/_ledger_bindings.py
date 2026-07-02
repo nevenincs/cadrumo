@@ -16,12 +16,12 @@ from ...iva import (
     EUMemberState,
     InvoiceKind,
     IvaCategory,
+    IvaExemptionArticle,
     IvaFlowDirection,
     IvaRateKind,
     OssIossRegime,
     TransactionKind,
 )
-from ...iva import IvaExemptionArticle
 from ._binding_aggregation import binding_aggregation_op
 from ._binding_selector_utils import invariant_diagnostics, selector_against_model
 from ._binding_selector_utils import selector_as_dict as _selector_as_dict

@@ -69,10 +69,13 @@ class Modelo(StrEnum):
     M036 = "036"
     M037 = "037"
     M038 = "038"
+    M043 = "043"
     M100 = "100"
     M111 = "111"
     M115 = "115"
     M117 = "117"
+    M121 = "121"
+    M122 = "122"
     M123 = "123"
     M126 = "126"
     M128 = "128"
@@ -80,7 +83,11 @@ class Modelo(StrEnum):
     M131 = "131"
     M136 = "136"
     M140 = "140"
+    M143 = "143"
+    M149 = "149"
+    M150 = "150"
     M151 = "151"
+    M156 = "156"
     M159 = "159"
     M165 = "165"
     M170 = "170"
@@ -92,6 +99,8 @@ class Modelo(StrEnum):
     M181 = "181"
     M182 = "182"
     M184 = "184"
+    M185 = "185"
+    M186 = "186"
     M187 = "187"
     M188 = "188"
     M189 = "189"
@@ -105,6 +114,13 @@ class Modelo(StrEnum):
     M202 = "202"
     M210 = "210"
     M216 = "216"
+    M218 = "218"
+    M221 = "221"
+    M235 = "235"
+    M236 = "236"
+    M240 = "240"
+    M241 = "241"
+    M242 = "242"
     M220 = "220"
     M222 = "222"
     M231 = "231"
@@ -138,10 +154,64 @@ class Modelo(StrEnum):
     M379 = "379"
     M380 = "380"
     M390 = "390"
+    M430 = "430"
+    M480 = "480"
+    M490 = "490"
+    M510 = "510"
+    M511 = "511"
+    M517 = "517"
+    M518 = "518"
+    M519 = "519"
+    M520 = "520"
+    M521 = "521"
+    M522 = "522"
+    M524 = "524"
+    M548 = "548"
+    M553 = "553"
+    M554 = "554"
+    M555 = "555"
+    M556 = "556"
+    M557 = "557"
+    M558 = "558"
+    M559 = "559"
+    M560 = "560"
+    M561 = "561"
+    M562 = "562"
+    M563 = "563"
+    M566 = "566"
+    M568 = "568"
+    M570 = "570"
+    M573 = "573"
+    M576 = "576"
+    M580 = "580"
+    M581 = "581"
+    M582 = "582"
+    M583 = "583"
+    M584 = "584"
+    M585 = "585"
+    M586 = "586"
+    M587 = "587"
+    M588 = "588"
+    M589 = "589"
+    M590 = "590"
+    M591 = "591"
+    M592 = "592"
+    M593 = "593"
+    M595 = "595"
+    M596 = "596"
+    M604 = "604"
     M714 = "714"
+    M718 = "718"
     M720 = "720"
     M721 = "721"
+    M795 = "795"
+    M796 = "796"
+    M797 = "797"
+    M798 = "798"
+    M763 = "763"
     M840 = "840"
+    M848 = "848"
+    M993 = "993"
 
 
 #: Recognized AEAT obligation modelos the registry does **not** yet model, each
@@ -161,6 +231,37 @@ class Modelo(StrEnum):
 #: declaraciones informativas and retención forms; it is not yet AEAT's full
 #: ~200-form set.
 UNMODELED_OBLIGATIONS: Mapping[Modelo, str] = {
+    Modelo.M222: "pago fraccionado del Impuesto sobre Sociedades en regimen de consolidacion fiscal (grupos)",
+    Modelo.M234: "mecanismos transfronterizos de planificacion fiscal DAC6 (informativa)",
+    Modelo.M136: "gravamen especial premios loterias (autoliquidacion trimestral)",
+    Modelo.M165: "certificaciones a socios de entidades de nueva o reciente creacion (informativa anual)",
+    Modelo.M179: "cesion de uso de viviendas con fines turisticos (informativa anual)",
+    Modelo.M181: "prestamos, creditos y operaciones financieras sobre inmuebles (informativa anual)",
+    Modelo.M182: "donativos, donaciones y aportaciones recibidas (informativa anual)",
+    Modelo.M189: "valores, seguros y rentas (informativa anual)",
+    Modelo.M233: "gastos en guarderias o centros de educacion infantil autorizados (informativa anual)",
+    Modelo.M238: "operadores de plataformas DAC7 (informativa anual)",
+    Modelo.M270: "resumen anual de retenciones del gravamen especial sobre premios de loterias",
+    Modelo.M280: "planes de ahorro a largo plazo (informativa anual)",
+    Modelo.M289: "cuentas financieras en el ambito de la asistencia mutua CRS (informativa anual)",
+    Modelo.M345: "planes y fondos de pensiones: participes y aportaciones (informativa anual)",
+    Modelo.M379: "pagos transfronterizos CESOP (informativa trimestral)",
+    Modelo.M038: "operaciones de entidades inscritas en registros publicos (informativa mensual)",
+    Modelo.M140: "IRPF deduccion por maternidad, solicitud de abono anticipado",
+    Modelo.M341: "reintegro de compensaciones del regimen especial de agricultura, ganaderia y pesca del IVA",
+    Modelo.M380: "IVA operaciones asimiladas a las importaciones (declaracion-liquidacion)",
+    Modelo.M143: "IRPF deducciones familia numerosa/discapacidad, solicitud de abono anticipado",
+    Modelo.M848: "comunicacion del importe neto de la cifra de negocios a efectos del IAE",
+    Modelo.M490: "Impuesto sobre Determinados Servicios Digitales (autoliquidacion trimestral)",
+    Modelo.M604: "Impuesto sobre las Transacciones Financieras (autoliquidacion mensual)",
+    Modelo.M763: "Impuesto sobre actividades de juego (autoliquidacion trimestral)",
+    Modelo.M156: "IRPF cotizaciones de afiliados/mutualistas a efectos de la deduccion por maternidad (anual)",
+    Modelo.M185: "declaracion informativa mensual de cotizaciones de afiliados y mutualistas",
+    Modelo.M186: "declaracion informativa de nacimientos y defunciones (Registro Civil)",
+    Modelo.M592: "impuesto especial sobre envases de plastico no reutilizables (fabricantes/adquirentes)",
+    Modelo.M576: "IEDMT autoliquidacion por matriculacion de determinados medios de transporte",
+    Modelo.M121: "comunicacion de cesion del derecho a deducciones por familia numerosa o discapacidad",
+    Modelo.M122: "regularizacion de deducciones familia numerosa/discapacidad por no obligados a declarar",
     Modelo.M220: "declaracion anual del Impuesto sobre Sociedades en regimen de consolidacion fiscal (grupos)",
     Modelo.M216: "IRNR retenciones e ingresos a cuenta for non-resident income, not yet registry-modeled",
 }
@@ -182,6 +283,62 @@ _REGISTRY_OUT_OF_SCOPE_OBLIGATIONS: Mapping[Modelo, str] = {
 #: scope rather than advised so they do not become investigate-noise for the target
 #: profiles, while still being explicitly accounted for by the completeness invariant.
 _UNMODELED_OUT_OF_SCOPE_OBLIGATIONS: Mapping[Modelo, str] = {
+    Modelo.M510: "impuesto especial de fabricacion; lo declaran fabricantes, depositos u operadores del sector",
+    Modelo.M511: "impuesto especial de fabricacion; lo declaran fabricantes, depositos u operadores del sector",
+    Modelo.M517: "impuesto especial de fabricacion; lo declaran fabricantes, depositos u operadores del sector",
+    Modelo.M518: "impuesto especial de fabricacion; lo declaran fabricantes, depositos u operadores del sector",
+    Modelo.M519: "impuesto especial de fabricacion; lo declaran fabricantes, depositos u operadores del sector",
+    Modelo.M520: "impuesto especial de fabricacion; lo declaran fabricantes, depositos u operadores del sector",
+    Modelo.M521: "impuesto especial de fabricacion; lo declaran fabricantes, depositos u operadores del sector",
+    Modelo.M522: "impuesto especial de fabricacion; lo declaran fabricantes, depositos u operadores del sector",
+    Modelo.M524: "impuesto especial de fabricacion; lo declaran fabricantes, depositos u operadores del sector",
+    Modelo.M548: "impuesto especial de fabricacion; lo declaran fabricantes, depositos u operadores del sector",
+    Modelo.M553: "impuesto especial de fabricacion; lo declaran fabricantes, depositos u operadores del sector",
+    Modelo.M554: "impuesto especial de fabricacion; lo declaran fabricantes, depositos u operadores del sector",
+    Modelo.M555: "impuesto especial de fabricacion; lo declaran fabricantes, depositos u operadores del sector",
+    Modelo.M556: "impuesto especial de fabricacion; lo declaran fabricantes, depositos u operadores del sector",
+    Modelo.M557: "impuesto especial de fabricacion; lo declaran fabricantes, depositos u operadores del sector",
+    Modelo.M558: "impuesto especial de fabricacion; lo declaran fabricantes, depositos u operadores del sector",
+    Modelo.M559: "impuesto especial de fabricacion; lo declaran fabricantes, depositos u operadores del sector",
+    Modelo.M561: "impuesto especial de fabricacion; lo declaran fabricantes, depositos u operadores del sector",
+    Modelo.M562: "impuesto especial de fabricacion; lo declaran fabricantes, depositos u operadores del sector",
+    Modelo.M563: "impuesto especial de fabricacion; lo declaran fabricantes, depositos u operadores del sector",
+    Modelo.M566: "impuesto especial de fabricacion; lo declaran fabricantes, depositos u operadores del sector",
+    Modelo.M570: "impuesto especial de fabricacion; lo declaran fabricantes, depositos u operadores del sector",
+    Modelo.M573: "impuesto especial de fabricacion; lo declaran fabricantes, depositos u operadores del sector",
+    Modelo.M580: "impuesto especial de fabricacion; lo declaran fabricantes, depositos u operadores del sector",
+    Modelo.M581: "impuesto especial de fabricacion; lo declaran fabricantes, depositos u operadores del sector",
+    Modelo.M582: "impuesto especial de fabricacion; lo declaran fabricantes, depositos u operadores del sector",
+    Modelo.M590: "impuesto especial de fabricacion; lo declaran fabricantes, depositos u operadores del sector",
+    Modelo.M560: "impuesto medioambiental/sectorial; lo declaran productores o instalaciones del sector",
+    Modelo.M595: "impuesto medioambiental/sectorial; lo declaran productores o instalaciones del sector",
+    Modelo.M596: "impuesto medioambiental/sectorial; lo declaran productores o instalaciones del sector",
+    Modelo.M583: "impuesto medioambiental/sectorial; lo declaran productores o instalaciones del sector",
+    Modelo.M584: "impuesto medioambiental/sectorial; lo declaran productores o instalaciones del sector",
+    Modelo.M585: "impuesto medioambiental/sectorial; lo declaran productores o instalaciones del sector",
+    Modelo.M588: "impuesto medioambiental/sectorial; lo declaran productores o instalaciones del sector",
+    Modelo.M589: "impuesto medioambiental/sectorial; lo declaran productores o instalaciones del sector",
+    Modelo.M591: "impuesto medioambiental/sectorial; lo declaran productores o instalaciones del sector",
+    Modelo.M586: "impuesto medioambiental/sectorial; lo declaran productores o instalaciones del sector",
+    Modelo.M587: "impuesto medioambiental/sectorial; lo declaran productores o instalaciones del sector",
+    Modelo.M593: "impuesto medioambiental/sectorial; lo declaran productores o instalaciones del sector",
+    Modelo.M430: "impuesto sobre primas de seguros; lo declaran las entidades aseguradoras",
+    Modelo.M480: "impuesto sobre primas de seguros, resumen anual; lo declaran las aseguradoras",
+    Modelo.M568: "IEDMT solicitud de devolucion; tramite puntual del sector de matriculacion",
+    Modelo.M149: "regimen especial de impatriados (vinculado al Modelo 151); fuera del nucleo autonomo/PYME",
+    Modelo.M150: "regimen especial de impatriados, declaracion residual; fuera del nucleo autonomo/PYME",
+    Modelo.M218: "pago fraccionado IS residual, sustituido en la practica por el Modelo 202",
+    Modelo.M221: "prestacion patrimonial por conversion de activos por impuesto diferido; supuesto especializado",
+    Modelo.M235: "actualizacion de mecanismos transfronterizos DAC6; complementa el Modelo 234, filers especializados",
+    Modelo.M236: "utilizacion de mecanismos transfronterizos DAC6; complementa el Modelo 234, filers especializados",
+    Modelo.M240: "Impuesto Complementario (Pilar 2), comunicacion; solo grandes grupos multinacionales",
+    Modelo.M241: "Impuesto Complementario (Pilar 2), informativa GIR; solo grandes grupos multinacionales",
+    Modelo.M242: "Impuesto Complementario (Pilar 2), autoliquidacion; solo grandes grupos multinacionales",
+    Modelo.M718: "Impuesto Temporal de Solidaridad de las Grandes Fortunas; solo patrimonios netos elevados",
+    Modelo.M795: "gravamen temporal energetico; solo grandes operadores del sector",
+    Modelo.M796: "gravamen temporal energetico, pago anticipado; solo grandes operadores del sector",
+    Modelo.M797: "gravamen temporal de entidades de credito; solo grandes entidades del sector",
+    Modelo.M798: "gravamen temporal de entidades de credito, pago anticipado; solo grandes entidades",
     Modelo.M159: "consumo de energia electrica (lo declaran las comercializadoras)",
     Modelo.M170: "operaciones con tarjetas (lo declaran las entidades de gestion de cobros)",
     Modelo.M171: "imposiciones, disposiciones y cobros (lo declaran las entidades de credito)",
@@ -194,6 +351,8 @@ _UNMODELED_OUT_OF_SCOPE_OBLIGATIONS: Mapping[Modelo, str] = {
     Modelo.M035: "registro censal de la ventanilla unica OSS/IOSS del IVA; no es autoliquidacion periodica",
     Modelo.M362: "reembolso de IVA diplomatico/consular/OOII; no aplica a contribuyentes generales",
     Modelo.M363: "reconocimiento previo de exencion de IVA diplomatica/consular; no aplica a contribuyentes generales",
+    Modelo.M043: "tasa fiscal del juego (bingo); gestion cedida a las CCAA; no aplica a contribuyentes generales",
+    Modelo.M993: "procedimiento interno AEAT de control de deducciones autonomicas; sin orden de aprobacion",
     Modelo.M198: "operaciones con activos financieros y otros valores mobiliarios (anual)",
     Modelo.M290: "cuentas de personas estadounidenses (FATCA, instituciones financieras)",
     Modelo.M291: "cuentas de no residentes sin establecimiento permanente (entidades)",

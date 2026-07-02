@@ -154,8 +154,8 @@ def _base_2025_inputs() -> dict[CasillaId, Decimal]:
         # renta-2025-minimo-contribuyente-base-2025 (state and per-CCAA
         # autonomic), and cannot be supplied as inputs.
         # 0513 and 0514 are now computed via the mínimo por descendientes
-        # engine (renta-2025-profile-minimo-descendientes-estatal binding,
-        # modelo-100-minimo-descendientes-engine ADR) and cannot be supplied
+        # engine (renta-2025-profile-minimo-descendientes-estatal binding)
+        # and cannot be supplied
         # as inputs; see the binding_values entry in _scenario_2025.
         _C0515: Decimal("0"),
         _C0516: Decimal("0"),
@@ -218,7 +218,7 @@ def _scenario_2025(
             # BIN-pendiente fresh-filer baseline (2025 binding).
             "renta-2025-base-liquidable-negativa-general-anterior": Decimal("0"),
             # Childless profile: Art. 58/61 LIRPF mínimo por descendientes
-            # aggregate is zero (modelo-100-minimo-descendientes-engine ADR).
+            # aggregate is zero (Option A engine).
             "renta-2025-profile-minimo-descendientes-estatal": Decimal("0"),
         },
         enum_binding_values={"renta-2025-profile-tax-residence-ccaa": "madrid"},
@@ -357,7 +357,7 @@ def test_base_liquidable_general_applies_reductions() -> None:
             # BIN-pendiente fresh-filer baseline (2025 binding).
             "renta-2025-base-liquidable-negativa-general-anterior": Decimal("0"),
             # Childless profile: Art. 58/61 LIRPF mínimo por descendientes
-            # aggregate is zero (modelo-100-minimo-descendientes-engine ADR).
+            # aggregate is zero (Option A engine).
             "renta-2025-profile-minimo-descendientes-estatal": Decimal("0"),
         },
         enum_binding_values={"renta-2025-profile-tax-residence-ccaa": "madrid"},

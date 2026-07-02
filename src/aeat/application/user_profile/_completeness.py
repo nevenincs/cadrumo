@@ -55,9 +55,7 @@ def iva_regime_required(values: Mapping[str, object]) -> bool:
     if entity_type != EntityType.NATURAL_PERSON.value:
         return True
     categories = {
-        token.strip()
-        for token in _token(values.get(IRPF_INCOME_CATEGORIES_PATH)).split(",")
-        if token.strip()
+        token.strip() for token in _token(values.get(IRPF_INCOME_CATEGORIES_PATH)).split(",") if token.strip()
     }
     return IrpfIncomeCategory.ACTIVIDAD_ECONOMICA.value in categories
 

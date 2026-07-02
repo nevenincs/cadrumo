@@ -1,4 +1,4 @@
-"""D1 wiring proof: the persona-scoped tool boundary is enforced by the live server.
+"""Wiring proof: the persona-scoped tool boundary is enforced by the live server.
 
 ``_persona_scope.py`` declares the per-persona ``(family, mutability)`` scope
 and the pure predicate ``is_tool_in_persona_scope``; this module proves that
@@ -15,8 +15,7 @@ KNOWN LIMITATION (see ``_persona_scope.py``'s module docstring): the scope is
 family-granular. ``modelo-preparer``, ``verifier``, and ``reconciler`` all
 declare ``families={"modelo"}``, so this gate cannot structurally distinguish
 between them - it cannot, for example, stop the preparer from calling
-``modelo.export``. That boundary stays prose-level (D3 of
-``2026-07-01-agent-harness-adr``), not enforced here.
+``modelo.export``. That boundary stays prose-level, not enforced here.
 """
 
 from __future__ import annotations

@@ -26,24 +26,19 @@ from dataclasses import dataclass
 from decimal import Decimal
 from enum import StrEnum
 
-from ...core import Modelo
-from ...core import Period
+from ...core import Modelo, Period
 from ...domain.modelos import WorkUnit
-from ...domain.transactions import (
-    BusinessClassification,
-    TransactionDirection,
-    TransactionLifecycleState,
-)
 from ...domain.transactions import (
     IRPF_CATEGORY_ACTIVIDAD_ECONOMICA,
     IRPF_CATEGORY_TRABAJO,
-)
-from ...domain.transactions import (
+    BusinessClassification,
     Transaction,
     TransactionCatalogue,
+    TransactionCatalogueRepository,
+    TransactionCatalogueRepositoryProtocol,
+    TransactionDirection,
+    TransactionLifecycleState,
 )
-from ...domain.transactions import TransactionCatalogueRepositoryProtocol
-from ...domain.transactions import TransactionCatalogueRepository
 
 _THRESHOLD = Decimal("0.70")
 _ZERO = Decimal("0")

@@ -15,16 +15,6 @@ related:
   - '[[2026-06-04-cross-domain-continuity-research]]'
 ---
 
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the
-       related: field above.
-     - The related: field carries the AUTHORISING documents
-       (ADR, research, reference, prior plan) for every Step in
-       this plan. Steps inherit this chain; per-row reference
-       footers do not exist.
-     - NEVER use [[wiki-links]] or markdown links in the
-       document body. -->
-
 <!-- RETIRED: P02, P64, S01 -->
 
 # `cross-domain-continuity` `cross-domain continuity remediation epic - open-ended persona-driven correctness campaign` plan
@@ -439,7 +429,6 @@ Bulk of Cluster O. Each Step is a single file drift resolution. Mechanical and r
 ### Phase `W09.P39` - _missing_refs utility duplication consolidation
 
 Seven identical copies of _missing_refs across _validate modules. Extract to a single helper module and import.
-
 
 ### Phase `W09.P40` - ledger aggregation duplication pair resolution
 

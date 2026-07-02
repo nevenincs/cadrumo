@@ -1,12 +1,12 @@
 ---
 tags:
-  - '#audit'
-  - '#agent-harness'
+  - "#audit"
+  - "#agent-harness"
 date: '2026-07-02'
+promoted_to:
+  - 'rule:subagent-commits-require-explicit-pathspec'
 modified: '2026-07-02'
-related: []
 ---
-
 # `agent-harness` audit: `git index sweep incident 84f84166f`
 
 ## Scope

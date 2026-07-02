@@ -1,13 +1,12 @@
 """HITL confirmation gate wired end-to-end for the operator golden-task eval (category 8).
 
-Closes eval-catalogue category 8 (HITL / confirmation bypass, NET-NEW -
-``.vault/research/2026-07-01-agent-harness-research.md``): "an autonomous agent
-optimising for completion may pass ``--yes``; no persona repro (humans had no
-reason to); justifies the Q3 defense-in-depth." ADR
-``2026-06-30-agent-harness-adr`` Q3 makes the ``PreToolUse`` gate the
-operator-facing, granular half of that defense-in-depth (the CLI's own
-``--yes`` / write-policy / ``LiveSubmitForbiddenError`` rails are the
-deterministic backstop beneath it).
+Covers eval-catalogue category 8 (HITL / confirmation bypass): an autonomous
+agent optimising for completion may pass ``--yes``, a failure mode no human
+persona would reproduce (a human has no reason to bypass their own
+confirmation). The ``PreToolUse`` gate is the operator-facing, granular half
+of the defense-in-depth against that risk (the CLI's own ``--yes`` /
+write-policy / ``LiveSubmitForbiddenError`` rails are the deterministic
+backstop beneath it).
 
 ``src/aeat/entrypoints/mcp/tests/test_hitl_and_live_write.py`` already proves the
 pure ``confirmation_for_tool`` function returns the right enum for a handful of
@@ -37,15 +36,19 @@ import pytest
 
 from ....application.operator_surface import OperatorMutability
 from ....entrypoints.cli import command_schema_refs
+from ....entrypoints.mcp import _server as _mcp_server
+from ....entrypoints.mcp import (
+    McpAnnotations,
+    annotations_for_command,
+)
 from ....entrypoints.mcp import (
     ConfirmationPolicy,
-    McpAnnotations,
-    McpToolDescriptor,
-    annotations_for_command,
-    build_tool_descriptors,
     confirmation_for_tool,
 )
-from ....entrypoints.mcp import _server as _mcp_server
+from ....entrypoints.mcp import (
+    McpToolDescriptor,
+    build_tool_descriptors,
+)
 from .. import ConfirmationGateCheck, ConfirmationTier, load_scenario, run_golden_scenario
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]

@@ -11,16 +11,6 @@ related:
   - '[[2026-07-02-arch-remediation-crash-window-reference]]'
 ---
 
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the
-       related: field above.
-     - The related: field carries the AUTHORISING documents
-       (ADR, research, reference, prior plan) for every Step in
-       this plan. Steps inherit this chain; per-row reference
-       footers do not exist.
-     - NEVER use [[wiki-links]] or markdown links in the
-       document body. -->
-
 # `arch-remediation-crash-window` plan
 
 ### Phase `P01` - VERIFY-cell resolution

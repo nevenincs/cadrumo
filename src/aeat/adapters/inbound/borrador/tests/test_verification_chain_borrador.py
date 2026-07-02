@@ -86,7 +86,7 @@ pytestmark = [
 _BORRADOR_FIXTURES_DIR = FIXTURES_DIR / "borrador"
 
 # Casilla 0505 (base liquidable general sometida a gravamen) is computed from
-# the 2020-2023 revisions onward (max(0, 0500), #532 Phase 2), so it can no
+# the 2020-2023 revisions onward (max(0, 0500)), so it can no
 # longer be supplied as a leaf input. The verification chain feeds the trabajo
 # leaf 0003 (ingresos íntegros) instead and lets the engine derive 0500 -> 0505.
 # In the fixture scenario the only work-income adjustment is the art. 19.2.f

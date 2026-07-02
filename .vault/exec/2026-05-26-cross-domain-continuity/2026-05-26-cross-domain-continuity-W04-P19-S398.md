@@ -9,41 +9,6 @@ related:
   - "[[2026-05-26-cross-domain-continuity-plan]]"
 ---
 
-<!-- FRONTMATTER RULES:
-     tags: one directory tag (hardcoded #exec) and one feature tag.
-     Replace cross-domain-continuity with a kebab-case feature tag, e.g. #foo-bar.
-     Additional tags may be appended below the required pair.
-
-     modified: CLI-maintained last-modified stamp; set at scaffold time,
-     refreshed by mutating CLI verbs and vault check fix; never hand-edit.
-
-     step_id is the originating Step's canonical identifier, e.g. S01.
-     The S398 and 2026-05-26-cross-domain-continuity-plan placeholders are machine-filled by
-     `vaultspec-core vault add exec`; do not fill them by hand.
-
-     Related: use wiki-links as '[[yyyy-mm-dd-foo-bar-plan]]' and link the
-     parent plan.
-
-     DO NOT add fields beyond those scaffolded; metadata lives
-     only in the frontmatter. -->
-
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the related: field above.
-     - NEVER use [[wiki-links]] or markdown links in the document body.
-     - NEVER reference file paths in the body. If you must name a source file,
-       class, or function, use inline backtick code: `src/module.py`. -->
-
-<!-- STEP RECORD:
-     This file represents one Step from the originating plan. Identified
-     by its canonical leaf identifier (S##) and ancestor display path.
-     The FU-task-226 M131 cuota-minima regulatory floor authoring gated on Orden EHA/672/2007 modulo-tariff corpus landing under task 226 and ## Scope
-
-- `structural implies_nonzero(C01 C07) attempt rolled back at c159966df because the formula DAG does not connect C01 to C07 via the page-1 chain (C07 = C02+C04+C06 only)`
-- `this Step now tracks the regulatory-floor predicate authoring waiting for the corpus blocker`
-- `src/aeat/_data/registry/aeat/modelos/131/` placeholders below are machine-filled
-     by `vaultspec-core vault add exec` from the originating Step row;
-     do not fill them by hand. -->
-
 # FU-task-226 M131 cuota-minima regulatory floor authoring gated on Orden EHA/672/2007 modulo-tariff corpus landing under task 226
 
 ## Scope

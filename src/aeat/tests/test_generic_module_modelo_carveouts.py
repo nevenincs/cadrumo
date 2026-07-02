@@ -1,6 +1,6 @@
 """Ratchet: per-modelo tokens in generic application modules only decrease.
 
-Part of the arch-remediation-modelo-surface campaign (W04). The architecture
+The architecture
 review found per-modelo special cases accreting inside generic application
 modules — modelo-branched logic keyed on ``Modelo.M###`` members or on
 ``_M###_*`` module constants — where dedicated per-modelo homes
@@ -21,8 +21,8 @@ a genuinely NEW per-modelo symbol trips it.
 Scope note (no silent caps): the domain formula runtime
 (``domain/calculations/registry/_formula_runtime.py``) is deliberately NOT in
 this list. Its per-modelo *op evaluators* (``_evaluate_m100_*`` /
-``_evaluate_m210_*`` / ``_evaluate_m131_*``) are named per-modelo behaviour the
-ADR permits, and the module is an actively-churned dispatch surface; ratcheting
+``_evaluate_m210_*`` / ``_evaluate_m131_*``) are named per-modelo behaviour that
+is permitted, and the module is an actively-churned dispatch surface; ratcheting
 it is deferred to a follow-up once its dispatch shape stabilises. Modelo-KEYED
 DATA modules (applicability rules, censo modelo sets, query projections) are out
 of scope by design — only modelo-BRANCHED LOGIC in generic modules is the debt.
@@ -32,11 +32,10 @@ from __future__ import annotations
 
 import ast
 import re
-from pathlib import Path
 
 import pytest
 
-import aeat
+from ._inventory import SRC_AEAT
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
@@ -45,12 +44,12 @@ _NAME_TOKEN_RE = re.compile(r"^_M\d+_")
 # ``M###`` attribute of the core ``Modelo`` enum (e.g. Modelo.M303).
 _MODELO_ATTR_RE = re.compile(r"^M\d+$")
 
-_SRC_ROOT = Path(aeat.__file__).resolve().parent
+_SRC_ROOT = SRC_AEAT
 
 #: The named generic application modules under ratchet, mapped to the distinct
-#: per-modelo-token baseline recorded after W01-W03. The count for each module
-#: may only decrease. Raising a baseline is a conscious, reviewed decision (a new
-#: per-modelo carve-out) — never an accident.
+#: per-modelo-token baseline recorded after the architecture-remediation sweep.
+#: The count for each module may only decrease. Raising a baseline is a
+#: conscious, reviewed decision (a new per-modelo carve-out) — never an accident.
 _RATCHET_BASELINE: dict[str, int] = {
     "application/modelo/_projection.py": 14,
     "application/modelo/_calculation_actions.py": 14,

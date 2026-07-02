@@ -85,8 +85,8 @@ def test_pdf_n26_provider_ingests_fixture_rows(
         assert transaction.description == expected["description"]
         assert transaction.provenance.source_row_index == expected["source_row_index"]
         assert transaction.provenance.source_format.value == "pdf"
-        assert transaction.transaction_id.startswith("n26-pdf-")
-        assert transaction.transaction_id.endswith(f"-{expected['source_row_index']}")
+        assert transaction.provider_transaction_id.startswith("n26-pdf-")
+        assert transaction.provider_transaction_id.endswith(f"-{expected['source_row_index']}")
         assert transaction.raw_fields["statement_period"]
         assert transaction.raw_fields["description_line"]
 

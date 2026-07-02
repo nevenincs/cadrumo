@@ -1,4 +1,4 @@
-"""Verify-report idempotent-collapse application tests (P05.S17).
+"""Verify-report idempotent-collapse application tests.
 
 The content-pinned verification report id keys on the verification *outcome*
 (calculation revision, completeness status, findings, actor) rather than the

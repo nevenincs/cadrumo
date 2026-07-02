@@ -9,9 +9,6 @@ related:
   - "[[2026-07-01-import-centralization-plan]]"
 ---
 
-
-
-
 # Promote `CensoSnapshot`, `CensoSnapshotService`, `PersistedExpedientesSnapshot`, `PersistedNotificationsSnapshot`, `VerifyObservation`, `censo_snapshot_object_key`, `expedientes_snapshot_object_key`, `notifications_snapshot_object_key`, `verify_observation_object_key` to `aeat.application.live.__all__` with eager re-exports so the 12 existing cross-package consumer site(s) can import from the facade
 
 ## Scope

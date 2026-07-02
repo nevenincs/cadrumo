@@ -9,11 +9,11 @@ fleet-level structural gate over it.
 
 The gate has two jobs:
 
-- **Report coverage honestly.** On every run it prints ``authorized N/30`` plus
-  the explicit UNAUTHORIZED id list and any engine-build-blocked modelos. There
+- **Report coverage honestly.** On every run it prints ``authorized N/<fleet size>``
+  plus the explicit UNAUTHORIZED id list and any engine-build-blocked modelos. There
   is no stored baseline and no recorded number to silently regress against;
   coverage can only ratchet upward as enrolling tests land. The denominator is
-  the curated :data:`CANONICAL_MODELO_FLEET` (30), pinned against the live
+  the curated :data:`CANONICAL_MODELO_FLEET`, pinned against the live
   registry so a registry change that adds or drops a modelo surfaces loudly.
 
 - **Enforce enrollment validity.** For every manifest entry it asserts the
@@ -26,9 +26,9 @@ The gate has two jobs:
   a stub or single-year test cannot claim authorization.
 
 CRITICAL DESIGN: the gate is GREEN at partial rollout. An empty manifest yields
-``authorized 0/30`` and passes, because there are zero *invalid* entries — the
-campaign ratchets coverage rather than the gate being permanently red until
-30/30 (a permanent-red gate would violate ``aeat-quality-gates``). A fake,
+``authorized 0/<fleet size>`` and passes, because there are zero *invalid* entries —
+the campaign ratchets coverage rather than the gate being permanently red until full
+coverage (a permanent-red gate would violate ``aeat-quality-gates``). A fake,
 single-year, missing-test, or contract-less entry turns the gate RED.
 """
 
@@ -98,11 +98,11 @@ def _authority():
     return resources().modelos.authority
 
 
-def test_canonical_fleet_is_thirty_distinct_modelos() -> None:
-    """The canonical fleet — the gate's denominator — is exactly 30 distinct ids."""
+def test_canonical_fleet_is_sixty_six_distinct_modelos() -> None:
+    """The canonical fleet — the gate's denominator — is exactly 66 distinct ids."""
     assert len(CANONICAL_MODELO_FLEET) == FLEET_SIZE
     assert len(set(CANONICAL_MODELO_FLEET)) == FLEET_SIZE
-    assert FLEET_SIZE == 30
+    assert FLEET_SIZE == 66
 
 
 def test_canonical_fleet_covers_every_loadable_modelo() -> None:
@@ -122,7 +122,7 @@ def test_canonical_fleet_covers_every_loadable_modelo() -> None:
 
 
 def test_authorization_coverage_report_and_validity(capsys: pytest.CaptureFixture[str]) -> None:
-    """Report ``authorized N/30`` and enforce per-entry enrollment validity.
+    """Report ``authorized N/<fleet size>`` and enforce per-entry enrollment validity.
 
     GREEN at partial rollout: the assertions below check only that each
     *present* manifest entry is a valid, un-fakeable enrollment. Zero entries

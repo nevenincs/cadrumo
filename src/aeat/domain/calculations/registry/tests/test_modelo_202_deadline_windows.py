@@ -28,9 +28,7 @@ def test_committed_modelo_202_2025_2p_and_3p_deadline_windows_match_aeat_calenda
     revision = modelo.revisions["2025-y-siguientes"]
 
     windows = {
-        window.period.registry_token: window
-        for window in revision.deadline_windows
-        if window.filing_year == 2025
+        window.period.registry_token: window for window in revision.deadline_windows if window.filing_year == 2025
     }
 
     two_p = windows["2P"]

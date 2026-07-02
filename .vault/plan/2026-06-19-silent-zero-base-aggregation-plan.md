@@ -12,7 +12,6 @@ related:
   - '[[2026-06-10-calculation-aggregation-taxonomy-adr]]'
 ---
 
-
 # `silent-zero-base-aggregation` plan
 
 Close the remaining silent-zero regulated-base and dropped-cuota gaps by

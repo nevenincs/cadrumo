@@ -9,9 +9,6 @@ related:
   - "[[2026-07-02-arch-remediation-engine-lifecycle-plan]]"
 ---
 
-
-
-
 # Make the bucket-session manager acquire the bucket engine lazily on first storage access within a session, registering the engine handle on the session
 
 ## Scope
@@ -30,4 +27,3 @@ The active bucket session owns its engine handle, acquired lazily; runtime repos
 Landed in commit `38e62c216`.
 
 ## Notes
-

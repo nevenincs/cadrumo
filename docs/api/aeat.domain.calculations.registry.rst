@@ -36,6 +36,7 @@ Submodules
    aeat.domain.calculations.registry._coverage
    aeat.domain.calculations.registry._cross_revision_divergence
    aeat.domain.calculations.registry._detail_record_bindings
+   aeat.domain.calculations.registry._donativo_bindings
    aeat.domain.calculations.registry._errors
    aeat.domain.calculations.registry._export
    aeat.domain.calculations.registry._export_parse

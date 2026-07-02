@@ -9,9 +9,6 @@ related:
   - "[[2026-07-02-arch-remediation-engine-lifecycle-plan]]"
 ---
 
-
-
-
 # Dispose the bucket engine on session close and on profile switch through the same path that invalidates session state, so the two lifecycles cannot diverge
 
 ## Scope

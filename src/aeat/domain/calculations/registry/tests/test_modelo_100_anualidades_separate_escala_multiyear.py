@@ -1,13 +1,13 @@
-"""M100 anualidades por alimentos separate-escala for 2020-2023 (#532 Phase 2).
+"""M100 anualidades por alimentos separate-escala for 2020-2023.
 
 LIRPF art. 64 (estatal) / art. 75 (autonómica) grant judicial anualidades por
 alimentos a favor de los hijos a SEPARATE-escala treatment: the art. 63 escala
 is applied separately to the anualidades (casilla 0527) and to the rest of the
 base liquidable general (0505 - 0527), and the total is minorada by the escala
 applied to the mínimo personal y familiar INCREMENTADO EN 1.980 EUR, floored at
-0. Phase 1 (commit 63f9b6125) modelled this for 2024/2025; this module proves
-the same régimen for the 2020-2023 revisions, where casilla 0505 is now computed
-(max(0, 0500)) rather than a manual input.
+0. This module proves this régimen for the 2020-2023 revisions in addition to
+2024/2025, where casilla 0505 is now computed (max(0, 0500)) rather than a
+manual input.
 
 Casilla 0527 input surface differs by year, verified against the bundled AEAT
 Diseño de Registros for each revision. 2020 and 2021 both carry 0527 (IMPALIM)
@@ -15,7 +15,7 @@ as a single scalar `tipo_ImpPositivo` field (2021 XSD: `maxOccurs="1"`) with no
 per-child structure, so it is a direct manual input in both years. 2022 and
 2023 introduce a 5-child "Hijo/Hija N: Importe de las anualidades por alimentos
 satisfechas" repeating block (casillas 1741/1744/1747.../1759) and 0527 is
-computed as their sum (#532 finding #1: the 2021 revision's now-deleted
+computed as their sum (the 2021 revision's now-deleted
 `renta-2021-anualidades-alimentos-hijos-suma` formula wrongly summed casillas
 1741/1744/1749/1754/1759, which in 2021 are unrelated Anexo C
 aportaciones/contribuciones a sistemas de previsión social fields, not the

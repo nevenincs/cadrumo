@@ -11,16 +11,6 @@ related:
   - '[[2026-07-02-arch-remediation-source-kind-deferrals-adr]]'
 ---
 
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the
-       related: field above.
-     - The related: field carries the AUTHORISING documents
-       (ADR, research, reference, prior plan) for every Step in
-       this plan. Steps inherit this chain; per-row reference
-       footers do not exist.
-     - NEVER use [[wiki-links]] or markdown links in the
-       document body. -->
-
 # `arch-remediation-source-kind-deferrals` plan
 
 - [x] `S01` - Add the structured owner-and-trigger annotation type on the deferred source-kind declaration carrying the owning ADR stem and the promotion trigger condition, annotations only per the Wave 1 freeze; `src/aeat/application/aggregation/_source_mesh.py`.

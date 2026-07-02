@@ -17,8 +17,9 @@ tasks the way ``freezegun`` / ``time_machine`` global freezing does, the
 pattern banned in live-marked tests by
 :data:`aeat-tests.conftest.BANNED_LIVE_IMPORTS`. :func:`frozen_clock`
 additionally refuses to activate while the pytest live-read opt-in
-(``AEAT_LIVE_TESTS_ENABLED``) is set, keeping live-marked tests on real
-wall-clock plus explicit ``clock=`` injection exactly as today.
+(:attr:`aeat.core.config.Settings.live_tests_enabled`) is set, keeping
+live-marked tests on real wall-clock plus explicit ``clock=`` injection
+exactly as today.
 """
 
 from __future__ import annotations
@@ -79,7 +80,7 @@ def _refuse_under_live_opt_in() -> None:
     if load_settings().live_tests_enabled:
         raise CoreValidationError(
             "frozen_clock is forbidden while the live-test opt-in "
-            "(AEAT_LIVE_TESTS_ENABLED) is set: live-marked tests must run on "
+            "is set: live-marked tests must run on "
             "real wall-clock plus explicit clock= injection",
         )
 
@@ -101,7 +102,7 @@ def frozen_clock(instant: datetime) -> Iterator[datetime]:
 
     Raises:
         CoreValidationError: When ``instant`` is naive or not UTC, or when
-            the live-test opt-in (``AEAT_LIVE_TESTS_ENABLED``) is enabled.
+            the pytest live-read opt-in is enabled.
     """
     validate_utc_aware(instant)
     _refuse_under_live_opt_in()

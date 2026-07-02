@@ -97,6 +97,34 @@ requires_snapshot = true
 legal_refs = ["ley-35-2006:art-99", "orden-eha-3377-2011:art-1"]
 source_refs = ["aeat-modelo-187-procedure", "boe-modelo-187-form-layout"]
 
+[[revisions."2019-y-siguientes".application_links]]
+id = "modelo-187-review"
+surface = "review"
+consumer = "aeat.application.filing.review"
+requires_snapshot = true
+legal_refs = ["orden-eha-3377-2011:art-1"]
+source_refs = ["aeat-modelo-187-procedure"]
+[[revisions."2019-y-siguientes".application_links]]
+id = "modelo-187-approval"
+surface = "approval"
+consumer = "aeat.application.workflow.approval"
+requires_snapshot = true
+legal_refs = ["orden-eha-3377-2011:art-1"]
+source_refs = ["aeat-modelo-187-procedure"]
+[[revisions."2019-y-siguientes".application_links]]
+id = "modelo-187-reconciliation"
+surface = "reconciliation"
+consumer = "aeat.application.reconciliation"
+requires_snapshot = true
+legal_refs = ["orden-eha-3377-2011:art-1"]
+source_refs = ["aeat-modelo-187-procedure"]
+[[revisions."2019-y-siguientes".application_links]]
+id = "modelo-187-workflow"
+surface = "workflow"
+consumer = "aeat.application.workflow"
+requires_snapshot = true
+legal_refs = ["orden-eha-3377-2011:art-1"]
+source_refs = ["aeat-modelo-187-procedure"]
 [[revisions."2019-y-siguientes".deadline_windows]]
 id = "modelo-187-2025-0a"
 filing_year = 2025
@@ -106,3 +134,11 @@ opens_on = 2026-01-01
 closes_on = 2026-01-31
 legal_refs = ["orden-eha-3377-2011:art-1"]
 source_refs = ["aeat-modelo-187-procedure", "boe-modelo-187-form-layout"]
+
+[[revisions."2019-y-siguientes".constructs]]
+id = "modelo-187-calculation-construct"
+title = "Modelo 187 calculation construct"
+legal_refs = ["ley-35-2006:art-99", "orden-eha-3377-2011:art-1"]
+source_refs = ["aeat-modelo-187-procedure", "boe-modelo-187-form-layout"]
+formulas = ["modelo-187-total"]
+application_links = ["modelo-187-calculation", "modelo-187-deadline", "modelo-187-filing", "modelo-187-2019-y-siguientes-verification", "modelo-187-review", "modelo-187-approval", "modelo-187-reconciliation", "modelo-187-workflow"]

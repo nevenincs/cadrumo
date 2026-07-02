@@ -54,15 +54,13 @@ from ...domain.calculations.registry import (
 )
 from ...domain.iva_compensation import (
     IvaCompensationCarryForwardReport,
-    IvaCompensationPeriodState,
-    derive_iva_compensation_year_end_carry_partition,
-    iva_compensation_period_sort_key,
-)
-from ...domain.iva_compensation import (
     IvaCompensationCasillaReferenceError,
     IvaCompensationDecimalParseError,
+    IvaCompensationPeriodState,
     IvaCompensationSeedConflictError,
     IvaCompensationYearRangeError,
+    derive_iva_compensation_year_end_carry_partition,
+    iva_compensation_period_sort_key,
 )
 from ._errors import IvaCompensationModeloError
 from ._ports import FiledDeclaracionObservationProtocol

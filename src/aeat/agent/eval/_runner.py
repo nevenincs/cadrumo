@@ -427,8 +427,7 @@ def check_exit_code_scenario(
     exit_code_matches = exit_code == scenario.expected_exit_code
     if not exit_code_matches:
         failures.append(
-            f"'{scenario.command}' expected exit code {scenario.expected_exit_code}, "
-            f"dispatch returned {exit_code}",
+            f"'{scenario.command}' expected exit code {scenario.expected_exit_code}, dispatch returned {exit_code}",
         )
 
     status = _envelope_field(envelope, "status")
@@ -689,9 +688,7 @@ def check_profile_confirmation_scenario(
             "required-prefix property",
         )
 
-    confirmation_positions = [
-        index for index, step in enumerate(trajectory) if step == scenario.confirmation_command
-    ]
+    confirmation_positions = [index for index, step in enumerate(trajectory) if step == scenario.confirmation_command]
     confirmed_before_first_mutation = False
     if mutating_step_present:
         first_mutation_index = mutation_positions[0]
