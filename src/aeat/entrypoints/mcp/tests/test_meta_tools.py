@@ -86,6 +86,43 @@ def test_meta_execute_refuses_an_unknown_command() -> None:
     assert outcome.refused == "unknown command: not.a.command"
 
 
+def test_gate_refusal_denies_the_handoff_boundary_to_a_non_verifier_persona() -> None:
+    # MEDIUM-2 close-review finding: the per-verb handoff deny (verifier-only
+    # export/record-marker) must be enforced STRUCTURALLY in gate_refusal, so the
+    # meta-execute path cannot become a side door to it — not left masked by the
+    # sync path's incidental no-elicitation fallback.
+    descriptors = build_tool_descriptors()
+    # modelo.export is IN the preparer/reconciler scope (modelo family) yet
+    # handoff-denied, so it exercises the handoff rule rather than a scope
+    # refusal masking it.
+    export = next(d for d in descriptors if d.command_key == "modelo.export")
+    for persona in (AgentPersona.MODELO_PREPARER, AgentPersona.RECONCILER):
+        refusal = gate_refusal(persona=persona, descriptor=export)
+        assert refusal is not None
+        assert "verifier" in refusal
+    # The verifier — the sole owner — is NOT denied it by the handoff rule.
+    verifier_refusal = gate_refusal(persona=AgentPersona.VERIFIER, descriptor=export)
+    assert verifier_refusal is None or "verifier" not in verifier_refusal
+
+
+def test_meta_execute_never_reaches_the_runner_on_a_handoff_denied_command() -> None:
+    def boom(descriptor: McpToolDescriptor, arguments: dict[str, object]) -> tuple[dict[str, object], bool]:
+        raise AssertionError("the runner must not be reached for a handoff-denied command")
+
+    descriptors = build_tool_descriptors()
+    export = next(d for d in descriptors if d.command_key == "modelo.export")
+    outcome = meta_execute(
+        export.command_key,
+        {},
+        descriptors=descriptors,
+        persona=AgentPersona.MODELO_PREPARER,
+        run=boom,
+    )
+    assert outcome.refused is not None
+    assert "verifier" in outcome.refused
+    assert outcome.envelope is None
+
+
 def test_meta_execute_dispatches_a_read_only_command_end_to_end() -> None:
     descriptors = build_tool_descriptors()
     outcome = meta_execute("contract", {}, descriptors=descriptors, persona=None, run=_run_subprocess_tool)
