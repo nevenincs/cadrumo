@@ -117,8 +117,8 @@ def _seed_evidence_bundle(bucket_id: str) -> None:
         BundleVerificationState,
         EvidenceBundle,
         EvidenceBundleRepository,
+        derive_bundle_id,
     )
-    from ...evidence._models import derive_bundle_id
 
     bundle_id = derive_bundle_id(bucket_id=bucket_id, work_unit_id=_HEX64, manifest_version=1, records=())
     EvidenceBundleRepository().save(
@@ -355,8 +355,7 @@ def _verify_iva_remote_state(bucket_id: str) -> None:
 
 
 def _seed_censo(bucket_id: str) -> None:
-    from ...live import CensoSnapshot, SnapshotLifecycleState
-    from ...live._censo import CensoSnapshotRepository
+    from ...live import CensoSnapshot, CensoSnapshotRepository, SnapshotLifecycleState
 
     snap = CensoSnapshot(
         snapshot_id="censo-1",
@@ -371,7 +370,7 @@ def _seed_censo(bucket_id: str) -> None:
 
 
 def _verify_censo(bucket_id: str) -> None:
-    from ...live._censo import CensoSnapshotRepository
+    from ...live import CensoSnapshotRepository
 
     assert CensoSnapshotRepository(bucket_id=bucket_id).list_snapshots(), "censo snapshot lost"
 
@@ -618,11 +617,8 @@ def _verify_borrador_100(bucket_id: str) -> None:
 
 def _seed_m036(bucket_id: str) -> None:
     from ....domain.calculations.registry import CensoModeloEventKind
-    from ...modelo import M036DeclarationResult
-    from ...modelo._m036_lifecycle import (
-        _m036_declaration_repository,
-        derive_m036_declaration_id,
-    )
+    from ...modelo import M036DeclarationResult, derive_m036_declaration_id
+    from ...modelo._m036_lifecycle import _m036_declaration_repository
 
     decl_id = derive_m036_declaration_id(
         profile_id=bucket_id,
@@ -652,9 +648,9 @@ def _verify_m036(bucket_id: str) -> None:
 def _seed_verify_observation(bucket_id: str) -> None:
     from ...live import (
         VerifyObservation,
+        VerifyObservationRepository,
         VerifySurface,
     )
-    from ...live._verify import VerifyObservationRepository
 
     obs = VerifyObservation(
         observation_id=sha256_hex(b"nif_iva|ESX1234567L|valid"),
@@ -669,7 +665,7 @@ def _seed_verify_observation(bucket_id: str) -> None:
 
 
 def _verify_verify_observation(bucket_id: str) -> None:
-    from ...live._verify import VerifyObservationRepository
+    from ...live import VerifyObservationRepository
 
     assert VerifyObservationRepository(bucket_id=bucket_id).list_observations(), "verify observation lost"
 
@@ -782,12 +778,10 @@ def _verify_withholding(bucket_id: str) -> None:
 
 def _seed_purchase_invoice_evidence(bucket_id: str) -> None:
     from ...ledger import (
-        PurchaseInvoiceEvidence,
-        PurchaseInvoiceEvidenceRepository,
-    )
-    from ...ledger._evidence import (
         MediaKind,
+        PurchaseInvoiceEvidence,
         PurchaseInvoiceEvidenceDocument,
+        PurchaseInvoiceEvidenceRepository,
     )
 
     rec = PurchaseInvoiceEvidence(

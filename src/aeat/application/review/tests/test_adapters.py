@@ -14,7 +14,6 @@ from pathlib import Path
 import pytest
 
 from ....adapters.persistence.storage.runtime_repository import secure_object_repository_for_active_bucket
-from ....application.user_profile._testing import register_minimal_profile
 from ....core import Period
 from ....core.classification import SensitivityClass
 from ....core.config import Settings
@@ -52,7 +51,7 @@ from ...filing import (
     ModeloValue,
     ModeloValueKind,
 )
-from ...user_profile import profile_create_storage_span
+from ...user_profile import profile_create_storage_span, register_minimal_profile
 from ...workflow import workflow_state_repository
 from .. import (
     FindingReviewItem,

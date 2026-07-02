@@ -28,6 +28,7 @@ Submodules
    aeat.application.modelo._calculation_preparation
    aeat.application.modelo._calculation_resolution
    aeat.application.modelo._calculation_source_policy
+   aeat.application.modelo._data_inventory
    aeat.application.modelo._decimal_parsing
    aeat.application.modelo._dt12_advisory
    aeat.application.modelo._export
@@ -55,6 +56,7 @@ Submodules
    aeat.application.modelo._projection
    aeat.application.modelo._quickfile
    aeat.application.modelo._reconcile
+   aeat.application.modelo._reconcile_casilla
    aeat.application.modelo._registry_discovery
    aeat.application.modelo._registry_helpers
    aeat.application.modelo._registry_resources

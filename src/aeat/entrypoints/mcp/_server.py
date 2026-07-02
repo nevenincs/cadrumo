@@ -424,7 +424,7 @@ def build_server(
         # away: per ADR R4 it is the universal operating-layer channel that must reach
         # any client, including a minimal tools-only one. The grounding tools follow
         # for the same always-available reason (ADR R3).
-        return [floor_tool, *grounding_tools, *sdk_tools, *meta_tools]  # type: ignore[list-item]
+        return [floor_tool, *grounding_tools, *sdk_tools, *meta_tools]  # type: ignore[list-item]  # TYPE-IGNORE-RATIONALE-sdk: MCP SDK tool-list is heterogeneous across tool subtypes
 
     @server.call_tool()
     async def _call_tool(name: str, arguments: dict[str, object]) -> CallToolResult:
@@ -667,7 +667,7 @@ def _run_server(
     from mcp.server.stdio import stdio_server
 
     telemetry = SessionTelemetryWriter(session_id=f"mcp-{uuid.uuid4().hex[:12]}")
-    server: Server = build_server(descriptors, persona=persona, telemetry=telemetry)  # type: ignore[assignment]
+    server: Server = build_server(descriptors, persona=persona, telemetry=telemetry)  # type: ignore[assignment]  # TYPE-IGNORE-RATIONALE-sdk: MCP SDK Server subtype assignment the checker cannot narrow
 
     async def _amain() -> None:
         async with stdio_server() as (read_stream, write_stream):

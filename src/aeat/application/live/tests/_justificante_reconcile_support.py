@@ -27,8 +27,7 @@ from ....domain.modelos import (
 )
 from ....tests import FIXTURES_DIR
 from ....tests.secure_sql import isolated_profile_storage_root
-from ...user_profile import profile_create_storage_span
-from ...user_profile._testing import register_minimal_profile
+from ...user_profile import profile_create_storage_span, register_minimal_profile
 from ...workflow import workflow_state_repository
 
 if TYPE_CHECKING:

@@ -9,7 +9,12 @@ from typing import NamedTuple
 
 import pytest
 
-from .....tests._inventory import ast_for_path, leaf_name, package_python_files, repo_relative
+from .....tests import (
+    ast_for_path,
+    leaf_name,
+    package_python_files,
+    repo_relative,
+)
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 

@@ -29,8 +29,7 @@ from pathlib import Path
 
 import pytest
 
-from .....tests import FIXTURES_DIR
-from .....tests._justificante_parse_cache import parse_committed_justificante_fixture
+from .....tests import FIXTURES_DIR, parse_committed_justificante_fixture
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_inbound_adapter]
 

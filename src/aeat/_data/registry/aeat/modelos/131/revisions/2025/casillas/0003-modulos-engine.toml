@@ -23,7 +23,7 @@
 [[revisions."2025".casillas]]
 id = "modulos-epigrafe"
 number = "modulos-epigrafe"
-label = "Epígrafe IAE de la actividad en estimación objetiva (módulos)"
+label = "Epígrafe IAE de la actividad en estimación objetiva (módulos). Para los epígrafes 659.4 y 691.9, que agrupan dos actividades distintas bajo un mismo código, use el sufijo \"a\" o \"b\" (p.ej. \"659.4a\", \"691.9b\") según la actividad — consulte el parámetro de coeficientes m131-modulos-coeficientes-2025 para la asignación exacta."
 section = ["actividades_economicas_estimacion_objetiva"]
 data_type = "text"
 semantic_role = "irpf_pf_modulos_epigrafe_iae"

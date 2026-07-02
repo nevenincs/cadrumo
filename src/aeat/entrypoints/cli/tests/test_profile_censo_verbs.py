@@ -45,7 +45,7 @@ def _isolated_backend(tmp_path: Path) -> Iterator[None]:
 
 
 def _seed_active_profile(*, without_taxpayer_axes: bool = False) -> None:
-    from ....application.user_profile._testing import register_minimal_profile
+    from ....application.user_profile import register_minimal_profile
     from ....application.workflow import workflow_state_repository
 
     repo = workflow_state_repository()

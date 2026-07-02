@@ -22,9 +22,9 @@ import pytest
 from ..adapters.persistence.storage.sql import SecureObjectRepository
 from ..application.aggregation import (
     compute_ledger_filing_snapshot,
+    evaluate_ledger_filing_staleness,
     stale_filed_revisions,
 )
-from ..application.aggregation._ledger_filing_snapshot import evaluate_ledger_filing_staleness
 from ..application.ledger import ManualLedgerTransactionPatch, update_manual_transaction_fields
 from ..core import Period
 from ..domain.calculations.registry import CasillaId, validated_casilla_id

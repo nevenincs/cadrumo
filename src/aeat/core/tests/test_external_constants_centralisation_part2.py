@@ -9,7 +9,7 @@ from pathlib import Path
 
 import pytest
 
-from ...tests._inventory import leaf_name
+from ...tests import leaf_name
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 

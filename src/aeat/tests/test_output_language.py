@@ -40,8 +40,7 @@ def isolated_language_state(tmp_path: Path) -> Iterator[None]:
 
 
 def _seed_profile_language(language: str) -> None:
-    from ..application.user_profile import set_active_field
-    from ..application.user_profile._testing import register_minimal_profile
+    from ..application.user_profile import register_minimal_profile, set_active_field
     from ..application.workflow import workflow_state_repository
     from ..domain.user_profile import UserProfileFact
 

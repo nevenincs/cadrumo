@@ -27,7 +27,7 @@ from .....tests.secure_sql import isolated_runtime_profile
 from ...storage import (
     session_scope,
 )
-from ...storage.sql._orm import FincaRow
+from ...storage.sql import FincaRow
 from ...storage.sql.engine import get_engine
 from ..fincas import FincaRepository
 

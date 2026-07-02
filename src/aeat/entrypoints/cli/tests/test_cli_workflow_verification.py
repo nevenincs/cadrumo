@@ -13,7 +13,6 @@ import typer
 from typer.core import TyperGroup
 
 from ....application.operator_surface import get_operator_surface_contract
-from ....application.wizard._catalogue import SETUP_FLOW
 from ....core.config import override_settings
 from ....core.redaction import CLI_BUCKET_ID_PLACEHOLDER, CLI_PROFILE_ID_PLACEHOLDER
 from ....tests.cli_runner import aeat_click_command, invoke_cached_cli
@@ -134,7 +133,10 @@ def test_config_profile_create_mounts_existing_setup_wizard_flow() -> None:
     callback = create_command.callback
     assert callback is not None
     wrapped = getattr(callback, "__wrapped__", callback)
-    assert getattr(wrapped, "__wizard_flow__", None) is SETUP_FLOW
+
+    from ....core.wizard_catalogue import get_setup_flow
+
+    assert getattr(wrapped, "__wizard_flow__", None) is get_setup_flow()
 
 
 def test_rejected_aliases_do_not_reach_workflow_services() -> None:

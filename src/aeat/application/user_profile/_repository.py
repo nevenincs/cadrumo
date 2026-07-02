@@ -106,7 +106,7 @@ def _record_output_language(record: UserProfileRecord) -> str | None:
 
 
 def _refresh_output_language_hint(*, bucket_id: str, record: UserProfileRecord) -> None:
-    from ...adapters.persistence.storage.bucket._output_language_hint import (
+    from ...adapters.persistence.storage.bucket import (
         clear_bucket_output_language_hint,
         write_bucket_output_language_hint,
     )

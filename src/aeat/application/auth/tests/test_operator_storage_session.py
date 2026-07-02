@@ -7,13 +7,13 @@ from pathlib import Path
 import pytest
 
 from ....adapters.persistence.storage import has_active_bucket_session
-from ....application.user_profile._testing import register_minimal_profile
 from ....application.wizard import WIZARD_FLOWS
 from ....domain.contribuyente import required_profile_keys
 from ....tests.secure_sql import isolated_profile_storage_root
 from ...user_profile import (
     profile_create_storage_span,
     profile_storage_session,
+    register_minimal_profile,
 )
 from ...workflow import workflow_state_repository
 from .._operator import clear_operator_auth, configure_operator_auth

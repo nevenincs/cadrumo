@@ -27,8 +27,7 @@ from .....application.auth import (
     login_operator_auth,
 )
 from .....application.auth import test_operator_auth as probe_operator_auth
-from .....application.user_profile import profile_create_storage_span
-from .....application.user_profile._testing import register_minimal_profile
+from .....application.user_profile import profile_create_storage_span, register_minimal_profile
 from .....application.workflow import workflow_state_repository
 from .....core.config import load_settings, override_settings
 from .....tests.cli_runner import invoke_typer_app

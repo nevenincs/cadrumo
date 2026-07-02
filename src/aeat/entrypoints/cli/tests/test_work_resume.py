@@ -10,8 +10,11 @@ import pytest
 from click.testing import Result
 
 from ....application.modelo import create_work_unit, workflow_period_for_work_unit
-from ....application.user_profile import UserProfileLifecycleRepository, profile_create_storage_span
-from ....application.user_profile._testing import register_minimal_profile
+from ....application.user_profile import (
+    UserProfileLifecycleRepository,
+    profile_create_storage_span,
+    register_minimal_profile,
+)
 from ....application.workflow import (
     WorkflowAbortReason,
     WorkflowResult,

@@ -9,7 +9,7 @@ from typing import override
 
 import pytest
 
-from .....tests._inventory import (
+from .....tests import (
     SRC_AEAT,
     ast_for_path,
     leaf_name,

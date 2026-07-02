@@ -10,7 +10,12 @@ from pydantic import ValidationError
 
 from .....core.classification import SensitivityClass
 from .....core.errors import ERROR_REGISTRY, build_error_envelope
-from .....tests._inventory import ast_for_path, leaf_name, package_python_files, repo_relative
+from .....tests import (
+    ast_for_path,
+    leaf_name,
+    package_python_files,
+    repo_relative,
+)
 from .. import (
     AEAT_BROWSER_SESSION_NAMESPACE,
     AEAT_FILED_DECLARATION_ARTEFACTS_NAMESPACE,

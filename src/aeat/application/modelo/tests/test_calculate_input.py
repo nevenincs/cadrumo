@@ -10,8 +10,7 @@ import pytest
 from ....core import CasillaId, Period, validated_casilla_id
 from ....core.resources import resources
 from ....tests.secure_sql import isolated_profile_storage_root
-from ...user_profile import profile_create_storage_span
-from ...user_profile._testing import register_minimal_profile
+from ...user_profile import profile_create_storage_span, register_minimal_profile
 from ...workflow import workflow_state_repository
 from .. import create_work_unit
 from .._calculate_input import (

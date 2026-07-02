@@ -24,11 +24,11 @@ from ....domain.filing import (
     ModeloAmendmentRepository,
     ModeloComplementaria,
     ModeloDraft,
+    ModeloDraftStatus,
     ModeloValue,
     ModeloValueKind,
     compute_modelo_draft_id,
 )
-from ....domain.filing._schema import ModeloDraftStatus
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 _AMENDMENT_CASILLA: CasillaId = validated_casilla_id("01", surface="_AMENDMENT_CASILLA")

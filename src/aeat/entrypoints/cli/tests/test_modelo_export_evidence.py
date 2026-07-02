@@ -12,6 +12,7 @@ from openpyxl import load_workbook
 from pydantic import ValidationError
 
 from ....application.storage.calc_sheets import (
+    CalcSheetsEngineError,
     OfflineWorkbookEvidenceSidecar,
     SheetEvidenceFacet,
     SheetExportMetadata,
@@ -21,7 +22,6 @@ from ....application.storage.calc_sheets import (
     serialize_offline_export,
     sheet_evidence_from_ledger_filing,
 )
-from ....application.storage.calc_sheets._errors import CalcSheetsEngineError
 from ....core import Period
 from ....domain.calculations.registry import CasillaId, validated_casilla_id
 from ....domain.modelos import (

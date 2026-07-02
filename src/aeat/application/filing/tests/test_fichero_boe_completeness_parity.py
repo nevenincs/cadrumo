@@ -21,18 +21,20 @@ from pathlib import Path
 import pytest
 
 from ....core.resources import resources
-from ....domain.calculations._export_field_kind import CasillaFieldKind
+from ....domain.calculations.registry import CasillaFieldKind
 from .._export import boe_representable_casilla_ids, export_draft, rendered_casilla_ids
 from ._export_support import (
     _approved_modelo_111_registry_draft,
     _approved_modelo_115_registry_draft,
     _approved_modelo_123_registry_draft,
     _approved_modelo_131_registry_draft,
+    _approved_modelo_200_registry_draft,
     _approved_registry_draft,
     _modelo_111_export_headers,
     _modelo_115_export_headers,
     _modelo_123_export_headers,
     _modelo_130_export_headers,
+    _modelo_200_export_headers,
     _schema_provider,
 )
 
@@ -43,18 +45,21 @@ def _m131_headers() -> dict[str, str]:
     return {"declaration_type": "I"}
 
 
-# (modelo, draft builder, headers builder) — fixed-width covered modelos that
-# declare a completeness manifest and have a reusable complete approved draft.
-# Modelo 131 (binding-derived) is covered: with the truth-grounded gate (required =
-# calculation results + schema-required, not optional inputs), its computed result
-# casillas are populated by the complete draft and reach disk, while its optional
-# inputs (02/08/09/12/14) are correctly excluded.
+# (modelo, draft builder, headers builder, filing_year, period) — fixed-width
+# covered modelos that declare a completeness manifest and have a reusable complete
+# approved draft. filing_year/period pin the schema provider to the same revision
+# the draft was built against (None = the builder's default period). Modelo 131
+# (binding-derived) is covered: with the truth-grounded gate (required = calculation
+# results + schema-required, not optional inputs), its computed result casillas are
+# populated and reach disk, while its optional inputs (02/08/09/12/14) are excluded.
+# Modelo 200 (sociedades) is covered with its 2024/0A provider.
 _COVERED = [
-    ("130", _approved_registry_draft, _modelo_130_export_headers),
-    ("111", _approved_modelo_111_registry_draft, _modelo_111_export_headers),
-    ("115", _approved_modelo_115_registry_draft, _modelo_115_export_headers),
-    ("123", _approved_modelo_123_registry_draft, _modelo_123_export_headers),
-    ("131", _approved_modelo_131_registry_draft, _m131_headers),
+    ("130", _approved_registry_draft, _modelo_130_export_headers, None, None),
+    ("111", _approved_modelo_111_registry_draft, _modelo_111_export_headers, None, None),
+    ("115", _approved_modelo_115_registry_draft, _modelo_115_export_headers, None, None),
+    ("123", _approved_modelo_123_registry_draft, _modelo_123_export_headers, None, None),
+    ("131", _approved_modelo_131_registry_draft, _m131_headers, None, None),
+    ("200", _approved_modelo_200_registry_draft, _modelo_200_export_headers, 2024, "0A"),
 ]
 
 # Broader fixed-width, manifest-bearing set for the structural dormancy lock
@@ -70,11 +75,11 @@ _DORMANCY_MODELOS = [
 ]
 
 
-@pytest.mark.parametrize(("modelo", "build_draft_fn", "headers_fn"), _COVERED)
+@pytest.mark.parametrize(("modelo", "build_draft_fn", "headers_fn", "filing_year", "period"), _COVERED)
 def test_complete_draft_reaches_disk_for_every_required_casilla(
-    modelo: str, build_draft_fn, headers_fn, tmp_path: Path
+    modelo: str, build_draft_fn, headers_fn, filing_year, period, tmp_path: Path
 ) -> None:
-    provider = _schema_provider(modelos=(modelo,))
+    provider = _schema_provider(filing_year=filing_year, period=period, modelos=(modelo,))
     draft = build_draft_fn()
     headers = headers_fn()
     subview = provider.get_subview(modelo)
@@ -102,9 +107,11 @@ def test_complete_draft_reaches_disk_for_every_required_casilla(
     assert not missing, f"modelo {modelo} complete draft omits required casillas: {missing}"
 
 
-@pytest.mark.parametrize(("modelo", "build_draft_fn", "headers_fn"), _COVERED)
-def test_complete_draft_exports_without_panic(modelo: str, build_draft_fn, headers_fn, tmp_path: Path) -> None:
-    provider = _schema_provider(modelos=(modelo,))
+@pytest.mark.parametrize(("modelo", "build_draft_fn", "headers_fn", "filing_year", "period"), _COVERED)
+def test_complete_draft_exports_without_panic(
+    modelo: str, build_draft_fn, headers_fn, filing_year, period, tmp_path: Path
+) -> None:
+    provider = _schema_provider(filing_year=filing_year, period=period, modelos=(modelo,))
     draft = build_draft_fn()
     output = tmp_path / f"modelo-{modelo}.txt"
 

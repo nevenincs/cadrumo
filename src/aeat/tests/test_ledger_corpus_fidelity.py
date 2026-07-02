@@ -26,8 +26,7 @@ import pytest
 
 from ..adapters.inbound.financial.providers import CsvProvider
 from ..adapters.outbound.fx import EcbReferenceRateProvider
-from ..application.aggregation import aggregate_iva_ledger_observations
-from ..application.aggregation._renta_income_ledger import aggregate_renta_income_ledger
+from ..application.aggregation import aggregate_iva_ledger_observations, aggregate_renta_income_ledger
 from ..core import Period
 from ..domain.currency import (
     CurrencyNormalizationService,

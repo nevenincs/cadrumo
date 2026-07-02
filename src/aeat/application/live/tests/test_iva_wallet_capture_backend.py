@@ -29,8 +29,7 @@ from ...calculations import (
     IvaWalletDecisionRepository,
     iva_wallet_decision_key,
 )
-from ...user_profile import profile_create_storage_span
-from ...user_profile._testing import register_minimal_profile
+from ...user_profile import profile_create_storage_span, register_minimal_profile
 from ...workflow import workflow_state_repository
 from .. import load_iva_remote_state, persist_and_reconcile_iva_compensation_wallet
 

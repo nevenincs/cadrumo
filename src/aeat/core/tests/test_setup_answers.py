@@ -45,11 +45,12 @@ def test_setup_answers_catalogue_uses_core_class() -> None:
     can check with ``isinstance(typed, SetupAnswers)`` where SetupAnswers is the
     core class.
     """
-    from ...application.wizard._catalogue import SETUP_FLOW
     from ..setup_answers import SetupAnswers
+    from ..wizard_catalogue import get_setup_flow
 
-    assert SETUP_FLOW.answers_model is SetupAnswers, (
-        f"SETUP_FLOW.answers_model is {SETUP_FLOW.answers_model!r}; expected aeat.core.setup_answers.SetupAnswers"
+    setup_flow = get_setup_flow()
+    assert setup_flow.answers_model is SetupAnswers, (
+        f"SETUP_FLOW.answers_model is {setup_flow.answers_model!r}; expected aeat.core.setup_answers.SetupAnswers"
     )
 
 

@@ -11,7 +11,6 @@ from pydantic import SecretStr
 
 from ....adapters.outbound.aeat.auth import _session_store
 from ....adapters.persistence.storage.runtime_repository import secure_object_repository_for_active_bucket
-from ....application.user_profile._testing import register_minimal_profile
 from ....core import Period
 from ....core.config import Settings, load_settings, override_settings
 from ....core.time import frozen_clock
@@ -20,7 +19,7 @@ from ....domain.calculations.registry import RegistrySnapshotRef
 from ....domain.filing import ModeloDraft, ModeloDraftRepository
 from ....domain.submission import ModeloDraftStatus
 from ....tests.secure_sql import isolated_profile_storage_root
-from ...user_profile import profile_create_storage_span
+from ...user_profile import profile_create_storage_span, register_minimal_profile
 from ...workflow import workflow_state_repository
 from .. import AuthProviderKind
 from .._operator import build_live_auth_preflight_report, configure_operator_auth, inspect_operator_auth

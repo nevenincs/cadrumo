@@ -31,7 +31,7 @@ from .....core.config import load_settings
 from .....domain.user_profile import ProfileSchemaValidationError, UserProfileFact
 from .....tests.secure_sql import isolated_profile_storage_root
 from ..bucket import bucket_paths, manifest_path
-from ..master_key._master_key_bucket_dek import bucket_dek_path
+from ..master_key import bucket_dek_path
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 
@@ -120,12 +120,12 @@ class TestRenameProfileCrashWindow:
 
     def test_partial_rename_leaves_a_drift_the_integrity_gate_refuses(self, backend: Path) -> None:
         from .....application.user_profile import (
+            ProfileIntegrityError,
             ProfileRepository,
             RenameProfileCommand,
             build_lifecycle_service,
             profile_storage_session,
         )
-        from .....application.user_profile._integrity import ProfileIntegrityError
         from ..bucket import read_manifest
 
         _create_profile(_RENAME_PROFILE_ID, label="Original Label", facts=_VALID_FACTS)
@@ -199,7 +199,7 @@ class TestHardDeleteCrashWindow:
             delete_profile_with_lifecycle_span,
             remove_profile_bucket_directory,
         )
-        from .....application.workflow._profile_bucket_scan import list_profile_bucket_scan_issues
+        from .....application.workflow import list_profile_bucket_scan_issues
         from .....core.external_constants import UTF_8_ENCODING
 
         _create_profile(_DELETE_PROFILE_ID, label="Delete target", facts=_VALID_FACTS)

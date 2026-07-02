@@ -272,6 +272,11 @@ from ._reconcile import (
     modelo_reconcile,
     modelo_reconcile_bytes,
 )
+from ._reconcile_casilla import (
+    CasillaDivergence,
+    CasillaDivergenceKind,
+    detect_casilla_divergences,
+)
 from ._registry_discovery import (
     declared_modelo_period_tokens,
     registry_bindings,
@@ -414,6 +419,8 @@ __all__ = [
     "CalculationRevisionNotFoundError",
     "CalculationRevisionState",
     "CalculationRevisionStateError",
+    "CasillaDivergence",
+    "CasillaDivergenceKind",
     "CasillaProvenanceMissingError",
     "DataInventoryCasilla",
     "DataInventoryChecklist",
@@ -568,6 +575,7 @@ __all__ = [
     "declared_modelo_period_tokens",
     "derive_m036_declaration_id",
     "derive_taxpayer_files_economic_activity",
+    "detect_casilla_divergences",
     "discard_work_unit",
     "ensure_modelo_work_unit_for_visible_target",
     "export_modelo_revision",

@@ -42,9 +42,11 @@ from .. import (
     save_encrypted_envelope,
 )
 from ..errors import DecryptionError
-from ..master_key._dek_wrap import WrappedDek, unwrap_dek, wrap_dek
-from ..master_key._master_key_bucket_dek import (
+from ..master_key import (
+    WrappedDek,
     read_wrapped_bucket_dek,
+    unwrap_dek,
+    wrap_dek,
     write_wrapped_bucket_dek,
 )
 

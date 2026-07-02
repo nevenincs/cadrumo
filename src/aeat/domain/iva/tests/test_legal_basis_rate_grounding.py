@@ -220,7 +220,7 @@ def test_lirpf_art_85_corpus_excerpt_quotes_imputation_rates() -> None:
 
 
 def test_lirpf_art_85_imputacion_substrate_matches_boe_text() -> None:
-    from ...fincas._imputacion_parameters import load_imputacion_parameters
+    from ...fincas import load_imputacion_parameters
 
     parameters = load_imputacion_parameters()
     assert parameters.recent_revision_rate == Decimal("0.011")  # 1.1 %

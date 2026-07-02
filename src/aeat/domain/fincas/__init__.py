@@ -75,6 +75,7 @@ from ._expense_rollup import (
     GastosForYear,
     compute_gastos_for_year,
 )
+from ._imputacion_parameters import LirpfArt85ImputacionParameters, load_imputacion_parameters
 from ._models import (
     Arrendamiento,
     Finca,
@@ -124,6 +125,7 @@ __all__ = [
     "FincaRendimientoReader",
     "FincaRendimientoRecord",
     "GastosForYear",
+    "LirpfArt85ImputacionParameters",
     "ReduccionTier",
     "TierResolution",
     "TierResolutionError",
@@ -132,5 +134,6 @@ __all__ = [
     "compute_amortization_for_year",
     "compute_finca_aggregates",
     "compute_gastos_for_year",
+    "load_imputacion_parameters",
     "resolve_reduccion",
 ]

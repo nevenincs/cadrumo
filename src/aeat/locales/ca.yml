@@ -890,9 +890,7 @@ application:
         %{period}; completa abans aquestes dades de perfil: %{missing}.'
       profile_readiness_profile_missing: No existeix cap perfil actiu persistit per
         a aquest treball de model; crea o repara el perfil abans de continuar.
-      reconcile_declaration_unsupported: La reconciliació des de PDF de declaració
-        encara no està disponible; reconcilia un justificant descarregat amb aeat
-        app modelo reconcile file fins que el parser de declaracions estigui disponible.
+      reconcile_declaration_unsupported: 'La reconciliació per casella des de PDF de declaració encara no està habilitada per a aquest model; reconcilia un justificant descarregat amb aeat app modelo reconcile file, o espera que aquest model estigui habilitat.'
       reconcile_no_active_bucket: No hi ha cap perfil actiu; executa `aeat config
         profile create NAME` abans de reconciliar una unitat de treball.
       refund_election_not_eligible: S'ha triat tornar per al Model %{modelo} %{filing_year}

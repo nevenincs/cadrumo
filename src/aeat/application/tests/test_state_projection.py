@@ -51,7 +51,7 @@ from ..state_projection import (
     build_operator_state_projection,
     modelo_requires_ledger_preflight,
 )
-from ..user_profile._testing import register_minimal_profile
+from ..user_profile import register_minimal_profile
 from ..wizard import WIZARD_FLOWS
 from ..workflow import WorkflowState, workflow_state_repository
 

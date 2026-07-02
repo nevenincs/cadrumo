@@ -167,6 +167,7 @@ if TYPE_CHECKING:
     from ._filing_baseline import missing_filing_baseline_flags
     from ._integrity import ProfileIntegrityError
     from ._keys_validation import list_profile_key_records, validate_profile_values
+    from ._language_resolver import resolve_profile_output_language_hint
     from ._lifecycle import ProfileLifecycleService
     from ._orchestration import (
         ProfileAlreadyRegisteredError,
@@ -340,6 +341,10 @@ def __getattr__(name: str):
         from . import _keys_validation
 
         return getattr(_keys_validation, name)
+    if name == "resolve_profile_output_language_hint":
+        from ._language_resolver import resolve_profile_output_language_hint
+
+        return resolve_profile_output_language_hint
     if name in (
         "ProfileAlreadyRegisteredError",
         "build_lifecycle_service",
@@ -490,6 +495,7 @@ __all__ = [
     "require_registered_label",
     "resolve_active_capability",
     "resolve_capability",
+    "resolve_profile_output_language_hint",
     "restore_carried_objects",
     "select_profile",
     "select_profile_with_lifecycle_span",

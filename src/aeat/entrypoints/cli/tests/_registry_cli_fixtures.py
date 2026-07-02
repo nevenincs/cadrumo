@@ -8,8 +8,7 @@ from pathlib import Path
 
 import pytest
 
-from ....adapters.persistence.storage.master_key import activate_session
-from ....adapters.persistence.storage.master_key._bucket_session import BucketSession
+from ....adapters.persistence.storage.master_key import BucketSession, activate_session
 from ....adapters.persistence.storage.sql.engine import dispose_engine
 from ....core.config import override_settings
 from ....tests.secure_sql import dev_test_database_password, isolated_runtime_profile

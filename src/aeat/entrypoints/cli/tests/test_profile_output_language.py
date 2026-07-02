@@ -83,12 +83,12 @@ def _profile_facts(profile_name: str) -> dict[str, str]:
 
 
 def test_config_profile_create_writes_profile_output_language() -> None:
-    from ....adapters.persistence.storage.master_key._master_key import (
+    from ....adapters.persistence.storage.master_key import (
         activate_master_key_provider,
         get_master_key_provider,
     )
-    from ....application.workflow._persistence import workflow_state_repository
-    from ....core._bucket_pointer_io import resolve_active_bucket_id
+    from ....application.workflow import workflow_state_repository
+    from ....core import resolve_active_bucket_id
     from ....core.config import override_settings
 
     init_result = _create_profile(
@@ -113,7 +113,7 @@ def test_config_profile_create_writes_profile_output_language() -> None:
         state = workflow_state_repository().load()
         record = state.active_profile_record()
         assert record is not None
-        from ....application.user_profile._orchestration import fact_value
+        from ....application.user_profile import fact_value
 
         assert fact_value(record, "preferences.output_language") == "en"
         profile_id = record.profile_id
@@ -130,11 +130,11 @@ def test_config_profile_create_writes_profile_output_language() -> None:
 
 
 def test_config_profile_create_validates_profile_output_language() -> None:
-    from ....adapters.persistence.storage.master_key._master_key import (
+    from ....adapters.persistence.storage.master_key import (
         activate_master_key_provider,
         get_master_key_provider,
     )
-    from ....application.workflow._persistence import workflow_state_repository
+    from ....application.workflow import workflow_state_repository
 
     valid_result = _create_profile(
         "default",
@@ -162,7 +162,7 @@ def test_config_profile_create_validates_profile_output_language() -> None:
         state = workflow_state_repository().load()
         record = state.active_profile_record()
         assert record is not None
-        from ....application.user_profile._orchestration import fact_value
+        from ....application.user_profile import fact_value
 
         assert fact_value(record, "preferences.output_language") == "ca"
         assert invalid_result.exit_code != 0
@@ -184,12 +184,12 @@ def test_config_profile_edit_quiet_is_a_patch_not_a_full_rewrite() -> None:
     left exactly as stored.
     """
 
-    from ....adapters.persistence.storage.master_key._master_key import (
+    from ....adapters.persistence.storage.master_key import (
         activate_master_key_provider,
         get_master_key_provider,
     )
-    from ....application.user_profile._orchestration import fact_value
-    from ....application.workflow._persistence import workflow_state_repository
+    from ....application.user_profile import fact_value
+    from ....application.workflow import workflow_state_repository
 
     create_result = _create_profile(
         "default",
@@ -313,12 +313,12 @@ def test_env_output_language_honored_when_creating_profile_with_accept_defaults(
     dict before the catalogue-default seeding runs, so the env var wins.
     """
 
-    from ....adapters.persistence.storage.master_key._master_key import (
+    from ....adapters.persistence.storage.master_key import (
         activate_master_key_provider,
         get_master_key_provider,
     )
-    from ....application.user_profile._orchestration import fact_value
-    from ....application.workflow._persistence import workflow_state_repository
+    from ....application.user_profile import fact_value
+    from ....application.workflow import workflow_state_repository
 
     result = _create_profile(
         "marta",
@@ -340,7 +340,7 @@ def test_env_output_language_honored_when_creating_profile_with_accept_defaults(
     )
 
     # Verify via the repository as well (not just the CLI show surface).
-    from ....core._bucket_pointer_io import resolve_active_bucket_id
+    from ....core import resolve_active_bucket_id
     from ....core.config import override_settings
 
     bucket_id = resolve_active_bucket_id()
@@ -394,10 +394,9 @@ def test_config_repair_labels_render_in_profile_output_language() -> None:
 def test_malformed_bucket_dek_error_renders_in_profile_output_language() -> None:
     """A critical master-key failure still renders through the profile language hint."""
 
-    from ....adapters.persistence.storage.bucket._output_language_hint import read_bucket_output_language_hint
-    from ....adapters.persistence.storage.master_key._active_session import current_active_bucket_session
-    from ....adapters.persistence.storage.master_key._master_key_bucket_dek import bucket_dek_path
-    from ....application.workflow._profile_bucket_scan import read_profile_bucket
+    from ....adapters.persistence.storage.bucket import read_bucket_output_language_hint
+    from ....adapters.persistence.storage.master_key import bucket_dek_path, current_active_bucket_session
+    from ....application.workflow import read_profile_bucket
     from ....core.config import load_settings, override_settings
     from ....core.i18n import clear_output_language_cache, tr
 
@@ -439,10 +438,10 @@ def test_malformed_bucket_dek_error_renders_in_profile_output_language() -> None
 def test_config_switch_malformed_target_bucket_dek_uses_target_profile_output_language() -> None:
     """A failed target-bucket switch renders through the target bucket's language hint."""
 
-    from ....adapters.persistence.storage.bucket._output_language_hint import read_bucket_output_language_hint
-    from ....adapters.persistence.storage.master_key._master_key_bucket_dek import bucket_dek_path
-    from ....application.workflow._profile_bucket_scan import read_profile_bucket
-    from ....core._bucket_pointer_io import resolve_active_bucket_id
+    from ....adapters.persistence.storage.bucket import read_bucket_output_language_hint
+    from ....adapters.persistence.storage.master_key import bucket_dek_path
+    from ....application.workflow import read_profile_bucket
+    from ....core import resolve_active_bucket_id
     from ....core.config import load_settings, override_settings
     from ....core.i18n import clear_output_language_cache, tr
 

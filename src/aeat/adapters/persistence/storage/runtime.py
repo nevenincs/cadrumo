@@ -34,12 +34,12 @@ from .errors import (
 from .errors import (
     storage_validation_error as _storage_validation_error,
 )
-from .master_key._active_session import current_active_bucket_session
+from .master_key import current_active_bucket_session
 
 if TYPE_CHECKING:
     from .sql.secure_objects import SecureObjectRepository
 
-from ....core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ....core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 
 _SYNTHETIC_SESSION_BUCKET_IDS = frozenset({"ephemeral"})
 _log = get_logger(__name__)
@@ -250,8 +250,8 @@ def _normalise_supported_language(value: object) -> str | None:
 
 def _active_bucket_output_language_hint(settings: Settings) -> str | None:
     try:
-        from ....core._bucket_pointer_io import resolve_active_bucket_id
-        from .bucket._output_language_hint import read_bucket_output_language_hint
+        from ....core import resolve_active_bucket_id
+        from .bucket import read_bucket_output_language_hint
 
         bucket_id = resolve_active_bucket_id()
         if bucket_id is None:

@@ -133,9 +133,9 @@ def test_overview_agenda_error_raised_for_non_positive_horizon() -> None:
 
     from ..application.overview import OverviewAgendaError, build_overview_agenda
 
-    # Import _agenda lazily; OverviewAgendaError is raised before any
-    # network or profile access so no fixture setup is needed.
-    from ..application.overview._agenda import DeadlineEngine
+    # OverviewAgendaError is raised before any network or profile access so
+    # no fixture setup is needed.
+    from ..domain.deadlines import DeadlineEngine
     from ..domain.deadlines.taxpayer_model import TaxpayerProfile
 
     with pytest.raises(OverviewAgendaError):
@@ -192,9 +192,15 @@ def test_censo_sync_error_typing() -> None:
 
 def test_portal_validation_error_for_invalid_entry_shapes() -> None:
     """build_entry raises PortalValidationError for mutually exclusive or malformed URL fields."""
-    from ..domain.portals import AuthMethod, Portal, PortalCategory, PortalHost, UrlStability
-    from ..domain.portals._entries._common import build_entry
-    from ..domain.portals._errors import PortalValidationError
+    from ..domain.portals import (
+        AuthMethod,
+        Portal,
+        PortalCategory,
+        PortalHost,
+        PortalValidationError,
+        UrlStability,
+        build_entry,
+    )
 
     cases = (
         ("url-and-path", {"url": "https://example.com", "path": "/also-present"}),
@@ -247,10 +253,7 @@ def test_m232_binding_error_too_many_rows() -> None:
     from decimal import Decimal as _Decimal
 
     from ..domain.calculations.registry import ModeloRevision, RegistryValidationError
-    from ..domain.modelos import Modelo232VinculadaRow
-    from ..domain.modelos._m232_row_materialisation import (
-        materialize_m232_related_party_rows,
-    )
+    from ..domain.modelos import Modelo232VinculadaRow, materialize_m232_related_party_rows
 
     sample_row = Modelo232VinculadaRow(
         nif="12345678A",

@@ -20,11 +20,11 @@ from ...crypto import KEY_SIZE
 from ...envelope import Envelope
 from ...errors import BlobIntegrityError, BlobNotFoundError, DecryptionError, EnvelopeVersionError
 from ...master_key import (
+    BucketSession,
     EphemeralMasterKeyProvider,
     NoActiveBucketSessionError,
     activate_session,
 )
-from ...master_key._bucket_session import BucketSession
 from .. import BlobReference
 from .._blob_store import BlobManifest, EncryptedBlobStore
 

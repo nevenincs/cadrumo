@@ -835,9 +835,7 @@ application:
         modellhez; előbb töltse ki ezeket a profiladatokat: %{missing}.'
       profile_readiness_profile_missing: Nincs perzisztált aktív profil ehhez a modelo
         munkához; folytatás előtt hozza létre vagy javítsa a profilt.
-      reconcile_declaration_unsupported: A bevallás-PDF egyeztetési forrás még nincs
-        implementálva; egyeztessen egy letöltött justificantét az aeat app modelo
-        reconcile file paranccsal, amíg a bevallás-elemző elérhetővé válik.
+      reconcile_declaration_unsupported: 'A bevallás-PDF rovatszintű egyeztetése még nincs engedélyezve ehhez a modellhez; egyeztessen egy letöltött justificantét az aeat app modelo reconcile file paranccsal, vagy várjon, amíg ez a modell engedélyezésre kerül.'
       reconcile_no_active_bucket: 'Nincs aktív profilmappa; futtassa: `aeat config
         profile create NÉV` az egyeztetés előtt.'
       refund_election_not_eligible: A(z) %{modelo} %{filing_year} %{period} modellnel

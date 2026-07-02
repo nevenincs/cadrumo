@@ -29,9 +29,9 @@ import pytest
 from ....adapters.persistence.storage.sql.engine import dispose_engine
 from ....application.user_profile import (
     profile_create_storage_span,
+    register_minimal_profile,
     set_active_fields,
 )
-from ....application.user_profile._testing import register_minimal_profile
 from ....application.workflow import workflow_state_repository
 from ....domain.user_profile import UserProfileFact
 from ....tests.cli_runner import invoke_cached_cli

@@ -7,8 +7,7 @@ from pathlib import Path
 
 import pytest
 
-from ....application.user_profile import profile_create_storage_span
-from ....application.user_profile._testing import register_minimal_profile
+from ....application.user_profile import profile_create_storage_span, register_minimal_profile
 from ....application.workflow import workflow_state_repository
 from ....tests.cli_runner import invoke_cached_cli
 from ....tests.secure_sql import isolated_profile_storage_root

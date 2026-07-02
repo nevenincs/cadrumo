@@ -83,13 +83,14 @@ def test_profile_registration_error_raised_on_double_register() -> None:
 
 
 def test_session_deserialization_error_is_registered_and_roundtrips() -> None:
-    from ..auth._sessions import SessionDeserializationError
+    from ..auth import SessionDeserializationError
 
     _assert_registered_and_roundtrip(SessionDeserializationError)
 
 
 def test_session_deserialization_error_raised_on_bad_type() -> None:
-    from ..auth._sessions import SessionDeserializationError, _session_metadata_datetime
+    from ..auth import SessionDeserializationError
+    from ..auth._sessions import _session_metadata_datetime
 
     with pytest.raises(SessionDeserializationError):
         _session_metadata_datetime(12345, field="started_at")
@@ -151,7 +152,7 @@ def test_modelo_applicability_filter_error_is_registered_and_roundtrips() -> Non
 
 
 def test_auth_diagnostic_payload_error_is_registered_and_roundtrips() -> None:
-    from ..auth._errors import AuthDiagnosticPayloadError
+    from ..auth import AuthDiagnosticPayloadError
 
     _assert_registered_and_roundtrip(AuthDiagnosticPayloadError)
 
@@ -159,8 +160,8 @@ def test_auth_diagnostic_payload_error_is_registered_and_roundtrips() -> None:
 def test_auth_diagnostic_payload_error_raised_on_non_object_json() -> None:
     import json
 
+    from ..auth import AuthDiagnosticPayloadError
     from ..auth._diagnostics import _payload
-    from ..auth._errors import AuthDiagnosticPayloadError
 
     raw = json.dumps([1, 2, 3]).encode()
     with pytest.raises(AuthDiagnosticPayloadError):
@@ -184,7 +185,7 @@ def test_workflow_input_mismatch_error_is_registered_and_roundtrips() -> None:
 
 
 def test_source_mesh_error_is_registered_and_roundtrips() -> None:
-    from ..aggregation._source_mesh import SourceMeshError
+    from ..aggregation import SourceMeshError
 
     _assert_registered_and_roundtrip(SourceMeshError)
 
@@ -192,8 +193,7 @@ def test_source_mesh_error_is_registered_and_roundtrips() -> None:
 def test_source_mesh_error_raised_on_blank_owned_source() -> None:
     from pydantic import ValidationError
 
-    from ..aggregation import CalculationSourceResolution
-    from ..aggregation._source_mesh import SourceMeshError
+    from ..aggregation import CalculationSourceResolution, SourceMeshError
 
     with pytest.raises((SourceMeshError, ValidationError)):
         CalculationSourceResolution(
@@ -205,8 +205,7 @@ def test_source_mesh_error_raised_on_blank_owned_source() -> None:
 def test_source_mesh_error_raised_on_duplicate_owned_source() -> None:
     from pydantic import ValidationError
 
-    from ..aggregation import CalculationSourceResolution
-    from ..aggregation._source_mesh import SourceMeshError
+    from ..aggregation import CalculationSourceResolution, SourceMeshError
 
     with pytest.raises((SourceMeshError, ValidationError)):
         CalculationSourceResolution(

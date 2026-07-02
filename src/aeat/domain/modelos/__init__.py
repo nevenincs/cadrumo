@@ -106,6 +106,7 @@ from ._ledger_filing_snapshot import (
     diff_ledger_fingerprints,
     snapshot_fingerprint,
 )
+from ._m232_row_materialisation import materialize_m232_related_party_rows
 from ._participation_index import (
     PARTICIPATION_INDEX_NAMESPACE,
     PARTICIPATION_INDEX_SCHEMA_VERSION,
@@ -218,6 +219,7 @@ __all__ = (
     "diff_ledger_fingerprints",
     "dt12_regime_window_eligibility",
     "m349_nif_number_for_export",
+    "materialize_m232_related_party_rows",
     "resolve_modelo_repository_bucket_id",
     "secure_objects_for_modelo_bucket",
     "snapshot_fingerprint",

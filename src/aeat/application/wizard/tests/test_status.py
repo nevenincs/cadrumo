@@ -19,8 +19,8 @@ from ....tests.secure_sql import isolated_profile_storage_root
 from ...user_profile import (
     profile_create_storage_span,
     profile_storage_session,
+    register_minimal_profile,
 )
-from ...user_profile._testing import register_minimal_profile
 from ...workflow import WorkflowState
 from .._status import (
     WizardStatusError,

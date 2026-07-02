@@ -25,15 +25,14 @@ from ....domain.calculations.registry import (
     DataBindingDefinition,
     InputKind,
     ModeloRevision,
+    PeriodSelector,
     RegistryValidationError,
     VerificationPredicateDefinition,
     calculate_registry_snapshot,
     validated_casilla_id,
 )
-from ....domain.calculations.registry._schema import PeriodSelector
 from ....domain.deadlines import IVARegime, TaxpayerProfile
-from ....domain.iva_compensation import IvaCompensationReconciliationDecision
-from ....domain.iva_compensation._reconciliation import IvaCompensationDivergence
+from ....domain.iva_compensation import IvaCompensationDivergence, IvaCompensationReconciliationDecision
 from ....domain.modelos import (
     CalculationRevision,
     CalculationRevisionState,
@@ -821,12 +820,12 @@ def test_iva_regime_cli_choices_cover_operator_selectable_wizard_values() -> Non
     that are not enrolled in IVA. It must not leak into the operator-facing
     ``--iva-regime`` choice set.
     """
-    from ...wizard._catalogue import SETUP_FLOW
+    from ....core.wizard_catalogue import get_setup_flow
     from ...wizard._commands import _IVA_REGIME_CHOICE_VALUES
 
     wizard_values = {
         choice.value
-        for section in SETUP_FLOW.sections
+        for section in get_setup_flow().sections
         for question in section.questions
         if question.id == "iva-regime"
         for choice in question.choices

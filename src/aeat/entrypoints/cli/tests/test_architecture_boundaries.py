@@ -28,7 +28,7 @@ from pathlib import Path
 import pytest
 
 from ....core.paths import PROJECT_ROOT
-from ....tests._inventory import leaf_name
+from ....tests import leaf_name
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 

@@ -20,8 +20,7 @@ from ....domain.modelos import (
 )
 from ....tests import FIXTURES_DIR
 from ....tests.secure_sql import isolated_profile_storage_root
-from ...user_profile import profile_create_storage_span
-from ...user_profile._testing import register_minimal_profile
+from ...user_profile import profile_create_storage_span, register_minimal_profile
 from ...workflow import workflow_state_repository
 from .._reconcile import (
     ModeloReconciliationCommand,
@@ -191,12 +190,14 @@ def test_modelo_reconcile_emits_modelo_reconciled_event() -> None:
     assert matching[-1].payload["source_kind"] == "justificante"
 
 
-def test_modelo_reconcile_refuses_declaration_source_until_parser_lands() -> None:
-    """The declaration-PDF parser has not shipped; the service refuses
-    cleanly per the app-modelo-shape contract's two-source requirement so
-    operators get a typed error rather than a silent-degraded path."""
+def test_modelo_reconcile_refuses_declaration_source_for_unenrolled_modelo() -> None:
+    """Casilla-level declaración reconcile is enrolled one modelo at a time.
 
-    work_unit_id = _seed_work_unit(modelo="130", filing_year=2026, period="1T")
+    A modelo outside :data:`_DECLARATION_CASILLA_RECONCILE_MODELOS` (303 here)
+    refuses cleanly with a typed error rather than silently degrading to a
+    header-only compare."""
+
+    work_unit_id = _seed_work_unit(modelo="303", filing_year=2026, period="1T")
 
     with pytest.raises(ReconciliationDeclaracionSourceUnsupportedError) as excinfo:
         modelo_reconcile(
@@ -295,8 +296,7 @@ def test_modelo_reconcile_malformed_evidence_refusal_is_clean_and_instructive(
     Regression for audit reconcile m11 / docs-hardening m16: before the fix the
     refusal echoed the raw parser message verbatim.
     """
-    from ....core.errors import resolve_error_message
-    from ....core.errors._registry import get_error_suggestion
+    from ....core.errors import get_error_suggestion, resolve_error_message
 
     work_unit_id = _seed_work_unit(modelo="130", filing_year=2026, period="1T")
     not_a_justificante = tmp_path / "garbage.pdf"

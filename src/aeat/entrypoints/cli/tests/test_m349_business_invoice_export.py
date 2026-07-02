@@ -11,8 +11,7 @@ from click.testing import Result
 
 from ....application.aggregation import CalculationSourceContext
 from ....application.invoices import InvoiceCatalogueSourceResolver
-from ....application.user_profile import profile_create_storage_span
-from ....application.user_profile._testing import register_minimal_profile
+from ....application.user_profile import profile_create_storage_span, register_minimal_profile
 from ....application.workflow import workflow_state_repository
 from ....core import Period
 from ....core.resources import bundled_path
