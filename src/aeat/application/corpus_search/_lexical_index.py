@@ -181,7 +181,7 @@ def _stem_text(stemmer: object, text: str) -> str:
     tokens = _WORD_RE.findall(text.lower())
     if not tokens:
         return ""
-    stemmed = stemmer.stemWords(tokens)  # type: ignore[attr-defined]
+    stemmed = stemmer.stemWords(tokens)  # type: ignore[attr-defined]  # TYPE-IGNORE-RATIONALE-stubs: PyStemmer.stemWords is a C-extension method absent from type stubs
     return " ".join(stemmed)
 
 
@@ -316,7 +316,7 @@ def search_lexical(
             context={"query": query},
         )
     stemmer = _spanish_stemmer()
-    stemmed_terms = stemmer.stemWords(folded_terms)  # type: ignore[attr-defined]
+    stemmed_terms = stemmer.stemWords(folded_terms)  # type: ignore[attr-defined]  # TYPE-IGNORE-RATIONALE-stubs: PyStemmer.stemWords is a C-extension method absent from type stubs
     match_expression = (
         f"text_folded : ({_fts_or_group(folded_terms)}) OR text_stemmed : ({_fts_or_group(stemmed_terms)})"
     )

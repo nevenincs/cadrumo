@@ -155,7 +155,7 @@ def load_terminology_concepts(locale: str = _FALLBACK_LOCALE) -> tuple[Terminolo
     """
     root = _terminology_root()
     concepts: list[TerminologyConcept] = []
-    for path in sorted(root.glob("*.toml"), key=lambda item: item.name):  # type: ignore[attr-defined]
+    for path in sorted(root.glob("*.toml"), key=lambda item: item.name):  # type: ignore[attr-defined]  # TYPE-IGNORE-RATIONALE-stubs: Path.glob attr on a resource-path union not narrowed by the checker
         payload = tomllib.loads(path.read_text(encoding=UTF_8_ENCODING))
         projected = _project_concept(payload, locale=locale)
         if projected is not None:

@@ -111,12 +111,15 @@ _BucketIdOpt = Annotated[str | None, typer.Option("--bucket-id", help=tr("cli.ap
 _ActorOpt = Annotated[str | None, typer.Option("--by", help=tr("cli.app.modelo.work.actor_help"))]
 
 
+# KWARGS-ANY-RATIONALE-cli: resolve_work_unit_for_cli is a CLI resolver callback injected by the command registrar
 def register_amend_wizard_commands(
     work_app: typer.Typer,
     *,
     activate_output_language: Callable[[typer.Context, OutputLanguage | None], None],
     require_active_profile: Callable[[], None],
-    resolve_work_unit_for_cli: Callable[..., Any],
+    resolve_work_unit_for_cli: Callable[
+        ..., Any
+    ],  # KWARGS-ANY-RATIONALE-cli-callback: work-unit resolver callback injected by the command registrar
     resolve_default_actor: Callable[[], str],
     bad_parameter_from_error: Callable[[BaseException], typer.BadParameter],
 ) -> None:
@@ -277,12 +280,15 @@ def _baseline_casilla_rows(unit: WorkUnit) -> tuple[Any, ...]:
     return tuple(report.rows)
 
 
+# KWARGS-ANY-RATIONALE-cli: casilla prompt rows carry a heterogeneous casilla-id element
 def _prompt_corrections(
     prompter: _TextAnswerPrompter,
     *,
     unit: WorkUnit,
     baseline: ModeloRecord,
-    casilla_rows: tuple[Any, ...],
+    casilla_rows: tuple[
+        Any, ...
+    ],  # KWARGS-ANY-RATIONALE-prompt-row: casilla prompt rows carry a heterogeneous casilla-id element
 ) -> tuple[tuple[Any, Decimal, Decimal], ...]:
     """Ask which casillas changed, then the corrected value for each.
 
@@ -415,6 +421,7 @@ def _prompt_reason(prompter: _TextAnswerPrompter) -> str:
     return raw
 
 
+# KWARGS-ANY-RATIONALE-cli: correction tuples carry a heterogeneous casilla-id element
 def _emit_amend_wizard_result(
     ctx: typer.Context,
     *,
@@ -422,7 +429,9 @@ def _emit_amend_wizard_result(
     unit: WorkUnit,
     amendment_kind: CalculationRevisionAmendmentKind,
     reason: str,
-    corrections: tuple[tuple[Any, Decimal, Decimal], ...],
+    corrections: tuple[
+        tuple[Any, Decimal, Decimal], ...
+    ],  # KWARGS-ANY-RATIONALE-prompt-row: correction tuples carry a heterogeneous casilla-id element
 ) -> None:
     from ._common import _emit_envelope
     from ._modelo_rendering import filing_record_payload
