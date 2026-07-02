@@ -403,18 +403,32 @@ def coerce_cell_text(value: object) -> str:
     return str(value).strip()
 
 
-def parse_date_value(value: object, *, day_first: bool = True) -> date:
+def _expected_date_format_hint(*, day_first: bool) -> str:
+    if day_first:
+        return "DD/MM/YYYY, DD-MM-YYYY, or YYYY-MM-DD"
+    return "YYYY-MM-DD, MM/DD/YYYY, or DD/MM/YYYY"
+
+
+def parse_date_value(value: object, *, day_first: bool = True, label: str = "date") -> date:
     """Parse a bank-statement date or date-time into a ``date``."""
     if isinstance(value, datetime):
         return value.date()
     if isinstance(value, date):
         return value
-    raw = coerce_cell_text(value)
-    if not raw:
+    original_raw = coerce_cell_text(value)
+    if not original_raw:
         raise FinancialValidationError("missing date value")
-    raw = raw.replace(".", "/")
+    raw = original_raw.replace(".", "/")
     if raw.isdigit() and len(raw) >= 8:
-        return datetime.strptime(raw[:8], "%Y%m%d").date()
+        try:
+            return datetime.strptime(raw[:8], "%Y%m%d").date()
+        except ValueError as fmt_exc:
+            LOGGER.debug(
+                "financial provider: compact date format %r did not match %r (%s); trying next",
+                "%Y%m%d",
+                raw,
+                fmt_exc,
+            )
     formats: Sequence[str]
     if day_first:
         formats = (
@@ -449,7 +463,12 @@ def parse_date_value(value: object, *, day_first: bool = True) -> date:
                 fmt_exc,
             )
             continue
-    raise FinancialValidationError(f"unsupported date format: {raw!r}")
+    expected_format = _expected_date_format_hint(day_first=day_first)
+    raise FinancialValidationError(
+        f"unsupported date format: {original_raw!r}; expected {expected_format}",
+        translated_message="errors.financial.unsupported_date_format",
+        context={"label": label, "raw": original_raw, "expected_format": expected_format},
+    )
 
 
 def parse_amount_value(

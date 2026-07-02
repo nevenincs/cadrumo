@@ -18,8 +18,8 @@ IVA wallet acquisition, justificante capture, notifications, expedientes,
 verification observations, and Borrador 100 snapshots. These classes document
 only the CLI transport shape that enters
 :class:`SchemaEnvelope` through
-:func:`~aeat.entrypoints.cli._common._emit_envelope`; they do not define a
-live-write surface or a second persistence contract.
+:func:`_emit_envelope`; they do not define a live-write surface or a second
+persistence contract.
 """
 
 from __future__ import annotations
@@ -168,7 +168,7 @@ class FiledCaptureSourcesResult(OutputSchema):
 
 
 class IvaCompensationHistoryRowPayload(OutputSchema):
-    """JSON projection of one :class:`~aeat.application.live.IvaCompensationHistoryRow`."""
+    """JSON projection of one :class:`IvaCompensationHistoryRow`."""
 
     year: int
     period: Period
@@ -184,7 +184,7 @@ class IvaCompensationHistoryRowPayload(OutputSchema):
 
 
 class IvaCompensationCarryForwardLotPayload(OutputSchema):
-    """JSON projection of one :class:`~aeat.application.live.IvaCompensationCarryForwardLotRow`."""
+    """JSON projection of one :class:`IvaCompensationCarryForwardLotRow`."""
 
     taxpayer_ref: str
     source_filing_year: int
@@ -198,7 +198,7 @@ class IvaCompensationCarryForwardLotPayload(OutputSchema):
 
 
 class IvaWalletAuthorityDecisionPayload(OutputSchema):
-    """JSON projection of one :class:`~aeat.application.live.IvaWalletAuthorityDecisionRow`.
+    """JSON projection of one :class:`IvaWalletAuthorityDecisionRow`.
 
     The decision records which authority source won for a target
     :class:`Period`: AEAT wallet evidence, local recurrence, or an explicit
@@ -222,7 +222,7 @@ class IvaWalletAuthorityDecisionPayload(OutputSchema):
 
 @register_schema("app.live.iva_wallet.pull")
 class IvaWalletPullResult(OutputSchema):
-    """Read-only wallet capture result from :class:`~aeat.application.live.IvaWalletCaptureReport`.
+    """Read-only wallet capture result from :class:`IvaWalletCaptureReport`.
 
     The payload identifies the persisted wallet observation and reconciliation
     decision for one target :class:`Period`. It reports the selected authority,
@@ -247,7 +247,7 @@ class IvaWalletPullResult(OutputSchema):
 
 @register_schema("app.live.iva_wallet.history")
 class IvaWalletHistoryResult(OutputSchema):
-    """Stored IVA evidence report from :class:`~aeat.application.live.IvaCompensationHistoryReport`.
+    """Stored IVA evidence report from :class:`IvaCompensationHistoryReport`.
 
     This command is local-only: rows, carry-forward lots, and wallet authority
     decisions are reloaded from secure profile storage without authenticating to
@@ -266,7 +266,7 @@ class IvaWalletHistoryResult(OutputSchema):
 
 @register_schema("app.live.iva_wallet.pull_history")
 class IvaWalletCaptureHistoryResult(OutputSchema):
-    """Filed-history capture result from :class:`~aeat.application.live.IvaCompensationHistoryCaptureReport`.
+    """Filed-history capture result from :class:`IvaCompensationHistoryCaptureReport`.
 
     The report comes from read-only Modelo 303 filed-history acquisition and
     includes the secure reload count that proves persisted observations were
@@ -282,7 +282,7 @@ class IvaWalletCaptureHistoryResult(OutputSchema):
 
 
 class LiveIvaSurfaceOutcomePayload(OutputSchema):
-    """Redacted JSON projection of one :class:`~aeat.application.live.LiveIvaReadOutcome`.
+    """Redacted JSON projection of one :class:`LiveIvaReadOutcome`.
 
     Filed history and wallet/cartera outcomes are reported independently so a
     successful surface can persist evidence even when the other surface fails
@@ -300,7 +300,7 @@ class LiveIvaSurfaceOutcomePayload(OutputSchema):
 
 
 class LiveIvaAuthOutcomePayload(OutputSchema):
-    """Redacted JSON projection of :class:`~aeat.application.live.LiveIvaAuthOutcome`."""
+    """Redacted JSON projection of :class:`LiveIvaAuthOutcome`."""
 
     status: str
     outcome_mode: str
@@ -313,7 +313,7 @@ class LiveIvaAuthOutcomePayload(OutputSchema):
 
 @register_schema("app.live.iva_wallet.pull_evidence")
 class IvaWalletPullEvidenceResult(OutputSchema):
-    """Combined IVA acquisition payload for :class:`~aeat.application.live.IvaRemoteStateAcquisitionReport`.
+    """Combined IVA acquisition payload for :class:`IvaRemoteStateAcquisitionReport`.
 
     The result carries the encrypted acquisition manifest id, redacted auth
     outcome, and per-surface read outcomes for filed history and wallet/cartera.
@@ -341,9 +341,8 @@ class IvaWalletPullEvidenceResult(OutputSchema):
 class NotificationRowPayload(OutputSchema):
     """One DEHú notification row in a viewed persisted snapshot.
 
-    Mirrors :class:`~aeat.adapters.outbound.aeat.sede.RemoteNotification` rows
-    stored inside
-    :class:`~aeat.application.live._notifications.PersistedNotificationsSnapshot`.
+    Mirrors :class:`RemoteNotification` rows stored inside
+    :class:`PersistedNotificationsSnapshot`.
     The payload is a CLI projection of already-captured evidence; rendering it
     does not acknowledge, mark, or mutate a notification in AEAT.
     """
@@ -366,12 +365,10 @@ class NotificationRowPayload(OutputSchema):
 class NotificationSnapshotListingPayload(OutputSchema):
     """Summary row for one persisted DEHu notification snapshot.
 
-    Used by
-    :class:`~aeat.entrypoints.cli._app_live_payloads.NotificationsListResult`
-    to expose the bucket snapshot id,
+    Used by :class:`NotificationsListResult` to expose the bucket snapshot id,
     capture timestamp, and row count returned by
-    :class:`~aeat.application.live.NotificationsService` without expanding the
-    underlying notification rows.
+    :class:`NotificationsService` without expanding the underlying
+    :class:`NotificationRowPayload` records.
     """
 
     snapshot_id: str
@@ -384,9 +381,9 @@ class NotificationsCaptureResult(OutputSchema):
     """Typed result for a persisted DEHu notification pull.
 
     The pull command performs the live read before this schema is built; the
-    payload records the bucket-scoped snapshot written by
-    :class:`~aeat.application.live.NotificationsService`, not an AEAT-side write
-    or acknowledgement.
+    payload records the bucket-scoped :class:`PersistedNotificationsSnapshot`
+    written by :class:`NotificationsService`, not an AEAT-side write or
+    acknowledgement.
     """
 
     bucket_id: str
@@ -401,11 +398,9 @@ class NotificationsCaptureResult(OutputSchema):
 class NotificationsListResult(OutputSchema):
     """Typed listing of persisted DEHu notification snapshots.
 
-    ``rows`` contains
-    :class:`~aeat.entrypoints.cli._app_live_payloads.NotificationSnapshotListingPayload`
-    summaries
-    returned by :class:`~aeat.application.live.NotificationsService`
-    ``list_snapshots``; message detail stays on the view payload.
+    ``rows`` contains :class:`NotificationSnapshotListingPayload` summaries
+    returned by :class:`NotificationsService` ``list_snapshots``; message
+    detail stays on :class:`NotificationsViewResult`.
     """
 
     bucket_id: str
@@ -418,11 +413,10 @@ class NotificationsViewResult(OutputSchema):
     """Typed detail view for one persisted DEHu notification snapshot.
 
     The command resolves a stored snapshot through
-    :class:`~aeat.application.live.NotificationsService` ``show`` and expands
-    its rows as
-    :class:`~aeat.entrypoints.cli._app_live_payloads.NotificationRowPayload`
-    records. It is a bucket read,
-    not a remote notification-state mutation.
+    :class:`NotificationsService` ``show`` and expands its
+    :class:`PersistedNotificationsSnapshot` rows as
+    :class:`NotificationRowPayload` records. It is a bucket read, not a remote
+    notification-state mutation.
     """
 
     bucket_id: str
@@ -438,8 +432,10 @@ class NotificationsLatestResult(OutputSchema):
     """Typed newest-snapshot response for DEHu notifications.
 
     ``snapshot_id`` is ``None`` when the bucket has no captured notification
-    snapshot; in that empty case every snapshot-derived field is also ``None``
-    so JSON clients can keep one stable schema for present and absent data.
+    snapshot from :class:`NotificationsService` ``latest``; in that empty case
+    every :class:`PersistedNotificationsSnapshot`-derived field is also
+    ``None`` so JSON clients can keep one stable schema for present and absent
+    data.
     """
 
     bucket_id: str
@@ -457,13 +453,10 @@ class NotificationsLatestResult(OutputSchema):
 class PortalEntryPayload(OutputSchema):
     """One local portal-registry catalogue entry.
 
-    Projects :class:`~aeat.domain.portals.PortalMetadata` from
-    :data:`~aeat.domain.portals.PORTAL_REGISTRY`, resolving translatable labels
-    before the value enters the CLI envelope.  Category, auth-method, and URL
-    stability fields carry the domain enum values from
-    :class:`~aeat.domain.portals.PortalCategory`,
-    :class:`~aeat.domain.portals.AuthMethod`, and
-    :class:`~aeat.domain.portals.UrlStability`.
+    Projects :class:`PortalMetadata` from :data:`PORTAL_REGISTRY`, resolving
+    translatable labels before the value enters the CLI envelope. Category,
+    auth-method, and URL stability fields carry the domain enum values from
+    :class:`PortalCategory`, :class:`AuthMethod`, and :class:`UrlStability`.
     """
 
     portal: str
@@ -481,10 +474,10 @@ class PortalEntryPayload(OutputSchema):
 class PortalsListResult(OutputSchema):
     """Typed local-catalogue result for ``aeat app live portals list``.
 
-    Rows are selected from :data:`~aeat.domain.portals.PORTAL_REGISTRY` directly
-    or through :func:`~aeat.domain.portals.portals_by_category` /
-    :func:`~aeat.domain.portals.portals_for_modelo`; the command never opens a
-    browser or contacts AEAT.
+    Rows are selected from :data:`PORTAL_REGISTRY` directly or through
+    :func:`portals_by_category` / :func:`portals_for_modelo`, then projected as
+    :class:`PortalEntryPayload`; the command never opens a browser or contacts
+    AEAT.
     """
 
     count: int
@@ -495,10 +488,8 @@ class PortalsListResult(OutputSchema):
 class PortalsViewResult(PortalEntryPayload):
     """Typed local-catalogue result for ``aeat app live portals view``.
 
-    The requested portal id resolves through
-    :func:`~aeat.domain.portals.get_portal` and emits the same
-    :class:`~aeat.entrypoints.cli._app_live_payloads.PortalEntryPayload`
-    projection as the list surface.
+    The requested portal id resolves through :func:`get_portal` and emits the
+    same :class:`PortalEntryPayload` projection as the list surface.
     """
 
 
@@ -510,9 +501,8 @@ class PortalsViewResult(PortalEntryPayload):
 class ExpedienteDeclarationPayload(OutputSchema):
     """One declaration-register row inside an expedientes-view payload.
 
-    Mirrors :class:`~aeat.adapters.outbound.aeat.sede.Declaracion` rows
-    persisted in a
-    :class:`~aeat.application.live._expedientes.PersistedExpedientesSnapshot`.
+    Mirrors :class:`Declaracion` rows persisted in a
+    :class:`PersistedExpedientesSnapshot`.
     Link-text and cell-index fields report what the read-only AEAT register
     exposed; they are not downloaded artefacts and do not imply a remote
     mutation.
@@ -538,12 +528,9 @@ class ExpedienteDeclarationPayload(OutputSchema):
 class ExpedienteSnapshotSummaryPayload(OutputSchema):
     """Summary row for one persisted expedientes snapshot.
 
-    Used by
-    :class:`~aeat.entrypoints.cli._app_live_payloads.ExpedientesListResult`
-    for rows returned from
-    :class:`~aeat.application.live.ExpedientesService`; full declaration detail
-    remains on
-    :class:`~aeat.entrypoints.cli._app_live_payloads.ExpedientesViewResult`.
+    Used by :class:`ExpedientesListResult` for rows returned from
+    :class:`ExpedientesService`; full :class:`ExpedienteDeclarationPayload`
+    detail remains on :class:`ExpedientesViewResult`.
     """
 
     snapshot_id: str
@@ -555,11 +542,10 @@ class ExpedienteSnapshotSummaryPayload(OutputSchema):
 class ExpedientesCaptureFailurePayload(OutputSchema):
     """One failed modelo/year row from a bulk expedientes pull.
 
-    Mirrors
-    :class:`~aeat.application.live.ExpedientesBulkCaptureFailureRow` entries in
-    :class:`~aeat.application.live.ExpedientesBulkCaptureReport`, preserving the
-    failed input coordinates and redacted diagnostic text without inventing a
-    partial snapshot.
+    Mirrors :class:`ExpedientesBulkCaptureFailureRow` entries in
+    :class:`ExpedientesBulkCaptureReport`, preserving the failed input
+    coordinates and redacted diagnostic text without inventing a partial
+    :class:`PersistedExpedientesSnapshot`.
     """
 
     modelo: str
@@ -573,12 +559,10 @@ class ExpedientesCaptureResult(OutputSchema):
     """Typed result for one or more persisted expedientes pulls.
 
     ``mode`` distinguishes a single-modelo capture from a bulk year-range
-    capture. Successful snapshots are persisted by
-    :class:`~aeat.application.live.ExpedientesService`; failed modelo/year pairs
-    are reported as
-    :class:`~aeat.entrypoints.cli._app_live_payloads.ExpedientesCaptureFailurePayload`
-    rows without
-    inventing declaration data.
+    capture. Successful :class:`PersistedExpedientesSnapshot` records are
+    persisted by :class:`ExpedientesService`; failed modelo/year pairs are
+    reported as :class:`ExpedientesCaptureFailurePayload` rows without inventing
+    declaration data.
     """
 
     mode: Literal["single", "bulk"] = "single"
@@ -601,10 +585,9 @@ class ExpedientesCaptureResult(OutputSchema):
 class ExpedientesListResult(OutputSchema):
     """Typed listing of persisted expedientes snapshots.
 
-    ``rows`` is the compact
-    :class:`~aeat.entrypoints.cli._app_live_payloads.ExpedienteSnapshotSummaryPayload`
-    projection returned by :class:`~aeat.application.live.ExpedientesService`
-    ``list_snapshots``; use the view schema for per-declaration detail.
+    ``rows`` is the compact :class:`ExpedienteSnapshotSummaryPayload`
+    projection returned by :class:`ExpedientesService` ``list_snapshots``; use
+    :class:`ExpedientesViewResult` for per-declaration detail.
     """
 
     bucket_id: str
@@ -616,10 +599,9 @@ class ExpedientesListResult(OutputSchema):
 class ExpedientesViewResult(OutputSchema):
     """Typed detail view for one persisted expedientes snapshot.
 
-    The command resolves a stored snapshot through
-    :class:`~aeat.application.live.ExpedientesService` and projects each
-    declaration into
-    :class:`~aeat.entrypoints.cli._app_live_payloads.ExpedienteDeclarationPayload`.
+    The command resolves a stored :class:`PersistedExpedientesSnapshot` through
+    :class:`ExpedientesService` and projects each declaration into
+    :class:`ExpedienteDeclarationPayload`.
     """
 
     bucket_id: str
@@ -635,8 +617,9 @@ class ExpedientesLatestResult(OutputSchema):
     """Typed newest-snapshot response for expedientes.
 
     ``snapshot_id`` is ``None`` when the bucket has no captured expedientes
-    snapshot; in that case every snapshot-derived field is also ``None`` to
-    keep the payload shape stable for JSON clients.
+    snapshot from :class:`ExpedientesService`; in that case every
+    :class:`PersistedExpedientesSnapshot`-derived field is also ``None`` to keep
+    the payload shape stable for JSON clients.
     """
 
     bucket_id: str
@@ -654,9 +637,8 @@ class ExpedientesLatestResult(OutputSchema):
 class VerifyObservationPayload(OutputSchema):
     """Shared JSON projection of one persisted verify observation.
 
-    Mirrors :class:`~aeat.application.live._verify.VerifyObservation` while
-    keeping ``bucket_id`` on detail and capture responses. ``surface`` is the
-    :class:`~aeat.application.live.VerifySurface` value, and
+    Mirrors :class:`VerifyObservation` while keeping ``bucket_id`` on detail
+    and capture responses. ``surface`` is the :class:`VerifySurface` value, and
     ``matched_expectation`` records whether the optional operator expectation
     matched the live verdict.
     """
@@ -678,14 +660,15 @@ class VerifyObservationPayload(OutputSchema):
 
 @register_schema("app.live.justificante.pull")
 class JustificanteCaptureResult(OutputSchema):
-    """Result envelope for a persisted :class:`~aeat.application.live.JustificanteCaptureSnapshot`.
+    """Result envelope for a persisted :class:`JustificanteCaptureSnapshot`.
 
     The pull command stores the signed receipt PDF through
-    :class:`~aeat.application.live.JustificanteCaptureSnapshotService` and
-    reports both the content-addressed ``pdf_sha256`` snapshot identity inputs
-    and the best-effort local enrolment outcome. ``filing_evidence_stamped`` is
-    false when no current local filing record exists; the live capture remains
-    persisted and can still back calendar evidence once metadata parses.
+    :class:`JustificanteCaptureSnapshotService` and reports both the
+    content-addressed ``pdf_sha256`` snapshot identity inputs and the
+    best-effort local enrolment outcome from :class:`JustificanteCaptureOutcome`.
+    ``filing_evidence_stamped`` is false when no current local filing record
+    exists; the live capture remains persisted and can still back calendar
+    evidence once metadata parses.
     """
 
     bucket_id: str
@@ -707,7 +690,11 @@ class JustificanteCaptureResult(OutputSchema):
 
 
 class JustificanteSnapshotSummaryPayload(OutputSchema):
-    """Summary projection of one :class:`~aeat.application.live.JustificanteCaptureSnapshot`."""
+    """Summary projection of one :class:`JustificanteCaptureSnapshot`.
+
+    Used by :class:`JustificanteListResult` for active snapshots returned from
+    :class:`JustificanteCaptureSnapshotService`.
+    """
 
     snapshot_id: str
     modelo: str
@@ -720,12 +707,13 @@ class JustificanteSnapshotSummaryPayload(OutputSchema):
 
 @register_schema("app.live.justificante.list")
 class JustificanteListResult(OutputSchema):
-    """List result from :class:`~aeat.application.live.JustificanteCaptureSnapshotService`.
+    """List result from :class:`JustificanteCaptureSnapshotService`.
 
-    Rows are active justificante-capture snapshots for the active bucket,
-    ordered by capture time and carrying the period token, lifecycle state, and
-    raw-PDF hash needed to identify the official receipt without exposing the
-    encrypted PDF bytes.
+    ``rows`` contains :class:`JustificanteSnapshotSummaryPayload` projections
+    for active :class:`JustificanteCaptureSnapshot` records in the active
+    bucket, ordered by capture time and carrying the period token,
+    :class:`SnapshotLifecycleState`, and raw-PDF hash needed to identify the
+    official receipt without exposing the encrypted PDF bytes.
     """
 
     bucket_id: str
@@ -735,11 +723,12 @@ class JustificanteListResult(OutputSchema):
 
 @register_schema("app.live.justificante.view")
 class JustificanteViewResult(OutputSchema):
-    """Detail view for one persisted :class:`~aeat.application.live.JustificanteCaptureSnapshot`.
+    """Detail view for one persisted :class:`JustificanteCaptureSnapshot`.
 
-    The view surfaces the AEAT expediente, CSV, official ``source_kind``,
-    lifecycle state, and ``pdf_sha256`` so operators can reconcile the local
-    evidence chain without printing the stored receipt body.
+    The view resolves through :class:`JustificanteCaptureSnapshotService` and
+    surfaces the AEAT expediente, CSV, official ``source_kind``,
+    :class:`SnapshotLifecycleState`, and ``pdf_sha256`` so operators can
+    reconcile the local evidence chain without printing the stored receipt body.
     """
 
     bucket_id: str
@@ -758,9 +747,10 @@ class JustificanteViewResult(OutputSchema):
 class VerifyObservationSummaryPayload(OutputSchema):
     """Compact verify-observation row for list output.
 
-    The list command already carries ``bucket_id`` at the envelope result level,
-    so each row keeps only the observation identity, surface, NIF, verdict, and
-    expectation-match status.
+    Used by :class:`VerifyListResult` for compact :class:`VerifyObservation`
+    projections. The list command already carries ``bucket_id`` at the envelope
+    result level, so each row keeps only the observation identity,
+    :class:`VerifySurface` value, NIF, verdict, and expectation-match status.
     """
 
     observation_id: str
@@ -776,11 +766,8 @@ class VerifyObservationSummaryPayload(OutputSchema):
 class VerifyListResult(OutputSchema):
     """Typed listing of persisted NIF verification observations.
 
-    ``rows`` contains
-    :class:`~aeat.entrypoints.cli._app_live_payloads.VerifyObservationSummaryPayload`
-    projections read
-    through :class:`~aeat.application.live.VerifyService`; the command does not
-    contact AEAT.
+    ``rows`` contains :class:`VerifyObservationSummaryPayload` projections read
+    through :class:`VerifyService`; the command does not contact AEAT.
     """
 
     bucket_id: str
@@ -790,17 +777,21 @@ class VerifyListResult(OutputSchema):
 
 @register_schema("app.live.verify.view")
 class VerifyViewResult(VerifyObservationPayload):
-    """Typed detail view for one persisted verify observation."""
+    """Typed detail view for one persisted :class:`VerifyObservation`.
+
+    The inherited :class:`VerifyObservationPayload` fields are resolved through
+    :class:`VerifyService` storage, not by performing a fresh live check.
+    """
 
 
 @register_schema("app.live.verify.latest")
 class VerifyLatestResult(OutputSchema):
     """Typed newest-observation response for one surface/NIF pair.
 
-    ``observation_id`` is ``None`` when no observation matches the
-    requested (surface, NIF) pair; ``surface`` and ``nif`` are still
-    populated to identify the lookup, and every observation-derived
-    field is ``None``.
+    ``observation_id`` is ``None`` when :class:`VerifyService` finds no
+    :class:`VerifyObservation` matching the requested (:class:`VerifySurface`,
+    NIF) pair; ``surface`` and ``nif`` are still populated to identify the
+    lookup, and every observation-derived field is ``None``.
     """
 
     bucket_id: str
@@ -818,7 +809,8 @@ class VerifyNifIvaResult(VerifyObservationPayload):
     """Typed result for an IXVI NIF-IVA live-read observation.
 
     The command persists the read-only AEAT verdict through
-    :class:`~aeat.application.live.VerifyService` before emitting this payload.
+    :class:`VerifyService` before emitting the inherited
+    :class:`VerifyObservationPayload` fields.
     """
 
 
@@ -827,7 +819,8 @@ class VerifyTgviResult(VerifyObservationPayload):
     """Typed result for a TGVI/GROI live-read observation.
 
     The command persists the read-only AEAT verdict through
-    :class:`~aeat.application.live.VerifyService` before emitting this payload.
+    :class:`VerifyService` before emitting the inherited
+    :class:`VerifyObservationPayload` fields.
     """
 
 
@@ -839,11 +832,10 @@ class VerifyTgviResult(VerifyObservationPayload):
 class Borrador100SnapshotSummaryPayload(OutputSchema):
     """Summary row for one persisted Modelo 100 borrador snapshot.
 
-    ``state`` is the
-    :class:`~aeat.application.live.SnapshotLifecycleState` value that controls
-    whether :class:`~aeat.application.live.Borrador100SnapshotService` exposes
-    the snapshot as active, superseded, discarded, or only through an explicit
-    ``--state all`` listing.
+    Projects :class:`Borrador100Snapshot` for :class:`Borrador100ListResult`.
+    ``state`` is the :class:`SnapshotLifecycleState` value that controls
+    whether :class:`Borrador100SnapshotService` exposes the snapshot as active,
+    superseded, discarded, or only through an explicit ``--state all`` listing.
     """
 
     snapshot_id: str
@@ -859,11 +851,9 @@ class Borrador100SnapshotSummaryPayload(OutputSchema):
 class Borrador100ListResult(OutputSchema):
     """Typed listing of bucket-scoped Modelo 100 borrador snapshots.
 
-    ``rows`` contains
-    :class:`~aeat.entrypoints.cli._app_live_payloads.Borrador100SnapshotSummaryPayload`
-    projections of
-    :class:`~aeat.application.live.Borrador100Snapshot` records returned by
-    :class:`~aeat.application.live.Borrador100SnapshotService`.
+    ``rows`` contains :class:`Borrador100SnapshotSummaryPayload` projections of
+    :class:`Borrador100Snapshot` records returned by
+    :class:`Borrador100SnapshotService`.
     """
 
     bucket_id: str
@@ -875,12 +865,12 @@ class Borrador100ListResult(OutputSchema):
 class Borrador100ViewResult(OutputSchema):
     """Typed detail view for one Modelo 100 borrador snapshot.
 
-    ``binding_values`` is a ``{BindingId: string_value}`` mapping from the
-    persisted :class:`~aeat.application.live.Borrador100Snapshot`. Decimal values
-    are rendered as their canonical string form before they reach the envelope
-    so the strict :class:`~aeat.entrypoints.cli._schemas.OutputSchema` never
-    encounters a non-JSON-native
-    scalar at validation time.
+    ``binding_values`` is a ``{BindingId: string_value}`` mapping keyed by
+    :data:`BindingId` from the persisted :class:`Borrador100Snapshot` resolved
+    through :class:`Borrador100SnapshotService`. Decimal values are rendered as
+    their canonical string form before they reach the envelope so the strict
+    :class:`OutputSchema` never encounters a non-JSON-native scalar at
+    validation time.
     """
 
     bucket_id: str
@@ -898,10 +888,11 @@ class Borrador100ViewResult(OutputSchema):
 class Borrador100LatestResult(OutputSchema):
     """Typed newest-active response for Modelo 100 borrador snapshots.
 
-    ``snapshot_id`` is ``None`` when no active snapshot exists for the requested
-    filing year; in that case every snapshot-derived field is also ``None`` to
-    keep the payload shape stable while still identifying the queried
-    ``filing_year``.
+    ``snapshot_id`` is ``None`` when :class:`Borrador100SnapshotService` finds
+    no active :class:`Borrador100Snapshot` for the requested filing year; in
+    that case every snapshot-derived field, including the
+    :class:`SnapshotLifecycleState` value, is also ``None`` to keep the payload
+    shape stable while still identifying the queried ``filing_year``.
     """
 
     bucket_id: str

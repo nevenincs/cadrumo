@@ -26,52 +26,49 @@ from .._tax_id import nif_check_letter, validate_spanish_tax_id
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
 
-class TestValidateSpanishTaxIdNie:
-    """NIE acceptance and rejection on the canonical-string validator."""
+def test_valid_nie_forms_are_accepted_and_normalised() -> None:
+    canonical_cases = (
+        # X -> 0: 01234567 % 23 = 19 -> L
+        ("X1234567L", 1234567),
+        # Y -> 1: 10000000 % 23 = 14 -> Z
+        ("Y0000000Z", 10000000),
+        # Z -> 2: 20000000 % 23 = 5 -> M
+        ("Z0000000M", 20000000),
+        # Y -> 1: 15678901 % 23 = 8 -> P
+        ("Y5678901P", 15678901),
+        # Z -> 2: 22345678 % 23 = 5 -> M
+        ("Z2345678M", 22345678),
+    )
 
-    def test_valid_nie_accepted_and_returned_canonical(self) -> None:
-        cases = (
-            # X -> 0: 01234567 % 23 = 19 -> L
-            ("X1234567L", 1234567),
-            # Y -> 1: 10000000 % 23 = 14 -> Z
-            ("Y0000000Z", 10000000),
-            # Z -> 2: 20000000 % 23 = 5 -> M
-            ("Z0000000M", 20000000),
-            # Y -> 1: 15678901 % 23 = 8 -> P
-            ("Y5678901P", 15678901),
-            # Z -> 2: 22345678 % 23 = 5 -> M
-            ("Z2345678M", 22345678),
-        )
+    for candidate, substituted in canonical_cases:
+        # The asserted check letter is derived from the AEAT table, not the
+        # validator: prove the fixture's check letter is the algorithm's answer.
+        assert candidate[-1] == nif_check_letter(substituted)
+        assert validate_spanish_tax_id(candidate) == candidate
 
-        for candidate, substituted in cases:
-            # The asserted check letter is derived from the AEAT table, not the
-            # validator: prove the fixture's check letter is the algorithm's answer.
-            assert candidate[-1] == nif_check_letter(substituted)
-            assert validate_spanish_tax_id(candidate) == candidate
+    normalised_cases = (
+        ("x1234567l", "X1234567L"),
+        ("  X-1234567-L  ", "X1234567L"),
+        # The foreign-facing VAT form ``ES`` + NIE is accepted and stripped.
+        ("ESX1234567L", "X1234567L"),
+    )
 
-    def test_valid_nie_input_forms_are_normalised(self) -> None:
-        cases = (
-            ("x1234567l", "X1234567L"),
-            ("  X-1234567-L  ", "X1234567L"),
-            # The foreign-facing VAT form ``ES`` + NIE is accepted and stripped.
-            ("ESX1234567L", "X1234567L"),
-        )
+    for raw, expected in normalised_cases:
+        assert validate_spanish_tax_id(raw) == expected
 
-        for raw, expected in cases:
-            assert validate_spanish_tax_id(raw) == expected
 
-    def test_invalid_nie_inputs_are_rejected_with_instructive_messages(self) -> None:
-        shape_message = "NIE must be a leading X/Y/Z plus 7 digits and a checksum letter"
-        cases = (
-            # X1234567 has check letter L (01234567 % 23 = 19); Z is wrong.
-            ("X1234567Z", "NIE checksum letter is invalid"),
-            ("X123A567L", shape_message),
-            # A NIE control character must be a letter, never a digit.
-            ("X12345678", shape_message),
-            ("X123456L", "9 characters long"),
-            ("   ", "must not be blank"),
-        )
+def test_invalid_nie_inputs_are_rejected_with_instructive_messages() -> None:
+    shape_message = "NIE must be a leading X/Y/Z plus 7 digits and a checksum letter"
+    cases = (
+        # X1234567 has check letter L (01234567 % 23 = 19); Z is wrong.
+        ("X1234567Z", "NIE checksum letter is invalid"),
+        ("X123A567L", shape_message),
+        # A NIE control character must be a letter, never a digit.
+        ("X12345678", shape_message),
+        ("X123456L", "9 characters long"),
+        ("   ", "must not be blank"),
+    )
 
-        for candidate, expected_message in cases:
-            with pytest.raises(IdentityError, match=expected_message):
-                validate_spanish_tax_id(candidate)
+    for candidate, expected_message in cases:
+        with pytest.raises(IdentityError, match=expected_message):
+            validate_spanish_tax_id(candidate)

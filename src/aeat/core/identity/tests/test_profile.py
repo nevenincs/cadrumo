@@ -15,19 +15,17 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 _Holder = single_field_model("profile_id", ProfileId)
 
 
-def test_accepts_valid_profile_ids() -> None:
+def test_profile_id_constraint_accepts_valid_values_and_rejects_invalid_values() -> None:
     minted = str(uuid4())
-    cases = (
+    valid_cases = (
         (minted, minted),
         (f"  {minted}  ", minted),
     )
 
-    for profile_id, expected in cases:
+    for profile_id, expected in valid_cases:
         assert _Holder(profile_id=profile_id).profile_id == expected
 
-
-def test_rejects_invalid_profile_ids() -> None:
-    cases = (
+    invalid_cases = (
         "operator",
         str(uuid4()).upper(),
         "",
@@ -36,6 +34,6 @@ def test_rejects_invalid_profile_ids() -> None:
         " leading-space-after-strip-still-bad?",
     )
 
-    for profile_id in cases:
+    for profile_id in invalid_cases:
         with pytest.raises(ValidationError):
             _Holder(profile_id=profile_id)

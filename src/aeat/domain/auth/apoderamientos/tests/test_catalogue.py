@@ -21,63 +21,47 @@ def catalogue() -> ApoderamientosCatalogue:
     return load_default_catalogue()
 
 
-class TestCatalogueLoad:
-    def test_default_catalogue_loads_from_registry(self, catalogue: ApoderamientosCatalogue) -> None:
-        assert catalogue.catalogue_version.startswith("2026")
-        assert len(catalogue.scopes) >= 5
-        codes = catalogue.code_set()
-        assert "IVA" in codes
-        assert "RENT" in codes
-        assert "CENSO" in codes
-
-    def test_catalogue_codes_are_uppercase(self, catalogue: ApoderamientosCatalogue) -> None:
-        for scope in catalogue.scopes:
-            assert scope.code == scope.code.upper()
-
-    def test_catalogue_iva_scope_binds_modelo_303_390(self, catalogue: ApoderamientosCatalogue) -> None:
-        iva = catalogue.get("IVA")
-        assert iva is not None
-        assert "303" in iva.modelo_codes
-        assert "390" in iva.modelo_codes
+def test_default_catalogue_loads_registry_invariants(catalogue: ApoderamientosCatalogue) -> None:
+    assert catalogue.catalogue_version.startswith("2026")
+    assert len(catalogue.scopes) >= 5
+    codes = catalogue.code_set()
+    assert {"IVA", "RENT", "CENSO"} <= codes
+    for scope in catalogue.scopes:
+        assert scope.code == scope.code.upper(), scope.code
+    iva = catalogue.get("IVA")
+    assert iva is not None
+    assert {"303", "390"} <= set(iva.modelo_codes)
 
 
-class TestParseScopeTokens:
-    def test_known_code_passes_through(self, catalogue: ApoderamientosCatalogue) -> None:
-        assert parse_scope_tokens(("IVA",), catalogue) == ("IVA",)
+def test_parse_scope_tokens_accepts_known_tokens_and_deduplicates(catalogue: ApoderamientosCatalogue) -> None:
+    cases = (
+        (("IVA",), ("IVA",)),
+        (("IVA", "RENT", "CENSO"), ("IVA", "RENT", "CENSO")),
+        (("IVA", "RENT", "IVA"), ("IVA", "RENT")),
+    )
 
-    def test_multiple_known_codes_preserve_order(self, catalogue: ApoderamientosCatalogue) -> None:
-        assert parse_scope_tokens(("IVA", "RENT", "CENSO"), catalogue) == ("IVA", "RENT", "CENSO")
-
-    def test_duplicates_are_deduplicated(self, catalogue: ApoderamientosCatalogue) -> None:
-        assert parse_scope_tokens(("IVA", "RENT", "IVA"), catalogue) == ("IVA", "RENT")
-
-    def test_unknown_code_refuses(self, catalogue: ApoderamientosCatalogue) -> None:
-        with pytest.raises(UnknownScopeError, match="not in catalogue"):
-            parse_scope_tokens(("BOGUS",), catalogue)
-
-    def test_lowercase_token_refuses(self, catalogue: ApoderamientosCatalogue) -> None:
-        with pytest.raises(UnknownScopeError, match="must be uppercase"):
-            parse_scope_tokens(("iva",), catalogue)
-
-    def test_comma_separated_refuses(self, catalogue: ApoderamientosCatalogue) -> None:
-        with pytest.raises(UnknownScopeError, match="contains a comma"):
-            parse_scope_tokens(("IVA,RENT",), catalogue)
+    for raw_tokens, expected in cases:
+        assert parse_scope_tokens(raw_tokens, catalogue) == expected, raw_tokens
 
 
-class TestAllTokenExpansion:
-    def test_all_token_expands_to_every_code(self, catalogue: ApoderamientosCatalogue) -> None:
-        expanded = expand_all_token(catalogue)
-        assert set(expanded) == catalogue.code_set()
-        # Sorted alphabetically per the contract.
-        assert list(expanded) == sorted(expanded)
+def test_parse_scope_tokens_rejects_invalid_operator_tokens(catalogue: ApoderamientosCatalogue) -> None:
+    cases = (
+        (("BOGUS",), "not in catalogue"),
+        (("iva",), "must be uppercase"),
+        (("IVA,RENT",), "contains a comma"),
+    )
 
-    def test_parse_with_all_expands_in_place(self, catalogue: ApoderamientosCatalogue) -> None:
-        result = parse_scope_tokens((ALL_TOKEN,), catalogue)
-        assert set(result) == catalogue.code_set()
+    for raw_tokens, expected_match in cases:
+        with pytest.raises(UnknownScopeError, match=expected_match):
+            parse_scope_tokens(raw_tokens, catalogue)
 
-    def test_parse_with_all_plus_extras_dedups(self, catalogue: ApoderamientosCatalogue) -> None:
-        # ALL expands first; subsequent explicit codes already present are deduped.
-        result = parse_scope_tokens((ALL_TOKEN, "IVA"), catalogue)
-        assert set(result) == catalogue.code_set()
-        # IVA must appear exactly once.
-        assert result.count("IVA") == 1
+
+def test_all_token_expansion_is_sorted_and_deduplicated(catalogue: ApoderamientosCatalogue) -> None:
+    expanded = expand_all_token(catalogue)
+    assert set(expanded) == catalogue.code_set()
+    assert list(expanded) == sorted(expanded)
+
+    for raw_tokens in ((ALL_TOKEN,), (ALL_TOKEN, "IVA")):
+        result = parse_scope_tokens(raw_tokens, catalogue)
+        assert set(result) == catalogue.code_set(), raw_tokens
+        assert result.count("IVA") == 1, raw_tokens

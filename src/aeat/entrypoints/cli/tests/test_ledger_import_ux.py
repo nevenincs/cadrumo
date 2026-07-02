@@ -62,6 +62,92 @@ def test_generic_csv_missing_currency_warning_is_provider_neutral_in_cli(tmp_pat
     assert "N26 CSV has no currency column" not in result.output
 
 
+@pytest.mark.parametrize(
+    ("filename", "contents"),
+    [
+        (
+            "missing-currency.csv",
+            "Date,Description,Amount\n2026-04-15,Invoice 1,121.00\n",
+        ),
+        (
+            "blank-currency.csv",
+            _N26_HEADER + "2026-04-15,Client SL,Invoice 1,121.00,,n26-001\n",
+        ),
+    ],
+)
+def test_missing_or_blank_csv_currency_imports_as_default_and_list_view_succeed(
+    tmp_path: Path,
+    filename: str,
+    contents: str,
+) -> None:
+    """Missing or blank CSV currency defaults at import and never breaks list/view payload validation."""
+    statement = tmp_path / filename
+    statement.write_text(contents, encoding="utf-8")
+
+    imported = _invoke(["app", "ledger", "import", str(statement), "--provider", "csv"])
+    assert imported.exit_code == 0, imported.output
+
+    listed = _invoke(["--format", "json", "app", "ledger", "list"])
+    assert listed.exit_code == 0, listed.output
+    rows = json.loads(listed.output)["result"]["rows"]
+    assert len(rows) == 1
+    assert rows[0]["currency"] == "EUR"
+
+    viewed = _invoke(["--format", "json", "app", "ledger", "view", rows[0]["transaction_id"]])
+    assert viewed.exit_code == 0, viewed.output
+    assert json.loads(viewed.output)["result"]["transaction"]["currency"] == "EUR"
+
+
+def test_short_csv_currency_refuses_at_import_with_currency_column_message(tmp_path: Path) -> None:
+    """A malformed nonblank CSV currency cell is not misreported as config repair."""
+    statement = tmp_path / "short-currency.csv"
+    statement.write_text(
+        _N26_HEADER + "2026-04-15,Client SL,Invoice 1,121.00,EU,n26-001\n",
+        encoding="utf-8",
+    )
+
+    result = _invoke(["app", "ledger", "import", str(statement), "--provider", "csv"])
+
+    assert result.exit_code != 0
+    assert "CSV row 2" in result.output
+    assert "currency column" in result.output
+    assert "EU" in result.output
+    assert "command input failed validation" not in result.output.lower()
+    assert "config repair" not in result.output.lower()
+
+
+@pytest.mark.parametrize(
+    ("locale", "inner_fragment"),
+    [
+        ("es", "Formato de fecha no válido"),
+        ("ca", "Format de data no vàlid"),
+        ("hu", "Érvénytelen dátumformátum"),
+    ],
+)
+def test_malformed_csv_date_import_localises_inner_reason(
+    tmp_path: Path,
+    locale: str,
+    inner_fragment: str,
+) -> None:
+    """A malformed CSV date keeps row and column context without leaking raw English."""
+    statement = tmp_path / f"bad-date-{locale}.csv"
+    statement.write_text(
+        _N26_HEADER + "not-a-date,Client SL,Invoice 1,121.00,EUR,n26-001\n",
+        encoding="utf-8",
+    )
+
+    result = _invoke(["--language", locale, "app", "ledger", "import", str(statement), "--provider", "csv"])
+
+    assert result.exit_code != 0
+    flattened = " ".join(result.output.split())
+    assert "CSV row 2" in flattened
+    assert "Date" in flattened
+    assert "not-a-date" in flattened
+    assert "YYYY-MM-DD" in flattened
+    assert inner_fragment in flattened
+    assert "unsupported date format" not in flattened
+
+
 def test_import_of_a_headers_only_csv_explains_zero_rows(tmp_path: Path) -> None:
     """A parsed-but-empty CSV explains the zero result, never silently.
 

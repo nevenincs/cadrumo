@@ -128,6 +128,25 @@ def test_n26_csv_missing_currency_warning_keeps_provider_label(tmp_path: Path) -
     assert validation.warnings == ("N26 CSV has no currency column; falling back to EUR",)
 
 
+def test_csv_provider_rejects_short_currency_cell_with_column_context(tmp_path: Path) -> None:
+    """A malformed nonblank currency cell is refused before RawTransaction validation leaks."""
+    source = tmp_path / "short-currency.csv"
+    source.write_text(
+        "Date,Payee,Payment reference,Amount (EUR),Currency,Transaction ID\n"
+        "2026-04-15,Client SL,Invoice 1,121.00,EU,n26-001\n",
+        encoding="utf-8",
+    )
+
+    with pytest.raises(InvalidFinancialSourceError) as exc_info:
+        tuple(CsvProvider().ingest(source))
+
+    message = str(exc_info.value)
+    assert "CSV row 2" in message
+    assert "currency column 'Currency'" in message
+    assert "three-letter ISO 4217 code" in message
+    assert "'EU'" in message
+
+
 def test_csv_provider_ignores_invalid_configured_encoding_name() -> None:
     """An invalid preferred encoding should not break the fallback decode order."""
     with override_settings(financial_default_csv_encoding="definitely-not-a-codec"):

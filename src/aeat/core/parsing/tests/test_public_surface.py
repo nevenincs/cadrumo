@@ -16,7 +16,7 @@ assert __package__ is not None, "test module must be runnable from a package"
 _PARSING_PACKAGE = import_module(__package__.rsplit(".", 1)[0])
 
 
-def test_public_parsing_surface_exposes_only_public_names() -> None:
+def test_public_parsing_surface_exposes_only_public_names_and_live_parsers() -> None:
     private_aliases = {
         "_parse_bool",
         "_parse_date",
@@ -28,12 +28,7 @@ def test_public_parsing_surface_exposes_only_public_names() -> None:
     for name in private_aliases:
         assert not hasattr(_PARSING_PACKAGE, name)
 
-
-def test_public_date_parsers_delegate_to_canonical_implementations() -> None:
     assert parse_iso8601_date("2026-06-05") == date(2026, 6, 5)
     assert parse_ddmmyyyy_date("05/06/2026") == date(2026, 6, 5)
-
-
-def test_public_bool_parser_remains_available() -> None:
     assert parse_bool("sí") is True
     assert parse_bool("no") is False

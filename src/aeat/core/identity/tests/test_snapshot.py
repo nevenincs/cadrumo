@@ -15,12 +15,10 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 _Holder = single_field_model("snapshot_id", SnapshotId)
 
 
-def test_accepts_canonical_sha256_hex_digest() -> None:
+def test_snapshot_id_constraint_accepts_canonical_digest_and_rejects_invalid_values() -> None:
     digest = hashlib.sha256(b"payload").hexdigest()
     assert _Holder(snapshot_id=digest).snapshot_id == digest
 
-
-def test_rejects_invalid_snapshot_ids() -> None:
     cases = (
         hashlib.sha256(b"payload").hexdigest().upper(),
         "a" * 63,

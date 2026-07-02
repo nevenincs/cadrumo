@@ -159,22 +159,18 @@ def test_cli_output_reveal_identifiers_unredacts_only_profile_and_bucket() -> No
         ),
     )
 
-    revealed = redact_for_cli_output(line, reveal_identifiers=True)
+    revealed_text = redact_for_cli_output(line, reveal_identifiers=True)
 
-    assert f"profile_id={_PROFILE_ID}" in revealed
-    assert f"bucket_id\t{_PROFILE_ID}" in revealed
-    assert CLI_PROFILE_ID_PLACEHOLDER not in revealed
-    assert CLI_BUCKET_ID_PLACEHOLDER not in revealed
+    assert f"profile_id={_PROFILE_ID}" in revealed_text
+    assert f"bucket_id\t{_PROFILE_ID}" in revealed_text
+    assert CLI_PROFILE_ID_PLACEHOLDER not in revealed_text
+    assert CLI_BUCKET_ID_PLACEHOLDER not in revealed_text
     # Identity, secure-object keys, and URL paths stay redacted regardless.
-    assert _NIF not in revealed
-    assert "sha256:" in revealed
-    assert _OBJECT_KEY not in revealed
-    assert CLI_OBJECT_KEY_PLACEHOLDER in revealed
-    assert "private/path" not in revealed
-
-
-def test_cli_output_structured_reveal_identifiers_unredacts_only_profile_and_bucket() -> None:
-    """JSON-shaped reveal exposes profile/bucket ids and keeps PII / keys redacted."""
+    assert _NIF not in revealed_text
+    assert "sha256:" in revealed_text
+    assert _OBJECT_KEY not in revealed_text
+    assert CLI_OBJECT_KEY_PLACEHOLDER in revealed_text
+    assert "private/path" not in revealed_text
 
     payload = {
         "profile_id": _PROFILE_ID,
@@ -186,30 +182,21 @@ def test_cli_output_structured_reveal_identifiers_unredacts_only_profile_and_buc
     }
 
     default_redacted = cast("dict[str, object]", redact_structured_for_cli_output(payload))
-    revealed = cast("dict[str, object]", redact_structured_for_cli_output(payload, reveal_identifiers=True))
+    revealed_structured = cast("dict[str, object]", redact_structured_for_cli_output(payload, reveal_identifiers=True))
 
     assert default_redacted["profile_id"] == CLI_PROFILE_ID_PLACEHOLDER
     assert default_redacted["bucket_id"] == CLI_BUCKET_ID_PLACEHOLDER
 
-    assert revealed["profile_id"] == _PROFILE_ID
-    assert revealed["bucket_id"] == _PROFILE_ID
-    assert revealed["modelo"] == "130"
+    assert revealed_structured["profile_id"] == _PROFILE_ID
+    assert revealed_structured["bucket_id"] == _PROFILE_ID
+    assert revealed_structured["modelo"] == "130"
     # Object key, tax id, and URL stay redacted in the reveal path.
-    assert revealed["object_key"] == CLI_OBJECT_KEY_PLACEHOLDER
-    revealed_tax_id = revealed["tax_id"]
+    assert revealed_structured["object_key"] == CLI_OBJECT_KEY_PLACEHOLDER
+    revealed_tax_id = revealed_structured["tax_id"]
     assert isinstance(revealed_tax_id, str)
     assert revealed_tax_id != _NIF
     assert revealed_tax_id.startswith("sha256:")
-    assert revealed["callback"] == "https://example.test"
-
-
-def test_cli_output_reveal_keeps_nif_shaped_uuid_verbatim() -> None:
-    """A revealed bucket/profile UUID must not be NIF-hashed in text or JSON.
-
-    The first UUID segment ``1470176e`` matches the NIF pattern. The reveal
-    opt-out parks the value behind a sentinel so the downstream free-text passes
-    cannot corrupt it.
-    """
+    assert revealed_structured["callback"] == "https://example.test"
 
     text = redact_for_cli_output(
         f"bucket_id\t{_NIF_SHAPED_UUID} nif={_NIF}",

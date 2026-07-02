@@ -28,6 +28,7 @@ from pydantic import BaseModel, Field
 
 from .....core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from .....core.config import load_settings
+from .....core.errors import resolve_error_message
 from .....core.external_constants import CSV_ENCODING_FALLBACK_CHAIN
 from .....core.logging import get_logger
 from .....domain.transactions import SourceFormat, TransactionDirection
@@ -320,7 +321,7 @@ class CsvProvider(FinancialProvider):
                     exc_info=True,
                 )
                 raise InvalidFinancialSourceError(
-                    f"CSV row {source_row_index} could not be parsed: {exc}",
+                    f"CSV row {source_row_index} could not be parsed: {resolve_error_message(exc)}",
                 ) from exc
             built = build_raw_transaction(
                 provider=self,
@@ -512,18 +513,34 @@ def _parse_tabular_transaction_row(
             source_sha256=source_sha256,
             source_row_index=source_row_index,
         )
-    booked_date = parse_date_value(
-        _required_typed_value(typed_fields, lookup, layout.columns.booked_date, "booked_date", required_field_context),
-        day_first=layout.day_first_dates,
+    booked_date_header, booked_date_raw = _required_typed_value_and_header(
+        typed_fields,
+        lookup,
+        layout.columns.booked_date,
+        "booked_date",
+        required_field_context,
     )
-    value_raw = _typed_value_from_aliases(typed_fields, lookup, layout.columns.value_date)
-    value_date = parse_date_value(value_raw, day_first=layout.day_first_dates) if value_raw is not None else None
+    booked_date = parse_date_value(
+        booked_date_raw,
+        day_first=layout.day_first_dates,
+        label=booked_date_header,
+    )
+    value_date_resolved = _typed_value_and_header_from_aliases(typed_fields, lookup, layout.columns.value_date)
+    value_date: date | None = None
+    if value_date_resolved is not None:
+        value_date_header, value_raw = value_date_resolved
+        value_date = parse_date_value(value_raw, day_first=layout.day_first_dates, label=value_date_header)
     amount = parse_amount_value(
         _required_typed_value(typed_fields, lookup, layout.columns.amount, "amount", required_field_context),
         decimal_separator=layout.decimal_separator,
     )
     direction = _direction_from_aliases(raw_fields, lookup, layout.columns.direction)
-    currency = _value_from_aliases(raw_fields, lookup, layout.columns.currency) or default_currency()
+    currency = _currency_from_aliases(
+        raw_fields,
+        lookup,
+        layout.columns.currency,
+        required_field_context,
+    )
     description = _required_value(raw_fields, lookup, layout.columns.description, "description")
     counterparty = _value_from_aliases(raw_fields, lookup, layout.columns.counterparty)
     return ParsedTabularTransactionRow(
@@ -552,6 +569,27 @@ def _value_from_aliases(
     return normalized or None
 
 
+def _currency_from_aliases(
+    raw_fields: Mapping[str, str],
+    lookup: Mapping[str, str],
+    aliases: tuple[str, ...],
+    context: str,
+) -> str:
+    """Resolve, default, and validate the optional currency column."""
+    header = _find_column(lookup, aliases)
+    if header is None:
+        return default_currency()
+    raw = coerce_cell_text(raw_fields.get(header, ""))
+    if not raw:
+        return default_currency()
+    normalized = raw.upper()
+    if len(normalized) != 3 or not normalized.isalpha():
+        raise FinancialValidationError(
+            f"{context} currency column {header!r} must be a three-letter ISO 4217 code; got {raw!r}",
+        )
+    return normalized
+
+
 def _typed_value_from_aliases(
     raw_fields: Mapping[str, object],
     lookup: Mapping[str, str],
@@ -563,6 +601,19 @@ def _typed_value_from_aliases(
         return None
     value = raw_fields.get(header, "")
     return value if coerce_cell_text(value) else None
+
+
+def _typed_value_and_header_from_aliases(
+    raw_fields: Mapping[str, object],
+    lookup: Mapping[str, str],
+    aliases: tuple[str, ...],
+) -> tuple[str, object] | None:
+    """Resolve and read the first non-empty typed value with its source header."""
+    header = _find_column(lookup, aliases)
+    if header is None:
+        return None
+    value = raw_fields.get(header, "")
+    return (header, value) if coerce_cell_text(value) else None
 
 
 def _direction_from_aliases(
@@ -610,3 +661,17 @@ def _required_typed_value(
     if value is None:
         raise InvalidFinancialSourceError(f"{context} is missing required field {field_name!r}")
     return value
+
+
+def _required_typed_value_and_header(
+    raw_fields: Mapping[str, object],
+    lookup: Mapping[str, str],
+    aliases: tuple[str, ...],
+    field_name: str,
+    context: str,
+) -> tuple[str, object]:
+    """Resolve a required logical column and retain the source header label."""
+    resolved = _typed_value_and_header_from_aliases(raw_fields, lookup, aliases)
+    if resolved is None:
+        raise InvalidFinancialSourceError(f"{context} is missing required field {field_name!r}")
+    return resolved
