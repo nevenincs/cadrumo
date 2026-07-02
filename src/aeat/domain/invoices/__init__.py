@@ -19,7 +19,7 @@ Service helpers such as :func:`link_transaction`,
 :func:`suggest_reconciliations`, and :func:`verify_link_consistency` are pure
 operations over :class:`InvoiceCatalogue` and
 :class:`~aeat.domain.transactions.TransactionCatalogue`; persisted
-cross-catalogue workflows belong in :mod:`aeat.application.invoices`.
+cross-catalogue workflows belong in :mod:`~aeat.application.invoices`.
 Ledger ``purchase_invoice_evidence_id`` references must resolve to
 bucket-owned :class:`Invoice` records with matching ``linked_transaction_ids``
 before aggregation treats them as purchase evidence.
@@ -47,13 +47,13 @@ See Also:
     :class:`~aeat.domain.invoices.InvoiceCatalogueRepositoryProtocol`
         Narrow port used by application services that only need load/save
         semantics.
-    :mod:`aeat.application.invoices`
+    :mod:`~aeat.application.invoices`
         Persisted invoice import, reconciliation, repository linking, and
         :class:`~aeat.application.invoices.InvoiceCatalogueSourceResolver`.
-    :mod:`aeat.application.ledger`
+    :mod:`~aeat.application.ledger`
         Ledger lifecycle that attaches ``purchase_invoice_evidence_id`` to
         bucket-scoped transactions after evidence ownership checks.
-    :mod:`aeat.application.aggregation`
+    :mod:`~aeat.application.aggregation`
         Calculation-source resolvers that consume invoice and purchase-evidence
         records for modelo bindings.
 """

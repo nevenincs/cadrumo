@@ -1,18 +1,18 @@
 """Filing-record actions for modelo calculation revisions.
 
 :func:`~aeat.application.modelo.file_modelo_revision` promotes a verified
-:class:`~aeat.domain.modelos.CalculationRevision` into a current
-:class:`~aeat.domain.modelos.ModeloRecord` after the
-:class:`~aeat.application.workflow.WorkflowEngine` preflight gate passes. Filing
+:class:`CalculationRevision` into a current
+:class:`ModeloRecord` after the
+:class:`WorkflowEngine` preflight gate passes. Filing
 transitions and audit entries are persisted through the
-:class:`~aeat.domain.buckets.BucketEventHistoryRepository` path shared by the
+:class:`BucketEventHistoryRepository` path shared by the
 modelo revision services.
 
 The action records the operator's local/internal filing state only. It never
 submits to AEAT, never marks AEAT acceptance, and never fabricates official
 external evidence. A successful transition sets the target revision to
 ``PRESENTADO``, creates a ``VIGENTE``
-:class:`~aeat.domain.modelos.ModeloRecord` with ``aeat_accepted=False``, and
+:class:`ModeloRecord` with ``aeat_accepted=False``, and
 delegates cross-period carry projection to
 :func:`~aeat.application.modelo._revision_persistence.persist_filed_revision`,
 which stamps locally-filed observations as non-official ``app_filing`` evidence.
@@ -20,7 +20,7 @@ which stamps locally-filed observations as non-official ``app_filing`` evidence.
 See Also:
     :func:`~aeat.application.modelo.import_external_filing_evidence`:
         Separate AEAT-attested import path that creates
-        :class:`~aeat.domain.modelos.ExternalEvidence` baselines; this local
+        :class:`ExternalEvidence` baselines; this local
         filing action deliberately does not.
     :func:`~aeat.application.modelo._revision_persistence.persist_filed_revision`:
         Persists the filing catalogue, revision state, work-unit pointers,
@@ -105,7 +105,7 @@ def _existing_vigente_filing_record(
 
     Used by the idempotent re-file no-op: a revision already in ``PRESENTADO``
     state is the current filed answer, so its VIGENTE
-    :class:`~aeat.domain.modelos.ModeloRecord` is returned unchanged. A
+    :class:`ModeloRecord` is returned unchanged. A
     ``PRESENTADO`` revision must have exactly one VIGENTE record; ``None``
     signals an inconsistent state the caller refuses rather than masking.
     """
@@ -139,7 +139,7 @@ def file_modelo_revision(
 
     This is the application service behind ``aeat app modelo work file``. It is
     a local state transition, not an AEAT presentation: the resulting
-    :class:`~aeat.domain.modelos.ModeloRecord` has ``aeat_accepted=False`` and no
+    :class:`ModeloRecord` has ``aeat_accepted=False`` and no
     external evidence.
 
     Preconditions and state changes:
@@ -147,14 +147,14 @@ def file_modelo_revision(
     1. Verify the revision is in ``VERIFICADO_COMPLETO`` state.
     2. Recheck profile readiness, persisted Modelo 303 IVA-wallet decision
        compatibility, and cross-period clean state.
-    3. Run the :class:`~aeat.application.workflow.WorkflowEngine` gate for the
+    3. Run the :class:`WorkflowEngine` gate for the
        revision's modelo and period.
     4. Resolve the Modelo 303 refund/carry disposition from
-       :class:`~aeat.core.RefundElection` and
-       :class:`~aeat.domain.deadlines.TaxpayerProfile`.
+       :class:`RefundElection` and
+       :class:`TaxpayerProfile`.
     5. If a prior current filing exists, mark its
-       :class:`~aeat.domain.modelos.ModeloRecord` as ``SUPERSEDIDO`` and its
-       prior :class:`~aeat.domain.modelos.CalculationRevision` as
+       :class:`ModeloRecord` as ``SUPERSEDIDO`` and its
+       prior :class:`CalculationRevision` as
        ``PRESENTADO_SUPERSEDIDO``.
     6. Create the new filing record with status ``VIGENTE`` and transition the
        target calculation revision from ``VERIFICADO_COMPLETO`` to
@@ -169,8 +169,8 @@ def file_modelo_revision(
             to file.
         actor: Operator identifier recorded in the filing record and audit
             trail.
-        workflow_profile: The :class:`~aeat.domain.deadlines.TaxpayerProfile`
-            used to evaluate :class:`~aeat.application.workflow.WorkflowEngine`
+        workflow_profile: The :class:`TaxpayerProfile`
+            used to evaluate :class:`WorkflowEngine`
             gate conditions and cross-period clean-state applicability.
         notes: Optional operator-supplied filing notes.
         refund_election: The operator's per-filing Modelo 303 negative-result
@@ -203,7 +203,7 @@ def file_modelo_revision(
         clock: Optional UTC timestamp override.
 
     Returns:
-        The newly created local :class:`~aeat.domain.modelos.ModeloRecord` in
+        The newly created local :class:`ModeloRecord` in
         ``VIGENTE`` status.
 
     Raises:
@@ -219,7 +219,7 @@ def file_modelo_revision(
             Performs the repository writes once all gates pass.
         :func:`~aeat.application.modelo.import_external_filing_evidence`:
             Creates official-evidence baselines for imported filings; use that
-            path when a :class:`~aeat.domain.modelos.ExternalEvidence` reference
+            path when a :class:`ExternalEvidence` reference
             must be carried.
         :func:`~aeat.application.modelo._filed_revision_observation.persist_filed_revision_observation`:
             Saves the non-official ``app_filing`` observation used by later
@@ -404,7 +404,7 @@ def list_filing_records(
     include_superseded: bool = False,
     filing_repository: ModeloRecordCatalogueRepositoryProtocol | None = None,
 ) -> tuple[ModeloRecord, ...]:
-    """List :class:`~aeat.domain.modelos.ModeloRecord` rows, optionally filtered to a bucket and modelo.
+    """List :class:`ModeloRecord` rows, optionally filtered to a bucket and modelo.
 
     Superseded records are excluded unless ``include_superseded``
     is true. Results are sorted by ``(bucket_id, filing_year,
@@ -433,7 +433,7 @@ def get_filing_record(
     *,
     filing_repository: ModeloRecordCatalogueRepositoryProtocol | None = None,
 ) -> ModeloRecord:
-    """Return the :class:`~aeat.domain.modelos.ModeloRecord` for the given id, or raise."""
+    """Return the :class:`ModeloRecord` for the given id, or raise."""
     fr_repo = filing_repository or ModeloRecordCatalogueRepository()
     catalogue = fr_repo.load()
     record = catalogue.get(filing_record_id)
@@ -450,11 +450,11 @@ def list_verification_reports(
     calculation_revision_id: str | None = None,
     verification_repository: VerificationReportCatalogueRepositoryProtocol | None = None,
 ) -> tuple[VerificationReport, ...]:
-    """List :class:`~aeat.domain.modelos.VerificationReport` records.
+    """List :class:`VerificationReport` records.
 
     Optionally filtered to one
-    :class:`~aeat.domain.modelos.CalculationRevision`. The
-    :class:`~aeat.domain.modelos.VerificationReportCatalogueRepositoryProtocol`
+    :class:`CalculationRevision`. The
+    :class:`VerificationReportCatalogueRepositoryProtocol`
     supplies the persisted report catalogue. Results are sorted by
     ``(calculation_revision_id, run_at)``.
     """
@@ -473,10 +473,10 @@ def get_verification_report(
     *,
     verification_repository: VerificationReportCatalogueRepositoryProtocol | None = None,
 ) -> VerificationReport:
-    """Return one :class:`~aeat.domain.modelos.VerificationReport` by id, or raise.
+    """Return one :class:`VerificationReport` by id, or raise.
 
     The optional
-    :class:`~aeat.domain.modelos.VerificationReportCatalogueRepositoryProtocol`
+    :class:`VerificationReportCatalogueRepositoryProtocol`
     supplies the persisted report catalogue for tests or alternate storage
     boundaries.
     """

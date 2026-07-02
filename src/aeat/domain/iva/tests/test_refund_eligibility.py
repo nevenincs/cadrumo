@@ -31,12 +31,14 @@ def _p(code: str, year: int = 2024) -> Period:
 class TestRedemeCompanyMonthlyRefund:
     """Persona 1 — REDEME-inscribed company filing monthly: refund available every period."""
 
-    @pytest.mark.parametrize("code", ["01", "02", "03", "06", "11", "12"])
-    def test_redeme_refund_available_in_every_monthly_period(self, code: str) -> None:
-        assert refund_disposition_available(redeme_enrolled=True, period=_p(code)) is True
-        assert (
-            refund_eligibility_reason(redeme_enrolled=True, period=_p(code)) is RefundEligibilityReason.REDEME_INSCRIBED
-        )
+    def test_redeme_refund_available_in_every_monthly_period(self) -> None:
+        for code in ("01", "02", "03", "06", "11", "12"):
+            period = _p(code)
+            assert refund_disposition_available(redeme_enrolled=True, period=period) is True, code
+            assert (
+                refund_eligibility_reason(redeme_enrolled=True, period=period)
+                is RefundEligibilityReason.REDEME_INSCRIBED
+            ), code
 
     def test_redeme_refund_available_even_in_an_early_quarter(self) -> None:
         assert refund_disposition_available(redeme_enrolled=True, period=_p("1T")) is True
@@ -48,27 +50,31 @@ class TestRedemeCompanyMonthlyRefund:
 class TestLastPeriodRefund:
     """Persona 2 — non-REDEME autónomo: refund available only in the last period of the year."""
 
-    @pytest.mark.parametrize("code", ["4T", "12", "0A"])
-    def test_refund_available_in_last_period_without_redeme(self, code: str) -> None:
-        assert is_last_filing_period_of_year(_p(code)) is True
-        assert refund_disposition_available(redeme_enrolled=False, period=_p(code)) is True
-        assert (
-            refund_eligibility_reason(redeme_enrolled=False, period=_p(code))
-            is RefundEligibilityReason.LAST_PERIOD_OF_YEAR
-        )
+    def test_refund_available_in_last_period_without_redeme(self) -> None:
+        for code in ("4T", "12", "0A"):
+            period = _p(code)
+            assert is_last_filing_period_of_year(period) is True, code
+            assert refund_disposition_available(redeme_enrolled=False, period=period) is True, code
+            assert (
+                refund_eligibility_reason(redeme_enrolled=False, period=period)
+                is RefundEligibilityReason.LAST_PERIOD_OF_YEAR
+            ), code
 
-    @pytest.mark.parametrize("code", ["1T", "2T", "3T", "01", "06", "11"])
-    def test_non_last_period_is_not_last(self, code: str) -> None:
-        assert is_last_filing_period_of_year(_p(code)) is False
+    def test_non_last_period_is_not_last(self) -> None:
+        for code in ("1T", "2T", "3T", "01", "06", "11"):
+            assert is_last_filing_period_of_year(_p(code)) is False, code
 
 
 class TestOrdinaryMidPeriodRefused:
     """Persona 3 (regression control) — ordinary non-REDEME mid-period: refund unavailable, only carry-forward."""
 
-    @pytest.mark.parametrize("code", ["1T", "2T", "3T", "01", "05", "11"])
-    def test_refund_unavailable(self, code: str) -> None:
-        assert refund_disposition_available(redeme_enrolled=False, period=_p(code)) is False
-        assert refund_eligibility_reason(redeme_enrolled=False, period=_p(code)) is RefundEligibilityReason.NOT_ELIGIBLE
+    def test_refund_unavailable(self) -> None:
+        for code in ("1T", "2T", "3T", "01", "05", "11"):
+            period = _p(code)
+            assert refund_disposition_available(redeme_enrolled=False, period=period) is False, code
+            assert (
+                refund_eligibility_reason(redeme_enrolled=False, period=period) is RefundEligibilityReason.NOT_ELIGIBLE
+            ), code
 
 
 class TestCrossEntityAndInvariants:

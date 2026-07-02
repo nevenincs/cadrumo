@@ -9,11 +9,13 @@ oracle-grounded against the AEAT form field constraints documented in:
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from decimal import Decimal
 
 import pytest
 from pydantic import ValidationError
 
+from .._calculation_revision import derive_calculation_revision_id
 from .._row_models import (
     Modelo184MemberRow,
     Modelo232VinculadaRow,
@@ -80,30 +82,50 @@ class TestModelo184MemberRow:
         assert row.importe == Decimal("15000")
         assert row.row_type == "miembro"
 
-    def test_nif_uppercased(self) -> None:
-        """NIF is normalised to uppercase."""
-        row = Modelo184MemberRow(nif="12345678a", porcentaje=Decimal("50"), importe=Decimal("1"))
-        assert row.nif == "12345678A"
-
-    def test_pais_defaults_to_es(self) -> None:
-        """pais defaults to ES (domestic member)."""
-        row = Modelo184MemberRow(nif="12345678A", porcentaje=Decimal("30"), importe=Decimal("0"))
-        assert row.pais == "ES"
-
-    def test_nombre_defaults_empty(self) -> None:
-        """nombre defaults to empty string."""
-        row = Modelo184MemberRow(nif="12345678A", porcentaje=Decimal("30"), importe=Decimal("0"))
-        assert row.nombre == ""
-
-    def test_porcentaje_zero_is_valid(self) -> None:
-        """porcentaje=0 is a valid lower-bound value."""
-        row = Modelo184MemberRow(nif="11111111A", porcentaje=Decimal("0"), importe=Decimal("0"))
-        assert row.porcentaje == Decimal("0")
-
-    def test_porcentaje_100_is_valid(self) -> None:
-        """porcentaje=100 is valid (sole member)."""
-        row = Modelo184MemberRow(nif="22222222B", porcentaje=Decimal("100"), importe=Decimal("50000"))
-        assert row.porcentaje == Decimal("100")
+    @pytest.mark.parametrize(
+        ("row_factory", "field_name", "expected"),
+        [
+            pytest.param(
+                lambda: Modelo184MemberRow(nif="12345678a", porcentaje=Decimal("50"), importe=Decimal("1")),
+                "nif",
+                "12345678A",
+                id="nif-uppercased",
+            ),
+            pytest.param(
+                lambda: Modelo184MemberRow(nif="12345678A", porcentaje=Decimal("30"), importe=Decimal("0")),
+                "pais",
+                "ES",
+                id="pais-defaults-es",
+            ),
+            pytest.param(
+                lambda: Modelo184MemberRow(nif="12345678A", porcentaje=Decimal("30"), importe=Decimal("0")),
+                "nombre",
+                "",
+                id="nombre-defaults-empty",
+            ),
+            pytest.param(
+                lambda: Modelo184MemberRow(nif="11111111A", porcentaje=Decimal("0"), importe=Decimal("0")),
+                "porcentaje",
+                Decimal("0"),
+                id="porcentaje-zero",
+            ),
+            pytest.param(
+                lambda: Modelo184MemberRow(nif="22222222B", porcentaje=Decimal("100"), importe=Decimal("50000")),
+                "porcentaje",
+                Decimal("100"),
+                id="porcentaje-100",
+            ),
+        ],
+    )
+    def test_member_row_scalar_contracts(
+        self,
+        row_factory: Callable[[], Modelo184MemberRow],
+        field_name: str,
+        expected: object,
+    ) -> None:
+        """Scalar normalization, defaults, and documented bounds use the real model."""
+        row = row_factory()
+        assert getattr(row, field_name) == expected
 
     @pytest.mark.parametrize("case", _M184_INVALID_CASES, ids=lambda case: case.case_id)
     def test_invalid_member_rows_rejected(self, case: _ValidationErrorCase) -> None:
@@ -131,12 +153,6 @@ class TestModelo184MemberRow:
         assert rows[1].importe == Decimal("10500")
         assert rows[2].importe == Decimal("7500")
 
-    def test_frozen_model_immutable(self) -> None:
-        """Modelo184MemberRow is frozen — mutation attempts raise TypeError."""
-        row = Modelo184MemberRow(nif="55555555E", porcentaje=Decimal("50"), importe=Decimal("0"))
-        with pytest.raises((ValidationError, TypeError)):
-            row.__setattr__("nif", "99999999Z")
-
 
 # ---------------------------------------------------------------------------
 # Modelo232VinculadaRow — operación vinculada row
@@ -163,25 +179,44 @@ class TestModelo232VinculadaRow:
         assert row.importe == Decimal("50000")
         assert row.row_type == "vinculada"
 
-    def test_nif_uppercased(self) -> None:
-        """NIF is normalised to uppercase."""
-        row = Modelo232VinculadaRow(nif="a12345678", importe=Decimal("1"))
-        assert row.nif == "A12345678"
-
-    def test_pais_defaults_to_es(self) -> None:
-        """pais defaults to ES."""
-        row = Modelo232VinculadaRow(nif="A12345678", importe=Decimal("1"))
-        assert row.pais == "ES"
-
-    def test_metodo_defaults_empty(self) -> None:
-        """metodo defaults to empty string."""
-        row = Modelo232VinculadaRow(nif="A12345678", importe=Decimal("1"))
-        assert row.metodo == ""
-
-    def test_metodo_uppercased(self) -> None:
-        """metodo is uppercased."""
-        row = Modelo232VinculadaRow(nif="A12345678", metodo="cup", importe=Decimal("1"))
-        assert row.metodo == "CUP"
+    @pytest.mark.parametrize(
+        ("row_factory", "field_name", "expected"),
+        [
+            pytest.param(
+                lambda: Modelo232VinculadaRow(nif="a12345678", importe=Decimal("1")),
+                "nif",
+                "A12345678",
+                id="nif-uppercased",
+            ),
+            pytest.param(
+                lambda: Modelo232VinculadaRow(nif="A12345678", importe=Decimal("1")),
+                "pais",
+                "ES",
+                id="pais-defaults-es",
+            ),
+            pytest.param(
+                lambda: Modelo232VinculadaRow(nif="A12345678", importe=Decimal("1")),
+                "metodo",
+                "",
+                id="metodo-defaults-empty",
+            ),
+            pytest.param(
+                lambda: Modelo232VinculadaRow(nif="A12345678", metodo="cup", importe=Decimal("1")),
+                "metodo",
+                "CUP",
+                id="metodo-uppercased",
+            ),
+        ],
+    )
+    def test_vinculada_row_scalar_contracts(
+        self,
+        row_factory: Callable[[], Modelo232VinculadaRow],
+        field_name: str,
+        expected: object,
+    ) -> None:
+        """Scalar normalization and defaults use the real model."""
+        row = row_factory()
+        assert getattr(row, field_name) == expected
 
     @pytest.mark.parametrize("case", _M232_INVALID_CASES, ids=lambda case: case.case_id)
     def test_invalid_vinculada_rows_rejected(self, case: _ValidationErrorCase) -> None:
@@ -204,16 +239,35 @@ class TestModelo232VinculadaRow:
         assert row1_modified.importe == Decimal("75000")
         assert row2.importe == Decimal("30000")
 
-    def test_frozen_model_immutable(self) -> None:
-        """Modelo232VinculadaRow is frozen."""
-        row = Modelo232VinculadaRow(nif="A12345678", importe=Decimal("1"))
-        with pytest.raises((ValidationError, TypeError)):
-            row.__setattr__("nif", "Z99999999")
-
 
 # ---------------------------------------------------------------------------
 # derive_calculation_revision_id with detail_rows
 # ---------------------------------------------------------------------------
+
+
+@pytest.mark.parametrize(
+    ("row_factory", "replacement_nif"),
+    [
+        pytest.param(
+            lambda: Modelo184MemberRow(nif="55555555E", porcentaje=Decimal("50"), importe=Decimal("0")),
+            "99999999Z",
+            id="m184",
+        ),
+        pytest.param(
+            lambda: Modelo232VinculadaRow(nif="A12345678", importe=Decimal("1")),
+            "Z99999999",
+            id="m232",
+        ),
+    ],
+)
+def test_row_models_are_frozen(
+    row_factory: Callable[[], Modelo184MemberRow | Modelo232VinculadaRow],
+    replacement_nif: str,
+) -> None:
+    """Row models are immutable once validated."""
+    row = row_factory()
+    with pytest.raises((ValidationError, TypeError)):
+        row.__setattr__("nif", replacement_nif)
 
 
 class TestRevisionIdWithDetailRows:
@@ -225,8 +279,6 @@ class TestRevisionIdWithDetailRows:
     """
 
     def test_revision_id_changes_when_rows_differ(self) -> None:
-        from .._calculation_revision import derive_calculation_revision_id
-
         base_kwargs: _BaseRevisionIdKwargs = {
             "work_unit_id": "a" * 64,
             "input_values_by_casilla_id": {},
@@ -252,8 +304,6 @@ class TestRevisionIdWithDetailRows:
 
     def test_revision_id_stable_when_rows_identical(self) -> None:
         """Same rows → same id regardless of call order."""
-        from .._calculation_revision import derive_calculation_revision_id
-
         rows = (
             Modelo184MemberRow(nif="11111111A", porcentaje=Decimal("40"), importe=Decimal("4000")),
             Modelo184MemberRow(nif="22222222B", porcentaje=Decimal("60"), importe=Decimal("6000")),
@@ -276,8 +326,6 @@ class TestRevisionIdWithDetailRows:
 
     def test_row_order_canonical_same_id(self) -> None:
         """Row insertion order must NOT affect the id (rows are sorted by nif)."""
-        from .._calculation_revision import derive_calculation_revision_id
-
         row_a = Modelo184MemberRow(nif="11111111A", porcentaje=Decimal("40"), importe=Decimal("4000"))
         row_b = Modelo184MemberRow(nif="22222222B", porcentaje=Decimal("60"), importe=Decimal("6000"))
         id_ab = derive_calculation_revision_id(
@@ -298,8 +346,6 @@ class TestRevisionIdWithDetailRows:
 
     def test_changing_one_row_importe_changes_id(self) -> None:
         """Anti-tautology: mutating one row's importe changes the revision id."""
-        from .._calculation_revision import derive_calculation_revision_id
-
         def _id(importe_1: str, importe_2: str) -> str:
             return derive_calculation_revision_id(
                 work_unit_id="d" * 64,

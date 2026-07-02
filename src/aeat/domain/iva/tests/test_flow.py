@@ -32,9 +32,8 @@ def test_iva_flow_direction_string_values_are_kebab_case() -> None:
     assert IvaFlowDirection.INVERSION_SUJETO_PASIVO.value == "inversion_sujeto_pasivo"
 
 
-@pytest.mark.parametrize(
-    ("category", "direction", "expected"),
-    [
+def test_derive_flow_classifies_non_reverse_charge_categories() -> None:
+    cases: tuple[tuple[IvaCategory, InvoiceKind, IvaFlowDirection], ...] = (
         (IvaCategory.DOMESTIC_GENERAL_21, InvoiceKind.ISSUED, IvaFlowDirection.REPERCUTIDO),
         (IvaCategory.DOMESTIC_REDUCED_10, InvoiceKind.ISSUED, IvaFlowDirection.REPERCUTIDO),
         (IvaCategory.DOMESTIC_SUPER_REDUCED_4, InvoiceKind.ISSUED, IvaFlowDirection.REPERCUTIDO),
@@ -49,45 +48,40 @@ def test_iva_flow_direction_string_values_are_kebab_case() -> None:
         (IvaCategory.DOMESTIC_SUPER_REDUCED_4, InvoiceKind.RECEIVED, IvaFlowDirection.SOPORTADO),
         (IvaCategory.IMPORT_THIRD_COUNTRY, InvoiceKind.RECEIVED, IvaFlowDirection.SOPORTADO),
         (IvaCategory.RECARGO_EQUIVALENCIA, InvoiceKind.RECEIVED, IvaFlowDirection.SOPORTADO),
-    ],
-)
-def test_derive_flow_classifies_non_reverse_charge_categories(
-    category: IvaCategory,
-    direction: InvoiceKind,
-    expected: IvaFlowDirection,
-) -> None:
-    assert derive_flow_for_classification(category=category, invoice_direction=direction) is expected
-
-
-@pytest.mark.parametrize("direction", [InvoiceKind.ISSUED, InvoiceKind.RECEIVED])
-def test_derive_flow_classifies_domestic_reverse_charge_as_autorepercutido(
-    direction: InvoiceKind,
-) -> None:
-    """Domestic reverse-charge (LIVA art 84.Uno.2) routes to INVERSION_SUJETO_PASIVO
-    irrespective of invoice direction; the recipient self-assesses."""
-    assert (
-        derive_flow_for_classification(
-            category=IvaCategory.DOMESTIC_REVERSE_CHARGE,
-            invoice_direction=direction,
-        )
-        is IvaFlowDirection.INVERSION_SUJETO_PASIVO
     )
 
+    for category, direction, expected in cases:
+        assert derive_flow_for_classification(category=category, invoice_direction=direction) is expected, (
+            category,
+            direction,
+        )
 
-@pytest.mark.parametrize("direction", [InvoiceKind.ISSUED, InvoiceKind.RECEIVED])
-def test_derive_flow_classifies_intracomm_acquisition_rc_as_autorepercutido(
-    direction: InvoiceKind,
-) -> None:
+
+def test_derive_flow_classifies_domestic_reverse_charge_as_autorepercutido() -> None:
+    """Domestic reverse-charge (LIVA art 84.Uno.2) routes to INVERSION_SUJETO_PASIVO
+    irrespective of invoice direction; the recipient self-assesses."""
+    for direction in (InvoiceKind.ISSUED, InvoiceKind.RECEIVED):
+        assert (
+            derive_flow_for_classification(
+                category=IvaCategory.DOMESTIC_REVERSE_CHARGE,
+                invoice_direction=direction,
+            )
+            is IvaFlowDirection.INVERSION_SUJETO_PASIVO
+        ), direction
+
+
+def test_derive_flow_classifies_intracomm_acquisition_rc_as_autorepercutido() -> None:
     """Intra-community acquisition reverse-charge (LIVA art 84.Uno.2.e)
     self-assesses both the repercutido and soportado entries on the
     same operation."""
-    assert (
-        derive_flow_for_classification(
-            category=IvaCategory.INTRA_COMMUNITY_ACQUISITION_REVERSE_CHARGE,
-            invoice_direction=direction,
-        )
-        is IvaFlowDirection.INVERSION_SUJETO_PASIVO
-    )
+    for direction in (InvoiceKind.ISSUED, InvoiceKind.RECEIVED):
+        assert (
+            derive_flow_for_classification(
+                category=IvaCategory.INTRA_COMMUNITY_ACQUISITION_REVERSE_CHARGE,
+                invoice_direction=direction,
+            )
+            is IvaFlowDirection.INVERSION_SUJETO_PASIVO
+        ), direction
 
 
 def test_iva_flow_legal_articles_present_in_registry_toml() -> None:

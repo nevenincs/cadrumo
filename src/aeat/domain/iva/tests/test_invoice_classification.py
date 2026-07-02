@@ -26,36 +26,28 @@ from .._invoice_classification import (
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 
-@pytest.mark.parametrize(
-    ("iva_rate", "expected_category", "expected_kind"),
-    [
+def test_classify_issued_invoice_at_each_rate_slot_resolves_to_repercutido() -> None:
+    cases: tuple[tuple[IvaRate, IvaCategory, IvaRateKind], ...] = (
         (IvaRate.RATE_0, IvaCategory.DOMESTIC_ZERO, IvaRateKind.ZERO),
         (IvaRate.RATE_4, IvaCategory.DOMESTIC_SUPER_REDUCED_4, IvaRateKind.SUPER_REDUCED),
         (IvaRate.RATE_10, IvaCategory.DOMESTIC_REDUCED_10, IvaRateKind.REDUCED),
         (IvaRate.RATE_21, IvaCategory.DOMESTIC_GENERAL_21, IvaRateKind.GENERAL),
         (IvaRate.EXEMPT, IvaCategory.DOMESTIC_EXEMPT, IvaRateKind.EXEMPT),
-    ],
-)
-def test_classify_issued_invoice_at_each_rate_slot_resolves_to_repercutido(
-    iva_rate: IvaRate,
-    expected_category: IvaCategory,
-    expected_kind: IvaRateKind,
-) -> None:
-    classification = classify_invoice_line_for_iva(iva_rate=iva_rate, invoice_kind=InvoiceKind.ISSUED)
-    assert classification.category is expected_category
-    assert classification.rate_kind is expected_kind
-    assert classification.flow_direction is IvaFlowDirection.REPERCUTIDO
-    assert classification.settlement_sides == frozenset({IvaSettlementSide.DEVENGADA})
+    )
+
+    for iva_rate, expected_category, expected_kind in cases:
+        classification = classify_invoice_line_for_iva(iva_rate=iva_rate, invoice_kind=InvoiceKind.ISSUED)
+        assert classification.category is expected_category, iva_rate
+        assert classification.rate_kind is expected_kind, iva_rate
+        assert classification.flow_direction is IvaFlowDirection.REPERCUTIDO, iva_rate
+        assert classification.settlement_sides == frozenset({IvaSettlementSide.DEVENGADA}), iva_rate
 
 
-@pytest.mark.parametrize(
-    "iva_rate",
-    [IvaRate.RATE_0, IvaRate.RATE_4, IvaRate.RATE_10, IvaRate.RATE_21, IvaRate.EXEMPT],
-)
-def test_classify_received_invoice_resolves_to_soportado(iva_rate: IvaRate) -> None:
-    classification = classify_invoice_line_for_iva(iva_rate=iva_rate, invoice_kind=InvoiceKind.RECEIVED)
-    assert classification.flow_direction is IvaFlowDirection.SOPORTADO
-    assert classification.settlement_sides == frozenset({IvaSettlementSide.DEDUCIBLE})
+def test_classify_received_invoice_resolves_to_soportado() -> None:
+    for iva_rate in (IvaRate.RATE_0, IvaRate.RATE_4, IvaRate.RATE_10, IvaRate.RATE_21, IvaRate.EXEMPT):
+        classification = classify_invoice_line_for_iva(iva_rate=iva_rate, invoice_kind=InvoiceKind.RECEIVED)
+        assert classification.flow_direction is IvaFlowDirection.SOPORTADO, iva_rate
+        assert classification.settlement_sides == frozenset({IvaSettlementSide.DEDUCIBLE}), iva_rate
 
 
 def test_classify_invoice_rejects_not_subject_rate() -> None:

@@ -26,6 +26,7 @@ from pathlib import Path
 
 import pytest
 
+from ....core.resources import resources
 from ._modelo_work_ux_support import (
     _create_calculable_work_unit,
     _create_gb_non_resident_profile,
@@ -550,6 +551,43 @@ def test_work_create_without_revision_resumes_existing_visible_target(_isolated_
     assert second_payload["status"] == "reused"
     assert second_payload["operation"] == "modelo.work.reuse"
     assert second_payload["work_unit_id"] == first_payload["work_unit_id"]
+
+
+def test_work_create_without_revision_uses_registry_revision_for_supplied_year(
+    _isolated_cli_backend: Path,
+) -> None:
+    """A fresh create without ``--revision`` binds to the law-selected registry revision."""
+
+    created = _invoke(
+        [
+            "config", "profile", "create", "operator",
+            "--quiet", "--accept-defaults",
+            "--entity-type", "natural_person",
+            "--irpf-income-categories", "actividad_economica",
+            "--irpf-estimation-regime", "objetiva",
+            "--tax-id", "12345678Z",
+            "--name", "Operator",
+            "--surnames", "Readiness",
+            "--activity", "objective-estimation activity",
+        ],
+    )  # fmt: skip
+    assert created.exit_code == 0, created.output
+    expected_revision = resources().modelos.authority.snapshot("131", filing_year=2026, period="2T").revision.id
+
+    result = _invoke(
+        [
+            "--format", "json",
+            "app", "modelo", "work", "create",
+            "--modelo", "131", "--year", "2026", "--period", "2T",
+        ],
+    )  # fmt: skip
+    assert result.exit_code == 0, result.output
+    payload = _payload(result.output)
+    assert payload["status"] == "created"
+    assert payload["modelo"] == "131"
+    assert payload["filing_year"] == 2026
+    assert payload["period"] == {"filing_year": 2026, "code": "2T"}
+    assert payload["revision_id"] == expected_revision
 
 
 def test_idempotent_work_create_applies_a_new_name_as_a_rename(_isolated_cli_backend: Path) -> None:

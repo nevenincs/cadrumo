@@ -2,13 +2,13 @@
 
 :func:`~aeat.application.modelo.import_external_filing_evidence` turns
 AEAT-attested external evidence into a presented
-:class:`~aeat.domain.modelos.CalculationRevision` plus current
-:class:`~aeat.domain.modelos.ModeloRecord`. Evidence-bearing imports validate the
-referenced :class:`~aeat.domain.justificante.Justificante`, stamp an
-:class:`~aeat.domain.modelos.ExternalEvidence` payload on the filing record,
+:class:`CalculationRevision` plus current
+:class:`ModeloRecord`. Evidence-bearing imports validate the
+referenced :class:`Justificante`, stamp an
+:class:`ExternalEvidence` payload on the filing record,
 supersede any prior current filing for the same target, and emit
 ``modelo.filing.imported`` through
-:class:`~aeat.domain.buckets.BucketEventHistoryRepository`.
+:class:`BucketEventHistoryRepository`.
 
 The imported record is the production baseline consumed by the amendment path.
 It is intentionally distinct from a locally calculated and filed return:
@@ -16,7 +16,7 @@ It is intentionally distinct from a locally calculated and filed return:
 while
 :func:`~aeat.application.modelo._calculation_helpers.external_filing_observations`
 keeps the imported casilla values on the same registry-grounded
-:class:`~aeat.domain.calculations.registry.CasillaObservation` contract as local
+:class:`CasillaObservation` contract as local
 calculation revisions.
 
 See Also:
@@ -24,7 +24,7 @@ See Also:
         CLI surface that parses ``filing-record import`` options and calls this
         service.
     :func:`~aeat.application.modelo.amend_modelo_revision`:
-        Consumes the imported current :class:`~aeat.domain.modelos.ModeloRecord`
+        Consumes the imported current :class:`ModeloRecord`
         as an amendment baseline.
     :mod:`~aeat.domain.justificante`:
         Receipt metadata store required by justificante-PDF, CSV-register, and
@@ -32,7 +32,7 @@ See Also:
     :func:`~aeat.application.modelo._registry_helpers.reject_unknown_import_casillas`:
         Resolves the registry snapshot and refuses noncanonical or undeclared
         imported casilla ids.
-    :class:`~aeat.domain.modelos.ExternalEvidence`:
+    :class:`ExternalEvidence`:
         Filing-record metadata that records the official evidence source.
 """
 
@@ -131,23 +131,23 @@ def import_external_filing_evidence[CasillaKey](
     expected_tax_id: str | None = None,
     clock: datetime | None = None,
 ) -> ModeloRecord:
-    """Persist an externally-filed return and return its current :class:`~aeat.domain.modelos.ModeloRecord`.
+    """Persist an externally-filed return and return its current :class:`ModeloRecord`.
 
-    The target :class:`~aeat.domain.modelos.WorkUnit` supplies the bucket,
+    The target :class:`WorkUnit` supplies the bucket,
     modelo, filing year, period, and registry revision used to validate imported
     casilla ids. Justificante-bound evidence kinds require a stored
-    :class:`~aeat.domain.justificante.Justificante` whose modelo, year, period,
+    :class:`Justificante` whose modelo, year, period,
     and taxpayer id match the target.
 
     The service writes a ``PRESENTADO``
-    :class:`~aeat.domain.modelos.CalculationRevision` containing the imported
+    :class:`CalculationRevision` containing the imported
     values and registry-grounded observations, creates a ``VIGENTE`` filing
-    record with :class:`~aeat.domain.modelos.ExternalEvidence`, supersedes any
+    record with :class:`ExternalEvidence`, supersedes any
     previous current filing for the same target, advances the work-unit pointers,
     and emits ``modelo.filing.imported``.
 
     Returns:
-        The new current :class:`~aeat.domain.modelos.ModeloRecord` carrying the
+        The new current :class:`ModeloRecord` carrying the
         external evidence metadata.
 
     See Also:
@@ -383,7 +383,7 @@ def _require_bound_justificante_artifact(
     expected_tax_id: str | None,
     justificante_repository: JustificanteRepository,
 ) -> None:
-    """Require matching stored :class:`~aeat.domain.justificante.Justificante` metadata.
+    """Require matching stored :class:`Justificante` metadata.
 
     CSV-register, justificante-PDF, and live-capture imports are treated as
     receipt-bound baselines: the evidence reference must resolve to stored

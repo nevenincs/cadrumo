@@ -20,8 +20,12 @@ from ._annotations import McpAnnotations
 _HANDOFF_LEAVES: frozenset[str] = frozenset({"export", "file"})
 # Leaf verbs that would write to AEAT. None are exposed today (the live tree is
 # read-only and live submission is permanently forbidden); this guard blocks one
-# defensively if it ever appears in the command set.
-_LIVE_WRITE_LEAVES: frozenset[str] = frozenset({"submit", "present", "send", "declare"})
+# defensively if it ever appears in the command set. "declare" is deliberately
+# excluded: it collides with the local ledger bien-de-inversion verb
+# (``ledger.bienes_inversion.declare``), a non-AEAT local write, so a bare leaf
+# match would false-positive a legitimate exposed tool as a forbidden live-write.
+# The remaining verbs are AEAT-submission-specific (submit/present/send).
+_LIVE_WRITE_LEAVES: frozenset[str] = frozenset({"submit", "present", "send"})
 
 
 class ConfirmationPolicy(StrEnum):

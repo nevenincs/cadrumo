@@ -44,6 +44,7 @@ You MUST respect these rules at all times:
 @.claude/rules/full-tree-gate-must-distinguish-owner.md
 @.claude/rules/generated-reference-is-cli-owned.builtin.md
 @.claude/rules/glossary-concepts-are-taxpayer-facing.md
+@.claude/rules/iva-cuota-devengada-includes-recargo-equivalencia.md
 @.claude/rules/ledger-amount-is-absolute-direction-is-authority.md
 @.claude/rules/ledger-derived-revisions-bundle-evidence.md
 @.claude/rules/ledger-evidence-bytes-not-links.md
