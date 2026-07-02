@@ -8,6 +8,8 @@ diff rather than silent drift through dependent code paths.
 
 from __future__ import annotations
 
+from enum import StrEnum
+
 import pytest
 
 from .._enums import SplitRole, TransactionDirection, TransactionLifecycleState
@@ -15,32 +17,29 @@ from .._enums import SplitRole, TransactionDirection, TransactionLifecycleState
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 
-def test_transaction_direction_members_are_closed() -> None:
-    assert set(TransactionDirection) == {
-        TransactionDirection.INCOMING,
-        TransactionDirection.OUTGOING,
-        TransactionDirection.INTERNAL_TRANSFER,
-    }
+def test_transaction_enum_contracts_are_closed_and_roundtrip() -> None:
+    contracts: tuple[tuple[type[StrEnum], set[StrEnum]], ...] = (
+        (
+            TransactionDirection,
+            {
+                TransactionDirection.INCOMING,
+                TransactionDirection.OUTGOING,
+                TransactionDirection.INTERNAL_TRANSFER,
+            },
+        ),
+        (
+            TransactionLifecycleState,
+            {
+                TransactionLifecycleState.ACTIVE,
+                TransactionLifecycleState.ARCHIVED,
+                TransactionLifecycleState.STASHED,
+                TransactionLifecycleState.SPLIT,
+            },
+        ),
+        (SplitRole, {SplitRole.PARENT, SplitRole.CHILD, SplitRole.MERGED}),
+    )
 
-
-def test_transaction_lifecycle_state_members_are_closed() -> None:
-    assert set(TransactionLifecycleState) == {
-        TransactionLifecycleState.ACTIVE,
-        TransactionLifecycleState.ARCHIVED,
-        TransactionLifecycleState.STASHED,
-        TransactionLifecycleState.SPLIT,
-    }
-
-
-def test_split_role_members_are_closed() -> None:
-    assert set(SplitRole) == {SplitRole.PARENT, SplitRole.CHILD, SplitRole.MERGED}
-
-
-def test_lifecycle_state_str_values_round_trip() -> None:
-    for state in TransactionLifecycleState:
-        assert TransactionLifecycleState(state.value) is state
-
-
-def test_split_role_str_values_round_trip() -> None:
-    for role in SplitRole:
-        assert SplitRole(role.value) is role
+    for enum_cls, expected_members in contracts:
+        assert set(enum_cls) == expected_members, enum_cls.__name__
+        for member in enum_cls:
+            assert enum_cls(member.value) is member, f"{enum_cls.__name__}.{member.name}"
