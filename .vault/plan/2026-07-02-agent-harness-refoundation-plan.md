@@ -9,15 +9,6 @@ related:
   - '[[2026-07-02-agent-harness-refoundation-adr]]'
 ---
 
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the
-       related: field above.
-     - The related: field carries the AUTHORISING documents
-       (ADR, research, reference, prior plan) for every Step in
-       this plan. Steps inherit this chain; per-row reference
-       footers do not exist.
-     - NEVER use [[wiki-links]] or markdown links in the
-       document body. -->
 
 # `agent-harness-refoundation` plan
 
@@ -161,16 +152,16 @@ Author the six WHEN-layer skills, regularizar-atrasos first, each with a golden 
 
 - [x] `W05.P11.S65` - Author the regularizar-atrasos skill sequencing the overview backlog past-due and recargo extemporaneo surface; `src/aeat/_data/agent/skills/regularizar-atrasos/SKILL.md`.
 - [x] `W05.P11.S66` - Add the regularizar-atrasos golden scenario; `src/aeat/agent/eval/scenarios/regularizar_atrasos.toml`.
-- [ ] `W05.P11.S67` - Author the cierre-trimestre skill sequencing the quarter-boundary agenda obligations; `src/aeat/_data/agent/skills/cierre-trimestre/SKILL.md`.
-- [ ] `W05.P11.S68` - Add the cierre-trimestre golden scenario; `src/aeat/agent/eval/scenarios/cierre_trimestre.toml`.
-- [ ] `W05.P11.S69` - Author the resumen-anual skill sequencing the annual-window obligations; `src/aeat/_data/agent/skills/resumen-anual/SKILL.md`.
-- [ ] `W05.P11.S70` - Add the resumen-anual golden scenario; `src/aeat/agent/eval/scenarios/resumen_anual.toml`.
-- [ ] `W05.P11.S71` - Author the rectificar-declaracion skill driving work amend and the complementaria and sustitutiva path; `src/aeat/_data/agent/skills/rectificar-declaracion/SKILL.md`.
-- [ ] `W05.P11.S72` - Add the rectificar-declaracion golden scenario; `src/aeat/agent/eval/scenarios/rectificar_declaracion.toml`.
-- [ ] `W05.P11.S73` - Author the inicio-actividad skill over the activity-start-date and 036 alta path; `src/aeat/_data/agent/skills/inicio-actividad/SKILL.md`.
-- [ ] `W05.P11.S74` - Add the inicio-actividad golden scenario; `src/aeat/agent/eval/scenarios/inicio_actividad.toml`.
-- [ ] `W05.P11.S75` - Author the cese-actividad skill over the activity-end-date and 036 baja path; `src/aeat/_data/agent/skills/cese-actividad/SKILL.md`.
-- [ ] `W05.P11.S76` - Add the cese-actividad golden scenario; `src/aeat/agent/eval/scenarios/cese_actividad.toml`.
+- [x] `W05.P11.S67` - Author the cierre-trimestre skill sequencing the quarter-boundary agenda obligations; `src/aeat/_data/agent/skills/cierre-trimestre/SKILL.md`.
+- [x] `W05.P11.S68` - Add the cierre-trimestre golden scenario; `src/aeat/agent/eval/scenarios/cierre_trimestre.toml`.
+- [x] `W05.P11.S69` - Author the resumen-anual skill sequencing the annual-window obligations; `src/aeat/_data/agent/skills/resumen-anual/SKILL.md`.
+- [x] `W05.P11.S70` - Add the resumen-anual golden scenario; `src/aeat/agent/eval/scenarios/resumen_anual.toml`.
+- [x] `W05.P11.S71` - Author the rectificar-declaracion skill driving work amend and the complementaria and sustitutiva path; `src/aeat/_data/agent/skills/rectificar-declaracion/SKILL.md`.
+- [x] `W05.P11.S72` - Add the rectificar-declaracion golden scenario; `src/aeat/agent/eval/scenarios/rectificar_declaracion.toml`.
+- [x] `W05.P11.S73` - Author the inicio-actividad skill over the activity-start-date and 036 alta path; `src/aeat/_data/agent/skills/inicio-actividad/SKILL.md`.
+- [x] `W05.P11.S74` - Add the inicio-actividad golden scenario; `src/aeat/agent/eval/scenarios/inicio_actividad.toml`.
+- [x] `W05.P11.S75` - Author the cese-actividad skill over the activity-end-date and 036 baja path; `src/aeat/_data/agent/skills/cese-actividad/SKILL.md`.
+- [x] `W05.P11.S76` - Add the cese-actividad golden scenario; `src/aeat/agent/eval/scenarios/cese_actividad.toml`.
 
 ## Wave `W06` - Grounding and packaging
 
