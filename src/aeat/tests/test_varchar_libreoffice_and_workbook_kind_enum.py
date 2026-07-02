@@ -136,7 +136,7 @@ def test_workbook_kind_is_strenum_with_all_members() -> None:
     """WorkbookKind must be a StrEnum enrolling all six canonical kind values."""
     from enum import StrEnum
 
-    from ..domain.calculations.registry._workbook_parity import WorkbookKind
+    from ..domain.calculations.registry import WorkbookKind
 
     assert issubclass(WorkbookKind, StrEnum), "WorkbookKind must be a StrEnum subclass, not a Literal alias."
     enrolled = frozenset(member.value for member in WorkbookKind)

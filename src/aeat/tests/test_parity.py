@@ -4,7 +4,10 @@ from pathlib import Path
 import pytest
 import yaml
 
-from ..locales._ast_scanner import scan_namespace_markers, scan_source_tree
+from ..locales import (
+    scan_namespace_markers,
+    scan_source_tree,
+)
 from ..locales.cli import app
 from ..locales.manager import LocaleError, LocaleManager, LocaleNode
 from .cli_runner import invoke_typer_app
@@ -415,7 +418,7 @@ def test_fstring_registry_expands_sal_and_sll_keys() -> None:
     These two enum values caused the #553 structural-repair-exception incident because
     scaffold could not generate their locale keys from the namespace marker alone.
     """
-    from ..locales._fstring_registry import get_registered_keys
+    from ..locales import get_registered_keys
 
     keys = get_registered_keys()
     assert "wizard.setup.taxpayer-type.legal-entity-form.choices.sal.label" in keys, (
@@ -429,7 +432,7 @@ def test_fstring_registry_expands_sal_and_sll_keys() -> None:
 def test_fstring_registry_covers_all_legal_entity_form_members() -> None:
     """Every LegalEntityForm member must have a registered locale key."""
     from ..domain.deadlines import LegalEntityForm
-    from ..locales._fstring_registry import get_registered_keys
+    from ..locales import get_registered_keys
 
     keys = get_registered_keys()
     missing = []
@@ -446,7 +449,7 @@ def test_fstring_registry_covers_all_legal_entity_form_members() -> None:
 def test_fstring_registry_covers_all_fiscal_residency_members() -> None:
     """Every FiscalResidency member must have a registered locale key."""
     from ..domain.deadlines import FiscalResidency
-    from ..locales._fstring_registry import get_registered_keys
+    from ..locales import get_registered_keys
 
     keys = get_registered_keys()
     missing = []
@@ -470,7 +473,7 @@ def test_fstring_registry_all_keys_present_in_all_locales(manager: LocaleManager
     scaffolded. A failure here means a new enum value was added without running
     scaffold (or scaffold does not cover it yet).
     """
-    from ..locales._fstring_registry import get_registered_keys
+    from ..locales import get_registered_keys
 
     registered_keys = get_registered_keys()
     errors = []
@@ -496,7 +499,7 @@ def test_scaffold_inserts_fstring_registry_keys(tmp_path: Path) -> None:
     Simulates the SAL/SLL incident: an empty locale file receives scaffold and
     must contain every registered key as a placeholder afterwards.
     """
-    from ..locales._fstring_registry import get_registered_keys
+    from ..locales import get_registered_keys
 
     locales_dir = tmp_path / "locales"
     locales_dir.mkdir()

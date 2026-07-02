@@ -21,11 +21,11 @@ from ....domain.calculations.registry import CasillaId, RegistrySnapshotRef, val
 from ....domain.filing import (
     ModeloDraft,
     ModeloDraftRepository,
+    ModeloDraftStatus,
     ModeloValue,
     ModeloValueKind,
     compute_modelo_draft_id,
 )
-from ....domain.filing._schema import ModeloDraftStatus
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

@@ -14,8 +14,8 @@ from pydantic import ValidationError
 
 from ....core import Period
 from ....core.resources import bundled_path
-from ....domain.calculations._export_field_kind import CasillaFieldKind
 from ....domain.calculations.registry import (
+    CasillaFieldKind,
     CasillaId,
     ExportLayoutDefinition,
     RegistrySnapshotRef,

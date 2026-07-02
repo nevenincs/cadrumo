@@ -28,7 +28,7 @@ from pathlib import Path
 
 import pytest
 
-from ..tests._env import temporary_env
+from ..tests import temporary_env
 
 
 @pytest.fixture(autouse=True, name="_isolated_aeat_root")

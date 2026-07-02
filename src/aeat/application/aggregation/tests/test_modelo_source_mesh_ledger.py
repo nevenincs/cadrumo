@@ -636,7 +636,7 @@ def test_iva_source_mesh_resolver_degrades_on_transaction_catalogue_drift(
     secure_objects: SecureObjectRepository,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
-    from ....domain.transactions._repository import transaction_index_object_key
+    from ....domain.transactions import transaction_index_object_key
 
     revision = _revision("303", "2009-y-siguientes")
     # Per-row catalogue: a corrupt membership-index row makes load() fail closed

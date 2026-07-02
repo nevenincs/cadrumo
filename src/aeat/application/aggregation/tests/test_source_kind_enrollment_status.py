@@ -24,7 +24,7 @@ from __future__ import annotations
 
 import pytest
 
-from ....tests._inventory import REPO_ROOT
+from ....tests import REPO_ROOT
 from ...aggregation import (
     DEFERRED_SOURCE_KIND_TARGETS,
     DEFERRED_SOURCE_KINDS,

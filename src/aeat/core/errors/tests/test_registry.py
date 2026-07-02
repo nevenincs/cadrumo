@@ -9,8 +9,7 @@ import pytest
 from pydantic import ValidationError
 
 from ...access_gate import LiveSubmitForbiddenError
-from ...i18n import tr
-from ...i18n._render import UnmatchedPlaceholderError
+from ...i18n import UnmatchedPlaceholderError, tr
 from ...logging import SecretScrubbingFilter, configure_logging
 from ...observability import (
     RunContextMissingError,

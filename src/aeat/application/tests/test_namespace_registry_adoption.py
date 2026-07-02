@@ -24,7 +24,7 @@ import pytest
 
 from ...adapters.persistence.storage import STORAGE_NAMESPACE_REGISTRY
 from ...core.paths import PROJECT_ROOT
-from ...tests._inventory import leaf_name
+from ...tests import leaf_name
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

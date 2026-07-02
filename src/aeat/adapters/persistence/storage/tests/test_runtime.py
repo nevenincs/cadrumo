@@ -15,8 +15,7 @@ from .....core.errors import AeatError, resolve_error_message
 from .....core.external_constants import OutputLanguage
 from .._namespace_registry import STORAGE_NAMESPACE_REGISTRY, WORKFLOW_STATE_NAMESPACE
 from ..errors import StorageValidationError
-from ..master_key import activate_session
-from ..master_key._bucket_session import BucketSession
+from ..master_key import BucketSession, activate_session
 from ..runtime import (
     StorageRuntime,
     StorageRuntimeReadinessCode,

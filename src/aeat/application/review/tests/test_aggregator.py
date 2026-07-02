@@ -9,7 +9,6 @@ from typing import Any
 
 import pytest
 
-from ....application.user_profile._testing import register_minimal_profile
 from ....core import Period
 from ....core.config import Settings
 from ....core.errors import BaseSeverity
@@ -43,6 +42,7 @@ from ...filing import (
 from ...user_profile import (
     profile_create_storage_span,
     profile_storage_session,
+    register_minimal_profile,
 )
 from ...workflow import workflow_state_repository
 from .. import (

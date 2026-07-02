@@ -23,8 +23,8 @@ from ....domain.iva_compensation import (
     IvaCompensationPeriodState,
     IvaCompensationReconciliationInputError,
     IvaCompensationWalletObservationProtocol,
+    IvaWalletReconciliationError,
 )
-from ....domain.iva_compensation._errors import IvaWalletReconciliationError
 from ....tests.secure_sql import isolated_runtime_profile
 from ...aggregation import CalculationSourceContext
 from .._iva_compensation_history import IvaCompensationHistoryRepository

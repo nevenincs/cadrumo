@@ -16,7 +16,7 @@ from ...adapters.persistence.storage import (
     has_active_bucket_session,
     suspend_active_session,
 )
-from ...adapters.persistence.storage.master_key._bucket_session import BucketSession
+from ...adapters.persistence.storage.master_key import BucketSession
 from ...adapters.persistence.storage.runtime_repository import secure_object_repository_for_active_bucket
 from ...adapters.persistence.storage.sql import dispose_engine
 from ...adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
@@ -382,8 +382,7 @@ def test_repair_auth_session_predicate_agrees_with_wizard_status(tmp_path: Path)
     authenticated) and asserting the report shape across each.
     """
     from ..auth import update_auth
-    from ..user_profile import profile_create_storage_span
-    from ..user_profile._testing import register_minimal_profile
+    from ..user_profile import profile_create_storage_span, register_minimal_profile
     from ..workflow import WorkflowState
 
     with (

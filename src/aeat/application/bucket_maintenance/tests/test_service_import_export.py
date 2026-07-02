@@ -504,7 +504,7 @@ def test_inspect_refuses_malformed_archive(tmp_path: Path) -> None:
     fabricated header. It must raise, exactly as ``import_`` does when it
     reads the same malformed archive.
     """
-    from ....adapters.persistence.storage.bucket._sealed_archive_errors import SealedArchiveLayoutError
+    from ....adapters.persistence.storage.bucket import SealedArchiveLayoutError
 
     garbage_path = tmp_path / "not-an-archive.tar.gz"
     garbage_path.write_bytes(b"this is not a gzip tar archive at all")

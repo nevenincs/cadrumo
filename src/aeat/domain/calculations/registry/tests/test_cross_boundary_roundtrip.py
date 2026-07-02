@@ -26,11 +26,11 @@ from .....core.identity import SubjectTaxId
 from ....filing import (
     ModeloBindingValue,
     ModeloDraft,
+    ModeloDraftStatus,
     ModeloValidationFinding,
     ModeloValue,
     ModeloValueKind,
 )
-from ....filing._schema import ModeloDraftStatus
 from ....modelos import (
     CalculationRevision,
     CalculationRevisionState,
@@ -548,8 +548,8 @@ def test_workflow_step_details_typed_envelope_roundtrip() -> None:
     from .....application.workflow import (
         WorkflowStage,
         WorkflowStep,
+        WorkflowStepDetails,
     )
-    from .....application.workflow._models import WorkflowStepDetails
 
     original = WorkflowStep(
         stage=WorkflowStage.RUNNING_PREFLIGHT,

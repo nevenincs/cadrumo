@@ -20,7 +20,7 @@ from pydantic import SecretStr
 
 from ...core.config import override_settings
 from ...domain.calculations.registry import ModeloDefinition, RegistrySnapshot, RegistryValidationError
-from ...domain.calculations.registry.tests._referential_integrity_support import (
+from ...domain.calculations.registry.tests import (
     REFERENCE_LEGAL_ID,
     build_minimal_snapshot,
     build_snapshot_with_missing_legal,

@@ -292,8 +292,7 @@ class TestAuthenticatorDescribeNarrowing:
 
         from pydantic import SecretStr
 
-        from ..adapters.outbound.aeat.auth import AeatAuthenticator, AuthValidationError
-        from ..adapters.outbound.aeat.auth._authenticator_types import CertificateHealthCheck
+        from ..adapters.outbound.aeat.auth import AeatAuthenticator, AuthValidationError, CertificateHealthCheck
         from ..adapters.outbound.aeat.auth.certificate import CertificateBackend
         from ..core.config import Settings
 
@@ -338,8 +337,7 @@ class TestAuthenticatorDescribeNarrowing:
 
         from pydantic import SecretStr
 
-        from ..adapters.outbound.aeat.auth import AeatAuthenticator
-        from ..adapters.outbound.aeat.auth._authenticator_types import CertificateHealthCheck
+        from ..adapters.outbound.aeat.auth import AeatAuthenticator, CertificateHealthCheck
         from ..adapters.outbound.aeat.auth.certificate import CertificateBackend, CertificateError
         from ..core.config import Settings
 

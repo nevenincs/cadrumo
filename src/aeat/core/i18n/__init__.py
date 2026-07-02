@@ -19,10 +19,11 @@ Major declarations:
 
 from __future__ import annotations
 
-from ..external_constants import OutputLanguage
+from ..external_constants import DEFAULT_OUTPUT_LANGUAGE, OutputLanguage
 from ._render import (
     OUTPUT_LANGUAGE_ENV_VAR,
     SUPPORTED_OUTPUT_LANGUAGES,
+    UnmatchedPlaceholderError,
     clear_output_language_cache,
     output_language,
     register_profile_language_resolver,
@@ -31,10 +32,12 @@ from ._render import (
 from ._translatable import Translatable
 
 __all__ = [
+    "DEFAULT_OUTPUT_LANGUAGE",
     "OUTPUT_LANGUAGE_ENV_VAR",
     "SUPPORTED_OUTPUT_LANGUAGES",
     "OutputLanguage",
     "Translatable",
+    "UnmatchedPlaceholderError",
     "clear_output_language_cache",
     "output_language",
     "register_profile_language_resolver",
