@@ -821,7 +821,9 @@ application:
         %{period}; complete these profile facts first: %{missing}.'
       profile_readiness_profile_missing: No persisted active profile exists for this
         modelo work target; create or repair the profile before continuing.
-      reconcile_declaration_unsupported: 'Declaration-PDF casilla-level reconcile is not yet enrolled for this modelo; reconcile a downloaded justificante via aeat app modelo reconcile file, or wait for this modelo to be enrolled.'
+      reconcile_declaration_unsupported: Declaration-PDF casilla-level reconcile is
+        not yet enrolled for this modelo; reconcile a downloaded justificante via
+        aeat app modelo reconcile file, or wait for this modelo to be enrolled.
       reconcile_no_active_bucket: No active profile bucket; run `aeat config profile
         create NAME` before reconciling a work unit.
       refund_election_not_eligible: Refund (devolver) was elected for Modelo %{modelo}
@@ -3214,6 +3216,21 @@ cli:
       year_help: Filing year (e.g. 2024).
     providers:
       help: List which subprocess LLM providers have a usable CLI on PATH.
+    pull_folder:
+      errors:
+        folder_id_unrecognised: 'Google Drive folder reference %{reference} does not contain a recognisable folder id. Pass a Drive folder URL or its bare folder id.'
+        folder_refused: 'Cannot list the Drive folder %{folder_id}%{scope_hint}: the folder must be reachable under the drive.file scope (created by the app or explicitly picked by the operator), or grant the required Google scope and retry.'
+      folder_help: 'Drive folder URL or bare folder id to bulk-fetch invoice PDFs/images from.'
+      help: 'Bulk-fetch every PDF/image invoice in a Drive folder and store each as encrypted evidence (unlinked to any transaction; link with ''aeat app ledger attach'' or ''link'').'
+      labels:
+        fetched: 'fetched_count'
+        folder_id: 'folder_id'
+        refused: 'refused_count'
+        skipped: 'skipped_non_document_count'
+        total: 'total_documents'
+      note_help: 'Optional note recorded on every fetched attachment.'
+      notices:
+        files_refused: '%{refused_count} file(s) in this folder could not be fetched under the drive.file scope; download them manually and attach with ''aeat app ledger attach --attachment-id ...''.'
     remove:
       actor_help: Operator name recorded on the bucket event
       dry_run_help: Report removal effects without deleting the ledger transaction
@@ -3460,47 +3477,65 @@ cli:
         Next: %{command}'
   overview:
     agenda:
-      allow_incomplete_help: 'Render the agenda even when profile data is incomplete.'
-      date_help: 'As-of date for the agenda (ISO YYYY-MM-DD); defaults to today.'
+      allow_incomplete_help: Render the agenda even when profile data is incomplete.
+      date_help: As-of date for the agenda (ISO YYYY-MM-DD); defaults to today.
       errors:
-        invalid_horizon: '--horizon must be a positive integer (days).'
-      help: 'Rank upcoming and past-due obligations around an as-of date. Surfaces a single `next_due` plus due-today / due-soon / overdue cohorts. Local-only; never contacts AEAT.'
-      horizon_help: 'Forward window (days) the `due_soon` cohort honours.'
-    app_help: 'Review the active tax workspace'
+        invalid_horizon: --horizon must be a positive integer (days).
+      help: Rank upcoming and past-due obligations around an as-of date. Surfaces
+        a single `next_due` plus due-today / due-soon / overdue cohorts. Local-only;
+        never contacts AEAT.
+      horizon_help: Forward window (days) the `due_soon` cohort honours.
+    app_help: Review the active tax workspace
     backlog:
-      allow_incomplete_help: 'Render the backlog even when profile data is incomplete.'
-      from_help: 'Inclusive start date (ISO YYYY-MM-DD); defaults to 365 days before today.'
-      help: 'List past-due obligations the operator has not yet filed. Sorted oldest first so the most-overdue items triage first. Local-only; never contacts AEAT.'
-      to_help: 'Inclusive end date (ISO YYYY-MM-DD); defaults to today.'
+      allow_incomplete_help: Render the backlog even when profile data is incomplete.
+      from_help: Inclusive start date (ISO YYYY-MM-DD); defaults to 365 days before
+        today.
+      help: List past-due obligations the operator has not yet filed. Sorted oldest
+        first so the most-overdue items triage first. Local-only; never contacts AEAT.
+      to_help: Inclusive end date (ISO YYYY-MM-DD); defaults to today.
     calendar:
-      all_profiles_help: 'Render the calendar for every registered profile instead of the active one. Each block is prefixed with a profile header line.'
-      allow_incomplete_help: 'Render the calendar even when profile data is incomplete.'
-      from_help: 'Inclusive start date for the calendar window (ISO YYYY-MM-DD).'
-      help: 'Render the deadline calendar for the active profile across the supplied date window. Applies festivos and business-day shifts. Local-only; never contacts AEAT.'
+      all_profiles_help: Render the calendar for every registered profile instead
+        of the active one. Each block is prefixed with a profile header line.
+      allow_incomplete_help: Render the calendar even when profile data is incomplete.
+      from_help: Inclusive start date for the calendar window (ISO YYYY-MM-DD).
+      help: Render the deadline calendar for the active profile across the supplied
+        date window. Applies festivos and business-day shifts. Local-only; never contacts
+        AEAT.
       shift:
-        business_day: 'Business day'
-        calendar_unavailable: 'Calendar unavailable'
-        domingo: 'Sunday'
-        modelo_exception: 'Modelo exception'
-        sabado: 'Saturday'
-      show_suppressed_help: 'Include filtered (non-applicable) obligations in the output with their applicability verdict and reason.'
-      to_help: 'Inclusive end date for the calendar window (ISO YYYY-MM-DD).'
-    calendar_local_filing_evidence_unavailable: 'Overview calendar local filing evidence is unavailable; refusing to render without persisted AEAT filing state.'
-    calendar_local_live_events_unavailable: 'Local live-event evidence is unavailable for this calendar row.'
-    calendar_local_modelo_events_unavailable: 'Local modelo event evidence is unavailable for this calendar row.'
-    calendar_refused_incomplete: 'Calendar has unresolved profile checks: %{keys}. Run the warning fix command or pass --allow-incomplete to inspect the provisional calendar.'
+        business_day: Business day
+        calendar_unavailable: Calendar unavailable
+        domingo: Sunday
+        modelo_exception: Modelo exception
+        sabado: Saturday
+      show_suppressed_help: Include filtered (non-applicable) obligations in the output
+        with their applicability verdict and reason.
+      to_help: Inclusive end date for the calendar window (ISO YYYY-MM-DD).
+    calendar_local_filing_evidence_unavailable: Overview calendar local filing evidence
+      is unavailable; refusing to render without persisted AEAT filing state.
+    calendar_local_live_events_unavailable: Local live-event evidence is unavailable
+      for this calendar row.
+    calendar_local_modelo_events_unavailable: Local modelo event evidence is unavailable
+      for this calendar row.
+    calendar_refused_incomplete: 'Calendar has unresolved profile checks: %{keys}.
+      Run the warning fix command or pass --allow-incomplete to inspect the provisional
+      calendar.'
     coverage:
       investigate: '%{count} filing obligation(s) could not be positively scoped for
         this profile and may be under-reported: %{modelos}. Investigate each with
         ''aeat app overview explain <modelo>''.'
-    drafts: 'Drafts'
+    drafts: Drafts
     explain:
-      help: 'Decompose a modelo''s applicability against the active profile. Surfaces the binary applicable flag, the registry-backed rationale text, and the profile facts the decision depends on. Local-only; never contacts AEAT.'
-      modelo_help: 'AEAT modelo identifier (e.g. 303, 130, 100).'
-      year_help: 'Fiscal year for the applicability evaluation; defaults to the current year.'
-    local_work_units_unavailable: 'Overview local Modelo work-unit state is unavailable; refusing to render without persisted work state.'
-    period: 'Period'
-    period_help: 'Filing period as an AEAT token: 1T-4T (quarters), 0A (annual), 01-12 (months). Combine with --year to choose the year.'
+      help: Decompose a modelo's applicability against the active profile. Surfaces
+        the binary applicable flag, the registry-backed rationale text, and the profile
+        facts the decision depends on. Local-only; never contacts AEAT.
+      modelo_help: AEAT modelo identifier (e.g. 303, 130, 100).
+      year_help: Fiscal year for the applicability evaluation; defaults to the current
+        year.
+    local_work_units_unavailable: Overview local Modelo work-unit state is unavailable;
+      refusing to render without persisted work state.
+    period: Period
+    period_help: 'Filing period as an AEAT token: 1T-4T (quarters), 0A (annual), 01-12
+      (months). Combine with --year to choose the year.'
     post_filing:
       pending: '%{count} AEAT post-filing event(s) require attention: %{kinds}. Review
         them with ''aeat app live notifications list''.'
@@ -3555,11 +3590,11 @@ cli:
       work_units_present_with_discarded: '%{count} active modelo work unit(s) (%{discarded}
         discarded) in this local storage - your active modelo work is saved; resume
         it with `aeat app modelo work list`.'
-    status_help: 'Show profile, ledger, and modelo readiness'
+    status_help: Show profile, ledger, and modelo readiness
     taxpayer_model_undeclared: The active profile does not declare this taxpayer model;
       update the profile or rerun with the incomplete-profile override.
-    verbose_help: 'Show details and next action when available'
-    year_help: 'Filing year for --period (e.g. 2024).'
+    verbose_help: Show details and next action when available
+    year_help: Filing year for --period (e.g. 2024).
   registry:
     app_help: Tax models registry management
     audit_oracles_environment_help: Live parity catalogue environment to audit against
