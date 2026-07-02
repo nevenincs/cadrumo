@@ -2,10 +2,10 @@
 
 The helpers walk the active :class:`click.Context` chain to surface root-level
 CLI flags (e.g. ``--json``) without forcing callers to thread the context
-object explicitly. They live in :mod:`aeat.core` so domain code can call
+object explicitly. They live in :mod:`core` so domain code can call
 :func:`json_output_requested`, :func:`current_cli_flag`, or
 :func:`context_chain_requests_json` without inverting the dependency direction
-onto :mod:`aeat.entrypoints.cli`. Terminal error handlers that have no live
+onto :mod:`entrypoints.cli`. Terminal error handlers that have no live
 context can fall back to :func:`argv_requests_json`.
 
 This module answers output-mode questions only. It is not an active-profile,
