@@ -43,7 +43,7 @@ Migrate the eight small inline informativa and retencion revisions to the fragme
 Migrate the two large calc-grade inline surfaces (M303 2009-y-siguientes and the M369 schemas) with the same equality gate plus their filing-grade suites.
 
 - [x] `P02.S11` - Migrate the M369 inline schemas to the fragmented layout in one atomic commit gated by the equality test plus the M369 filing-grade suites; `src/aeat/_data/registry/aeat/modelos/369`.
-- [ ] `P02.S12` - Migrate the M303 2009-y-siguientes inline revision to the fragmented layout in one atomic commit gated by the equality test plus the M303 filing-grade suites, scheduled per board state because it validates against the whole revision and waits on dirty peer WIP in that tree; `src/aeat/_data/registry/aeat/modelos/303`.
+- [x] `P02.S12` - Migrate the M303 2009-y-siguientes inline revision to the fragmented layout in one atomic commit gated by the equality test plus the M303 filing-grade suites, scheduled per board state because it validates against the whole revision and waits on dirty peer WIP in that tree; `src/aeat/_data/registry/aeat/modelos/303`.
 
 ### Phase `P03` - closeout: delete inline support and converge the rule
 
