@@ -43,12 +43,12 @@ def test_source_ref_id_accepts_current_catalogue_key_shape() -> None:
     assert adapter.validate_python("aeat-dr-303-2025-v2") == "aeat-dr-303-2025-v2"
 
 
-@pytest.mark.parametrize("source_ref", ["aeat.src.1", "ley-37-1992:art-1", "source"])
-def test_source_ref_id_rejects_generic_registry_and_legal_ref_shapes(source_ref: str) -> None:
+def test_source_ref_id_rejects_generic_registry_and_legal_ref_shapes() -> None:
     adapter = TypeAdapter(SourceRefId)
 
-    with pytest.raises(ValidationError):
-        adapter.validate_python(source_ref)
+    for source_ref in ("aeat.src.1", "ley-37-1992:art-1", "source"):
+        with pytest.raises(ValidationError):
+            adapter.validate_python(source_ref)
 
 
 def _relation_payload(**overrides: object) -> dict[str, object]:
@@ -94,58 +94,57 @@ def test_input_kind_is_str() -> None:
 # ---------------------------------------------------------------------------
 
 
-@pytest.mark.parametrize(
-    "member, raw_string",
-    [
+def test_casilla_roundtrip_valid_input_kind() -> None:
+    """Constructor accepts each member string and model_dump round-trips it."""
+    cases = (
         (InputKind.MANUAL, "manual"),
         (InputKind.BOUND, "bound"),
         (InputKind.COMPUTED, "computed"),
         (InputKind.INFORMATIONAL, "informational"),
-    ],
-)
-def test_casilla_roundtrip_valid_input_kind(member: InputKind, raw_string: str) -> None:
-    """Constructor accepts each member string and model_dump round-trips it."""
-    # Validate TOML-shaped payloads so raw string enum coercion stays on the
-    # same boundary production registry loading uses.
-    if member == InputKind.COMPUTED:
-        payload: dict[str, object] = {
-            "id": _SCHEMA_CASILLA_ID,
-            "number": "01",
-            "label": "Test casilla",
-            "section": ("test",),
-            "input_kind": raw_string,
-            "formula": "test.formula",
-            "legal_refs": (_SCHEMA_LEGAL_ID,),
-            "source_refs": (_SCHEMA_SOURCE_ID,),
-        }
-    elif member == InputKind.BOUND:
-        payload = {
-            "id": _SCHEMA_CASILLA_ID,
-            "number": "01",
-            "label": "Test casilla",
-            "section": ("test",),
-            "input_kind": raw_string,
-            "binding": "test.binding",
-            "legal_refs": (_SCHEMA_LEGAL_ID,),
-            "source_refs": (_SCHEMA_SOURCE_ID,),
-        }
-    else:
-        payload = {
-            "id": _SCHEMA_CASILLA_ID,
-            "number": "01",
-            "label": "Test casilla",
-            "section": ("test",),
-            "input_kind": raw_string,
-            "legal_refs": (_SCHEMA_LEGAL_ID,),
-            "source_refs": (_SCHEMA_SOURCE_ID,),
-        }
-    casilla = CasillaDefinition.model_validate(payload)
+    )
 
-    assert casilla.input_kind == member
-    assert isinstance(casilla.input_kind, InputKind)
-    dumped = casilla.model_dump()
-    # StrEnum serialises as its string value, not the enum repr
-    assert dumped["input_kind"] == raw_string
+    for member, raw_string in cases:
+        # Validate TOML-shaped payloads so raw string enum coercion stays on the
+        # same boundary production registry loading uses.
+        if member == InputKind.COMPUTED:
+            payload: dict[str, object] = {
+                "id": _SCHEMA_CASILLA_ID,
+                "number": "01",
+                "label": "Test casilla",
+                "section": ("test",),
+                "input_kind": raw_string,
+                "formula": "test.formula",
+                "legal_refs": (_SCHEMA_LEGAL_ID,),
+                "source_refs": (_SCHEMA_SOURCE_ID,),
+            }
+        elif member == InputKind.BOUND:
+            payload = {
+                "id": _SCHEMA_CASILLA_ID,
+                "number": "01",
+                "label": "Test casilla",
+                "section": ("test",),
+                "input_kind": raw_string,
+                "binding": "test.binding",
+                "legal_refs": (_SCHEMA_LEGAL_ID,),
+                "source_refs": (_SCHEMA_SOURCE_ID,),
+            }
+        else:
+            payload = {
+                "id": _SCHEMA_CASILLA_ID,
+                "number": "01",
+                "label": "Test casilla",
+                "section": ("test",),
+                "input_kind": raw_string,
+                "legal_refs": (_SCHEMA_LEGAL_ID,),
+                "source_refs": (_SCHEMA_SOURCE_ID,),
+            }
+        casilla = CasillaDefinition.model_validate(payload)
+
+        assert casilla.input_kind == member, raw_string
+        assert isinstance(casilla.input_kind, InputKind), raw_string
+        dumped = casilla.model_dump()
+        # StrEnum serialises as its string value, not the enum repr
+        assert dumped["input_kind"] == raw_string
 
 
 # ---------------------------------------------------------------------------
@@ -301,9 +300,8 @@ def test_relation_definition_rejects_legacy_source_output_key() -> None:
     assert "source_output" in message
 
 
-@pytest.mark.parametrize(
-    ("selector", "expected"),
-    [
+def test_relation_definition_rejects_invalid_source_revision_selector() -> None:
+    cases = (
         ({}, "must declare year, year_from, or filing_year_delta"),
         ({"revision": "2025"}, "revision"),
         ({"revision_id": "2025"}, "revision_id"),
@@ -311,37 +309,30 @@ def test_relation_definition_rejects_legacy_source_output_key() -> None:
         ({"year": 2025, "year_from": 2024}, "year or year_from/year_to"),
         ({"year_to": 2025}, "year_to requires year_from"),
         ({"year_from": 2025, "year_to": 2024}, "year_to must be on or after year_from"),
-    ],
-)
-def test_relation_definition_rejects_invalid_source_revision_selector(
-    selector: dict[str, object],
-    expected: str,
-) -> None:
-    with pytest.raises(ValidationError) as exc_info:
-        RelationDefinition.model_validate(_relation_payload(source_revision_selector=selector))
+    )
 
-    assert expected in str(exc_info.value)
+    for selector, expected in cases:
+        with pytest.raises(ValidationError) as exc_info:
+            RelationDefinition.model_validate(_relation_payload(source_revision_selector=selector))
+
+        assert expected in str(exc_info.value), selector
 
 
-@pytest.mark.parametrize(
-    ("period_alignment", "expected"),
-    [
+def test_relation_definition_rejects_invalid_period_alignment() -> None:
+    cases = (
         ({}, "must declare a current alignment shape"),
         ({"mode": "same_period"}, "same_period"),
         ({"source_periods": "quarters"}, "source_periods requires target_period"),
         ({"source_period_kind": "quarterly"}, "source_period_kind requires target_period"),
         ({"source_period": "0A", "target_period": "0A"}, "requires target_period and filing_year_delta"),
         ({"target_period": "0A"}, "declares target/delta fields without source alignment"),
-    ],
-)
-def test_relation_definition_rejects_invalid_period_alignment(
-    period_alignment: dict[str, object],
-    expected: str,
-) -> None:
-    with pytest.raises(ValidationError) as exc_info:
-        RelationDefinition.model_validate(_relation_payload(period_alignment=period_alignment))
+    )
 
-    assert expected in str(exc_info.value)
+    for period_alignment, expected in cases:
+        with pytest.raises(ValidationError) as exc_info:
+            RelationDefinition.model_validate(_relation_payload(period_alignment=period_alignment))
+
+        assert expected in str(exc_info.value), period_alignment
 
 
 def test_verification_expectation_definition_rejects_legacy_computed_casillas_key() -> None:
@@ -477,32 +468,28 @@ def _make_export_field_filler(raw_string: str, length: int) -> ExportFieldDefini
     )
 
 
-@pytest.mark.parametrize(
-    "member, raw_string",
-    [
+def test_export_field_roundtrip_valid_casilla_field_kind() -> None:
+    """ExportFieldDefinition accepts each member string and round-trips via model_dump."""
+    cases = (
         (CasillaFieldKind.LITERAL, "literal"),
         (CasillaFieldKind.CASILLA, "casilla"),
         (CasillaFieldKind.BINDING, "binding"),
         (CasillaFieldKind.FILLER, "filler"),
-    ],
-)
-def test_export_field_roundtrip_valid_casilla_field_kind(
-    member: CasillaFieldKind,
-    raw_string: str,
-) -> None:
-    """ExportFieldDefinition accepts each member string and round-trips via model_dump."""
-    if member == CasillaFieldKind.LITERAL:
-        field = _make_export_field_literal(raw_string, "TEST")
-    elif member == CasillaFieldKind.CASILLA:
-        field = _make_export_field_casilla(raw_string, _SCHEMA_CASILLA_ID)
-    elif member == CasillaFieldKind.BINDING:
-        field = _make_export_field_binding(raw_string, "some.binding")
-    else:
-        field = _make_export_field_filler(raw_string, 10)
-    assert field.kind == member
-    assert isinstance(field.kind, CasillaFieldKind)
-    dumped = field.model_dump()
-    assert dumped["kind"] == raw_string
+    )
+
+    for member, raw_string in cases:
+        if member == CasillaFieldKind.LITERAL:
+            field = _make_export_field_literal(raw_string, "TEST")
+        elif member == CasillaFieldKind.CASILLA:
+            field = _make_export_field_casilla(raw_string, _SCHEMA_CASILLA_ID)
+        elif member == CasillaFieldKind.BINDING:
+            field = _make_export_field_binding(raw_string, "some.binding")
+        else:
+            field = _make_export_field_filler(raw_string, 10)
+        assert field.kind == member, raw_string
+        assert isinstance(field.kind, CasillaFieldKind), raw_string
+        dumped = field.model_dump()
+        assert dumped["kind"] == raw_string
 
 
 def test_export_field_rejects_generic_casilla_key() -> None:
