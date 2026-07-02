@@ -14,6 +14,16 @@ related:
   - '[[2026-07-01-import-centralization-W01-P10-S10]]'
   - '[[2026-07-01-import-centralization-W01-P10-S11]]'
   - '[[2026-07-01-import-centralization-W01-P12-S15]]'
+  - '[[2026-07-01-import-centralization-W02-P36-S49]]'
+  - '[[2026-07-01-import-centralization-W02-P37-S97]]'
+  - '[[2026-07-01-import-centralization-W02-P38-S120]]'
+  - '[[2026-07-01-import-centralization-W02-P40-S159]]'
+  - '[[2026-07-01-import-centralization-W02-P41-S174]]'
+  - '[[2026-07-01-import-centralization-W02-P43-S199]]'
+  - '[[2026-07-01-import-centralization-W02-P45-S217]]'
+  - '[[2026-07-01-import-centralization-W02-P49-S240]]'
+  - '[[2026-07-01-import-centralization-W02-P54-S258]]'
+  - '[[2026-07-01-import-centralization-W02-P61-S275]]'
   - '[[2026-07-01-import-centralization-W04-P89-S378]]'
   - '[[2026-07-01-import-centralization-adr]]'
   - '[[2026-07-01-import-centralization-plan]]'
@@ -41,6 +51,16 @@ Auto-generated index of all documents tagged with `#import-centralization`.
 - `2026-07-01-import-centralization-W01-P10-S11` - Decide and apply the public-surface disposition for `_profile_keys` (rename-to-public and promote, expose a narrower public API, or remove the reach) currently defined in `aeat.domain.contribuyente._keys` and consumed cross-package from `src/aeat/application/user_profile/_keys_validation.py`
 - `2026-07-01-import-centralization-W01-P12-S15` - Promote `KNOWN_PROFILE_FLAG_ADVISORY_FIELDS`, `select_revision` to `aeat.domain.calculations.registry.__all__` with eager re-exports so the 2 existing cross-package consumer site(s) can import from the facade
 - `2026-07-01-import-centralization-W04-P89-S378` - Add a ratcheting production-Family-1 baseline JSON that fails the gate when the current cross-package private-import count exceeds the committed baseline, and shrink the baseline in the same commit as any fix that reduces the count
+- `2026-07-01-import-centralization-W02-P36-S49` - Rewire 5 cross-package private import name(s) in this file onto the promoted facade(s) of `aeat.domain.modelos`
+- `2026-07-01-import-centralization-W02-P37-S97` - Rewire 7 cross-package private import name(s) in this file onto the promoted facade(s) of `aeat.domain.fincas`
+- `2026-07-01-import-centralization-W02-P38-S120` - Rewire 1 cross-package private import name(s) in this file onto the promoted facade(s) of `aeat.core.i18n`
+- `2026-07-01-import-centralization-W02-P40-S159` - Rewire 5 cross-package private import name(s) in this file onto the promoted facade(s) of `aeat.domain.buckets`, `aeat.domain.modelos`, `aeat.domain.transactions`
+- `2026-07-01-import-centralization-W02-P41-S174` - Rewire 2 cross-package private import name(s) in this file onto the promoted facade(s) of `aeat.core.time`, `aeat.domain.user_profile`
+- `2026-07-01-import-centralization-W02-P43-S199` - Rewire 2 cross-package private import name(s) in this file onto the promoted facade(s) of `aeat.domain.iva_compensation`
+- `2026-07-01-import-centralization-W02-P45-S217` - Rewire 1 cross-package private import name(s) in this file onto the promoted facade(s) of `aeat.core.time`
+- `2026-07-01-import-centralization-W02-P49-S240` - Rewire 1 cross-package private import name(s) in this file onto the promoted facade(s) of `aeat.domain.iva`
+- `2026-07-01-import-centralization-W02-P54-S258` - Rewire 1 cross-package private import name(s) in this file onto the promoted facade(s) of `aeat.core.errors`
+- `2026-07-01-import-centralization-W02-P61-S275` - Rewire 5 cross-package private import name(s) in this file onto the promoted facade(s) of `aeat.domain.calculations.registry`
 
 ### plan
 
