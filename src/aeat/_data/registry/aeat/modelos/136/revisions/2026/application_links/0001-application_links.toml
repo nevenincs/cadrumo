@@ -30,3 +30,35 @@ requires_snapshot = true
 legal_refs = ["ley-35-2006:da-33", "orden-hac-763-2018:art-tercero", "orden-hap-70-2013:art-11"]
 source_refs = ["boe-lirpf-lottery-prize-special-levy", "boe-modelo-136-current-form", "boe-modelo-136-current-form-text"]
 
+[[revisions."2026".application_links]]
+id = "modelo-136-review"
+surface = "review"
+consumer = "aeat.application.filing.review"
+requires_snapshot = true
+legal_refs = ["orden-hap-70-2013:art-11"]
+source_refs = ["aeat-modelo-136-procedure"]
+
+[[revisions."2026".application_links]]
+id = "modelo-136-approval"
+surface = "approval"
+consumer = "aeat.application.workflow.approval"
+requires_snapshot = true
+legal_refs = ["orden-hap-70-2013:art-11"]
+source_refs = ["aeat-modelo-136-procedure"]
+
+[[revisions."2026".application_links]]
+id = "modelo-136-reconciliation"
+surface = "reconciliation"
+consumer = "aeat.application.reconciliation"
+requires_snapshot = true
+legal_refs = ["orden-hap-70-2013:art-11"]
+source_refs = ["aeat-modelo-136-procedure"]
+
+[[revisions."2026".application_links]]
+id = "modelo-136-workflow"
+surface = "workflow"
+consumer = "aeat.application.workflow"
+requires_snapshot = true
+legal_refs = ["orden-hap-70-2013:art-11"]
+source_refs = ["aeat-modelo-136-procedure"]
+
