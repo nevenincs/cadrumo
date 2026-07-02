@@ -341,9 +341,8 @@ class IvaWalletPullEvidenceResult(OutputSchema):
 class NotificationRowPayload(OutputSchema):
     """One DEHú notification row in a viewed persisted snapshot.
 
-    Mirrors :class:`~aeat.adapters.outbound.aeat.sede.RemoteNotification` rows
-    stored inside
-    :class:`~aeat.application.live._notifications.PersistedNotificationsSnapshot`.
+    Mirrors :class:`RemoteNotification` rows stored inside
+    :class:`PersistedNotificationsSnapshot`.
     The payload is a CLI projection of already-captured evidence; rendering it
     does not acknowledge, mark, or mutate a notification in AEAT.
     """
@@ -366,12 +365,10 @@ class NotificationRowPayload(OutputSchema):
 class NotificationSnapshotListingPayload(OutputSchema):
     """Summary row for one persisted DEHu notification snapshot.
 
-    Used by
-    :class:`~aeat.entrypoints.cli._app_live_payloads.NotificationsListResult`
-    to expose the bucket snapshot id,
+    Used by :class:`NotificationsListResult` to expose the bucket snapshot id,
     capture timestamp, and row count returned by
-    :class:`~aeat.application.live.NotificationsService` without expanding the
-    underlying notification rows.
+    :class:`NotificationsService` without expanding the underlying
+    :class:`NotificationRowPayload` records.
     """
 
     snapshot_id: str
@@ -384,9 +381,9 @@ class NotificationsCaptureResult(OutputSchema):
     """Typed result for a persisted DEHu notification pull.
 
     The pull command performs the live read before this schema is built; the
-    payload records the bucket-scoped snapshot written by
-    :class:`~aeat.application.live.NotificationsService`, not an AEAT-side write
-    or acknowledgement.
+    payload records the bucket-scoped :class:`PersistedNotificationsSnapshot`
+    written by :class:`NotificationsService`, not an AEAT-side write or
+    acknowledgement.
     """
 
     bucket_id: str
@@ -401,11 +398,9 @@ class NotificationsCaptureResult(OutputSchema):
 class NotificationsListResult(OutputSchema):
     """Typed listing of persisted DEHu notification snapshots.
 
-    ``rows`` contains
-    :class:`~aeat.entrypoints.cli._app_live_payloads.NotificationSnapshotListingPayload`
-    summaries
-    returned by :class:`~aeat.application.live.NotificationsService`
-    ``list_snapshots``; message detail stays on the view payload.
+    ``rows`` contains :class:`NotificationSnapshotListingPayload` summaries
+    returned by :class:`NotificationsService` ``list_snapshots``; message
+    detail stays on :class:`NotificationsViewResult`.
     """
 
     bucket_id: str
@@ -418,11 +413,10 @@ class NotificationsViewResult(OutputSchema):
     """Typed detail view for one persisted DEHu notification snapshot.
 
     The command resolves a stored snapshot through
-    :class:`~aeat.application.live.NotificationsService` ``show`` and expands
-    its rows as
-    :class:`~aeat.entrypoints.cli._app_live_payloads.NotificationRowPayload`
-    records. It is a bucket read,
-    not a remote notification-state mutation.
+    :class:`NotificationsService` ``show`` and expands its
+    :class:`PersistedNotificationsSnapshot` rows as
+    :class:`NotificationRowPayload` records. It is a bucket read, not a remote
+    notification-state mutation.
     """
 
     bucket_id: str
@@ -438,8 +432,10 @@ class NotificationsLatestResult(OutputSchema):
     """Typed newest-snapshot response for DEHu notifications.
 
     ``snapshot_id`` is ``None`` when the bucket has no captured notification
-    snapshot; in that empty case every snapshot-derived field is also ``None``
-    so JSON clients can keep one stable schema for present and absent data.
+    snapshot from :class:`NotificationsService` ``latest``; in that empty case
+    every :class:`PersistedNotificationsSnapshot`-derived field is also
+    ``None`` so JSON clients can keep one stable schema for present and absent
+    data.
     """
 
     bucket_id: str
