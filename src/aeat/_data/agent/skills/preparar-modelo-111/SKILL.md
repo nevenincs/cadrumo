@@ -7,6 +7,13 @@ description: >-
   fichero-BOE, and hand off for the taxpayer to file. Use when the taxpayer
   withholds retención on salaries paid to employees, professional fees paid to
   autónomos, or premios/derechos de imagen subject to retención.
+applies_when:
+  profile_match: any
+  profile_facts:
+    - fact: has_employees
+      match: is_true
+    - fact: pays_professionals_with_retencion
+      match: is_true
 ---
 
 # Prepare Modelo 111
