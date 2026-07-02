@@ -53,7 +53,7 @@ class SourceMeshError(CoreValidationError):
     Replaces bare :exc:`ValueError` at the ``owned_sources`` uniqueness / blank
     guards and the ``source_transaction_ids`` uniqueness / blank guards so
     callers receive a typed, registry-bound, localized error.  Inherits from
-    :class:`~aeat.core.errors.CoreValidationError` (which inherits from
+    :class:`~core.errors.CoreValidationError` (which inherits from
     :exc:`ValueError`) so pydantic field validators surface it through
     ``ValidationError`` without special handling.
     """
@@ -341,7 +341,7 @@ class BindingSourceDisposition(StrEnum):
     """Where a binding source kind resolves on the live calculate mesh.
 
     The single closed answer to "where does source X resolve" for every
-    :class:`~aeat.core.BindingSourceKind` member, replacing the four scattered
+    :class:`~core.BindingSourceKind` member, replacing the four scattered
     enrollment structures (the ``merge_source_resolutions`` resolver tuple, the
     pre-mesh-handled set, ``DEFERRED_SOURCE_KINDS``, and the per-modelo service
     provider enum).
@@ -388,7 +388,7 @@ def build_binding_source_dispositions(
 class CalculationSourceContext(BaseModel):
     """Context supplied to a calculation source resolver.
 
-    The ``period`` field is the typed :class:`~aeat.core.Period` value
+    The ``period`` field is the typed :class:`~core.Period` value
     carrying both the filing year and the bare registry period code.  Consumers
     that need the raw token for a downstream ``str``-typed API should use
     ``context.period.registry_token``; those that need only the year can use
@@ -515,11 +515,11 @@ class CalculationSourceResolution(BaseModel):
     def _coerce_owned_sources(cls, value: object) -> object:
         """Hydrate known bare source-token strings to their :class:`BindingSourceKind` member.
 
-        The model carries :data:`~aeat.core.STRICT_FROZEN_CONFIG` (``strict=True``),
+        The model carries :data:`~core.STRICT_FROZEN_CONFIG` (``strict=True``),
         which disables string→enum coercion. Resolvers declare their owned source as a
         canonical token and may pass either the member or its bare string value; this
         before-validator maps each KNOWN bare string to its member (the
-        ``BindingAggregation._coerce_op`` precedent in :mod:`aeat.core.aggregation`) so
+        ``BindingAggregation._coerce_op`` precedent in :mod:`core.aggregation`) so
         the field stays strictly typed while a known token still validates. A blank
         string raises :class:`SourceMeshError`; any other non-member value is left
         untouched for the strict field to reject with its standard enum error, so a
