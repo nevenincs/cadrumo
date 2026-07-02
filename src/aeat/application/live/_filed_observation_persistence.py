@@ -63,16 +63,16 @@ from ...domain.calculations.registry import (
     expression_casilla_refs,
     validated_casilla_id,
 )
-from ...domain.iva_compensation._carry_forward import derive_303_compensation_available
+from ...domain.iva_compensation import derive_303_compensation_available
 from ...domain.justificante import Justificante, JustificanteRepository
 from ...domain.modelos import (
     ExternalEvidence,
     ExternalEvidenceKind,
     ModeloRecord,
     ModeloRecordCatalogueRepository,
+    ModeloRecordCatalogueRepositoryProtocol,
     upsert_filing_record,
 )
-from ...domain.modelos._protocols import ModeloRecordCatalogueRepositoryProtocol
 from ._errors import LiveApplicationError, LiveApplicationInputError
 
 logger = get_logger(__name__)

@@ -24,8 +24,12 @@ from ...core import STRICT_FROZEN_CONFIG
 from ...core.errors import BaseSeverity
 from ...core.i18n import Translatable as tr
 from ...core.logging import get_logger
-from ...domain.transactions import RawTransaction, TransactionCatalogue
-from ...domain.transactions._models import derive_import_fingerprint, derive_transaction_id
+from ...domain.transactions import (
+    RawTransaction,
+    TransactionCatalogue,
+    derive_import_fingerprint,
+    derive_transaction_id,
+)
 from ._diagnostics import (
     LedgerImportDiagnostic,
     LedgerImportDiagnosticKind,

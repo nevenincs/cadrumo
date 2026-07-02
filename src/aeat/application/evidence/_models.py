@@ -34,8 +34,8 @@ from ...core.external_constants import UTF_8_ENCODING
 from ...core.hashing import sha256_hex
 from ...core.identity import BucketId
 from ...core.time import now
-from ...domain.buckets._event import BucketEventObjectType
-from ...domain.modelos._ids import (
+from ...domain.buckets import BucketEventObjectType
+from ...domain.modelos import (
     CalculationRevisionId,
     FilingRecordId,
     WorkUnitId,

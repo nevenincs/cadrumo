@@ -17,8 +17,6 @@ from ...domain.invoices import (
     Invoice,
     InvoiceCatalogue,
     InvoiceCatalogueRepository,
-)
-from ...domain.invoices._service import (
     LinkInconsistency,
     find_invoice,
     find_unmatched,

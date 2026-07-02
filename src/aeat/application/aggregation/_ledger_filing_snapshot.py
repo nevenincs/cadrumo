@@ -32,15 +32,16 @@ from pydantic import TypeAdapter, ValidationError
 
 from ...core.hashing import sha256_hex
 from ...domain.calculations.registry import CasillaId, LegalRefId, SourceRefId
-from ...domain.modelos._calculation_revision import CalculationRevision, CalculationRevisionState
-from ...domain.modelos._errors import ModeloValidationError
-from ...domain.modelos._ledger_filing_snapshot import (
+from ...domain.modelos import (
+    CalculationRevision,
+    CalculationRevisionState,
     LedgerEvidenceRow,
     LedgerFilingEvidence,
     LedgerFilingSnapshot,
     LedgerFilingStalenessVerdict,
     LedgerRowFingerprint,
     ManualFactBasisEntry,
+    ModeloValidationError,
     diff_ledger_fingerprints,
     snapshot_fingerprint,
 )
