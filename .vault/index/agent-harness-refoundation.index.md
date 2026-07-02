@@ -32,6 +32,7 @@ related:
   - '[[2026-07-02-agent-harness-refoundation-W03-P06-S24]]'
   - '[[2026-07-02-agent-harness-refoundation-W03-P06-S25]]'
   - '[[2026-07-02-agent-harness-refoundation-W03-P06-S26]]'
+  - '[[2026-07-02-agent-harness-refoundation-W04-P07-S27]]'
   - '[[2026-07-02-agent-harness-refoundation-W04-P08-S28]]'
   - '[[2026-07-02-agent-harness-refoundation-W04-P08-S29]]'
   - '[[2026-07-02-agent-harness-refoundation-W04-P08-S30]]'
@@ -130,6 +131,7 @@ Auto-generated index of all documents tagged with `#agent-harness-refoundation`.
 - `2026-07-02-agent-harness-refoundation-W03-P06-S24` - Add per-verb handoff deny rules over the family-granular persona scope
 - `2026-07-02-agent-harness-refoundation-W03-P06-S25` - Add local session telemetry recording per-call trajectory records with session ids
 - `2026-07-02-agent-harness-refoundation-W03-P06-S26` - Add tests for the faithfulness serving path, the handoff deny rules, and telemetry
+- `2026-07-02-agent-harness-refoundation-W04-P07-S27` - Add a real-client handshake conformance test exercising initialize, tools-list, and a call round-trip over stdio
 - `2026-07-02-agent-harness-refoundation-W04-P08-S28` - Build the live subagent-persona harness substrate that starts the real server, drives a real client session, and captures the trajectory
 - `2026-07-02-agent-harness-refoundation-W04-P08-S29` - Score observed calls against golden scenarios plus faithfulness and confirmation with the zero-live-submit and zero-handoff-faithfulness invariants
 - `2026-07-02-agent-harness-refoundation-W04-P08-S30` - Extend the golden-scenario models for live-persona trajectory capture and scoring
