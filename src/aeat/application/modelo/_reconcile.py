@@ -62,7 +62,7 @@ if TYPE_CHECKING:
     from ...domain.justificante import Justificante
     from ...domain.modelos import CalculationRevision, WorkUnit
 
-_DECLARATION_CASILLA_RECONCILE_MODELOS: frozenset[str] = frozenset({"130"})
+_DECLARATION_CASILLA_RECONCILE_MODELOS: frozenset[str] = frozenset({"111", "130", "190", "303", "390"})
 """Modelos enrolled in casilla-level filed-declaration reconciliation.
 
 A modelo not in this set still accepts
@@ -70,10 +70,28 @@ A modelo not in this set still accepts
 level but is refused with
 :class:`ReconciliationDeclaracionSourceUnsupportedError` — the enrolled set
 grows one modelo at a time as each modelo's ``declaracion_pdf`` extraction
-profile is confirmed to line up with its registry casilla ids one-to-one.
+profile is confirmed to line up with its registry casilla ids one-to-one (the
+same casilla-id vocabulary its
+:meth:`~aeat.domain.calculations.registry.RegistrySnapshot.verification_policy`
+reconciles, whether that vocabulary is the printed AEAT box number or an
+engine-internal compound id such as ``iva.resultado``).
+
 Modelo 130 is the first: its extraction profile targets registry casilla ids
 ``"01"``..``"19"`` directly (the printed AEAT box numbers), so no id-mapping
-layer is required between the extractor and the divergence detector.
+layer is required between the extractor and the divergence detector. Modelo
+303 (IVA autoliquidación) and Modelo 390 (IVA resumen anual) mix printed box
+numbers with the compound ``iva.*`` primitive/result ids that
+:func:`aeat.adapters.inbound.declaracion.parse_declaracion` already extracts
+and :func:`aeat.application.verification.verify_declaracion` already
+reconciles pre-filing — the same casilla-id vocabulary carries through to the
+after-filing reconcile here. Modelo 111 (retenciones e ingresos a cuenta
+trimestral) targets casilla ids ``"01"``..``"30"`` directly. Modelo 190
+(resumen anual de retenciones) targets the compound ``decl.*`` summary ids.
+Modelos whose extraction profile has not yet been authored (e.g. Modelo 200,
+Modelo 202 — no ``declaracion_pdf`` surface at all) or whose casilla-id
+alignment has not yet been confirmed stay outside this set and are refused;
+real-PDF ``bbox_anchored`` extraction quality for the newly enrolled modelos
+remains Tier-R and is tracked separately, blocked on #332-337.
 """
 
 
