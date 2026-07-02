@@ -66,23 +66,20 @@ def test_coverage_gate_rejects_gap_with_evidence_refs() -> None:
         )
 
 
-@pytest.mark.parametrize(
-    "field_update",
-    (
+def test_coverage_gate_rejects_blank_evidence_ref_ids() -> None:
+    for field_update in (
         {"legal_refs": ("",)},
         {"source_refs": ("",)},
         {"workbook_refs": ("",)},
         {"cross_reference_refs": ("",)},
-    ),
-)
-def test_coverage_gate_rejects_blank_evidence_ref_ids(field_update: dict[str, tuple[str, ...]]) -> None:
-    with pytest.raises(ValidationError, match=next(iter(field_update))):
-        EvidenceTierCoverageGate(
-            tier="legal_authority",
-            status="satisfied",
-            detail="blank evidence id",
-            **field_update,
-        )
+    ):
+        with pytest.raises(ValidationError, match=next(iter(field_update))):
+            EvidenceTierCoverageGate(
+                tier="legal_authority",
+                status="satisfied",
+                detail="blank evidence id",
+                **field_update,
+            )
 
 
 def test_committed_aeat_record_design_sources_match_corpus_manifests() -> None:
@@ -265,9 +262,24 @@ def test_renta_economic_activity_legal_basis_links_to_corpus() -> None:
     verify_legal_catalogue(catalogues.legal, source_root=bundled_path())
 
 
-@pytest.mark.parametrize(
-    ("ref_id", "effective_from", "required_text"),
-    (
+def _assert_lirpf_reference_links_to_full_boe_corpus(
+    ref_id: str,
+    effective_from: date,
+    required_text: tuple[str, ...],
+):
+    catalogues = _catalogues()
+    reference = catalogues.legal[ref_id]
+    article = ref_id.rsplit("-", 1)[-1]
+
+    assert reference.corpus_ref == f"corpus/normatives/html/ley-35-2006.html#a{article}", ref_id
+    assert reference.effective_from == effective_from, ref_id
+    assert reference.required_text == required_text, ref_id
+    verify_legal_catalogue({reference.id: reference}, source_root=bundled_path())
+    return reference
+
+
+def test_lirpf_work_and_capital_income_foundations_link_to_full_boe_corpus() -> None:
+    cases = (
         (
             "ley-35-2006:art-17",
             date(2020, 2, 6),
@@ -370,29 +382,16 @@ def test_renta_economic_activity_legal_basis_links_to_corpus() -> None:
                 "300.000 euros anuales",
             ),
         ),
-    ),
-)
-def test_lirpf_work_and_capital_income_foundations_link_to_full_boe_corpus(
-    ref_id: str,
-    effective_from: date,
-    required_text: tuple[str, ...],
-) -> None:
-    catalogues = _catalogues()
-    reference = catalogues.legal[ref_id]
-    article = ref_id.rsplit("-", 1)[-1]
-
-    assert reference.corpus_ref == f"corpus/normatives/html/ley-35-2006.html#a{article}"
-    assert reference.effective_from == effective_from
-    assert reference.required_text == required_text
-    if ref_id == "ley-35-2006:art-20":
-        assert reference.notes is not None
-        assert "effects from 2024-01-01" in reference.notes
-    verify_legal_catalogue({reference.id: reference}, source_root=bundled_path())
+    )
+    for ref_id, effective_from, required_text in cases:
+        reference = _assert_lirpf_reference_links_to_full_boe_corpus(ref_id, effective_from, required_text)
+        if ref_id == "ley-35-2006:art-20":
+            assert reference.notes is not None
+            assert "effects from 2024-01-01" in reference.notes
 
 
-@pytest.mark.parametrize(
-    ("ref_id", "effective_from", "required_text"),
-    (
+def test_lirpf_economic_activity_chapter_links_to_full_boe_corpus() -> None:
+    cases = (
         (
             "ley-35-2006:art-27",
             date(2015, 1, 1),
@@ -442,26 +441,13 @@ def test_lirpf_work_and_capital_income_foundations_link_to_full_boe_corpus(
                 "inicien el ejercicio de una actividad económica",
             ),
         ),
-    ),
-)
-def test_lirpf_economic_activity_chapter_links_to_full_boe_corpus(
-    ref_id: str,
-    effective_from: date,
-    required_text: tuple[str, ...],
-) -> None:
-    catalogues = _catalogues()
-    reference = catalogues.legal[ref_id]
-    article = ref_id.rsplit("-", 1)[-1]
-
-    assert reference.corpus_ref == f"corpus/normatives/html/ley-35-2006.html#a{article}"
-    assert reference.effective_from == effective_from
-    assert reference.required_text == required_text
-    verify_legal_catalogue({reference.id: reference}, source_root=bundled_path())
+    )
+    for ref_id, effective_from, required_text in cases:
+        _assert_lirpf_reference_links_to_full_boe_corpus(ref_id, effective_from, required_text)
 
 
-@pytest.mark.parametrize(
-    ("ref_id", "effective_from", "required_text"),
-    (
+def test_lirpf_capital_gains_foundation_links_to_full_boe_corpus() -> None:
+    cases = (
         (
             "ley-35-2006:art-33",
             date(2015, 1, 1),
@@ -492,26 +478,13 @@ def test_lirpf_economic_activity_chapter_links_to_full_boe_corpus(
                 "instituciones de inversión colectiva",
             ),
         ),
-    ),
-)
-def test_lirpf_capital_gains_foundation_links_to_full_boe_corpus(
-    ref_id: str,
-    effective_from: date,
-    required_text: tuple[str, ...],
-) -> None:
-    catalogues = _catalogues()
-    reference = catalogues.legal[ref_id]
-    article = ref_id.rsplit("-", 1)[-1]
-
-    assert reference.corpus_ref == f"corpus/normatives/html/ley-35-2006.html#a{article}"
-    assert reference.effective_from == effective_from
-    assert reference.required_text == required_text
-    verify_legal_catalogue({reference.id: reference}, source_root=bundled_path())
+    )
+    for ref_id, effective_from, required_text in cases:
+        _assert_lirpf_reference_links_to_full_boe_corpus(ref_id, effective_from, required_text)
 
 
-@pytest.mark.parametrize(
-    ("ref_id", "effective_from", "required_text"),
-    (
+def test_lirpf_state_quota_chain_links_to_full_boe_corpus() -> None:
+    cases = (
         (
             "ley-35-2006:art-62",
             date(2007, 1, 1),
@@ -555,26 +528,13 @@ def test_lirpf_capital_gains_foundation_links_to_full_boe_corpus(
                 "no podrá ser negativo",
             ),
         ),
-    ),
-)
-def test_lirpf_state_quota_chain_links_to_full_boe_corpus(
-    ref_id: str,
-    effective_from: date,
-    required_text: tuple[str, ...],
-) -> None:
-    catalogues = _catalogues()
-    reference = catalogues.legal[ref_id]
-    article = ref_id.rsplit("-", 1)[-1]
-
-    assert reference.corpus_ref == f"corpus/normatives/html/ley-35-2006.html#a{article}"
-    assert reference.effective_from == effective_from
-    assert reference.required_text == required_text
-    verify_legal_catalogue({reference.id: reference}, source_root=bundled_path())
+    )
+    for ref_id, effective_from, required_text in cases:
+        _assert_lirpf_reference_links_to_full_boe_corpus(ref_id, effective_from, required_text)
 
 
-@pytest.mark.parametrize(
-    ("ref_id", "effective_from", "required_text"),
-    (
+def test_lirpf_autonomic_quota_chain_links_to_full_boe_corpus() -> None:
+    cases = (
         (
             "ley-35-2006:art-73",
             date(2007, 1, 1),
@@ -629,29 +589,16 @@ def test_lirpf_state_quota_chain_links_to_full_boe_corpus(
                 "no podrá ser negativo",
             ),
         ),
-    ),
-)
-def test_lirpf_autonomic_quota_chain_links_to_full_boe_corpus(
-    ref_id: str,
-    effective_from: date,
-    required_text: tuple[str, ...],
-) -> None:
-    catalogues = _catalogues()
-    reference = catalogues.legal[ref_id]
-    article = ref_id.rsplit("-", 1)[-1]
-
-    assert reference.corpus_ref == f"corpus/normatives/html/ley-35-2006.html#a{article}"
-    assert reference.effective_from == effective_from
-    assert reference.required_text == required_text
-    if ref_id == "ley-35-2006:art-75":
-        assert reference.notes is not None
-        assert "not the generic autonomic quota article" in reference.notes
-    verify_legal_catalogue({reference.id: reference}, source_root=bundled_path())
+    )
+    for ref_id, effective_from, required_text in cases:
+        reference = _assert_lirpf_reference_links_to_full_boe_corpus(ref_id, effective_from, required_text)
+        if ref_id == "ley-35-2006:art-75":
+            assert reference.notes is not None
+            assert "not the generic autonomic quota article" in reference.notes
 
 
-@pytest.mark.parametrize(
-    ("ref_id", "effective_from", "required_text"),
-    (
+def test_lirpf_minimum_and_broad_deduction_foundations_link_to_full_boe_corpus() -> None:
+    cases = (
         (
             "ley-35-2006:art-56",
             date(2010, 1, 1),
@@ -678,26 +625,13 @@ def test_lirpf_autonomic_quota_chain_links_to_full_boe_corpus(
                 "actuaciones para la protección y difusión del Patrimonio Histórico Español",
             ),
         ),
-    ),
-)
-def test_lirpf_minimum_and_broad_deduction_foundations_link_to_full_boe_corpus(
-    ref_id: str,
-    effective_from: date,
-    required_text: tuple[str, ...],
-) -> None:
-    catalogues = _catalogues()
-    reference = catalogues.legal[ref_id]
-    article = ref_id.rsplit("-", 1)[-1]
-
-    assert reference.corpus_ref == f"corpus/normatives/html/ley-35-2006.html#a{article}"
-    assert reference.effective_from == effective_from
-    assert reference.required_text == required_text
-    verify_legal_catalogue({reference.id: reference}, source_root=bundled_path())
+    )
+    for ref_id, effective_from, required_text in cases:
+        _assert_lirpf_reference_links_to_full_boe_corpus(ref_id, effective_from, required_text)
 
 
-@pytest.mark.parametrize(
-    ("ref_id", "effective_from", "required_text"),
-    (
+def test_lirpf_family_joint_and_attribution_foundations_link_to_full_boe_corpus() -> None:
+    cases = (
         (
             "ley-35-2006:art-82",
             date(2007, 1, 1),
@@ -774,24 +708,12 @@ def test_lirpf_minimum_and_broad_deduction_foundations_link_to_full_boe_corpus(
                 "podrán practicar en su declaración las reducciones previstas",
             ),
         ),
-    ),
-)
-def test_lirpf_family_joint_and_attribution_foundations_link_to_full_boe_corpus(
-    ref_id: str,
-    effective_from: date,
-    required_text: tuple[str, ...],
-) -> None:
-    catalogues = _catalogues()
-    reference = catalogues.legal[ref_id]
-    article = ref_id.rsplit("-", 1)[-1]
-
-    assert reference.corpus_ref == f"corpus/normatives/html/ley-35-2006.html#a{article}"
-    assert reference.effective_from == effective_from
-    assert reference.required_text == required_text
-    if ref_id == "ley-35-2006:art-84":
-        assert reference.notes is not None
-        assert "in force from 2010-01-01" in reference.notes
-    if ref_id == "ley-35-2006:art-87":
-        assert reference.notes is not None
-        assert "in force from 2022-10-20" in reference.notes
-    verify_legal_catalogue({reference.id: reference}, source_root=bundled_path())
+    )
+    for ref_id, effective_from, required_text in cases:
+        reference = _assert_lirpf_reference_links_to_full_boe_corpus(ref_id, effective_from, required_text)
+        if ref_id == "ley-35-2006:art-84":
+            assert reference.notes is not None
+            assert "in force from 2010-01-01" in reference.notes
+        if ref_id == "ley-35-2006:art-87":
+            assert reference.notes is not None
+            assert "in force from 2022-10-20" in reference.notes
