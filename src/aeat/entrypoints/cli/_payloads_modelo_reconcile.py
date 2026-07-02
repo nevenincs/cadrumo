@@ -9,9 +9,8 @@ facade remains authoritative for
 :class:`TaxationComparisonResult`; this module only
 documents the CLI transport shape that enters
 :class:`SchemaEnvelope` through
-:func:`~aeat.entrypoints.cli._common._emit_envelope`. The parent
-:mod:`~aeat.entrypoints.cli._modelo_payloads` module re-exports these split
-schemas so modelo emitters keep one payload import surface.
+:func:`_emit_envelope`. The parent :mod:`_modelo_payloads` module re-exports
+these split schemas so modelo emitters keep one payload import surface.
 """
 
 from __future__ import annotations
@@ -66,10 +65,8 @@ class ModeloReconcileResult(OutputSchema):
 
     Both verbs share
     :class:`ModeloReconciliationReport` from
-    :func:`~aeat.application.modelo.modelo_reconcile` or
-    :func:`~aeat.application.modelo.modelo_reconcile_bytes`: a
-    work-unit-level :obj:`WorkUnitId`, :obj:`BucketId` scope,
-    :class:`ModeloReconciliationVerdict`,
+    :func:`modelo_reconcile` or :func:`modelo_reconcile_bytes`: a work-unit-level
+    :obj:`WorkUnitId`, :obj:`BucketId` scope, :class:`ModeloReconciliationVerdict`,
     :class:`ModeloReconciliationEvidenceKind`, evidence path/reference,
     :class:`ModeloReconciliationDiffPayload` list, reconciliation timestamp,
     and optional narrative.
@@ -91,10 +88,10 @@ class WorkCompareTaxationResult(OutputSchema):
     """Result payload for ``aeat app modelo work compare-taxation``.
 
     Projects :class:`TaxationComparisonResult` returned
-    by :func:`~aeat.application.modelo.compare_taxation_for_work_address`.
-    It surfaces the semantic-role-selected cuota resultante de la
-    autoliquidación and cuota diferencial / resultado for both conjunta and
-    individual filing modes, plus the signed delta and
+    by :func:`compare_taxation_for_work_address`. It surfaces the
+    semantic-role-selected cuota resultante de la autoliquidación and cuota
+    diferencial / resultado for both conjunta and individual filing modes, plus
+    the signed delta and
     :class:`TaxationRecommendation`.
     """
 
