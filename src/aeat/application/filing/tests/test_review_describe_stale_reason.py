@@ -35,32 +35,20 @@ _EXPECTED_REASON_KEYS = {
 }
 
 
-@pytest.mark.parametrize(
-    ("reason", "expected_key"),
-    list(_EXPECTED_REASON_KEYS.items()),
-    ids=lambda value: value.name.lower() if isinstance(value, ModeloApprovalStaleReason) else value.rsplit(".", 1)[-1],
-)
-def test_describe_stale_reason_renders_expected_phrase(
-    reason: ModeloApprovalStaleReason,
-    expected_key: str,
-) -> None:
-    assert describe_stale_reason(reason) == tr(expected_key)
+def test_describe_stale_reason_renders_expected_phrase() -> None:
+    for reason, expected_key in _EXPECTED_REASON_KEYS.items():
+        assert describe_stale_reason(reason) == tr(expected_key), reason
 
 
-@pytest.mark.parametrize("reason", list(ModeloApprovalStaleReason))
-def test_describe_stale_reason_returns_non_empty_phrase(reason: ModeloApprovalStaleReason) -> None:
-    phrase = describe_stale_reason(reason)
-
-    assert phrase
-    assert phrase.strip() == phrase
-
-
-@pytest.mark.parametrize("reason", list(ModeloApprovalStaleReason))
-def test_describe_stale_reason_phrase_contains_no_underscores(reason: ModeloApprovalStaleReason) -> None:
+def test_describe_stale_reason_renders_operator_phrase_for_each_reason() -> None:
     """Raw enum identifiers contain underscores; the rendered phrase
     must not (otherwise the operator sees `draft_payload_changed`
     bleed-through from the catch-all fallback)."""
-    assert "_" not in describe_stale_reason(reason)
+    for reason in ModeloApprovalStaleReason:
+        phrase = describe_stale_reason(reason)
+        assert phrase, reason
+        assert phrase.strip() == phrase, reason
+        assert "_" not in phrase, reason
 
 
 def test_describe_stale_reason_covers_every_enum_member() -> None:
