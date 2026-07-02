@@ -1276,10 +1276,9 @@ categories:
     display_label_851219: Display label 851219
 cli:
   agent:
-    app_help: Materialise the operator agent harness (rules, personas, skills) for
-      an agent runtime.
+    app_help: 'Materialise the operator agent harness (rules, personas, skills) as a Claude-native .claude workspace for an agent runtime.'
     materialise:
-      output_help: Directory to write the operator workspace into.
+      output_help: 'Directory to write the Claude-native operator workspace (.claude/ plus a CLAUDE.md) into.'
       summary: 'Wrote operator workspace to {path}: {rules} rules, {personas} personas,
         {skills} skills.'
   app:
@@ -4892,17 +4891,28 @@ locales:
 mcp:
   elicitation:
     confirm:
-      consequence_handoff: 'This produces the filing-grade artefact the taxpayer will file with AEAT themselves. Nothing is submitted anywhere by confirming.'
-      consequence_local: 'This changes local data for the active taxpayer profile.'
-      field_description: 'Run ''{command}'' now?'
-      message: 'Confirm running ''{command}''. {consequence} Answer yes to proceed or no to stop.'
+      consequence_handoff: This produces the filing-grade artefact the taxpayer will
+        file with AEAT themselves. Nothing is submitted anywhere by confirming.
+      consequence_local: This changes local data for the active taxpayer profile.
+      declined: '''{command}'' was not confirmed by the user ({outcome}); nothing was run.'
+      field_description: Run '{command}' now?
+      message: Confirm running '{command}'. {consequence} Answer yes to proceed or
+        no to stop.
     refusal:
-      blocked: '''{command}'' is permanently blocked: live submission to AEAT is forbidden by design. Export locally; the taxpayer files themselves.'
-      no_channel: '''{command}'' needs a human confirmation, and this client does not support elicitation. Run it from a client that can ask you questions, or run the equivalent aeat CLI command directly in a terminal.'
+      blocked: '''{command}'' is permanently blocked: live submission to AEAT is forbidden
+        by design. Export locally; the taxpayer files themselves.'
+      no_channel: '''{command}'' needs a human confirmation, and this client does
+        not support elicitation. Run it from a client that can ask you questions,
+        or run the equivalent aeat CLI command directly in a terminal.'
   faithfulness:
-    advisory: 'FAITHFULNESS ADVISORY: the call''s arguments cite amount(s) [{values}] that no tool result in this session produced. Verify the figure against a calculate/revision read before relying on it.'
+    advisory: 'FAITHFULNESS ADVISORY: the call''s arguments cite amount(s) [{values}]
+      that no tool result in this session produced. Verify the figure against a calculate/revision
+      read before relying on it.'
   persona:
-    handoff_denied: '''{command}'' is the irreversible filing-handoff boundary, owned by the ''{owner}'' persona; the ''{persona}'' persona is structurally denied it. Hand the verified work unit to the verifier session to produce the export or record marker.'
+    handoff_denied: '''{command}'' is the irreversible filing-handoff boundary, owned
+      by the ''{owner}'' persona; the ''{persona}'' persona is structurally denied
+      it. Hand the verified work unit to the verifier session to produce the export
+      or record marker.'
 profile:
   descendiente:
     custodia_compartida_prorrata_applied: 50 % prorrata (Art. 61 LIRPF) applied for

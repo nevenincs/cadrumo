@@ -1361,10 +1361,9 @@ categories:
     display_label_851219: Etiqueta de visualització 851219
 cli:
   agent:
-    app_help: Materialitza el harness de l'operador (regles, persones, habilitats)
-      per a un runtime d'agent.
+    app_help: 'Materialitza el harness de l''agent operador (regles, perfils, habilitats) com un espai de treball .claude natiu de Claude per a un entorn d''agent.'
     materialise:
-      output_help: Directori on escriure l'espai de treball de l'operador.
+      output_help: 'Directori on escriure l''espai de treball de l''operador natiu de Claude (.claude/ i un CLAUDE.md).'
       summary: 'Espai de treball de l''operador escrit a {path}: {rules} regles, {personas}
         persones, {skills} habilitats.'
   app:
@@ -5185,17 +5184,29 @@ locales:
 mcp:
   elicitation:
     confirm:
-      consequence_handoff: 'Això genera el document de presentació que el contribuent presentarà davant l''AEAT pel seu compte. Confirmar no envia res enlloc.'
-      consequence_local: 'Això modifica dades locals del perfil de contribuent actiu.'
-      field_description: 'Executar ''{command}'' ara?'
-      message: 'Confirma l''execució de ''{command}''. {consequence} Respon sí per continuar o no per aturar.'
+      consequence_handoff: Això genera el document de presentació que el contribuent
+        presentarà davant l'AEAT pel seu compte. Confirmar no envia res enlloc.
+      consequence_local: Això modifica dades locals del perfil de contribuent actiu.
+      declined: '''{command}'' no ha estat confirmat per l''usuari ({outcome}); no s''ha executat res.'
+      field_description: Executar '{command}' ara?
+      message: Confirma l'execució de '{command}'. {consequence} Respon sí per continuar
+        o no per aturar.
     refusal:
-      blocked: '''{command}'' està bloquejat permanentment: la presentació en línia davant l''AEAT està prohibida per disseny. Exporta localment; el contribuent presenta pel seu compte.'
-      no_channel: '''{command}'' requereix confirmació humana i aquest client no admet la funció de preguntes (elicitation). Executa''l des d''un client que pugui fer-te preguntes, o executa l''ordre aeat equivalent directament en un terminal.'
+      blocked: '''{command}'' està bloquejat permanentment: la presentació en línia
+        davant l''AEAT està prohibida per disseny. Exporta localment; el contribuent
+        presenta pel seu compte.'
+      no_channel: '''{command}'' requereix confirmació humana i aquest client no admet
+        la funció de preguntes (elicitation). Executa''l des d''un client que pugui
+        fer-te preguntes, o executa l''ordre aeat equivalent directament en un terminal.'
   faithfulness:
-    advisory: 'AVÍS DE FIDELITAT: els arguments de la crida citen imports [{values}] que cap resultat d''eina d''aquesta sessió ha produït. Verifica la xifra amb una lectura de calculate/revision abans de confiar-hi.'
+    advisory: 'AVÍS DE FIDELITAT: els arguments de la crida citen imports [{values}]
+      que cap resultat d''eina d''aquesta sessió ha produït. Verifica la xifra amb
+      una lectura de calculate/revision abans de confiar-hi.'
   persona:
-    handoff_denied: '''{command}'' és la frontera irreversible de lliurament de la presentació, propietat de la persona ''{owner}''; la persona ''{persona}'' la té denegada estructuralment. Lliura la unitat de treball verificada a la sessió del verificador per produir l''exportació o el marcador de registre.'
+    handoff_denied: '''{command}'' és la frontera irreversible de lliurament de la
+      presentació, propietat de la persona ''{owner}''; la persona ''{persona}'' la
+      té denegada estructuralment. Lliura la unitat de treball verificada a la sessió
+      del verificador per produir l''exportació o el marcador de registre.'
 profile:
   descendiente:
     custodia_compartida_prorrata_applied: S'ha aplicat prorrata 50 %% (Art. 61 LIRPF)
