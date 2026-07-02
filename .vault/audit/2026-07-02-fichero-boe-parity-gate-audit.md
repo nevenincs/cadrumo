@@ -134,13 +134,16 @@ row_field-only.
 ### code-review-medium-coverage | medium | P04 draft-based lock now covers 5 of 12; dormancy lock covers 7
 
 Twelve fixed-width modelos carry a completeness manifest and are gated in
-production (`111 115 123 130 131 180 200 202 232 303 349 720`). The draft-based
-parity lock now covers `130 111 115 123 131` (131 added after the truth-grounded
-gate landed — its computed casillas are populated, optional inputs excluded). The
-structural row_field dormancy lock covers `130 111 115 123 131 303 200`. Remaining
-draft-based coverage for `180 200 202 232 303 349 720` needs complete-draft
-fixtures (200 sociedades and 303 IVA are the most valuable and the most involved to
-author). Follow-up; the dormancy lock already exercises 200/303 structurally.
+production (`111 115 123 130 131 180 200 202 232 303 349 720`). Effective gate
+coverage on COMPLETE drafts is broader than the P04 parity file alone: the P04
+parity lock covers `130 111 115 123 131` (131 added after the truth-grounded gate
+landed), and the fichero-BOE roundtrip test independently exercises `export_draft`
+under the gate on complete `130` and `303` drafts (byte-roundtrip through the
+parser). So `303` (IVA) is genuinely validated under the gate despite not being in
+the P04 parity file. The structural row_field dormancy lock covers `130 111 115 123
+131 303 200`. The genuine remaining gap is a complete-draft export test for `200`
+(sociedades) and the informativas `180 202 232 349 720`; `200` is exercised
+structurally by the dormancy lock but has no complete-draft gate test. Follow-up.
 
 ### truth-grounded-required-set | high | RESOLVED — the gate requires computed/schema-required casillas, not optional inputs
 
