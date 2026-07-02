@@ -18,9 +18,9 @@ from ......core.config import Settings
 from ......domain.calculations.registry import RegistryValidationError
 from .._nif_iva_check import (
     DEFAULT_NIF_IVA_TIMEOUT_MS,
-    NifIvaCheckObservation,
     NifIvaCheckResult,
     NifIvaCheckSedeDriver,
+    SedeNifIvaCheckObservation,
     _assert_query_browser_action,
     extract_verdict_from_response_text,
     is_aeat_auth_gate_redirect,
@@ -85,27 +85,27 @@ def test_default_timeout_is_thirty_seconds() -> None:
 
 
 def test_observation_model_roundtrips_through_strict_frozen_pydantic() -> None:
-    observation = NifIvaCheckObservation(
+    observation = SedeNifIvaCheckObservation(
         nif="DE111222333",
         verdict="valid",
         raw_evidence_locator=_AEAT.oracles.nif_iva_verification,
     )
-    rebuilt = NifIvaCheckObservation.model_validate(observation.model_dump())
+    rebuilt = SedeNifIvaCheckObservation.model_validate(observation.model_dump())
     assert rebuilt == observation
 
 
 def test_observation_model_rejects_unknown_verdict() -> None:
     with pytest.raises(ValidationError, match=r"verdict|Input should be"):
-        NifIvaCheckObservation.model_validate({"nif": "DE111", "verdict": "maybe"})
+        SedeNifIvaCheckObservation.model_validate({"nif": "DE111", "verdict": "maybe"})
 
 
 def test_observation_model_rejects_empty_nif() -> None:
     with pytest.raises(ValidationError, match=r"nif|at least 1 character"):
-        NifIvaCheckObservation(nif="", verdict="valid")
+        SedeNifIvaCheckObservation(nif="", verdict="valid")
 
 
 def test_observation_model_is_frozen() -> None:
-    observation = NifIvaCheckObservation(nif="DE111", verdict="valid")
+    observation = SedeNifIvaCheckObservation(nif="DE111", verdict="valid")
     with pytest.raises(ValidationError, match=r"frozen|Instance is frozen"):
         observation.nif = "FR222"
 
