@@ -90,7 +90,6 @@ from ._export_support import (
     _approved_modelo_131_zero_payable_direct_debit_draft,
     _approved_registry_draft,
     _assert_missing_export_layout_refusal,
-    _ExportVerifyMatchCase,
     _field_slice,
     _modelo_111_export_headers,
     _modelo_111_export_payload,
@@ -197,26 +196,23 @@ def test_export_result_round_trips_canonical_fields() -> None:
     assert receipt.model_dump(mode="json")["period"] == {"filing_year": 2026, "code": "1T"}
 
 
-@pytest.mark.parametrize(
-    ("digest", "match"),
-    (
-        pytest.param("A" * 64, r"file_sha256|hex|lowercase", id="uppercase"),
-        pytest.param("z" * 64, r"file_sha256|hex", id="non-hex"),
-    ),
-)
-def test_export_result_rejects_invalid_digest(digest: str, match: str) -> None:
-    with pytest.raises(ValueError, match=match):
-        DeclaracionExportResult(
-            draft_id="d",
-            modelo="130",
-            period=_PERIOD,
-            format=DeclaracionExportFormat.FICHERO_BOE,
-            output_path=_OTHER_EXPORT_PATH,
-            byte_size=1,
-            file_sha256=digest,
-            exported_at=datetime(2026, 5, 3, tzinfo=UTC),
-            narrative=_narrative(),
-        )
+def test_export_result_rejects_invalid_digest() -> None:
+    for digest, match in (
+        ("A" * 64, r"file_sha256|hex|lowercase"),
+        ("z" * 64, r"file_sha256|hex"),
+    ):
+        with pytest.raises(ValueError, match=match):
+            DeclaracionExportResult(
+                draft_id="d",
+                modelo="130",
+                period=_PERIOD,
+                format=DeclaracionExportFormat.FICHERO_BOE,
+                output_path=_OTHER_EXPORT_PATH,
+                byte_size=1,
+                file_sha256=digest,
+                exported_at=datetime(2026, 5, 3, tzinfo=UTC),
+                narrative=_narrative(),
+            )
 
 
 def test_export_result_is_frozen() -> None:
@@ -282,26 +278,20 @@ def test_verify_result_rejects_legacy_casilla_list_keys() -> None:
     assert "unchecked_casillas" in message
 
 
-@pytest.mark.parametrize(
-    ("mismatched_casilla_ids", "match"),
-    (
-        pytest.param(("", "07"), r"casilla|empty|at least 1 character", id="blank"),
-        pytest.param((" 01 ",), r"casilla|whitespace|leading|trailing", id="padded"),
-    ),
-)
-def test_verify_result_rejects_invalid_casilla_ids(
-    mismatched_casilla_ids: tuple[str, ...],
-    match: str,
-) -> None:
-    with pytest.raises(ValueError, match=match):
-        DeclaracionVerifyResult(
-            draft_id="d",
-            file_path=_OTHER_EXPORT_PATH,
-            verdict=DeclaracionVerifyVerdict.DRIFT,
-            mismatched_casilla_ids=mismatched_casilla_ids,
-            verified_at=datetime(2026, 5, 3, tzinfo=UTC),
-            narrative=_narrative(),
-        )
+def test_verify_result_rejects_invalid_casilla_ids() -> None:
+    for mismatched_casilla_ids, match in (
+        (("", "07"), r"casilla|empty|at least 1 character"),
+        ((" 01 ",), r"casilla|whitespace|leading|trailing"),
+    ):
+        with pytest.raises(ValueError, match=match):
+            DeclaracionVerifyResult(
+                draft_id="d",
+                file_path=_OTHER_EXPORT_PATH,
+                verdict=DeclaracionVerifyVerdict.DRIFT,
+                mismatched_casilla_ids=mismatched_casilla_ids,
+                verified_at=datetime(2026, 5, 3, tzinfo=UTC),
+                narrative=_narrative(),
+            )
 
 
 def test_verify_result_rejects_short_digest() -> None:
@@ -681,34 +671,30 @@ def test_export_writes_modelo_131_historical_flat_layout(tmp_path: Path) -> None
     }
 
 
-@pytest.mark.parametrize(("filing_year", "binding_prefix"), ((2024, "modelo-131-2024"), (2025, "modelo-131-2025")))
-def test_export_writes_modelo_131_year_scoped_binding_layouts(
-    tmp_path: Path,
-    filing_year: int,
-    binding_prefix: str,
-) -> None:
-    draft = _approved_modelo_131_year_scoped_registry_draft(filing_year, binding_prefix)
-    output = tmp_path / f"modelo-131-{filing_year}.txt"
-    provider = _schema_provider(filing_year=filing_year, period="1T", modelos=("131",))
+def test_export_writes_modelo_131_year_scoped_binding_layouts(tmp_path: Path) -> None:
+    for filing_year, binding_prefix in ((2024, "modelo-131-2024"), (2025, "modelo-131-2025")):
+        draft = _approved_modelo_131_year_scoped_registry_draft(filing_year, binding_prefix)
+        output = tmp_path / f"modelo-131-{filing_year}.txt"
+        provider = _schema_provider(filing_year=filing_year, period="1T", modelos=("131",))
 
-    receipt = export_draft(
-        draft,
-        output_path=output,
-        headers={"declaration_type": "I"},
-        schema_provider=provider,
-    )
+        receipt = export_draft(
+            draft,
+            output_path=output,
+            headers={"declaration_type": "I"},
+            schema_provider=provider,
+        )
 
-    payload = output.read_bytes()
-    parsed = parse_export_payload(provider.get_subview(draft.modelo).export_layouts[0], payload)
-    values = {entry.binding_id: entry.value for entry in parsed.fields if entry.binding_id}
+        payload = output.read_bytes()
+        parsed = parse_export_payload(provider.get_subview(draft.modelo).export_layouts[0], payload)
+        values = {entry.binding_id: entry.value for entry in parsed.fields if entry.binding_id}
 
-    assert receipt.modelo == "131"
-    assert receipt.byte_size == len(payload)
-    assert values[f"{binding_prefix}.page1.110-113.actividad-1-epigrafe"] == "722"
-    assert values[f"{binding_prefix}.page1.114-130.actividad-1-rendimiento-neto"] == Decimal("1200.50")
-    assert values[f"{binding_prefix}.dpa.013-016.epigrafe-iae"] == "722"
-    assert values[f"{binding_prefix}.dpa.031-032.vehiculos-afectos"] == Decimal("2")
-    assert values[f"{binding_prefix}.did.012-045.iban"] == "ES9121000418450200051332"
+        assert receipt.modelo == "131", filing_year
+        assert receipt.byte_size == len(payload), filing_year
+        assert values[f"{binding_prefix}.page1.110-113.actividad-1-epigrafe"] == "722"
+        assert values[f"{binding_prefix}.page1.114-130.actividad-1-rendimiento-neto"] == Decimal("1200.50")
+        assert values[f"{binding_prefix}.dpa.013-016.epigrafe-iae"] == "722"
+        assert values[f"{binding_prefix}.dpa.031-032.vehiculos-afectos"] == Decimal("2")
+        assert values[f"{binding_prefix}.did.012-045.iban"] == "ES9121000418450200051332"
 
 
 def test_export_omits_modelo_131_direct_debit_record_without_iban(tmp_path: Path) -> None:
@@ -934,9 +920,10 @@ def test_export_requires_declared_header_values(tmp_path: Path) -> None:
         )
 
 
-@pytest.mark.parametrize(
-    ("headers", "missing_header"),
-    (
+def test_export_rejects_blank_required_header_values(tmp_path: Path) -> None:
+    draft = _approved_registry_draft()
+
+    for headers, missing_header in (
         (
             {"declaration_type": "", "surnames": "EXPORT TEST", "name": "ANA"},
             "declaration_type",
@@ -949,22 +936,14 @@ def test_export_requires_declared_header_values(tmp_path: Path) -> None:
             {"declaration_type": "I", "surnames": "EXPORT TEST", "name": " "},
             "name",
         ),
-    ),
-    ids=("declaration-type", "surnames", "name"),
-)
-def test_export_rejects_blank_required_header_values(
-    tmp_path: Path,
-    headers: dict[str, str],
-    missing_header: str,
-) -> None:
-    draft = _approved_registry_draft()
-    with pytest.raises(ValueError, match=missing_header):
-        export_draft(
-            draft,
-            output_path=tmp_path / "modelo-130.txt",
-            headers=headers,
-            schema_provider=_schema_provider(),
-        )
+    ):
+        with pytest.raises(ValueError, match=missing_header):
+            export_draft(
+                draft,
+                output_path=tmp_path / "modelo-130.txt",
+                headers=headers,
+                schema_provider=_schema_provider(),
+            )
 
 
 def test_verify_reports_unchecked_reserved_or_derived_casillas(tmp_path: Path) -> None:
@@ -980,18 +959,19 @@ def test_verify_reports_unchecked_reserved_or_derived_casillas(tmp_path: Path) -
     assert verdict.unchecked_casilla_ids == ("saldo-negativo-fin-periodo",)
 
 
-@pytest.mark.parametrize("case", _EXPORT_VERIFY_MATCH_CASES)
-def test_verify_matches_exported_registry_layouts(tmp_path: Path, case: _ExportVerifyMatchCase) -> None:
-    draft = case.draft_factory()
-    exported = tmp_path / case.output_name
-    provider = _schema_provider(filing_year=case.filing_year, period=case.period, modelos=case.modelos)
-    exported.write_bytes(case.payload_factory())
+def test_verify_matches_exported_registry_layouts(tmp_path: Path) -> None:
+    for parameter in _EXPORT_VERIFY_MATCH_CASES:
+        case = parameter.values[0]
+        draft = case.draft_factory()
+        exported = tmp_path / case.output_name
+        provider = _schema_provider(filing_year=case.filing_year, period=case.period, modelos=case.modelos)
+        exported.write_bytes(case.payload_factory())
 
-    verdict = verify_export(draft, file_path=exported, schema_provider=provider)
+        verdict = verify_export(draft, file_path=exported, schema_provider=provider)
 
-    assert verdict.verdict is DeclaracionVerifyVerdict.MATCH
-    assert verdict.file_sha256 is not None
-    assert verdict.mismatched_casilla_ids == ()
+        assert verdict.verdict is DeclaracionVerifyVerdict.MATCH, case.output_name
+        assert verdict.file_sha256 is not None, case.output_name
+        assert verdict.mismatched_casilla_ids == (), case.output_name
 
 
 def test_verify_reports_missing_for_malformed_export_payload(tmp_path: Path) -> None:

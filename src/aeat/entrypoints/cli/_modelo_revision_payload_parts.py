@@ -4,14 +4,14 @@ The rows in this module are nested JSON-envelope fragments reused by modelo
 work-revision result schemas. They project
 :class:`CasillaObservation` rows emitted by
 :class:`RegistryCalculationResult` and
-:class:`~aeat.application.modelo.ResultSummaryRow` headline-result rows into
+:class:`ResultSummaryRow` headline-result rows into
 strict :class:`OutputSchema` fragments.
 They are not registered command results on their own; registered
-:class:`~aeat.entrypoints.cli._modelo_work_revision_payloads.WorkRevisionResult`,
-:class:`~aeat.entrypoints.cli._modelo_work_revision_payloads.WorkObservationsResult`,
-and :class:`~aeat.entrypoints.cli._modelo_payloads.WorkCalculateResult` models
+:class:`WorkRevisionResult`,
+:class:`WorkObservationsResult`,
+and :class:`WorkCalculateResult` models
 carry them into :class:`SchemaEnvelope` through
-:func:`~aeat.entrypoints.cli._common._emit_envelope`.
+:func:`_emit_envelope`.
 """
 
 from __future__ import annotations
@@ -39,7 +39,7 @@ class ObservationPayload(OutputSchema):
     """One JSON-safe casilla observation with registry provenance.
 
     Mirrors :class:`CasillaObservation` after
-    :func:`~aeat.entrypoints.cli._modelo_rendering.calculation_revision_payload`
+    :func:`calculation_revision_payload`
     converts Decimal values to strings. Formula observations carry
     :obj:`FormulaId`, operand lineage,
     :obj:`LegalRefId`, and
@@ -77,8 +77,8 @@ class ObservationPayload(OutputSchema):
 class ResultSummaryRowPayload(OutputSchema):
     """One headline-result summary row selected from a calculation revision.
 
-    Mirrors :class:`~aeat.application.modelo.ResultSummaryRow`, whose rows come
-    from :func:`~aeat.application.modelo.calculation_result_summary`.  ``role``
+    Mirrors :class:`ResultSummaryRow`, whose rows come
+    from :func:`calculation_result_summary`.  ``role``
     names the registry-declared total or key-figure purpose, while
     ``casilla_id`` keeps the summary row joinable to the underlying
     :class:`ObservationPayload` provenance.

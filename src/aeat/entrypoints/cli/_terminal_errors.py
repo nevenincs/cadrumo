@@ -8,7 +8,7 @@ meant the shared-spine error document (``schema_version`` / ``command`` /
 cli-envelope-notice-standardisation ADR never appeared on any parse-time
 or crash failure — automation read prose, an empty stdout, or a traceback.
 
-:func:`~aeat.entrypoints.cli._terminal_errors.run_standalone_with_error_contract`
+:func:`run_standalone_with_error_contract`
 re-implements the standalone terminal handling around a non-standalone
 dispatch:
 
@@ -19,7 +19,7 @@ dispatch:
   Rich rendering is preserved. The Click exit code (2 for usage errors)
   is preserved in both modes.
 - **Unexpected exceptions**: wrapped in
-  :class:`~aeat.entrypoints.cli._errors.CliUnexpectedBoundaryError`
+  :class:`CliUnexpectedBoundaryError`
   (INTERNAL, exit 6) and rendered through the same JSON/text funnel —
   never a raw traceback.
 - **Abort** keeps the interactive text rendering: it is an operator

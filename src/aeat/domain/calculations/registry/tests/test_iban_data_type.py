@@ -34,34 +34,31 @@ def _casilla_with(data_type: str) -> CasillaDefinition:
 
 
 class TestIbanStringAccepts:
-    @pytest.mark.parametrize(
-        "raw,canonical",
-        [
+    def test_known_valid_ibans_accepted(self) -> None:
+        cases = (
             ("ES9121000418450200051332", "ES9121000418450200051332"),
             ("GB82WEST12345698765432", "GB82WEST12345698765432"),
             ("DE89370400440532013000", "DE89370400440532013000"),
             ("FR1420041010050500013M02606", "FR1420041010050500013M02606"),
-        ],
-    )
-    def test_known_valid_ibans_accepted(self, raw: str, canonical: str) -> None:
-        assert _IBAN_ADAPTER.validate_python(raw) == canonical
+        )
 
-    @pytest.mark.parametrize(
-        "raw,canonical",
-        [
+        for raw, canonical in cases:
+            assert _IBAN_ADAPTER.validate_python(raw) == canonical, raw
+
+    def test_normalisation_strips_punctuation(self) -> None:
+        cases = (
             ("  es9121000418450200051332  ", "ES9121000418450200051332"),
             ("ES91-2100-0418-45-0200051332", "ES9121000418450200051332"),
             ("ES91 2100 0418 4502 0005 1332", "ES9121000418450200051332"),
-        ],
-    )
-    def test_normalisation_strips_punctuation(self, raw: str, canonical: str) -> None:
-        assert _IBAN_ADAPTER.validate_python(raw) == canonical
+        )
+
+        for raw, canonical in cases:
+            assert _IBAN_ADAPTER.validate_python(raw) == canonical, raw
 
 
 class TestIbanStringRejects:
-    @pytest.mark.parametrize(
-        "raw",
-        [
+    def test_invalid_ibans_rejected_through_adapter(self) -> None:
+        cases: tuple[object, ...] = (
             "",
             "ES",
             "ES91",
@@ -71,24 +68,22 @@ class TestIbanStringRejects:
             "@@@@@@@@@@@@@@@@",
             "ES9121000418450200051332EXTRA",  # too long
             123456,
-        ],
-    )
-    def test_invalid_ibans_rejected_through_adapter(self, raw: object) -> None:
-        with pytest.raises(ValidationError):
-            _IBAN_ADAPTER.validate_python(raw)
+        )
 
-    @pytest.mark.parametrize(
-        ("raw", "message"),
-        [
+        for raw in cases:
+            with pytest.raises(ValidationError):
+                _IBAN_ADAPTER.validate_python(raw)
+
+    def test_invalid_ibans_raise_registry_validation_error_at_validator(self) -> None:
+        cases = (
             ("", "blank"),
             ("ES9921000418450200051332", "mod-97"),
             ("ES", "ISO 13616"),
-        ],
-        ids=("blank", "wrong-checksum", "malformed"),
-    )
-    def test_invalid_ibans_raise_registry_validation_error_at_validator(self, raw: str, message: str) -> None:
-        with pytest.raises(RegistryValidationError, match=message):
-            _validate_iban_string(raw)
+        )
+
+        for raw, message in cases:
+            with pytest.raises(RegistryValidationError, match=message):
+                _validate_iban_string(raw)
 
 
 class TestCasillaDefinitionDataType:

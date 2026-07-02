@@ -71,7 +71,7 @@ def modelo_130_snapshot(registry_snapshot: Callable[[str, int, str], RegistrySna
     return registry_snapshot("130", 2024, "3T")
 
 
-def test_formula_expression_accepts_dispatch_table_entries() -> None:
+def test_formula_expression_dispatch_table_entry_contract() -> None:
     expression = FormulaExpression.model_validate(
         {
             "dispatch_table_entries": [
@@ -86,8 +86,6 @@ def test_formula_expression_accepts_dispatch_table_entries() -> None:
         "cataluna": "renta-2025-escala-autonomica-cataluna-base-general",
     }
 
-
-def test_formula_expression_rejects_duplicate_dispatch_table_entries() -> None:
     with pytest.raises(ValidationError, match="duplicate key 'madrid'"):
         FormulaExpression.model_validate(
             {
@@ -98,8 +96,6 @@ def test_formula_expression_rejects_duplicate_dispatch_table_entries() -> None:
             },
         )
 
-
-def test_formula_expression_rejects_mixed_dispatch_table_shapes() -> None:
     with pytest.raises(ValidationError, match="dispatch_table or dispatch_table_entries"):
         FormulaExpression.model_validate(
             {
@@ -111,57 +107,32 @@ def test_formula_expression_rejects_mixed_dispatch_table_shapes() -> None:
         )
 
 
-@pytest.mark.parametrize(("attr_path", "expected"), _SNAPSHOT_HEADER_EXPECTATIONS)
-def test_committed_snapshot_resolves_header_field(
-    modelo_130_snapshot: RegistrySnapshot, attr_path: str, expected: object
-) -> None:
-    """Snapshot ``(modelo, revision, filing_year, period)`` tuple matches the committed registry coordinates."""
-    actual: object = modelo_130_snapshot
-    for segment in attr_path.split("."):
-        actual = getattr(actual, segment)
-    assert actual == expected
-
-
-def test_committed_snapshot_indexes_legal_reference_with_authority_tier(modelo_130_snapshot: RegistrySnapshot) -> None:
-    """Legal-reference is indexed and its evidence_tier reads as legal_authority."""
-    assert "rd-439-2007:art-110" in modelo_130_snapshot.legal
-    assert modelo_130_snapshot.legal["rd-439-2007:art-110"].evidence_tier == "legal_authority"
-
-
-def test_committed_snapshot_indexes_source_reference_with_layout_tier(modelo_130_snapshot: RegistrySnapshot) -> None:
-    """Source-reference is indexed and its evidence_tier reads as layout_authority."""
-    assert "aeat-dr-130-2019-v12" in modelo_130_snapshot.sources
-    assert modelo_130_snapshot.sources["aeat-dr-130-2019-v12"].evidence_tier == "layout_authority"
-
-
-def test_committed_snapshot_lists_single_extraction_profile(modelo_130_snapshot: RegistrySnapshot) -> None:
-    assert tuple(modelo_130_snapshot.extraction_profiles) == ("modelo-130-declaracion-pdf",)
-
-
-def test_committed_snapshot_lists_expected_live_cross_references(modelo_130_snapshot: RegistrySnapshot) -> None:
-    assert set(modelo_130_snapshot.live_cross_references) == _EXPECTED_LIVE_CROSS_REFERENCES
-
-
-def test_committed_snapshot_static_cross_reference_carries_layout_tier(modelo_130_snapshot: RegistrySnapshot) -> None:
-    assert modelo_130_snapshot.live_cross_references["modelo-130-static-official"].evidence_tier == "layout_authority"
-
-
-def test_committed_snapshot_filed_declarations_read_is_authenticated_read_surface(
+def test_committed_snapshot_exposes_expected_metadata(
     modelo_130_snapshot: RegistrySnapshot,
 ) -> None:
-    """The filed-declarations cross-reference must declare an authenticated read surface."""
+    """Committed M130 snapshot metadata matches the registry authority contracts."""
+
+    for attr_path, expected in _SNAPSHOT_HEADER_EXPECTATIONS:
+        actual: object = modelo_130_snapshot
+        for segment in attr_path.split("."):
+            actual = getattr(actual, segment)
+        assert actual == expected, attr_path
+
+    assert "rd-439-2007:art-110" in modelo_130_snapshot.legal
+    assert modelo_130_snapshot.legal["rd-439-2007:art-110"].evidence_tier == "legal_authority"
+    assert "aeat-dr-130-2019-v12" in modelo_130_snapshot.sources
+    assert modelo_130_snapshot.sources["aeat-dr-130-2019-v12"].evidence_tier == "layout_authority"
+    assert tuple(modelo_130_snapshot.extraction_profiles) == ("modelo-130-declaracion-pdf",)
+    assert set(modelo_130_snapshot.live_cross_references) == _EXPECTED_LIVE_CROSS_REFERENCES
+    assert (
+        modelo_130_snapshot.live_cross_references["modelo-130-static-official"].evidence_tier == "layout_authority"
+    )
     filed_read = modelo_130_snapshot.live_cross_references["modelo-130-filed-declarations-read"]
     assert filed_read.surface == "authenticated_read_surface"
     assert set(filed_read.allowed_methods).issubset({"GET", "HEAD", "OPTIONS"})
     assert filed_read.requires_authentication is True
     assert filed_read.requires_aeat_authorization is True
-
-
-def test_committed_snapshot_lists_single_workbook_parity_ref(modelo_130_snapshot: RegistrySnapshot) -> None:
     assert tuple(modelo_130_snapshot.workbook_parity_refs) == ("modelo-130-dr-xls",)
-
-
-def test_committed_snapshot_lists_verification_expectations(modelo_130_snapshot: RegistrySnapshot) -> None:
     # The coverage-gated calculation contract plus the exhaustive
     # reconcile-when-present contract (situational computed casillas value-checked
     # when present, excluded from the coverage denominator).
@@ -169,10 +140,9 @@ def test_committed_snapshot_lists_verification_expectations(modelo_130_snapshot:
         "modelo-130-calculation-verification",
         "modelo-130-2019-y-siguientes-reconcile-when-present",
     )
-
-
-def test_committed_snapshot_declares_no_support_removal_decisions(modelo_130_snapshot: RegistrySnapshot) -> None:
     assert modelo_130_snapshot.support_removal_decisions == {}
+    assert tuple(modelo_130_snapshot.deadline_windows) == _EXPECTED_DEADLINE_WINDOWS
+    assert set(modelo_130_snapshot.application_links) >= _REQUIRED_APPLICATION_LINKS
 
 
 def test_committed_registry_contains_no_zero_casilla_revisions(
@@ -208,14 +178,6 @@ def test_revision_without_casillas_is_registry_validation_failure() -> None:
         match="revision must declare at least one casilla",
     ):
         _validate_revision(modelo, catalogues, empty_revision)
-
-
-def test_committed_snapshot_lists_registered_quarterly_deadline_windows(modelo_130_snapshot: RegistrySnapshot) -> None:
-    assert tuple(modelo_130_snapshot.deadline_windows) == _EXPECTED_DEADLINE_WINDOWS
-
-
-def test_committed_snapshot_application_links_cover_required_surfaces(modelo_130_snapshot: RegistrySnapshot) -> None:
-    assert set(modelo_130_snapshot.application_links) >= _REQUIRED_APPLICATION_LINKS
 
 
 def test_model_law_coverage_ledger_does_not_count_layout_source_as_guidance() -> None:
@@ -551,25 +513,58 @@ def test_validator_rejects_binding_citation_missing_from_official_source() -> No
         _validate_revision(modelo, catalogues, mutated)
 
 
-def test_validator_rejects_invoice_binding_without_typed_selector() -> None:
+def test_validator_rejects_invalid_invoice_binding_shapes() -> None:
     modelo, catalogues = _committed_registry()
     revision = _revision(modelo)
-    mutated = _with_binding(
-        revision,
-        revision.bindings[0].model_copy(
-            update={
+    cases = (
+        (
+            "missing-fact",
+            {
                 "source": "collectible_invoice",
                 "selector": {"claves": ("E",)},
                 "aggregation": BindingAggregation(op=BindingAggregationOp.SUM),
             },
+            r"selector violates _InvoiceSelector",
+        ),
+        (
+            "aggregation-mismatch",
+            {
+                "source": "collectible_invoice",
+                "selector": {"fact": "operator_count", "claves": ("E",)},
+                "aggregation": BindingAggregation(op=BindingAggregationOp.SUM),
+            },
+            "requires aggregation op 'count_distinct'",
+        ),
+        (
+            "rectification-delta-without-scope",
+            {
+                "source": "collectible_invoice",
+                "selector": {"fact": "rectified_base_delta_sum", "claves": ("E",)},
+                "aggregation": BindingAggregation(op=BindingAggregationOp.SUM),
+            },
+            "requires rectification_scope 'only_rectifications'",
+        ),
+        (
+            "period-rows-without-scope",
+            {
+                "source": "collectible_invoice",
+                "selector": {
+                    "fact": "row_field",
+                    "row_field": "base_imponible",
+                    "grouping": "operator_clave_period",
+                    "claves": ("E",),
+                },
+                "aggregation": BindingAggregation(op=BindingAggregationOp.ROWS),
+            },
+            "grouping 'operator_clave_period' requires",
         ),
     )
 
-    # The unified validator preserves the underlying pydantic field error rather
-    # than flattening to a generic "malformed selector": the missing ``fact`` key
-    # is named explicitly (selector violates _InvoiceSelector / fact Field required).
-    with pytest.raises(RegistryValidationError, match=r"selector violates _InvoiceSelector"):
-        _validate_revision(modelo, catalogues, mutated)
+    for case_id, update, match in cases:
+        mutated = _with_binding(revision, revision.bindings[0].model_copy(update=update))
+        with pytest.raises(RegistryValidationError, match=match) as excinfo:
+            _validate_revision(modelo, catalogues, mutated)
+        assert excinfo.type is RegistryValidationError, case_id
 
 
 def test_validator_rejects_profile_binding_selector_missing_from_user_profile_schema() -> None:
@@ -585,65 +580,6 @@ def test_validator_rejects_profile_binding_selector_missing_from_user_profile_sc
         RegistryValidationError,
         match=r"user-profile schema .* selector 'unknown\.profile'",
     ):
-        _validate_revision(modelo, catalogues, mutated)
-
-
-def test_validator_rejects_invoice_binding_aggregation_mismatch() -> None:
-    modelo, catalogues = _committed_registry()
-    revision = _revision(modelo)
-    mutated = _with_binding(
-        revision,
-        revision.bindings[0].model_copy(
-            update={
-                "source": "collectible_invoice",
-                "selector": {"fact": "operator_count", "claves": ("E",)},
-                "aggregation": BindingAggregation(op=BindingAggregationOp.SUM),
-            },
-        ),
-    )
-
-    with pytest.raises(RegistryValidationError, match="requires aggregation op 'count_distinct'"):
-        _validate_revision(modelo, catalogues, mutated)
-
-
-def test_validator_rejects_invoice_rectification_delta_without_rectification_scope() -> None:
-    modelo, catalogues = _committed_registry()
-    revision = _revision(modelo)
-    mutated = _with_binding(
-        revision,
-        revision.bindings[0].model_copy(
-            update={
-                "source": "collectible_invoice",
-                "selector": {"fact": "rectified_base_delta_sum", "claves": ("E",)},
-                "aggregation": BindingAggregation(op=BindingAggregationOp.SUM),
-            },
-        ),
-    )
-
-    with pytest.raises(RegistryValidationError, match="requires rectification_scope 'only_rectifications'"):
-        _validate_revision(modelo, catalogues, mutated)
-
-
-def test_validator_rejects_invoice_period_rows_without_rectification_scope() -> None:
-    modelo, catalogues = _committed_registry()
-    revision = _revision(modelo)
-    mutated = _with_binding(
-        revision,
-        revision.bindings[0].model_copy(
-            update={
-                "source": "collectible_invoice",
-                "selector": {
-                    "fact": "row_field",
-                    "row_field": "base_imponible",
-                    "grouping": "operator_clave_period",
-                    "claves": ("E",),
-                },
-                "aggregation": BindingAggregation(op=BindingAggregationOp.ROWS),
-            },
-        ),
-    )
-
-    with pytest.raises(RegistryValidationError, match="grouping 'operator_clave_period' requires"):
         _validate_revision(modelo, catalogues, mutated)
 
 

@@ -1,7 +1,7 @@
 """Google Sheets calculation sync commands for ``aeat config google``.
 
 Google calc commands resolve a
-:class:`~aeat.domain.calculations.registry.RegistrySnapshot` before exporting
+:class:`RegistrySnapshot` before exporting
 or pulling sheet rows against the live calculation schema.
 """
 

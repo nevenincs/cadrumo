@@ -1,10 +1,10 @@
 """Typed registry of bootstrap-exempt CLI verb paths.
 
 A bootstrap-exempt verb runs **without** an active
-:class:`~aeat.adapters.persistence.storage.master_key._bucket_session.BucketSession`.
+:class:`BucketSession`.
 The CLI root callback skips the session open for these verbs; every other verb
 is active-gated and refused with a translated
-:class:`~aeat.entrypoints.cli._errors.CliRefusedBoundaryError` when no active
+:class:`CliRefusedBoundaryError` when no active
 profile resolves.
 
 The exemption list is the seam between the CLI transport layer and
@@ -72,7 +72,7 @@ def is_bootstrap_exempt(verb_path: str | None) -> bool:
     """Return whether ``verb_path`` is exempt from the active-session gate.
 
     Matching is prefix-based against
-    :data:`~aeat.entrypoints.cli._bootstrap_exempt.BOOTSTRAP_EXEMPT_VERB_PATHS`.
+    :data:`BOOTSTRAP_EXEMPT_VERB_PATHS`.
     The leading ``aeat`` is elided; ``verb_path`` is the dispatched subcommand
     chain as Typer reports it (e.g. ``"config profile create"`` for the full
     operator invocation ``aeat config profile create alice``).

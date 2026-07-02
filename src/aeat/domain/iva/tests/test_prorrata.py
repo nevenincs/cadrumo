@@ -46,66 +46,60 @@ from .._prorrata import (
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 _INPUT_DEDUCTION_CASES = (
-    pytest.param(
+    (
         InputClassification.EXCLUSIVELY_DEDUCTIBLE,
         Decimal("210.00"),
         Decimal("40"),
         Decimal("100"),
         Decimal("210.00"),
-        id="exclusively-deductible",
     ),
-    pytest.param(
+    (
         InputClassification.EXCLUSIVELY_NON_DEDUCTIBLE,
         Decimal("210.00"),
         Decimal("80"),
         Decimal("0"),
         Decimal("0.00"),
-        id="exclusively-non-deductible",
     ),
-    pytest.param(
+    (
         InputClassification.COMMON,
         Decimal("210.00"),
         Decimal("70"),
         Decimal("70"),
         Decimal("147.00"),
-        id="common-input",
     ),
 )
 
 _ESPECIAL_MANDATORY_CASES = (
-    pytest.param(((Decimal("110.01"), Decimal("100.00")),), True, id="more-than-ten-percent"),
-    pytest.param(
+    (((Decimal("110.01"), Decimal("100.00")),), True),
+    (
         (
             (Decimal("110.00"), Decimal("100.00")),
             (Decimal("109.99"), Decimal("100.00")),
         ),
         False,
-        id="at-or-below-ten-percent",
     ),
-    pytest.param(((Decimal("50.00"), Decimal("0.00")),), True, id="especial-zero-general-positive"),
-    pytest.param(((Decimal("0.00"), Decimal("0.00")),), False, id="both-zero"),
+    (((Decimal("50.00"), Decimal("0.00")),), True),
+    (((Decimal("0.00"), Decimal("0.00")),), False),
 )
 
 _ACCEPTED_PRORRATA_REFERENCE_CASES = (
-    pytest.param(
+    (
         "prorrata:2026:provisional:general",
         ProrrataKind.PROVISIONAL,
         ProrrataRegime.GENERAL,
         None,
-        id="canonical-general",
     ),
-    pytest.param(
+    (
         "prorrata:2026:definitiva:especial:sector-retail",
         ProrrataKind.DEFINITIVA,
         ProrrataRegime.ESPECIAL,
         "sector-retail",
-        id="sectoral-especial",
     ),
 )
 
 _INVALID_SECTOR_ID_CASES = (
-    pytest.param("", "empty id", id="empty"),
-    pytest.param("has spaces and unicode ñ", "bad pattern", id="invalid-pattern"),
+    ("", "empty id"),
+    ("has spaces and unicode ñ", "bad pattern"),
 )
 
 
@@ -240,26 +234,18 @@ def test_general_percentage_does_not_round_up_exact_whole_integer() -> None:
 # ---------------------------------------------------------------------------
 
 
-@pytest.mark.parametrize(
-    ("classification", "input_iva_amount", "general_percentage", "expected_percentage", "expected_amount"),
-    _INPUT_DEDUCTION_CASES,
-)
-def test_classify_input_deduction_cases(
-    classification: InputClassification,
-    input_iva_amount: Decimal,
-    general_percentage: Decimal,
-    expected_percentage: Decimal,
-    expected_amount: Decimal,
-) -> None:
+def test_classify_input_deduction_cases() -> None:
     """LIVA art. 103.Uno classification rules for exclusive and common inputs."""
 
-    deduction = classify_input_deduction(
-        classification,
-        input_iva_amount=input_iva_amount,
-        general_percentage=general_percentage,
-    )
-    assert deduction.deductible_percentage == expected_percentage
-    assert deduction.deductible_amount == expected_amount
+    for case in _INPUT_DEDUCTION_CASES:
+        classification, input_iva_amount, general_percentage, expected_percentage, expected_amount = case
+        deduction = classify_input_deduction(
+            classification,
+            input_iva_amount=input_iva_amount,
+            general_percentage=general_percentage,
+        )
+        assert deduction.deductible_percentage == expected_percentage, classification
+        assert deduction.deductible_amount == expected_amount, classification
 
 
 # ---------------------------------------------------------------------------
@@ -267,15 +253,12 @@ def test_classify_input_deduction_cases(
 # ---------------------------------------------------------------------------
 
 
-@pytest.mark.parametrize(("deduction_pairs", "expected"), _ESPECIAL_MANDATORY_CASES)
-def test_especial_mandatory_cases(
-    deduction_pairs: tuple[tuple[Decimal, Decimal], ...],
-    expected: bool,
-) -> None:
+def test_especial_mandatory_cases() -> None:
     """LIVA art. 103.Dos strict +10% boundary and zero-deduction defences."""
 
-    for general_deduction, especial_deduction in deduction_pairs:
-        assert is_especial_mandatory(general_deduction, especial_deduction) is expected
+    for deduction_pairs, expected in _ESPECIAL_MANDATORY_CASES:
+        for general_deduction, especial_deduction in deduction_pairs:
+            assert is_especial_mandatory(general_deduction, especial_deduction) is expected
 
 
 def test_is_especial_mandatory_rejects_negative_amounts() -> None:
@@ -440,24 +423,16 @@ def test_result_definitiva_rejects_non_annual_period() -> None:
         )
 
 
-@pytest.mark.parametrize(
-    ("reference_id", "expected_kind", "expected_regime", "expected_sector_id"),
-    _ACCEPTED_PRORRATA_REFERENCE_CASES,
-)
-def test_validate_prorrata_reference_accepts_canonical_values(
-    reference_id: str,
-    expected_kind: ProrrataKind,
-    expected_regime: ProrrataRegime,
-    expected_sector_id: str | None,
-) -> None:
-    reference = validate_prorrata_reference(reference_id)
+def test_validate_prorrata_reference_accepts_canonical_values() -> None:
+    for reference_id, expected_kind, expected_regime, expected_sector_id in _ACCEPTED_PRORRATA_REFERENCE_CASES:
+        reference = validate_prorrata_reference(reference_id)
 
-    assert isinstance(reference, ProrrataReference)
-    assert reference.reference_id == reference_id
-    assert reference.year == 2026
-    assert reference.kind is expected_kind
-    assert reference.regime is expected_regime
-    assert reference.sector_id == expected_sector_id
+        assert isinstance(reference, ProrrataReference)
+        assert reference.reference_id == reference_id
+        assert reference.year == 2026
+        assert reference.kind is expected_kind
+        assert reference.regime is expected_regime
+        assert reference.sector_id == expected_sector_id
 
 
 def test_validate_prorrata_reference_rejects_usage_ratio_and_malformed_values() -> None:
@@ -533,17 +508,17 @@ def test_classify_input_rejects_out_of_range_general_percentage() -> None:
         )
 
 
-@pytest.mark.parametrize(("sector_id", "name"), _INVALID_SECTOR_ID_CASES)
-def test_sector_rejects_invalid_sector_ids(sector_id: str, name: str) -> None:
-    with pytest.raises(ValidationError, match=r"sector_id"):
-        ProrrataSector(
-            sector_id=sector_id,
-            name=name,
-            inputs=ProrrataInputs(
-                operaciones_con_derecho_deduccion=Decimal("100"),
-                operaciones_sin_derecho_deduccion=Decimal("0"),
-            ),
-        )
+def test_sector_rejects_invalid_sector_ids() -> None:
+    for sector_id, name in _INVALID_SECTOR_ID_CASES:
+        with pytest.raises(ValidationError, match=r"sector_id"):
+            ProrrataSector(
+                sector_id=sector_id,
+                name=name,
+                inputs=ProrrataInputs(
+                    operaciones_con_derecho_deduccion=Decimal("100"),
+                    operaciones_sin_derecho_deduccion=Decimal("0"),
+                ),
+            )
 
 
 # ---------------------------------------------------------------------------

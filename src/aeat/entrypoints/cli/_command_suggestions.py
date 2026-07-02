@@ -10,7 +10,7 @@ command via :func:`~difflib.get_close_matches`. That covers typos
 * **Cross-path commands** — a command that exists, but under a
   different group, e.g. ``app status`` for ``app overview status``.
 
-:class:`~aeat.entrypoints.cli._command_suggestions.AeatTyperGroup` keeps
+:class:`AeatTyperGroup` keeps
 Typer's typo suggestions and layers a per-group synonym table on top so both
 cases produce a translated "did you mean" hint instead of a bare "No such
 command".
@@ -23,10 +23,10 @@ whole tree just to construct the ``aeat`` app object made
 never dispatch into a subcommand.
 
 Heavy subcommand groups therefore register a
-:class:`~aeat.entrypoints.cli._command_suggestions.LazySubcommand` loader
+:class:`LazySubcommand` loader
 instead of an eagerly-imported Typer instance. The loader's module is imported
 only when
-:meth:`~aeat.entrypoints.cli._command_suggestions.AeatTyperGroup.get_command`
+:meth:`AeatTyperGroup.get_command`
 resolves that subcommand, which happens only when an operator invokes something
 in that subtree. ``--version`` / ``--help`` / the bare landing surface
 short-circuit in their callbacks before any subcommand is resolved, so they
@@ -78,9 +78,9 @@ class LazySubcommand:
     command module and returns its :class:`~typer.Typer` instance. The
     import — and therefore the application-layer / registry cost — is
     paid only when
-    :meth:`~aeat.entrypoints.cli._command_suggestions.LazySubcommand.load`
+    :meth:`LazySubcommand.load`
     runs, which
-    :class:`~aeat.entrypoints.cli._command_suggestions.AeatTyperGroup`
+    :class:`AeatTyperGroup`
     triggers on the first ``get_command`` / ``list_commands`` access.
 
     ``decorate`` is applied to the Typer instance before it is
@@ -124,11 +124,11 @@ class LazySubcommand:
 
 #: Lazy-subcommand registry keyed by the owning group's command
 #: ``name``. Typer materializes the Click
-#: :class:`~aeat.entrypoints.cli._command_suggestions.AeatTyperGroup`
+#: :class:`AeatTyperGroup`
 #: instance lazily, inside ``get_command(app)``; the instance therefore
 #: cannot carry its lazy table at app-construction time. Keying by
 #: group name lets
-#: :func:`~aeat.entrypoints.cli._command_suggestions.register_lazy_subcommand`
+#: :func:`register_lazy_subcommand`
 #: populate the table
 #: at module-import time and lets every materialized group instance of
 #: that name read it back. AEAT group names (``aeat``, ``app``,
@@ -140,7 +140,7 @@ def register_lazy_subcommand(group_name: str, lazy: LazySubcommand) -> None:
     """Register ``lazy`` under ``group_name`` for deferred resolution.
 
     The owning
-    :class:`~aeat.entrypoints.cli._command_suggestions.AeatTyperGroup` imports
+    :class:`AeatTyperGroup` imports
     the command module only when the subcommand is first resolved through
     ``get_command``.
     """
@@ -164,13 +164,13 @@ class AeatTyperGroup(TyperGroup):
       class are preserved; the synonym table only adds a hint when the
       base class produced none.
     * **Lazy subcommands.** Subcommands registered through
-      :func:`~aeat.entrypoints.cli._command_suggestions.register_lazy_subcommand`
+      :func:`register_lazy_subcommand`
       import their command module only when first resolved, keeping the
       construction of the ``aeat`` app object free of the registry parse.
     * **Remainder capture.** Click empties ``ctx.args`` and the
       protected list before running the group callback, so the callback
       cannot see the tokens that follow the group name.
-      :meth:`~aeat.entrypoints.cli._command_suggestions.AeatTyperGroup.invoke`
+      :meth:`AeatTyperGroup.invoke`
       stashes them in ``ctx.meta`` first (``setdefault`` — the outermost group's
       full remainder wins) so the root callback can recognise help-only and
       unknown-command invocations without re-reading ``sys.argv`` (which is
@@ -227,7 +227,7 @@ class AeatTyperGroup(TyperGroup):
         through this method; returning the lazy names from the registry
         keeps the listing complete without paying any import cost. The
         per-command import happens later, in
-        :meth:`~aeat.entrypoints.cli._command_suggestions.AeatTyperGroup.get_command`,
+        :meth:`AeatTyperGroup.get_command`,
         and only for the command actually selected.
         """
         eager = super().list_commands(ctx)

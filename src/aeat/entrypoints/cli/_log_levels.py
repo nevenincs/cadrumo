@@ -3,11 +3,11 @@
 Encapsulates the contract for translating the CLI's ``--quiet`` /
 ``--verbose`` / ``--debug`` flag triple plus the ``AEAT_LOG_LEVEL``
 environment variable into a single
-:class:`~aeat.entrypoints.cli._log_levels.LogLevel` value, and applies that
+:class:`LogLevel` value, and applies that
 value to the configured root logger via
-:func:`~aeat.entrypoints.cli._log_levels.apply_to_root_logger`. Every CLI
+:func:`apply_to_root_logger`. Every CLI
 entrypoint funnels its verbosity decision through
-:func:`~aeat.entrypoints.cli._log_levels.resolve_log_level` so behaviour stays
+:func:`resolve_log_level` so behaviour stays
 consistent across commands.
 """
 
@@ -26,7 +26,7 @@ class LogLevelResolutionError(AeatError):
 
     Examples include passing more than one of ``--quiet`` / ``--verbose``
     / ``--debug`` together, or setting ``AEAT_LOG_LEVEL`` to a value
-    outside the :class:`~aeat.entrypoints.cli._log_levels.LogLevel`
+    outside the :class:`LogLevel`
     vocabulary.
     """
 
@@ -67,24 +67,24 @@ def resolve_log_level(
     Flags take precedence over the environment in the order
     ``debug > verbose > quiet``. When no flag is set, ``AEAT_LOG_LEVEL``
     is consulted; an empty value falls back to
-    :attr:`~aeat.entrypoints.cli._log_levels.LogLevel.DEFAULT`.
+    :attr:`LogLevel.DEFAULT`.
 
     Args:
         quiet: Whether ``--quiet`` was passed.
         verbose: Whether ``--verbose`` was passed.
         debug: Whether ``--debug`` was passed.
         env: Optional environment mapping for deterministic tests; when
-            ``None``, :func:`~aeat.core.config.load_settings` is
+            ``None``, :func:`load_settings` is
             consulted (the single AEAT-config surface).
 
     Returns:
-        The effective :class:`~aeat.entrypoints.cli._log_levels.LogLevel`.
+        The effective :class:`LogLevel`.
 
     Raises:
         LogLevelResolutionError: If more than one verbosity flag is
             active simultaneously, or if ``AEAT_LOG_LEVEL`` carries a
             value outside the
-            :class:`~aeat.entrypoints.cli._log_levels.LogLevel` vocabulary.
+            :class:`LogLevel` vocabulary.
     """
     selected_flags = sum((quiet, verbose, debug))
     if selected_flags > 1:
@@ -125,8 +125,8 @@ def resolve_log_level(
 def apply_to_root_logger(level: LogLevel) -> None:
     """Apply the resolved CLI log level to the configured root logger.
 
-    Delegates to :func:`~aeat.core.logging.set_log_level` which calls
-    :func:`~aeat.core.logging.configure_logging` first so the
+    Delegates to :func:`set_log_level` which calls
+    :func:`configure_logging` first so the
     project-wide logging contract is in place, then sets the level on
     the root logger and every attached handler.
 

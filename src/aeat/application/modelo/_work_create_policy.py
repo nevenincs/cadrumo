@@ -28,6 +28,8 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
+from pydantic import ValidationError
+
 from ...core import Modelo
 from ...core.config import load_settings
 
@@ -152,7 +154,10 @@ def modelo_work_create_applicability_refusal(
 
     state = workflow_state_repository().load()
     record = state.active_profile_record()
-    profile = projection_for_taxpayer(record or {}, tax_id_default="00000000T")
+    try:
+        profile = projection_for_taxpayer(record or {}, tax_id_default="00000000T")
+    except ValidationError:
+        return None
     applicability = derive_modelo_applicability(profile, modelo.strip())
     blocking = {
         ApplicabilityVerdict.NOT_APPLICABLE,

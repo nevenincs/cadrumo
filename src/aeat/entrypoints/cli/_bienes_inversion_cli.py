@@ -1,11 +1,11 @@
 """Typer registration for the capital-goods IVA regularización register.
 
 The commands delegate register persistence to
-:class:`~aeat.application.bienes_inversion.BienesInversionRegisterService` and emit
-typed payloads from :mod:`aeat.entrypoints.cli._bienes_inversion_payloads`. The
+:class:`BienesInversionRegisterService` and emit
+typed payloads from :mod:`._bienes_inversion_payloads`. The
 register feeds the LIVA arts. 107-110 regularización (Modelo 303 casilla 43 /
 Modelo 390); the annual compute itself is the pure domain function
-:func:`~aeat.domain.bienes_inversion.compute_regularizacion_anual`.
+:func:`compute_regularizacion_anual`.
 """
 
 from __future__ import annotations
@@ -146,7 +146,7 @@ def bienes_inversion_declare(
         ),
     ),
 ) -> None:
-    """Persist one :class:`~aeat.domain.bienes_inversion.BienInversionIvaRecord`."""
+    """Persist one :class:`BienInversionIvaRecord`."""
     bucket_id = _register_bucket_id()
     disposal: BienInversionDisposal | None = None
     if disposal_year is not None or disposal_regime is not None:

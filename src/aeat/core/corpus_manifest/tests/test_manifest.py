@@ -38,6 +38,8 @@ from .. import (
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
+_GENERATED_AT = datetime(2026, 5, 12, 12, 0, 0, tzinfo=UTC)
+
 
 def _seed_corpus(corpus_root: Path) -> dict[str, bytes]:
     """Seed a tmp corpus with two text files and one binary file.
@@ -58,18 +60,23 @@ def _seed_corpus(corpus_root: Path) -> dict[str, bytes]:
     return files
 
 
-def test_build_save_load_roundtrip_preserves_every_entry(tmp_path: Path) -> None:
-    corpus_root = tmp_path / "corpus"
+def _build_seeded_manifest(corpus_root: Path):
     _seed_corpus(corpus_root)
-
-    built = build_corpus_manifest(
+    return build_corpus_manifest(
         corpus_root,
         corpus_root_name="manuals",
-        generated_at=datetime(2026, 5, 12, 12, 0, 0, tzinfo=UTC),
+        generated_at=_GENERATED_AT,
     )
+
+
+def test_build_save_load_roundtrip_preserves_sorted_entries(tmp_path: Path) -> None:
+    corpus_root = tmp_path / "corpus"
+    built = _build_seeded_manifest(corpus_root)
     save_corpus_manifest(built, manifest_path_for(corpus_root))
     loaded = load_corpus_manifest(manifest_path_for(corpus_root))
 
+    paths = [entry.relative_path for entry in built.entries]
+    assert paths == sorted(paths)
     assert loaded.corpus_root_name == "manuals"
     assert loaded.manifest_sha256 == built.manifest_sha256
     assert tuple(entry.relative_path for entry in loaded.entries) == tuple(
@@ -81,73 +88,30 @@ def test_build_save_load_roundtrip_preserves_every_entry(tmp_path: Path) -> None
     )
 
 
-def test_build_sorts_entries_by_relative_path_for_deterministic_digest(tmp_path: Path) -> None:
-    """The manifest_sha256 is order-sensitive, so entries must be sorted."""
-    corpus_root = tmp_path / "corpus"
-    _seed_corpus(corpus_root)
-
-    built = build_corpus_manifest(
-        corpus_root,
-        corpus_root_name="manuals",
-        generated_at=datetime(2026, 5, 12, 12, 0, 0, tzinfo=UTC),
+def test_verify_reports_each_drift_category(tmp_path: Path) -> None:
+    scenarios = (
+        ("added", "new-file.txt", "added"),
+        ("removed", "subdir/notes.txt", "removed"),
+        ("changed", "manual.txt", "changed"),
     )
 
-    paths = [entry.relative_path for entry in built.entries]
-    assert paths == sorted(paths)
+    for scenario, expected_path, changed_category in scenarios:
+        corpus_root = tmp_path / scenario
+        manifest = _build_seeded_manifest(corpus_root)
 
+        if changed_category == "added":
+            (corpus_root / expected_path).write_bytes(b"appeared after manifest was built")
+        elif changed_category == "removed":
+            (corpus_root / expected_path).unlink()
+        else:
+            (corpus_root / expected_path).write_bytes(b"Mutated bytes do not match the original sha256.")
 
-def test_verify_reports_added_file_in_diff(tmp_path: Path) -> None:
-    corpus_root = tmp_path / "corpus"
-    _seed_corpus(corpus_root)
-    manifest = build_corpus_manifest(
-        corpus_root,
-        corpus_root_name="manuals",
-        generated_at=datetime(2026, 5, 12, 12, 0, 0, tzinfo=UTC),
-    )
+        diff = verify_corpus_manifest(corpus_root, manifest=manifest)
 
-    (corpus_root / "new-file.txt").write_bytes(b"appeared after manifest was built")
-    diff = verify_corpus_manifest(corpus_root, manifest=manifest)
-
-    assert diff.is_clean is False
-    assert "new-file.txt" in diff.added
-    assert diff.removed == ()
-    assert diff.changed == ()
-
-
-def test_verify_reports_removed_file_in_diff(tmp_path: Path) -> None:
-    corpus_root = tmp_path / "corpus"
-    _seed_corpus(corpus_root)
-    manifest = build_corpus_manifest(
-        corpus_root,
-        corpus_root_name="manuals",
-        generated_at=datetime(2026, 5, 12, 12, 0, 0, tzinfo=UTC),
-    )
-
-    (corpus_root / "subdir" / "notes.txt").unlink()
-    diff = verify_corpus_manifest(corpus_root, manifest=manifest)
-
-    assert diff.is_clean is False
-    assert "subdir/notes.txt" in diff.removed
-    assert diff.added == ()
-    assert diff.changed == ()
-
-
-def test_verify_reports_changed_file_in_diff(tmp_path: Path) -> None:
-    corpus_root = tmp_path / "corpus"
-    _seed_corpus(corpus_root)
-    manifest = build_corpus_manifest(
-        corpus_root,
-        corpus_root_name="manuals",
-        generated_at=datetime(2026, 5, 12, 12, 0, 0, tzinfo=UTC),
-    )
-
-    (corpus_root / "manual.txt").write_bytes(b"Mutated bytes do not match the original sha256.")
-    diff = verify_corpus_manifest(corpus_root, manifest=manifest)
-
-    assert diff.is_clean is False
-    assert "manual.txt" in diff.changed
-    assert diff.added == ()
-    assert diff.removed == ()
+        assert diff.is_clean is False, scenario
+        assert expected_path in getattr(diff, changed_category), scenario
+        for clean_category in {"added", "removed", "changed"} - {changed_category}:
+            assert getattr(diff, clean_category) == (), scenario
 
 
 def test_iter_corpus_files_skips_hidden_entries_and_the_manifest_sidecar(tmp_path: Path) -> None:
@@ -162,11 +126,7 @@ def test_iter_corpus_files_skips_hidden_entries_and_the_manifest_sidecar(tmp_pat
     (corpus_root / ".dotdir").mkdir()
     (corpus_root / ".dotdir" / "secret.txt").write_bytes(b"hidden directory file")
 
-    manifest = build_corpus_manifest(
-        corpus_root,
-        corpus_root_name="manuals",
-        generated_at=datetime(2026, 5, 12, 12, 0, 0, tzinfo=UTC),
-    )
+    manifest = build_corpus_manifest(corpus_root, corpus_root_name="manuals", generated_at=_GENERATED_AT)
 
     paths = {entry.relative_path for entry in manifest.entries}
     assert ".gitignore" not in paths
@@ -183,12 +143,7 @@ def test_load_raises_tamper_error_when_manifest_sha256_does_not_match_body(tmp_p
     """Mutating the recorded ``manifest_sha256`` on disk must trip the
     self-attesting digest check at load time."""
     corpus_root = tmp_path / "corpus"
-    _seed_corpus(corpus_root)
-    manifest = build_corpus_manifest(
-        corpus_root,
-        corpus_root_name="manuals",
-        generated_at=datetime(2026, 5, 12, 12, 0, 0, tzinfo=UTC),
-    )
+    manifest = _build_seeded_manifest(corpus_root)
     target = manifest_path_for(corpus_root)
     save_corpus_manifest(manifest, target)
 
@@ -200,30 +155,13 @@ def test_load_raises_tamper_error_when_manifest_sha256_does_not_match_body(tmp_p
         load_corpus_manifest(target)
 
 
-def test_assert_corpus_clean_raises_on_drift(tmp_path: Path) -> None:
+def test_assert_corpus_clean_passes_matching_manifest_and_raises_on_drift(tmp_path: Path) -> None:
     corpus_root = tmp_path / "corpus"
-    _seed_corpus(corpus_root)
-    manifest = build_corpus_manifest(
-        corpus_root,
-        corpus_root_name="manuals",
-        generated_at=datetime(2026, 5, 12, 12, 0, 0, tzinfo=UTC),
-    )
+    manifest = _build_seeded_manifest(corpus_root)
     save_corpus_manifest(manifest, manifest_path_for(corpus_root))
+
+    assert_corpus_clean(corpus_root)
     (corpus_root / "manual.txt").write_bytes(b"diverged corpus state")
 
     with pytest.raises(CorpusManifestDriftError, match=r"manual\.txt"):
         assert_corpus_clean(corpus_root)
-
-
-def test_assert_corpus_clean_passes_when_corpus_matches_manifest(tmp_path: Path) -> None:
-    corpus_root = tmp_path / "corpus"
-    _seed_corpus(corpus_root)
-    manifest = build_corpus_manifest(
-        corpus_root,
-        corpus_root_name="manuals",
-        generated_at=datetime(2026, 5, 12, 12, 0, 0, tzinfo=UTC),
-    )
-    save_corpus_manifest(manifest, manifest_path_for(corpus_root))
-
-    # No exception means clean — assert by reaching the line after the call.
-    assert_corpus_clean(corpus_root)

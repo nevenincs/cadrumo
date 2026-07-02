@@ -1,7 +1,7 @@
 """Profile bundle import/export command registration for ``aeat config profile``.
 
 Profile import/export emits
-:class:`~aeat.domain.buckets.BucketEventHistoryRepository` lifecycle events
+:class:`BucketEventHistoryRepository` lifecycle events
 around portable bundle writes and reads.
 """
 
@@ -56,7 +56,7 @@ def register_profile_bundle_commands(
 
 #: Personal-data categories the portable bundle carries, surfaced in the SAR
 #: data catalogue so a subject can see what the archive holds. These mirror the
-#: v3 :class:`~aeat.domain.user_profile.UserProfilePortableExport` typed fields.
+#: v3 :class:`UserProfilePortableExport` typed fields.
 _SAR_DATA_CATEGORIES: tuple[str, ...] = (
     "profile_identity_and_facts",
     "modelo_work_units",

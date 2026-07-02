@@ -40,52 +40,44 @@ def _casilla_with(data_type: str) -> CasillaDefinition:
 class TestModeloYearAccepts:
     """`ModeloYear` accepts integers and digit strings within the window."""
 
-    @pytest.mark.parametrize(
-        "raw,canonical",
-        [
+    def test_canonical_input_returns_int(self) -> None:
+        cases = (
             (2000, 2000),
             (2025, 2025),
             (2099, 2099),
             ("2024", 2024),
             ("  2026  ", 2026),
-        ],
-    )
-    def test_canonical_input_returns_int(self, raw: object, canonical: int) -> None:
-        assert _YEAR_ADAPTER.validate_python(raw) == canonical
+        )
+
+        for raw, canonical in cases:
+            assert _YEAR_ADAPTER.validate_python(raw) == canonical, raw
 
 
 class TestModeloYearRejects:
     """`ModeloYear` rejects out-of-range, malformed, and wrong-type inputs."""
 
-    @pytest.mark.parametrize(
-        "raw",
-        (
-            pytest.param(1999, id="below-min-int"),
-            pytest.param(2100, id="above-max-int"),
-            pytest.param("1999", id="below-min-string"),
-            pytest.param("2100", id="above-max-string"),
-            pytest.param("", id="blank"),
-            pytest.param("   ", id="whitespace"),
-            pytest.param("twenty-twenty", id="words"),
-            pytest.param("20.25", id="decimal-string"),
-            pytest.param(True, id="boolean"),
-            pytest.param(2024.5, id="float"),
-        ),
-    )
-    def test_invalid_values_rejected(self, raw: object) -> None:
-        with pytest.raises(ValidationError):
-            _YEAR_ADAPTER.validate_python(raw)
+    def test_invalid_values_rejected(self) -> None:
+        cases: tuple[object, ...] = (
+            1999,
+            2100,
+            "1999",
+            "2100",
+            "",
+            "   ",
+            "twenty-twenty",
+            "20.25",
+            True,
+            2024.5,
+        )
 
-    @pytest.mark.parametrize(
-        "raw",
-        (
-            pytest.param("", id="blank"),
-            pytest.param(True, id="boolean"),
-        ),
-    )
-    def test_invalid_value_raises_registry_validation_error_at_validator(self, raw: object) -> None:
-        with pytest.raises(RegistryValidationError):
-            _coerce_modelo_year(raw)
+        for raw in cases:
+            with pytest.raises(ValidationError):
+                _YEAR_ADAPTER.validate_python(raw)
+
+    def test_invalid_value_raises_registry_validation_error_at_validator(self) -> None:
+        for raw in ("", True):
+            with pytest.raises(RegistryValidationError):
+                _coerce_modelo_year(raw)
 
 
 class TestCasillaDefinitionDataType:

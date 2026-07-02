@@ -225,42 +225,23 @@ def test_verify_payload_rejects_label_keyed_expected_mapping_before_replay() -> 
 # ---------------------------------------------------------------------------
 
 
-def test_parse_decimal_text_returns_none_for_empty_input() -> None:
-    assert _parse_decimal_text("") is None
-    assert _parse_decimal_text("   ") is None
-
-
-def test_parse_decimal_text_parses_plain_integer() -> None:
-    assert _parse_decimal_text("1234") == Decimal("1234")
-
-
-def test_parse_decimal_text_parses_dot_decimal() -> None:
-    assert _parse_decimal_text("1234.56") == Decimal("1234.56")
-
-
-def test_parse_decimal_text_parses_comma_decimal_with_thousands_separator() -> None:
+def test_parse_decimal_text_handles_spanish_locale_and_invalid_inputs() -> None:
     """AEAT Renta WEB Open renders amounts as ``1.234,56`` (Spanish locale).
-    The parser must drop ``.`` thousands separators and treat ``,`` as the
-    decimal point."""
-    assert _parse_decimal_text("1.234,56") == Decimal("1234.56")
+    The parser must drop ``.`` thousands separators, treat ``,`` as the
+    decimal point, and tolerate NBSP separators while rejecting malformed text."""
 
-
-def test_parse_decimal_text_strips_non_breaking_space() -> None:
-    """AEAT's rendering uses ``\\xa0`` (NBSP) before the EUR suffix and
-    sometimes as a thousands separator."""
-    assert _parse_decimal_text("1\xa0234,56") == Decimal("1234.56")
-
-
-def test_parse_decimal_text_returns_none_for_malformed_input() -> None:
-    assert _parse_decimal_text("not-a-number") is None
-    assert _parse_decimal_text("12,34,56") is None
-
-
-def test_parse_decimal_text_tolerates_multiple_dot_thousands_groups() -> None:
-    """When a comma is present, every ``.`` is stripped before parsing,
-    so multi-group thousands renderings like ``1.234.567,89`` parse
-    cleanly (and so do degenerate inputs the parser opts to accept)."""
-    assert _parse_decimal_text("1.234.567,89") == Decimal("1234567.89")
+    for raw, expected in (
+        ("", None),
+        ("   ", None),
+        ("1234", Decimal("1234")),
+        ("1234.56", Decimal("1234.56")),
+        ("1.234,56", Decimal("1234.56")),
+        ("1\xa0234,56", Decimal("1234.56")),
+        ("not-a-number", None),
+        ("12,34,56", None),
+        ("1.234.567,89", Decimal("1234567.89")),
+    ):
+        assert _parse_decimal_text(raw) == expected, raw
 
 
 # ---------------------------------------------------------------------------
@@ -268,29 +249,20 @@ def test_parse_decimal_text_tolerates_multiple_dot_thousands_groups() -> None:
 # ---------------------------------------------------------------------------
 
 
-def test_equivalent_renta_web_open_value_matches_identical_strings() -> None:
-    assert equivalent_renta_web_open_value("1234.56", "1234.56") is True
-
-
-def test_equivalent_renta_web_open_value_matches_dot_vs_comma_rendering() -> None:
+def test_equivalent_renta_web_open_value_compares_rendered_amounts() -> None:
     """Registry-side produces ``1234.56``; Renta WEB Open returns
     ``1.234,56``. Both must compare as equivalent so true matches do not
     surface as spurious mismatches."""
-    assert equivalent_renta_web_open_value("1234.56", "1.234,56") is True
 
-
-def test_equivalent_renta_web_open_value_matches_scale_normalisation() -> None:
-    """Decimal normalises trailing zeros so ``0.00`` equals ``0``."""
-    assert equivalent_renta_web_open_value("0.00", "0") is True
-
-
-def test_equivalent_renta_web_open_value_returns_false_for_distinct_values() -> None:
-    assert equivalent_renta_web_open_value("1234.56", "1234.57") is False
-
-
-def test_equivalent_renta_web_open_value_returns_false_when_either_side_unparseable() -> None:
-    assert equivalent_renta_web_open_value("1234.56", "no-such-amount") is False
-    assert equivalent_renta_web_open_value("no-such-amount", "1234.56") is False
+    for expected, observed, equivalent in (
+        ("1234.56", "1234.56", True),
+        ("1234.56", "1.234,56", True),
+        ("0.00", "0", True),
+        ("1234.56", "1234.57", False),
+        ("1234.56", "no-such-amount", False),
+        ("no-such-amount", "1234.56", False),
+    ):
+        assert equivalent_renta_web_open_value(expected, observed) is equivalent, (expected, observed)
 
 
 # ---------------------------------------------------------------------------
@@ -303,21 +275,19 @@ _MISMATCH_FIELD = ParityFieldComparison(name="probe", expected="x", observed="y"
 _UNVERIFIABLE_FIELD = ParityFieldComparison(name="probe", expected="x", observed="", verdict="unverifiable")
 
 
-def test_overall_verdict_match_when_all_fields_match() -> None:
-    assert _overall_verdict((_MATCH_FIELD,)) == "match"
-    assert _overall_verdict((_MATCH_FIELD, _MATCH_FIELD)) == "match"
-
-
-def test_overall_verdict_unverifiable_when_some_fields_unverifiable_and_none_mismatched() -> None:
-    assert _overall_verdict((_MATCH_FIELD, _UNVERIFIABLE_FIELD)) == "unverifiable"
-    assert _overall_verdict((_UNVERIFIABLE_FIELD,)) == "unverifiable"
-
-
-def test_overall_verdict_mismatch_when_any_field_mismatched_even_with_unverifiable_present() -> None:
+def test_overall_verdict_applies_match_unverifiable_mismatch_precedence() -> None:
     """Mismatch outranks unverifiable in the precedence chain."""
-    assert _overall_verdict((_MATCH_FIELD, _MISMATCH_FIELD)) == "mismatch"
-    assert _overall_verdict((_UNVERIFIABLE_FIELD, _MISMATCH_FIELD)) == "mismatch"
-    assert _overall_verdict((_MATCH_FIELD, _UNVERIFIABLE_FIELD, _MISMATCH_FIELD)) == "mismatch"
+
+    for fields, expected_verdict in (
+        ((_MATCH_FIELD,), "match"),
+        ((_MATCH_FIELD, _MATCH_FIELD), "match"),
+        ((_MATCH_FIELD, _UNVERIFIABLE_FIELD), "unverifiable"),
+        ((_UNVERIFIABLE_FIELD,), "unverifiable"),
+        ((_MATCH_FIELD, _MISMATCH_FIELD), "mismatch"),
+        ((_UNVERIFIABLE_FIELD, _MISMATCH_FIELD), "mismatch"),
+        ((_MATCH_FIELD, _UNVERIFIABLE_FIELD, _MISMATCH_FIELD), "mismatch"),
+    ):
+        assert _overall_verdict(fields) == expected_verdict, fields
 
 
 # ---------------------------------------------------------------------------

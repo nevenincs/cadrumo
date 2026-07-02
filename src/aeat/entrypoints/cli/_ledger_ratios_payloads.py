@@ -1,20 +1,17 @@
 """JSON-contract payloads for the ``aeat app ledger ratios`` subgroup.
 
-Each result is a strict :class:`~aeat.entrypoints.cli._schemas.OutputSchema`
-registered through :func:`~aeat.entrypoints.cli._schemas.register_schema` and
-emitted inside :class:`~aeat.entrypoints.cli._schemas.SchemaEnvelope` via
-:func:`~aeat.entrypoints.cli._common._emit_envelope`. The parent
-:mod:`~aeat.entrypoints.cli._ledger_payloads` module re-exports these split
-schemas so ledger ratio handlers keep the existing payload import surface.
+Each result is a strict :class:`OutputSchema` registered through
+:func:`register_schema` and emitted inside :class:`SchemaEnvelope` via
+:func:`_emit_envelope`. The parent :mod:`_ledger_payloads` module re-exports
+these split schemas so ledger ratio handlers keep the existing payload import
+surface.
 
 The application layer remains authoritative for
-:class:`~aeat.application.ledger.EligibleCategoryRow`,
-:class:`~aeat.application.ledger.RatiosValidationReport`,
-:func:`~aeat.application.ledger.set_usage_ratio`, and
-:func:`~aeat.application.ledger.unset_usage_ratio`; the domain
-:class:`~aeat.domain.usage_ratios.UsageRatioProfile` owns persisted
-per-category override validation. This module only pins the CLI transport
-shape for list, set, unset, eligible, and validate results.
+:class:`EligibleCategoryRow`, :class:`RatiosValidationReport`,
+:func:`set_usage_ratio`, and :func:`unset_usage_ratio`; the domain
+:class:`UsageRatioProfile` owns persisted per-category override validation. This
+module only pins the CLI transport shape for list, set, unset, eligible, and
+validate results.
 """
 
 from __future__ import annotations
@@ -87,8 +84,8 @@ class RatiosEligibleResult(OutputSchema):
 class RatiosValidateResult(OutputSchema):
     """JSON envelope for ``aeat app ledger ratios validate``.
 
-    Mirrors ``RatiosValidationReport.model_dump(mode='json')`` produced by
-    :func:`~aeat.application.ledger.validate_ratios_for_bucket`.
+    Mirrors :meth:`RatiosValidationReport.model_dump` output produced by
+    :func:`validate_ratios_for_bucket`.
     """
 
     bucket_id: str

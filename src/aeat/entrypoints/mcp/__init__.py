@@ -22,19 +22,33 @@ from ._annotations import McpAnnotations, annotations_for_command
 from ._dispatch import command_key_for_tool, tool_name_for_command, tool_request_argv
 from ._faithfulness import FaithfulnessResult, faithfulness_check
 from ._hitl import ConfirmationPolicy, confirmation_for_tool
+from ._persona_scope import (
+    PERSONA_TOOL_SCOPES,
+    AgentPersona,
+    PersonaToolScope,
+    is_tool_in_persona_scope,
+    live_family_mutability,
+    scope_for_persona,
+)
 from ._tools import McpToolDescriptor, build_tool_descriptors
 
 __all__ = [
+    "PERSONA_TOOL_SCOPES",
+    "AgentPersona",
     "ConfirmationPolicy",
     "FaithfulnessResult",
     "McpAnnotations",
     "McpToolDescriptor",
+    "PersonaToolScope",
     "annotations_for_command",
     "build_tool_descriptors",
     "command_key_for_tool",
     "confirmation_for_tool",
     "faithfulness_check",
+    "is_tool_in_persona_scope",
+    "live_family_mutability",
     "main",
+    "scope_for_persona",
     "tool_name_for_command",
     "tool_request_argv",
 ]

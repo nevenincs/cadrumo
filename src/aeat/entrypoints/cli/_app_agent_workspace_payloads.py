@@ -2,9 +2,8 @@
 
 The materialiser writes the shipped operator harness (rules, personas, skills)
 into an operator-chosen directory. The result is a strict
-:class:`~aeat.entrypoints.cli._schemas.OutputSchema` mirroring the application
-:class:`~aeat.agent.WorkspaceManifest`, surfaced through
-:class:`~aeat.entrypoints.cli._schemas.SchemaEnvelope`.
+:class:`OutputSchema` mirroring the application
+:class:`WorkspaceManifest`, surfaced through :class:`SchemaEnvelope`.
 """
 
 from __future__ import annotations
@@ -18,8 +17,8 @@ from ._schemas import OutputSchema, register_schema
 class AgentWorkspaceResult(OutputSchema):
     """JSON result of materialising an operator workspace.
 
-    Mirrors :class:`~aeat.agent.WorkspaceManifest`: the output path and the count
-    of rules, personas, and skills written from the shipped harness data.
+    Mirrors :class:`WorkspaceManifest`: the output path and the count of rules,
+    personas, and skills written from the shipped harness data.
     """
 
     output_path: str = Field(min_length=1)

@@ -2,22 +2,21 @@
 
 ``aeat app modelo work revision`` and ``work observations`` both project a
 persisted :class:`CalculationRevision` through
-:func:`~aeat.entrypoints.cli._modelo_rendering.calculation_revision_payload`.
+:func:`calculation_revision_payload`.
 They share the nested
 :class:`ObservationPayload`
 and
 :class:`ResultSummaryRowPayload`
 rows, then register strict
 :class:`OutputSchema` result schemas through
-:func:`~aeat.entrypoints.cli._schemas.register_schema`.
+:func:`register_schema`.
 
 The application/modelo facade remains authoritative for revision lookup,
 selection, and Modelo 202 modality resolution; these classes only document the
 JSON transport shape that enters
 :class:`SchemaEnvelope` through
-:func:`~aeat.entrypoints.cli._common._emit_envelope`. The parent
-:mod:`~aeat.entrypoints.cli._modelo_payloads` module re-exports these split
-schemas so modelo work emitters keep one payload import surface.
+:func:`_emit_envelope`. The parent :mod:`_modelo_payloads` module re-exports
+these split schemas so modelo work emitters keep one payload import surface.
 """
 
 from __future__ import annotations
@@ -36,12 +35,11 @@ class WorkRevisionResult(OutputSchema):
 
     Carries the JSON-safe projection of one
     :class:`CalculationRevision`, matching
-    :class:`~aeat.entrypoints.cli._modelo_payloads.WorkCalculateResult` minus
-    the persistence-confirmation pair (``saved`` / ``saved_confirmation``).
-    Modelo 202 modality comes from
-    :class:`~aeat.application.modelo.Modelo202ModalitySummary` and stays on the
-    same optional fields as the calculate result so inspection and calculation
-    envelopes remain contract-compatible.
+    :class:`WorkCalculateResult` minus the persistence-confirmation pair
+    (``saved`` / ``saved_confirmation``). Modelo 202 modality comes from
+    :class:`Modelo202ModalitySummary` and stays on the same optional fields as
+    the calculate result so inspection and calculation envelopes remain
+    contract-compatible.
     """
 
     operation: str = "modelo.work.revision"
@@ -72,9 +70,8 @@ class WorkObservationsResult(OutputSchema):
 
     ``observations`` reuses the same :class:`ObservationPayload` rows emitted by
     :class:`WorkRevisionResult` and
-    :class:`~aeat.entrypoints.cli._modelo_payloads.WorkCalculateResult`; the
-    separate command exists so operators can inspect
-    :obj:`FormulaId`,
+    :class:`WorkCalculateResult`; the separate command exists so operators can
+    inspect :obj:`FormulaId`,
     :obj:`LegalRefId`,
     :obj:`SourceRefId`, and operand
     provenance without reading the full revision payload.

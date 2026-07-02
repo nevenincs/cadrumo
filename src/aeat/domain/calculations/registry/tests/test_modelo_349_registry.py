@@ -12,7 +12,6 @@ from .....core.resources import bundled_path
 from .....tests.aeat_literal_fixtures import AEAT_HOST_SUFFIX_EXPECTED
 from .. import (
     CasillaFieldKind,
-    CasillaId,
     InputKind,
     RegistryValidator,
     build_snapshot,
@@ -63,37 +62,30 @@ def test_committed_modelo_349_validates_against_catalogues() -> None:
     assert set(modelo.revisions) == {"2020-y-siguientes"}
 
 
-@pytest.mark.parametrize(
-    ("filing_year", "period", "expected_revision"),
-    [
+def test_committed_modelo_349_resolves_revision_for_monthly_and_quarterly_periods() -> None:
+    modelo, catalogues = _load_modelo_349()
+
+    for filing_year, period, expected_revision in (
         (2020, "1T", "2020-y-siguientes"),
         (2024, "05", "2020-y-siguientes"),
         (2026, "01", "2020-y-siguientes"),
         (2026, "12", "2020-y-siguientes"),
         (2026, "1T", "2020-y-siguientes"),
         (2026, "4T", "2020-y-siguientes"),
-    ],
-)
-def test_committed_modelo_349_resolves_revision_for_monthly_and_quarterly_periods(
-    filing_year: int,
-    period: str,
-    expected_revision: str,
-) -> None:
-    modelo, catalogues = _load_modelo_349()
+    ):
+        snapshot = build_snapshot(
+            modelo,
+            catalogues,
+            source_root=bundled_path(),
+            filing_year=filing_year,
+            period=period,
+        )
 
-    snapshot = build_snapshot(
-        modelo,
-        catalogues,
-        source_root=bundled_path(),
-        filing_year=filing_year,
-        period=period,
-    )
-
-    assert snapshot.revision.id == expected_revision
-    assert snapshot.revision.orden_aplicabilidad == (
-        "orden-eha-769-2010:art-1",
-        "orden-hac-174-2020:art-1",
-    )
+        assert snapshot.revision.id == expected_revision, (filing_year, period)
+        assert snapshot.revision.orden_aplicabilidad == (
+            "orden-eha-769-2010:art-1",
+            "orden-hac-174-2020:art-1",
+        )
 
 
 def test_committed_modelo_349_is_informative_static_documentation_only() -> None:
@@ -137,9 +129,8 @@ def test_committed_modelo_349_casilla_numbers_match_official_record_design() -> 
         )
 
 
-@pytest.mark.parametrize(
-    ("casilla_id", "expected_data_type"),
-    [
+def test_committed_modelo_349_casilla_data_types_match_official_record_design() -> None:
+    expected_types = (
         (_DECL_NUMERO_OPERADORES_CASILLA, "integer"),
         (_DECL_IMPORTE_OPERACIONES_CASILLA, "money"),
         (_DECL_NUMERO_RECTIFICACIONES_CASILLA, "integer"),
@@ -153,15 +144,12 @@ def test_committed_modelo_349_casilla_numbers_match_official_record_design() -> 
         (_RECT_PERIODO_RECTIFICADO_CASILLA, "period_code"),
         (_RECT_BASE_RECTIFICADA_CASILLA, "money"),
         (_RECT_BASE_ANTERIOR_CASILLA, "money"),
-    ],
-)
-def test_committed_modelo_349_casilla_data_types_match_official_record_design(
-    casilla_id: CasillaId,
-    expected_data_type: str,
-) -> None:
+    )
     revision = _modelo_349_revision()
-    casilla = next(item for item in revision.casillas if item.id == casilla_id)
-    assert casilla.data_type == expected_data_type
+
+    for casilla_id, expected_data_type in expected_types:
+        casilla = next(item for item in revision.casillas if item.id == casilla_id)
+        assert casilla.data_type == expected_data_type, casilla_id
 
 
 def test_committed_modelo_349_base_intracomunitaria_role_coverage() -> None:
@@ -365,9 +353,8 @@ def test_committed_modelo_349_deadline_windows_cover_every_supported_period_per_
         assert periods == expected_periods, f"filing_year {filing_year} period coverage gap: {missing}"
 
 
-@pytest.mark.parametrize(
-    ("window_id", "expected_open", "expected_close"),
-    [
+def test_committed_modelo_349_deadline_windows_match_official_plazo_rules() -> None:
+    expected_windows = (
         # Standard monthly window: 1st to 20th of the following month.
         ("modelo-349-2025-03", date(2025, 4, 1), date(2025, 4, 20)),
         # July monthly window has its closure extended to 20 September (BOE Orden EHA/769/2010 art-10).
@@ -378,17 +365,13 @@ def test_committed_modelo_349_deadline_windows_cover_every_supported_period_per_
         ("modelo-349-2025-2t", date(2025, 7, 1), date(2025, 7, 20)),
         # Fourth-quarter window closes 30 January of the following year (extended).
         ("modelo-349-2025-4t", date(2026, 1, 1), date(2026, 1, 30)),
-    ],
-)
-def test_committed_modelo_349_deadline_windows_match_official_plazo_rules(
-    window_id: str,
-    expected_open: date,
-    expected_close: date,
-) -> None:
+    )
     revision = _modelo_349_revision()
-    window = next(w for w in revision.deadline_windows if w.id == window_id)
-    assert window.opens_on == expected_open
-    assert window.closes_on == expected_close
+
+    for window_id, expected_open, expected_close in expected_windows:
+        window = next(w for w in revision.deadline_windows if w.id == window_id)
+        assert window.opens_on == expected_open, window_id
+        assert window.closes_on == expected_close, window_id
 
 
 def test_committed_modelo_349_deadline_windows_are_unique_by_period() -> None:
@@ -422,26 +405,21 @@ def test_committed_modelo_349_export_layout_declares_three_fixed_width_records()
         assert record.line_ending == "none"
 
 
-@pytest.mark.parametrize(
-    ("record_type", "expected_record_type_literal"),
-    [
+def test_committed_modelo_349_export_records_open_with_official_record_type_literal() -> None:
+    revision = _modelo_349_revision()
+    layout = revision.export_layouts[0]
+
+    for record_type, expected_record_type_literal in (
         ("declarante", "1"),
         ("operador", "2"),
         ("rectificacion", "2"),
-    ],
-)
-def test_committed_modelo_349_export_records_open_with_official_record_type_literal(
-    record_type: str,
-    expected_record_type_literal: str,
-) -> None:
-    revision = _modelo_349_revision()
-    layout = revision.export_layouts[0]
-    record = next(item for item in layout.records if item.record_type == record_type)
-    first_field = record.fields[0]
-    assert first_field.offset == 1
-    assert first_field.length == 1
-    assert first_field.kind is CasillaFieldKind.LITERAL
-    assert first_field.literal == expected_record_type_literal
+    ):
+        record = next(item for item in layout.records if item.record_type == record_type)
+        first_field = record.fields[0]
+        assert first_field.offset == 1, record_type
+        assert first_field.length == 1, record_type
+        assert first_field.kind is CasillaFieldKind.LITERAL, record_type
+        assert first_field.literal == expected_record_type_literal, record_type
 
 
 def test_committed_modelo_349_export_records_total_five_hundred_bytes_each() -> None:

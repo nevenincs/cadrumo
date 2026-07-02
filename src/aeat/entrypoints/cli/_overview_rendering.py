@@ -1,12 +1,11 @@
 """Text rendering and notice projection for ``overview status``.
 
 This module consumes an application-built
-:class:`~aeat.application.overview.OverviewStatusReport` and turns it into
-localized text lines plus :class:`~aeat.core.json_contract.Notice` objects for the
-:class:`~aeat.core.json_contract.SchemaEnvelope` notice channel.  It is
+:class:`OverviewStatusReport` and turns it into
+localized text lines plus :class:`Notice` objects for the
+:class:`SchemaEnvelope` notice channel.  It is
 presentation-only: active-profile discovery, storage reads, and status assembly
-stay upstream in :mod:`~aeat.application.overview` and
-:mod:`~aeat.entrypoints.cli._overview`.
+stay upstream in the application overview layer and :mod:`._overview`.
 """
 
 from __future__ import annotations
@@ -22,7 +21,7 @@ from ...core.json_contract import Notice, NoticeSeverity
 
 
 def overview_next_step_notices(report: OverviewStatusReport) -> list[Notice]:
-    """Surface the workspace-state next-step guidance as :class:`~aeat.core.json_contract.Notice` values.
+    """Surface the workspace-state next-step guidance as :class:`Notice` values.
 
     Mirrors the text-mode ``_next_step_lines`` guidance so JSON consumers
     receive the same forward guidance the text surface already shows,
@@ -43,7 +42,7 @@ _COVERAGE_NOTICE_CODE = "overview.coverage.incomplete"
 def overview_coverage_notices(coverage: ObligationCoverageReport) -> list[Notice]:
     """Project the obligation-coverage advisory onto the envelope notice channel.
 
-    Returns a single default-visible :class:`~aeat.core.json_contract.Notice`
+    Returns a single default-visible :class:`Notice`
     naming every registry modelo the surface could not positively scope — the
     ``advised`` bucket of the reconciliation — so an operator (or the autonomous
     agent the CLI targets) is never allowed to trust ``overview`` and silently
@@ -51,7 +50,7 @@ def overview_coverage_notices(coverage: ObligationCoverageReport) -> list[Notice
     positively known to apply but has no deadline window (the Modelo-190 shape —
     an unambiguous under-filing risk); otherwise ``info`` for the merely
     applicability-undetermined set. The advised modelo→reason map rides on
-    :attr:`~aeat.core.json_contract.Notice.context` so machine consumers keep the
+    :attr:`Notice.context` so machine consumers keep the
     structured list. Empty ``advised`` yields no notice.
     """
     if not coverage.has_advisories:
@@ -88,14 +87,14 @@ def overview_post_filing_event_notices(events: Sequence[OverviewCalendarEvent]) 
     """Surface pulled AEAT post-filing events that demand operator attention.
 
     Filters the observed calendar events to the actionable
-    :class:`~aeat.core.PostFilingEventKind` categories through
-    :func:`~aeat.application.overview.actionable_post_filing_events` — a
+    :class:`PostFilingEventKind` categories through
+    :func:`actionable_post_filing_events` — a
     requerimiento, a propuesta / acuerdo de liquidación, a procedimiento
     sancionador, or a recaudación enforcement act — and projects them onto a
-    single ``warning``-severity :class:`~aeat.core.json_contract.Notice` so the
+    single ``warning``-severity :class:`Notice` so the
     overview never silently buries a pending requerimiento in an
     undifferentiated event list. The per-event reference→kind map rides on
-    :attr:`~aeat.core.json_contract.Notice.context` so machine consumers keep the
+    :attr:`Notice.context` so machine consumers keep the
     structured list. Empty when no actionable event is present.
     """
     actionable = actionable_post_filing_events(tuple(events))
@@ -127,10 +126,10 @@ def overview_post_filing_event_notices(events: Sequence[OverviewCalendarEvent]) 
 
 
 def render_cli_overview_status_lines(report: OverviewStatusReport) -> tuple[str, ...]:
-    """Render :class:`~aeat.application.overview.OverviewStatusReport` as operator-facing CLI text.
+    """Render :class:`OverviewStatusReport` as operator-facing CLI text.
 
     The renderer preserves the same next-step decisions used by
-    :func:`~aeat.entrypoints.cli._overview_rendering.overview_next_step_notices`,
+    :func:`overview_next_step_notices`,
     so text and JSON-envelope notice output stay aligned.
     """
     lines: list[str] = [
@@ -158,7 +157,7 @@ def _next_step_lines(report: OverviewStatusReport) -> tuple[str, ...]:
     the operator forward: import when the ledger is empty, classify /
     work-modelo when transactions exist, continue the modelo flow when
     work units are already in progress. Unsupported
-    :class:`~aeat.core.Modelo` work-unit creation is diverted to discovery
+    :class:`Modelo` work-unit creation is diverted to discovery
     guidance instead of a dead command.
     """
     if report.work_units > 0:

@@ -52,6 +52,35 @@ def _capture_logger_output() -> tuple[logging.Logger, logging.Logger, logging.Ha
     return logger, root_logger, handler, stream
 
 
+def _render_info(message: str, *args: object) -> str:
+    logger, root_logger, handler, stream = _capture_logger_output()
+    previous_root_level = root_logger.level
+    root_logger.setLevel(logging.INFO)
+    try:
+        logger.info(
+            message,
+            *args,
+            extra={
+                "cookie": "<redacted>",
+                "bearer_header": "<redacted>",
+                "region": "es",
+            },
+        )
+    finally:
+        root_logger.removeHandler(handler)
+        root_logger.setLevel(previous_root_level)
+    return stream.getvalue()
+
+
+def _force_configure_logging() -> None:
+    original_configured = _logging_mod._CONFIGURED
+    _logging_mod._CONFIGURED = False
+    try:
+        _logging_mod.configure_logging()
+    finally:
+        _logging_mod._CONFIGURED = original_configured or True
+
+
 def test_default_logging_routes_warnings_to_file_not_stderr(capsys: pytest.CaptureFixture[str]) -> None:
     """Warnings should be persisted for diagnostics without polluting CLI stderr."""
 
@@ -213,109 +242,43 @@ def test_secret_scrubbing_redacts_inline_message_text_when_tuple_args_exist() ->
     assert "status=ok" in rendered
 
 
-def test_secret_scrubbing_maps_key_hints_to_the_correct_placeholder() -> None:
-    """Only the placeholder paired with the sensitive key should be scrubbed."""
+def test_secret_scrubbing_maps_key_hints_and_colon_assignments() -> None:
+    """Sensitive key hints and colon-delimited assignments scrub the paired placeholder."""
 
-    logger, root_logger, handler, stream = _capture_logger_output()
-    previous_root_level = root_logger.level
-    root_logger.setLevel(logging.INFO)
-    try:
-        logger.info(
+    for case_id, message, args, expected_visible, expected_redacted in (
+        (
+            "token-placeholder",
             "item %s has token: %s",
-            "safe-item",
-            "token-secret",
-            extra={
-                "cookie": "<redacted>",
-                "bearer_header": "<redacted>",
-                "region": "es",
-            },
-        )
-    finally:
-        root_logger.removeHandler(handler)
-        root_logger.setLevel(previous_root_level)
-
-    rendered = stream.getvalue()
-    assert "safe-item" in rendered
-    assert "token-secret" not in rendered
-    assert "token: <redacted>" in rendered
+            ("safe-item", "token-secret"),
+            ("safe-item",),
+            ("token-secret",),
+        ),
+        ("colon-assignment", "token: %s", ("colon-secret",), (), ("colon-secret",)),
+    ):
+        rendered = _render_info(message, *args)
+        for value in expected_visible:
+            assert value in rendered, case_id
+        for value in expected_redacted:
+            assert value not in rendered, case_id
+        assert "token: <redacted>" in rendered, case_id
 
 
-def test_secret_scrubbing_handles_colon_assignments() -> None:
-    """Colon-delimited sensitive placeholders should still be scrubbed."""
+def test_secret_scrubbing_redacts_multiword_passphrase_assignments() -> None:
+    """Quoted and unquoted passphrase assignments should not leak sensitive words."""
 
-    logger, root_logger, handler, stream = _capture_logger_output()
-    previous_root_level = root_logger.level
-    root_logger.setLevel(logging.INFO)
-    try:
-        logger.info(
-            "token: %s",
-            "colon-secret",
-            extra={
-                "cookie": "<redacted>",
-                "bearer_header": "<redacted>",
-                "region": "es",
-            },
-        )
-    finally:
-        root_logger.removeHandler(handler)
-        root_logger.setLevel(previous_root_level)
-
-    rendered = stream.getvalue()
-    assert "colon-secret" not in rendered
-    assert "token: <redacted>" in rendered
-
-
-def test_secret_scrubbing_redacts_unquoted_multiword_passphrase_assignment() -> None:
-    """Passphrase assignments should not leak words after the first space."""
-
-    logger, root_logger, handler, stream = _capture_logger_output()
-    previous_root_level = root_logger.level
-    root_logger.setLevel(logging.INFO)
-    try:
-        logger.info(
+    for case_id, message, forbidden_values in (
+        (
+            "unquoted",
             "passphrase=correct horse battery staple status=locked",
-            extra={
-                "cookie": "<redacted>",
-                "bearer_header": "<redacted>",
-                "region": "es",
-            },
-        )
-    finally:
-        root_logger.removeHandler(handler)
-        root_logger.setLevel(previous_root_level)
-
-    rendered = stream.getvalue()
-    assert "correct" not in rendered
-    assert "horse" not in rendered
-    assert "battery" not in rendered
-    assert "staple" not in rendered
-    assert "passphrase=<redacted>" in rendered
-    assert "status=locked" in rendered
-
-
-def test_secret_scrubbing_redacts_quoted_multiword_passphrase_assignment() -> None:
-    """Quoted passphrase assignments should be redacted as one sensitive value."""
-
-    logger, root_logger, handler, stream = _capture_logger_output()
-    previous_root_level = root_logger.level
-    root_logger.setLevel(logging.INFO)
-    try:
-        logger.info(
-            'passphrase="correct horse battery staple"; status=locked',
-            extra={
-                "cookie": "<redacted>",
-                "bearer_header": "<redacted>",
-                "region": "es",
-            },
-        )
-    finally:
-        root_logger.removeHandler(handler)
-        root_logger.setLevel(previous_root_level)
-
-    rendered = stream.getvalue()
-    assert "correct horse battery staple" not in rendered
-    assert "passphrase=<redacted>" in rendered
-    assert "status=locked" in rendered
+            ("correct", "horse", "battery", "staple"),
+        ),
+        ("quoted", 'passphrase="correct horse battery staple"; status=locked', ("correct horse battery staple",)),
+    ):
+        rendered = _render_info(message)
+        for value in forbidden_values:
+            assert value not in rendered, case_id
+        assert "passphrase=<redacted>" in rendered, case_id
+        assert "status=locked" in rendered, case_id
 
 
 def test_secret_scrubbing_applies_shared_shape_rules_to_plain_text_args() -> None:
@@ -398,89 +361,24 @@ def test_secret_scrubbing_uses_context_hints_for_list_args_too() -> None:
     assert record.args == ("safe-item", "<redacted>")
 
 
-def test_pdfminer_logger_level_governed_by_dictconfig() -> None:
-    """dictConfig must set the pdfminer logger to WARNING via the loggers block.
+def test_noisy_pdf_library_logger_levels_are_governed_by_dictconfig() -> None:
+    """dictConfig owns pdfminer and pikepdf silencing without per-module mutators."""
 
-    Verifies contract: configure_logging() centralises pdfminer silencing so
-    neither _pdfplumber.py nor _record_design.py need to mutate it locally.
-    """
-    import logging
+    _force_configure_logging()
 
-    from .. import logging as _logging_mod
+    expected_levels = {"pdfminer": logging.WARNING, "pikepdf._core": logging.WARNING}
+    for logger_name, expected_level in expected_levels.items():
+        logger = logging.getLogger(logger_name)
+        assert logger.level == expected_level, (
+            f"{logger_name} logger level should be WARNING ({expected_level}) "
+            f"after configure_logging(); got {logger.level}"
+        )
 
-    # Force a fresh dictConfig run by temporarily resetting the guard.
-    original_configured = _logging_mod._CONFIGURED
-    _logging_mod._CONFIGURED = False
-    try:
-        _logging_mod.configure_logging()
-    finally:
-        # Restore so other tests are not affected.
-        _logging_mod._CONFIGURED = original_configured or True
-
-    pdfminer_logger = logging.getLogger("pdfminer")
-    assert pdfminer_logger.level == logging.WARNING, (
-        f"pdfminer logger level should be WARNING ({logging.WARNING}) "
-        f"after configure_logging(); got {pdfminer_logger.level}"
-    )
-
-
-def test_pdfplumber_and_record_design_do_not_mutate_pdfminer_logger() -> None:
-    """Neither _pdfplumber nor _record_design should re-mutate the pdfminer logger.
-
-    Verifies contract: importing both modules and calling configure_logging()
-    leaves the pdfminer logger at WARNING — confirming the per-module
-    context-manager silencers have been removed and centralized config governs.
-    """
-    import logging
-
-    from .. import logging as _logging_mod
-
-    original_configured = _logging_mod._CONFIGURED
-    _logging_mod._CONFIGURED = False
-    try:
-        _logging_mod.configure_logging()
-    finally:
-        _logging_mod._CONFIGURED = original_configured or True
-
-    # Trigger module imports — side-effects would show up as level mutations.
-
-    pdfminer_logger = logging.getLogger("pdfminer")
-    assert pdfminer_logger.level == logging.WARNING, (
-        f"pdfminer logger level should remain WARNING after importing both pdf modules; got {pdfminer_logger.level}"
-    )
-
-    # Confirm the per-module silencer has been deleted from _pdfplumber's
-    # public surface.
     from ...adapters.inbound.pdf._pdfplumber import __all__ as pdfplumber_all
 
     assert "suppress_pdfminer_debug_logging" not in pdfplumber_all, (
         "suppress_pdfminer_debug_logging still exported from _pdfplumber; "
         "it should have been deleted (centralized in dictConfig)"
-    )
-
-
-def test_pikepdf_core_logger_level_governed_by_dictconfig() -> None:
-    """dictConfig must set pikepdf._core to WARNING via the loggers block.
-
-    Verifies contract: configure_logging() centralises pikepdf._core silencing so
-    src/aeat/__init__.py no longer needs a bootstrap-time setLevel mutation.
-    The level must survive a second configure_logging() call (the guard resets).
-    """
-    import logging
-
-    from .. import logging as _logging_mod
-
-    original_configured = _logging_mod._CONFIGURED
-    _logging_mod._CONFIGURED = False
-    try:
-        _logging_mod.configure_logging()
-    finally:
-        _logging_mod._CONFIGURED = original_configured or True
-
-    pikepdf_logger = logging.getLogger("pikepdf._core")
-    assert pikepdf_logger.level == logging.WARNING, (
-        f"pikepdf._core logger level should be WARNING ({logging.WARNING}) "
-        f"after configure_logging(); got {pikepdf_logger.level}"
     )
 
 

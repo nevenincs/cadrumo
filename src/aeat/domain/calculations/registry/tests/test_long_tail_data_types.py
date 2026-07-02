@@ -62,21 +62,20 @@ _NAME = TypeAdapter(PersonOrEntityName)
 
 
 class TestPersonOrEntityName:
-    @pytest.mark.parametrize(
-        "raw,canonical",
-        [
+    def test_accepted(self) -> None:
+        cases = (
             ("Maria Garcia Lopez", "Maria Garcia Lopez"),
             ("  ACME SA  ", "ACME SA"),
             ("Año Nuevo Holdings", "Año Nuevo Holdings"),
-        ],
-    )
-    def test_accepted(self, raw: str, canonical: str) -> None:
-        assert _NAME.validate_python(raw) == canonical
+        )
 
-    @pytest.mark.parametrize("raw", ["", "   ", "x" * 201])
-    def test_rejected(self, raw: str) -> None:
-        with pytest.raises(ValidationError):
-            _NAME.validate_python(raw)
+        for raw, canonical in cases:
+            assert _NAME.validate_python(raw) == canonical, raw
+
+    def test_rejected(self) -> None:
+        for raw in ("", "   ", "x" * 201):
+            with pytest.raises(ValidationError):
+                _NAME.validate_python(raw)
 
 
 # ---- nif_iva -------------------------------------------------------------
@@ -85,22 +84,21 @@ _NIFIVA = TypeAdapter(NifIvaString)
 
 
 class TestNifIvaString:
-    @pytest.mark.parametrize(
-        "raw,canonical",
-        [
+    def test_accepted(self) -> None:
+        cases = (
             ("ESB58818501", "ESB58818501"),
             ("FR12345678901", "FR12345678901"),
             ("DE123456789", "DE123456789"),
             ("  es-b58818501  ", "ESB58818501"),
-        ],
-    )
-    def test_accepted(self, raw: str, canonical: str) -> None:
-        assert _NIFIVA.validate_python(raw) == canonical
+        )
 
-    @pytest.mark.parametrize("raw", ["", "E", "ES", "ES1", "1234567890", "@@" + "1" * 8])
-    def test_rejected(self, raw: str) -> None:
-        with pytest.raises(ValidationError):
-            _NIFIVA.validate_python(raw)
+        for raw, canonical in cases:
+            assert _NIFIVA.validate_python(raw) == canonical, raw
+
+    def test_rejected(self) -> None:
+        for raw in ("", "E", "ES", "ES1", "1234567890", "@@" + "1" * 8):
+            with pytest.raises(ValidationError):
+                _NIFIVA.validate_python(raw)
 
 
 # ---- ccaa_code -----------------------------------------------------------
@@ -109,14 +107,36 @@ _CCAA = TypeAdapter(CCAACode)
 
 
 class TestCCAACode:
-    @pytest.mark.parametrize("code", [f"{n:02d}" for n in range(1, 20)])
-    def test_supported_accepted(self, code: str) -> None:
-        assert _CCAA.validate_python(code) == code
+    def test_supported_accepted(self) -> None:
+        cases = (
+            "01",
+            "02",
+            "03",
+            "04",
+            "05",
+            "06",
+            "07",
+            "08",
+            "09",
+            "10",
+            "11",
+            "12",
+            "13",
+            "14",
+            "15",
+            "16",
+            "17",
+            "18",
+            "19",
+        )
 
-    @pytest.mark.parametrize("raw", ["", "20", "1", "ES", "  01  ", "00"])
-    def test_rejected(self, raw: str) -> None:
-        with pytest.raises(ValidationError):
-            _CCAA.validate_python(raw)
+        for code in cases:
+            assert _CCAA.validate_python(code) == code, code
+
+    def test_rejected(self) -> None:
+        for raw in ("", "20", "1", "ES", "  01  ", "00"):
+            with pytest.raises(ValidationError):
+                _CCAA.validate_python(raw)
 
 
 # ---- province_code -------------------------------------------------------
@@ -125,14 +145,14 @@ _PROV = TypeAdapter(ProvinceCode)
 
 
 class TestProvinceCode:
-    @pytest.mark.parametrize("code", ["01", "28", "50", "52"])
-    def test_accepted(self, code: str) -> None:
-        assert _PROV.validate_python(code) == code
+    def test_accepted(self) -> None:
+        for code in ("01", "28", "50", "52"):
+            assert _PROV.validate_python(code) == code, code
 
-    @pytest.mark.parametrize("raw", ["", "00", "53", "99", "1", "ES", "AB"])
-    def test_rejected(self, raw: str) -> None:
-        with pytest.raises(ValidationError):
-            _PROV.validate_python(raw)
+    def test_rejected(self) -> None:
+        for raw in ("", "00", "53", "99", "1", "ES", "AB"):
+            with pytest.raises(ValidationError):
+                _PROV.validate_python(raw)
 
 
 # ---- postal_code ---------------------------------------------------------
@@ -141,14 +161,14 @@ _POSTAL = TypeAdapter(PostalCode)
 
 
 class TestPostalCode:
-    @pytest.mark.parametrize("code", ["28013", "08001", "00001", "99999"])
-    def test_accepted(self, code: str) -> None:
-        assert _POSTAL.validate_python(code) == code
+    def test_accepted(self) -> None:
+        for code in ("28013", "08001", "00001", "99999"):
+            assert _POSTAL.validate_python(code) == code, code
 
-    @pytest.mark.parametrize("raw", ["", "1234", "123456", "ABCDE", "28-13"])
-    def test_rejected(self, raw: str) -> None:
-        with pytest.raises(ValidationError):
-            _POSTAL.validate_python(raw)
+    def test_rejected(self) -> None:
+        for raw in ("", "1234", "123456", "ABCDE", "28-13"):
+            with pytest.raises(ValidationError):
+                _POSTAL.validate_python(raw)
 
 
 # ---- municipality_code --------------------------------------------------
@@ -157,14 +177,14 @@ _MUNI = TypeAdapter(MunicipalityCode)
 
 
 class TestMunicipalityCode:
-    @pytest.mark.parametrize("code", ["28079", "08019", "00001"])
-    def test_accepted(self, code: str) -> None:
-        assert _MUNI.validate_python(code) == code
+    def test_accepted(self) -> None:
+        for code in ("28079", "08019", "00001"):
+            assert _MUNI.validate_python(code) == code, code
 
-    @pytest.mark.parametrize("raw", ["", "123", "ABCDE", "12-345"])
-    def test_rejected(self, raw: str) -> None:
-        with pytest.raises(ValidationError):
-            _MUNI.validate_python(raw)
+    def test_rejected(self) -> None:
+        for raw in ("", "123", "ABCDE", "12-345"):
+            with pytest.raises(ValidationError):
+                _MUNI.validate_python(raw)
 
 
 # ---- bic -----------------------------------------------------------------
@@ -173,21 +193,20 @@ _BIC = TypeAdapter(BicString)
 
 
 class TestBicString:
-    @pytest.mark.parametrize(
-        "raw,canonical",
-        [
+    def test_accepted(self) -> None:
+        cases = (
             ("CAIXESBBXXX", "CAIXESBBXXX"),
             ("CAIXESBB", "CAIXESBB"),
             ("  caix esbb xxx  ", "CAIXESBBXXX"),
-        ],
-    )
-    def test_accepted(self, raw: str, canonical: str) -> None:
-        assert _BIC.validate_python(raw) == canonical
+        )
 
-    @pytest.mark.parametrize("raw", ["", "CAIX", "CAIXES", "CAIXESBBXX", "1AIXESBB"])
-    def test_rejected(self, raw: str) -> None:
-        with pytest.raises(ValidationError):
-            _BIC.validate_python(raw)
+        for raw, canonical in cases:
+            assert _BIC.validate_python(raw) == canonical, raw
+
+    def test_rejected(self) -> None:
+        for raw in ("", "CAIX", "CAIXES", "CAIXESBBXX", "1AIXESBB"):
+            with pytest.raises(ValidationError):
+                _BIC.validate_python(raw)
 
 
 # ---- date ----------------------------------------------------------------
@@ -196,22 +215,21 @@ _DATE = TypeAdapter(CalendarDate)
 
 
 class TestCalendarDate:
-    @pytest.mark.parametrize("raw", ["2024-01-15", "2024-12-31", "15012024", "31122024"])
-    def test_accepted(self, raw: str) -> None:
-        assert _DATE.validate_python(raw) == raw
+    def test_accepted(self) -> None:
+        for raw in ("2024-01-15", "2024-12-31", "15012024", "31122024"):
+            assert _DATE.validate_python(raw) == raw, raw
 
-    @pytest.mark.parametrize("raw", ["", "2024", "2024-13-01", "32012024", "00012024", "2024/01/15"])
-    def test_rejected(self, raw: str) -> None:
-        with pytest.raises(ValidationError):
-            _DATE.validate_python(raw)
+    def test_rejected(self) -> None:
+        for raw in ("", "2024", "2024-13-01", "32012024", "00012024", "2024/01/15"):
+            with pytest.raises(ValidationError):
+                _DATE.validate_python(raw)
 
 
 # ---- casilla round-trip across all atoms -------------------------------
 
 
-@pytest.mark.parametrize(
-    "tag",
-    [
+def test_casilla_definition_round_trips_with_long_tail_data_types() -> None:
+    tags = (
         "name",
         "nif_iva",
         "ccaa_code",
@@ -220,10 +238,10 @@ class TestCalendarDate:
         "municipality_code",
         "bic",
         "date",
-    ],
-)
-def test_casilla_definition_round_trips_with_long_tail_data_types(tag: str) -> None:
-    casilla = _casilla_with(tag)
-    round_tripped = CasillaDefinition.model_validate(casilla.model_dump())
-    assert round_tripped.data_type == tag
-    assert round_tripped == casilla
+    )
+
+    for tag in tags:
+        casilla = _casilla_with(tag)
+        round_tripped = CasillaDefinition.model_validate(casilla.model_dump())
+        assert round_tripped.data_type == tag, tag
+        assert round_tripped == casilla

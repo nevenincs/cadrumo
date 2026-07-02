@@ -6,7 +6,7 @@ with :func:`register_schema` so the
 JSON-contract test suite can enumerate every ledger-command surface this module
 covers.  Emission wraps the validated result in
 :class:`SchemaEnvelope` through
-:func:`~aeat.entrypoints.cli._common._emit_envelope`.
+:func:`_emit_envelope`.
 
 Field sets match the production payload dicts constructed in ``_ledger.py``
 at their emit sites. Optional fields cover multi-branch payload shapes
@@ -25,9 +25,9 @@ The application layer remains authoritative for
 :class:`LedgerPreflightReport`, and the slim
 :class:`BusinessOperationInvoice` record.  Adjacent
 surfaces that split out of this module keep their own transport schemas in
-:mod:`~aeat.entrypoints.cli._ledger_rule_payloads`,
-:mod:`~aeat.entrypoints.cli._ledger_llm_payloads`, and
-:mod:`~aeat.entrypoints.cli._ledger_catalogue_invoice_payloads`.
+:mod:`_ledger_rule_payloads`,
+:mod:`_ledger_llm_payloads`, and
+:mod:`_ledger_catalogue_invoice_payloads`.
 """
 
 from __future__ import annotations
@@ -394,7 +394,7 @@ class LedgerExcludeResult(_LedgerMutationResult):
 class LedgerRemoveResult(OutputSchema):
     """JSON envelope for ``aeat app ledger remove``.
 
-    Mirrors :class:`~aeat.application.ledger.LedgerTransactionRemovalReport`.
+    Mirrors :class:`LedgerTransactionRemovalReport`.
     ``blocking_modelo_references`` is the hard finalized-revision guard;
     ``stale_draft_revision_references`` is advisory evidence for borradores that
     still cite the removed transaction and should be recalculated.
@@ -486,7 +486,7 @@ class LedgerListRowPayload(OutputSchema):
     """One typed ``aeat app ledger list`` row (D2).
 
     Projected from
-    :class:`~aeat.application.ledger.LedgerTransactionReviewPayload` plus the
+    :class:`LedgerTransactionReviewPayload` plus the
     three id/group keys the list builder appends (``full_id``,
     ``display_id``, ``group_label``). Carries the non-negative ``amount`` magnitude
     plus ``direction`` (money shape fixed by C1) and the D6 ``created_at`` /
@@ -569,10 +569,10 @@ class LedgerViewResult(OutputSchema):
 class LedgerStatusResult(OutputSchema):
     """JSON envelope for ``aeat app ledger status``.
 
-    Mirrors :class:`~aeat.application.ledger.LedgerStatusReport`.  With no
+    Mirrors :class:`LedgerStatusReport`.  With no
     period it is an at-a-glance bucket summary; with ``--period`` it adds the
     ledger preflight counts and readiness verdict for the selected
-    :class:`~aeat.core.Period`.  The money totals are gross EUR roll-ups over
+    :class:`Period`.  The money totals are gross EUR roll-ups over
     active business/mixed rows, not modelo registry calculations.
     """
 
@@ -597,7 +597,7 @@ class LedgerStatusResult(OutputSchema):
 class LedgerHistoryEventPayload(OutputSchema):
     """One bucket event nested in ``aeat app ledger history`` (D2).
 
-    Mirrors :class:`~aeat.domain.buckets.BucketEvent`'s
+    Mirrors :class:`BucketEvent`'s
     ``model_dump(mode="json")`` — replaces the former bare ``dict[str, object]`` event shape. The
     ``payload`` mapping stays a typed ``dict[str, str]`` (the append-only event's
     free-form short-string detail, per the bucket-event contract), not a bare
@@ -645,7 +645,7 @@ class LedgerCategoriesResult(OutputSchema):
 class LedgerExportRowPayload(OutputSchema):
     """One serialised ledger row nested in ``aeat app ledger export`` (D2).
 
-    Mirrors :class:`~aeat.application.ledger.LedgerExportRow`'s
+    Mirrors :class:`LedgerExportRow`'s
     ``model_dump(mode="json")`` — replaces the former bare ``dict[str, object]``
     export-row shape. The flow stays the non-negative ``amount`` magnitude plus
     the ``direction`` authority (money shape fixed by C1); every other column is
@@ -689,12 +689,12 @@ class LedgerExportPayload(OutputSchema):
     """JSON envelope for ``aeat app ledger export``.
 
     Distinct from the application
-    :class:`~aeat.application.ledger.LedgerExportResult` (DB-26 S51): the backend
+    :class:`LedgerExportResult` (DB-26 S51): the backend
     result carries the raw ``payload`` bytes and typed members (``BucketId``,
     ``ExportSerializationFormat``, ``LedgerExportRow``); this
     envelope projects the JSON-coerced metadata + row view and appends the
     operator-facing ``output_path``. Derive instances via
-    :meth:`~aeat.entrypoints.cli._ledger_payloads.LedgerExportPayload.from_result`.
+    :meth:`LedgerExportPayload.from_result`.
     """
 
     bucket_id: str
@@ -733,7 +733,7 @@ class LedgerImportPayload(OutputSchema):
     """JSON envelope for ``aeat app ledger import``.
 
     Distinct from the application
-    :class:`~aeat.application.ledger.LedgerSourceImportResult` (DB-26 S51): this
+    :class:`LedgerSourceImportResult` (DB-26 S51): this
     envelope projects that result's JSON-coerced fields (the nested
     validation/source/diagnostic reports become the CLI ``*Payload`` shapes) and
     appends the optional operator-facing notice strings.
@@ -795,7 +795,7 @@ class LedgerTransactionParticipationPayload(OutputSchema):
     """JSON envelope for ``aeat app ledger participation <transaction-id>``.
 
     Carries the full
-    :class:`~aeat.domain.modelos.TransactionRevisionParticipationIndex` read for
+    :class:`TransactionRevisionParticipationIndex` read for
     one ledger transaction: every finalized modelo revision and filing that
     consumed it.  An empty ``participations`` list is the auditable "not used in
     any finalized declaration" answer, not a lookup failure.
@@ -810,7 +810,7 @@ class LedgerParticipationRebuildResult(OutputSchema):
     """JSON envelope for ``aeat app ledger participation rebuild``.
 
     Reports the outcome of
-    :func:`~aeat.application.modelo.rebuild_participation_index`, which
+    :func:`rebuild_participation_index`, which
     regenerates the derived participation index from the authoritative finalized
     calculation-revision catalogue.  The result is a repair summary for the
     read-side cache, not a mutation of ledger transactions.
@@ -825,7 +825,7 @@ class LedgerTrackingProvenancePayload(OutputSchema):
     """One evidence-link lineage entry nested in ``ledger track`` (D2).
 
     Mirrors
-    :class:`~aeat.domain.transactions.TransactionEvidenceProvenanceEntry`'s JSON
+    :class:`TransactionEvidenceProvenanceEntry`'s JSON
     dump; ``linked_at`` is the ISO-8601 timestamp.
     """
 
@@ -840,7 +840,7 @@ class LedgerTrackingProvenancePayload(OutputSchema):
 class LedgerTrackingEditPayload(OutputSchema):
     """One manual-correction lineage entry nested in ``ledger track`` (D2).
 
-    Mirrors :class:`~aeat.domain.transactions.TransactionEditLineageEntry`'s
+    Mirrors :class:`TransactionEditLineageEntry`'s
     JSON dump; ``edited_at`` is the ISO-8601 timestamp.
     """
 
@@ -855,7 +855,7 @@ class LedgerTrackingLifecyclePayload(OutputSchema):
     """One lifecycle-transition lineage entry nested in ``ledger track`` (D2).
 
     Mirrors
-    :class:`~aeat.domain.transactions.TransactionLifecycleLineageEntry`'s JSON
+    :class:`TransactionLifecycleLineageEntry`'s JSON
     dump; ``changed_at`` is the ISO-8601 timestamp.
     """
 
@@ -872,9 +872,9 @@ class LedgerTrackingPayload(OutputSchema):
     """Durable event-lineage projection for one transaction (D2).
 
     Mirrors
-    :class:`~aeat.application.ledger.LedgerTransactionTrackingPayload`'s JSON
+    :class:`LedgerTransactionTrackingPayload`'s JSON
     dump — replaces the former bare ``dict[str, object]`` ``tracking`` field on
-    :class:`~aeat.entrypoints.cli._ledger_payloads.LedgerTrackResult`.
+    :class:`LedgerTrackResult`.
     """
 
     transaction_id: str
@@ -892,7 +892,7 @@ class LedgerTrackResult(OutputSchema):
     ``participated_in`` carries the finalized-revision participations that
     consumed this transaction (the inverse audit trail), or ``None`` when the
     transaction appears in no finalized revision.  The field is read from
-    :class:`~aeat.domain.modelos.TransactionRevisionParticipationIndex` and
+    :class:`TransactionRevisionParticipationIndex` and
     complements the transaction's own evidence/edit/lifecycle lineage.
     """
 
@@ -935,7 +935,7 @@ class LedgerReviewResult(OutputSchema):
 class LedgerPreflightIssuePayload(OutputSchema):
     """One readiness issue attached to a ledger transaction.
 
-    Mirrors :class:`~aeat.application.ledger.LedgerPreflightIssue`: the
+    Mirrors :class:`LedgerPreflightIssue`: the
     transaction id, machine-readable reason, and operator detail explaining which
     fact blocks or warns before modelo calculation.
     """
@@ -951,7 +951,7 @@ class LedgerCheckResult(OutputSchema):
 
     ``check`` is a report-only audit over one explicit period or every period the
     ledger touches.  It aggregates
-    :func:`~aeat.application.ledger.preflight_transaction_catalogue` issue rows
+    :func:`preflight_transaction_catalogue` issue rows
     into a bucket-level readiness verdict without mutating transactions.
     """
 
@@ -966,12 +966,12 @@ class LedgerCheckResult(OutputSchema):
 class LedgerPreflightResult(OutputSchema):
     """JSON envelope for ``aeat app ledger preflight``.
 
-    Mirrors :class:`~aeat.application.ledger.LedgerPreflightReport` produced by
-    :func:`~aeat.application.ledger.preflight_ledger_tax_readiness`. ``period``
+    Mirrors :class:`LedgerPreflightReport` produced by
+    :func:`preflight_ledger_tax_readiness`. ``period``
     is the nested
-    :class:`~aeat.entrypoints.cli._ledger_payloads.LedgerPeriodPayload` model
+    :class:`LedgerPeriodPayload` model
     dump, ``issues`` are
-    :class:`~aeat.entrypoints.cli._ledger_payloads.LedgerPreflightIssuePayload`
+    :class:`LedgerPreflightIssuePayload`
     rows, and ``ready`` is the computed no-issues verdict.
     """
 
@@ -986,7 +986,7 @@ class LedgerLinkEvidenceUpdatePayload(OutputSchema):
     """Typed evidence-update projection nested in ``ledger link`` (D2).
 
     Mirrors
-    :class:`~aeat.application.ledger.LedgerTransactionResultPayload`: the
+    :class:`LedgerTransactionResultPayload`: the
     single-transaction mutation result produced when ``link`` attaches
     purchase-invoice evidence to the transaction. Replaces the former bare
     ``dict[str, object]`` ``evidence_update`` field.
@@ -1005,7 +1005,7 @@ class LedgerLinkResult(OutputSchema):
     D1: ``link`` now projects the ``transaction`` it mutated (the evidence
     attachment) alongside the link metadata; D2: the former bare-dict
     ``evidence_update`` is the typed
-    :class:`~aeat.entrypoints.cli._ledger_payloads.LedgerLinkEvidenceUpdatePayload`.
+    :class:`LedgerLinkEvidenceUpdatePayload`.
     Both are ``None`` on an invoice-only link, where no single-transaction
     mutation projection is produced.
     """
@@ -1107,7 +1107,7 @@ class InvoiceListResult(BusinessInvoiceListResult):
 
 
 class InventoryStockLayerPayload(OutputSchema):
-    """One :class:`~aeat.domain.contribuyente.inventory.StockLayer` transport row."""
+    """One :class:`StockLayer` transport row."""
 
     sku: str = "default"
     quantity: str
@@ -1116,7 +1116,7 @@ class InventoryStockLayerPayload(OutputSchema):
 
 
 class InventoryMovementPayload(OutputSchema):
-    """One :class:`~aeat.domain.contribuyente.inventory.MovementRecord` transport row."""
+    """One :class:`MovementRecord` transport row."""
 
     movement_id: str
     movement_date: str
@@ -1134,7 +1134,7 @@ class InventoryMovementPayload(OutputSchema):
 class InventoryLedgerPayload(OutputSchema):
     """One per-actividad inventory ledger record.
 
-    Mirrors :class:`~aeat.domain.contribuyente.inventory.InventoryLedger`'s
+    Mirrors :class:`InventoryLedger`'s
     ``model_dump(mode='json')`` plus the ``bucket_event_ids`` field the
     CLI appends at the emit site.
     """
@@ -1181,12 +1181,12 @@ class InventoryValuationPreviewPayload(OutputSchema):
     """JSON envelope for ``aeat app ledger inventory valuation preview``.
 
     Distinct from the application wrapper
-    :class:`~aeat.application.inventory.InventoryValuationPreviewResult` (DB-26
+    :class:`InventoryValuationPreviewResult` (DB-26
     S52): this envelope *flattens* that wrapper, projecting its inner
-    ``preview`` (:class:`~aeat.application.inventory.InventoryValuationPreview`)
+    ``preview`` (:class:`InventoryValuationPreview`)
     fields and lifting the wrapper's ``bucket_event_ids`` to the top level.
     Derive via
-    :meth:`~aeat.entrypoints.cli._ledger_payloads.InventoryValuationPreviewPayload.from_result`.
+    :meth:`InventoryValuationPreviewPayload.from_result`.
     """
 
     actividad_id: str
@@ -1205,7 +1205,7 @@ class InventoryValuationPreviewPayload(OutputSchema):
         enum/Decimal coercion, and the event ids are lifted onto the same level.
 
         Returns:
-            :class:`~aeat.entrypoints.cli._ledger_payloads.InventoryValuationPreviewPayload`:
+            :class:`InventoryValuationPreviewPayload`:
             Flattened CLI JSON envelope.
         """
         data = result.preview.model_dump(mode="json")

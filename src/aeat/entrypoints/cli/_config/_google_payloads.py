@@ -1,12 +1,12 @@
 """Typed ``--json`` payload schemas for Google config CLI commands.
 
 Each class declared here is a strict
-:class:`~aeat.entrypoints.cli._schemas.OutputSchema` subclass and is decorated
-with :func:`~aeat.entrypoints.cli._schemas.register_schema` so the
+:class:`OutputSchema` subclass and is decorated
+with :func:`register_schema` so the
 JSON-contract test suite can enumerate every google-config command surface this
 module covers. Validated results enter
-:class:`~aeat.entrypoints.cli._schemas.SchemaEnvelope` through
-:func:`~aeat.entrypoints.cli._common._emit_envelope`.
+:class:`SchemaEnvelope` through
+:func:`_emit_envelope`.
 
 Field sets match the production payload dicts constructed in ``_google.py``,
 ``_google_folder.py``, and ``_google_sync_calc.py`` at their emit sites. All
@@ -14,17 +14,17 @@ sequence fields use ``list`` rather than ``tuple`` because
 ``model_dump(mode='json')`` serialises pydantic tuples as JSON arrays.
 
 The payload classes document only the CLI transport shapes registered with
-:func:`~aeat.entrypoints.cli._schemas.register_schema`. OAuth state remains
-owned by :mod:`~aeat.adapters.outbound.google`, Drive mirror state by
-:mod:`~aeat.adapters.outbound.storage`, and calc-sheets semantics by
-:mod:`~aeat.application.storage.calc_sheets`.
+:func:`register_schema`. OAuth state remains
+owned by :mod:`google`, Drive mirror state by
+:mod:`storage`, and calc-sheets semantics by
+:mod:`calc_sheets`.
 
 See Also:
-    :mod:`~aeat.entrypoints.cli._config._google`
+    :mod:`_google`
         Google OAuth, status, and Drive mirror emit sites.
-    :mod:`~aeat.entrypoints.cli._config._google_folder`
+    :mod:`_google_folder`
         Drive root-folder configuration emit sites.
-    :mod:`~aeat.entrypoints.cli._config._google_sync_calc`
+    :mod:`_google_sync_calc`
         Google Sheets export, pull, verify, and compute emit sites.
 """
 
@@ -41,8 +41,8 @@ class GoogleRegisterResult(OutputSchema):
     """JSON envelope for ``aeat config google register``.
 
     Projects the operator-imported
-    :class:`~aeat.adapters.outbound.google.OAuthClient` after
-    :func:`~aeat.adapters.outbound.google._session_store.save_client` persists
+    :class:`OAuthClient` after
+    :func:`save_client` persists
     it for the active profile. Only non-secret orientation fields are exposed;
     ``client_secret`` never enters the CLI payload.
     """
@@ -58,9 +58,9 @@ class GoogleLoginResult(OutputSchema):
     """JSON envelope for ``aeat config google login``.
 
     The ``consent`` branch mirrors the
-    :class:`~aeat.adapters.outbound.google.OAuthMetadata` returned with an
-    :class:`~aeat.adapters.outbound.google.OAuthToken` by
-    :func:`~aeat.adapters.outbound.google._oauth_flow.run_login_flow`. The
+    :class:`OAuthMetadata` returned with an
+    :class:`OAuthToken` by
+    :func:`run_login_flow`. The
     ``refresh-only`` branch reports the existing metadata without exposing the
     refresh token.
     """
@@ -76,9 +76,9 @@ class GoogleLoginResult(OutputSchema):
 class GoogleStatusResult(OutputSchema):
     """JSON envelope for ``aeat config google status``.
 
-    Combines stored :class:`~aeat.adapters.outbound.google.OAuthClient`
+    Combines stored :class:`OAuthClient`
     presence with the non-secret
-    :class:`~aeat.adapters.outbound.google.OAuthMetadata` audit record. Missing
+    :class:`OAuthMetadata` audit record. Missing
     client or session records are represented with ``False`` booleans and
     ``None`` detail fields so status remains a read-only inspection surface.
     """
@@ -100,9 +100,9 @@ class GoogleLogoutResult(OutputSchema):
     """JSON envelope for ``aeat config google logout``.
 
     Reports the result of
-    :func:`~aeat.adapters.outbound.google._session_store.delete_session`: token
+    :func:`delete_session`: token
     and metadata removal are surfaced separately, while the registered
-    :class:`~aeat.adapters.outbound.google.OAuthClient` is intentionally
+    :class:`OAuthClient` is intentionally
     preserved for the next login.
     """
 
@@ -122,8 +122,8 @@ class GoogleLogoutResult(OutputSchema):
 class GoogleFolderSetResult(OutputSchema):
     """JSON envelope for ``aeat config google folder set``.
 
-    Mirrors the :class:`~aeat.adapters.outbound.google.DriveConfig` written by
-    :func:`~aeat.adapters.outbound.google._session_store.save_drive_config` for
+    Mirrors the :class:`DriveConfig` written by
+    :func:`save_drive_config` for
     the active profile. The folder id becomes the Google Drive root consumed by
     the storage provider and calc-sheets export commands.
     """
@@ -138,7 +138,7 @@ class GoogleFolderGetResult(OutputSchema):
     """JSON envelope for ``aeat config google folder get``.
 
     Projects the optional
-    :class:`~aeat.adapters.outbound.google.DriveConfig` loaded from the active
+    :class:`DriveConfig` loaded from the active
     profile. ``configured`` distinguishes an absent persisted root from a root
     folder id that is present and ready for provider construction.
     """
@@ -158,8 +158,8 @@ class GoogleFolderGetResult(OutputSchema):
 class GoogleSyncProbeResult(OutputSchema):
     """JSON envelope for ``aeat config google sync probe``.
 
-    Adapts :class:`~aeat.adapters.outbound.storage.ProviderProbeReport` from
-    the resolved Google Drive :class:`~aeat.adapters.outbound.storage.StorageProvider`.
+    Adapts :class:`ProviderProbeReport` from
+    the resolved Google Drive :class:`StorageProvider`.
     ``root_folder_id`` is included from the configured provider so operators
     can line up probe health with the selected Drive root.
     """
@@ -179,7 +179,7 @@ class GoogleSyncFailedObjectPayload(OutputSchema):
     """One failed ciphertext object in a sync push report.
 
     The row identifies the secure-object namespace, the remote
-    :func:`~aeat.adapters.outbound.storage._mirror_manifest.remote_mirror_object_key_hmac`,
+    :func:`remote_mirror_object_key_hmac`,
     and the storage error observed while writing or verifying that ciphertext
     object. Plaintext secure-object payloads never appear in this schema.
     """
@@ -193,7 +193,7 @@ class GoogleSyncFailedManifestPayload(OutputSchema):
     """One failed namespace manifest in a sync push report.
 
     Mirrors failures around
-    :func:`~aeat.adapters.outbound.storage._mirror_manifest.put_remote_mirror_namespace_manifest`
+    :func:`put_remote_mirror_namespace_manifest`
     or the follow-up manifest inspection pass for one secure-object namespace.
     """
 
@@ -205,7 +205,7 @@ class GoogleSyncDegradedManifestPayload(OutputSchema):
     """One degraded namespace manifest detected during a sync push.
 
     ``detail`` summarizes the
-    :class:`~aeat.adapters.outbound.storage.RemoteMirrorInspection` issue found
+    :class:`RemoteMirrorInspection` issue found
     after upload/download validation of that namespace's remote manifest.
     """
 
@@ -219,10 +219,10 @@ class GoogleSyncPushResult(OutputSchema):
 
     Summarizes the ciphertext mirror pass over the active bucket's secure-object
     rows. Object uploads return
-    :class:`~aeat.adapters.outbound.storage.ProviderObjectMetadata` internally,
+    :class:`ProviderObjectMetadata` internally,
     while namespace manifests are validated through
-    :class:`~aeat.adapters.outbound.storage.RemoteMirrorNamespaceManifest` and
-    :class:`~aeat.adapters.outbound.storage.RemoteMirrorInspection`. This
+    :class:`RemoteMirrorNamespaceManifest` and
+    :class:`RemoteMirrorInspection`. This
     payload exposes counts and error rows only, not decrypted profile data.
     """
 
@@ -255,10 +255,10 @@ class GoogleSyncPushResult(OutputSchema):
 class GoogleSyncCalcExportResult(OutputSchema):
     """JSON envelope for ``aeat config google sync calc export``.
 
-    Projects :class:`~aeat.adapters.outbound.google._calc_sheets_apply.CalcSheetsApplyResult`
-    after :func:`~aeat.application.storage.calc_sheets.build_export_plan` creates
-    the pure :class:`~aeat.application.storage.calc_sheets.SheetExportPlan` and
-    :func:`~aeat.adapters.outbound.google._calc_sheets_apply.apply_export_plan`
+    Projects :class:`CalcSheetsApplyResult`
+    after :func:`build_export_plan` creates
+    the pure :class:`SheetExportPlan` and
+    :func:`apply_export_plan`
     materialises it in Google Sheets.
     """
 
@@ -283,7 +283,7 @@ class GoogleSyncCalcExportResult(OutputSchema):
 class GoogleSyncCalcVerifyDivergencePayload(OutputSchema):
     """One divergent casilla row in a calc verify report.
 
-    Mirrors a :class:`~aeat.application.storage.calc_sheets._parity_harness.CasillaParity`
+    Mirrors a :class:`CasillaParity`
     row where local Decimal output, Google Sheets output, and optionally the
     AEAT oracle do not all agree.
     """
@@ -299,9 +299,9 @@ class GoogleSyncCalcVerifyDivergencePayload(OutputSchema):
 class GoogleSyncCalcVerifyResult(OutputSchema):
     """JSON envelope for ``aeat config google sync calc verify``.
 
-    Projects the :class:`~aeat.application.storage.calc_sheets._parity_harness.ParityReport`
+    Projects the :class:`ParityReport`
     returned by
-    :func:`~aeat.application.storage.calc_sheets._parity_harness.verify_modelo_parity`.
+    :func:`verify_modelo_parity`.
     The payload keeps the aggregate verdict beside the divergent casilla rows
     so consumers can fail fast without discarding audit detail.
     """
@@ -325,8 +325,8 @@ class GoogleSyncCalcPullOperatorEditPayload(OutputSchema):
     """One populated operator casilla edit emitted by ``sync calc pull``.
 
     Narrows the populated
-    :class:`~aeat.adapters.outbound.google._calc_sheets_pull.OperatorEdit`
-    subset of a :class:`~aeat.adapters.outbound.google._calc_sheets_pull.PullResult`
+    :class:`OperatorEdit`
+    subset of a :class:`PullResult`
     to the public CLI fields.
     """
 
@@ -338,7 +338,7 @@ class GoogleSyncCalcPullOperatorEditPayload(OutputSchema):
 class GoogleSyncCalcComputeCasillaPayload(OutputSchema):
     """One registry-computed casilla emitted by ``sync calc compute``.
 
-    Mirrors a :class:`~aeat.domain.calculations.registry.RegistryCalculationEntry`
+    Mirrors a :class:`RegistryCalculationEntry`
     produced from a pulled workbook. Legal and source references are required so
     the Google Sheets compute surface keeps the same grounding contract as the
     core modelo calculation output.
@@ -355,12 +355,12 @@ class GoogleSyncCalcComputeCasillaPayload(OutputSchema):
 class GoogleSyncCalcPullResult(OutputSchema):
     """JSON envelope for ``aeat config google sync calc pull``.
 
-    Projects the :class:`~aeat.adapters.outbound.google._calc_sheets_pull.PullResult`
+    Projects the :class:`PullResult`
     returned by
-    :func:`~aeat.adapters.outbound.google._calc_sheets_pull.pull_operator_edits`.
+    :func:`pull_operator_edits`.
     The payload composes
-    :class:`~aeat.adapters.outbound.google._calc_sheets_pull.PullMetadata`, the
-    :class:`~aeat.adapters.outbound.google._calc_sheets_pull.MetadataMatchState`,
+    :class:`PullMetadata`, the
+    :class:`MetadataMatchState`,
     populated operator/binding/relation edits, and optional row-set assemblies.
     Casilla-bearing rows are typed so the CLI cannot emit anonymous string
     casilla references at this boundary. Computing casilla values from pulled
@@ -397,9 +397,9 @@ class GoogleSyncCalcComputeResult(OutputSchema):
     """JSON envelope for ``aeat config google sync calc compute``.
 
     Pulls operator-edited cells through
-    :func:`~aeat.adapters.outbound.google._calc_sheets_pull.pull_operator_edits`,
+    :func:`pull_operator_edits`,
     then runs
-    :func:`~aeat.adapters.outbound.google._calc_sheets_pull.compute_from_pull`
+    :func:`compute_from_pull`
     against the shared registry engine. The verb persists nothing; the
     computed block is the result surface.
     """

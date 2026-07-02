@@ -47,39 +47,26 @@ from ._modelo_100_registry_support import (
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 
-def test_modelo_100_source_foundation_inherits_revision_legal_and_source_refs() -> None:
+def test_modelo_100_source_foundation_matches_revision_refs_and_links() -> None:
     snapshot = _modelo_100_snapshot()
     source_foundation = snapshot.constructs["renta-source-foundation"]
+
     assert set(snapshot.revision.legal_refs).issubset(source_foundation.legal_refs)
     assert set(snapshot.revision.source_refs).issubset(source_foundation.source_refs)
-
-
-def test_modelo_100_source_foundation_carries_workbook_and_live_cross_references() -> None:
-    snapshot = _modelo_100_snapshot()
-    source_foundation = snapshot.constructs["renta-source-foundation"]
     assert set(source_foundation.workbook_parity_refs) == set(snapshot.workbook_parity_refs)
     assert set(source_foundation.live_cross_references) == set(snapshot.live_cross_references)
-
-
-def test_modelo_100_source_foundation_application_links_match_expected_set() -> None:
-    snapshot = _modelo_100_snapshot()
-    source_foundation = snapshot.constructs["renta-source-foundation"]
     assert set(source_foundation.application_links) == _SOURCE_FOUNDATION_APPLICATION_LINKS
 
 
-def test_modelo_100_personal_family_construct_bindings_match_expected_set() -> None:
+def test_modelo_100_personal_family_construct_members_match_expected_sets() -> None:
     snapshot = _modelo_100_snapshot()
     personal_family = snapshot.constructs["renta-personal-family"]
+
     assert set(personal_family.bindings) == _PERSONAL_FAMILY_BINDINGS
-
-
-def test_modelo_100_personal_family_construct_casillas_match_expected_set() -> None:
-    snapshot = _modelo_100_snapshot()
-    personal_family = snapshot.constructs["renta-personal-family"]
     assert set(personal_family.casilla_ids) == _PERSONAL_FAMILY_CASILLAS
 
 
-def test_modelo_100_dependent_modelos_construct_covers_every_previous_filing_binding() -> None:
+def test_modelo_100_dependent_modelos_construct_covers_dependency_members() -> None:
     snapshot = _modelo_100_snapshot()
     dependencies = snapshot.constructs["renta-dependent-modelos"]
     # The dependent-modelos construct covers every current observation-backed slot:
@@ -91,11 +78,6 @@ def test_modelo_100_dependent_modelos_construct_covers_every_previous_filing_bin
         if binding.source in {"previous_filing", "relation_prefill"}
     }
     assert set(dependencies.bindings) == filed_dependency_bindings
-
-
-def test_modelo_100_dependent_modelos_construct_covers_every_revision_relation() -> None:
-    snapshot = _modelo_100_snapshot()
-    dependencies = snapshot.constructs["renta-dependent-modelos"]
     assert set(dependencies.relations) == {relation.id for relation in snapshot.revision.relations}
 
 
@@ -124,7 +106,7 @@ def test_modelo_100_2025_member_grounded_constructs_do_not_declare_extra_legal_r
     assert not offenders
 
 
-def test_modelo_100_payments_retentions_construct_covers_classified_payment_bindings() -> None:
+def test_modelo_100_payments_retentions_construct_covers_classified_payment_members() -> None:
     """payments_retentions covers retention + pagos-a-cuenta filings only.
 
     Some previous_filing bindings are not payment/retention sources:
@@ -138,33 +120,29 @@ def test_modelo_100_payments_retentions_construct_covers_classified_payment_bind
         for classification in snapshot.revision.dependency_classifications
         if "renta-payments-retentions" in classification.target_constructs
     }
-    expected = {
+    expected_bindings = {
         binding.id
         for binding in snapshot.revision.bindings
         if binding.source in {"previous_filing", "relation_prefill"}
         and selector_as_dict(binding).get("source_modelo") in payment_source_modelos
     }
+    expected_relations = {
+        relation.id for relation in snapshot.revision.relations if relation.source_modelo in payment_source_modelos
+    }
+    expected_classifications = {
+        classification.id
+        for classification in snapshot.dependency_classifications.values()
+        if "renta-payments-retentions" in classification.target_constructs
+    }
 
-    assert set(payments_retentions.bindings) == expected
+    assert set(payments_retentions.bindings) == expected_bindings
+    assert set(payments_retentions.relations) == expected_relations
+    assert set(payments_retentions.dependency_classifications) == expected_classifications
     assert "renta-2025-base-liquidable-negativa-general-anterior" not in payments_retentions.bindings
     assert (
         "renta-2025-base-liquidable-negativa-general-anterior"
         in snapshot.constructs["renta-anexo-c-base-liquidable-negativa-general"].bindings
     )
-
-
-def test_modelo_100_payments_retentions_construct_excludes_atribucion_relations() -> None:
-    snapshot = _modelo_100_snapshot()
-    payments_retentions = snapshot.constructs["renta-payments-retentions"]
-    payment_source_modelos = {
-        classification.source_modelo
-        for classification in snapshot.revision.dependency_classifications
-        if "renta-payments-retentions" in classification.target_constructs
-    }
-    expected = {
-        relation.id for relation in snapshot.revision.relations if relation.source_modelo in payment_source_modelos
-    }
-    assert set(payments_retentions.relations) == expected
 
 
 def test_modelo_100_economic_activities_construct_pins_estimacion_directa_binding() -> None:
@@ -184,17 +162,6 @@ def test_modelo_100_dependent_modelos_construct_carries_every_dependency_classif
     snapshot = _modelo_100_snapshot()
     dependencies = snapshot.constructs["renta-dependent-modelos"]
     assert set(dependencies.dependency_classifications) == set(snapshot.dependency_classifications)
-
-
-def test_modelo_100_payments_retentions_construct_dependency_classifications_target_payments() -> None:
-    snapshot = _modelo_100_snapshot()
-    payments_retentions = snapshot.constructs["renta-payments-retentions"]
-    expected = {
-        classification.id
-        for classification in snapshot.dependency_classifications.values()
-        if "renta-payments-retentions" in classification.target_constructs
-    }
-    assert set(payments_retentions.dependency_classifications) == expected
 
 
 _CASILLA_TO_PROFILE_BINDING: Mapping[CasillaId, str] = _binding_map_by_casilla(

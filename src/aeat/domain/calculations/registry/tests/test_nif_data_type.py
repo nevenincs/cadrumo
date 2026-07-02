@@ -44,9 +44,8 @@ def _casilla_with(data_type: str) -> CasillaDefinition:
 class TestNifStringAccepts:
     """`NifString` accepts canonically formatted Spanish identifiers."""
 
-    @pytest.mark.parametrize(
-        "raw,canonical",
-        [
+    def test_valid_input_returns_canonical_output(self) -> None:
+        cases = (
             ("00000000T", "00000000T"),
             ("00000001R", "00000001R"),
             ("12345678Z", "12345678Z"),
@@ -60,10 +59,10 @@ class TestNifStringAccepts:
             ("ES00000000T", "00000000T"),
             ("00000000t", "00000000T"),
             ("x0000000t", "X0000000T"),
-        ],
-    )
-    def test_valid_input_returns_canonical_output(self, raw: str, canonical: str) -> None:
-        assert _NIF_ADAPTER.validate_python(raw) == canonical
+        )
+
+        for raw, canonical in cases:
+            assert _NIF_ADAPTER.validate_python(raw) == canonical, raw
 
 
 class TestNifStringRejects:
@@ -76,9 +75,8 @@ class TestNifStringRejects:
     directly to confirm the raw schema-error surface.
     """
 
-    @pytest.mark.parametrize(
-        "raw",
-        [
+    def test_invalid_inputs_rejected_through_adapter(self) -> None:
+        cases: tuple[object, ...] = (
             "",
             "12345678",
             "12345678A",
@@ -87,26 +85,25 @@ class TestNifStringRejects:
             "@@@@@@@@@",
             "1234567890",
             12345678,
-        ],
-    )
-    def test_invalid_inputs_rejected_through_adapter(self, raw: object) -> None:
-        with pytest.raises(ValidationError):
-            _NIF_ADAPTER.validate_python(raw)
+        )
 
-    @pytest.mark.parametrize(
-        "raw",
-        [
+        for raw in cases:
+            with pytest.raises(ValidationError):
+                _NIF_ADAPTER.validate_python(raw)
+
+    def test_invalid_inputs_raise_registry_validation_error_at_validator(self) -> None:
+        cases: tuple[object, ...] = (
             "",
             "12345678",
             "12345678A",
             "X0000000A",
             "A58818500",
             12345678,
-        ],
-    )
-    def test_invalid_inputs_raise_registry_validation_error_at_validator(self, raw: object) -> None:
-        with pytest.raises(RegistryValidationError):
-            _validate_nif_string(raw)
+        )
+
+        for raw in cases:
+            with pytest.raises(RegistryValidationError):
+                _validate_nif_string(raw)
 
 
 class TestCasillaDefinitionDataType:

@@ -320,25 +320,22 @@ def test_groi_planned_operations_emit_only_read_only_http_methods() -> None:
             assert operation.method in {"GET", "HEAD", "OPTIONS"}, operation
 
 
-@pytest.mark.parametrize("forbidden_label", AEAT_WRITE_FORBIDDEN_ACTIONS)
-def test_guard_blocks_fabricated_write_class_browser_action_under_groi_policy(forbidden_label: str) -> None:
+def test_guard_blocks_fabricated_write_class_browser_actions_under_groi_policy() -> None:
     """The guard rejects every write-class action label the GROI policy declares forbidden."""
 
-    fabricated = RemoteOperation(kind="browser_action", action=f"trigger-{forbidden_label}-on-aeat")
-    with pytest.raises(RegistryValidationError, match="forbidden action"):
-        assert_remote_operation_allowed(_aeat_policy(), fabricated)
+    for forbidden_label in AEAT_WRITE_FORBIDDEN_ACTIONS:
+        fabricated = RemoteOperation(kind="browser_action", action=f"trigger-{forbidden_label}-on-aeat")
+        with pytest.raises(RegistryValidationError, match="forbidden action"):
+            assert_remote_operation_allowed(_aeat_policy(), fabricated)
 
 
-@pytest.mark.parametrize(
-    "forbidden_token",
-    ("submit", "send", "post", "save", "sign", "payment", "presentar", "enviar", "firmar"),
-)
-def test_guard_blocks_fabricated_browser_action_carrying_forbidden_token(forbidden_token: str) -> None:
+def test_guard_blocks_fabricated_browser_actions_carrying_forbidden_tokens() -> None:
     """The guard's global forbidden-token set blocks any action label containing a write verb."""
 
-    fabricated = RemoteOperation(kind="browser_action", action=f"groi-{forbidden_token}-form-data")
-    with pytest.raises(RegistryValidationError, match="forbidden"):
-        assert_remote_operation_allowed(_aeat_policy(), fabricated)
+    for forbidden_token in ("submit", "send", "post", "save", "sign", "payment", "presentar", "enviar", "firmar"):
+        fabricated = RemoteOperation(kind="browser_action", action=f"groi-{forbidden_token}-form-data")
+        with pytest.raises(RegistryValidationError, match="forbidden"):
+            assert_remote_operation_allowed(_aeat_policy(), fabricated)
 
 
 def test_guard_blocks_fabricated_http_post_to_aeat_under_groi_policy() -> None:

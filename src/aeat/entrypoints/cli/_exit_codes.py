@@ -1,11 +1,11 @@
 """Stable CLI exit-code table for the JSON output contract.
 
-Defines :class:`~aeat.entrypoints.cli._exit_codes.ExitCode`, the canonical
-exit-code reservation used by every command in :mod:`~aeat.entrypoints.cli`, and
-:func:`~aeat.entrypoints.cli._exit_codes.exit_with`, the thin helper that emits
+Defines :class:`ExitCode`, the canonical
+exit-code reservation used by every command in the CLI package, and
+:func:`exit_with`, the thin helper that emits
 an optional stderr message and raises :class:`~typer.Exit` with the chosen code.
 Keeping the table centralised beside
-:func:`~aeat.core.errors.get_error_exit_code` guarantees that the CLI contract
+:func:`get_error_exit_code` guarantees that the CLI contract
 and the structured error envelope speak the same exit-code vocabulary.
 """
 
@@ -19,7 +19,7 @@ import typer
 class ExitCode(IntEnum):
     """Stable process exit codes reserved for the AEAT CLI contract.
 
-    The values map one-to-one with :class:`~aeat.core.errors.ErrorCategory`
+    The values map one-to-one with :class:`ErrorCategory`
     categories so the JSON envelope's ``exit_code`` field is always derived
     from the same table the operating shell sees.
 
