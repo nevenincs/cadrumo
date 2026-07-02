@@ -23,13 +23,12 @@ if TYPE_CHECKING:
 from ...core.external_constants import CLASSIFIED_BY_MANUAL
 from ...domain.buckets import (
     BucketEvent,
+    BucketEventHistoryRepositoryProtocol,
     BucketEventObjectType,
     BucketEventType,
 )
-from ...domain.buckets._protocols import BucketEventHistoryRepositoryProtocol
-from ...domain.invoices import InvoiceCatalogue, InvoiceCatalogueRepository
-from ...domain.invoices._protocols import InvoiceCatalogueRepositoryProtocol
-from ...domain.modelos._protocols import (
+from ...domain.invoices import InvoiceCatalogue, InvoiceCatalogueRepository, InvoiceCatalogueRepositoryProtocol
+from ...domain.modelos import (
     CalculationRevisionCatalogueRepositoryProtocol,
     WorkUnitCatalogueRepositoryProtocol,
 )
@@ -37,11 +36,11 @@ from ...domain.transactions import (
     BusinessClassification,
     Transaction,
     TransactionCatalogue,
+    TransactionCatalogueRepositoryProtocol,
     TransactionLifecycleLineageEntry,
     TransactionLifecycleState,
     TransactionValidationError,
 )
-from ...domain.transactions._protocols import TransactionCatalogueRepositoryProtocol
 from ._actions_common import (
     _blocking_modelo_references,
     _bucket_event_repository,

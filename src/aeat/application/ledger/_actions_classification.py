@@ -19,26 +19,26 @@ from typing import TYPE_CHECKING
 from pydantic import ValidationError
 
 if TYPE_CHECKING:
-    from ...domain.transactions._classification_rule import LedgerClassificationRule
+    from ...domain.transactions import LedgerClassificationRule
 
 from ...core.errors import AeatError
 from ...core.external_constants import CLASSIFIED_BY_MANUAL
 from ...domain.buckets import (
     BucketEvent,
+    BucketEventHistoryRepositoryProtocol,
 )
-from ...domain.buckets._protocols import BucketEventHistoryRepositoryProtocol
-from ...domain.modelos._protocols import (
+from ...domain.modelos import (
     CalculationRevisionCatalogueRepositoryProtocol,
     WorkUnitCatalogueRepositoryProtocol,
 )
 from ...domain.transactions import (
     BusinessClassification,
     Transaction,
+    TransactionCatalogueRepositoryProtocol,
     TransactionLifecycleState,
     TransactionValidationError,
     is_classified,
 )
-from ...domain.transactions._protocols import TransactionCatalogueRepositoryProtocol
 from ._actions_common import (
     _blockers_by_source_transaction_id,
     _bucket_event_repository,
@@ -344,7 +344,7 @@ def add_classification_rule(
     """
     from typing import cast
 
-    from ...domain.transactions._classification_rule import LedgerClassificationRule
+    from ...domain.transactions import LedgerClassificationRule
     from ._rule_repository import LedgerClassificationRuleRepository
 
     repo: LedgerClassificationRuleRepository = (

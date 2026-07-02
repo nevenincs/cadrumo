@@ -28,6 +28,7 @@ from enum import StrEnum
 
 from pydantic import BaseModel, Field, computed_field, field_serializer, field_validator
 
+from ...adapters.persistence.profile.usage_ratios import load_usage_ratios_with_censo_guard
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core import Period
 from ...core.external_constants import DEFAULT_CURRENCY
@@ -43,8 +44,8 @@ from ...domain.transactions import (
     TransactionLifecycleState,
     TransactionValidationError,
 )
-from ...domain.usage_ratios import CensoRatioMismatchError, load_usage_ratios_with_censo_guard
-from ..aggregation._iva_ledger import (
+from ...domain.usage_ratios import CensoRatioMismatchError
+from ..aggregation import (
     IvaLedgerAggregationIssueReason,
     iva_ledger_missing_fact_reasons,
     validate_iva_ledger_counterparty_category,
@@ -69,9 +70,7 @@ class LedgerPreflightIssueReason(StrEnum):
     MISSING_IVA_RATE = "missing_iva_rate"
     MISSING_EUR_TAX_SUBSTRATE = "missing_eur_tax_substrate"
     MISSING_COUNTERPARTY_EU_MEMBER_STATE = "missing_counterparty_eu_member_state"
-    DOMESTIC_COUNTERPARTY_ON_INTRA_COMMUNITY_TRANSACTION = (
-        "domestic_counterparty_on_intra_community_transaction"
-    )
+    DOMESTIC_COUNTERPARTY_ON_INTRA_COMMUNITY_TRANSACTION = "domestic_counterparty_on_intra_community_transaction"
     EU_MEMBER_STATE_ON_EXPORT_TRANSACTION = "eu_member_state_on_export_transaction"
     MISSING_PROPORTIONALITY_REFERENCE = "missing_proportionality_reference"
     UNSUPPORTED_CURRENCY = "unsupported_currency"
