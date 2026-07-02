@@ -20,8 +20,6 @@ import typer
 from ...application.modelo import (
     AmendmentEvidenceMissingError,
     AmendmentTargetStateError,
-    CalculationRevision,
-    CalculationRevisionAmendmentKind,
     CalculationRevisionNotFoundError,
     CalculationRevisionStateError,
     ModeloCalculationRevisionDefault,
@@ -36,7 +34,6 @@ from ...application.modelo import (
     ModeloWorkSelectorContradictionError,
     ModeloWorkUnitNotFoundError,
     ModeloWorkVisibleTargetAmbiguousError,
-    WorkUnit,
     WorkUnitNotFoundError,
     amend_modelo_revision,
     declared_modelo_period_tokens,
@@ -54,6 +51,7 @@ from ...core.external_constants import OutputLanguage
 from ...core.i18n import SUPPORTED_OUTPUT_LANGUAGES, tr
 from ...core.logging import get_logger
 from ...domain.calculations.registry import CasillaId, RegistryValidationError, validated_casilla_id
+from ...domain.modelos import CalculationRevision, CalculationRevisionAmendmentKind, WorkUnit
 from ._common import activate_subcommand_output_language
 from ._modelo_aggregate_cli import register_aggregate_commands
 from ._modelo_audit_cli import audit_app as audit_app

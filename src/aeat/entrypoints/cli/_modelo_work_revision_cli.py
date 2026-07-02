@@ -21,16 +21,15 @@ from typing import Annotated
 import typer
 
 from ...application.modelo import (
-    CalculationRevision,
     CalculationRevisionNotFoundError,
     ModeloCalculationRevisionSelector,
-    WorkUnit,
     list_calculation_revisions,
     modelo_202_modality_for_work_unit,
     resolve_modelo_work_unit_for_operator_target,
 )
 from ...core.external_constants import OutputLanguage
 from ...core.i18n import tr
+from ...domain.modelos import CalculationRevision, WorkUnit
 from ._common import _emit_envelope
 from ._modelo_cli_support import OutputLanguageOpt
 from ._modelo_payloads import WorkObservationsResult, WorkRevisionResult, WorkRevisionsResult

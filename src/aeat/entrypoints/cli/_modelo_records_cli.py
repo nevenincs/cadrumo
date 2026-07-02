@@ -17,7 +17,6 @@ from typing import Annotated
 import typer
 
 from ...application.modelo import (
-    ExternalEvidenceKind,
     ExternalModeloImportError,
     ModeloLocalObservationError,
     ModeloRecordNotFoundError,
@@ -35,7 +34,7 @@ from ...application.modelo import (
 from ...core import Period, PeriodError
 from ...core.i18n import tr
 from ...domain.calculations.registry import CasillaId, validated_casilla_id
-from ...domain.modelos import ModeloCode, ModeloValidationError
+from ...domain.modelos import ExternalEvidenceKind, ModeloCode, ModeloValidationError
 from ._common import _emit_envelope, _profile_to_taxpayer
 from ._modelo_payloads import (
     FilingRecordImportResult,
