@@ -8,7 +8,7 @@ validation contract used by Pydantic-backed records.
 This module is deliberately narrower than the registry-backed modelo catalogue.
 :class:`ModeloIdentifier` preserves leading zeros and validates the textual
 identifier shape only; it does not prove that a modelo is present in the bundled
-registry or in the closed :class:`~aeat.core.Modelo` enum. Callers that need a
+registry or in the closed :class:`core.Modelo` enum. Callers that need a
 loadable revision must ask the registry authority.
 """
 
@@ -32,7 +32,7 @@ class ModeloIdentifier(str):
     optional uppercase suffix. It is suitable for lightweight domain records and
     Pydantic schemas that need syntactic validation without importing the
     registry authority. It is not a membership check against the current
-    registry or the closed :class:`~aeat.core.Modelo` enum.
+    registry or the closed :class:`core.Modelo` enum.
     """
 
     __slots__ = ()
