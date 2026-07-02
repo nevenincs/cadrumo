@@ -2,7 +2,7 @@
 
 Carries the per-casilla :class:`CasillaProvenance` trace and the aggregated
 :class:`CasillaAggregation` ledger shape. The aggregation package re-exports
-the canonical :class:`aeat.core.Period`; period construction and date-span
+the canonical :class:`core.Period`; period construction and date-span
 authority live in core, not in an application-layer wrapper.
 """
 
