@@ -96,26 +96,23 @@ def test_update_manual_transaction_persists_replacement_transaction_id(secure_ob
     assert outcome.updated.ref.transaction_id in outcome.reloaded.transactions
 
 
-@pytest.mark.parametrize(("attr_path", "expected"), UPDATED_FIELD_EXPECTATIONS)
 def test_update_manual_transaction_replaces_field(
     secure_objects: SecureObjectRepository,
-    attr_path: str,
-    expected: object,
 ) -> None:
     outcome = _drive_update_manual_transaction(secure_objects)
-    actual: object = outcome.updated.transaction
-    for segment in attr_path.split("."):
-        actual = getattr(actual, segment)
-    assert actual == expected
+    for attr_path, expected in UPDATED_FIELD_EXPECTATIONS:
+        actual: object = outcome.updated.transaction
+        for segment in attr_path.split("."):
+            actual = getattr(actual, segment)
+        assert actual == expected, attr_path
 
 
-@pytest.mark.parametrize("attr", PRESERVED_CREATE_AUDIT_FIELDS)
 def test_update_manual_transaction_preserves_original_audit_field(
     secure_objects: SecureObjectRepository,
-    attr: str,
 ) -> None:
     outcome = _drive_update_manual_transaction(secure_objects)
-    assert getattr(outcome.updated.transaction, attr) == getattr(outcome.created.transaction, attr)
+    for attr in PRESERVED_CREATE_AUDIT_FIELDS:
+        assert getattr(outcome.updated.transaction, attr) == getattr(outcome.created.transaction, attr), attr
 
 
 def test_update_manual_transaction_records_edit_lineage_entry(secure_objects: SecureObjectRepository) -> None:
@@ -142,15 +139,12 @@ def test_update_manual_transaction_links_update_events_to_result(secure_objects:
     assert [event.event_id for event in outcome.events[1:]] == list(outcome.updated.bucket_event_ids)
 
 
-@pytest.mark.parametrize(("event_index", "payload_key", "expected"), POST_UPDATE_EVENT_PAYLOADS)
 def test_update_manual_transaction_event_payload_marks_mutation_kind(
     secure_objects: SecureObjectRepository,
-    event_index: int,
-    payload_key: str,
-    expected: str,
 ) -> None:
     outcome = _drive_update_manual_transaction(secure_objects)
-    assert outcome.events[event_index].payload[payload_key] == expected
+    for event_index, payload_key, expected in POST_UPDATE_EVENT_PAYLOADS:
+        assert outcome.events[event_index].payload[payload_key] == expected, (event_index, payload_key)
 
 
 def test_update_manual_transaction_edit_event_references_previous_transaction(
