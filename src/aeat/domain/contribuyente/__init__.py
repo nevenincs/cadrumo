@@ -5,7 +5,7 @@ profiles, browser profiles, and spending-category profiles. It owns
 personal local state needed to parameterize RENTA verification.
 
 :class:`TaxResidenceProfile` and :class:`ResidenceChange` carry the
-:class:`~aeat.domain.contribuyente._ccaa.CCAA` residence axis; :class:`RentaFamilyProfile` and
+:class:`CCAA` residence axis; :class:`RentaFamilyProfile` and
 :class:`DescendantInfo` carry the Modelo 100 personal/family facts, and
 :class:`ProfileKey` exposes the wizard-registered editable profile schema.
 """
@@ -155,7 +155,7 @@ class TaxResidenceProfile(BaseModel, frozen=True, strict=True):
 
 
 def parse_tax_region(raw: str) -> CCAA:
-    """Parse a CLI/user tax-region token into the closed :class:`~aeat.domain.contribuyente._ccaa.CCAA` enum."""
+    """Parse a CLI/user tax-region token into the closed :class:`CCAA` enum."""
     normalized = _normalize_region_token(raw)
     if normalized in _FORAL_ALIASES:
         raise ForalRegimeError(raw)
