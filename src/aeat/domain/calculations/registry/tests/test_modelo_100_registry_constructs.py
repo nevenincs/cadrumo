@@ -47,39 +47,26 @@ from ._modelo_100_registry_support import (
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 
-def test_modelo_100_source_foundation_inherits_revision_legal_and_source_refs() -> None:
+def test_modelo_100_source_foundation_matches_revision_refs_and_links() -> None:
     snapshot = _modelo_100_snapshot()
     source_foundation = snapshot.constructs["renta-source-foundation"]
+
     assert set(snapshot.revision.legal_refs).issubset(source_foundation.legal_refs)
     assert set(snapshot.revision.source_refs).issubset(source_foundation.source_refs)
-
-
-def test_modelo_100_source_foundation_carries_workbook_and_live_cross_references() -> None:
-    snapshot = _modelo_100_snapshot()
-    source_foundation = snapshot.constructs["renta-source-foundation"]
     assert set(source_foundation.workbook_parity_refs) == set(snapshot.workbook_parity_refs)
     assert set(source_foundation.live_cross_references) == set(snapshot.live_cross_references)
-
-
-def test_modelo_100_source_foundation_application_links_match_expected_set() -> None:
-    snapshot = _modelo_100_snapshot()
-    source_foundation = snapshot.constructs["renta-source-foundation"]
     assert set(source_foundation.application_links) == _SOURCE_FOUNDATION_APPLICATION_LINKS
 
 
-def test_modelo_100_personal_family_construct_bindings_match_expected_set() -> None:
+def test_modelo_100_personal_family_construct_members_match_expected_sets() -> None:
     snapshot = _modelo_100_snapshot()
     personal_family = snapshot.constructs["renta-personal-family"]
+
     assert set(personal_family.bindings) == _PERSONAL_FAMILY_BINDINGS
-
-
-def test_modelo_100_personal_family_construct_casillas_match_expected_set() -> None:
-    snapshot = _modelo_100_snapshot()
-    personal_family = snapshot.constructs["renta-personal-family"]
     assert set(personal_family.casilla_ids) == _PERSONAL_FAMILY_CASILLAS
 
 
-def test_modelo_100_dependent_modelos_construct_covers_every_previous_filing_binding() -> None:
+def test_modelo_100_dependent_modelos_construct_covers_dependency_members() -> None:
     snapshot = _modelo_100_snapshot()
     dependencies = snapshot.constructs["renta-dependent-modelos"]
     # The dependent-modelos construct covers every current observation-backed slot:
@@ -91,11 +78,6 @@ def test_modelo_100_dependent_modelos_construct_covers_every_previous_filing_bin
         if binding.source in {"previous_filing", "relation_prefill"}
     }
     assert set(dependencies.bindings) == filed_dependency_bindings
-
-
-def test_modelo_100_dependent_modelos_construct_covers_every_revision_relation() -> None:
-    snapshot = _modelo_100_snapshot()
-    dependencies = snapshot.constructs["renta-dependent-modelos"]
     assert set(dependencies.relations) == {relation.id for relation in snapshot.revision.relations}
 
 
