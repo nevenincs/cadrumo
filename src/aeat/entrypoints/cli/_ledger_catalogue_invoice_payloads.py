@@ -4,20 +4,20 @@ Each payload is a strict
 :class:`OutputSchema` subclass registered with
 :func:`register_schema` on the shared
 :class:`SchemaEnvelope` surface through
-:func:`~aeat.entrypoints.cli._common._emit_envelope`.
+:func:`_emit_envelope`.
 
 The unified ``aeat app ledger invoice`` group drives the slim
 :class:`BusinessOperationInvoice` operator record
-(payloads in :mod:`~aeat.entrypoints.cli._ledger_payloads`). The ``catalogue``
+(payloads in :mod:`_ledger_payloads`). The ``catalogue``
 subgroup added here drives the **rich** :class:`Invoice`
 in the
 :class:`InvoiceCatalogue` — the only invoice aggregate
 that carries ``linked_transaction_ids`` and the one ``link --invoice-id``
 resolves through
-:func:`~aeat.application.invoices.link_invoice_transaction_repositories`. These
+:func:`link_invoice_transaction_repositories`. These
 payloads are declared in their own module so the registration side-effects live
 next to the verb that emits them without touching the slim
-:mod:`~aeat.entrypoints.cli._ledger_payloads` surface.
+:mod:`_ledger_payloads` surface.
 """
 
 from __future__ import annotations
@@ -63,9 +63,8 @@ class CatalogueInvoiceRecordPayload(OutputSchema):
 class CatalogueInvoiceCreateResult(CatalogueInvoiceRecordPayload):
     """JSON envelope for ``aeat app ledger invoice catalogue create``.
 
-    Mirrors the ``invoice`` inside
-    :class:`~aeat.application.invoices.CatalogueInvoiceCreateResult` returned by
-    :func:`~aeat.application.invoices.create_catalogue_invoice`.
+    Mirrors the ``invoice`` inside the application-layer create result returned
+    by :func:`create_catalogue_invoice`.
     """
 
 
@@ -74,7 +73,7 @@ class CatalogueInvoiceViewResult(CatalogueInvoiceRecordPayload):
     """JSON envelope for ``aeat app ledger invoice catalogue view``.
 
     Projects the rich :class:`Invoice` resolved by
-    :func:`~aeat.application.invoices.resolve_catalogue_invoice_from_repository`.
+    :func:`resolve_catalogue_invoice_from_repository`.
     """
 
 
@@ -83,8 +82,8 @@ class CatalogueInvoiceRemoveResult(CatalogueInvoiceRecordPayload):
     """JSON envelope for ``aeat app ledger invoice catalogue remove``.
 
     Reports the deleted rich :class:`Invoice` returned by
-    :func:`~aeat.application.invoices.remove_catalogue_invoice`; linked invoices
-    are refused before this payload is emitted.
+    :func:`remove_catalogue_invoice`; linked invoices are refused before this
+    payload is emitted.
     """
 
 
