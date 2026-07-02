@@ -53,7 +53,11 @@ class TerminologySearchPayload(BaseModel):
 
 
 def terminology_payload_from_hits(query: str, hits: tuple[TerminologyHit, ...]) -> TerminologySearchPayload:
-    """Map ranked terminology hits to the tool's typed payload."""
+    """Map ranked terminology hits to the tool's typed payload.
+
+    Returns:
+        A :class:`TerminologySearchPayload`.
+    """
     rows = tuple(
         TerminologyResultRow(
             concept_id=hit.concept_id,
@@ -72,7 +76,11 @@ def build_terminology_search_payload(
     locale: str = "es",
     limit: int = _DEFAULT_LIMIT,
 ) -> TerminologySearchPayload:
-    """Run terminology search for ``query`` and return the tool payload."""
+    """Run terminology search for ``query`` and return the tool payload.
+
+    Returns:
+        A :class:`TerminologySearchPayload`.
+    """
     hits = search_terminology(query, locale=locale, limit=limit)
     return terminology_payload_from_hits(query, hits)
 
