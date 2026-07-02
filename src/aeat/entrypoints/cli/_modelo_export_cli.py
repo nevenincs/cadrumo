@@ -56,6 +56,27 @@ def _local_export_evidence_notice(result: ModeloExportResult) -> Notice:
     )
 
 
+def _completeness_advisory_notice(result: ModeloExportResult) -> Notice:
+    return Notice(
+        severity=NoticeSeverity.WARNING,
+        code="modelo.export.completeness_unverified",
+        message=result.completeness_advisory_message,
+        context={
+            "reason": "no_completeness_manifest",
+            "modelo": str(result.modelo),
+            "filing_year": str(result.filing_year),
+            "period": result.period.registry_token,
+        },
+    )
+
+
+def _export_notices(result: ModeloExportResult) -> list[Notice]:
+    notices = [_local_export_evidence_notice(result)]
+    if result.completeness_unverified:
+        notices.append(_completeness_advisory_notice(result))
+    return notices
+
+
 def _export_text_lines(result: ModeloExportResult) -> list[str]:
     return [
         "operation\tmodelo.export",
@@ -241,7 +262,7 @@ def register_export_commands(
             command="modelo.export",
             result=export_result,
             lines=_export_text_lines(result),
-            notices=[_local_export_evidence_notice(result)],
+            notices=_export_notices(result),
         )
 
 
