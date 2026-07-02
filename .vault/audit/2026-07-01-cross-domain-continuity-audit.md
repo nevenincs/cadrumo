@@ -3,7 +3,7 @@ tags:
   - '#audit'
   - '#cross-domain-continuity'
 date: '2026-07-01'
-modified: '2026-07-01'
+modified: '2026-07-02'
 related:
   - "[[2026-05-26-cross-domain-continuity-plan]]"
 ---
@@ -73,6 +73,9 @@ related:
 - Reviewed W09.P45.S222 changes to financial-provider date parsing, CSV row error wrapping, localized financial error leaves, and focused ledger import UX tests.
 - Checked that malformed CSV dates now render the inner date-format reason through `errors.financial.unsupported_date_format` while retaining row, column, raw value, and expected-format context.
 - Checked validation evidence from focused CSV provider and ledger import UX tests, locale scaffold/audit, touched-file ruff, reviewer output, and RAG grounding.
+- Reviewed W09.P41.S320 retroactive locale-scaffold compliance for `iva_category_help` and `counterparty_eu_member_state_help` in the four locale catalogues.
+- Checked that the target help leaves are structurally present in `en.yml`, `es.yml`, `ca.yml`, and `hu.yml`, and that the authoritative locale scaffold/check/audit commands pass after scaffold canonicalization.
+- Checked validation evidence from RAG grounding, direct locale key search, `aeat.locales scaffold`, `aeat.locales scaffold --check`, and `aeat.locales audit`.
 
 ## Findings
 
@@ -155,6 +158,10 @@ No findings for the CSV currency/list-view validation closure. The fix keeps def
 ### w09-p45-s222 | low | no findings
 
 No findings for the CSV date-parse localization fix. Unsupported financial-source dates now carry a translated message key with label, raw value, and expected-format context; the CSV wrapper resolves that message before adding row context, so non-English ledger import refusals no longer leak the raw English `unsupported date format` string. Residual risk is limited to invalid compact-date behavior being manually verified by review rather than covered by a committed dedicated regression.
+
+### w09-p41-s320 | low | no findings
+
+No findings for the retroactive locale-scaffold compliance closure. The two requested ledger classify help leaves were already present in all four locale catalogues before the run, and the authoritative scaffold command preserved them while canonicalizing unrelated locale ordering and wrapping. `scaffold --check` and `audit` both passed for all four catalogues. Residual risk is limited to the expected scaffold churn being broader than the two target leaves.
 
 ### w03-p14-s223 | medium | resolved review findings
 

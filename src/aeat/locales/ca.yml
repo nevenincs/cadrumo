@@ -321,8 +321,10 @@ aggregation:
       bucket_mismatch: El bucket del repositori de moviments no coincideix amb el
         bucket d'agregació sol·licitat.
       candidate_outside_period: La candidatura queda fora del periode.
-      domestic_counterparty_on_intra_community_transaction: 'Les contraparts espanyoles no són vàlides per a operacions intracomunitàries.'
-      eu_member_state_on_export_transaction: 'Les operacions d''exportació o assimilades no poden portar un Estat membre de la UE; rebut %{member_state}.'
+      domestic_counterparty_on_intra_community_transaction: Les contraparts espanyoles
+        no són vàlides per a operacions intracomunitàries.
+      eu_member_state_on_export_transaction: Les operacions d'exportació o assimilades
+        no poden portar un Estat membre de la UE; rebut %{member_state}.
       unsupported_iva_category: 'Error intern: categoria d''IVA no admesa per a l''agregacio.'
   modelo_bindings:
     errors:
@@ -1229,6 +1231,9 @@ application:
         %{observed_ref}, resolta %{resolved_ref}.'
   wizard:
     errors:
+      command_input_invalid: 'Les dades del perfil no han superat la validació: %{details}'
+      command_input_invalid_fallback: un o més camps del perfil no han superat la
+        validació
       create_missing_filing_baseline: 'A la creació del perfil li falten dades d''identitat
         per presentar models. Afegeix aquests flags i torna a executar l''ordre: %{missing_flags}.'
       edit_missing_filing_baseline: 'Aquesta edició deixaria incompletes les dades
@@ -1243,8 +1248,6 @@ application:
       quiet_missing_flags: 'A aquesta execució amb --quiet li falten dades obligatòries.
         Afegeix aquests flags i torna a executar l''ordre: %{missing_flags}. O executa-la
         sense --quiet des d''un terminal interactiu per fer servir l''assistent guiat.'
-      command_input_invalid: 'Les dades del perfil no han superat la validació: %{details}'
-      command_input_invalid_fallback: 'un o més camps del perfil no han superat la validació'
     next_hint:
       modelo_work_create: aeat app modelo work create
     notices:
@@ -1636,9 +1639,13 @@ cli:
           temporals opcionals, sense mutar l'estat
         unknown_keys: 'Clau(s) de --binding desconeguda(es) {keys}; vinculacions conegudes
           per a {code}@{revision} ({period}): {suggestion}.'
+        unscoped_revision_suggestion: Abans de copiar ids a work calculate, torna
+          a executar amb --modelo MODELO --year YEAR --period PERIOD per a la unitat
+          de treball de destinacio.
+        unscoped_revision_warning: La llista de vinculacions no esta acotada per %{missing_filters};
+          pot incloure ids de vinculacions d una revisio que no coincideix amb la
+          unitat de treball usada per work calculate.
         year_help: Exercici fiscal del model (p. ex. 2026)
-        unscoped_revision_warning: 'La llista de vinculacions no esta acotada per %{missing_filters}; pot incloure ids de vinculacions d una revisio que no coincideix amb la unitat de treball usada per work calculate.'
-        unscoped_revision_suggestion: 'Abans de copiar ids a work calculate, torna a executar amb --modelo MODELO --year YEAR --period PERIOD per a la unitat de treball de destinacio.'
       casilla:
         casilla_help: Id de casella o numero impres de casella que cal descriure (p.
           ex. 0596).
@@ -2582,8 +2589,8 @@ cli:
         al paquet. Fes-lo servir quan l'etiqueta desada ja s'estigui utilitzant.
       import_label_taken: Ja existeix un perfil amb el nom %{name}. Torna a executar
         amb `--label NOM_NOU` per importar-lo amb un nom diferent.
-      import_label_taken_different_id: L'etiqueta de perfil %{name} ja s'està
-        utilitzant. Useu --label NOU_NOM per importar amb una etiqueta diferent.
+      import_label_taken_different_id: L'etiqueta de perfil %{name} ja s'està utilitzant.
+        Useu --label NOU_NOM per importar amb una etiqueta diferent.
       import_missing_bundle: No s'ha trobat el paquet de perfil a %{path}
       import_missing_filing_baseline: 'Al paquet de perfil li falten dades d''identitat
         per presentar models. Corregeix el paquet o torna a exportar un perfil complet
@@ -3577,7 +3584,8 @@ cli:
     period_help: 'Període de declaració com a testimoni AEAT: 1T-4T (trimestres),
       0A (anual), 01-12 (mesos). Combineu-lo amb --year per triar l''any.'
     post_filing:
-      pending: '%{count} esdeveniment(s) posteriors a la presentació d''AEAT requereixen atenció: %{kinds}. Revisa''ls amb ''aeat app live notifications list''.'
+      pending: '%{count} esdeveniment(s) posteriors a la presentació d''AEAT requereixen
+        atenció: %{kinds}. Revisa''ls amb ''aeat app live notifications list''.'
     status:
       drafts_empty: No s'han trobat esborranys de declaracions desats.
       drafts_empty_with_work_units: No hi ha esborranys de declaracions desats; es
@@ -5379,14 +5387,14 @@ wizard:
         help: Data en què el treballador va optar pel règim d'impatriats (AAAA-MM-DD).
           Només quan irpf-special-regime és "impatriado". RIRPF Art. 116. El règim
           expira en acabar el 6è any natural.
+      iva-group-dominant-entity-enrolled:
+        help: Alta com a entitat dominant d'un grup d'IVA
+      iva-group-member-enrolled:
+        help: Alta com a entitat membre d'un grup d'IVA
       iva-intracommunity-operations-exceed-50000-eur:
         help: Operacions intracomunitàries superen 50.000 EUR
       iva-oss-enrolled:
         help: Alta en OSS
-      iva-group-member-enrolled:
-        help: Alta com a entitat membre d'un grup d'IVA
-      iva-group-dominant-entity-enrolled:
-        help: Alta com a entitat dominant d'un grup d'IVA
       iva-redeme-enrolled:
         help: Si el contribuent està inscrit a REDEME
       iva-regime:
@@ -5520,14 +5528,14 @@ wizard:
 
       Després de desar, revisa el progrés amb `aeat config profile status`.'
     iva:
+      iva-group-dominant-entity-enrolled:
+        prompt: Alta com a entitat dominant d'un grup d'IVA
+      iva-group-member-enrolled:
+        prompt: Alta com a entitat membre d'un grup d'IVA
       iva-intracommunity-operations-exceed-50000-eur:
         prompt: Operacions intracomunitàries superen 50.000 EUR
       iva-oss-enrolled:
         prompt: Alta en OSS
-      iva-group-member-enrolled:
-        prompt: Alta com a entitat membre d'un grup d'IVA
-      iva-group-dominant-entity-enrolled:
-        prompt: Alta com a entitat dominant d'un grup d'IVA
       iva-redeme-enrolled:
         prompt: Inscrit a REDEME (Registre de Devolució Mensual de l'IVA)
       iva-regime:
