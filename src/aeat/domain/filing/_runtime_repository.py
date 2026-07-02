@@ -1,7 +1,7 @@
 """Runtime-backed repository helpers for filing persistence.
 
 Provides factory helpers that return a
-:class:`~aeat.adapters.persistence.storage.SecureObjectRepository` bound to
+:class:`~adapters.persistence.storage.SecureObjectRepository` bound to
 the active profile bucket for use by filing repository classes.
 """
 
@@ -25,7 +25,7 @@ def secure_objects_for_filing_bucket(bucket_id: str) -> SecureObjectRepository:
     """Return runtime-created secure-object storage for ``bucket_id``.
 
     Returns:
-        A :class:`~aeat.adapters.persistence.storage.SecureObjectRepository`
+        A :class:`~adapters.persistence.storage.SecureObjectRepository`
         scoped to the given filing bucket.
     """
     from ...adapters.persistence.storage import secure_object_repository_for_bucket
