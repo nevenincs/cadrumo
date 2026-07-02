@@ -38,9 +38,7 @@ import pytest
 from .....domain.buckets import BucketExportError, BucketImportError
 from .....tests.secure_sql import TestRuntimeProfile, isolated_profile_storage_root, isolated_runtime_profile
 from .. import BUCKETS_DIRNAME
-from ..bucket._export_header import ExportArchiveHeader
-from ..bucket._sealed_archive_reader import read_sealed_archive
-from ..bucket._sealed_archive_writer import write_sealed_archive
+from ..bucket import ExportArchiveHeader, read_sealed_archive, write_sealed_archive
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 
@@ -128,9 +126,8 @@ class TestBundleImportCrashWindow:
         # A corrupted archive is rejected at the reader boundary the import
         # service calls first, before writing any bucket store: no partial
         # bucket is provisioned.
-        from .....application.bucket_maintenance._contracts import ImportBucketCommand
-        from .....application.bucket_maintenance._service import BucketMaintenanceService
-        from .....application.workflow._profile_bucket_scan import read_profile_bucket_by_id
+        from .....application.bucket_maintenance import BucketMaintenanceService, ImportBucketCommand
+        from .....application.workflow import read_profile_bucket_by_id
 
         archive = tmp_path / "import-source.aeat-bucket.tar.gz"
         _write_valid_archive(archive)
@@ -149,9 +146,9 @@ class TestBundleImportCrashWindow:
         # fails when the importer decrypts it, and that check precedes any
         # bucket provisioning. Built under the active bucket's master key so the
         # AEAD is genuinely exercised.
-        from .....application.bucket_maintenance._contracts import ImportBucketCommand
-        from .....application.bucket_maintenance._service import BucketMaintenanceService, _archive_associated_data
-        from .....application.workflow._profile_bucket_scan import read_profile_bucket_by_id
+        from .....application.bucket_maintenance import BucketMaintenanceService, ImportBucketCommand
+        from .....application.bucket_maintenance._service import _archive_associated_data
+        from .....application.workflow import read_profile_bucket_by_id
         from ..crypto import EncryptedBlob, decrypt_record, encrypt_record
         from ..master_key import get_active_master_key
 

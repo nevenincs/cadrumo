@@ -22,9 +22,11 @@ import pytest
 
 from .....core.i18n import tr
 from .....core.resources import resources
-from .....domain.calculations.registry import CasillaId, validated_casilla_id
-from .....domain.calculations.registry._schema import InputKind
-from ....outbound.storage._errors import OutboundStorageConflictError, OutboundStorageValidationError
+from .....domain.calculations.registry import CasillaId, InputKind, validated_casilla_id
+from ...storage import (
+    OutboundStorageConflictError,
+    OutboundStorageValidationError,
+)
 from .._calc_sheets_pull import (
     BindingEdit,
     MetadataMatchState,

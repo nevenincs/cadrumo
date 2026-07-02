@@ -16,7 +16,7 @@ from pathlib import Path
 
 import pytest
 
-from ...crypto._encrypted_columns import secure_object_key_digest
+from ...crypto import secure_object_key_digest
 from ...errors import SecureObjectRevisionConflictError
 from .._secure_object_records import SecureObjectDeletion, SecureObjectWrite
 from ._secure_objects_support import (

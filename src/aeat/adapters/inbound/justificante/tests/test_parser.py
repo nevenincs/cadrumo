@@ -33,7 +33,7 @@ from .....tests.aeat_literal_fixtures import (
     aeat_host,
     aeat_url,
 )
-from ...pdf._utils import source_pdf_reference_path
+from ...pdf import source_pdf_reference_path
 from .. import parse_justificante, parse_justificante_bytes
 from .._parsers import _TEXT_CACHE, extract_text
 

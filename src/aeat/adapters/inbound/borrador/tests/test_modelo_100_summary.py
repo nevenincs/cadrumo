@@ -15,7 +15,7 @@ from .....domain.calculations.registry import (
     ExtractionTargetDefinition,
     validated_casilla_id,
 )
-from ...pdf._utils import source_pdf_reference_path
+from ...pdf import source_pdf_reference_path
 from .. import ArtefactKind, BorradorParseError, BorradorParseMode, InboundBorradorObservation, parse_borrador
 
 pytestmark = [

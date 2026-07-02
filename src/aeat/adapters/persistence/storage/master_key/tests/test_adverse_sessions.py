@@ -10,15 +10,16 @@ import pytest
 
 from ......core.config import SecretStoreBackend, Settings, override_settings
 from ......core.external_constants import UTF_8_ENCODING
-from ...bucket._errors import BucketLockedError
-from ...bucket._layout import provision_bucket_directory
-from ...bucket._manifest import (
+from ...bucket import (
     BucketKeySchedule,
     BucketLifecycleStatus,
+    BucketLockedError,
     BucketManifest,
     ManifestKdfParams,
+    manifest_path,
+    provision_bucket_directory,
+    write_manifest,
 )
-from ...bucket._manifest_io import manifest_path, write_manifest
 from ...errors import (
     MasterKeyPassphraseMismatchError,
     StorageValidationError,
