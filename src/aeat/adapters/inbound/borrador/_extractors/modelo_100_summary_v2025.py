@@ -36,7 +36,7 @@ from ...pdf._shared import ExtractedCasilla
 from ...pdf._utils import sha256_file, source_pdf_reference_path
 from .._errors import BorradorParseError
 from .._parsers import extract_pages_text
-from .._schema import ArtefactKind, BorradorExtractionProfile, BorradorObservation
+from .._schema import ArtefactKind, BorradorExtractionProfile, InboundBorradorObservation
 
 _CASILLA_VALUE_RE = re.compile(
     rf"(?m)^\s*(?P<casilla_id>[0-9]{{4}})\s[^\n]{{0,160}}?{SPANISH_AMOUNT_GROUP}",
@@ -56,7 +56,7 @@ class Modelo100ObservedV2025Extractor:
 
     Reads the printed text via the backend facade's ``extract_pages_text``
     primitive, locates printed casilla rows, and returns a strict
-    :class:`~aeat.adapters.inbound.borrador._schema.BorradorObservation`.
+    :class:`~aeat.adapters.inbound.borrador._schema.InboundBorradorObservation`.
 
     Attributes:
         año: The original implementation year. The extractor registry may map
@@ -71,8 +71,8 @@ class Modelo100ObservedV2025Extractor:
         pdf_path: Path,
         artefact_kind: ArtefactKind,
         extraction_profile: BorradorExtractionProfile | None = None,
-    ) -> BorradorObservation:
-        """Parse ``pdf_path`` into a :class:`~aeat.adapters.inbound.borrador._schema.BorradorObservation`.
+    ) -> InboundBorradorObservation:
+        """Parse ``pdf_path`` into a :class:`~aeat.adapters.inbound.borrador._schema.InboundBorradorObservation`.
 
         Args:
             pdf_path: Path to the Modelo 100 PDF.
@@ -84,7 +84,7 @@ class Modelo100ObservedV2025Extractor:
                 for this parse.
 
         Returns:
-            The strict :class:`~aeat.adapters.inbound.borrador._schema.BorradorObservation`
+            The strict :class:`~aeat.adapters.inbound.borrador._schema.InboundBorradorObservation`
             with observed casillas extracted.
 
         Raises:
@@ -137,7 +137,7 @@ class Modelo100ObservedV2025Extractor:
                 )
 
         source_pdf_sha256 = sha256_file(pdf_path)
-        return BorradorObservation(
+        return InboundBorradorObservation(
             modelo=Modelo.M100,
             ejercicio=ejercicio,
             tax_id=tax_id.upper(),
