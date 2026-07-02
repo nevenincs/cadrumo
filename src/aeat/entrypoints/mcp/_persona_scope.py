@@ -5,7 +5,7 @@ Implements decision D1 of the ``2026-07-01-agent-harness-adr``: a runtime
 active operator persona's declared ``(family, mutability)`` ceiling. The
 per-persona declaration in this module is a typed mapping from
 :class:`AgentPersona` to a coarse set of mounted-command-family ``child``
-tokens plus an :class:`~aeat.application.operator_surface.OperatorMutability`
+tokens plus an :class:`~application.operator_surface.OperatorMutability`
 ceiling - derived from each persona document's "Tool scope" section under
 ``src/aeat/_data/agent/personas/``. It is deliberately NOT a per-tool
 allowlist: per D1, a second tool-shaped artifact would duplicate the
@@ -14,7 +14,7 @@ builds, contrary to ``aeat-registry-authority-flow``'s single-authority
 discipline.
 
 :func:`is_tool_in_persona_scope` reads the live
-:func:`~aeat.application.operator_surface.build_operator_surface_manifest`
+:func:`~application.operator_surface.build_operator_surface_manifest`
 on every call - never a frozen snapshot - so a manifest change (a family
 added, removed, or re-mounted by the in-flight Track-1 ``#1`` manifest-
 completeness brief) is picked up automatically. Correctness of the
@@ -22,7 +22,7 @@ per-persona declaration against the live manifest is proven separately by
 the build-time pinning test in ``tests/test_persona_scope.py``, not by this
 module.
 
-This complements the existing global :func:`~aeat.entrypoints.mcp.confirmation_for_tool`
+This complements the existing global :func:`~entrypoints.mcp.confirmation_for_tool`
 HITL policy: that gate decides *how* a call is approved (auto/confirm/block)
 irrespective of persona; this gate decides *whether* a tool is in the active
 persona's boundary at all. Both run in the ``PreToolUse`` layer.
@@ -101,7 +101,7 @@ class PersonaToolScope(BaseModel):
     ``"ledger"``, ``"modelo"``) the persona document's Tool-scope section
     grants it; a family absent from this set is out of scope regardless of
     mutability. ``mutability_ceiling`` is the highest
-    :class:`~aeat.application.operator_surface.OperatorMutability` the persona
+    :class:`~application.operator_surface.OperatorMutability` the persona
     may invoke within its scoped families - a family whose own manifest-declared
     mutability exceeds the ceiling is refused even when the family child is
     listed, which is defence in depth for a future manifest edit that raises a
@@ -207,7 +207,7 @@ def _family_token_for_command_key(command_key: str) -> str:
 def live_family_mutability() -> dict[str, OperatorMutability]:
     """Read the live operator-surface manifest and map each family to its mutability.
 
-    Reads :func:`~aeat.application.operator_surface.build_operator_surface_manifest`
+    Reads :func:`~application.operator_surface.build_operator_surface_manifest`
     fresh on every call rather than caching a snapshot, so a manifest change
     (a family added, removed, or re-mounted) is observed immediately - the
     single-authority discipline D1 requires.
@@ -233,7 +233,7 @@ def is_tool_in_persona_scope(*, persona: AgentPersona, command_key: str) -> bool
     never treated as in scope.
 
     This is independent of, and complements, the global
-    :func:`~aeat.entrypoints.mcp.confirmation_for_tool` HITL confirmation tier:
+    :func:`~entrypoints.mcp.confirmation_for_tool` HITL confirmation tier:
     that gate decides how an in-scope call is approved; this gate decides
     whether the call is in the persona's boundary at all.
     """
