@@ -69,7 +69,7 @@ class SpendingCategoryFamily(StrEnum):
     Each :class:`SpendingCategory` belongs to exactly one family —
     the membership table is :data:`CATEGORY_FAMILY_MEMBERS` and the
     invariant is enforced by
-    :func:`aeat.domain.categories.test_spending_category.test_every_category_belongs_to_exactly_one_family`.
+    :func:`domain.categories.tests.test_spending_category.test_every_category_belongs_to_exactly_one_family`.
 
     The home-office bucket is split into two distinct families per
     LIRPF Art. 30.2 rule 5 (Ley 6/2017, BOE-A-2017-12544): the
