@@ -15,101 +15,79 @@ each other's input.
 
 from __future__ import annotations
 
+from collections.abc import Callable
+from datetime import date
+
 import pytest
 
 from .._dates import _parse_ddmmyyyy_date, _parse_iso8601_date
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
-
-# ---------------------------------------------------------------------------
-# _parse_iso8601_date — valid inputs
-# ---------------------------------------------------------------------------
+_Parser = Callable[[str | None], date | None]
 
 
-def test_iso8601_accepts_valid_dates() -> None:
-    for raw, expected_tuple in (
-        ("2024-12-31", (2024, 12, 31)),
-        ("2000-01-01", (2000, 1, 1)),
-        ("  2023-06-15  ", (2023, 6, 15)),
-    ):
-        result = _parse_iso8601_date(raw)
-        assert result is not None, raw
-        assert (result.year, result.month, result.day) == expected_tuple, raw
+def test_date_parsers_accept_contract_formats_and_absent_values() -> None:
+    cases: tuple[tuple[str, _Parser, tuple[tuple[str, tuple[int, int, int]], ...]], ...] = (
+        (
+            "iso8601",
+            _parse_iso8601_date,
+            (
+                ("2024-12-31", (2024, 12, 31)),
+                ("2000-01-01", (2000, 1, 1)),
+                ("  2023-06-15  ", (2023, 6, 15)),
+            ),
+        ),
+        (
+            "ddmmyyyy",
+            _parse_ddmmyyyy_date,
+            (
+                ("31-12-2024", (2024, 12, 31)),
+                ("31/12/2024", (2024, 12, 31)),
+                ("01-01-2000", (2000, 1, 1)),
+                ("  15/06/2023  ", (2023, 6, 15)),
+            ),
+        ),
+    )
+
+    for label, parser, valid_inputs in cases:
+        for raw, expected_tuple in valid_inputs:
+            result = parser(raw)
+            assert result is not None, (label, raw)
+            assert (result.year, result.month, result.day) == expected_tuple, (label, raw)
+        for raw in (None, "", "   "):
+            assert parser(raw) is None, (label, raw)
 
 
-def test_iso8601_absent_returns_none() -> None:
-    for raw in (None, "", "   "):
-        assert _parse_iso8601_date(raw) is None, raw
+def test_date_parsers_reject_foreign_formats_and_invalid_dates() -> None:
+    cases: tuple[tuple[str, _Parser, tuple[str, ...]], ...] = (
+        (
+            "iso8601",
+            _parse_iso8601_date,
+            (
+                "31/12/2024",
+                "31-12-2024",
+                "not-a-date",
+                "2024/12/31",
+            ),
+        ),
+        (
+            "ddmmyyyy",
+            _parse_ddmmyyyy_date,
+            (
+                "2024-12-31",
+                "2024/12/31",
+                "not-a-date",
+                "20241231",
+                "31.12.2024",
+                "32-01-2024",
+                "00-01-2024",
+                "31-02-2024",
+            ),
+        ),
+    )
 
-
-# ---------------------------------------------------------------------------
-# _parse_iso8601_date — REJECTS foreign (dd/mm/yyyy) format
-# ---------------------------------------------------------------------------
-
-
-def test_iso8601_rejects_foreign_format() -> None:
-    """ISO-8601 parser MUST reject day-first and other non-standard inputs."""
-    for foreign in (
-        "31/12/2024",  # dd/mm/yyyy with slash separator — the canonical ddmmyyyy format
-        "31-12-2024",  # dd-mm-yyyy with dash separator
-        "not-a-date",
-        "2024/12/31",  # slash separator is not ISO-8601 extended
-    ):
-        with pytest.raises(ValueError):
-            _parse_iso8601_date(foreign)
-
-
-# ---------------------------------------------------------------------------
-# _parse_ddmmyyyy_date — valid inputs
-# ---------------------------------------------------------------------------
-
-
-def test_ddmmyyyy_accepts_valid_dates() -> None:
-    for raw, expected_tuple in (
-        ("31-12-2024", (2024, 12, 31)),
-        ("31/12/2024", (2024, 12, 31)),
-        ("01-01-2000", (2000, 1, 1)),
-        ("  15/06/2023  ", (2023, 6, 15)),
-    ):
-        result = _parse_ddmmyyyy_date(raw)
-        assert result is not None, raw
-        assert (result.year, result.month, result.day) == expected_tuple, raw
-
-
-def test_ddmmyyyy_absent_returns_none() -> None:
-    for raw in (None, "", "   "):
-        assert _parse_ddmmyyyy_date(raw) is None, raw
-
-
-# ---------------------------------------------------------------------------
-# _parse_ddmmyyyy_date — REJECTS foreign (ISO-8601) format
-# ---------------------------------------------------------------------------
-
-
-def test_ddmmyyyy_rejects_foreign_format() -> None:
-    """Day-first parser MUST reject ISO-8601 and other non-day-first inputs."""
-    for foreign in (
-        "2024-12-31",  # ISO-8601 with dash separator
-        "2024/12/31",  # ISO-8601 with slash separator
-        "not-a-date",
-        "20241231",  # no separator at all
-        "31.12.2024",  # dot separator not supported
-    ):
-        with pytest.raises(ValueError):
-            _parse_ddmmyyyy_date(foreign)
-
-
-# ---------------------------------------------------------------------------
-# _parse_ddmmyyyy_date — invalid calendar dates
-# ---------------------------------------------------------------------------
-
-
-def test_ddmmyyyy_rejects_invalid_calendar_date() -> None:
-    for invalid_calendar in (
-        "32-01-2024",  # day 32 does not exist
-        "00-01-2024",  # day 0 does not exist
-        "31-02-2024",  # Feb 31 does not exist
-    ):
-        with pytest.raises(ValueError):
-            _parse_ddmmyyyy_date(invalid_calendar)
+    for _label, parser, invalid_inputs in cases:
+        for raw in invalid_inputs:
+            with pytest.raises(ValueError):
+                parser(raw)
