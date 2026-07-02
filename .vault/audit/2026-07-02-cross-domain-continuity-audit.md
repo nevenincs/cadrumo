@@ -12,13 +12,14 @@ related:
 
 ## Scope
 
-Reviewed the W09.P45 operator-surface fixes for S356, S358, S219, S331, and S330.
+Reviewed the W09.P45 operator-surface fixes for S356, S358, S219, S331, S330, and S226.
 
 - S356 adds operator-visible `iva_category` rendering to human `ledger list` output while preserving the existing typed JSON row contract. The audit covered the projection code, the real CLI regression test, the S356 plan row close, and the S356 execution record.
 - S358 adds royalty/SGAE guidance to the existing `ledger classify --irpf-category` help text without adding automatic classification heuristics. The audit covered the locale leaves, the real CLI help regression, the S358 plan row close, and the S358 execution record.
 - S219 localizes the `NO_PENDING_OBLIGATION` workflow-gate refusal for `modelo work file` through the existing error-rendering boundary. The audit covered the exception mapping, registry key, locale leaves, renderer tests, the S219 plan row close, and the S219 execution record.
 - S331 localizes malformed modelo work `KEY=VALUE` guidance and the cross-period not-applicable verify advisory. The audit covered the shared parser, localized finding text, real CLI malformed-binding regression, existing row-parser coverage, locale leaves, the S331 plan row close, and the S331 execution record.
 - S330 localizes modelo lifecycle state labels in text renderers while preserving raw enum tokens in JSON payloads. The audit covered the shared modelo renderer, locale leaves, real object-based renderer tests, the S330 plan row close, and the S330 execution record.
+- S226 localizes calculation result-summary casilla labels through registry-provided `localized_labels` while preserving official Spanish fallbacks and raw machine ids. The audit covered result-summary row construction, text and JSON payload rendering, focused isolated-storage regression coverage, the S226 plan row close, and the S226 execution record.
 
 ## Findings
 
@@ -46,6 +47,12 @@ No scoped findings for the lifecycle-state label fix. Modelo work-unit and calcu
 
 Residual edge noted by review: other modelo CLI surfaces outside the touched renderer may still print raw `revision.state.value` in text output. Keep that as a follow-up candidate under the broader R9 language-effectiveness work rather than broadening S330 into unrelated renderer ownership.
 
+### w09-p45-s226 | low | no scoped findings
+
+No scoped findings for the result-summary label localization fix. The application summary row retains the official Spanish `label` as fallback, carries registry `localized_labels`, and the text and JSON renderers select the active output-language display label without changing `casilla_id`, `role`, or decimal value semantics.
+
+Residual edge noted by review: the focused regression covers real Modelo 130 Catalan rendering and the typed payload row, but not a full JSON envelope parse or a separate missing-locale fallback assertion. Risk is low because the fallback is a direct `localized_labels.get(language, label)` projection.
+
 ## Recommendations
 
-No follow-up required for S356, S358, S219, S331, or the scoped S330 renderer fix.
+No follow-up required for S356, S358, S219, S331, the scoped S330 renderer fix, or the scoped S226 result-summary localization fix.
