@@ -4,6 +4,11 @@ description: >-
   Prepare a Modelo 303 (IVA autoliquidación) from a classified ledger: create the
   work unit, calculate the IVA result, verify, export the fichero-BOE, and hand off
   for the taxpayer to file. Use when the taxpayer files their periodic VAT return.
+applies_when:
+  profile_facts:
+    - fact: iva_regime
+      match: equals
+      values: [GENERAL, SIMPLIFICADO]
 ---
 
 # Prepare Modelo 303
