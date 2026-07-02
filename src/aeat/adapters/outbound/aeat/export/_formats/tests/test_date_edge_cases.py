@@ -44,32 +44,28 @@ _SAMPLE_DATES: list[date] = [
 
 
 class TestYYYYMMDDRoundTrip:
-    @pytest.mark.parametrize("value", _SAMPLE_DATES, ids=lambda v: v.isoformat())
-    def test_round_trip(self, value: date) -> None:
-        encoded = encode_date(value, DateFmt.YYYYMMDD, encoding="cp1252")
-        assert len(encoded) == 8
-        assert encoded == value.strftime("%Y%m%d").encode("ascii")
-        assert _decode_date(encoded, DateFmt.YYYYMMDD) == value
+    def test_round_trip(self) -> None:
+        for value in _SAMPLE_DATES:
+            encoded = encode_date(value, DateFmt.YYYYMMDD, encoding="cp1252")
+            assert len(encoded) == 8, value
+            assert encoded == value.strftime("%Y%m%d").encode("ascii"), value
+            assert _decode_date(encoded, DateFmt.YYYYMMDD) == value
 
 
 class TestDDMMYYYYRoundTrip:
-    @pytest.mark.parametrize("value", _SAMPLE_DATES, ids=lambda v: v.isoformat())
-    def test_round_trip(self, value: date) -> None:
-        encoded = encode_date(value, DateFmt.DDMMYYYY, encoding="cp1252")
-        assert len(encoded) == 8
-        assert encoded == value.strftime("%d%m%Y").encode("ascii")
-        assert _decode_date(encoded, DateFmt.DDMMYYYY) == value
+    def test_round_trip(self) -> None:
+        for value in _SAMPLE_DATES:
+            encoded = encode_date(value, DateFmt.DDMMYYYY, encoding="cp1252")
+            assert len(encoded) == 8, value
+            assert encoded == value.strftime("%d%m%Y").encode("ascii"), value
+            assert _decode_date(encoded, DateFmt.DDMMYYYY) == value
 
 
 class TestDateDecodeRejection:
-    @pytest.mark.parametrize(
-        "bad",
-        [b"ABCDEFGH", b"20241301", b"20241232", b"20240230", b"notadate", b"2024    "],
-        ids=["alpha", "bad_month", "bad_day_dec", "bad_day_feb_leap_off", "non_numeric", "space_padded"],
-    )
-    def test_yyyymmdd_rejects_garbage(self, bad: bytes) -> None:
-        with pytest.raises(AeatExportFormatError, match=r"DATE field"):
-            _decode_date(bad, DateFmt.YYYYMMDD)
+    def test_yyyymmdd_rejects_garbage(self) -> None:
+        for bad in (b"ABCDEFGH", b"20241301", b"20241232", b"20240230", b"notadate", b"2024    "):
+            with pytest.raises(AeatExportFormatError, match=r"DATE field"):
+                _decode_date(bad, DateFmt.YYYYMMDD)
 
     def test_yyyymmdd_error_redacts_payload_and_has_no_chained_context(self) -> None:
         bad = b"12345678Z"
@@ -83,14 +79,10 @@ class TestDateDecodeRejection:
         assert exc_info.value.__cause__ is None
         assert exc_info.value.__context__ is None
 
-    @pytest.mark.parametrize(
-        "bad",
-        [b"ABCDEFGH", b"32122024", b"00122024", b"31022024"],
-        ids=["alpha", "day_32", "day_00", "feb_31"],
-    )
-    def test_ddmmyyyy_rejects_garbage(self, bad: bytes) -> None:
-        with pytest.raises(AeatExportFormatError, match=r"DATE field"):
-            _decode_date(bad, DateFmt.DDMMYYYY)
+    def test_ddmmyyyy_rejects_garbage(self) -> None:
+        for bad in (b"ABCDEFGH", b"32122024", b"00122024", b"31022024"):
+            with pytest.raises(AeatExportFormatError, match=r"DATE field"):
+                _decode_date(bad, DateFmt.DDMMYYYY)
 
 
 class TestDateFormatsAreNotInterchangeable:
