@@ -22,6 +22,7 @@ from ...core.wizard_catalogue import get_setup_flow
 from ._errors import ProfileError
 from ._models import (
     CrossPeriodGroupMemberRoster,
+    EntityType,
     FiscalResidency,
     IrpfIncomeCategory,
     IrpfSpecialRegime,
@@ -44,7 +45,10 @@ def taxpayer_profile_from_mapping(
     ``project_answers`` so canonical-token semantics for every
     boolean / select / text field stay in lockstep with the wizard's
     on-prompt validation. Missing identity fields fall back to
-    ``tax_id_default`` / ``iva_regime_default``.
+    ``tax_id_default``. Missing IVA regime falls back to
+    ``NO_APLICA`` for natural persons without economic-activity income
+    and to ``iva_regime_default`` for profiles that still require an
+    IVA regime declaration.
     """
     # Coerce mixed-typed mappings to canonical-token strings before the
     # descriptor's projection runs.
@@ -94,13 +98,19 @@ def taxpayer_profile_from_mapping(
     if not isinstance(typed, SetupAnswers):
         raise ProfileError("setup flow projection did not yield a SetupAnswers instance")
 
-    tax_id = canonical.get("identity.tax_id") or canonical.get("tax.id") or tax_id_default
-    iva_regime = _resolve_iva_regime(canonical.get("iva.regime"), iva_regime_default)
-
     entity_type = typed.entity_type or None
     legal_entity_form = typed.legal_entity_form or None
     income_categories = _resolve_income_categories(typed.irpf_income_categories)
     estimation_regime = typed.irpf_estimation_regime or None
+    tax_id = canonical.get("identity.tax_id") or canonical.get("tax.id") or tax_id_default
+    iva_regime = _resolve_iva_regime(
+        canonical.get("iva.regime"),
+        _default_iva_regime_for_profile(
+            entity_type=entity_type,
+            income_categories=income_categories,
+            configured_default=iva_regime_default,
+        ),
+    )
 
     return TaxpayerProfile(
         tax_id=tax_id,
@@ -329,6 +339,20 @@ def _resolve_iva_regime(raw: str | None, default: IVARegime) -> IVARegime:
         return default
     canonical = raw.strip().upper().replace("-", "_")
     return IVARegime(canonical)
+
+
+def _default_iva_regime_for_profile(
+    *,
+    entity_type: EntityType | None,
+    income_categories: frozenset[IrpfIncomeCategory],
+    configured_default: IVARegime,
+) -> IVARegime:
+    if (
+        entity_type is EntityType.NATURAL_PERSON
+        and IrpfIncomeCategory.ACTIVIDAD_ECONOMICA not in income_categories
+    ):
+        return IVARegime.NO_APLICA
+    return configured_default
 
 
 def _resolve_fiscal_residency(raw: FiscalResidency | str) -> FiscalResidency | None:

@@ -14,6 +14,7 @@ from pathlib import Path
 import pytest
 from pydantic import ValidationError
 
+from ....domain.deadlines import IVARegime
 from ....tests.secure_sql import isolated_profile_storage_root
 from ...user_profile._orchestration import profile_create_storage_span, profile_storage_session
 from ...user_profile._testing import register_minimal_profile
@@ -73,6 +74,28 @@ def test_active_profile_with_identity_and_iva_regime_is_profile_ready() -> None:
     assert report.enrolment_ready is True
     assert report.profile_ready is True
     assert report.missing_enrolment == ()
+
+
+def test_active_natural_person_without_activity_is_profile_ready_without_iva_regime() -> None:
+    state = _register_profile_state(
+        WorkflowState(),
+        profile_id=_PROFILE_ID,
+        overrides={
+            "activities.description": "",
+            "iva.regime": "",
+            "taxpayer_type.entity_type": "natural_person",
+            "taxpayer_type.irpf_income_categories": "capital_inmobiliario",
+        },
+    )
+    with profile_storage_session(_PROFILE_ID):
+        report = build_wizard_status(state)
+        profile = load_active_taxpayer_profile(state)
+
+    assert report.identity_ready is True
+    assert report.enrolment_ready is True
+    assert report.profile_ready is True
+    assert report.missing_enrolment == ()
+    assert profile.iva_regime is IVARegime.NO_APLICA
 
 
 def test_next_action_for_empty_state_directs_to_profile_create() -> None:

@@ -15,6 +15,16 @@ related:
   - '[[2026-06-04-cross-domain-continuity-research]]'
 ---
 
+<!-- LINK RULES:
+     - [[wiki-links]] are ONLY for .vault/ documents in the
+       related: field above.
+     - The related: field carries the AUTHORISING documents
+       (ADR, research, reference, prior plan) for every Step in
+       this plan. Steps inherit this chain; per-row reference
+       footers do not exist.
+     - NEVER use [[wiki-links]] or markdown links in the
+       document body. -->
+
 <!-- RETIRED: P02, P64, S01 -->
 
 # `cross-domain-continuity` `cross-domain continuity remediation epic - open-ended persona-driven correctness campaign` plan
@@ -430,6 +440,7 @@ Bulk of Cluster O. Each Step is a single file drift resolution. Mechanical and r
 
 Seven identical copies of _missing_refs across _validate modules. Extract to a single helper module and import.
 
+
 ### Phase `W09.P40` - ledger aggregation duplication pair resolution
 
 Three structurally identical guard pairs between _iva_ledger.py and _renta_ledger.py: currency business-classification branch and business-proportion extraction.
@@ -604,7 +615,7 @@ _covered_by_namespace defined identically in two locale modules extract to one.
 - [x] `W09.P45.S229` - R7-INES-3 register --output-language option on overview calendar to parity-match other commands; `currently rejected with No such option --output-language; `src/aeat/entrypoints/cli/_overview.py`.
 - [x] `W09.P45.S231` - R7-INES-5 disambiguate the CLI input-validation refusal message from the stored-data validation refusal message; `a malformed --retencion-observation JSON currently emits the same Catalan-Spanish-text and recommends aeat config repair which is wrong; need a distinct argument-validation message pointing to the expected pydantic field shape; `src/aeat/entrypoints/cli/_errors.py`.
 - [x] `W09.P45.S232` - R7-INES-6 register --output-language option on config profile subcommand root for parity with other config subcommands; `src/aeat/entrypoints/cli/_config/__init__.py`.
-- [ ] `W09.P45.S234` - R7-ANNA-D3 fix iva.regime defaulting to GENERAL for entity_type=natural_person profiles without actividad_economica; `field should remain unset or marked no_aplica until user opts in; misleading for salaried-only profiles; `src/aeat/application/wizard/`.
+- [x] `W09.P45.S234` - R7-ANNA-D3 fix iva.regime defaulting to GENERAL for entity_type=natural_person profiles without actividad_economica; `field should remain unset or marked no_aplica until user opts in; misleading for salaried-only profiles; `src/aeat/application/wizard/`.
 - [x] `W09.P45.S235` - R7-ANNA-D4 expand wizard non-TTY refusal message to list the minimum required flags for one-shot profile creation; `currently only --tax-id NIF mentioned but entity-type irpf-income-categories tax-residence-ccaa are also required; `src/aeat/application/wizard/`.
 - [x] `W09.P45.S236` - R7-ANNA-D5 default modelo work create --revision to the in-force revision for the supplied --year via registry lookup; `today operators must run aeat app modelo describe first to find a valid revision id; reduces friction for the common case while preserving explicit override; `src/aeat/entrypoints/cli/_modelo.py`.
 - [x] `W09.P45.S237` - R7-MARC-D1 ledger classify list view blocked by silent profile-completeness gate; `ledger status review update preflight succeed on same profile; config repair confirms ready; no error message identifies which field triggers the gate; surface the specific gate failure to operator or remove the gate; same defect class as R7-A but on different verbs; `src/aeat/application/ledger/`.

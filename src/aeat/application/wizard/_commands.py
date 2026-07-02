@@ -170,10 +170,12 @@ def _irpf_personal_choice_values() -> tuple[list[str], list[str]]:
 
 
 def _iva_regime_choice_values() -> list[str]:
-    """Return the IVARegime choice tokens accepted by ``--iva-regime``."""
-    from ...domain.deadlines._models import IVARegime
-
-    return [member.value for member in IVARegime]
+    """Return the wizard choice tokens accepted by ``--iva-regime``."""
+    for section in SETUP_FLOW.sections:
+        for question in section.questions:
+            if question.id == "iva-regime":
+                return [choice.value for choice in question.choices]
+    raise RuntimeError("SETUP_FLOW is missing the iva-regime question")
 
 
 _IVA_REGIME_CHOICE_VALUES: list[str] = _iva_regime_choice_values()
