@@ -740,31 +740,31 @@ Repoint every production import in `aeat.domain.deadlines` that reaches into a f
 
 Repoint every production import in `aeat.domain.fincas` that reaches into a foreign package private module onto that package promoted top-level facade, behavior-preserving only.
 
-- [ ] `W02.P78.S294` - Rewire 1 cross-package private import name(s) in this file onto the promoted facade(s) of `aeat.domain.calculations.registry`; `src/aeat/domain/fincas/_imputacion_parameters.py`.
+- [x] `W02.P78.S294` - Rewire 1 cross-package private import name(s) in this file onto the promoted facade(s) of `aeat.domain.calculations.registry`; `src/aeat/domain/fincas/_imputacion_parameters.py`.
 
 ### Phase `W02.P79` - rewire aeat.domain.iva consumers
 
 Repoint every production import in `aeat.domain.iva` that reaches into a foreign package private module onto that package promoted top-level facade, behavior-preserving only.
 
-- [ ] `W02.P79.S295` - Rewire 1 cross-package private import name(s) in this file onto the promoted facade(s) of `aeat.domain.calculations.registry`; `src/aeat/domain/iva/_recargo_equivalencia.py`.
+- [x] `W02.P79.S295` - Rewire 1 cross-package private import name(s) in this file onto the promoted facade(s) of `aeat.domain.calculations.registry`; `src/aeat/domain/iva/_recargo_equivalencia.py`.
 
 ### Phase `W02.P80` - rewire aeat.entrypoints.mcp consumers
 
 Repoint every production import in `aeat.entrypoints.mcp` that reaches into a foreign package private module onto that package promoted top-level facade, behavior-preserving only.
 
-- [ ] `W02.P80.S296` - Rewire 1 cross-package private import name(s) in this file onto the promoted facade(s) of `aeat.entrypoints.cli`; `src/aeat/entrypoints/mcp/_tools.py`.
+- [x] `W02.P80.S296` - Rewire 1 cross-package private import name(s) in this file onto the promoted facade(s) of `aeat.entrypoints.cli`; `src/aeat/entrypoints/mcp/_tools.py`.
 
 ### Phase `W02.P81` - rewire aeat.locales._fstring_registry consumers
 
 Repoint every production import in `aeat.locales._fstring_registry` that reaches into a foreign package private module onto that package promoted top-level facade, behavior-preserving only.
 
-- [ ] `W02.P81.S297` - Rewire 7 cross-package private import name(s) in this file onto the promoted facade(s) of `aeat.domain.contribuyente`, `aeat.domain.deadlines`; `src/aeat/locales/_fstring_registry.py`.
+- [x] `W02.P81.S297` - Rewire 7 cross-package private import name(s) in this file onto the promoted facade(s) of `aeat.domain.contribuyente`, `aeat.domain.deadlines`; `src/aeat/locales/_fstring_registry.py`.
 
 ### Phase `W02.P82` - rewire aeat.locales._modelo_manager consumers
 
 Repoint every production import in `aeat.locales._modelo_manager` that reaches into a foreign package private module onto that package promoted top-level facade, behavior-preserving only.
 
-- [ ] `W02.P82.S298` - Rewire 6 cross-package private import name(s) in this file onto the promoted facade(s) of `aeat.domain.calculations.registry`; `src/aeat/locales/_modelo_manager.py`.
+- [x] `W02.P82.S298` - Rewire 6 cross-package private import name(s) in this file onto the promoted facade(s) of `aeat.domain.calculations.registry`; `src/aeat/locales/_modelo_manager.py`.
 
 ## Wave `W03` - shim retirement, dynamic-import retargeting, and umbrella facade retirement
 
@@ -801,10 +801,10 @@ Make dev/import_hygiene_scan.py the authoritative CI gate for cross-package priv
 
 Make dev/import_hygiene_scan.py the authoritative CI gate for cross-package private imports, ratcheting the production-Family-1 baseline down to zero across the campaign, and retire the two narrower gates it now supersedes.
 
-- [ ] `W04.P89.S377` - Seed dev/import_hygiene_scan.py exception allowlist from the pre-existing exceptions in test_public_api_boundaries.py and test_architecture_boundaries.py so the new gate starts from the same tolerated baseline; `dev/import_hygiene_scan.py`.
-- [ ] `W04.P89.S378` - Add a ratcheting production-Family-1 baseline JSON that fails the gate when the current cross-package private-import count exceeds the committed baseline, and shrink the baseline in the same commit as any fix that reduces the count; `dev/import_hygiene_scan.py`.
-- [ ] `W04.P89.S379` - Wire dev/import_hygiene_scan.py into the pytest/CI surface as the authoritative import-hygiene gate; `src/aeat/tests/test_import_hygiene_gate.py`.
-- [ ] `W04.P89.S398` - Supersede test_public_api_boundaries.py and test_architecture_boundaries.py now that the ratcheting scanner gate covers their checks, retiring the narrower assertions while keeping any check the scanner does not yet cover; `src/aeat/tests/test_public_api_boundaries.py`.
+- [x] `W04.P89.S377` - Seed dev/import_hygiene_scan.py exception allowlist from the pre-existing exceptions in test_public_api_boundaries.py and test_architecture_boundaries.py so the new gate starts from the same tolerated baseline; `dev/import_hygiene_scan.py`.
+- [x] `W04.P89.S378` - Add a ratcheting production-Family-1 baseline JSON that fails the gate when the current cross-package private-import count exceeds the committed baseline, and shrink the baseline in the same commit as any fix that reduces the count; `dev/import_hygiene_scan.py`.
+- [x] `W04.P89.S379` - Wire dev/import_hygiene_scan.py into the pytest/CI surface as the authoritative import-hygiene gate; `src/aeat/tests/test_import_hygiene_gate.py`.
+- [x] `W04.P89.S398` - Supersede test_public_api_boundaries.py and test_architecture_boundaries.py now that the ratcheting scanner gate covers their checks, retiring the narrower assertions while keeping any check the scanner does not yet cover; `src/aeat/tests/test_public_api_boundaries.py`.
 
 ## Wave `W05` - test-only import sweep
 
@@ -814,86 +814,86 @@ Repoint the 1599 test-only cross-package private import sites (65 owning package
 
 Repoint every test-only cross-package private import reaching a domain owning package onto that package promoted facade, one Step per owning package.
 
-- [ ] `W05.P83.S299` - Rewire the 427 test-only cross-package private import site(s) across 138 test file(s) reaching into `aeat.domain.modelos` onto its promoted top-level facade; `src/aeat/domain/modelos (test consumers)`.
-- [ ] `W05.P83.S300` - Rewire the 69 test-only cross-package private import site(s) across 43 test file(s) reaching into `aeat.domain.calculations.registry` onto its promoted top-level facade; `src/aeat/domain/calculations/registry (test consumers)`.
-- [ ] `W05.P83.S301` - Rewire the 37 test-only cross-package private import site(s) across 31 test file(s) reaching into `aeat.domain.deadlines` onto its promoted top-level facade; `src/aeat/domain/deadlines (test consumers)`.
-- [ ] `W05.P83.S302` - Rewire the 44 test-only cross-package private import site(s) across 29 test file(s) reaching into `aeat.domain.iva_compensation` onto its promoted top-level facade; `src/aeat/domain/iva_compensation (test consumers)`.
-- [ ] `W05.P83.S303` - Rewire the 26 test-only cross-package private import site(s) across 20 test file(s) reaching into `aeat.domain.transactions` onto its promoted top-level facade; `src/aeat/domain/transactions (test consumers)`.
-- [ ] `W05.P83.S304` - Rewire the 21 test-only cross-package private import site(s) across 12 test file(s) reaching into `aeat.domain.user_profile` onto its promoted top-level facade; `src/aeat/domain/user_profile (test consumers)`.
-- [ ] `W05.P83.S305` - Rewire the 15 test-only cross-package private import site(s) across 10 test file(s) reaching into `aeat.domain.contribuyente` onto its promoted top-level facade; `src/aeat/domain/contribuyente (test consumers)`.
-- [ ] `W05.P83.S306` - Rewire the 21 test-only cross-package private import site(s) across 10 test file(s) reaching into `aeat.domain.filing` onto its promoted top-level facade; `src/aeat/domain/filing (test consumers)`.
-- [ ] `W05.P83.S307` - Rewire the 11 test-only cross-package private import site(s) across 8 test file(s) reaching into `aeat.domain.buckets` onto its promoted top-level facade; `src/aeat/domain/buckets (test consumers)`.
-- [ ] `W05.P83.S308` - Rewire the 12 test-only cross-package private import site(s) across 7 test file(s) reaching into `aeat.domain.submission` onto its promoted top-level facade; `src/aeat/domain/submission (test consumers)`.
-- [ ] `W05.P83.S309` - Rewire the 6 test-only cross-package private import site(s) across 6 test file(s) reaching into `aeat.domain` onto its promoted top-level facade; `src/aeat/domain (test consumers)`.
-- [ ] `W05.P83.S310` - Rewire the 6 test-only cross-package private import site(s) across 6 test file(s) reaching into `aeat.domain.iva` onto its promoted top-level facade; `src/aeat/domain/iva (test consumers)`.
-- [ ] `W05.P83.S311` - Rewire the 7 test-only cross-package private import site(s) across 4 test file(s) reaching into `aeat.domain.invoices` onto its promoted top-level facade; `src/aeat/domain/invoices (test consumers)`.
-- [ ] `W05.P83.S312` - Rewire the 6 test-only cross-package private import site(s) across 3 test file(s) reaching into `aeat.domain.attachments` onto its promoted top-level facade; `src/aeat/domain/attachments (test consumers)`.
-- [ ] `W05.P83.S313` - Rewire the 7 test-only cross-package private import site(s) across 3 test file(s) reaching into `aeat.domain.portals` onto its promoted top-level facade; `src/aeat/domain/portals (test consumers)`.
-- [ ] `W05.P83.S314` - Rewire the 4 test-only cross-package private import site(s) across 2 test file(s) reaching into `aeat.domain.usage_ratios` onto its promoted top-level facade; `src/aeat/domain/usage_ratios (test consumers)`.
-- [ ] `W05.P83.S315` - Rewire the 1 test-only cross-package private import site(s) across 1 test file(s) reaching into `aeat.domain.justificante` onto its promoted top-level facade; `src/aeat/domain/justificante (test consumers)`.
-- [ ] `W05.P83.S316` - Rewire the 1 test-only cross-package private import site(s) across 1 test file(s) reaching into `aeat.domain.retention` onto its promoted top-level facade; `src/aeat/domain/retention (test consumers)`.
-- [ ] `W05.P83.S317` - Rewire the 2 test-only cross-package private import site(s) across 1 test file(s) reaching into `aeat.domain.renta` onto its promoted top-level facade; `src/aeat/domain/renta (test consumers)`.
-- [ ] `W05.P83.S318` - Rewire the 1 test-only cross-package private import site(s) across 1 test file(s) reaching into `aeat.domain.calculations` onto its promoted top-level facade; `src/aeat/domain/calculations (test consumers)`.
-- [ ] `W05.P83.S319` - Rewire the 1 test-only cross-package private import site(s) across 1 test file(s) reaching into `aeat.domain.calculations.registry.tests` onto its promoted top-level facade; `src/aeat/domain/calculations/registry/tests (test consumers)`.
-- [ ] `W05.P83.S320` - Rewire the 1 test-only cross-package private import site(s) across 1 test file(s) reaching into `aeat.domain.manuals` onto its promoted top-level facade; `src/aeat/domain/manuals (test consumers)`.
-- [ ] `W05.P83.S321` - Rewire the 1 test-only cross-package private import site(s) across 1 test file(s) reaching into `aeat.domain.auth.apoderamientos` onto its promoted top-level facade; `src/aeat/domain/auth/apoderamientos (test consumers)`.
-- [ ] `W05.P83.S322` - Rewire the 1 test-only cross-package private import site(s) across 1 test file(s) reaching into `aeat.domain.fincas` onto its promoted top-level facade; `src/aeat/domain/fincas (test consumers)`.
+- [x] `W05.P83.S299` - Rewire the 427 test-only cross-package private import site(s) across 138 test file(s) reaching into `aeat.domain.modelos` onto its promoted top-level facade; `src/aeat/domain/modelos (test consumers)`.
+- [x] `W05.P83.S300` - Rewire the 69 test-only cross-package private import site(s) across 43 test file(s) reaching into `aeat.domain.calculations.registry` onto its promoted top-level facade; `src/aeat/domain/calculations/registry (test consumers)`.
+- [x] `W05.P83.S301` - Rewire the 37 test-only cross-package private import site(s) across 31 test file(s) reaching into `aeat.domain.deadlines` onto its promoted top-level facade; `src/aeat/domain/deadlines (test consumers)`.
+- [x] `W05.P83.S302` - Rewire the 44 test-only cross-package private import site(s) across 29 test file(s) reaching into `aeat.domain.iva_compensation` onto its promoted top-level facade; `src/aeat/domain/iva_compensation (test consumers)`.
+- [x] `W05.P83.S303` - Rewire the 26 test-only cross-package private import site(s) across 20 test file(s) reaching into `aeat.domain.transactions` onto its promoted top-level facade; `src/aeat/domain/transactions (test consumers)`.
+- [x] `W05.P83.S304` - Rewire the 21 test-only cross-package private import site(s) across 12 test file(s) reaching into `aeat.domain.user_profile` onto its promoted top-level facade; `src/aeat/domain/user_profile (test consumers)`.
+- [x] `W05.P83.S305` - Rewire the 15 test-only cross-package private import site(s) across 10 test file(s) reaching into `aeat.domain.contribuyente` onto its promoted top-level facade; `src/aeat/domain/contribuyente (test consumers)`.
+- [x] `W05.P83.S306` - Rewire the 21 test-only cross-package private import site(s) across 10 test file(s) reaching into `aeat.domain.filing` onto its promoted top-level facade; `src/aeat/domain/filing (test consumers)`.
+- [x] `W05.P83.S307` - Rewire the 11 test-only cross-package private import site(s) across 8 test file(s) reaching into `aeat.domain.buckets` onto its promoted top-level facade; `src/aeat/domain/buckets (test consumers)`.
+- [x] `W05.P83.S308` - Rewire the 12 test-only cross-package private import site(s) across 7 test file(s) reaching into `aeat.domain.submission` onto its promoted top-level facade; `src/aeat/domain/submission (test consumers)`.
+- [x] `W05.P83.S309` - Rewire the 6 test-only cross-package private import site(s) across 6 test file(s) reaching into `aeat.domain` onto its promoted top-level facade; `src/aeat/domain (test consumers)`.
+- [x] `W05.P83.S310` - Rewire the 6 test-only cross-package private import site(s) across 6 test file(s) reaching into `aeat.domain.iva` onto its promoted top-level facade; `src/aeat/domain/iva (test consumers)`.
+- [x] `W05.P83.S311` - Rewire the 7 test-only cross-package private import site(s) across 4 test file(s) reaching into `aeat.domain.invoices` onto its promoted top-level facade; `src/aeat/domain/invoices (test consumers)`.
+- [x] `W05.P83.S312` - Rewire the 6 test-only cross-package private import site(s) across 3 test file(s) reaching into `aeat.domain.attachments` onto its promoted top-level facade; `src/aeat/domain/attachments (test consumers)`.
+- [x] `W05.P83.S313` - Rewire the 7 test-only cross-package private import site(s) across 3 test file(s) reaching into `aeat.domain.portals` onto its promoted top-level facade; `src/aeat/domain/portals (test consumers)`.
+- [x] `W05.P83.S314` - Rewire the 4 test-only cross-package private import site(s) across 2 test file(s) reaching into `aeat.domain.usage_ratios` onto its promoted top-level facade; `src/aeat/domain/usage_ratios (test consumers)`.
+- [x] `W05.P83.S315` - Rewire the 1 test-only cross-package private import site(s) across 1 test file(s) reaching into `aeat.domain.justificante` onto its promoted top-level facade; `src/aeat/domain/justificante (test consumers)`.
+- [x] `W05.P83.S316` - Rewire the 1 test-only cross-package private import site(s) across 1 test file(s) reaching into `aeat.domain.retention` onto its promoted top-level facade; `src/aeat/domain/retention (test consumers)`.
+- [x] `W05.P83.S317` - Rewire the 2 test-only cross-package private import site(s) across 1 test file(s) reaching into `aeat.domain.renta` onto its promoted top-level facade; `src/aeat/domain/renta (test consumers)`.
+- [x] `W05.P83.S318` - Rewire the 1 test-only cross-package private import site(s) across 1 test file(s) reaching into `aeat.domain.calculations` onto its promoted top-level facade; `src/aeat/domain/calculations (test consumers)`.
+- [x] `W05.P83.S319` - Rewire the 1 test-only cross-package private import site(s) across 1 test file(s) reaching into `aeat.domain.calculations.registry.tests` onto its promoted top-level facade; `src/aeat/domain/calculations/registry/tests (test consumers)`.
+- [x] `W05.P83.S320` - Rewire the 1 test-only cross-package private import site(s) across 1 test file(s) reaching into `aeat.domain.manuals` onto its promoted top-level facade; `src/aeat/domain/manuals (test consumers)`.
+- [x] `W05.P83.S321` - Rewire the 1 test-only cross-package private import site(s) across 1 test file(s) reaching into `aeat.domain.auth.apoderamientos` onto its promoted top-level facade; `src/aeat/domain/auth/apoderamientos (test consumers)`.
+- [x] `W05.P83.S322` - Rewire the 1 test-only cross-package private import site(s) across 1 test file(s) reaching into `aeat.domain.fincas` onto its promoted top-level facade; `src/aeat/domain/fincas (test consumers)`.
 
 ### Phase `W05.P84` - application test-only import sweep
 
 Repoint every test-only cross-package private import reaching a application owning package onto that package promoted facade, one Step per owning package.
 
-- [ ] `W05.P84.S323` - Rewire the 232 test-only cross-package private import site(s) across 113 test file(s) reaching into `aeat.application.user_profile` onto its promoted top-level facade; `src/aeat/application/user_profile (test consumers)`.
-- [ ] `W05.P84.S324` - Rewire the 140 test-only cross-package private import site(s) across 106 test file(s) reaching into `aeat.application.workflow` onto its promoted top-level facade; `src/aeat/application/workflow (test consumers)`.
-- [ ] `W05.P84.S325` - Rewire the 41 test-only cross-package private import site(s) across 30 test file(s) reaching into `aeat.application.calculations` onto its promoted top-level facade; `src/aeat/application/calculations (test consumers)`.
-- [ ] `W05.P84.S326` - Rewire the 39 test-only cross-package private import site(s) across 19 test file(s) reaching into `aeat.application.aggregation` onto its promoted top-level facade; `src/aeat/application/aggregation (test consumers)`.
-- [ ] `W05.P84.S327` - Rewire the 39 test-only cross-package private import site(s) across 14 test file(s) reaching into `aeat.application.live` onto its promoted top-level facade; `src/aeat/application/live (test consumers)`.
-- [ ] `W05.P84.S328` - Rewire the 18 test-only cross-package private import site(s) across 14 test file(s) reaching into `aeat.application.modelo` onto its promoted top-level facade; `src/aeat/application/modelo (test consumers)`.
-- [ ] `W05.P84.S329` - Rewire the 18 test-only cross-package private import site(s) across 7 test file(s) reaching into `aeat.application.auth` onto its promoted top-level facade; `src/aeat/application/auth (test consumers)`.
-- [ ] `W05.P84.S330` - Rewire the 5 test-only cross-package private import site(s) across 5 test file(s) reaching into `aeat.application.storage.calc_sheets` onto its promoted top-level facade; `src/aeat/application/storage/calc_sheets (test consumers)`.
-- [ ] `W05.P84.S331` - Rewire the 10 test-only cross-package private import site(s) across 5 test file(s) reaching into `aeat.application.ledger` onto its promoted top-level facade; `src/aeat/application/ledger (test consumers)`.
-- [ ] `W05.P84.S332` - Rewire the 7 test-only cross-package private import site(s) across 5 test file(s) reaching into `aeat.application.wizard` onto its promoted top-level facade; `src/aeat/application/wizard (test consumers)`.
-- [ ] `W05.P84.S333` - Rewire the 5 test-only cross-package private import site(s) across 3 test file(s) reaching into `aeat.application.filing` onto its promoted top-level facade; `src/aeat/application/filing (test consumers)`.
-- [ ] `W05.P84.S334` - Rewire the 3 test-only cross-package private import site(s) across 3 test file(s) reaching into `aeat.application.review` onto its promoted top-level facade; `src/aeat/application/review (test consumers)`.
-- [ ] `W05.P84.S335` - Rewire the 2 test-only cross-package private import site(s) across 1 test file(s) reaching into `aeat.application.bucket_maintenance` onto its promoted top-level facade; `src/aeat/application/bucket_maintenance (test consumers)`.
-- [ ] `W05.P84.S336` - Rewire the 3 test-only cross-package private import site(s) across 1 test file(s) reaching into `aeat.application.evidence` onto its promoted top-level facade; `src/aeat/application/evidence (test consumers)`.
-- [ ] `W05.P84.S337` - Rewire the 2 test-only cross-package private import site(s) across 1 test file(s) reaching into `aeat.application.overview` onto its promoted top-level facade; `src/aeat/application/overview (test consumers)`.
-- [ ] `W05.P84.S338` - Rewire the 3 test-only cross-package private import site(s) across 1 test file(s) reaching into `aeat.application.invoices` onto its promoted top-level facade; `src/aeat/application/invoices (test consumers)`.
+- [x] `W05.P84.S323` - Rewire the 232 test-only cross-package private import site(s) across 113 test file(s) reaching into `aeat.application.user_profile` onto its promoted top-level facade; `src/aeat/application/user_profile (test consumers)`.
+- [x] `W05.P84.S324` - Rewire the 140 test-only cross-package private import site(s) across 106 test file(s) reaching into `aeat.application.workflow` onto its promoted top-level facade; `src/aeat/application/workflow (test consumers)`.
+- [x] `W05.P84.S325` - Rewire the 41 test-only cross-package private import site(s) across 30 test file(s) reaching into `aeat.application.calculations` onto its promoted top-level facade; `src/aeat/application/calculations (test consumers)`.
+- [x] `W05.P84.S326` - Rewire the 39 test-only cross-package private import site(s) across 19 test file(s) reaching into `aeat.application.aggregation` onto its promoted top-level facade; `src/aeat/application/aggregation (test consumers)`.
+- [x] `W05.P84.S327` - Rewire the 39 test-only cross-package private import site(s) across 14 test file(s) reaching into `aeat.application.live` onto its promoted top-level facade; `src/aeat/application/live (test consumers)`.
+- [x] `W05.P84.S328` - Rewire the 18 test-only cross-package private import site(s) across 14 test file(s) reaching into `aeat.application.modelo` onto its promoted top-level facade; `src/aeat/application/modelo (test consumers)`.
+- [x] `W05.P84.S329` - Rewire the 18 test-only cross-package private import site(s) across 7 test file(s) reaching into `aeat.application.auth` onto its promoted top-level facade; `src/aeat/application/auth (test consumers)`.
+- [x] `W05.P84.S330` - Rewire the 5 test-only cross-package private import site(s) across 5 test file(s) reaching into `aeat.application.storage.calc_sheets` onto its promoted top-level facade; `src/aeat/application/storage/calc_sheets (test consumers)`.
+- [x] `W05.P84.S331` - Rewire the 10 test-only cross-package private import site(s) across 5 test file(s) reaching into `aeat.application.ledger` onto its promoted top-level facade; `src/aeat/application/ledger (test consumers)`.
+- [x] `W05.P84.S332` - Rewire the 7 test-only cross-package private import site(s) across 5 test file(s) reaching into `aeat.application.wizard` onto its promoted top-level facade; `src/aeat/application/wizard (test consumers)`.
+- [x] `W05.P84.S333` - Rewire the 5 test-only cross-package private import site(s) across 3 test file(s) reaching into `aeat.application.filing` onto its promoted top-level facade; `src/aeat/application/filing (test consumers)`.
+- [x] `W05.P84.S334` - Rewire the 3 test-only cross-package private import site(s) across 3 test file(s) reaching into `aeat.application.review` onto its promoted top-level facade; `src/aeat/application/review (test consumers)`.
+- [x] `W05.P84.S335` - Rewire the 2 test-only cross-package private import site(s) across 1 test file(s) reaching into `aeat.application.bucket_maintenance` onto its promoted top-level facade; `src/aeat/application/bucket_maintenance (test consumers)`.
+- [x] `W05.P84.S336` - Rewire the 3 test-only cross-package private import site(s) across 1 test file(s) reaching into `aeat.application.evidence` onto its promoted top-level facade; `src/aeat/application/evidence (test consumers)`.
+- [x] `W05.P84.S337` - Rewire the 2 test-only cross-package private import site(s) across 1 test file(s) reaching into `aeat.application.overview` onto its promoted top-level facade; `src/aeat/application/overview (test consumers)`.
+- [x] `W05.P84.S338` - Rewire the 3 test-only cross-package private import site(s) across 1 test file(s) reaching into `aeat.application.invoices` onto its promoted top-level facade; `src/aeat/application/invoices (test consumers)`.
 
 ### Phase `W05.P85` - adapters test-only import sweep
 
 Repoint every test-only cross-package private import reaching a adapters owning package onto that package promoted facade, one Step per owning package.
 
-- [ ] `W05.P85.S339` - Rewire the 42 test-only cross-package private import site(s) across 23 test file(s) reaching into `aeat.adapters.persistence.storage.bucket` onto its promoted top-level facade; `src/aeat/adapters/persistence/storage/bucket (test consumers)`.
-- [ ] `W05.P85.S340` - Rewire the 24 test-only cross-package private import site(s) across 21 test file(s) reaching into `aeat.adapters.persistence.storage.crypto` onto its promoted top-level facade; `src/aeat/adapters/persistence/storage/crypto (test consumers)`.
-- [ ] `W05.P85.S341` - Rewire the 24 test-only cross-package private import site(s) across 21 test file(s) reaching into `aeat.adapters.persistence.storage.sql` onto its promoted top-level facade; `src/aeat/adapters/persistence/storage/sql (test consumers)`.
-- [ ] `W05.P85.S342` - Rewire the 24 test-only cross-package private import site(s) across 15 test file(s) reaching into `aeat.adapters.persistence.storage.master_key` onto its promoted top-level facade; `src/aeat/adapters/persistence/storage/master_key (test consumers)`.
-- [ ] `W05.P85.S343` - Rewire the 20 test-only cross-package private import site(s) across 12 test file(s) reaching into `aeat.adapters.outbound.aeat.sede` onto its promoted top-level facade; `src/aeat/adapters/outbound/aeat/sede (test consumers)`.
-- [ ] `W05.P85.S344` - Rewire the 7 test-only cross-package private import site(s) across 7 test file(s) reaching into `aeat.adapters.inbound.pdf` onto its promoted top-level facade; `src/aeat/adapters/inbound/pdf (test consumers)`.
-- [ ] `W05.P85.S345` - Rewire the 7 test-only cross-package private import site(s) across 7 test file(s) reaching into `aeat.adapters.outbound.storage` onto its promoted top-level facade; `src/aeat/adapters/outbound/storage (test consumers)`.
-- [ ] `W05.P85.S346` - Rewire the 10 test-only cross-package private import site(s) across 6 test file(s) reaching into `aeat.adapters.outbound.google` onto its promoted top-level facade; `src/aeat/adapters/outbound/google (test consumers)`.
-- [ ] `W05.P85.S347` - Rewire the 8 test-only cross-package private import site(s) across 6 test file(s) reaching into `aeat.adapters.inbound.financial.providers` onto its promoted top-level facade; `src/aeat/adapters/inbound/financial/providers (test consumers)`.
-- [ ] `W05.P85.S348` - Rewire the 8 test-only cross-package private import site(s) across 5 test file(s) reaching into `aeat.adapters.outbound.aeat.browser` onto its promoted top-level facade; `src/aeat/adapters/outbound/aeat/browser (test consumers)`.
-- [ ] `W05.P85.S349` - Rewire the 7 test-only cross-package private import site(s) across 4 test file(s) reaching into `aeat.adapters.persistence.storage` onto its promoted top-level facade; `src/aeat/adapters/persistence/storage (test consumers)`.
-- [ ] `W05.P85.S350` - Rewire the 12 test-only cross-package private import site(s) across 3 test file(s) reaching into `aeat.adapters.outbound.aeat.auth` onto its promoted top-level facade; `src/aeat/adapters/outbound/aeat/auth (test consumers)`.
-- [ ] `W05.P85.S351` - Rewire the 6 test-only cross-package private import site(s) across 2 test file(s) reaching into `aeat.adapters.outbound.llm` onto its promoted top-level facade; `src/aeat/adapters/outbound/llm (test consumers)`.
-- [ ] `W05.P85.S352` - Rewire the 2 test-only cross-package private import site(s) across 2 test file(s) reaching into `aeat.adapters.inbound.declaracion` onto its promoted top-level facade; `src/aeat/adapters/inbound/declaracion (test consumers)`.
-- [ ] `W05.P85.S353` - Rewire the 1 test-only cross-package private import site(s) across 1 test file(s) reaching into `aeat.adapters.persistence.storage.blob_store` onto its promoted top-level facade; `src/aeat/adapters/persistence/storage/blob_store (test consumers)`.
-- [ ] `W05.P85.S354` - Rewire the 1 test-only cross-package private import site(s) across 1 test file(s) reaching into `aeat.adapters.inbound.borrador` onto its promoted top-level facade; `src/aeat/adapters/inbound/borrador (test consumers)`.
+- [x] `W05.P85.S339` - Rewire the 42 test-only cross-package private import site(s) across 23 test file(s) reaching into `aeat.adapters.persistence.storage.bucket` onto its promoted top-level facade; `src/aeat/adapters/persistence/storage/bucket (test consumers)`.
+- [x] `W05.P85.S340` - Rewire the 24 test-only cross-package private import site(s) across 21 test file(s) reaching into `aeat.adapters.persistence.storage.crypto` onto its promoted top-level facade; `src/aeat/adapters/persistence/storage/crypto (test consumers)`.
+- [x] `W05.P85.S341` - Rewire the 24 test-only cross-package private import site(s) across 21 test file(s) reaching into `aeat.adapters.persistence.storage.sql` onto its promoted top-level facade; `src/aeat/adapters/persistence/storage/sql (test consumers)`.
+- [x] `W05.P85.S342` - Rewire the 24 test-only cross-package private import site(s) across 15 test file(s) reaching into `aeat.adapters.persistence.storage.master_key` onto its promoted top-level facade; `src/aeat/adapters/persistence/storage/master_key (test consumers)`.
+- [x] `W05.P85.S343` - Rewire the 20 test-only cross-package private import site(s) across 12 test file(s) reaching into `aeat.adapters.outbound.aeat.sede` onto its promoted top-level facade; `src/aeat/adapters/outbound/aeat/sede (test consumers)`.
+- [x] `W05.P85.S344` - Rewire the 7 test-only cross-package private import site(s) across 7 test file(s) reaching into `aeat.adapters.inbound.pdf` onto its promoted top-level facade; `src/aeat/adapters/inbound/pdf (test consumers)`.
+- [x] `W05.P85.S345` - Rewire the 7 test-only cross-package private import site(s) across 7 test file(s) reaching into `aeat.adapters.outbound.storage` onto its promoted top-level facade; `src/aeat/adapters/outbound/storage (test consumers)`.
+- [x] `W05.P85.S346` - Rewire the 10 test-only cross-package private import site(s) across 6 test file(s) reaching into `aeat.adapters.outbound.google` onto its promoted top-level facade; `src/aeat/adapters/outbound/google (test consumers)`.
+- [x] `W05.P85.S347` - Rewire the 8 test-only cross-package private import site(s) across 6 test file(s) reaching into `aeat.adapters.inbound.financial.providers` onto its promoted top-level facade; `src/aeat/adapters/inbound/financial/providers (test consumers)`.
+- [x] `W05.P85.S348` - Rewire the 8 test-only cross-package private import site(s) across 5 test file(s) reaching into `aeat.adapters.outbound.aeat.browser` onto its promoted top-level facade; `src/aeat/adapters/outbound/aeat/browser (test consumers)`.
+- [x] `W05.P85.S349` - Rewire the 7 test-only cross-package private import site(s) across 4 test file(s) reaching into `aeat.adapters.persistence.storage` onto its promoted top-level facade; `src/aeat/adapters/persistence/storage (test consumers)`.
+- [x] `W05.P85.S350` - Rewire the 12 test-only cross-package private import site(s) across 3 test file(s) reaching into `aeat.adapters.outbound.aeat.auth` onto its promoted top-level facade; `src/aeat/adapters/outbound/aeat/auth (test consumers)`.
+- [x] `W05.P85.S351` - Rewire the 6 test-only cross-package private import site(s) across 2 test file(s) reaching into `aeat.adapters.outbound.llm` onto its promoted top-level facade; `src/aeat/adapters/outbound/llm (test consumers)`.
+- [x] `W05.P85.S352` - Rewire the 2 test-only cross-package private import site(s) across 2 test file(s) reaching into `aeat.adapters.inbound.declaracion` onto its promoted top-level facade; `src/aeat/adapters/inbound/declaracion (test consumers)`.
+- [x] `W05.P85.S353` - Rewire the 1 test-only cross-package private import site(s) across 1 test file(s) reaching into `aeat.adapters.persistence.storage.blob_store` onto its promoted top-level facade; `src/aeat/adapters/persistence/storage/blob_store (test consumers)`.
+- [x] `W05.P85.S354` - Rewire the 1 test-only cross-package private import site(s) across 1 test file(s) reaching into `aeat.adapters.inbound.borrador` onto its promoted top-level facade; `src/aeat/adapters/inbound/borrador (test consumers)`.
 
 ### Phase `W05.P86` - core-entrypoints-locales-tests test-only import sweep
 
 Repoint every test-only cross-package private import reaching a core-entrypoints-locales-tests owning package onto that package promoted facade, one Step per owning package.
 
-- [ ] `W05.P86.S355` - Rewire the 14 test-only cross-package private import site(s) across 14 test file(s) reaching into `aeat.tests` onto its promoted top-level facade; `src/aeat/tests (test consumers)`.
-- [ ] `W05.P86.S356` - Rewire the 13 test-only cross-package private import site(s) across 13 test file(s) reaching into `aeat.core.errors` onto its promoted top-level facade; `src/aeat/core/errors (test consumers)`.
-- [ ] `W05.P86.S357` - Rewire the 37 test-only cross-package private import site(s) across 13 test file(s) reaching into `aeat.core` onto its promoted top-level facade; `src/aeat/core (test consumers)`.
-- [ ] `W05.P86.S358` - Rewire the 12 test-only cross-package private import site(s) across 11 test file(s) reaching into `aeat.core.i18n` onto its promoted top-level facade; `src/aeat/core/i18n (test consumers)`.
-- [ ] `W05.P86.S359` - Rewire the 9 test-only cross-package private import site(s) across 5 test file(s) reaching into `aeat.entrypoints.cli` onto its promoted top-level facade; `src/aeat/entrypoints/cli (test consumers)`.
-- [ ] `W05.P86.S360` - Rewire the 5 test-only cross-package private import site(s) across 3 test file(s) reaching into `aeat.core.observability` onto its promoted top-level facade; `src/aeat/core/observability (test consumers)`.
-- [ ] `W05.P86.S361` - Rewire the 8 test-only cross-package private import site(s) across 2 test file(s) reaching into `aeat.locales` onto its promoted top-level facade; `src/aeat/locales (test consumers)`.
-- [ ] `W05.P86.S362` - Rewire the 2 test-only cross-package private import site(s) across 1 test file(s) reaching into `aeat.entrypoints.mcp` onto its promoted top-level facade; `src/aeat/entrypoints/mcp (test consumers)`.
-- [ ] `W05.P86.S363` - Rewire the 1 test-only cross-package private import site(s) across 1 test file(s) reaching into `aeat.core.decimal` onto its promoted top-level facade; `src/aeat/core/decimal (test consumers)`.
+- [x] `W05.P86.S355` - Rewire the 14 test-only cross-package private import site(s) across 14 test file(s) reaching into `aeat.tests` onto its promoted top-level facade; `src/aeat/tests (test consumers)`.
+- [x] `W05.P86.S356` - Rewire the 13 test-only cross-package private import site(s) across 13 test file(s) reaching into `aeat.core.errors` onto its promoted top-level facade; `src/aeat/core/errors (test consumers)`.
+- [x] `W05.P86.S357` - Rewire the 37 test-only cross-package private import site(s) across 13 test file(s) reaching into `aeat.core` onto its promoted top-level facade; `src/aeat/core (test consumers)`.
+- [x] `W05.P86.S358` - Rewire the 12 test-only cross-package private import site(s) across 11 test file(s) reaching into `aeat.core.i18n` onto its promoted top-level facade; `src/aeat/core/i18n (test consumers)`.
+- [x] `W05.P86.S359` - Rewire the 9 test-only cross-package private import site(s) across 5 test file(s) reaching into `aeat.entrypoints.cli` onto its promoted top-level facade; `src/aeat/entrypoints/cli (test consumers)`.
+- [x] `W05.P86.S360` - Rewire the 5 test-only cross-package private import site(s) across 3 test file(s) reaching into `aeat.core.observability` onto its promoted top-level facade; `src/aeat/core/observability (test consumers)`.
+- [x] `W05.P86.S361` - Rewire the 8 test-only cross-package private import site(s) across 2 test file(s) reaching into `aeat.locales` onto its promoted top-level facade; `src/aeat/locales (test consumers)`.
+- [x] `W05.P86.S362` - Rewire the 2 test-only cross-package private import site(s) across 1 test file(s) reaching into `aeat.entrypoints.mcp` onto its promoted top-level facade; `src/aeat/entrypoints/mcp (test consumers)`.
+- [x] `W05.P86.S363` - Rewire the 1 test-only cross-package private import site(s) across 1 test file(s) reaching into `aeat.core.decimal` onto its promoted top-level facade; `src/aeat/core/decimal (test consumers)`.
 
 ## Wave `W06` - verification and closeout
 
@@ -910,6 +910,7 @@ Confirm the scanner reports zero production Family-1 violations, flip the Wave W
 - [ ] `W06.P90.S399` - Re-run dev/import_hygiene_scan.py and confirm zero production Family-1 cross-package private-import violations, then flip the Wave W04 ratchet gate to hard-zero mode; `dev/import_hygiene_scan.py`.
 - [ ] `W06.P90.S400` - Run a fresh-context honesty review against the campaign closure summary per the campaign-close-honesty-review discipline before declaring the campaign structurally complete, tracking every surfaced item as a new Step or a formally deferred follow-up; `.vault/audit/2026-07-01-import-centralization-audit.md`.
 - [ ] `W06.P90.S401` - Persist Step Records for every closed Step and rebuild the feature index, then confirm vaultspec-core vault plan status reports the plan fully closed; `.vault/exec/2026-07-01-import-centralization`.
+- [ ] `W06.P90.S402` - Extend the import-hygiene scanner to detect underscore-named __all__ entries and dispose the 8 pre-existing hits surfaced by honesty-review finding #7; `dev/import_hygiene_scan.py`.
 
 ## Parallelization
 
