@@ -6,6 +6,14 @@ description: >-
   calculate, verify, export the fichero-BOE, and hand off for the taxpayer to
   file. Use when the taxpayer is a self-employed individual filing their
   quarterly IRPF instalment under the objective-estimation (módulos) regime.
+applies_when:
+  profile_facts:
+    - fact: irpf_income_categories
+      match: contains
+      values: [actividad_economica]
+    - fact: irpf_estimation_regime
+      match: equals
+      values: [objetiva]
 ---
 
 # Prepare Modelo 131
