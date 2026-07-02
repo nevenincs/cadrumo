@@ -3,10 +3,10 @@
 This subpackage owns the user-writable substrate for proportional-deduction
 coefficients: a frozen :class:`UsageRatioProfile`, the
 :data:`ELIGIBLE_USAGE_RATIO_CATEGORIES` set derived from
-:mod:`aeat.domain.categories`, the pure resolver :func:`resolve_user_ratio`,
+:mod:`domain.categories`, the pure resolver :func:`resolve_user_ratio`,
 and the ledger reference validator :func:`validate_usage_ratio_reference`.
 Usage-ratio identifiers are concrete
-:class:`~aeat.domain.categories.SpendingCategory` values, not aliases or
+:class:`domain.categories.SpendingCategory` values, not aliases or
 parallel ids.
 
 Profile persistence is an encrypted ``FINANCIAL`` secure-object round trip via
@@ -24,15 +24,15 @@ proportions. They are explicitly separate from legal IVA prorrata and do not
 decide modelo applicability or casilla routing.
 
 See Also:
-    :mod:`aeat.application.ledger`
+    :mod:`application.ledger`
         Validates ledger ratio references, reports missing proportionality, and
         surfaces HOME_OFFICE censo drift before modelo calculation.
-    :mod:`aeat.application.aggregation`
+    :mod:`application.aggregation`
         Consumes resolved ratios when building Renta deductible-expense binding
         values from active ledger rows.
-    :mod:`aeat.domain.iva`
+    :mod:`domain.iva`
         Owns the separate legal IVA prorrata substrate used by IVA aggregation.
-    :mod:`aeat.application.user_profile`
+    :mod:`application.user_profile`
         Supplies the bound censo facts used to derive and guard HOME_OFFICE
         usage-ratio values.
 
