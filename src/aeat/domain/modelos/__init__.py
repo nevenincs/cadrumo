@@ -6,19 +6,20 @@ their in-memory catalogues, encrypted repository boundaries, repository
 protocols, row DTOs, derivation and upsert helpers, :class:`ExternalEvidence`,
 and :obj:`WorkUnitId`. :class:`ModeloCode` validates identifier shape only;
 filing availability and revision targeting are resolved through registry-aware
-flows anchored on :class:`ModeloRevision`.
+flows anchored on :class:`domain.calculations.registry.ModeloRevision`.
 
 These records are the domain aggregate carried by
-:mod:`~aeat.application.modelo`:
+:mod:`application.modelo`:
 a :class:`WorkUnit` fixes the bucket/modelo/year/period/registry-revision target
 and carries current/filed pointers, while a :class:`CalculationRevision` is
 content-addressed, stateful, source-transaction aware, and records
-:class:`CasillaObservation` values plus :obj:`ModeloDetailRow` rows. A
-:class:`ModeloRecord` is the durable filing-record receipt paired with a filed
-revision. Local filing writes keep ``aeat_accepted=False`` and no
+:class:`domain.calculations.registry.CasillaObservation` values plus
+:obj:`ModeloDetailRow` rows. A :class:`ModeloRecord` is the durable
+filing-record receipt paired with a filed revision. Local filing writes keep
+``aeat_accepted=False`` and no
 :class:`ExternalEvidence`; only the external import path may stamp
 AEAT-attested evidence, validated against
-:class:`~aeat.domain.justificante.Justificante` metadata for receipt-bound
+:class:`domain.justificante.Justificante` metadata for receipt-bound
 evidence kinds, and turn that record into an amendment baseline.
 
 The package also owns the transaction participation index. A
@@ -34,10 +35,10 @@ Informational-declaration row models also live here:
 :class:`Modelo349RectificacionRow`, and :obj:`ModeloDetailRow`, plus the
 Modelo 349 NIF and country-prefix validators exposed by this root facade.
 Regulatory constants such as the Modelo 347 declarability threshold remain in
-:mod:`~aeat.core.external_constants`.
+:mod:`core.external_constants`.
 
 See Also:
-    :mod:`~aeat.application.modelo`
+    :mod:`application.modelo`
         Application facade that creates, calculates, verifies, files, exports,
         reconciles, and rebuilds this aggregate.
     :class:`CalculationRevision`
@@ -48,22 +49,22 @@ See Also:
     :class:`ExternalEvidence`
         Official evidence metadata carried only by imported AEAT-attested
         filing records.
-    :func:`~aeat.application.modelo.file_modelo_revision`
+    :func:`application.modelo.file_modelo_revision`
         Application service that records a verified revision as local/internal
         filed state without AEAT acceptance.
-    :func:`~aeat.application.modelo.import_external_filing_evidence`
+    :func:`application.modelo.import_external_filing_evidence`
         Application service that imports AEAT-attested evidence into a current
         filing record.
-    :func:`~aeat.application.modelo.amend_modelo_revision`
+    :func:`application.modelo.amend_modelo_revision`
         Application service that consumes an externally evidenced current
         filing record as the amendment baseline.
-    :mod:`~aeat.domain.justificante`
+    :mod:`domain.justificante`
         Receipt metadata domain referenced by justificante PDF, CSV-register,
         and live-capture evidence kinds.
     :class:`TransactionRevisionParticipationIndex`
         Rebuildable inverse index from ledger transaction ids to finalized
         calculation revisions and filing records.
-    :mod:`~aeat.domain.calculations.registry`
+    :mod:`domain.calculations.registry`
         Registry snapshots, formulas, bindings, and observation types that
         produce the calculation payload stored on a revision.
 """
