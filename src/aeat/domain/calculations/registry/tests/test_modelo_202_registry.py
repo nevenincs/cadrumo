@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from datetime import date
 from decimal import Decimal
+from functools import lru_cache
 
 import pytest
 
@@ -56,8 +57,26 @@ _M202_SOURCE_EXPECTATIONS = {
         date(2025, 3, 20),
     ),
 }
+_M202_REVISION_IDS = ("2019-2022", "2023-2024", "2025-y-siguientes")
+_M202_CLOSED_REVISION_SOURCE_CASES = (
+    (
+        "2019-2022",
+        "aeat-modelo-202-instructions-2018-2022",
+        date(2018, 1, 1),
+        date(2022, 12, 31),
+        ("aeat-modelo-202-instructions", "aeat-modelo-202-instructions-2023-2024"),
+    ),
+    (
+        "2023-2024",
+        "aeat-modelo-202-instructions-2023-2024",
+        date(2023, 1, 1),
+        date(2024, 12, 31),
+        ("aeat-modelo-202-instructions", "aeat-modelo-202-instructions-2018-2022"),
+    ),
+)
 
 
+@lru_cache
 def _load_modelo_202() -> tuple[ModeloDefinition, RegistryCatalogues]:
     return _committed_modelo("202")
 
@@ -137,44 +156,22 @@ def test_committed_modelo_202_order_chain_is_boe_corpus_backed() -> None:
         assert "modelo 202" in source_text or "Modelo 202" in source_text
 
 
-@pytest.mark.parametrize(
-    ("revision_id", "expected_source_ref", "applies_from", "applies_to", "forbidden_source_refs"),
-    (
-        (
-            "2019-2022",
-            "aeat-modelo-202-instructions-2018-2022",
-            date(2018, 1, 1),
-            date(2022, 12, 31),
-            ("aeat-modelo-202-instructions", "aeat-modelo-202-instructions-2023-2024"),
-        ),
-        (
-            "2023-2024",
-            "aeat-modelo-202-instructions-2023-2024",
-            date(2023, 1, 1),
-            date(2024, 12, 31),
-            ("aeat-modelo-202-instructions", "aeat-modelo-202-instructions-2018-2022"),
-        ),
-    ),
-)
-def test_committed_modelo_202_closed_revisions_use_period_matching_instruction_sources(
-    revision_id: str,
-    expected_source_ref: str,
-    applies_from: date,
-    applies_to: date,
-    forbidden_source_refs: tuple[str, ...],
-) -> None:
+def test_committed_modelo_202_closed_revisions_use_period_matching_instruction_sources() -> None:
     modelo, catalogues = _load_modelo_202()
-    revision = modelo.revisions[revision_id]
-    instruction_source = catalogues.sources[expected_source_ref]
+    for revision_id, expected_source_ref, applies_from, applies_to, forbidden_source_refs in (
+        _M202_CLOSED_REVISION_SOURCE_CASES
+    ):
+        revision = modelo.revisions[revision_id]
+        instruction_source = catalogues.sources[expected_source_ref]
 
-    assert instruction_source.evidence_tier == "official_source_guidance"
-    assert instruction_source.applies_from == applies_from
-    assert instruction_source.applies_to == applies_to
-    assert expected_source_ref in revision.source_refs
+        assert instruction_source.evidence_tier == "official_source_guidance"
+        assert instruction_source.applies_from == applies_from
+        assert instruction_source.applies_to == applies_to
+        assert expected_source_ref in revision.source_refs
 
-    revision_payload = revision.model_dump_json()
-    for source_ref in forbidden_source_refs:
-        assert f'"{source_ref}"' not in revision_payload
+        revision_payload = revision.model_dump_json()
+        for source_ref in forbidden_source_refs:
+            assert f'"{source_ref}"' not in revision_payload, revision_id
 
 
 def test_committed_modelo_202_marks_2025_only_b2_rate_bands_as_intentional_singletons() -> None:
@@ -243,8 +240,7 @@ _M202_BASE_IMPONIBLE_PREVIA_ADVISORY_PREDICATE_ID = (
 )
 
 
-@pytest.mark.parametrize("revision_id", ["2019-2022", "2023-2024", "2025-y-siguientes"])
-def test_committed_modelo_202_guards_base_imponible_previa_under_declaration(revision_id: str) -> None:
+def test_committed_modelo_202_guards_base_imponible_previa_under_declaration() -> None:
     """Every M202 revision carries the clave 04 -> clave 13 silent-under-declaration advisory.
 
     The base imponible previa (clave 13) is formula-derived from the resultado
@@ -254,18 +250,19 @@ def test_committed_modelo_202_guards_base_imponible_previa_under_declaration(rev
     under-declaration with no test failing it (`no-silent-under-declaration`).
     """
     modelo, _catalogues = _load_modelo_202()
-    revision = modelo.revisions[revision_id]
+    for revision_id in _M202_REVISION_IDS:
+        revision = modelo.revisions[revision_id]
 
-    predicate = next(
-        p
-        for p in revision.verification_predicates
-        if p.predicate_id == _M202_BASE_IMPONIBLE_PREVIA_ADVISORY_PREDICATE_ID
-    )
+        predicate = next(
+            p
+            for p in revision.verification_predicates
+            if p.predicate_id == _M202_BASE_IMPONIBLE_PREVIA_ADVISORY_PREDICATE_ID
+        )
 
-    assert predicate.expression == 'implies_nonzero(["04", "13"])'
-    assert predicate.finding_kind == "ADVISORY"
-    assert "ley-27-2014:art-40-3" in tuple(str(r) for r in predicate.legal_refs)
-    assert "ley-27-2014:art-40" in tuple(str(r) for r in predicate.legal_refs)
+        assert predicate.expression == 'implies_nonzero(["04", "13"])'
+        assert predicate.finding_kind == "ADVISORY"
+        assert "ley-27-2014:art-40-3" in tuple(str(r) for r in predicate.legal_refs)
+        assert "ley-27-2014:art-40" in tuple(str(r) for r in predicate.legal_refs)
 
 
 _M202_B2_TIPO_3_ADVISORY_PREDICATE_ID = "modelo-202-2025-b2-base-tipo-3-implica-importe-pago-fraccionado-tipo-3"
@@ -311,10 +308,7 @@ def _casilla_refs_in_expression(expression: object) -> set[str]:
     return refs
 
 
-@pytest.mark.parametrize("revision_id", ["2019-2022", "2023-2024", "2025-y-siguientes"])
-def test_committed_modelo_202_b2_resultado_previo_feeds_modalidad_40_3_resultado(
-    revision_id: str,
-) -> None:
+def test_committed_modelo_202_b2_resultado_previo_feeds_modalidad_40_3_resultado() -> None:
     """Clave 26 (B2 resultado previo) now feeds clave 32 (modalidad-40-3-resultado).
 
     The bundled AEAT corpus (``modelo-202-instrucciones.html`` /
@@ -335,30 +329,34 @@ def test_committed_modelo_202_b2_resultado_previo_feeds_modalidad_40_3_resultado
     data only while verification refuses the both-positive overstatement case.
     """
     modelo, _catalogues = _load_modelo_202()
-    revision = modelo.revisions[revision_id]
+    for revision_id in _M202_REVISION_IDS:
+        revision = modelo.revisions[revision_id]
 
-    modalidad_40_3_resultado_formula = next(f for f in revision.formulas if f.target_casilla_id == "32")
-    expression = modalidad_40_3_resultado_formula.expression
-    referenced_casillas = _casilla_refs_in_expression(expression)
-    assert "18" in referenced_casillas
-    assert "26" in referenced_casillas
+        modalidad_40_3_resultado_formula = next(f for f in revision.formulas if f.target_casilla_id == "32")
+        expression = modalidad_40_3_resultado_formula.expression
+        referenced_casillas = _casilla_refs_in_expression(expression)
+        assert "18" in referenced_casillas
+        assert "26" in referenced_casillas
 
-    # Lock the exact combination shape: an "add" node whose two args are
-    # precisely the clave 18 and clave 26 leaves (not, say, a "subtract" or
-    # "max" that would zero or misstate one lane).
-    combination_nodes = [node for node in _iter_expression_nodes(expression) if node.op == "add"]
-    assert any({getattr(arg, "casilla_id", None) for arg in node.args} == {"18", "26"} for node in combination_nodes), (
-        "expected an add(clave 18, clave 26) node combining the B1 and B2 resultado previo lanes"
-    )
+        # Lock the exact combination shape: an "add" node whose two args are
+        # precisely the clave 18 and clave 26 leaves (not, say, a "subtract" or
+        # "max" that would zero or misstate one lane).
+        combination_nodes = [node for node in _iter_expression_nodes(expression) if node.op == "add"]
+        assert any(
+            {getattr(arg, "casilla_id", None) for arg in node.args} == {"18", "26"}
+            for node in combination_nodes
+        ), "expected an add(clave 18, clave 26) node combining the B1 and B2 resultado previo lanes"
 
-    predicate_ids = {p.predicate_id for p in revision.verification_predicates}
-    assert _M202_B2_RESULTADO_PREVIO_ADVISORY_PREDICATE_ID not in predicate_ids
-    predicate = next(
-        p for p in revision.verification_predicates if p.predicate_id == _M202_B1_B2_RESULTADO_PREVIO_XOR_PREDICATE_ID
-    )
-    assert predicate.expression == 'at_most_one_positive(["18", "26"])'
-    assert predicate.finding_kind == "BLOCKING_RULE"
-    assert "ley-27-2014:art-40-3" in tuple(str(r) for r in predicate.legal_refs)
+        predicate_ids = {p.predicate_id for p in revision.verification_predicates}
+        assert _M202_B2_RESULTADO_PREVIO_ADVISORY_PREDICATE_ID not in predicate_ids
+        predicate = next(
+            p
+            for p in revision.verification_predicates
+            if p.predicate_id == _M202_B1_B2_RESULTADO_PREVIO_XOR_PREDICATE_ID
+        )
+        assert predicate.expression == 'at_most_one_positive(["18", "26"])'
+        assert predicate.finding_kind == "BLOCKING_RULE"
+        assert "ley-27-2014:art-40-3" in tuple(str(r) for r in predicate.legal_refs)
 
 
 def _iter_expression_nodes(expression: FormulaExpression) -> list[FormulaExpression]:
@@ -369,10 +367,7 @@ def _iter_expression_nodes(expression: FormulaExpression) -> list[FormulaExpress
     return nodes
 
 
-@pytest.mark.parametrize("revision_id", ["2019-2022", "2023-2024", "2025-y-siguientes"])
-def test_committed_modelo_202_modalidad_40_3_resultado_reflects_b2_only_filer(
-    revision_id: str,
-) -> None:
+def test_committed_modelo_202_modalidad_40_3_resultado_reflects_b2_only_filer() -> None:
     """A B2-only filer's resultado previo (clave 26) now reaches clave 32, not zero.
 
     This is a graph-wiring / runtime-execution proof, not a re-derivation of
@@ -385,41 +380,41 @@ def test_committed_modelo_202_modalidad_40_3_resultado_reflects_b2_only_filer(
     adjustment values.
     """
     modelo, _catalogues = _load_modelo_202()
-    revision = modelo.revisions[revision_id]
-    modalidad_40_3_resultado_formula = next(f for f in revision.formulas if f.target_casilla_id == "32")
+    for revision_id in _M202_REVISION_IDS:
+        revision = modelo.revisions[revision_id]
+        modalidad_40_3_resultado_formula = next(f for f in revision.formulas if f.target_casilla_id == "32")
 
-    operand_refs: list[str] = []
-    operand_casilla_refs: list[CasillaId] = []
-    operand_values: list[Decimal] = []
-    result = _evaluate_expression(
-        modalidad_40_3_resultado_formula.expression,
-        values={
-            "18": Decimal("0"),
-            "26": Decimal("1000"),
-            "27": Decimal("0"),
-            "28": Decimal("0"),
-            "29": Decimal("100"),
-            "30": Decimal("0"),
-            "31": Decimal("0"),
-        },
-        binding_values={},
-        parameters={},
-        date_context={},
-        relation_values={},
-        unresolved_relation_ids=frozenset(),
-        unresolved_casilla_ids=set(),
-        operand_refs=operand_refs,
-        operand_casilla_refs=operand_casilla_refs,
-        operand_values=operand_values,
-    )
-    assert result == Decimal("1000")
+        operand_refs: list[str] = []
+        operand_casilla_refs: list[CasillaId] = []
+        operand_values: list[Decimal] = []
+        result = _evaluate_expression(
+            modalidad_40_3_resultado_formula.expression,
+            values={
+                "18": Decimal("0"),
+                "26": Decimal("1000"),
+                "27": Decimal("0"),
+                "28": Decimal("0"),
+                "29": Decimal("100"),
+                "30": Decimal("0"),
+                "31": Decimal("0"),
+            },
+            binding_values={},
+            parameters={},
+            date_context={},
+            relation_values={},
+            unresolved_relation_ids=frozenset(),
+            unresolved_casilla_ids=set(),
+            operand_refs=operand_refs,
+            operand_casilla_refs=operand_casilla_refs,
+            operand_values=operand_values,
+        )
+        assert result == Decimal("1000"), revision_id
 
 
 _M202_MINIMO_A_INGRESAR_CN_10M_ADVISORY_PREDICATE_ID = "modelo-202-04-implica-minimo-a-ingresar-cn-10m"
 
 
-@pytest.mark.parametrize("revision_id", ["2019-2022", "2023-2024", "2025-y-siguientes"])
-def test_committed_modelo_202_minimo_a_ingresar_cn_10m_remains_unguarded(revision_id: str) -> None:
+def test_committed_modelo_202_minimo_a_ingresar_cn_10m_remains_unguarded() -> None:
     """Clave 33 (minimo a ingresar, CN >= 10 millones euros) is a grounded, documented non-guard.
 
     The LIS pago-fraccionado minimo floor for INCN >= EUR 10.000.000 groups is
@@ -444,15 +439,16 @@ def test_committed_modelo_202_minimo_a_ingresar_cn_10m_remains_unguarded(revisio
     with no formula or binding linkage in every revision.
     """
     modelo, _catalogues = _load_modelo_202()
-    revision = modelo.revisions[revision_id]
-    casillas_by_id = {casilla.id: casilla for casilla in revision.casillas}
+    for revision_id in _M202_REVISION_IDS:
+        revision = modelo.revisions[revision_id]
+        casillas_by_id = {casilla.id: casilla for casilla in revision.casillas}
 
-    casilla_33 = casillas_by_id["33"]
-    assert casilla_33.formula is None
-    assert casilla_33.binding is None
-    # The DA-14a binding provision is grounded on the value (Item A / residuals
-    # Finding 1b) even though the value stays unguarded.
-    assert "ley-27-2014:da-14" in {str(ref) for ref in casilla_33.legal_refs}
+        casilla_33 = casillas_by_id["33"]
+        assert casilla_33.formula is None
+        assert casilla_33.binding is None
+        # The DA-14a binding provision is grounded on the value (Item A / residuals
+        # Finding 1b) even though the value stays unguarded.
+        assert "ley-27-2014:da-14" in {str(ref) for ref in casilla_33.legal_refs}
 
-    predicate_ids = {p.predicate_id for p in revision.verification_predicates}
-    assert _M202_MINIMO_A_INGRESAR_CN_10M_ADVISORY_PREDICATE_ID not in predicate_ids
+        predicate_ids = {p.predicate_id for p in revision.verification_predicates}
+        assert _M202_MINIMO_A_INGRESAR_CN_10M_ADVISORY_PREDICATE_ID not in predicate_ids
