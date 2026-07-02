@@ -25,7 +25,7 @@ class IvaRateTableRepository(ResourceCacheRepository[Mapping["EUMemberState", "t
 
     @override
     def _load(self, key: None) -> Mapping[EUMemberState, tuple[IvaRateRecord, ...]]:
-        from ....domain.iva._rates import load_iva_rate_table
+        from ....domain.iva import load_iva_rate_table
 
         return load_iva_rate_table()
 

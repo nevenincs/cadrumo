@@ -24,7 +24,7 @@ from pydantic import BaseModel
 from ...core import STRICT_FROZEN_CONFIG
 from ..config import PROJECT_ROOT, load_settings
 from ..logging import attach_run_sink, detach_run_sink, get_logger
-from ..time._clock import now
+from ..time import now
 from ._capture import _CAPTURE_SINK
 from ._fingerprint import (
     compute_corpus_sha256,

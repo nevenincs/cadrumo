@@ -384,8 +384,12 @@ def _record_captured_envelope(envelope_payload: object) -> None:
     if not isinstance(envelope_payload, Mapping):
         return
     try:
-        from .observability._capture import record_emitted_envelope
+        from .observability import record_emitted_envelope
 
+        # CAST-RATIONALE-ENVELOPE-CAPTURE-MAPPING: the isinstance check above
+        # confirms only the erased runtime `Mapping` shape, not the `str, object`
+        # type parameters; the cast narrows to the capture helper's declared
+        # parameter type.
         record_emitted_envelope(cast("Mapping[str, object]", envelope_payload))
     except Exception:  # capture must never break emit
         _log.debug("json_contract: envelope capture failed; continuing", exc_info=True)
