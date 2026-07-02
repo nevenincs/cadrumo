@@ -101,8 +101,59 @@ the existing filing export suite). Per `full-tree-gate-must-distinguish-owner`,
 this is peer churn, not an owner regression; the collect-only gate stays open
 until the peer refactor settles.
 
+### code-review-critical-empty-kind | critical | the shipped gate keyed on id membership, not value presence — fixed in the working tree, commit blocked
+
+The dispatched `vaultspec-code-review` found a CONFIRMED critical defect in the
+committed gate (`db7eda99d`): `rendered_casilla_ids` computed
+`{value.casilla_id for value in draft.values}` and intersected it with the
+representable set. But `build_draft` emits a `ModeloValue` row for EVERY declared
+casilla, marking an unsupplied one `EMPTY` (`value=None`). So casilla-id membership
+in `draft.values` is the full declared set, not the valued set: an `EMPTY`,
+manifest-required, schema-optional casilla (e.g. M130 `06`) counted as "rendered,"
+the gate's `missing` set came up empty, and the export succeeded with a valid
+digest -- exactly the structurally-thin file the gate exists to refuse. The
+reviewer reproduced it end-to-end on M130 casillas `06`/`08`/`10`/`16`/`18`. The
+paired test (`test_thin_fixed_width_draft_panics_before_writing`) was tautological
+w.r.t. the real bug: it removed the `ModeloValue` tuple entry (an unreachable
+state) instead of emptying it. Fix: `rendered_casilla_ids` filters
+`value.value is not None` (value is None iff `kind == EMPTY`, per the `ModeloValue`
+contract); the test now empties a required-applicable casilla (the real production
+state) and asserts the panic. Fourteen filing tests pass with the fix, including
+the corrected thin-draft test and the P04 parity (complete drafts still reach disk;
+zeros are real values, only `EMPTY` is excluded). STATUS: fix implemented and
+tested in the working tree; the commit is blocked because a concurrent peer has 238
+files staged in the shared index (a codebase-wide import-centralization sweep,
+including `_export.py`). Committing now would sweep peer work, so the fix lands via
+the apply-cached drive once that changeset commits and the index clears. The
+committed gate is currently ineffective (it never fires on the real thin state) but
+causes no active harm: it does not false-panic and writes nothing incorrect.
+
+### code-review-medium-row-field | medium | dormant false-panic vector via row_field_casilla_ids
+
+`boe_representable_casilla_ids` unions `record.row_field_casilla_ids.values()` into
+the representable set, but those casillas are materialised from `binding_values`,
+never `draft.values`, so `rendered_casilla_ids` can never see them. A
+manifest-required casilla whose only representable route is a `row_field_casilla_ids`
+mapping would show permanently missing and false-panic on every export. Currently
+dormant: no shipped registry revision has a manifest-required casilla routed solely
+through `row_field_casilla_ids` (confirmed across 130/111/115/123/131). Follow-up:
+either extend the rendered computation to count binding-materialised row casillas,
+or add a registry-build validator forbidding a manifest-required casilla from being
+row_field-only.
+
+### code-review-medium-coverage | medium | P04 parity lock covers 4 of 12 gated modelos
+
+Twelve fixed-width modelos carry a completeness manifest and are gated in
+production (`111 115 123 130 131 180 200 202 232 303 349 720`); the P04 lock covers
+only `130 111 115 123` (the four with reusable complete-draft builders). Extending
+the lock to at least 200 and 303 (named in the P02 empirical grounding) requires
+authoring complete-draft fixtures for them. Follow-up.
+
 ## Recommendations
 
+- Commit the CRITICAL `rendered_casilla_ids` value-presence fix (ready and tested in
+  the working tree) via the apply-cached drive as soon as the 238-file peer
+  import-centralization changeset lands and the shared index clears.
 - Land the coverage advisory (P03.S12-S14) once the peer `_export.py` WIP commits,
   routing the manifest-absent signal through the typed `Notice` channel and adding
   the locale keys via the locales CLI.
