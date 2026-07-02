@@ -90,7 +90,6 @@ from ._export_support import (
     _approved_modelo_131_zero_payable_direct_debit_draft,
     _approved_registry_draft,
     _assert_missing_export_layout_refusal,
-    _ExportVerifyMatchCase,
     _field_slice,
     _modelo_111_export_headers,
     _modelo_111_export_payload,
@@ -960,18 +959,19 @@ def test_verify_reports_unchecked_reserved_or_derived_casillas(tmp_path: Path) -
     assert verdict.unchecked_casilla_ids == ("saldo-negativo-fin-periodo",)
 
 
-@pytest.mark.parametrize("case", _EXPORT_VERIFY_MATCH_CASES)
-def test_verify_matches_exported_registry_layouts(tmp_path: Path, case: _ExportVerifyMatchCase) -> None:
-    draft = case.draft_factory()
-    exported = tmp_path / case.output_name
-    provider = _schema_provider(filing_year=case.filing_year, period=case.period, modelos=case.modelos)
-    exported.write_bytes(case.payload_factory())
+def test_verify_matches_exported_registry_layouts(tmp_path: Path) -> None:
+    for parameter in _EXPORT_VERIFY_MATCH_CASES:
+        case = parameter.values[0]
+        draft = case.draft_factory()
+        exported = tmp_path / case.output_name
+        provider = _schema_provider(filing_year=case.filing_year, period=case.period, modelos=case.modelos)
+        exported.write_bytes(case.payload_factory())
 
-    verdict = verify_export(draft, file_path=exported, schema_provider=provider)
+        verdict = verify_export(draft, file_path=exported, schema_provider=provider)
 
-    assert verdict.verdict is DeclaracionVerifyVerdict.MATCH
-    assert verdict.file_sha256 is not None
-    assert verdict.mismatched_casilla_ids == ()
+        assert verdict.verdict is DeclaracionVerifyVerdict.MATCH, case.output_name
+        assert verdict.file_sha256 is not None, case.output_name
+        assert verdict.mismatched_casilla_ids == (), case.output_name
 
 
 def test_verify_reports_missing_for_malformed_export_payload(tmp_path: Path) -> None:
