@@ -18,15 +18,17 @@ Key exports:
 
 * :func:`find_invoice`, :func:`find_unmatched` — read paths against the
   invoice catalogue.
-* :func:`link_transaction` — link an invoice to one or more transactions.
 * :func:`link_invoice_transaction_repositories` — persisted
   bidirectional invoice/transaction linking.
-* :func:`suggest_reconciliations` — heuristic matcher for unlinked
-  invoices.
-* :func:`verify_link_consistency` and :class:`LinkInconsistency` —
-  audit helpers for cross-side link integrity.
+* :class:`LinkInconsistency` — audit result for cross-side link integrity.
 * :class:`InvoiceCatalogueSourceResolver` — the live calculate-path resolver for
   invoice-source bindings and Modelo 349 detail rows.
+
+:func:`domain.invoices.link_transaction`,
+:func:`domain.invoices.suggest_reconciliations`, and
+:func:`domain.invoices.verify_link_consistency` are NOT re-exported here;
+:mod:`domain.invoices` is their sole canonical source
+(import-centralization ADR ruling 5).
 
 See Also:
     :mod:`domain.invoices`
@@ -48,13 +50,7 @@ See Also:
 
 from __future__ import annotations
 
-from ...domain.invoices import (
-    find_invoice,
-    find_unmatched,
-    link_transaction,
-    suggest_reconciliations,
-    verify_link_consistency,
-)
+from ...domain.invoices import find_invoice, find_unmatched
 from ._creation import (
     CatalogueInvoiceCreateResult,
     build_catalogue_invoice,
@@ -129,7 +125,6 @@ __all__ = [
     "invoice_review_status",
     "link_invoice_transaction_catalogues",
     "link_invoice_transaction_repositories",
-    "link_transaction",
     "list_invoice_repository_rows",
     "list_invoice_rows",
     "list_unmatched_invoice_repository_rows",
@@ -144,7 +139,5 @@ __all__ = [
     "remove_catalogue_invoice",
     "resolve_catalogue_invoice",
     "resolve_catalogue_invoice_from_repository",
-    "suggest_reconciliations",
     "verify_invoice_repository_links",
-    "verify_link_consistency",
 ]
