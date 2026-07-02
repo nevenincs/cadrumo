@@ -65,7 +65,7 @@ from ...core.hashing import sha256_file, sha256_hex
 from ...core.logging import get_logger
 from ...core.money import round_to_cents
 from ...core.time import now
-from ...domain.calculations.registry import CasillaFieldKind
+from ...domain.calculations.registry import CalculationCompletenessManifest, CasillaFieldKind
 from ...domain.calculations.registry._errors import RegistryValidationError
 from ...domain.calculations.registry._export_parse import (
     XmlDictionaryEntry,
@@ -327,6 +327,14 @@ def export_draft(
     if not payload:
         raise FilingExportError(f"modelo {draft.modelo!r} export layout {layout.id!r} rendered an empty payload")
     casilla_provenance = _exported_casilla_provenance(layout, draft=draft, schema_provider=provider)
+    if subview.completeness_manifest is not None:
+        assert_export_mirrors_manifest(
+            layout,
+            draft=draft,
+            headers=headers,
+            schema_provider=provider,
+            manifest=subview.completeness_manifest,
+        )
     output_path.parent.mkdir(parents=True, exist_ok=True)
     output_path.write_bytes(payload)
     digest = sha256_hex(payload)
@@ -1135,11 +1143,69 @@ def rendered_casilla_ids(
     )
 
 
+def assert_export_mirrors_manifest(
+    layout: ExportLayoutDefinition,
+    *,
+    draft: ModeloDraft,
+    headers: dict[str, str],
+    schema_provider: RegistrySchemaAccessor,
+    manifest: CalculationCompletenessManifest,
+) -> None:
+    """Panic if the ``.boe`` would not mirror the manifest-required structure.
+
+    The completeness gate: every casilla the official record files that the
+    calculation-completeness manifest also requires (``manifest ∩ representable``
+    for this draft's disposition) MUST carry a value on disk. A required,
+    representable casilla the draft omits would render as a blank fixed-width slot
+    (or an omitted xml element) while the SHA-256 digest stays valid -- the
+    structurally-thin file this gate refuses. A shortfall raises a hard
+    :class:`FilingExportError` naming every missing casilla with its official
+    record number and segmento, so the panic is loud and explicit rather than a
+    silently thin export.
+
+    A manifest casilla absent from the representable set is a calculation-closure
+    casilla the official record does not file; it is out of scope and never
+    flagged. Callers pass ``manifest`` only when the revision declares one; a
+    revision without a manifest is handled by the coverage-advisory path, not
+    here.
+
+    The gate applies only to the fixed-width fichero-BOE. In that format every
+    field occupies its byte slot always, so an omitted required casilla renders a
+    blank slot behind a valid digest -- the structurally-thin file. An
+    ``xml_dictionary`` export instead omits an absent casilla as an absent
+    optional element, which is legitimate (a filer declares only the casillas its
+    situation requires), so completeness is not asserted for that transport.
+    """
+    if layout.format != "fixed_width":
+        return
+    representable = boe_representable_casilla_ids(layout, headers=headers, schema_provider=schema_provider)
+    rendered = rendered_casilla_ids(layout, draft=draft, headers=headers, schema_provider=schema_provider)
+    required_applicable = {casilla.casilla_id for casilla in manifest.casillas} & representable
+    missing = sorted(required_applicable - rendered)
+    if not missing:
+        return
+    metadata = {casilla.casilla_id: (casilla.number, casilla.segmento) for casilla in manifest.casillas}
+    rendered_missing = "; ".join(_format_missing_casilla(casilla_id, metadata[casilla_id]) for casilla_id in missing)
+    raise FilingExportError(
+        f"fichero-BOE export for modelo {draft.modelo!r} would omit {len(missing)} required "
+        f"casilla(s) the official record files, rendering them as blank slots (structurally-thin "
+        f"filing): {rendered_missing}. Every required casilla must be declared in the draft before export.",
+    )
+
+
+def _format_missing_casilla(casilla_id: CasillaId, metadata: tuple[str, str | None]) -> str:
+    number, segmento = metadata
+    if segmento is not None:
+        return f"{casilla_id} (segmento {segmento}, casilla {number})"
+    return f"{casilla_id} (casilla {number})"
+
+
 __all__ = [
     "DeclaracionExportFormat",
     "DeclaracionExportResult",
     "DeclaracionVerifyResult",
     "DeclaracionVerifyVerdict",
+    "assert_export_mirrors_manifest",
     "boe_representable_casilla_ids",
     "export_draft",
     "render_layout",
