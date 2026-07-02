@@ -1,7 +1,7 @@
-"""Ordered domain :class:`~aeat.core.errors.ErrorCode` registry shard.
+"""Ordered domain :class:`~core.errors.ErrorCode` registry shard.
 
 Rows map domain-layer exception qualnames to stable
-:class:`~aeat.core.errors.ErrorCategory` values and locale message keys.
+:class:`~core.errors.ErrorCategory` values and locale message keys.
 """
 
 from .._registry import ErrorCategory, ErrorCode
