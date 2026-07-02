@@ -25,10 +25,14 @@ from typing import Any
 
 import pytest
 
-from ..adapters.inbound.financial.providers._csv import CsvProvider
-from ..domain.transactions import BusinessClassification, Transaction, TransactionDirection
-from ..domain.transactions._errors import LLMClassifierError
-from ..domain.transactions._llm import build_claude_classifier
+from ..adapters.inbound.financial.providers import CsvProvider
+from ..domain.transactions import (
+    BusinessClassification,
+    LLMClassifierError,
+    Transaction,
+    TransactionDirection,
+    build_claude_classifier,
+)
 from .live_gate import requires_live_enabled
 
 pytestmark = [pytest.mark.aeat_live, pytest.mark.hex_application]

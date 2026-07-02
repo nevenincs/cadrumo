@@ -12,7 +12,10 @@ from ...access_gate import LiveSubmitForbiddenError
 from ...i18n import tr
 from ...i18n._render import UnmatchedPlaceholderError
 from ...logging import SecretScrubbingFilter, configure_logging
-from ...observability._errors import RunContextMissingError, RunTracePersistenceError
+from ...observability import (
+    RunContextMissingError,
+    RunTracePersistenceError,
+)
 from .. import (
     ERROR_REGISTRY,
     ErrorCategory,

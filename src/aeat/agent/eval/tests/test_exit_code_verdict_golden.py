@@ -29,7 +29,7 @@ from typing import Any
 import pytest
 
 from ....adapters.persistence.storage.sql.engine import dispose_engine
-from ....application.user_profile._orchestration import profile_storage_session
+from ....application.user_profile import profile_storage_session
 from ....core import resolve_active_bucket_id
 from ....core.config import override_settings
 from ....core.json_contract import EnvelopeStatus

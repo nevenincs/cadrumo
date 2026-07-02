@@ -9,8 +9,8 @@ from pathlib import Path
 import pytest
 
 from ..adapters.persistence.storage import has_active_bucket_session
-from ..adapters.persistence.storage.bucket._manifest_io import read_manifest
-from ..adapters.persistence.storage.master_key._active_session import activate_session
+from ..adapters.persistence.storage.bucket import read_manifest
+from ..adapters.persistence.storage.master_key import activate_session
 from ..adapters.persistence.storage.master_key._bucket_session import BucketSession
 from ..adapters.persistence.storage.runtime import StorageRuntimeReadinessCode, inspect_storage_runtime
 from ..adapters.persistence.storage.sql.engine import dispose_engine, get_engine
@@ -156,9 +156,8 @@ def test_profile_bootstrap_storage_uses_shared_dev_database_password(tmp_path: P
 def test_isolated_cli_runtime_profile_routes_workflow_and_modelo_repositories_to_active_bucket(
     tmp_path: Path,
 ) -> None:
-    from ..application.workflow._persistence import workflow_state_repository
-    from ..domain.modelos._calculation_repository import CalculationRevisionCatalogueRepository
-    from ..domain.modelos._repository import WorkUnitCatalogueRepository
+    from ..application.workflow import workflow_state_repository
+    from ..domain.modelos import CalculationRevisionCatalogueRepository, WorkUnitCatalogueRepository
 
     with isolated_cli_runtime_profile(tmp_path=tmp_path, bucket_id=_CONTROL_BUCKET_ID) as profile:
         workflow_state_repository().update(lambda state: state)

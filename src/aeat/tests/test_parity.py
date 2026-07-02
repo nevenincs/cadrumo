@@ -428,7 +428,7 @@ def test_fstring_registry_expands_sal_and_sll_keys() -> None:
 
 def test_fstring_registry_covers_all_legal_entity_form_members() -> None:
     """Every LegalEntityForm member must have a registered locale key."""
-    from ..domain.deadlines._models import LegalEntityForm
+    from ..domain.deadlines import LegalEntityForm
     from ..locales._fstring_registry import get_registered_keys
 
     keys = get_registered_keys()
@@ -445,7 +445,7 @@ def test_fstring_registry_covers_all_legal_entity_form_members() -> None:
 
 def test_fstring_registry_covers_all_fiscal_residency_members() -> None:
     """Every FiscalResidency member must have a registered locale key."""
-    from ..domain.deadlines._models import FiscalResidency
+    from ..domain.deadlines import FiscalResidency
     from ..locales._fstring_registry import get_registered_keys
 
     keys = get_registered_keys()

@@ -13,9 +13,9 @@ from pathlib import Path
 
 import pytest
 
-from ..application.user_profile._orchestration import profile_create_storage_span
+from ..application.user_profile import profile_create_storage_span
 from ..core.config import override_settings
-from ..core.i18n._render import output_language
+from ..core.i18n import output_language
 from .secure_sql import isolated_profile_storage_root
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -40,9 +40,9 @@ def isolated_language_state(tmp_path: Path) -> Iterator[None]:
 
 
 def _seed_profile_language(language: str) -> None:
-    from ..application.user_profile._orchestration import set_active_field
+    from ..application.user_profile import set_active_field
     from ..application.user_profile._testing import register_minimal_profile
-    from ..application.workflow._persistence import workflow_state_repository
+    from ..application.workflow import workflow_state_repository
     from ..domain.user_profile import UserProfileFact
 
     repository = workflow_state_repository()
@@ -56,7 +56,7 @@ def test_output_language_reads_active_profile_without_emitting_bucket_events(
     isolated_language_state: None,
 ) -> None:
     del isolated_language_state
-    from ..application.workflow._persistence import workflow_state_repository
+    from ..application.workflow import workflow_state_repository
 
     _seed_profile_language("ca")
     repository = workflow_state_repository()
