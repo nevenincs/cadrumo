@@ -3,14 +3,14 @@
 The Agencia Tributaria's identifier algorithm is shared infrastructure
 across multiple subpackages — invoice counterparty checks, encrypted
 master-key NIF canaries, sanitiser fixture validation, and CLI preflight
-gates. Co-locating the algorithm in :mod:`aeat.core.identity` gives
+gates. Co-locating the algorithm in :mod:`core.identity` gives
 every caller a public, layer-respecting import path.
 
-This module differs from :mod:`aeat.core.identity._documents` only in its return
+This module differs from :mod:`core.identity._documents` only in its return
 shape: :func:`validate_spanish_tax_id` yields the normalised identifier string,
-while :func:`~aeat.core.identity.validate_identity` returns the matching
-:class:`~aeat.core.identity.IdentityDocument` enum member. Both surfaces raise
-:class:`~aeat.core.identity.IdentityError`; this module also exports
+while :func:`~core.identity.validate_identity` returns the matching
+:class:`~core.identity.IdentityDocument` enum member. Both surfaces raise
+:class:`~core.identity.IdentityError`; this module also exports
 :func:`nif_check_letter` for callers that need the shared NIF/NIE checksum
 table directly.
 """
