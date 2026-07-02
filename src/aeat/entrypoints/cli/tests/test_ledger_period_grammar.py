@@ -55,43 +55,28 @@ _TOKEN_YEAR_SPAN = (
     ("03", 2024, "03", date(2024, 3, 1), date(2024, 3, 31)),
     ("12", 2024, "12", date(2024, 12, 1), date(2024, 12, 31)),
 )
+_CALENDAR_SHAPES = ("2024Q1", "2024-03", "2024", "2026Q4", "2025-12")
+_YEAR_QUALIFIED_HYBRIDS = ("2024-1T", "2024-0A", "2026-1T")
+_INVALID_TOKENS = ("not-a-period", "ZZ", "99", "13T", "Q5")
+_FILTER_REJECTED_PERIODS = ("2024Q1", "2024", "2024-1T", "not-a-period", "1P")
+_HISTORIC_IMPORT_PERIODS = ("2024-1T", "2024/1T", "2024Q1")
 
 
-@pytest.mark.parametrize(("token", "year", "registry_token", "start", "end"), _TOKEN_YEAR_SPAN)
-def test_aeat_token_plus_year_resolves_to_period(
-    token: str,
-    year: int,
-    registry_token: str,
-    start: date,
-    end: date,
-) -> None:
-    """A bare AEAT token plus ``--year`` resolves to one typed :class:`Period`."""
-
-    resolved = _canonical_period(token, year=year)
-    assert isinstance(resolved, Period)
-    assert resolved.year == year
-    assert resolved.registry_token == registry_token
-    assert resolved.start_date == start
-    assert resolved.end_date == end
-
-
-@pytest.mark.parametrize(("token", "year", "registry_token", "start", "end"), _TOKEN_YEAR_SPAN)
-def test_resolved_period_round_trips_through_registry_token(
-    token: str,
-    year: int,
-    registry_token: str,
-    start: date,
-    end: date,
-) -> None:
-    """The resolved :class:`Period` carries the bare registry token back out.
+def test_aeat_token_plus_year_resolves_to_period() -> None:
+    """A bare AEAT token plus ``--year`` resolves to one typed :class:`Period`.
 
     Anti-leak proof: the operator's ``(year, token)`` pair is recoverable from
     the resolved date span, so no combined calendar string is needed to render
     the period back to the operator.
     """
 
-    resolved = _canonical_period(token, year=year)
-    assert (resolved.year, resolved.registry_token) == (year, registry_token)
+    for token, year, registry_token, start, end in _TOKEN_YEAR_SPAN:
+        resolved = _canonical_period(token, year=year)
+        assert isinstance(resolved, Period)
+        assert resolved.year == year
+        assert resolved.registry_token == registry_token
+        assert resolved.start_date == start
+        assert resolved.end_date == end
 
 
 def test_registry_union_validator_is_the_token_authority() -> None:
@@ -117,21 +102,20 @@ def test_registry_union_validator_is_the_token_authority() -> None:
 # --- Calendar shapes now REFUSE -----------------------------------------------
 
 
-@pytest.mark.parametrize("calendar_shape", ["2024Q1", "2024-03", "2024", "2026Q4", "2025-12"])
-def test_calendar_shape_refuses_naming_aeat_tokens_and_year(calendar_shape: str) -> None:
+def test_calendar_shape_refuses_naming_aeat_tokens_and_year() -> None:
     """A calendar shape is no longer accepted; it refuses, naming the AEAT tokens and --year."""
 
-    with pytest.raises(typer.BadParameter) as excinfo:
-        _canonical_period(calendar_shape, year=2024)
-    message = str(excinfo.value)
-    # The refusal names the AEAT token grammar and the --year argument.
-    assert "1T" in message
-    assert "0A" in message
-    assert "--year" in message
+    for calendar_shape in _CALENDAR_SHAPES:
+        with pytest.raises(typer.BadParameter) as excinfo:
+            _canonical_period(calendar_shape, year=2024)
+        message = str(excinfo.value)
+        # The refusal names the AEAT token grammar and the --year argument.
+        assert "1T" in message, calendar_shape
+        assert "0A" in message, calendar_shape
+        assert "--year" in message, calendar_shape
 
 
-@pytest.mark.parametrize("hybrid", ["2024-1T", "2024-0A", "2026-1T"])
-def test_year_qualified_hybrid_refuses(hybrid: str) -> None:
+def test_year_qualified_hybrid_refuses() -> None:
     """The ``2024-1T`` year-qualified hybrid now refuses.
 
     Bare ``--period`` carries no year; the year comes from ``--year``. A
@@ -140,19 +124,20 @@ def test_year_qualified_hybrid_refuses(hybrid: str) -> None:
     not a bare month token, so it refuses too.)
     """
 
-    with pytest.raises(typer.BadParameter):
-        _canonical_period(hybrid, year=2024)
+    for hybrid in _YEAR_QUALIFIED_HYBRIDS:
+        with pytest.raises(typer.BadParameter):
+            _canonical_period(hybrid, year=2024)
 
 
-@pytest.mark.parametrize("invalid_token", ["not-a-period", "ZZ", "99", "13T", "Q5"])
-def test_invalid_token_refuses_naming_aeat_tokens(invalid_token: str) -> None:
+def test_invalid_token_refuses_naming_aeat_tokens() -> None:
     """A genuinely-invalid token refuses, naming the AEAT token grammar and --year."""
 
-    with pytest.raises(typer.BadParameter) as excinfo:
-        _canonical_period(invalid_token, year=2024)
-    message = str(excinfo.value)
-    assert "1T" in message
-    assert "--year" in message
+    for invalid_token in _INVALID_TOKENS:
+        with pytest.raises(typer.BadParameter) as excinfo:
+            _canonical_period(invalid_token, year=2024)
+        message = str(excinfo.value)
+        assert "1T" in message, invalid_token
+        assert "--year" in message, invalid_token
 
 
 def test_empty_period_refuses() -> None:
@@ -177,12 +162,12 @@ def test_filter_clause_accepts_bare_token_with_year() -> None:
     assert tuple(_filter_canonical_period(token, year=2024).registry_token for token in tokens) == tokens
 
 
-@pytest.mark.parametrize("rejected", ["2024Q1", "2024", "2024-1T", "not-a-period", "1P"])
-def test_filter_clause_refuses_calendar_and_year_qualified(rejected: str) -> None:
+def test_filter_clause_refuses_calendar_and_year_qualified() -> None:
     """The filter clause refuses a calendar shape or a year-qualified hybrid token."""
 
-    with pytest.raises(typer.BadParameter):
-        _filter_canonical_period(rejected, year=2024)
+    for rejected in _FILTER_REJECTED_PERIODS:
+        with pytest.raises(typer.BadParameter):
+            _filter_canonical_period(rejected, year=2024)
 
 
 # --- End-to-end: real ledger command takes --period AEAT token + --year -------
@@ -304,9 +289,7 @@ def test_import_accepts_aeat_token_with_year(
     assert "2024-1T" not in result.output
 
 
-@pytest.mark.parametrize("historic_period", ["2024-1T", "2024/1T", "2024Q1"])
 def test_import_historic_period_forms_refuse_with_current_canonical_grammar(
-    historic_period: str,
     tmp_path: Path,
     _isolated_backend: None,
 ) -> None:
@@ -315,27 +298,28 @@ def test_import_historic_period_forms_refuse_with_current_canonical_grammar(
     statement = tmp_path / "statement.csv"
     _write_import_statement(statement)
 
-    result = invoke_cached_cli(
-        [
-            "app",
-            "ledger",
-            "import",
-            str(statement),
-            "--provider",
-            "csv",
-            "--dry-run",
-            "--period",
-            historic_period,
-            "--year",
-            "2024",
-        ],
-    )
+    for historic_period in _HISTORIC_IMPORT_PERIODS:
+        result = invoke_cached_cli(
+            [
+                "app",
+                "ledger",
+                "import",
+                str(statement),
+                "--provider",
+                "csv",
+                "--dry-run",
+                "--period",
+                historic_period,
+                "--year",
+                "2024",
+            ],
+        )
 
-    assert result.exit_code != 0, result.output
-    assert historic_period in result.output
-    assert "1T" in result.output
-    assert "0A" in result.output
-    assert "--year" in result.output
+        assert result.exit_code != 0, result.output
+        assert historic_period in result.output
+        assert "1T" in result.output
+        assert "0A" in result.output
+        assert "--year" in result.output
 
 
 def test_import_period_without_year_refuses_with_year_guidance(
