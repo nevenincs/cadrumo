@@ -501,9 +501,8 @@ class PortalsViewResult(PortalEntryPayload):
 class ExpedienteDeclarationPayload(OutputSchema):
     """One declaration-register row inside an expedientes-view payload.
 
-    Mirrors :class:`~aeat.adapters.outbound.aeat.sede.Declaracion` rows
-    persisted in a
-    :class:`~aeat.application.live._expedientes.PersistedExpedientesSnapshot`.
+    Mirrors :class:`Declaracion` rows persisted in a
+    :class:`PersistedExpedientesSnapshot`.
     Link-text and cell-index fields report what the read-only AEAT register
     exposed; they are not downloaded artefacts and do not imply a remote
     mutation.
@@ -529,12 +528,9 @@ class ExpedienteDeclarationPayload(OutputSchema):
 class ExpedienteSnapshotSummaryPayload(OutputSchema):
     """Summary row for one persisted expedientes snapshot.
 
-    Used by
-    :class:`~aeat.entrypoints.cli._app_live_payloads.ExpedientesListResult`
-    for rows returned from
-    :class:`~aeat.application.live.ExpedientesService`; full declaration detail
-    remains on
-    :class:`~aeat.entrypoints.cli._app_live_payloads.ExpedientesViewResult`.
+    Used by :class:`ExpedientesListResult` for rows returned from
+    :class:`ExpedientesService`; full :class:`ExpedienteDeclarationPayload`
+    detail remains on :class:`ExpedientesViewResult`.
     """
 
     snapshot_id: str
@@ -546,11 +542,10 @@ class ExpedienteSnapshotSummaryPayload(OutputSchema):
 class ExpedientesCaptureFailurePayload(OutputSchema):
     """One failed modelo/year row from a bulk expedientes pull.
 
-    Mirrors
-    :class:`~aeat.application.live.ExpedientesBulkCaptureFailureRow` entries in
-    :class:`~aeat.application.live.ExpedientesBulkCaptureReport`, preserving the
-    failed input coordinates and redacted diagnostic text without inventing a
-    partial snapshot.
+    Mirrors :class:`ExpedientesBulkCaptureFailureRow` entries in
+    :class:`ExpedientesBulkCaptureReport`, preserving the failed input
+    coordinates and redacted diagnostic text without inventing a partial
+    :class:`PersistedExpedientesSnapshot`.
     """
 
     modelo: str
@@ -564,12 +559,10 @@ class ExpedientesCaptureResult(OutputSchema):
     """Typed result for one or more persisted expedientes pulls.
 
     ``mode`` distinguishes a single-modelo capture from a bulk year-range
-    capture. Successful snapshots are persisted by
-    :class:`~aeat.application.live.ExpedientesService`; failed modelo/year pairs
-    are reported as
-    :class:`~aeat.entrypoints.cli._app_live_payloads.ExpedientesCaptureFailurePayload`
-    rows without
-    inventing declaration data.
+    capture. Successful :class:`PersistedExpedientesSnapshot` records are
+    persisted by :class:`ExpedientesService`; failed modelo/year pairs are
+    reported as :class:`ExpedientesCaptureFailurePayload` rows without inventing
+    declaration data.
     """
 
     mode: Literal["single", "bulk"] = "single"
@@ -592,10 +585,9 @@ class ExpedientesCaptureResult(OutputSchema):
 class ExpedientesListResult(OutputSchema):
     """Typed listing of persisted expedientes snapshots.
 
-    ``rows`` is the compact
-    :class:`~aeat.entrypoints.cli._app_live_payloads.ExpedienteSnapshotSummaryPayload`
-    projection returned by :class:`~aeat.application.live.ExpedientesService`
-    ``list_snapshots``; use the view schema for per-declaration detail.
+    ``rows`` is the compact :class:`ExpedienteSnapshotSummaryPayload`
+    projection returned by :class:`ExpedientesService` ``list_snapshots``; use
+    :class:`ExpedientesViewResult` for per-declaration detail.
     """
 
     bucket_id: str
@@ -607,10 +599,9 @@ class ExpedientesListResult(OutputSchema):
 class ExpedientesViewResult(OutputSchema):
     """Typed detail view for one persisted expedientes snapshot.
 
-    The command resolves a stored snapshot through
-    :class:`~aeat.application.live.ExpedientesService` and projects each
-    declaration into
-    :class:`~aeat.entrypoints.cli._app_live_payloads.ExpedienteDeclarationPayload`.
+    The command resolves a stored :class:`PersistedExpedientesSnapshot` through
+    :class:`ExpedientesService` and projects each declaration into
+    :class:`ExpedienteDeclarationPayload`.
     """
 
     bucket_id: str
@@ -626,8 +617,9 @@ class ExpedientesLatestResult(OutputSchema):
     """Typed newest-snapshot response for expedientes.
 
     ``snapshot_id`` is ``None`` when the bucket has no captured expedientes
-    snapshot; in that case every snapshot-derived field is also ``None`` to
-    keep the payload shape stable for JSON clients.
+    snapshot from :class:`ExpedientesService`; in that case every
+    :class:`PersistedExpedientesSnapshot`-derived field is also ``None`` to keep
+    the payload shape stable for JSON clients.
     """
 
     bucket_id: str
