@@ -2,7 +2,7 @@
 
 Every remote navigation path enters through the live-read access gate before it
 authenticates or opens an AEAT sede surface. Most surfaces use
-:func:`~aeat.application.live._session.active_verified_session`; IVA remote-state
+:func:`_session.active_verified_session`; IVA remote-state
 acquisition enforces the same read gate before coordinating its filed-history and
 wallet reads. The package has no live-submit surface: captured notifications,
 expedientes, filed declarations, justificantes, IVA wallet rows, Borrador 100
@@ -10,14 +10,14 @@ snapshots, and verification checks are local evidence objects, not remote filing
 mutations.
 
 Live capture services persist encrypted active-bucket evidence through
-:class:`~aeat.adapters.persistence.storage.SecureObjectRepository` or the
+:class:`adapters.persistence.storage.SecureObjectRepository` or the
 snapshot repositories re-exported by this facade. Parsed filed-declaration
 observations are typed as
-:class:`~aeat.domain.calculations.registry.CasillaObservation` rows and routed
-through :class:`~aeat.domain.calculations.registry.ValidatedRegistryAuthority`
+:class:`domain.calculations.registry.CasillaObservation` rows and routed
+through :class:`domain.calculations.registry.ValidatedRegistryAuthority`
 to bind them to the correct revision. Justificante capture may stamp the
-matching current :class:`~aeat.domain.modelos.ModeloRecord` with
-:class:`~aeat.domain.modelos.ExternalEvidence` only after the local filing record
+matching current :class:`domain.modelos.ModeloRecord` with
+:class:`domain.modelos.ExternalEvidence` only after the local filing record
 already exists.
 
 Snapshot payloads that depend on an authenticated taxpayer carry a normalised
@@ -30,22 +30,22 @@ Persisted capture/enrolment orchestration emits bucket events with sanitized
 summary payloads; non-persisting read/list surfaces remain event-free.
 
 IVA remote-state helpers separate stored-evidence reads from live acquisition.
-:func:`~aeat.application.live.load_iva_remote_state` returns the local
-:class:`~aeat.application.live.IvaRemoteStateStoredEvidenceReport` without
+:func:`load_iva_remote_state` returns the local
+:class:`IvaRemoteStateStoredEvidenceReport` without
 contacting AEAT, while
-:func:`~aeat.application.live.capture_iva_remote_state` returns an
-:class:`~aeat.application.live.IvaRemoteStateAcquisitionReport`, persists a
-redacted :class:`~aeat.application.live.IvaRemoteStateAcquisitionManifest`, and
+:func:`capture_iva_remote_state` returns an
+:class:`IvaRemoteStateAcquisitionReport`, persists a
+redacted :class:`IvaRemoteStateAcquisitionManifest`, and
 reports each remote surface independently so partial failures remain explicit.
 
 See Also:
-    :func:`~aeat.application.live._filed_observation_persistence.enroll_filed_justificante_evidence`
+    :func:`enroll_filed_justificante_evidence`
         Filed-history path that persists justificante metadata and stamps
         current filing records with live-capture evidence.
-    :class:`~aeat.application.live.SecureSnapshotRepository`
+    :class:`SecureSnapshotRepository`
         Bucket-scoped encrypted snapshot repository base used by live snapshot
         services.
-    :mod:`aeat.application.overview`
+    :mod:`application.overview`
         Local-only summary surface that reads captured live evidence without
         contacting AEAT and filters calendar events by active-profile identity.
 """
@@ -198,8 +198,8 @@ class JustificanteCaptureOutcome:
     The :class:`JustificanteCaptureSnapshot` is always the persisted live
     evidence. ``justificante`` is populated only when the PDF parsed into domain
     metadata, and ``filing_record`` is populated only when an existing current
-    :class:`ModeloRecord` could be stamped with live
-    :class:`ExternalEvidence`.
+    :class:`domain.modelos.ModeloRecord` could be stamped with live
+    :class:`domain.modelos.ExternalEvidence`.
     """
 
     snapshot: JustificanteCaptureSnapshot
@@ -229,7 +229,7 @@ async def capture_expedientes(*, bucket_id: str, modelo: str, year: int):
     filed-data list/capture verbs drive), wraps the typed declarations
     in an :class:`ExpedientesCapture`, and persists through
     :class:`ExpedientesService` against the active bucket. The helper obtains
-    its session via :func:`aeat.application.live._session.active_verified_session`,
+    its session via :func:`_session.active_verified_session`,
     so the read access gate is enforced before any remote contact.
     """
     from ._expedientes import ExpedientesCapture, ExpedientesService
