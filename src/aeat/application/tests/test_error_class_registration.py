@@ -101,35 +101,34 @@ def test_session_deserialization_error_raised_on_bad_type() -> None:
 
 
 def test_iva_compensation_year_range_error_is_registered_and_roundtrips() -> None:
-    from ...domain.iva_compensation._errors import IvaCompensationYearRangeError
+    from ...domain.iva_compensation import IvaCompensationYearRangeError
 
     _assert_registered_and_roundtrip(IvaCompensationYearRangeError)
 
 
 def test_iva_compensation_decimal_parse_error_is_registered_and_roundtrips() -> None:
-    from ...domain.iva_compensation._errors import IvaCompensationDecimalParseError
+    from ...domain.iva_compensation import IvaCompensationDecimalParseError
 
     _assert_registered_and_roundtrip(IvaCompensationDecimalParseError)
 
 
 def test_iva_compensation_casilla_reference_error_is_registered_and_roundtrips() -> None:
-    from ...domain.iva_compensation._errors import IvaCompensationCasillaReferenceError
+    from ...domain.iva_compensation import IvaCompensationCasillaReferenceError
 
     _assert_registered_and_roundtrip(IvaCompensationCasillaReferenceError)
 
 
 def test_iva_compensation_year_range_error_raised_on_out_of_range_filing_year() -> None:
     from ...core import Period
-    from ...domain.iva_compensation._errors import IvaCompensationYearRangeError
-    from ..calculations._iva_compensation_history import iva_compensation_period_key
+    from ...domain.iva_compensation import IvaCompensationYearRangeError
+    from ..calculations import iva_compensation_period_key
 
     with pytest.raises(IvaCompensationYearRangeError):
         iva_compensation_period_key(Period.from_year_and_code(1999, "1T"))
 
 
 def test_iva_compensation_year_range_error_raised_on_out_of_range_as_of_year() -> None:
-    from ...domain.iva_compensation._carry_forward import build_iva_compensation_carry_forward_report
-    from ...domain.iva_compensation._errors import IvaCompensationYearRangeError
+    from ...domain.iva_compensation import IvaCompensationYearRangeError, build_iva_compensation_carry_forward_report
 
     with pytest.raises(IvaCompensationYearRangeError):
         build_iva_compensation_carry_forward_report((), as_of_year=2100)
@@ -174,7 +173,7 @@ def test_auth_diagnostic_payload_error_raised_on_non_object_json() -> None:
 
 
 def test_workflow_input_mismatch_error_is_registered_and_roundtrips() -> None:
-    from ..workflow._errors import WorkflowInputMismatchError
+    from ..workflow import WorkflowInputMismatchError
 
     _assert_registered_and_roundtrip(WorkflowInputMismatchError)
 
@@ -193,7 +192,8 @@ def test_source_mesh_error_is_registered_and_roundtrips() -> None:
 def test_source_mesh_error_raised_on_blank_owned_source() -> None:
     from pydantic import ValidationError
 
-    from ..aggregation._source_mesh import CalculationSourceResolution, SourceMeshError
+    from ..aggregation import CalculationSourceResolution
+    from ..aggregation._source_mesh import SourceMeshError
 
     with pytest.raises((SourceMeshError, ValidationError)):
         CalculationSourceResolution(
@@ -205,7 +205,8 @@ def test_source_mesh_error_raised_on_blank_owned_source() -> None:
 def test_source_mesh_error_raised_on_duplicate_owned_source() -> None:
     from pydantic import ValidationError
 
-    from ..aggregation._source_mesh import CalculationSourceResolution, SourceMeshError
+    from ..aggregation import CalculationSourceResolution
+    from ..aggregation._source_mesh import SourceMeshError
 
     with pytest.raises((SourceMeshError, ValidationError)):
         CalculationSourceResolution(

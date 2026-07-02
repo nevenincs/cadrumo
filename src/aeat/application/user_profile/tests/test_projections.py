@@ -4,7 +4,10 @@ from __future__ import annotations
 
 import pytest
 
-from ....domain.deadlines._models import IrpfEstimationRegime, IVARegime
+from ....domain.deadlines import (
+    IrpfEstimationRegime,
+    IVARegime,
+)
 from ....domain.user_profile import UserProfileFact, UserProfileRecord
 from ...wizard import _catalogue as _wizard_catalogue  # noqa: F401  (registration side effect)
 from .. import (

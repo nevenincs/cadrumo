@@ -163,5 +163,3 @@ def test_manual_ledger_transaction_command_accepts_magnitude_for_either_directio
     )
     assert outgoing.amount == Decimal("121.00")
     assert incoming.amount == Decimal("121.00")
-
-

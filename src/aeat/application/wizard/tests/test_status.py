@@ -16,9 +16,12 @@ from pydantic import ValidationError
 
 from ....domain.deadlines import IVARegime
 from ....tests.secure_sql import isolated_profile_storage_root
-from ...user_profile._orchestration import profile_create_storage_span, profile_storage_session
+from ...user_profile import (
+    profile_create_storage_span,
+    profile_storage_session,
+)
 from ...user_profile._testing import register_minimal_profile
-from ...workflow._models import WorkflowState
+from ...workflow import WorkflowState
 from .._status import (
     WizardStatusError,
     WizardStatusReport,

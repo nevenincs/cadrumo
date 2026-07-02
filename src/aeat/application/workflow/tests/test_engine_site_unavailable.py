@@ -6,8 +6,7 @@ from pathlib import Path
 
 import pytest
 
-from ....adapters.outbound.aeat.browser._site_health import SiteHealthState
-from ....adapters.outbound.aeat.browser._site_health_parsers import evaluate_response
+from ....adapters.outbound.aeat.browser import SiteHealthState, evaluate_response
 from ....core.errors import SiteHealthError
 from ....tests import FIXTURES_DIR
 from .. import WorkflowAbortReason, WorkflowStage

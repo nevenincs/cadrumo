@@ -37,7 +37,7 @@ from ....core.resources import resources
 from ....domain.deadlines import IrpfSpecialRegime
 from ....domain.user_profile import ProfileSchemaDefinition, UserProfileFact, UserProfileRecord
 from ....tests.secure_sql import isolated_profile_storage_root
-from ...workflow._models import WorkflowState
+from ...workflow import WorkflowState
 from .._orchestration import (
     profile_create_storage_span,
     read_active_profile,

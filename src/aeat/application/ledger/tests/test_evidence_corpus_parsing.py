@@ -19,7 +19,7 @@ from pathlib import Path
 import pytest
 from PIL import Image
 
-from ....adapters.inbound.pdf._pdfplumber import extract_pages_text_from_bytes
+from ....adapters.inbound.pdf import extract_pages_text_from_bytes
 from ....adapters.outbound.llm import LLMPdfRasterisationError, rasterise_pdf_pages_to_base64_png
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]

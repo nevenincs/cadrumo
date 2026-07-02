@@ -6,18 +6,16 @@ from datetime import datetime
 
 from ....core import Period
 from ....domain.calculations.registry import CasillaId, validated_casilla_id
-from ....domain.modelos._calculation_repository import CalculationRevisionCatalogueRepository
-from ....domain.modelos._calculation_revision import (
+from ....domain.modelos import (
     CalculationRevision,
     CalculationRevisionCatalogue,
+    CalculationRevisionCatalogueRepository,
     CalculationRevisionState,
-    derive_calculation_revision_id,
-)
-from ....domain.modelos._codes import ModeloCode
-from ....domain.modelos._repository import WorkUnitCatalogueRepository
-from ....domain.modelos._work_unit import (
+    ModeloCode,
     WorkUnit,
     WorkUnitCatalogue,
+    WorkUnitCatalogueRepository,
+    derive_calculation_revision_id,
     derive_work_unit_id,
 )
 from ....tests.registry_observations import registry_grounded_observations

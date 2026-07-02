@@ -15,7 +15,7 @@ from datetime import UTC, datetime, timedelta, timezone
 import pytest
 from pydantic import ValidationError
 
-from ....adapters.persistence.storage.bucket._manifest import (
+from ....adapters.persistence.storage.bucket import (
     BucketLifecycleStatus,
     ManifestKdfParams,
 )

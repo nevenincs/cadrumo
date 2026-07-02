@@ -14,7 +14,6 @@ from pathlib import Path
 
 import pytest
 
-from ....application.user_profile._orchestration import profile_create_storage_span
 from ....core.config import Settings
 from ....domain.transactions import (
     BusinessClassification,
@@ -23,9 +22,10 @@ from ....domain.transactions import (
     SourceFormat,
     Transaction,
     TransactionCatalogue,
+    TransactionCatalogueRepository,
     TransactionDirection,
 )
-from ....domain.transactions._repository import TransactionCatalogueRepository
+from ...user_profile import profile_create_storage_span
 from .._enums import ReviewState
 from .._operator import project_review_queue
 

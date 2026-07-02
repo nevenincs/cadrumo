@@ -55,16 +55,18 @@ from ....domain.invoices import (
     PaymentStatus,
 )
 from ....domain.iva import InvoiceKind
-from ....domain.modelos._calculation_repository import CalculationRevisionCatalogueRepository
-from ....domain.modelos._calculation_revision import (
+from ....domain.modelos import (
     CalculationRevision,
     CalculationRevisionCatalogue,
+    CalculationRevisionCatalogueRepository,
     CalculationRevisionState,
+    ModeloCode,
+    WorkUnit,
+    WorkUnitCatalogue,
+    WorkUnitCatalogueRepository,
     derive_calculation_revision_id,
+    derive_work_unit_id,
 )
-from ....domain.modelos._codes import ModeloCode
-from ....domain.modelos._repository import WorkUnitCatalogueRepository
-from ....domain.modelos._work_unit import WorkUnit, WorkUnitCatalogue, derive_work_unit_id
 from ....domain.transactions import (
     BusinessClassification,
     RawProvenance,

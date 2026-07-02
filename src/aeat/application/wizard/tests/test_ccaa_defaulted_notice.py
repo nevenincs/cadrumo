@@ -28,7 +28,7 @@ import typer
 
 from ....core.i18n import tr
 from ....core.json_contract import NoticeSeverity
-from ....domain.contribuyente._ccaa import CCAA
+from ....domain.contribuyente import CCAA
 from ....tests.secure_sql import isolated_profile_storage_root
 from .._catalogue import SETUP_FLOW
 from .._commands import _emit_wizard_success, build_wizard_command

@@ -14,7 +14,7 @@ from ....adapters.inbound.declaracion import (
     InboundDeclaracionObservation,
     TemplateRevision,
 )
-from ....adapters.inbound.pdf._shared import ExtractedCasilla
+from ....adapters.inbound.pdf import ExtractedCasilla
 from ....core import CasillaId, Period, validated_casilla_id
 from ....core.errors import render_error_json, render_error_text
 from ....core.resources import resources

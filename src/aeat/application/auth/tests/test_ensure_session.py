@@ -19,9 +19,9 @@ from ....adapters.outbound.aeat.auth import (
 from ....adapters.persistence.storage.sql.engine import dispose_engine
 from ....core.config import SecretStoreBackend, Settings, override_settings
 from ....tests.secure_sql import dev_test_database_password
-from ...user_profile._orchestration import profile_create_storage_span
+from ...user_profile import profile_create_storage_span
 from ...user_profile._testing import register_minimal_profile
-from ...workflow._persistence import workflow_state_repository
+from ...workflow import workflow_state_repository
 from .. import AuthProvider, AuthProviderDescription, AuthProviderKind
 from .._acquisition_lock import inspect_auth_acquisition_lock
 from .._sessions import AuthSessionUnavailableError, ensure_authenticated_aeat_session
