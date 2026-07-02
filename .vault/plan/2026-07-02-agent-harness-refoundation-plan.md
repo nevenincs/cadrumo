@@ -108,7 +108,7 @@ Drive the real console with live subagent personas, score observed calls, enforc
 - [x] `W04.P08.S30` - Extend the golden-scenario models for live-persona trajectory capture and scoring; `src/aeat/agent/eval/_models.py`.
 - [x] `W04.P08.S31` - Add the flywheel that promotes live failures into new golden scenarios; `src/aeat/agent/eval/_flywheel.py`.
 - [x] `W04.P08.S32` - Add the local measurement report artefact; `src/aeat/agent/eval/_report.py`.
-- [ ] `W04.P08.S33` - Add the live-harness test; `src/aeat/agent/eval/tests/test_live_harness.py`.
+- [x] `W04.P08.S33` - Add the live-harness test; `src/aeat/agent/eval/tests/test_live_harness.py`.
 
 ## Wave `W05` - Situation-keyed skills
 
