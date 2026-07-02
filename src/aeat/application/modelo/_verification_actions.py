@@ -41,84 +41,71 @@ from pathlib import Path
 from types import MappingProxyType
 from typing import TYPE_CHECKING
 
-from ...core._modelo import Modelo
+from ...core import Modelo
 from ...core.config import Settings
 from ...core.i18n import tr
 from ...core.time import now as _utc_now
-from ...domain.buckets._event import BucketEventObjectType, BucketEventType
-from ...domain.buckets._event_repository import BucketEventHistoryRepository
-from ...domain.buckets._protocols import BucketEventHistoryRepositoryProtocol
-from ...domain.calculations.registry._applicability_modelo202 import derive_modelo_202_modality
-from ...domain.calculations.registry._bindings import CasillaObservation
-from ...domain.calculations.registry._formula_runtime import (
-    RegistryCalculationUnresolvedOutcome,
-    RegistryUnresolvedOutcomeReason,
+from ...domain.buckets import (
+    BucketEventHistoryRepository,
+    BucketEventHistoryRepositoryProtocol,
+    BucketEventObjectType,
+    BucketEventType,
 )
-from ...domain.calculations.registry._ids import CasillaId, validated_casilla_id
-from ...domain.calculations.registry._schema import (
+from ...domain.calculations.registry import (
     KNOWN_PROFILE_FLAG_ADVISORY_FIELDS,
     CasillaDefinition,
+    CasillaId,
+    CasillaObservation,
     InputKind,
+    RegistryCalculationUnresolvedOutcome,
     RegistrySnapshot,
+    RegistryUnresolvedOutcomeReason,
     VerificationPredicateDefinition,
+    derive_modelo_202_modality,
+    validated_casilla_id,
 )
 from ...domain.deadlines import FiscalResidency, TaxpayerProfile
-from ...domain.modelos._calculation_repository import (
-    CalculationRevisionCatalogueRepository,
-    upsert_calculation_revision,
-)
-from ...domain.modelos._calculation_revision import (
+from ...domain.modelos import (
     CalculationRevision,
     CalculationRevisionCatalogue,
+    CalculationRevisionCatalogueRepository,
+    CalculationRevisionCatalogueRepositoryProtocol,
     CalculationRevisionState,
-)
-from ...domain.modelos._errors import ModeloError, ModeloValidationError
-from ...domain.modelos._filing_repository import ModeloRecordCatalogueRepository
-from ...domain.modelos._ledger_filing_snapshot import (
     LedgerFilingEvidence,
     LedgerFilingSnapshot,
     ManualFactBasisEntry,
-)
-from ...domain.modelos._participation_index import (
-    TransactionParticipationIndexRepository,
-    TransactionRevisionParticipation,
-    upsert_transaction_participation,
-)
-from ...domain.modelos._protocols import (
-    CalculationRevisionCatalogueRepositoryProtocol,
+    ModeloError,
+    ModeloRecordCatalogueRepository,
     ModeloRecordCatalogueRepositoryProtocol,
-    VerificationReportCatalogueRepositoryProtocol,
-    WorkUnitCatalogueRepositoryProtocol,
-)
-from ...domain.modelos._repository import WorkUnitCatalogueRepository, upsert_work_unit
-from ...domain.modelos._verification_report import (
+    ModeloValidationError,
     ModeloVerificationFinding,
     ModeloVerificationFindingKind,
     ModeloVerificationFindingSeverity,
+    TransactionParticipationIndexRepository,
+    TransactionRevisionParticipation,
     VerificationCompletenessStatus,
     VerificationReport,
-    derive_verification_report_id,
-)
-from ...domain.modelos._verification_repository import (
     VerificationReportCatalogueRepository,
+    VerificationReportCatalogueRepositoryProtocol,
+    WorkUnit,
+    WorkUnitCatalogueRepository,
+    WorkUnitCatalogueRepositoryProtocol,
+    derive_verification_report_id,
+    upsert_calculation_revision,
+    upsert_transaction_participation,
     upsert_verification_report,
+    upsert_work_unit,
 )
-from ...domain.modelos._work_unit import WorkUnit
-from ...domain.transactions._repository import TransactionCatalogueRepository
-from ..aggregation._evidence_advisory import (
+from ...domain.transactions import TransactionCatalogueRepository
+from ..aggregation import (
     MISSING_DEDUCTIBLE_VAT_EVIDENCE_SOURCE_KIND,
-    missing_evidence_advisory_observations,
-)
-from ..aggregation._ledger_filing_snapshot import (
+    CalculationSourceDiagnostic,
     compute_ledger_filing_evidence,
     compute_ledger_filing_snapshot,
+    missing_evidence_advisory_observations,
 )
-from ..aggregation._source_mesh import CalculationSourceDiagnostic
-from ..calculations._cross_period_models import CrossPeriodExpectedMemberSet
-from ..calculations._observations_repository import CalculationObservationRepository
-from ..workflow._engine import WorkflowEngine
-from ..workflow._models import WorkflowPurpose
-from ..workflow._persistence import WorkflowRunRepository
+from ..calculations import CalculationObservationRepository, CrossPeriodExpectedMemberSet
+from ..workflow import WorkflowEngine, WorkflowPurpose, WorkflowRunRepository
 from ._action_errors import (
     WORKFLOW_GATE_LEGAL_REFS,
     CalculationRevisionNotFoundError,
@@ -174,8 +161,8 @@ from ._workflow_gate import run_revision_workflow_gate as _run_revision_workflow
 
 if TYPE_CHECKING:
     from ...adapters.persistence.storage import SecureObjectWrite
-    from ...domain.iva_compensation._reconciliation import IvaCompensationReconciliationDecision
-    from ..calculations._observations_repository import IvaWalletDecisionRepository
+    from ...domain.iva_compensation import IvaCompensationReconciliationDecision
+    from ..calculations import IvaWalletDecisionRepository
 
 _PREDICATE_ALL_NONZERO = _re.compile(r"^all_nonzero\(\[(?P<ids>[^\]]*)\]\)$")
 _PREDICATE_ANY_NONZERO = _re.compile(r"^any_nonzero\(\[(?P<ids>[^\]]*)\]\)$")
@@ -1514,7 +1501,7 @@ def _collect_revision_verification_findings(
     resolved_casilla_ids: list[CasillaId] = []
     missing_required_casilla_ids: list[CasillaId] = []
 
-    from ...domain.calculations.registry._errors import RegistrySnapshotError
+    from ...domain.calculations.registry import RegistrySnapshotError
 
     try:
         authority = _authority_via_resources()

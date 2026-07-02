@@ -30,7 +30,7 @@ See Also:
 from __future__ import annotations
 
 from ...core.errors import CoreNotFoundError
-from ...domain.modelos._errors import ModeloError
+from ...domain.modelos import ModeloError
 from ..workflow import WorkflowAbortReason, WorkflowResult
 
 WORKFLOW_GATE_LEGAL_REFS: tuple[str, ...] = (

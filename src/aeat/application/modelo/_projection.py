@@ -40,8 +40,11 @@ from ...domain.calculations.registry import (
     calculate_registry_snapshot,
     validated_casilla_id,
 )
-from ...domain.modelos._calculation_revision import CalculationRevision, CalculationRevisionState
-from ...domain.modelos._work_unit import WorkUnitState
+from ...domain.modelos import (
+    CalculationRevision,
+    CalculationRevisionState,
+    WorkUnitState,
+)
 from ._calculation_actions import list_calculation_revisions
 from ._profile_binding import resolve_profile_sourced_bindings
 from ._registry_helpers import validate_casilla_input_ids

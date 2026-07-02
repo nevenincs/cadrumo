@@ -25,7 +25,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING
 
 from ...core import Period
-from ...domain.modelos._errors import ModeloError
+from ...domain.modelos import ModeloError
 
 if TYPE_CHECKING:
     from ...domain.calculations.registry import ValidatedRegistryAuthority

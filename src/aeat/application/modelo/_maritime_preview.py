@@ -33,10 +33,10 @@ from decimal import Decimal
 from typing import Literal, cast
 
 from ...application.calculations import resolve_maritime_exemption
-from ...application.calculations._maritime_exemption_service import MaritimeExemptionResult
 from ...application.user_profile import fact_value
 from ...application.workflow import workflow_state_repository
 from ...domain.renta import MaritimeWorkerFacts, ProfileCompletenessError
+from ..calculations import MaritimeExemptionResult
 
 
 @dataclass(frozen=True)

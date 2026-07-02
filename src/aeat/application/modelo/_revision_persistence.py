@@ -40,12 +40,12 @@ from typing import TYPE_CHECKING
 from ...core.hashing import sha256_hex
 from ...domain.buckets import (
     BucketEvent,
+    BucketEventHistoryRepositoryProtocol,
     BucketEventObjectType,
     BucketEventType,
     append_bucket_event,
     derive_bucket_event_id,
 )
-from ...domain.buckets._protocols import BucketEventHistoryRepositoryProtocol
 from ...domain.calculations.registry import (
     BindingId,
     CasillaId,
@@ -53,27 +53,26 @@ from ...domain.calculations.registry import (
     RegistryCalculationUnresolvedOutcome,
     RelationId,
 )
-from ...domain.modelos._calculation_repository import upsert_calculation_revision
-from ...domain.modelos._calculation_revision import (
+from ...domain.modelos import (
     CalculationRevision,
+    CalculationRevisionCatalogueRepositoryProtocol,
     CalculationRevisionState,
-    derive_calculation_revision_id,
-)
-from ...domain.modelos._filing_record import ModeloRecord, ModeloRecordStatus, derive_filing_record_id
-from ...domain.modelos._filing_repository import upsert_filing_record
-from ...domain.modelos._participation_index import (
+    ModeloDetailRow,
+    ModeloRecord,
+    ModeloRecordCatalogueRepositoryProtocol,
+    ModeloRecordStatus,
     TransactionParticipationIndexRepository,
     TransactionRevisionParticipation,
-    upsert_transaction_participation,
-)
-from ...domain.modelos._protocols import (
-    CalculationRevisionCatalogueRepositoryProtocol,
-    ModeloRecordCatalogueRepositoryProtocol,
+    WorkUnit,
+    WorkUnitCatalogue,
     WorkUnitCatalogueRepositoryProtocol,
+    derive_calculation_revision_id,
+    derive_filing_record_id,
+    upsert_calculation_revision,
+    upsert_filing_record,
+    upsert_transaction_participation,
+    upsert_work_unit,
 )
-from ...domain.modelos._repository import upsert_work_unit
-from ...domain.modelos._row_models import ModeloDetailRow
-from ...domain.modelos._work_unit import WorkUnit, WorkUnitCatalogue
 from ..calculations import CalculationObservationRepository
 from ._filed_revision_observation import persist_filed_revision_observation
 

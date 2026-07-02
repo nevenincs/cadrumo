@@ -24,8 +24,8 @@ from decimal import Decimal
 from ...core import Modelo
 from ...core.aggregation import BindingSourceKind
 from ...core.resources import resources
+from ...domain import canonical_decimal_string
 from ...domain import filing as filing_domain
-from ...domain._identifiers import canonical_decimal_string
 from ...domain.calculations.registry import (
     ApplicabilityVerdict,
     BindingId,
@@ -40,9 +40,13 @@ from ...domain.calculations.registry import (
     derive_modelo_applicability,
 )
 from ...domain.deadlines import TaxpayerProfile
-from ...domain.modelos._calculation_revision import CalculationRevision
-from ...domain.modelos._row_models import Modelo349OperadorRow, Modelo349RectificacionRow, m349_nif_number_for_export
-from ...domain.modelos._work_unit import WorkUnit
+from ...domain.modelos import (
+    CalculationRevision,
+    Modelo349OperadorRow,
+    Modelo349RectificacionRow,
+    WorkUnit,
+    m349_nif_number_for_export,
+)
 
 _ZERO_DECIMAL_TEXT = canonical_decimal_string(Decimal("0"))
 _M349_OPERADOR_ROW_BINDINGS: dict[BindingId, str] = {

@@ -26,8 +26,8 @@ from decimal import Decimal
 from ...core.external_constants import MODELO_100_ART_20_TRABAJO_REDUCCION_RNT_CEILING_EUR
 from ...core.i18n import tr
 from ...domain.calculations.registry import CasillaId
-from ...domain.modelos._errors import ModeloError
-from ...domain.modelos._verification_report import (
+from ...domain.modelos import (
+    ModeloError,
     ModeloVerificationFinding,
     ModeloVerificationFindingKind,
     ModeloVerificationFindingSeverity,

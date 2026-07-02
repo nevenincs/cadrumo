@@ -38,8 +38,8 @@ from ...core import BindingSourceKind, Period
 from ...core.hashing import sha256_hex
 from ...core.identity import BucketId
 from ...domain.calculations.registry import BindingId, DataBindingDefinition, RegistrySnapshot
-from ...domain.modelos._errors import ModeloError
-from ..aggregation._source_mesh import (
+from ...domain.modelos import ModeloError
+from ..aggregation import (
     BorradorSourceProvenance,
     CalculationSourceContext,
     CalculationSourceProvenance,

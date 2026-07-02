@@ -47,43 +47,44 @@ from datetime import date, datetime
 from decimal import Decimal
 from typing import TYPE_CHECKING
 
-from ...core._modelo import Modelo
+from ...core import Modelo
 from ...core.aggregation import BindingSourceKind
 from ...core.decimal import coerce_decimal_strict
 from ...core.money import round_to_cents
 from ...core.time import now as _utc_now
-from ...domain.buckets._event_repository import BucketEventHistoryRepository
-from ...domain.buckets._protocols import BucketEventHistoryRepositoryProtocol
+from ...domain.buckets import BucketEventHistoryRepository, BucketEventHistoryRepositoryProtocol
 from ...domain.calculations.registry import (
     IVA_WALLET_OWNED_RELATION_TARGET_BINDINGS,
+    BindingId,
+    CasillaId,
+    CasillaObservation,
+    InputKind,
+    ModeloRevision,
+    RelationId,
+    bound_casilla_binding_ids,
+    calculate_registry_snapshot,
+    casillas_by_id,
+    relation_source_requirements,
     selector_as_dict,
     validated_text_input_casilla_ids,
 )
-from ...domain.calculations.registry._bindings import CasillaObservation, bound_casilla_binding_ids
-from ...domain.calculations.registry._casilla_membership import casillas_by_id
-from ...domain.calculations.registry._formula_runtime import calculate_registry_snapshot
-from ...domain.calculations.registry._ids import BindingId, CasillaId, RelationId
-from ...domain.calculations.registry._relations import relation_source_requirements
-from ...domain.calculations.registry._schema import ModeloRevision
-from ...domain.calculations.registry._schema_input_kind import InputKind
-from ...domain.invoices._repository import InvoiceCatalogueRepository
-from ...domain.modelos._calculation_repository import (
+from ...domain.invoices import InvoiceCatalogueRepository
+from ...domain.modelos import (
+    CalculationRevision,
     CalculationRevisionCatalogueRepository,
+    CalculationRevisionCatalogueRepositoryProtocol,
+    CalculationRevisionState,
+    Modelo349OperadorRow,
+    Modelo349RectificacionRow,
+    ModeloDetailRow,
+    WorkUnit,
+    WorkUnitCatalogueRepository,
+    WorkUnitCatalogueRepositoryProtocol,
     upsert_calculation_revision,
 )
-from ...domain.modelos._calculation_revision import CalculationRevision, CalculationRevisionState
-from ...domain.modelos._protocols import (
-    CalculationRevisionCatalogueRepositoryProtocol,
-    WorkUnitCatalogueRepositoryProtocol,
-)
-from ...domain.modelos._repository import WorkUnitCatalogueRepository
-from ...domain.modelos._row_models import Modelo349OperadorRow, Modelo349RectificacionRow, ModeloDetailRow
-from ...domain.modelos._work_unit import WorkUnit
-from ...domain.transactions._repository import TransactionCatalogueRepository
-from ..calculations._cross_period_clean_state import (
-    cross_period_dependency_requirements as _cross_period_dependency_requirements,
-)
-from ..live._borrador_100 import Borrador100SnapshotRepository
+from ...domain.transactions import TransactionCatalogueRepository
+from ..calculations import cross_period_dependency_requirements as _cross_period_dependency_requirements
+from ..live import Borrador100SnapshotRepository
 from ._action_errors import (
     CalculationRevisionNotFoundError,
     CalculationRevisionStateError,
@@ -134,9 +135,12 @@ from ._registry_helpers import validate_casilla_input_ids as _validate_casilla_i
 from ._revision_persistence import persist_calculation_revision
 
 if TYPE_CHECKING:
-    from ...domain.calculations.registry._schema import RegistrySnapshot
-    from ..aggregation._source_mesh import CalculationSourceDiagnostic, CalculationSourceResolution
-    from ..calculations._observations_repository import IvaWalletDecisionRepository
+    from ...domain.calculations.registry import RegistrySnapshot
+    from ..aggregation import (
+        CalculationSourceDiagnostic,
+        CalculationSourceResolution,
+    )
+    from ..calculations import IvaWalletDecisionRepository
 
 
 @dataclass(frozen=True, slots=True)

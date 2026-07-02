@@ -60,7 +60,10 @@ See Also:
 from __future__ import annotations
 
 from ...domain.modelos import (
+    CalculationRevision,
+    CalculationRevisionAmendmentKind,
     CalculationRevisionState,
+    ExternalEvidenceKind,
     Modelo184MemberRow,
     Modelo232VinculadaRow,
     Modelo347ContraparteRow,
@@ -68,17 +71,15 @@ from ...domain.modelos import (
     Modelo349OperadorRow,
     Modelo349RectificacionRow,
     ModeloDetailRow,
+    ModeloError,
     ModeloRecordStatus,
     ModeloVerificationFindingKind,
     ModeloVerificationFindingSeverity,
     VerificationCompletenessStatus,
+    WorkUnit,
     validate_m349_country_prefix_context,
     validate_m349_nif_format,
 )
-from ...domain.modelos._calculation_revision import CalculationRevision, CalculationRevisionAmendmentKind
-from ...domain.modelos._errors import ModeloError
-from ...domain.modelos._filing_record import ExternalEvidenceKind
-from ...domain.modelos._work_unit import WorkUnit
 from ._action_errors import (
     AmendmentEvidenceMissingError,
     AmendmentOverrideCasillaError,

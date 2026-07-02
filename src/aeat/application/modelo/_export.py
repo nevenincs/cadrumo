@@ -55,31 +55,31 @@ from ...domain import filing as filing_domain
 from ...domain.buckets import (
     BucketEvent,
     BucketEventHistoryRepository,
+    BucketEventHistoryRepositoryProtocol,
     BucketEventObjectType,
     BucketEventType,
 )
-from ...domain.buckets._protocols import BucketEventHistoryRepositoryProtocol
 from ...domain.calculations.registry import derive_modelo_202_modality
 from ...domain.deadlines import RefundAccount, TaxpayerProfile
 from ...domain.iva import SepaMarca, derive_sepa_marca
-from ...domain.iva_compensation._reconciliation import IvaCompensationReconciliationDecision
+from ...domain.iva_compensation import IvaCompensationReconciliationDecision
 from ...domain.modelos import (
+    CalculationRevision,
+    CalculationRevisionAmendmentKind,
+    CalculationRevisionCatalogueRepository,
+    CalculationRevisionCatalogueRepositoryProtocol,
+    CalculationRevisionId,
+    CalculationRevisionState,
+    ModeloError,
+    ModeloExportError,
     ModeloRecordCatalogueRepository,
     ModeloRecordCatalogueRepositoryProtocol,
     VerificationReportCatalogueRepository,
     VerificationReportCatalogueRepositoryProtocol,
+    WorkUnit,
+    WorkUnitCatalogueRepository,
+    WorkUnitId,
 )
-from ...domain.modelos._calculation_repository import CalculationRevisionCatalogueRepository
-from ...domain.modelos._calculation_revision import (
-    CalculationRevision,
-    CalculationRevisionAmendmentKind,
-    CalculationRevisionState,
-)
-from ...domain.modelos._errors import ModeloError, ModeloExportError
-from ...domain.modelos._ids import CalculationRevisionId, WorkUnitId
-from ...domain.modelos._protocols import CalculationRevisionCatalogueRepositoryProtocol
-from ...domain.modelos._repository import WorkUnitCatalogueRepository
-from ...domain.modelos._work_unit import WorkUnit
 from ...domain.period import (
     PeriodValidationError,
     period_end_date,
@@ -450,8 +450,7 @@ def _operator_name_facts(bucket_id: str, *, modelo: str) -> tuple[str, str, str]
             populate the profile first.
     """
     from ...domain.user_profile import ProfileNotFoundError
-    from ..user_profile import UserProfileLifecycleRepository
-    from ..user_profile._projections import record_to_path_values
+    from ..user_profile import UserProfileLifecycleRepository, record_to_path_values
 
     try:
         record = UserProfileLifecycleRepository(bucket_id=bucket_id).load(bucket_id)

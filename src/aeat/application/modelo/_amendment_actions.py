@@ -41,33 +41,35 @@ from datetime import datetime
 from decimal import Decimal
 
 from ...core.time import now as _utc_now
-from ...domain.buckets import BucketEventHistoryRepository, BucketEventObjectType, BucketEventType
-from ...domain.buckets._protocols import BucketEventHistoryRepositoryProtocol
+from ...domain.buckets import (
+    BucketEventHistoryRepository,
+    BucketEventHistoryRepositoryProtocol,
+    BucketEventObjectType,
+    BucketEventType,
+)
 from ...domain.calculations.registry import CasillaId
 from ...domain.modelos import (
-    CalculationRevisionCatalogue,
-    ModeloRecordCatalogue,
-    WorkUnit,
-    WorkUnitCatalogue,
-)
-from ...domain.modelos._calculation_repository import (
-    CalculationRevisionCatalogueRepository,
-    upsert_calculation_revision,
-)
-from ...domain.modelos._calculation_revision import (
     CalculationRevision,
     CalculationRevisionAmendmentKind,
-    CalculationRevisionState,
-    derive_calculation_revision_id,
-)
-from ...domain.modelos._filing_record import ModeloRecord, ModeloRecordStatus, derive_filing_record_id
-from ...domain.modelos._filing_repository import ModeloRecordCatalogueRepository, upsert_filing_record
-from ...domain.modelos._protocols import (
+    CalculationRevisionCatalogue,
+    CalculationRevisionCatalogueRepository,
     CalculationRevisionCatalogueRepositoryProtocol,
+    CalculationRevisionState,
+    ModeloRecord,
+    ModeloRecordCatalogue,
+    ModeloRecordCatalogueRepository,
     ModeloRecordCatalogueRepositoryProtocol,
+    ModeloRecordStatus,
+    WorkUnit,
+    WorkUnitCatalogue,
+    WorkUnitCatalogueRepository,
     WorkUnitCatalogueRepositoryProtocol,
+    derive_calculation_revision_id,
+    derive_filing_record_id,
+    upsert_calculation_revision,
+    upsert_filing_record,
+    upsert_work_unit,
 )
-from ...domain.modelos._repository import WorkUnitCatalogueRepository, upsert_work_unit
 from ._action_errors import (
     AmendmentEvidenceMissingError,
     AmendmentTargetStateError,
