@@ -40,16 +40,14 @@ class CorpusChunk(BaseModel):
 
 
 class CorpusDocument(BaseModel):
-    """Metadata for one extracted corpus source file."""
+    """Metadata for one extracted corpus source file in the lexical index."""
 
     model_config = _STRICT_FROZEN
 
     corpus_ref: _Text
     source_path: _Text
     title: _Text
-    unit_count: int = Field(ge=0)
     chunk_count: int = Field(ge=0)
-    attribution: str | None = None
 
 
 class LexicalSearchHit(BaseModel):
