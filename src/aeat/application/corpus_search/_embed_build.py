@@ -24,6 +24,7 @@ from collections.abc import Iterable, Sequence
 from pathlib import Path
 from typing import TYPE_CHECKING
 
+from ...core.external_constants import UTF_8_ENCODING
 from ._model_loader import load_static_model, model_dimensions
 from ._models import CorpusChunk, CorpusEmbeddingBuildResult, SimilarChunk
 
@@ -86,7 +87,7 @@ def embed_corpus(
     matrix_path = Path(matrix_path)
     chunk_ids_path = Path(chunk_ids_path)
     np.save(matrix_path, matrix, allow_pickle=False)
-    chunk_ids_path.write_text(json.dumps(chunk_ids, ensure_ascii=False, indent=0), encoding="utf-8")
+    chunk_ids_path.write_text(json.dumps(chunk_ids, ensure_ascii=False, indent=0), encoding=UTF_8_ENCODING)
 
     return CorpusEmbeddingBuildResult(
         matrix_path=matrix_path.as_posix(),
@@ -111,7 +112,7 @@ def load_embeddings(matrix_path: Path, chunk_ids_path: Path) -> tuple[np.ndarray
     import numpy as np
 
     matrix = np.load(matrix_path, allow_pickle=False)
-    chunk_ids = tuple(json.loads(Path(chunk_ids_path).read_text(encoding="utf-8")))
+    chunk_ids = tuple(json.loads(Path(chunk_ids_path).read_text(encoding=UTF_8_ENCODING)))
     return matrix, chunk_ids
 
 

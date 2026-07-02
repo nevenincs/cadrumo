@@ -21,6 +21,7 @@ import json
 from collections.abc import Mapping
 from pathlib import Path
 
+from ...core.external_constants import UTF_8_ENCODING
 from ...domain.calculations.registry import LegalReference, bundled_authority
 from ._errors import CorpusSearchInputError
 from ._models import CitationResolution
@@ -125,7 +126,7 @@ class CitationLookup:
                 return text
         extracted_md = source_path.with_name(source_path.name + ".extracted.md")
         if extracted_md.is_file():
-            text = extracted_md.read_text(encoding="utf-8").strip()
+            text = extracted_md.read_text(encoding=UTF_8_ENCODING).strip()
             if text:
                 return text
         if source_path.is_file():
@@ -136,7 +137,7 @@ class CitationLookup:
 
 
 def _text_from_units(extracted_json: Path, *, anchor: str | None) -> str:
-    payload = json.loads(extracted_json.read_text(encoding="utf-8"))
+    payload = json.loads(extracted_json.read_text(encoding=UTF_8_ENCODING))
     units = payload.get("units") or ()
     texts = [(unit.get("anchor"), (unit.get("text") or "").strip()) for unit in units]
     texts = [(_clean_anchor(item_anchor), text) for item_anchor, text in texts if text]
@@ -162,7 +163,7 @@ def _text_from_html(html_path: Path) -> str:
     """
     from bs4 import BeautifulSoup
 
-    soup = BeautifulSoup(html_path.read_text(encoding="utf-8"), "html.parser")
+    soup = BeautifulSoup(html_path.read_text(encoding=UTF_8_ENCODING), "html.parser")
     lines = [line.strip() for line in soup.get_text(separator="\n").splitlines()]
     return "\n".join(line for line in lines if line).strip()
 
