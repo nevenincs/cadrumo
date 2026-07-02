@@ -1,10 +1,10 @@
 """Application services for read-only registry workflows.
 
 Registry query and corpus validation services consume a
-:class:`~aeat.domain.calculations.registry.ValidatedRegistryAuthority` as
+:class:`domain.calculations.registry.ValidatedRegistryAuthority` as
 the single entry point for
-:class:`~aeat.domain.calculations.registry.ModeloDefinition` instances,
-:class:`~aeat.domain.calculations.registry.RegistrySnapshot` values, and
+:class:`domain.calculations.registry.ModeloDefinition` instances,
+:class:`domain.calculations.registry.RegistrySnapshot` values, and
 deadline windows.
 
 The package exposes three local read surfaces: registry-tree inspection
@@ -17,7 +17,7 @@ The observation-persistence path reads captured filed state through the
 active-bucket encrypted observation store.
 
 See Also:
-    :class:`~aeat.domain.calculations.registry.ValidatedRegistryAuthority`
+    :class:`domain.calculations.registry.ValidatedRegistryAuthority`
         Domain authority used to load, validate, and snapshot modelo registry
         definitions.
     :class:`RegistryTreeReport`
@@ -26,19 +26,19 @@ See Also:
         Citation projection over reviewed registry legal references and topics.
     :class:`RegistryManualVerificationReport`
         Manual/casilla verification report for bundled manual corpus checks.
-    :mod:`aeat.domain.manuals`
+    :mod:`domain.manuals`
         Strict manual schema and loader surface that owns extracted manual
-        records and :class:`~aeat.domain.manuals.ManualCasillaReference` values.
-    :mod:`aeat.core.resources`
+        records and :class:`domain.manuals.ManualCasillaReference` values.
+    :mod:`core.resources`
         Bundled-data boundary used to locate packaged registry and corpus
         material without repository-relative path reads.
     :class:`FiledStateVerificationReport`
         Filed-state comparison report built from encrypted captured AEAT
         observations and local registry recalculation.
-    :class:`~aeat.adapters.outbound.aeat.sede.FiledDeclaracionObservationStore`
+    :class:`adapters.outbound.aeat.sede.FiledDeclaracionObservationStore`
         Active-bucket observation store that persists captured filed state for
         local registry comparison.
-    :mod:`aeat.application.modelo._registry_discovery`
+    :mod:`application.modelo._registry_discovery`
         Modelo work-unit discovery facade for CLI-facing registry queries.
 """
 
