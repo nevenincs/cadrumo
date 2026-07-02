@@ -150,10 +150,23 @@ build-backend = "hatchling.build"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/aeat"]
+# Test modules and fixtures serve no installed consumer: the suites run from
+# the repo tree, and nothing in the wheel imports `aeat.tests` at module load
+# (the one production-space reference, `envelope/_repository_test_suite.py`,
+# imports the harness function-locally and is exercised only by excluded test
+# modules). The data-budget ADR sheds this payload from the distribution.
+exclude = [
+  "src/aeat/tests",
+  "src/aeat/tests/**",
+  "src/aeat/**/tests",
+  "src/aeat/**/tests/**",
+]
 # The recovery-key BIP-39 wordlist is shipped as package data so
 # `importlib.resources.files()` can locate it at runtime in installed
-# wheels.
+# wheels; `py.typed` marks the package PEP 561 typed so consumers read the
+# inline types; `external_constants.toml` carries the curated leaf constants.
 include = [
+  "src/aeat/py.typed",
   "src/aeat/adapters/persistence/storage/master_key/_bip39_wordlist.txt",
   "src/aeat/core/external_constants.toml",
 ]
@@ -463,6 +476,9 @@ convention = "google"
 # Bundled `git ls-files` invocation reads from PATH; the explicit command list
 # is reviewed and audited rather than a partial path risk.
 "src/aeat/tests/test_wheel_bundles_corpus_and_registry.py" = ["S603", "S607"]
+# Same rationale: the content-boundary gate builds the project's own wheel with
+# the trusted `uv` build driver (partial path resolved from PATH by design).
+"src/aeat/tests/test_wheel_content_boundary.py" = ["S603", "S607"]
 # Setup-answers subprocess test shells out to `sys.executable -c <script>` to
 # observe the project_answers registration error path; the script is a vetted
 # literal in this file.
