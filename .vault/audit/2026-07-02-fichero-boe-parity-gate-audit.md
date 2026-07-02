@@ -139,11 +139,35 @@ only `130 111 115 123` (the four with reusable complete-draft builders). Extendi
 the lock to at least 200 and 303 (named in the P02 empirical grounding) requires
 authoring complete-draft fixtures for them. Follow-up.
 
+### truth-grounded-required-set | high | RESOLVED — the gate requires computed/schema-required casillas, not optional inputs
+
+The value-presence fix (correct for computed casillas) over-corrected: it required
+EVERY manifest ∩ representable casilla to carry a value, which broke the existing
+`test_export_writes_modelo_131_binding_derived_layout` at HEAD (a real regression).
+Grounded in the AEAT casilla semantics rather than guessed: Modelo 131 manifest
+casillas 02/08/09/12/14 are `Pago fraccionado previo por datos-base`, `Retenciones
+e ingresos a cuenta`, `Minoración por rendimientos netos`, `Pago de préstamos para
+vivienda habitual`, and `Resultado a ingresar de autoliquidaciones anteriores` --
+all OPTIONAL operator inputs a taxpayer may legitimately not have, so a blank slot
+is a valid zero, not a thin file. Probed across the covered modelos: manifest
+casillas are a mix of computed results (formula) and optional inputs (131 = 7
+computed + 8 optional; 130 = 12 computed + 1 schema-required + 7 optional; etc.),
+and every complete fixture populates its computed casillas. The gate now restricts
+the required set to casillas that declare a formula (calculation RESULTS) or are
+schema-required, using `schema_provider.get_collection(modelo)`; optional inputs
+are excluded. This keeps the real thin-file protection (a blank computed result
+means the calc did not run) while eliminating the false-panic on optional inputs.
+The 131 regression is fixed (its 7 computed casillas are populated), and the full
+filing export surface is green (64 tests). The gate test now empties a computed
+casilla to reproduce a real thin file, and the parity test mirrors the restricted
+required set. This also downgrades the row_field-only vector further: an optional
+row_field-only casilla is now excluded by the computed/required filter too.
+
 ## Recommendations
 
-- Commit the CRITICAL `rendered_casilla_ids` value-presence fix (ready and tested in
-  the working tree) via the apply-cached drive as soon as the 238-file peer
-  import-centralization changeset lands and the shared index clears.
+- Correct the codified `modelo-export-mirrors-official-structure` rule text to say
+  the fichero-BOE gate requires calculation RESULTS and schema-required casillas
+  (not every manifest casilla), matching the truth-grounded implementation.
 - Land the coverage advisory (P03.S12-S14) once the peer `_export.py` WIP commits,
   routing the manifest-absent signal through the typed `Notice` channel and adding
   the locale keys via the locales CLI.
