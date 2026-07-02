@@ -1,22 +1,22 @@
 """Registered work-revision inspection payloads for modelo CLI commands.
 
 ``aeat app modelo work revision`` and ``work observations`` both project a
-persisted :class:`~aeat.domain.modelos.CalculationRevision` through
+persisted :class:`CalculationRevision` through
 :func:`~aeat.entrypoints.cli._modelo_rendering.calculation_revision_payload`.
 They share the nested
-:class:`~aeat.entrypoints.cli._modelo_revision_payload_parts.ObservationPayload`
+:class:`ObservationPayload`
 and
-:class:`~aeat.entrypoints.cli._modelo_revision_payload_parts.ResultSummaryRowPayload`
+:class:`ResultSummaryRowPayload`
 rows, then register strict
-:class:`~aeat.entrypoints.cli._schemas.OutputSchema` result schemas through
+:class:`OutputSchema` result schemas through
 :func:`~aeat.entrypoints.cli._schemas.register_schema`.
 
 The application/modelo facade remains authoritative for revision lookup,
 selection, and Modelo 202 modality resolution; these classes only document the
 JSON transport shape that enters
-:class:`~aeat.entrypoints.cli._schemas.SchemaEnvelope` through
+:class:`SchemaEnvelope` through
 :func:`~aeat.entrypoints.cli._common._emit_envelope`. The parent
-:mod:`aeat.entrypoints.cli._modelo_payloads` module re-exports these split
+:mod:`~aeat.entrypoints.cli._modelo_payloads` module re-exports these split
 schemas so modelo work emitters keep one payload import surface.
 """
 
@@ -35,7 +35,7 @@ class WorkRevisionResult(OutputSchema):
     """Single-revision shape returned by ``aeat app modelo work revision``.
 
     Carries the JSON-safe projection of one
-    :class:`~aeat.domain.modelos.CalculationRevision`, matching
+    :class:`CalculationRevision`, matching
     :class:`~aeat.entrypoints.cli._modelo_payloads.WorkCalculateResult` minus
     the persistence-confirmation pair (``saved`` / ``saved_confirmation``).
     Modelo 202 modality comes from
@@ -68,15 +68,15 @@ class WorkRevisionResult(OutputSchema):
 
 @register_schema("modelo.work.observations")
 class WorkObservationsResult(OutputSchema):
-    """Typed provenance view for one stored :class:`~aeat.domain.modelos.CalculationRevision`.
+    """Typed provenance view for one stored :class:`CalculationRevision`.
 
     ``observations`` reuses the same :class:`ObservationPayload` rows emitted by
     :class:`WorkRevisionResult` and
     :class:`~aeat.entrypoints.cli._modelo_payloads.WorkCalculateResult`; the
     separate command exists so operators can inspect
-    :class:`~aeat.domain.calculations.registry.FormulaId`,
-    :class:`~aeat.domain.calculations.registry.LegalRefId`,
-    :class:`~aeat.domain.calculations.registry.SourceRefId`, and operand
+    :obj:`FormulaId`,
+    :obj:`LegalRefId`,
+    :obj:`SourceRefId`, and operand
     provenance without reading the full revision payload.
     """
 

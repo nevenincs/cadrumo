@@ -1,17 +1,17 @@
 """JSON-contract payloads for the rich catalogue-invoice CLI verbs.
 
 Each payload is a strict
-:class:`~aeat.entrypoints.cli._schemas.OutputSchema` subclass registered with
-:func:`~aeat.entrypoints.cli._schemas.register_schema` on the shared
-:class:`~aeat.entrypoints.cli._schemas.SchemaEnvelope` surface through
+:class:`OutputSchema` subclass registered with
+:func:`register_schema` on the shared
+:class:`SchemaEnvelope` surface through
 :func:`~aeat.entrypoints.cli._common._emit_envelope`.
 
 The unified ``aeat app ledger invoice`` group drives the slim
-:class:`~aeat.application.ledger.BusinessOperationInvoice` operator record
+:class:`BusinessOperationInvoice` operator record
 (payloads in :mod:`~aeat.entrypoints.cli._ledger_payloads`). The ``catalogue``
-subgroup added here drives the **rich** :class:`~aeat.domain.invoices.Invoice`
+subgroup added here drives the **rich** :class:`Invoice`
 in the
-:class:`~aeat.domain.invoices.InvoiceCatalogue` — the only invoice aggregate
+:class:`InvoiceCatalogue` — the only invoice aggregate
 that carries ``linked_transaction_ids`` and the one ``link --invoice-id``
 resolves through
 :func:`~aeat.application.invoices.link_invoice_transaction_repositories`. These
@@ -29,16 +29,16 @@ class CatalogueInvoiceRecordPayload(OutputSchema):
     """One rich catalogue invoice projected for the operator surface.
 
     Nested in
-    :class:`~aeat.entrypoints.cli._ledger_catalogue_invoice_payloads.CatalogueInvoiceCreateResult`,
-    :class:`~aeat.entrypoints.cli._ledger_catalogue_invoice_payloads.CatalogueInvoiceViewResult`,
-    :class:`~aeat.entrypoints.cli._ledger_catalogue_invoice_payloads.CatalogueInvoiceRemoveResult`,
+    :class:`CatalogueInvoiceCreateResult`,
+    :class:`CatalogueInvoiceViewResult`,
+    :class:`CatalogueInvoiceRemoveResult`,
     and
-    :class:`~aeat.entrypoints.cli._ledger_catalogue_invoice_payloads.CatalogueInvoiceListResult`.
+    :class:`CatalogueInvoiceListResult`.
     Carries the content-addressed
     ``invoice_id`` (the value ``link --invoice-id`` resolves) plus the identity
     and total fields. The ``linked_transaction_ids`` list reflects the
     bidirectional links the ``link`` verb writes onto the rich
-    :class:`~aeat.domain.invoices.Invoice`.
+    :class:`Invoice`.
     """
 
     invoice_id: str
@@ -73,7 +73,7 @@ class CatalogueInvoiceCreateResult(CatalogueInvoiceRecordPayload):
 class CatalogueInvoiceViewResult(CatalogueInvoiceRecordPayload):
     """JSON envelope for ``aeat app ledger invoice catalogue view``.
 
-    Projects the rich :class:`~aeat.domain.invoices.Invoice` resolved by
+    Projects the rich :class:`Invoice` resolved by
     :func:`~aeat.application.invoices.resolve_catalogue_invoice_from_repository`.
     """
 
@@ -82,7 +82,7 @@ class CatalogueInvoiceViewResult(CatalogueInvoiceRecordPayload):
 class CatalogueInvoiceRemoveResult(CatalogueInvoiceRecordPayload):
     """JSON envelope for ``aeat app ledger invoice catalogue remove``.
 
-    Reports the deleted rich :class:`~aeat.domain.invoices.Invoice` returned by
+    Reports the deleted rich :class:`Invoice` returned by
     :func:`~aeat.application.invoices.remove_catalogue_invoice`; linked invoices
     are refused before this payload is emitted.
     """
@@ -93,9 +93,9 @@ class CatalogueInvoiceListResult(OutputSchema):
     """JSON envelope for ``aeat app ledger invoice catalogue list``.
 
     Each row is a
-    :class:`~aeat.entrypoints.cli._ledger_catalogue_invoice_payloads.CatalogueInvoiceRecordPayload`
+    :class:`CatalogueInvoiceRecordPayload`
     projected from the
-    active bucket's :class:`~aeat.domain.invoices.InvoiceCatalogue`; ``kind``
+    active bucket's :class:`InvoiceCatalogue`; ``kind``
     filtering stays in the CLI query before this envelope is validated.
     """
 

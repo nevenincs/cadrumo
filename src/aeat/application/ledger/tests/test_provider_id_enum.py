@@ -16,27 +16,17 @@ from .._actions_import import LedgerProviderID
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
-# Literals that were previously bare-string dispatch targets in the import service.
-_KNOWN_PROVIDER_LITERALS: frozenset[str] = frozenset([p.value for p in LedgerProviderID])
-
 _ACTIONS_IMPORT_MODULE = PROJECT_ROOT / "src" / "aeat" / "application" / "ledger" / "_actions_import.py"
 
-_DISPATCH_BARE_STRING_RE = re.compile(r'provider_id\s*==\s*"([^"]+)"|provider_id\s+in\s+\{([^}]+)\}')
 
-
-def test_ledger_provider_id_enum_round_trip() -> None:
-    """Every LedgerProviderID value round-trips through StrEnum construction."""
+def test_ledger_provider_id_enum_contract() -> None:
+    """LedgerProviderID covers every dispatch value and round-trips through StrEnum construction."""
+    expected = {"auto", "csv", "ofx", "qfx", "xlsx", "excel", "n26", "pdf", "pdf-n26"}
+    actual = {p.value for p in LedgerProviderID}
+    assert actual == expected
     for member in LedgerProviderID:
         reconstructed = LedgerProviderID(member.value)
         assert reconstructed is member, f"LedgerProviderID({member.value!r}) did not return the canonical member"
-
-
-def test_ledger_provider_id_covers_all_known_values() -> None:
-    """LedgerProviderID contains every expected dispatch value."""
-    expected = {"auto", "csv", "ofx", "qfx", "xlsx", "excel", "n26", "pdf", "pdf-n26"}
-    actual = {p.value for p in LedgerProviderID}
-    missing = expected - actual
-    assert not missing, f"LedgerProviderID is missing values: {missing}"
 
 
 def test_no_bare_string_dispatch_survivors_in_import_service() -> None:

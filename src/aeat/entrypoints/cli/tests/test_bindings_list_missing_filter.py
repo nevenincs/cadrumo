@@ -36,12 +36,14 @@ from ....tests.secure_sql import isolated_profile_storage_root
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
-# Modelo 100 (IRPF) 2025 declares 33 ``source = "profile"`` bindings, 10 of
-# them formula-consumed. The partial profile below satisfies exactly four:
-# tax-residence CCAA, declaration type, taxpayer birth date, and the
-# minor-children-in-unit count. The remaining profile bindings (spouse,
-# descendants, marriage deltas, ...) and every non-profile binding (ledger
-# aggregations, prior-filing pulls) stay unresolved, i.e. still "missing".
+# Modelo 100 (IRPF) 2025 declares formula-consumed ``source = "profile"``
+# bindings. The partial profile below satisfies the explicit facts for
+# tax-residence CCAA, declaration type, taxpayer birth date, and
+# minor-children-in-unit count. The real profile resolver also derives neutral
+# defaults for the anualidades eligibility and Madrid nacimiento/adopción
+# operands. The remaining profile bindings (spouse, descendants, marriage
+# deltas, ...) and every non-profile binding (ledger aggregations,
+# prior-filing pulls) stay unresolved, i.e. still "missing".
 _MODELO = "100"
 _YEAR = 2025
 _PERIOD = "0A"
@@ -51,6 +53,9 @@ _RESOLVED_BINDING_IDS = frozenset(
         "renta-2025-profile-declaration-type",
         "renta-2025-profile-taxpayer-birth-date",
         "renta-2025-profile-family-minor-children-in-unit",
+        "renta-2025-profile-anualidades-sin-minimo-descendientes",
+        "renta-2025-profile-madrid-nacimiento-adopcion-eligible-count",
+        "renta-2025-profile-unidad-familiar-otros-miembros-base",
     },
 )
 
@@ -108,11 +113,11 @@ def _binding_ids_in_listing(output: str) -> set[str]:
 def test_bindings_list_missing_returns_strict_subset_of_unfiltered() -> None:
     """``--missing`` removes EXACTLY the profile-resolved bindings.
 
-    With an active profile that satisfies four of Modelo 100's
+    With an active profile that satisfies a proper subset of Modelo 100's
     ``source = "profile"`` bindings, the ``--missing`` listing must be a
     strict subset of the unfiltered listing whose removed rows are exactly
-    those four resolved binding ids — proving the filter actually narrows
-    the set rather than echoing the flag while returning everything.
+    those resolved binding ids — proving the filter actually narrows the
+    set rather than echoing the flag while returning everything.
     """
     _seed_partial_modelo_100_profile()
     scope = ["app", "modelo", "bindings", "list", "--modelo", _MODELO, "--year", str(_YEAR), "--period", _PERIOD]

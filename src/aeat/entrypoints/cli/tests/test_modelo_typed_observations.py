@@ -2,7 +2,12 @@
 
 from __future__ import annotations
 
+from pathlib import Path
+
 import pytest
+
+from ....tests.cli_runner import invoke_cached_cli
+from ....tests.secure_sql import isolated_profile_storage_root
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -83,3 +88,41 @@ def test_parse_typed_cli_observations_rejects_schema_violation() -> None:
     )
     with pytest.raises(_typer.BadParameter):
         _parse_typed_cli_observations([missing_scheme], model=RetencionObservation, flag="--retencion-observation")
+
+
+def test_cli_retencion_observation_schema_violation_is_argument_validation(tmp_path: Path) -> None:
+    """A malformed retencion observation is refused as a CLI argument error."""
+
+    missing_scheme = (
+        '{"source_kind": "ledger_transaction", "source_object_id": "txn-001",'
+        ' "perceptor_nif": "A12345678", "taxable_base": "1000.00",'
+        ' "retencion_amount": "190.00", "accrued_on": "2024-01-15"}'
+    )
+
+    with isolated_profile_storage_root(tmp_path=tmp_path):
+        result = invoke_cached_cli(
+            [
+                "--language",
+                "en",
+                "app",
+                "modelo",
+                "aggregate",
+                "--modelo",
+                "111",
+                "--year",
+                "2024",
+                "--period",
+                "1T",
+                "--retencion-observation",
+                missing_scheme,
+            ],
+        )
+
+    assert result.exit_code == 2, result.output
+    assert "Invalid value" in result.output
+    assert "--retencion-observation" in result.output
+    assert "not a valid" in result.output
+    assert "observation object" in result.output
+    assert "scheme: Field required" in result.output
+    assert "config repair" not in result.output
+    assert "no longer matches the expected schema" not in result.output

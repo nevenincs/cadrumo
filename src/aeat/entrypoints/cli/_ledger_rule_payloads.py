@@ -1,13 +1,13 @@
 """Typed ``--json`` payload schemas for ledger rule commands.
 
 Every declared payload is an
-:class:`~aeat.entrypoints.cli._schemas.OutputSchema` subclass registered with
-:func:`~aeat.entrypoints.cli._schemas.register_schema` for the ledger rule
+:class:`OutputSchema` subclass registered with
+:func:`register_schema` for the ledger rule
 command JSON-contract surface carried by
-:class:`~aeat.entrypoints.cli._schemas.SchemaEnvelope` through
+:class:`SchemaEnvelope` through
 :func:`~aeat.entrypoints.cli._common._emit_envelope`. These schemas are the
 CLI projection of the secure, profile-local rule engine: persisted
-:class:`~aeat.domain.transactions.LedgerClassificationRule` records are listed
+:class:`LedgerClassificationRule` records are listed
 and added through :mod:`~aeat.entrypoints.cli._ledger_rules_cli`, while
 :func:`~aeat.application.ledger.apply_classification_rules` owns live mutation
 semantics. The parent :mod:`~aeat.entrypoints.cli._ledger_payloads` module
@@ -23,11 +23,11 @@ from ._schemas import OutputSchema, register_schema
 class ClassificationRulePayload(OutputSchema):
     """One persisted ledger classification rule row.
 
-    Mirrors :class:`~aeat.domain.transactions.LedgerClassificationRule` as
+    Mirrors :class:`LedgerClassificationRule` as
     emitted by
-    :class:`~aeat.entrypoints.cli._ledger_rule_payloads.RuleAddResult` and
+    :class:`RuleAddResult` and
     nested in
-    :class:`~aeat.entrypoints.cli._ledger_rule_payloads.RuleListResult`.
+    :class:`RuleListResult`.
     ``rule_id`` is the content-addressed id, ``description_pattern`` is the
     regex evaluated against transaction descriptions, and lower ``priority``
     values run before higher ones.
@@ -47,8 +47,8 @@ class RuleAddResult(ClassificationRulePayload):
     """JSON envelope for ``aeat app ledger rule add``.
 
     The command persists one
-    :class:`~aeat.domain.transactions.LedgerClassificationRule` through
-    :class:`~aeat.application.ledger.LedgerClassificationRuleRepository`; adding
+    :class:`LedgerClassificationRule` through
+    :class:`LedgerClassificationRuleRepository`; adding
     the same pattern/classification/category tuple is idempotent because the
     rule id is content-addressed.
     """
@@ -71,10 +71,10 @@ class RuleApplyMatchPayload(OutputSchema):
 
     The row reports the first rule that would classify the transaction if the
     operator re-ran without ``--dry-run``. It previews the same priority-ordered
-    :class:`~aeat.domain.transactions.LedgerClassificationRule` match selection
+    :class:`LedgerClassificationRule` match selection
     as :func:`~aeat.application.ledger.apply_classification_rules`, but remains
     evidence only: no transaction state or bucket event is written for these
-    :class:`~aeat.entrypoints.cli._ledger_rule_payloads.RuleApplyResult` rows.
+    :class:`RuleApplyResult` rows.
     """
 
     transaction_id: str
@@ -87,9 +87,9 @@ class RuleApplyAppliedPayload(OutputSchema):
     """One transaction classified by a live ``ledger rule apply`` pass.
 
     Nested in
-    :class:`~aeat.entrypoints.cli._ledger_rule_payloads.RuleApplyResult` and
+    :class:`RuleApplyResult` and
     mirrors
-    :class:`~aeat.application.ledger.ApplyRulesAppliedRow`: the transaction id,
+    :class:`ApplyRulesAppliedRow`: the transaction id,
     the matched content-addressed rule id, and the classification persisted
     through the shared manual transaction mutation path with ``rule:<rule_id>``
     provenance.
@@ -108,7 +108,7 @@ class RuleApplyResult(OutputSchema):
     ``count``) and the live-apply branch (``rules_evaluated``,
     ``transactions_scanned``, ``matched``, ``skipped_already_classified``,
     ``no_match``, ``applied``).  Live counts mirror
-    :class:`~aeat.application.ledger.ApplyRulesResult`; dry-run rows preview the
+    :class:`ApplyRulesResult`; dry-run rows preview the
     same first-match rule selection without writing transaction state.  Rows
     already classified by an operator are skipped unless the command is run with
     the explicit ``--reaffirm`` consent flag.
@@ -131,9 +131,9 @@ class LLMProviderAvailabilityPayload(OutputSchema):
     """One subprocess LLM provider's PATH availability.
 
     Nested in
-    :class:`~aeat.entrypoints.cli._ledger_rule_payloads.LedgerProvidersResult`
+    :class:`LedgerProvidersResult`
     and mirrors
-    :class:`~aeat.application.ledger.LLMProviderAvailability` from
+    :class:`LLMProviderAvailability` from
     :func:`~aeat.application.ledger.available_llm_providers`.  The probe uses
     PATH lookup only; it does not spawn the provider CLI or send transaction
     data to a cloud service.
@@ -149,9 +149,9 @@ class VisionProviderPayload(OutputSchema):
     """The on-host Ollama vision model's availability.
 
     Nested in
-    :class:`~aeat.entrypoints.cli._ledger_rule_payloads.LedgerProvidersResult`
+    :class:`LedgerProvidersResult`
     and carries the
-    :class:`~aeat.application.provisioning.DependencyStatus` fields surfaced
+    :class:`DependencyStatus` fields surfaced
     beside subprocess LLM providers, including operator remediation text when
     the local model or service is unavailable.
     """
@@ -181,7 +181,7 @@ class LedgerProvidersResult(OutputSchema):
 class LlmUsageProviderPayload(OutputSchema):
     """Per-provider LLM usage/cost row.
 
-    Mirrors :class:`~aeat.application.ledger.LlmUsageProviderMetrics`, aggregated
+    Mirrors :class:`LlmUsageProviderMetrics`, aggregated
     from the encrypted usage log. ``calls`` counts every recorded call
     (cache hits included); ``cost_estimate_usd`` is the summed estimate.
     """
@@ -198,7 +198,7 @@ class LlmUsageProviderPayload(OutputSchema):
 class LlmConfidenceProviderPayload(OutputSchema):
     """Per-provider classification-confidence distribution row.
 
-    Mirrors :class:`~aeat.application.ledger.LlmConfidenceProviderMetrics`,
+    Mirrors :class:`LlmConfidenceProviderMetrics`,
     aggregated from LLM-classified ledger transactions. ``low_confidence_count``
     is the count below the tunable report threshold; ``high_confidence_count``
     (>= 0.8) and ``medium_confidence_count`` ([0.5, 0.8)) are fixed-floor
@@ -221,9 +221,9 @@ class LedgerLlmDiagnosticsResult(OutputSchema):
 
     Presents the two existing LLM metric stores in one read-only report: the
     usage/cost log aggregated per provider
-    (:class:`~aeat.application.ledger.LlmUsageProviderMetrics`) and the
+    (:class:`LlmUsageProviderMetrics`) and the
     classification-confidence distribution over LLM-classified ledger
-    transactions (:class:`~aeat.application.ledger.LlmConfidenceProviderMetrics`),
+    transactions (:class:`LlmConfidenceProviderMetrics`),
     both sourced from
     :func:`~aeat.application.ledger.build_llm_diagnostics_report`. It reports
     only accounting metadata, never response text or financial content.

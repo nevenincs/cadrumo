@@ -1584,6 +1584,8 @@ cli:
         unknown_keys: 'Ismeretlen --binding kulcs(ok): {keys}; ismert kötések a(z)
           {code}@{revision} ({period}) számára: {suggestion}.'
         year_help: A nyomtatvány adóéve (pl. 2026).
+        unscoped_revision_warning: 'A koteslista nincs %{missing_filters} szerint szukitve; olyan revizio kotesazonositoit is tartalmazhatja, amely nem egyezik a work calculate altal hasznalt munkaegyseggel.'
+        unscoped_revision_suggestion: 'Mielott az ids ertekeket work calculate parancsba masolod, futtasd ujra --modelo MODELO --year YEAR --period PERIOD kapcsolokkal a cel munkaegyseghez.'
       casilla:
         casilla_help: Leirando mezoazonosito vagy nyomtatott mezoszam (pl. 0596).
         help: Megjeleniti egy mezo cimkejet, jogi alapjat, bemeneti tipusat es kepletet

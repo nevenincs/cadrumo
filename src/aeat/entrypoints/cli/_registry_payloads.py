@@ -1,8 +1,8 @@
 """Typed ``--json`` payload schemas for registry CLI commands.
 
 Each class declared here is a strict
-:class:`~aeat.entrypoints.cli._schemas.OutputSchema` subclass and is decorated
-with :func:`~aeat.entrypoints.cli._schemas.register_schema` so the
+:class:`OutputSchema` subclass and is decorated
+with :func:`register_schema` so the
 JSON-contract test suite can enumerate every registry command surface this
 module covers.
 
@@ -13,7 +13,7 @@ because ``model_dump(mode='json')`` serialises pydantic tuples as JSON arrays.
 The application layer remains authoritative for registry validation, oracle
 audits, workbook verification, filed-state comparison, and parity tape
 execution. These schemas document the CLI transport shape that enters
-:class:`~aeat.entrypoints.cli._schemas.SchemaEnvelope` through
+:class:`SchemaEnvelope` through
 :func:`~aeat.entrypoints.cli._common._emit_envelope`.
 """
 
@@ -27,10 +27,10 @@ class RegistryInspectResult(OutputSchema):
     """JSON envelope for ``aeat app registry inspect``.
 
     Mirrors the inventory half of
-    :class:`~aeat.application.registry.RegistryTreeReport` returned by
+    :class:`RegistryTreeReport` returned by
     :func:`~aeat.application.registry.inspect_registry_tree`. Extra fields carry
     per-revision detail rows such as
-    :class:`~aeat.application.registry.RegistryRevisionDetailReport`.
+    :class:`RegistryRevisionDetailReport`.
     """
 
     modelo_count: int
@@ -56,13 +56,13 @@ class RegistryInspectResult(OutputSchema):
 class RegistryVerifyResult(OutputSchema):
     """JSON envelope for ``aeat app registry verify``.
 
-    Mirrors the validated :class:`~aeat.application.registry.RegistryTreeReport`
+    Mirrors the validated :class:`RegistryTreeReport`
     returned by :func:`~aeat.application.registry.verify_registry_tree`.
     ``verified`` marks the fail-fast registry/corpus validation branch, while
     extra fields preserve the same
-    :class:`~aeat.application.registry.RegistryRevisionDetailReport` inventory
+    :class:`RegistryRevisionDetailReport` inventory
     available from
-    :class:`~aeat.entrypoints.cli._registry_payloads.RegistryInspectResult`.
+    :class:`RegistryInspectResult`.
     """
 
     verified: bool
@@ -89,12 +89,12 @@ class RegistryVerifyResult(OutputSchema):
 class RegistryAuditOraclesResult(OutputSchema):
     """JSON envelope for ``aeat app registry audit-oracles``.
 
-    Mirrors :class:`~aeat.application.registry.RegistryOracleAuditReport` from
+    Mirrors :class:`RegistryOracleAuditReport` from
     :func:`~aeat.application.registry.audit_registry_oracles`. The report
     aggregates
     :func:`~aeat.domain.calculations.registry.audit_registry_oracle_bindings`
     failures, applicability declarations, and orphan oracle ids for one
-    :class:`~aeat.domain.calculations.registry.OracleEnvironment`.
+    :class:`OracleEnvironment`.
     """
 
     environment: str
@@ -113,10 +113,10 @@ class RegistryAuditOraclesResult(OutputSchema):
 class RegistryVerifyFiledStateResult(OutputSchema):
     """JSON envelope for ``aeat app registry verify-filed-state``.
 
-    Mirrors :class:`~aeat.application.registry.FiledStateVerificationReport`
+    Mirrors :class:`FiledStateVerificationReport`
     from :func:`~aeat.application.registry.verify_filed_state`. ``comparison``
     contains the
-    :class:`~aeat.domain.calculations.registry.RegistryFiledStateComparison`
+    :class:`RegistryFiledStateComparison`
     between local registry calculation output and the captured filed AEAT
     observation.
     """
@@ -135,7 +135,7 @@ class RegistryWorkbooksVerifyResult(OutputSchema):
     """JSON envelope for ``aeat app registry workbooks verify``.
 
     Mirrors
-    :class:`~aeat.domain.calculations.registry.WorkbookBackendVerificationReport`
+    :class:`WorkbookBackendVerificationReport`
     returned by :func:`~aeat.application.registry.verify_registry_workbooks`.
     ``runner`` reports workbook backend availability, ``reports`` carries
     per-workbook artefact scans, and ``modelo_coverage`` summarizes
@@ -161,9 +161,9 @@ class RegistryWorkbooksVerifyResult(OutputSchema):
 class RegistryParityRunResult(OutputSchema):
     """JSON envelope for ``aeat app registry parity run``.
 
-    Mirrors :class:`~aeat.domain.calculations.registry.ParityTape` returned by
+    Mirrors :class:`ParityTape` returned by
     :func:`~aeat.application.registry.run_registry_parity`. The payload includes
-    the :class:`~aeat.domain.calculations.registry.ParityScenario`, scanned
+    the :class:`ParityScenario`, scanned
     workbook artefact, runner availability, and the registry workbook parity
     run report; ``path`` is added by the CLI as the archive destination.
     """
@@ -185,9 +185,9 @@ class RegistryParityRunResult(OutputSchema):
 class RegistryParityReplayResult(OutputSchema):
     """JSON envelope for ``aeat app registry parity replay``.
 
-    Mirrors :class:`~aeat.domain.calculations.registry.ParityTapeReplayReport`
+    Mirrors :class:`ParityTapeReplayReport`
     returned by :func:`~aeat.application.registry.replay_registry_parity`.
-    ``stored`` is the archived :class:`~aeat.domain.calculations.registry.ParityTape`;
+    ``stored`` is the archived :class:`ParityTape`;
     ``current`` is the fresh replay tape, and ``differences`` lists the stable
     JSON paths that diverged.
     """

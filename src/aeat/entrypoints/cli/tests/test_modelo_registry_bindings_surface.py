@@ -6,6 +6,7 @@ import pytest
 
 from ....core.resources import resources
 from ....tests.cli_runner import invoke_cached_cli
+from .envelope_helpers import unwrap_envelope_notices as _notices
 from .envelope_helpers import unwrap_schema_envelope as _payload
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
@@ -48,6 +49,93 @@ def test_bindings_list_missing_filter_excludes_constant_value_bindings() -> None
     )
     assert result.exit_code == 0, result.output
     assert "missing_filter\tTrue" in result.output
+
+
+def test_bindings_list_warns_when_period_scope_filters_are_missing() -> None:
+    """Unscoped binding ids are discoverable but unsafe to copy into work calculate."""
+
+    text = invoke_cached_cli(["--language", "en", "app", "modelo", "bindings", "list", "--modelo", "303"])
+
+    assert text.exit_code == 0, text.output
+    assert "binding_count\t" in text.output
+    assert (
+        "notice\twarning\tmodelo.bindings.list.unscoped_revision\t"
+        "The binding list is not scoped by --year, --period;"
+    ) in text.output
+    assert "rerun with --modelo MODELO --year YEAR --period PERIOD" in text.output
+
+    json_result = invoke_cached_cli(
+        ["--language", "en", "--format", "json", "app", "modelo", "bindings", "list", "--modelo", "303"],
+    )
+
+    assert json_result.exit_code == 0, json_result.output
+    notices = _notices(json_result.output)
+    (notice,) = [item for item in notices if item["code"] == "modelo.bindings.list.unscoped_revision"]
+    assert notice["severity"] == "warning"
+    assert notice["context"]["modelo_filter"] == "303"
+    assert notice["context"]["year_filter"] == ""
+    assert notice["context"]["period_filter"] == ""
+    assert notice["context"]["missing_filters"] == "--year, --period"
+    assert "work calculate" in notice["message"]
+    assert "--modelo MODELO --year YEAR --period PERIOD" in notice["suggestion"]
+
+
+def test_bindings_list_warning_names_only_the_missing_scope_filter() -> None:
+    """Partially scoped listings keep the same warning but name only the missing filter."""
+
+    result = invoke_cached_cli(
+        [
+            "--language",
+            "en",
+            "--format",
+            "json",
+            "app",
+            "modelo",
+            "bindings",
+            "list",
+            "--modelo",
+            "303",
+            "--year",
+            "2026",
+        ],
+    )
+
+    assert result.exit_code == 0, result.output
+    notices = _notices(result.output)
+    (notice,) = [item for item in notices if item["code"] == "modelo.bindings.list.unscoped_revision"]
+    assert notice["context"]["modelo_filter"] == "303"
+    assert notice["context"]["year_filter"] == "2026"
+    assert notice["context"]["period_filter"] == ""
+    assert notice["context"]["missing_filters"] == "--period"
+
+
+def test_bindings_list_omits_scope_warning_when_year_and_period_are_supplied() -> None:
+    """The scoped listing already matches the work-unit revision resolver inputs."""
+
+    result = invoke_cached_cli(
+        [
+            "--language",
+            "en",
+            "--format",
+            "json",
+            "app",
+            "modelo",
+            "bindings",
+            "list",
+            "--modelo",
+            "303",
+            "--year",
+            "2026",
+            "--period",
+            "1T",
+        ],
+    )
+
+    assert result.exit_code == 0, result.output
+    scope_notices = [
+        notice for notice in _notices(result.output) if notice["code"] == "modelo.bindings.list.unscoped_revision"
+    ]
+    assert scope_notices == []
 
 
 def test_bindings_list_missing_m200_surfaces_m202_relation_inputs() -> None:

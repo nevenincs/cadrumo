@@ -1,11 +1,11 @@
 """Typed ``--json`` payload schemas for ledger CLI commands.
 
 Each class declared here is a strict
-:class:`~aeat.entrypoints.cli._schemas.OutputSchema` subclass and is decorated
-with :func:`~aeat.entrypoints.cli._schemas.register_schema` so the
+:class:`OutputSchema` subclass and is decorated
+with :func:`register_schema` so the
 JSON-contract test suite can enumerate every ledger-command surface this module
 covers.  Emission wraps the validated result in
-:class:`~aeat.entrypoints.cli._schemas.SchemaEnvelope` through
+:class:`SchemaEnvelope` through
 :func:`~aeat.entrypoints.cli._common._emit_envelope`.
 
 Field sets match the production payload dicts constructed in ``_ledger.py``
@@ -19,15 +19,15 @@ the strict ``OutputSchema`` base does not coerce lists to tuples on
 re-validation.
 
 The application layer remains authoritative for
-:class:`~aeat.application.ledger.LedgerSourceImportResult`,
-:class:`~aeat.application.ledger.LedgerTransactionPayload`,
-:class:`~aeat.application.ledger.LedgerTransactionResultPayload`,
-:class:`~aeat.application.ledger.LedgerPreflightReport`, and the slim
-:class:`~aeat.application.ledger.BusinessOperationInvoice` record.  Adjacent
+:class:`LedgerSourceImportResult`,
+:class:`LedgerTransactionPayload`,
+:class:`LedgerTransactionResultPayload`,
+:class:`LedgerPreflightReport`, and the slim
+:class:`BusinessOperationInvoice` record.  Adjacent
 surfaces that split out of this module keep their own transport schemas in
-:mod:`aeat.entrypoints.cli._ledger_rule_payloads`,
-:mod:`aeat.entrypoints.cli._ledger_llm_payloads`, and
-:mod:`aeat.entrypoints.cli._ledger_catalogue_invoice_payloads`.
+:mod:`~aeat.entrypoints.cli._ledger_rule_payloads`,
+:mod:`~aeat.entrypoints.cli._ledger_llm_payloads`, and
+:mod:`~aeat.entrypoints.cli._ledger_catalogue_invoice_payloads`.
 """
 
 from __future__ import annotations
@@ -89,7 +89,7 @@ if TYPE_CHECKING:
 
 
 class TransactionPayload(OutputSchema):
-    """Nested CLI copy of :class:`~aeat.application.ledger.LedgerTransactionPayload`."""
+    """Nested CLI copy of :class:`LedgerTransactionPayload`."""
 
     transaction_id: str
     date: str
@@ -156,7 +156,7 @@ class LedgerIrpfCategoryPayload(OutputSchema):
 
 
 class LedgerReviewRowPayload(OutputSchema):
-    """One :class:`~aeat.application.ledger.LedgerReviewRow` transport row."""
+    """One :class:`LedgerReviewRow` transport row."""
 
     id: str
     date: str
@@ -169,7 +169,7 @@ class LedgerReviewRowPayload(OutputSchema):
 class LedgerRemovalBlockerPayload(OutputSchema):
     """One modelo revision reference surfaced by ledger removal.
 
-    Mirrors :class:`~aeat.application.ledger.LedgerRemovalBlocker`.  In
+    Mirrors :class:`LedgerRemovalBlocker`.  In
     ``blocking_modelo_references`` the row names a finalized revision that
     prevents removal because it still cites the transaction through
     ``source_transaction_ids``.  In ``stale_draft_revision_references`` the same
@@ -189,7 +189,7 @@ class LedgerPeriodPayload(OutputSchema):
     """Nested filing-period projection used by ledger readiness surfaces.
 
     Carries the JSON-safe filing year plus period code derived from
-    :class:`~aeat.core.Period`; preflight/check reports use this shape instead
+    :class:`Period`; preflight/check reports use this shape instead
     of serialising the richer period object directly.
     """
 
@@ -203,7 +203,7 @@ class LedgerTransactionParticipationEntryPayload(OutputSchema):
     Surfaces the inverse of the forward ``source_transaction_ids`` link:
     a finalized modelo revision (and, where filed, its filing record and
     justificante reference) that consumed the transaction.  The row mirrors
-    :class:`~aeat.domain.modelos.TransactionRevisionParticipation`, which lives
+    :class:`TransactionRevisionParticipation`, which lives
     in the derived, rebuildable participation index rather than on the
     content-addressed transaction itself.
     """
@@ -221,7 +221,7 @@ class LedgerTransactionParticipationEntryPayload(OutputSchema):
 class LedgerImportTransactionRefPayload(OutputSchema):
     """One bucket-qualified transaction reference nested in the import result (D2).
 
-    Mirrors :class:`~aeat.domain.transactions.BucketTransactionRef`'s
+    Mirrors :class:`BucketTransactionRef`'s
     ``model_dump(mode="json")`` — replaces the former bare ``dict[str, object]``
     on the imported / skipped / likely-duplicate ref lists.
     """
@@ -231,7 +231,7 @@ class LedgerImportTransactionRefPayload(OutputSchema):
 
 
 class LedgerImportValidationPayload(OutputSchema):
-    """Source-file validation details from :class:`~aeat.application.ledger.LedgerSourceValidationReport`."""
+    """Source-file validation details from :class:`LedgerSourceValidationReport`."""
 
     valid: bool
     warnings: list[str] = []
@@ -240,7 +240,7 @@ class LedgerImportValidationPayload(OutputSchema):
 
 
 class LedgerImportSourcePayload(OutputSchema):
-    """Source-file verification details from :class:`~aeat.application.ledger.LedgerSourceVerificationReport`."""
+    """Source-file verification details from :class:`LedgerSourceVerificationReport`."""
 
     requested: bool
     path: str | None = None
@@ -248,7 +248,7 @@ class LedgerImportSourcePayload(OutputSchema):
 
 
 class LedgerImportDiagnosticPayload(OutputSchema):
-    """One :class:`~aeat.application.ledger.LedgerImportDiagnosticReport` entry."""
+    """One :class:`LedgerImportDiagnosticReport` entry."""
 
     kind: str
     severity: str

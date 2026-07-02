@@ -31,6 +31,7 @@ from ...application.modelo import (
 )
 from ...core import NON_REGISTRY_MODELOS, Modelo, Period, TaxDomain
 from ...core.i18n import output_language, tr
+from ...core.json_contract import Notice, NoticeSeverity
 from ...domain.calculations.registry import (
     InputKind,
     ModeloListRow,
@@ -726,8 +727,44 @@ def _register_bindings_list_command(bindings_app: typer.Typer, deps: _DiscoveryD
             f"binding_count\t{len(merged_rows)}",
             "modelo\trevision\tperiod\tbinding_id\tsource\treadiness\ttyped_enum\tinput_channel\tborrador_capable",
         ]
+        notices = _bindings_list_scope_notices(modelo=modelo, year=year, period=period)
+        lines.extend(_notice_text_lines(notices))
         lines.extend(text_rows)
-        _emit_envelope(ctx, command="modelo.bindings.list", result=result, lines=lines)
+        _emit_envelope(ctx, command="modelo.bindings.list", result=result, lines=lines, notices=notices)
+
+
+def _bindings_list_scope_notices(*, modelo: str | None, year: int | None, period: str | None) -> tuple[Notice, ...]:
+    missing_filters = tuple(
+        option
+        for option, value in (("--year", year), ("--period", period))
+        if value is None or (isinstance(value, str) and not value.strip())
+    )
+    if not missing_filters:
+        return ()
+    missing = ", ".join(missing_filters)
+    message = tr("cli.app.modelo.bindings.unscoped_revision_warning", missing_filters=missing)
+    suggestion = tr("cli.app.modelo.bindings.unscoped_revision_suggestion")
+    return (
+        Notice(
+            severity=NoticeSeverity.WARNING,
+            code="modelo.bindings.list.unscoped_revision",
+            message=message,
+            suggestion=suggestion,
+            context={
+                "modelo_filter": modelo or "",
+                "year_filter": "" if year is None else str(year),
+                "period_filter": period or "",
+                "missing_filters": missing,
+            },
+        ),
+    )
+
+
+def _notice_text_lines(notices: tuple[Notice, ...]) -> list[str]:
+    return [
+        f"notice\t{notice.severity.value}\t{notice.code}\t{notice.message}\t{notice.suggestion or '-'}"
+        for notice in notices
+    ]
 
 
 def _require_binding_scope(*, modelo: str | None, year: int | None, period: str | None) -> None:

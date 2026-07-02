@@ -1,8 +1,8 @@
 """Typed ``--json`` payload schemas for app live CLI commands.
 
 Each class declared here is a strict
-:class:`~aeat.entrypoints.cli._schemas.OutputSchema` subclass and is decorated
-with :func:`~aeat.entrypoints.cli._schemas.register_schema` so the
+:class:`OutputSchema` subclass and is decorated
+with :func:`register_schema` so the
 JSON-contract test suite can enumerate every live-command surface this module
 covers.
 
@@ -17,7 +17,7 @@ bucket-scoped encrypted snapshot persistence, filed-declaration observations,
 IVA wallet acquisition, justificante capture, notifications, expedientes,
 verification observations, and Borrador 100 snapshots. These classes document
 only the CLI transport shape that enters
-:class:`~aeat.entrypoints.cli._schemas.SchemaEnvelope` through
+:class:`SchemaEnvelope` through
 :func:`~aeat.entrypoints.cli._common._emit_envelope`; they do not define a
 live-write surface or a second persistence contract.
 """
@@ -36,7 +36,7 @@ from ._schemas import OutputSchema, register_schema
 
 
 class FiledListingRowPayload(OutputSchema):
-    """JSON projection of one :class:`~aeat.application.live.FiledDataListingRow`.
+    """JSON projection of one :class:`FiledDataListingRow`.
 
     The row comes from AEAT's declaration register only; the boolean fields say
     which submitted-file, declaration-copy, or justificante links were visible
@@ -55,7 +55,7 @@ class FiledListingRowPayload(OutputSchema):
 
 
 class FiledCaptureFailurePayload(OutputSchema):
-    """JSON projection of one :class:`~aeat.application.live.FiledDataCaptureFailureRow`."""
+    """JSON projection of one :class:`FiledDataCaptureFailureRow`."""
 
     modelo: str
     year: int
@@ -75,8 +75,8 @@ class FiledListResult(OutputSchema):
     """List result for declaration-register rows returned by the live filed surface.
 
     Single-modelo calls mirror
-    :class:`~aeat.application.live.FiledDataListingReport`; registry-wide calls
-    mirror :class:`~aeat.application.live.BulkFiledDataListingReport` and may
+    :class:`FiledDataListingReport`; registry-wide calls
+    mirror :class:`BulkFiledDataListingReport` and may
     include per-modelo failure rows. No filed artefact bodies are captured by
     this schema.
     """
@@ -95,11 +95,11 @@ class FiledCaptureResult(OutputSchema):
     """Capture result for encrypted filed-declaration observations and artefacts.
 
     In ``single`` mode the payload mirrors
-    :class:`~aeat.application.live.FiledDataCaptureReport`; in ``bulk`` mode it
-    mirrors :class:`~aeat.application.live.BulkFiledDataCaptureReport`. The
+    :class:`FiledDataCaptureReport`; in ``bulk`` mode it
+    mirrors :class:`BulkFiledDataCaptureReport`. The
     ``observation_paths`` and ``artefact_refs`` fields identify local encrypted
     stores, while justificante and filing-evidence counts report local metadata
-    enrolment against existing :class:`~aeat.domain.modelos.ModeloRecord`
+    enrolment against existing :class:`ModeloRecord`
     records.
     """
 
@@ -130,7 +130,7 @@ class FiledCaptureResult(OutputSchema):
 class FiledCaptureSourcesResult(OutputSchema):
     """Source-observation capture result for a target filing's registry dependencies.
 
-    Mirrors :class:`~aeat.application.live.SourceFiledDataCaptureReport`: the
+    Mirrors :class:`SourceFiledDataCaptureReport`: the
     target :class:`Period` is resolved through registry authority, prior filed
     observations are persisted as encrypted local evidence, and matching
     justificantes may enrol local filing evidence without mutating AEAT state.
