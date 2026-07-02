@@ -9,14 +9,14 @@ at import time.
 
 This is a read-only remote-mirror registry for public, externally defined
 constants. Runtime-tunable values such as timeouts, storage roots, and operator
-choices belong in :class:`~aeat.core.config.Settings`; profile data, tokens,
+choices belong in :class:`core.config.Settings`; profile data, tokens,
 passphrases, bucket ids, and SQL routes do not belong here. Loading the registry
 only reads packaged TOML (or an explicit audit/test path) and never opens
 storage, writes files, or contacts remote providers.
 
 The typed root is :class:`ExternalConstants`, with AEAT-specific subsections
 grouped under :class:`AeatSection`; callers normally reach it through
-:meth:`~aeat.core.config.Settings.external_constants`. The volatile Pre303 and
+:meth:`core.config.Settings.external_constants`. The volatile Pre303 and
 IVA-wallet browser surface remains lazily validated as :class:`AeatPre303Surface`
 so selector churn does not poison unrelated configuration reads.
 """
@@ -105,7 +105,7 @@ class AeatSedePaths(_Frozen):
 
     These values are route fragments and templates only; consumers choose the
     correct origin from :class:`AeatDomains` or an overrideable
-    :class:`~aeat.core.config.Settings` field before building a full URL.
+    :class:`core.config.Settings` field before building a full URL.
     """
 
     auth_gate_4033: str
@@ -298,13 +298,13 @@ class AeatSection(_Frozen):
     section of the registry: every value tracks the AEAT portal's HTML
     and may break on a portal redesign. To keep that volatility from
     poisoning the whole registry — and therefore every ``Settings()``
-    construction, since :class:`~aeat.core.config.Settings` resolves
+    construction, since :class:`core.config.Settings` resolves
     AEAT-URL defaults through :func:`load_external_constants` — the raw
     ``[aeat.pre303]`` mapping is kept untyped and validated lazily into a
     strict :class:`AeatPre303Surface` only on first access via the
     :attr:`pre303` property. A missing or malformed pre303 block thus
     never raises while parsing the registry; it surfaces as a clean
-    :class:`~aeat.core.errors.CoreValidationError` to the wallet /
+    :class:`core.errors.CoreValidationError` to the wallet /
     representation flows that actually consume it, and leaves
     selector-free commands (``config profile status``, ``modelo list``,
     …) entirely unaffected.
@@ -330,7 +330,7 @@ class AeatSection(_Frozen):
         ``[aeat.pre303]`` block cannot break registry parsing for the
         many CLI paths that never scrape the AEAT portal. When the block
         is broken the leaked :exc:`pydantic.ValidationError` is wrapped
-        in a :class:`~aeat.core.errors.CoreValidationError` carrying an
+        in a :class:`core.errors.CoreValidationError` carrying an
         operator-facing recovery hint.
         """
         try:
@@ -405,7 +405,7 @@ LATIN_1_ENCODING: Final[str] = "latin-1"
 #:
 #: Identical in coverage to :data:`LATIN_1_ENCODING` at runtime; declared as a
 #: typed ``Literal["iso-8859-1"]`` so callers that pass it to a
-#: :data:`~aeat.adapters.outbound.aeat.export._formats._record_spec.FicheroBoeEncoding`
+#: :data:`adapters.outbound.aeat.export._formats._record_spec.FicheroBoeEncoding`
 #: parameter satisfy the static type checker without a cast.
 ISO_8859_1_ENCODING: Final[Literal["iso-8859-1"]] = "iso-8859-1"
 
@@ -579,7 +579,7 @@ MODELO_100_ART_20_TRABAJO_REDUCCION_RNT_CEILING_EUR: Final[Decimal] = Decimal("1
 #: This is the LIVA art. 90 Uno general rate (Ley 37/1992, BOE-A-1992-28740)
 #: currently in force for Spain (ES).
 #: The DATED authoritative percentage lives in ``registry/aeat/iva/rates.toml``
-#: and is resolved via :func:`aeat.domain.iva.lookup_rate`; this constant is
+#: and is resolved via :func:`domain.iva.lookup_rate`; this constant is
 #: bound to that registry authority by a gate test so it cannot silently drift.
 DEFAULT_IVA_GENERAL_RATE_PCT: Final[Decimal] = Decimal("21.00")
 
