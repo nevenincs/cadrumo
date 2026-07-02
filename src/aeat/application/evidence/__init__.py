@@ -7,10 +7,10 @@ filing for offline replay and audit handoff. Bundles are durable
 artifacts stored inside the active bucket; they are not the source of
 relational truth.
 
-Bundle manifests can reference :class:`aeat.domain.modelos.WorkUnit`,
-:class:`aeat.domain.modelos.CalculationRevision`, and
-:class:`aeat.domain.modelos.ModeloRecord` payloads by stable id, with each
-record typed by :class:`aeat.domain.buckets.BucketEventObjectType`. They are
+Bundle manifests can reference :class:`domain.modelos.WorkUnit`,
+:class:`domain.modelos.CalculationRevision`, and
+:class:`domain.modelos.ModeloRecord` payloads by stable id, with each
+record typed by :class:`domain.buckets.BucketEventObjectType`. They are
 audit packaging records, not purchase-invoice evidence or official AEAT filing
 evidence claims.
 
@@ -44,9 +44,9 @@ See Also:
         ``replay`` flows.
     :class:`BundleVerificationState`
         Closed verification state vocabulary for bundle manifests.
-    :class:`aeat.application.ledger.PurchaseInvoiceEvidence`
+    :class:`application.ledger.PurchaseInvoiceEvidence`
         Source-document evidence for ledger rows.
-    :class:`aeat.domain.modelos.ExternalEvidence`
+    :class:`domain.modelos.ExternalEvidence`
         Official filing evidence stamped on current modelo filing records.
 """
 
