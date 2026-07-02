@@ -31,7 +31,7 @@ from collections.abc import Iterable, Iterator
 from pathlib import Path
 
 from ...core.resources import bundled_path
-from ._models import CorpusChunk, CorpusIndexBuildResult, LexicalSearchHit
+from ._models import CorpusChunk, CorpusDocument, CorpusIndexBuildResult, LexicalSearchHit
 
 _CORPUS_HTML_PARTS = ("corpus", "normatives", "html")
 _CORPUS_REF_PREFIX = "corpus/normatives/html"
@@ -80,7 +80,6 @@ def _chunks_for_source(json_path: Path) -> Iterator[CorpusChunk]:
     html_name = json_path.name.removesuffix(".extracted.json")
     html_stem = html_name.removesuffix(".html")
     corpus_ref_base = f"{_CORPUS_REF_PREFIX}/{html_name}"
-    attribution = payload.get("attribution")
     doc_title = _document_title(units, fallback=html_stem)
     global_ordinal = 0
     for unit_ordinal, unit in enumerate(units):
@@ -102,7 +101,6 @@ def _chunks_for_source(json_path: Path) -> Iterator[CorpusChunk]:
                 text=chunk_text,
             )
             global_ordinal += 1
-    _ = attribution  # attribution rides the document row in build_lexical_index.
 
 
 def _document_title(units: Iterable[object], *, fallback: str) -> str:
@@ -209,7 +207,8 @@ def build_lexical_index(
     connection = sqlite3.connect(database_path)
     try:
         _create_schema(connection)
-        documents: dict[str, dict[str, object]] = {}
+        chunk_counts: dict[str, int] = {}
+        titles: dict[str, str] = {}
         chunk_count = 0
         for rowid, chunk in enumerate(chunks, start=1):
             connection.execute(
@@ -232,23 +231,26 @@ def build_lexical_index(
                 "INSERT INTO chunks_fts(rowid, text_folded, text_stemmed) VALUES(?, ?, ?)",
                 (rowid, chunk.text, _stem_text(stemmer, chunk.text)),
             )
-            document = documents.setdefault(
-                chunk.source_path,
-                {"corpus_ref": chunk.source_path, "title": chunk.doc_title, "chunk_count": 0},
-            )
-            document["chunk_count"] = int(document["chunk_count"]) + 1  # type: ignore[arg-type]
+            chunk_counts[chunk.source_path] = chunk_counts.get(chunk.source_path, 0) + 1
+            titles.setdefault(chunk.source_path, chunk.doc_title)
             chunk_count += 1
-        for source_path, document in sorted(documents.items()):
+        for source_path in sorted(chunk_counts):
+            document = CorpusDocument(
+                corpus_ref=source_path,
+                source_path=source_path,
+                title=titles[source_path],
+                chunk_count=chunk_counts[source_path],
+            )
             connection.execute(
                 "INSERT INTO documents(corpus_ref, source_path, title, chunk_count) VALUES(?, ?, ?, ?)",
-                (document["corpus_ref"], source_path, document["title"], document["chunk_count"]),
+                (document.corpus_ref, document.source_path, document.title, document.chunk_count),
             )
         connection.commit()
     finally:
         connection.close()
     return CorpusIndexBuildResult(
         database_path=Path(database_path).as_posix(),
-        document_count=len(documents),
+        document_count=len(chunk_counts),
         chunk_count=chunk_count,
     )
 
