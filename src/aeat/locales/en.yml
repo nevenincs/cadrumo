@@ -821,9 +821,7 @@ application:
         %{period}; complete these profile facts first: %{missing}.'
       profile_readiness_profile_missing: No persisted active profile exists for this
         modelo work target; create or repair the profile before continuing.
-      reconcile_declaration_unsupported: Declaration-PDF reconcile source is not yet
-        implemented; reconcile a downloaded justificante via aeat app modelo reconcile
-        file until the declaration parser lands.
+      reconcile_declaration_unsupported: 'Declaration-PDF casilla-level reconcile is not yet enrolled for this modelo; reconcile a downloaded justificante via aeat app modelo reconcile file, or wait for this modelo to be enrolled.'
       reconcile_no_active_bucket: No active profile bucket; run `aeat config profile
         create NAME` before reconciling a work unit.
       refund_election_not_eligible: Refund (devolver) was elected for Modelo %{modelo}
