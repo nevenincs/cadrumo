@@ -3,7 +3,7 @@
 Each operator-callable registry command becomes one SDK-independent
 :class:`McpToolDescriptor`: a namespaced tool name, a description drawn from the
 family's operator intent, a per-verb input schema derived from the command's own
-click parameters (via :func:`~aeat.entrypoints.mcp._input_schema.build_verb_input_schemas`),
+click parameters (via :func:`~entrypoints.mcp._input_schema.build_verb_input_schemas`),
 the command's registered result model as the output schema, and the mutability
 annotations. The server shell adapts these into the MCP SDK's ``Tool`` /
 ``ToolAnnotations`` types. This module owns no protocol detail and is unit-tested.
