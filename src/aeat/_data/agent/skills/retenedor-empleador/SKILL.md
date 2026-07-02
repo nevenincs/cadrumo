@@ -8,6 +8,15 @@ description: >-
   declares `has_employees`, `pays_professionals_with_retencion`, or
   `pays_rent_with_retencion` true. Never hard-codes the obligation set; derives
   it from the overview surface.
+applies_when:
+  profile_match: any
+  profile_facts:
+    - fact: has_employees
+      match: is_true
+    - fact: pays_professionals_with_retencion
+      match: is_true
+    - fact: pays_rent_with_retencion
+      match: is_true
 ---
 
 # Retenedor / empleador
