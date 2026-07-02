@@ -1,4 +1,4 @@
-"""Determinism-conformance axis over the ``--format json`` command surface (ADR D4).
+"""Determinism-conformance axis over the ``--format json`` command surface.
 
 An opt-in axis: for each command a campaign ENROLS as replayable, this gate
 captures the command's emitted ``SchemaEnvelope`` twice under a frozen clock with
@@ -78,7 +78,7 @@ def _committed_db_fingerprint(profile: TestRuntimeProfile, snapshot_dir: Path) -
     Snapshots the committed database files — the main ``.db`` plus its committed
     ``-wal`` frames — into ``snapshot_dir``, excluding the volatile ``-shm``
     shared-memory WAL index, then fingerprints that snapshot with the substrate's
-    :func:`compute_db_sha256` (the ADR's named db_sha256 tier). ``-shm`` carries no
+    :func:`compute_db_sha256` (the named db_sha256 tier). ``-shm`` carries no
     committed row payload and its reader-marks flap on every read (not a state
     change), and it cannot be removed in-session on Windows (its mmap handle
     outlives ``engine.dispose()``), so the live var tree cannot be hashed directly

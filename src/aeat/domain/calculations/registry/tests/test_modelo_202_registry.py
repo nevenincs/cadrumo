@@ -425,14 +425,13 @@ def test_committed_modelo_202_minimo_a_ingresar_cn_10m_remains_unguarded(revisio
     The LIS pago-fraccionado minimo floor for INCN >= EUR 10.000.000 groups is
     now GROUNDED on clave 33 via ``ley-27-2014:da-14`` (disposicion adicional
     decimocuarta, redaccion vigente del art. 71 de la Ley 6/2018), closing the
-    ``registry-calculation-legal-grounding`` gap that
-    `2026-07-01-modelo-verify-nonzero-guards-residuals-research` Finding 1b
+    ``registry-calculation-legal-grounding`` gap previously
     identified; the value now cites the provision that establishes it, not only
     the framework art-40/40-3/29/30/105 mechanics.
 
     The verify GUARD nonetheless stays DEFERRED (documented non-guard) because
-    no false-positive-free antecedent is expressible today (residuals research
-    Finding 1d): the semantically-correct guard is
+    no false-positive-free antecedent is expressible today: the
+    semantically-correct guard is
     (INCN >= 10.000.000) AND (resultado positivo ajustado > 0) => clave 33 > 0,
     and all three signals are structurally unreachable -- the INCN is a
     ``profile`` binding fact the predicate evaluator never receives (it sees
@@ -442,9 +441,7 @@ def test_committed_modelo_202_minimo_a_ingresar_cn_10m_remains_unguarded(revisio
     would therefore fire on every sub-EUR-10M filer who correctly leaves clave
     33 blank -- the overwhelming majority -- a structurally guaranteed
     false-positive rate (the M714-class antipattern). Clave 33 is fully manual
-    with no formula or binding linkage in every revision. See
-    `2026-07-01-modelo-verify-nonzero-guards-residuals-research` (Finding 1) and
-    the accepted `2026-07-01-modelo-verify-nonzero-guards-residuals-adr`.
+    with no formula or binding linkage in every revision.
     """
     modelo, _catalogues = _load_modelo_202()
     revision = modelo.revisions[revision_id]

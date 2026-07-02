@@ -131,6 +131,7 @@ def test_no_orphan_formula_feeding_bindings_in_any_revision() -> None:
         for casilla in revision.casillas:
             if casilla.binding:
                 referenced.add(casilla.binding)
+            referenced.update(casilla.alternate_bindings)
         orphans = formula_feeding - referenced
         for orphan in sorted(orphans):
             offences.append(f"{revision_id}: orphan formula-feeding binding {orphan!r}")

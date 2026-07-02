@@ -120,9 +120,7 @@ def test_modelo_100_base_and_attribution_roles_are_legally_grounded_across_revis
             assert _GENERAL_BASE_ART_48_REF not in casilla.legal_refs, (filing_year, casilla.id)
 
         attribution_base = next(
-            casilla
-            for casilla in revision.casillas
-            if casilla.id == _ATTRIBUTION_REGIME_BASE_IMPUTADA_CASILLA
+            casilla for casilla in revision.casillas if casilla.id == _ATTRIBUTION_REGIME_BASE_IMPUTADA_CASILLA
         )
         assert _ATTRIBUTION_REGIME_ART_86_REF in attribution_base.legal_refs, filing_year
         assert attribution_base.semantic_role == _ATTRIBUTION_REGIME_BASE_IMPUTADA_ROLE, filing_year
@@ -169,9 +167,7 @@ def test_modelo_100_annual_order_refs_are_declared_and_cited() -> None:
         assert revision.orden_aplicabilidad == (annual_order_ref,), filing_year
 
         casillas_by_role = {
-            casilla.semantic_role: casilla
-            for casilla in revision.casillas
-            if casilla.semantic_role in detail_roles
+            casilla.semantic_role: casilla for casilla in revision.casillas if casilla.semantic_role in detail_roles
         }
         assert set(casillas_by_role) == detail_roles, filing_year
         for casilla in casillas_by_role.values():

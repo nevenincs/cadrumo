@@ -9,9 +9,6 @@ related:
   - "[[2026-07-02-arch-remediation-source-kind-deferrals-plan]]"
 ---
 
-
-
-
 # Add a fired-trigger check surfaced at the swarm-audit cadence that flags a deferred kind whose trigger has fired but which remains deferred
 
 ## Scope
@@ -27,4 +24,3 @@ related:
 A fired promotion trigger is now mechanically detectable at the swarm-audit cadence — 'we forgot to promote it' is a test failure, not archaeology.
 
 ## Notes
-

@@ -10,16 +10,6 @@ related:
   - '[[2026-06-26-binding-resolver-contract-unification-research]]'
 ---
 
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the
-       related: field above.
-     - The related: field carries the AUTHORISING documents
-       (ADR, research, reference, prior plan) for every Step in
-       this plan. Steps inherit this chain; per-row reference
-       footers do not exist.
-     - NEVER use [[wiki-links]] or markdown links in the
-       document body. -->
-
 # `binding-resolver-contract-unification` plan
 
 ### Phase `P01` - One result envelope: retire the vestigial source-resolution envelopes

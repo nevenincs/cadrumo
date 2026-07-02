@@ -14,7 +14,8 @@ from pathlib import Path
 
 import pytest
 
-from ....domain.filing import FilingExportError, ModeloValueKind
+from ....domain.filing import FilingExportError
+from ....domain.filing import ModeloValueKind
 from .._export import boe_representable_casilla_ids, export_draft
 from ._export_support import (
     _approved_registry_draft,

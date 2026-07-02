@@ -7,13 +7,15 @@ import pytest
 
 from ....core import Period
 from ....domain.deadlines import IrpfEstimationRegime, IVARegime, TaxpayerProfile
+from ....domain.modelos import ModeloVerificationFindingKind
 from ....domain.modelos import (
     CalculationRevision,
     CalculationRevisionState,
-    ModeloVerificationFindingKind,
-    ModeloVerificationFindingSeverity,
-    WorkUnit,
     derive_calculation_revision_id,
+)
+from ....domain.modelos import ModeloVerificationFindingSeverity
+from ....domain.modelos import (
+    WorkUnit,
     derive_work_unit_id,
 )
 from .._objective_estimation_advisory import _objective_estimation_exclusion_advisory_findings
@@ -161,6 +163,7 @@ def test_revision_verification_collects_objective_estimation_exclusion_advisory(
         work_unit=work_unit,
         target=_calculation_revision(work_unit),
         profile=profile,
+        transaction_repository=None,
     )
 
     matching = [

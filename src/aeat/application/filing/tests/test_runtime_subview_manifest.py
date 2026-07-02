@@ -23,9 +23,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 def test_subview_projects_revision_completeness_manifest() -> None:
     # Modelo 130 1T/2025 declares a completeness manifest (it is a covered
     # modelo in the workbook parity gate), so its subview must carry it intact.
-    snapshot = resources().modelos.authority.snapshot(
-        "130", filing_year=2025, period="1T", on=date(2025, 4, 1)
-    )
+    snapshot = resources().modelos.authority.snapshot("130", filing_year=2025, period="1T", on=date(2025, 4, 1))
     assert snapshot.revision.completeness_manifest is not None
 
     subview = _subview_from_snapshot(snapshot)

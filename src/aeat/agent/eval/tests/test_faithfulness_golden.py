@@ -1,10 +1,9 @@
 """Faithfulness gate wired end-to-end for the operator golden-task eval (category 9).
 
-Closes eval-catalogue category 9 (hallucinated numeric, NET-NEW, HIGH -
-``.vault/research/2026-07-01-agent-harness-research.md``): a hallucinated
-numeric is the load-bearing risk for regulated filing narration, since a
-plausible-looking but fabricated casilla value reads as authoritative to an
-operator who cannot tell it apart from a real one.
+Covers eval-catalogue category 9 (hallucinated numeric, high severity): a
+hallucinated numeric is the load-bearing risk for regulated filing narration,
+since a plausible-looking but fabricated casilla value reads as authoritative
+to an operator who cannot tell it apart from a real one.
 
 This module dispatches a REAL ``modelo.work.calculate`` for M130 through the
 actual CLI command handling (the identical transport
@@ -18,8 +17,7 @@ so casilla 07 resolves to the same 1.600,00 EUR oracle figure
 text and the captured calculate JSON, and feeds the verdict into
 :func:`aeat.agent.eval.run_golden_scenario` via its
 ``narration_faithfulness_checks`` parameter so the pass/fail composition itself
-proves ADR Q4's two-part posture: advisory off the handoff path, hard block on
-it.
+proves the two-part posture: advisory off the handoff path, hard block on it.
 
 No mocks: every seeded row is a genuine ``TransactionCatalogueRepository``
 write, every calculate value is what the real registry engine plus the real
@@ -38,7 +36,8 @@ from pathlib import Path
 
 import pytest
 
-from ....application.user_profile import UserProfileLifecycleRepository, profile_storage_session
+from ....application.user_profile import profile_storage_session
+from ....application.user_profile import UserProfileLifecycleRepository
 from ....core import resolve_active_bucket_id
 from ....domain.transactions import (
     BusinessClassification,
@@ -243,7 +242,7 @@ def _dispatch_real_m130_calculate_json(
 def test_fabricated_value_is_flagged_advisory_on_a_non_handoff_step(runtime_profile: TestRuntimeProfile) -> None:
     """A fabricated numeric in calculate-step narration is flagged but does not block.
 
-    ADR Q4: advisory by default off the irreversible handoff path. Wires the real
+    Advisory by default off the irreversible handoff path. Wires the real
     ``faithfulness_check`` verdict into ``run_golden_scenario`` at the
     ``modelo.work.calculate`` step and proves the scenario still passes overall -
     the flag is visible (``faithful=False``) but non-blocking (``blocks=False``).
@@ -290,7 +289,7 @@ def test_identical_fabricated_value_hard_blocks_on_the_export_handoff_step(
 ) -> None:
     """The SAME fabricated numeric on the export handoff step hard-blocks the scenario.
 
-    ADR Q4: hard block at the export / record-marker boundary. Same narration
+    Hard block at the export / record-marker boundary. Same narration
     text, same captured JSON, only ``blocking`` (the step) differs - proving the
     split is driven by step identity, not by the value itself.
     """

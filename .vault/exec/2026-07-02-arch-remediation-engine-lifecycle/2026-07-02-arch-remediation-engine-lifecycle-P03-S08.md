@@ -9,9 +9,6 @@ related:
   - "[[2026-07-02-arch-remediation-engine-lifecycle-plan]]"
 ---
 
-
-
-
 # Add a regression asserting an in-process profile switch cannot observe the prior bucket engine, via an engine-identity assertion across a switch
 
 ## Scope
@@ -30,4 +27,3 @@ Regression pins that an in-process profile switch cannot observe the prior bucke
 Landed in commit `38e62c216`.
 
 ## Notes
-

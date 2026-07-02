@@ -347,10 +347,7 @@ def _default_iva_regime_for_profile(
     income_categories: frozenset[IrpfIncomeCategory],
     configured_default: IVARegime,
 ) -> IVARegime:
-    if (
-        entity_type is EntityType.NATURAL_PERSON
-        and IrpfIncomeCategory.ACTIVIDAD_ECONOMICA not in income_categories
-    ):
+    if entity_type is EntityType.NATURAL_PERSON and IrpfIncomeCategory.ACTIVIDAD_ECONOMICA not in income_categories:
         return IVARegime.NO_APLICA
     return configured_default
 

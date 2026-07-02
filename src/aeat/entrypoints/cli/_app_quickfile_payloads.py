@@ -55,7 +55,7 @@ class QuickfileResultPayload(OutputSchema):
 
     @classmethod
     def from_result(cls, result: QuickfileResult) -> QuickfileResultPayload:
-        """Project the application :class:`QuickfileResult` into this envelope."""
+        """Project the application :class:`QuickfileResult` into this :class:`QuickfileResultPayload` envelope."""
         granted = result.verification_report.granted_verificado_completo if result.verification_report else None
         return cls(
             modelo=result.modelo,

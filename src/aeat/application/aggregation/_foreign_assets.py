@@ -18,7 +18,6 @@ canonical source-kind values ``ledger_transaction``,
 from __future__ import annotations
 
 from collections.abc import Iterable, Mapping
-from datetime import date
 from decimal import Decimal
 from types import MappingProxyType
 
@@ -27,6 +26,7 @@ from pydantic import BaseModel, Field, InstanceOf, field_validator, model_valida
 from ...core import STRICT_FROZEN_CONFIG, BindingSourceKind, Modelo, Period
 from ...core.aggregation import ForeignAssetClass
 from ...core.external_constants import MODELO_720_REPORTING_THRESHOLD_EUR
+from ...core.parsing import parse_iso8601_date
 from ...domain.calculations.registry import Modelo720RowObservation, resolve_foreign_asset_binding_row_values
 from ._source_mesh import CalculationSourceContext, CalculationSourceProvenance, CalculationSourceResolution
 
@@ -303,12 +303,15 @@ def _selected_foreign_asset_observations(
 def _registry_observation_from_foreign_asset(
     observation: ForeignAssetIngestObservation,
 ) -> Modelo720RowObservation:
+    acquisition_date = parse_iso8601_date(observation.acquisition_date)
+    if acquisition_date is None:
+        raise ValueError(f"acquisition_date {observation.acquisition_date!r} is not a valid ISO-8601 date")
     return Modelo720RowObservation(
         source_id=f"{observation.source_kind.value}:{observation.source_object_id}",
         asset_class_code=_asset_class_code(observation.asset_class),
         country_code=observation.country,
         asset_identifier=observation.asset_external_id,
-        acquisition_date=date.fromisoformat(observation.acquisition_date),
+        acquisition_date=acquisition_date,
         valuation_amount=observation.valuation_eur,
     )
 

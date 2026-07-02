@@ -9,9 +9,6 @@ related:
   - "[[2026-07-02-arch-remediation-data-budget-plan]]"
 ---
 
-
-
-
 # Add a size-budget gate asserting the _data tree is at or under 550 MB, failing with a message that names the data-budget ADR and the two breach options raise-by-ADR or split
 
 ## Scope

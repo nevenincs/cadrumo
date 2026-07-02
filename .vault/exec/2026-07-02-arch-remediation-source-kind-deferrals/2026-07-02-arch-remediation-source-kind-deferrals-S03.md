@@ -9,9 +9,6 @@ related:
   - "[[2026-07-02-arch-remediation-source-kind-deferrals-plan]]"
 ---
 
-
-
-
 # Migrate the bienes_inversion_regularizacion deferral to a structured annotation citing its accepted 2026-07-01 ADR and the prorrata-definitiva-source-lands dependency trigger
 
 ## Scope
@@ -27,4 +24,3 @@ related:
 bienes-inversión regularización is governed and mechanically dependency-linked to prorrata landing.
 
 ## Notes
-

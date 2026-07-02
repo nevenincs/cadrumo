@@ -1,6 +1,6 @@
 """M100 negative general-base carry resolves on the live calculate path.
 
-The round-9 S365 finding described a manual transcription into casilla 0501.
+A prior finding described a manual transcription into casilla 0501.
 The registry's actual carry vehicle is the Anexo C negative general-base stock:
 prior M100 casilla 1391 is copied by a ``previous_filing`` binding into the
 next year's opening pending casilla 1388. Casilla 0501 remains the separate
@@ -24,14 +24,15 @@ from ....adapters.persistence.storage.sql import SecureObjectRepository
 from ....core import Period
 from ....core.resources import resources
 from ....domain.buckets import BucketEventHistoryRepository
+from ....domain.calculations.registry import RegistryModeloObservation
 from ....domain.calculations.registry import (
     BindingId,
     CasillaId,
-    RegistryModeloObservation,
     validated_casilla_id,
 )
 from ....domain.invoices import InvoiceCatalogueRepository
-from ....domain.modelos import CalculationRevisionCatalogueRepository, WorkUnitCatalogueRepository
+from ....domain.modelos import CalculationRevisionCatalogueRepository
+from ....domain.modelos import WorkUnitCatalogueRepository
 from ....domain.transactions import TransactionCatalogueRepository
 from ....domain.user_profile import (
     UserProfileFact,

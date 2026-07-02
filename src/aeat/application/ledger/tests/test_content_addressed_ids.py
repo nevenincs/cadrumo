@@ -1,4 +1,4 @@
-"""Content-addressed ``evidence_id`` / ``invoice_id`` (determinism ADR, D1).
+"""Content-addressed ``evidence_id`` / ``invoice_id`` determinism.
 
 Real-behaviour proofs that both surrogate keys were replaced by a content
 digest over their identifying fields, mirroring ``derive_transaction_id``:

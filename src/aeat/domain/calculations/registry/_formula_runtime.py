@@ -629,6 +629,10 @@ def _evaluate_expression(
         return _evaluate_age_at_year_end(expression, ctx)
     if op == "m131_resolve_modulos_previo":
         return _evaluate_m131_resolve_modulos_previo(expression, ctx)
+    if op == "m303_resolve_modulos_iva_cuota_devengada":
+        return _evaluate_m303_resolve_modulos_iva_cuota_devengada(expression, ctx)
+    if op == "m303_resolve_modulos_iva_cuota_minima_pct":
+        return _evaluate_m303_resolve_modulos_iva_cuota_minima_pct(expression, ctx)
     args = [_evaluate_with_ctx(arg, ctx) for arg in expression.args]
     return _ops.evaluate_args_op(op, args)
 
@@ -1563,6 +1567,226 @@ def _evaluate_m131_resolve_modulos_previo(expression: FormulaExpression, ctx: _E
         ctx.operand_values.append(coefficient)
         total += units * coefficient
     return total
+
+
+@dataclass(frozen=True, slots=True)
+class _M303ResolveModulosIvaCuotaDevengadaArgs:
+    """Resolved registry ids for the M303 régimen-simplificado IVA módulos dispatcher."""
+
+    epigrafe_casilla_id: CasillaId
+    modulo_unit_casilla_ids: tuple[CasillaId, CasillaId, CasillaId]
+    coefficient_parameter: ParameterId
+
+
+#: Módulo slot count the M303 first-slice IVA cuota coefficient table carries
+#: (972.1 peluquería — personal empleado, superficie, consumo eléctrico — is
+#: the highest signo count among the tabled activities; 721.2 and 722 pass a
+#: literal ``0`` for the unused trailing slot).
+_M303_MODULOS_IVA_SLOT_COUNT = 3
+
+
+def _m303_resolve_modulos_iva_cuota_devengada_args(
+    expression: FormulaExpression,
+) -> _M303ResolveModulosIvaCuotaDevengadaArgs:
+    op = "m303_resolve_modulos_iva_cuota_devengada"
+    expected_arg_count = 2 + _M303_MODULOS_IVA_SLOT_COUNT
+    if len(expression.args) != expected_arg_count:
+        raise RegistryValidationError(
+            f"formula op {op!r} expects {expected_arg_count} args, got {len(expression.args)}",
+            translated_message="errors.calc.lookup_dispatch_arg_count",
+            context={"op": op, "expected": str(expected_arg_count)},
+        )
+    epigrafe_arg = expression.args[0]
+    modulo_args = expression.args[1 : 1 + _M303_MODULOS_IVA_SLOT_COUNT]
+    coefficient_arg = expression.args[1 + _M303_MODULOS_IVA_SLOT_COUNT]
+    if epigrafe_arg.casilla_id is None:
+        raise RegistryValidationError(
+            f"formula op {op!r} requires args[0] to be a casilla leaf",
+            translated_message="errors.calc.lookup_dispatch_arg_kind",
+            context={"op": op, "position": "args[0]", "expected_kind": "casilla"},
+        )
+    resolved_modulo_ids: list[CasillaId] = []
+    for index, modulo_arg in enumerate(modulo_args, start=1):
+        if modulo_arg.casilla_id is None:
+            raise RegistryValidationError(
+                f"formula op {op!r} requires args[{index}] to be a casilla leaf",
+                translated_message="errors.calc.lookup_dispatch_arg_kind",
+                context={"op": op, "position": f"args[{index}]", "expected_kind": "casilla"},
+            )
+        resolved_modulo_ids.append(modulo_arg.casilla_id)
+    if coefficient_arg.parameter is None:
+        raise RegistryValidationError(
+            f"formula op {op!r} requires args[{1 + _M303_MODULOS_IVA_SLOT_COUNT}] to be a parameter leaf",
+            translated_message="errors.calc.lookup_dispatch_arg_kind",
+            context={
+                "op": op,
+                "position": f"args[{1 + _M303_MODULOS_IVA_SLOT_COUNT}]",
+                "expected_kind": "parameter",
+            },
+        )
+    modulo_ids = (resolved_modulo_ids[0], resolved_modulo_ids[1], resolved_modulo_ids[2])
+    return _M303ResolveModulosIvaCuotaDevengadaArgs(
+        epigrafe_casilla_id=epigrafe_arg.casilla_id,
+        modulo_unit_casilla_ids=modulo_ids,
+        coefficient_parameter=coefficient_arg.parameter,
+    )
+
+
+def _m303_modulos_iva_coefficient(
+    parameter: ParameterDefinition | None,
+    *,
+    epigrafe: str,
+    modulo_index: int,
+    year: int,
+) -> Decimal | None:
+    """Look up the (epígrafe, módulo) IVA cuota-devengada coefficient in the keyed-bracket table.
+
+    Mirrors :func:`_m131_modulos_coefficient` for the M303 régimen-simplificado
+    de IVA cuota-devengada-por-unidad table (Orden HAC/1347/2024 Anexo I,
+    grounded in ``registry-calculation-legal-grounding``). Returns ``None``
+    when the composite key has no row for the filing year — the epígrafe is
+    not (yet) part of the first-slice tabled activities, or the módulo slot
+    does not apply to that activity.
+    """
+    if parameter is None:
+        return None
+    key = f"{epigrafe}:{modulo_index}"
+    for entry in parameter.keyed_brackets:
+        in_window = entry.valid_from.year <= year and (entry.valid_to is None or entry.valid_to.year >= year)
+        if entry.key == key and in_window:
+            try:
+                return Decimal(entry.value)
+            except (ArithmeticError, ValueError):
+                return None
+    return None
+
+
+def _evaluate_m303_resolve_modulos_iva_cuota_devengada(expression: FormulaExpression, ctx: _EvalContext) -> Decimal:
+    """Resolve the M303 régimen-simplificado de IVA cuota devengada por operaciones corrientes.
+
+    LIVA art. 123.Dos.1 + Orden HAC/1347/2024 Anexo I (Instrucciones para la
+    aplicación de los índices y módulos en el IVA, apartado 2.1) fix the
+    mechanism: cuota devengada por operaciones corrientes = Σ(unidades_módulo
+    × cuota devengada anual por unidad), per IAE epígrafe — structurally the
+    same units×coefficient product as the M131 estimación-objetiva fase 1ª
+    (:func:`_evaluate_m131_resolve_modulos_previo`), but keyed to the IVA
+    cuota-per-unit table rather than the IRPF rendimiento-per-unit table (the
+    two Orden annexes carry distinct per-activity module sets and distinct
+    euro figures, so they are two coefficient parameters, never conflated).
+
+    An untabled epígrafe (bounded first-slice per the
+    ``2026-07-01-modelo-303-regimen-simplificado-adr``) or a blank epígrafe
+    resolves to ``Decimal('0')`` — this op feeds an internal-only
+    advisory-support casilla, never the filed casilla 48 directly, so a zero
+    here means "the table-driven engine has no coverage for this activity",
+    not "the cuota is zero". The ``advisory_when_computed_diverges``
+    verification predicate surfaces the gap or the discrepancy to the
+    operator; it never silently substitutes.
+    """
+    args = _m303_resolve_modulos_iva_cuota_devengada_args(expression)
+    epigrafe = ctx.text_values.get(args.epigrafe_casilla_id, "").strip()
+    ctx.operand_refs.append(args.epigrafe_casilla_id)
+    ctx.operand_casilla_refs.append(args.epigrafe_casilla_id)
+    parameter = ctx.parameters.get(args.coefficient_parameter)
+    ctx.operand_refs.append(args.coefficient_parameter)
+    if not epigrafe or parameter is None:
+        return _ZERO
+    total = _ZERO
+    for modulo_index, modulo_casilla_id in enumerate(args.modulo_unit_casilla_ids, start=1):
+        units = _m210_numeric_casilla_value(modulo_casilla_id, ctx)
+        if units == _ZERO:
+            continue
+        coefficient = _m303_modulos_iva_coefficient(
+            parameter,
+            epigrafe=epigrafe,
+            modulo_index=modulo_index,
+            year=ctx.filing_year,
+        )
+        if coefficient is None:
+            # This módulo slot has no row for the declared epígrafe (either
+            # untabled entirely, or this slot does not apply to it) — the
+            # whole cuota-devengada product is untabled for this activity, so
+            # the running total is abandoned and the internal casilla
+            # resolves to zero (no partial/mixed tabled-untabled fabrication).
+            return _ZERO
+        ctx.operand_values.append(coefficient)
+        total += units * coefficient
+    return total
+
+
+@dataclass(frozen=True, slots=True)
+class _M303ResolveModulosIvaCuotaMinimaPctArgs:
+    """Resolved registry ids for the M303 régimen-simplificado IVA cuota-mínima percentage dispatcher."""
+
+    epigrafe_casilla_id: CasillaId
+    percentage_parameter: ParameterId
+
+
+def _m303_resolve_modulos_iva_cuota_minima_pct_args(
+    expression: FormulaExpression,
+) -> _M303ResolveModulosIvaCuotaMinimaPctArgs:
+    op = "m303_resolve_modulos_iva_cuota_minima_pct"
+    if len(expression.args) != 2:
+        raise RegistryValidationError(
+            f"formula op {op!r} expects 2 args, got {len(expression.args)}",
+            translated_message="errors.calc.lookup_dispatch_arg_count",
+            context={"op": op, "expected": "2"},
+        )
+    epigrafe_arg = expression.args[0]
+    percentage_arg = expression.args[1]
+    if epigrafe_arg.casilla_id is None:
+        raise RegistryValidationError(
+            f"formula op {op!r} requires args[0] to be a casilla leaf",
+            translated_message="errors.calc.lookup_dispatch_arg_kind",
+            context={"op": op, "position": "args[0]", "expected_kind": "casilla"},
+        )
+    if percentage_arg.parameter is None:
+        raise RegistryValidationError(
+            f"formula op {op!r} requires args[1] to be a parameter leaf",
+            translated_message="errors.calc.lookup_dispatch_arg_kind",
+            context={"op": op, "position": "args[1]", "expected_kind": "parameter"},
+        )
+    return _M303ResolveModulosIvaCuotaMinimaPctArgs(
+        epigrafe_casilla_id=epigrafe_arg.casilla_id,
+        percentage_parameter=percentage_arg.parameter,
+    )
+
+
+def _evaluate_m303_resolve_modulos_iva_cuota_minima_pct(expression: FormulaExpression, ctx: _EvalContext) -> Decimal:
+    """Resolve the M303 régimen-simplificado de IVA cuota-mínima percentage por epígrafe.
+
+    Orden HAC/1347/2024 Anexo II fixes, per IAE epígrafe, the "cuota mínima
+    por operaciones corrientes" percentage applied over the cuota devengada
+    (LIVA art. 123.Dos.1, Orden Anexo I apartado 2.3). The percentage is a
+    single-key (epígrafe-only, not epígrafe:módulo) keyed-bracket-table
+    lookup — structurally simpler than
+    :func:`_evaluate_m303_resolve_modulos_iva_cuota_devengada`, which sums a
+    per-módulo product. An untabled or blank epígrafe resolves to
+    ``Decimal('0')`` (no-silent-under-declaration: this op feeds the same
+    internal-only advisory-support casilla chain, never the filed casilla 48
+    directly, so a zero here means "no table coverage", not "cuota mínima is
+    zero").
+    """
+    args = _m303_resolve_modulos_iva_cuota_minima_pct_args(expression)
+    epigrafe = ctx.text_values.get(args.epigrafe_casilla_id, "").strip()
+    ctx.operand_refs.append(args.epigrafe_casilla_id)
+    ctx.operand_casilla_refs.append(args.epigrafe_casilla_id)
+    ctx.operand_refs.append(args.percentage_parameter)
+    parameter = ctx.parameters.get(args.percentage_parameter)
+    if not epigrafe or parameter is None:
+        return _ZERO
+    for entry in parameter.keyed_brackets:
+        in_window = entry.valid_from.year <= ctx.filing_year and (
+            entry.valid_to is None or entry.valid_to.year >= ctx.filing_year
+        )
+        if entry.key == epigrafe and in_window:
+            try:
+                value = Decimal(entry.value)
+            except (ArithmeticError, ValueError):
+                return _ZERO
+            ctx.operand_values.append(value)
+            return value
+    return _ZERO
 
 
 def _evaluate_lookup_parameter_by_entity_type(expression: FormulaExpression, ctx: _EvalContext) -> Decimal:

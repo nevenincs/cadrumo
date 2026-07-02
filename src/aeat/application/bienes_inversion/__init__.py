@@ -67,4 +67,9 @@ class BienesInversionRegisterService:
         return self._repository.load()
 
 
-__all__ = ["BienesInversionRegisterService"]
+__all__ = [
+    "BienInversionIvaRecord",
+    "BienesInversionIvaRegister",
+    "BienesInversionIvaRegisterRepository",
+    "BienesInversionRegisterService",
+]

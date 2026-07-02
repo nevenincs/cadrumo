@@ -28,6 +28,9 @@ article = "1"
 permalink = "https://example.com/test"
 effective_from = 2025-01-01
 review_status = "reviewed"
+reviewed_at = 2025-01-01
+reviewed_by = "registry-test"
+required_text = ["test provision text"]
 
 [sources."test-source-001"]
 evidence_tier = "layout_authority"
@@ -38,6 +41,17 @@ sha256 = "44f8354494a5ba03ba1792a8d3e9c534c47a9181980fde7a3f44b06ef2ae7c7f"
 bytes = 1000
 retrieved_at = 2025-01-01
 source_url = "https://example.com/test-source"
+review_status = "reviewed"
+
+[sources."test-source-002"]
+evidence_tier = "official_source_guidance"
+authority = "aeat"
+kind = "instructions"
+corpus_path = "corpus/test/test-source-002.pdf"
+sha256 = "44f8354494a5ba03ba1792a8d3e9c534c47a9181980fde7a3f44b06ef2ae7c7f"
+bytes = 1000
+retrieved_at = 2025-01-01
+source_url = "https://example.com/test-source-002"
 review_status = "reviewed"
 """
 
@@ -68,7 +82,7 @@ surface = "filing"
 consumer = "cli.app"
 requires_snapshot = true
 legal_refs = ["test-ley-001:art-1"]
-source_refs = ["test-source-001"]
+source_refs = ["test-source-002"]
 
 [[revisions."{revision_id}".casillas]]
 id = "01"
@@ -100,6 +114,8 @@ def _write_year_ambiguous_registry(tmp_path: Path) -> Path:
     corpus_file = tmp_path / "corpus" / "test" / "test-source-001.pdf"
     corpus_file.parent.mkdir(parents=True)
     corpus_file.write_bytes(b"x" * 1000)
+    (corpus_file.parent / "test-source-002.pdf").write_bytes(b"x" * 1000)
+    (corpus_file.parent / "test-ley-001.html").write_text("<html>test provision text</html>", encoding="utf-8")
 
     (legal_dir / "catalogue.toml").write_text(_MINIMAL_CATALOGUE_TOML, encoding="utf-8")
     (modelos_dir / "manifest.toml").write_text(_MINIMAL_MANIFEST_TOML, encoding="utf-8")

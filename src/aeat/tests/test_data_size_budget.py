@@ -2,17 +2,17 @@
 
 The architecture review (finding ``bundled-data-weight-unbudgeted``) measured
 ``src/aeat/_data`` growing from ~311 MB to 516 MB in six weeks with no ceiling
-and no gate. The data-budget ADR
-(`2026-07-02-arch-remediation-data-budget-adr`) converts the next doubling from
-a silent surprise into an ADR-governed decision: this gate asserts the ``_data``
-tree stays at or under the declared budget and fails with a message naming the
-ADR and the two options a breach permits.
+and no gate. The declared data budget below
+converts the next doubling from
+a silent surprise into a reviewed decision: this gate asserts the ``_data``
+tree stays at or under the declared budget and fails with a message naming
+the two options a breach permits.
 
 Bundling the corpus is an accepted decision (offline-verifiable legal grounding,
-the corpus-registry-packaging ADR); growth is legitimate demand. The budget does
+the corpus-registry-packaging decision); growth is legitimate demand. The budget does
 not forbid growth — it forces a decision when growth crosses the ceiling. The
-budget may only be raised by an accepted ADR; a breach forces either that ADR or
-the corpus-split escape hatch declared below.
+budget may only be raised by a reviewed decision; a breach forces either that
+or the corpus-split escape hatch declared below.
 
 The gate reads the tree size directly (summed file bytes, deterministic across
 filesystems, unlike block-rounded ``du``) so the arithmetic lives in one place.
@@ -29,8 +29,8 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
 _DATA_ROOT = SRC_AEAT / "_data"
 
-# Declared budget: 550 MiB — the 516 MiB measured at the 2026-07-02 review plus
-# bounded headroom. Raising this constant requires an accepted ADR (see the
+# Declared budget: 550 MiB — the 516 MiB measured at the most recent review plus
+# bounded headroom. Raising this constant requires a reviewed decision (see the
 # failure message). Kept in mebibytes so the number matches the ``du -sh``
 # reading operators see.
 _DATA_SIZE_BUDGET_MIB = 550
@@ -39,11 +39,11 @@ _DATA_SIZE_BUDGET_BYTES = _DATA_SIZE_BUDGET_MIB * 1024 * 1024
 # Deferral-as-data: the corpus-split escape hatch. When a budget breach is
 # driven by legitimate corpus growth rather than accidental payload, the second
 # option a breach permits is splitting the bundled corpus into a separate data
-# distribution (ADR Option B). It is recorded here as a named constant carrying
+# distribution. It is recorded here as a named constant carrying
 # its target condition so the option is discoverable in code, not only in prose.
 _CORPUS_SPLIT_ESCAPE_HATCH = (
     "Split src/aeat/_data/corpus into a separate optional data distribution "
-    "(data-budget ADR Option B) when a budget raise-by-ADR is no longer the "
+    "when a raise-by-decision is no longer the "
     "right call — i.e. when operator install-size pain appears, or the corpus "
     "growth is structural (a new modelo family's manuals) rather than incidental."
 )
@@ -67,9 +67,8 @@ def test_data_tree_within_declared_budget() -> None:
     actual_bytes = _data_tree_bytes()
     actual_mib = actual_bytes / 1024 / 1024
     assert actual_bytes <= _DATA_SIZE_BUDGET_BYTES, (
-        f"src/aeat/_data is {actual_mib:.1f} MiB, over the {_DATA_SIZE_BUDGET_MIB} MiB data budget "
-        f"declared by the data-budget ADR (2026-07-02-arch-remediation-data-budget-adr). "
-        f"A breach permits exactly two options: (1) raise the budget with an accepted ADR that "
+        f"src/aeat/_data is {actual_mib:.1f} MiB, over the {_DATA_SIZE_BUDGET_MIB} MiB declared data budget. "
+        f"A breach permits exactly two options: (1) raise the budget with a reviewed decision that "
         f"records why the growth is warranted, or (2) take the corpus-split escape hatch — "
         f"{_CORPUS_SPLIT_ESCAPE_HATCH}"
     )

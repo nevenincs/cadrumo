@@ -9,9 +9,6 @@ related:
   - "[[2026-07-02-arch-remediation-source-kind-deferrals-plan]]"
 ---
 
-
-
-
 # Add the structured owner-and-trigger annotation type on the deferred source-kind declaration carrying the owning ADR stem and the promotion trigger condition, annotations only per the Wave 1 freeze
 
 ## Scope
@@ -27,4 +24,3 @@ related:
 The deferral set gains a typed governance carrier; `DEFERRED_SOURCE_KINDS` is now derived from the annotated `DEFERRED_SOURCE_KIND_TARGETS` mapping so membership and governance cannot diverge.
 
 ## Notes
-

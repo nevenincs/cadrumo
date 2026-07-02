@@ -11,16 +11,6 @@ related:
   - '[[2026-07-02-arch-remediation-data-budget-adr]]'
 ---
 
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the
-       related: field above.
-     - The related: field carries the AUTHORISING documents
-       (ADR, research, reference, prior plan) for every Step in
-       this plan. Steps inherit this chain; per-row reference
-       footers do not exist.
-     - NEVER use [[wiki-links]] or markdown links in the
-       document body. -->
-
 # `arch-remediation-data-budget` plan
 
 - [x] `S01` - Add hatchling wheel excludes for src/aeat/**/tests/** and src/aeat/tests/** so no test module or fixture ships in the installed wheel; `pyproject.toml`.

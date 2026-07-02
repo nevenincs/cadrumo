@@ -65,6 +65,14 @@ _EXEMPTIONS: frozenset[str] = frozenset(
         "src/aeat/entrypoints/cli/_registry_corpus.py",
         "src/aeat/entrypoints/cli/_review.py",
         "src/aeat/entrypoints/cli/registry.py",
+        # aeat app quickfile / aeat app agent: same _lazy(...) dispatch as
+        # above; each has a dedicated entrypoints/cli/tests/test_app_*.py
+        # driving the real CLI end-to-end, and its payload module is only
+        # reachable through that same dynamically-dispatched command module.
+        "src/aeat/entrypoints/cli/_app_quickfile.py",
+        "src/aeat/entrypoints/cli/_app_quickfile_payloads.py",
+        "src/aeat/entrypoints/cli/_app_agent_workspace.py",
+        "src/aeat/entrypoints/cli/_app_agent_workspace_payloads.py",
         # Registry payload modules are imported by CLI/schema registration
         # paths that are exercised by docs-tool conformance gates outside the
         # production package. They must not be pulled into coverage only by a

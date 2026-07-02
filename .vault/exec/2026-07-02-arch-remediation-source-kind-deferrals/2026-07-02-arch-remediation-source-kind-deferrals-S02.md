@@ -9,9 +9,6 @@ related:
   - "[[2026-07-02-arch-remediation-source-kind-deferrals-plan]]"
 ---
 
-
-
-
 # Migrate the prorrata_regularizacion deferral from its free-prose comment to a structured annotation citing its accepted 2026-07-01 IVA ADR and the provisional-carry plus Q4 regularisation trigger
 
 ## Scope
@@ -27,4 +24,3 @@ related:
 prorrata regularización is governed with its owning IVA ADR and dependency trigger.
 
 ## Notes
-

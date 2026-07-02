@@ -10,7 +10,6 @@ related:
   - '[[2026-06-26-binding-vocabulary-cli-cohesion-reference]]'
 ---
 
-
 # `binding-vocabulary-cli-cohesion` plan
 
 Phase-2.4 (final) of the bindings-architecture-unification sweep: a behaviour-preserving rename / re-home pass that makes the bindings vocabulary load-bearing (F6 homonyms + false-friends), reconciles the forked source-pull CLI verb surface (F7), and carves the selector discriminated-union typing (F8) to a tracked deferred follow-up.

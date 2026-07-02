@@ -174,7 +174,9 @@ _INMOBILIARIO_INPUTS: dict[CasillaId, Decimal] = {
 }
 
 
-def _scenario(*, tier: str, expected_0150: Decimal, expected_0154: Decimal, scenario_id: str) -> RegistryCalculationScenario:
+def _scenario(
+    *, tier: str, expected_0150: Decimal, expected_0154: Decimal, scenario_id: str
+) -> RegistryCalculationScenario:
     return RegistryCalculationScenario(
         id=scenario_id,
         modelo="100",
@@ -271,12 +273,12 @@ def test_0150_anti_tautology_tier_change_changes_value() -> None:
         scenario_id="m100-2024-0150-anti-tautology-tier-50",
     )
     tier_50_report = run_registry_calculation_scenario(tier_50, registry_root=_REGISTRY_ROOT, source_root=_SOURCE_ROOT)
-    assert (
-        tier_90_report.calculation.values[_CASILLA_0150] != tier_50_report.calculation.values[_CASILLA_0150]
-    ), "0150 must differ when the art. 23.2 tier binding changes"
-    assert (
-        tier_90_report.calculation.values[_CASILLA_0154] != tier_50_report.calculation.values[_CASILLA_0154]
-    ), "0154 must differ when the art. 23.2 tier binding changes"
+    assert tier_90_report.calculation.values[_CASILLA_0150] != tier_50_report.calculation.values[_CASILLA_0150], (
+        "0150 must differ when the art. 23.2 tier binding changes"
+    )
+    assert tier_90_report.calculation.values[_CASILLA_0154] != tier_50_report.calculation.values[_CASILLA_0154], (
+        "0154 must differ when the art. 23.2 tier binding changes"
+    )
 
 
 def test_0154_manual_grounding_is_enrolled_and_raises_independently_grounded_fraction() -> None:

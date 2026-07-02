@@ -9,9 +9,6 @@ related:
   - "[[2026-07-02-arch-remediation-engine-lifecycle-plan]]"
 ---
 
-
-
-
 # Add a regression asserting closing a session disposes its engine, verified by pool inspection
 
 ## Scope
@@ -30,4 +27,3 @@ Regression pins that closing a session disposes its engine.
 Landed in commit `38e62c216`.
 
 ## Notes
-

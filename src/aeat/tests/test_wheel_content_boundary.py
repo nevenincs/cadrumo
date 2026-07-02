@@ -1,6 +1,6 @@
 """Packaging content-boundary gate: the wheel sheds tests and keeps payload.
 
-The data-budget ADR (`2026-07-02-arch-remediation-data-budget-adr`) excludes
+The build config excludes
 every ``tests/`` tree from the installed wheel — those modules and fixtures
 serve no installed consumer, since the suites run from the repository tree.
 This gate proves the boundary end-to-end by building the real wheel and

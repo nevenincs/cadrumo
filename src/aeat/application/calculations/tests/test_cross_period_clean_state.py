@@ -105,7 +105,9 @@ def test_m100_suffered_retencion_deps_scoped_out_self_filed_enforced(tmp_path: P
             resources().modelos.authority.snapshot("100", filing_year=2024, period="0A"),
         )
 
-    suffered = {"111", "115", "123", "193"}
+    # M115 (arrendamiento retenciones) was retired as a dormant M100
+    # rental-retention source; the surviving suffered-retencion set is 111/123/193.
+    suffered = {"111", "123", "193"}
     scoped_out = {
         item.requirement.source_modelo for item in verdict.dependencies if item.modelo_not_applicable_advisory
     }
@@ -262,13 +264,14 @@ def test_cross_period_dependency_inventory_covers_renta_2025_target_modelo(
     assert inventory.target_modelos == ("100",)
     assert len(inventory.items) == 1
     assert inventory.items[0].target_period == Period.from_year_and_code(2025, "0A")
+    # M115 (arrendamiento retenciones) and M180 (retenciones anuales arrendamiento)
+    # dependency classifications were retired as dormant M100 rental-retention
+    # sources; the surviving suffered-retencion sources are 111/123/193.
     assert set(inventory.items[0].source_modelos) >= {
         "111",
-        "115",
         "123",
         "130",
         "131",
-        "180",
         "184",
         "190",
         "193",

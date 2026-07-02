@@ -257,7 +257,9 @@ def test_1826_anti_tautology_gastos_transmision_change_changes_value() -> None:
         expected_1840=Decimal("49562.95"),
         scenario_id="m100-2024-1826-anti-tautology-grounded",
     )
-    grounded_report = run_registry_calculation_scenario(grounded, registry_root=_REGISTRY_ROOT, source_root=_SOURCE_ROOT)
+    grounded_report = run_registry_calculation_scenario(
+        grounded, registry_root=_REGISTRY_ROOT, source_root=_SOURCE_ROOT
+    )
     assert_registry_scenario_matches(grounded_report)
 
     # The perturbed scenario's expected 1826/1830/1836/1840 values are never
@@ -275,16 +277,18 @@ def test_1826_anti_tautology_gastos_transmision_change_changes_value() -> None:
         expected_1840=Decimal("0.00"),
         scenario_id="m100-2024-1826-anti-tautology-perturbed",
     )
-    perturbed_report = run_registry_calculation_scenario(perturbed, registry_root=_REGISTRY_ROOT, source_root=_SOURCE_ROOT)
-    assert (
-        grounded_report.calculation.values[_CASILLA_1826] != perturbed_report.calculation.values[_CASILLA_1826]
-    ), "1826 must differ when the gastos-de-transmisión raw input changes"
-    assert (
-        grounded_report.calculation.values[_CASILLA_1836] != perturbed_report.calculation.values[_CASILLA_1836]
-    ), "1836 must differ when the gastos-de-transmisión raw input changes"
-    assert (
-        grounded_report.calculation.values[_CASILLA_1840] != perturbed_report.calculation.values[_CASILLA_1840]
-    ), "1840 must differ when the gastos-de-transmisión raw input changes"
+    perturbed_report = run_registry_calculation_scenario(
+        perturbed, registry_root=_REGISTRY_ROOT, source_root=_SOURCE_ROOT
+    )
+    assert grounded_report.calculation.values[_CASILLA_1826] != perturbed_report.calculation.values[_CASILLA_1826], (
+        "1826 must differ when the gastos-de-transmisión raw input changes"
+    )
+    assert grounded_report.calculation.values[_CASILLA_1836] != perturbed_report.calculation.values[_CASILLA_1836], (
+        "1836 must differ when the gastos-de-transmisión raw input changes"
+    )
+    assert grounded_report.calculation.values[_CASILLA_1840] != perturbed_report.calculation.values[_CASILLA_1840], (
+        "1840 must differ when the gastos-de-transmisión raw input changes"
+    )
 
 
 def test_1840_manual_grounding_is_enrolled_and_raises_independently_grounded_fraction() -> None:

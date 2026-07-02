@@ -28,13 +28,13 @@ from pathlib import Path
 import pytest
 from pydantic import SecretStr
 
+from ...adapters.persistence.storage.bucket import provision_bucket_directory
 from ...adapters.persistence.storage.bucket import (
     BucketLifecycleStatus,
     BucketManifest,
     ManifestKdfParams,
-    provision_bucket_directory,
-    write_manifest,
 )
+from ...adapters.persistence.storage.bucket import write_manifest
 from ...adapters.persistence.storage.sql.engine import dispose_engine
 from ...core import Period
 from ...core.config import SecretStoreBackend, override_settings
@@ -53,7 +53,8 @@ from ..state_projection import (
 )
 from ..user_profile._testing import register_minimal_profile
 from ..wizard import WIZARD_FLOWS
-from ..workflow import WorkflowState, workflow_state_repository
+from ..workflow import WorkflowState
+from ..workflow import workflow_state_repository
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -347,6 +348,16 @@ def test_modelo_303_readiness_reports_pre_activity_period_refusal() -> None:
 
 
 def test_modelo_349_readiness_uses_applicability_for_attribution_entity() -> None:
+    """An attribution entity that trades intracommunity is APPLICABLE for Modelo 349.
+
+    RD 1624/1992 art. 79 obliges the entity itself (a comunidad de bienes /
+    sociedad civil) to file the declaración recapitulativa when it performs
+    operaciones intracomunitarias — régimen de atribución de rentas governs
+    IRPF/IS attribution, not IVA obligations. The readiness gate must not
+    refuse this profile on applicability grounds; it still reports
+    ``ready is False`` here because the minimal fixture has no ledger-sourced
+    binding values, a separate axis from applicability.
+    """
     bucket_id = _register_active_profile(
         overrides={
             "identity.tax_id": "E12345674",
@@ -371,10 +382,11 @@ def test_modelo_349_readiness_uses_applicability_for_attribution_entity() -> Non
     readiness = projection.modelo_readiness[0]
     assert readiness.profile_id == bucket_id
     assert readiness.registry_ready is True
-    assert readiness.profile_ready is False
+    assert readiness.profile_ready is True
+    assert readiness.profile_refusal == ""
+    assert readiness.binding_ready is False
+    assert readiness.missing_bindings
     assert readiness.ready is False
-    assert "Modelo 349 is not applicable to the active profile" in readiness.profile_refusal
-    assert "Modelo 349 no aplica" in readiness.profile_refusal
     assert projection.workspace.work_units == 0
 
 

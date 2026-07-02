@@ -6,8 +6,10 @@ from decimal import Decimal
 
 import pytest
 
-from ....domain.calculations.registry import CasillaId, VerificationPredicateDefinition
-from ....domain.modelos import ModeloError, ModeloVerificationFindingKind
+from ....domain.calculations.registry import CasillaId
+from ....domain.calculations.registry import VerificationPredicateDefinition
+from ....domain.modelos import ModeloError
+from ....domain.modelos import ModeloVerificationFindingKind
 from .._verification_actions import (
     evaluate_advisory_predicate_fires,
     evaluate_predicate_expression,
@@ -365,8 +367,8 @@ def test_predicate_implies_nonzero_cases(values: dict[CasillaId, Decimal], expec
 # casilla_equals_implies_nonzero — categorical-conditional material
 # implication; the antecedent is a TEXT casilla's operator-entered raw
 # value (read from a separate text_values mapping), not the Decimal
-# casilla_values projection. ADVISORY-only (ADR
-# m210-categorical-conditional-predicate); authored for the M210 IRNR
+# casilla_values projection. ADVISORY-only (the m210 categorical-conditional
+# predicate decision); authored for the M210 IRNR
 # inmobiliaria branch (tipo_renta == "inmobiliaria" implies a non-zero
 # base_imponible), the no-silent-under-declaration shape implies_nonzero
 # cannot express because its trigger is a categorical equality.

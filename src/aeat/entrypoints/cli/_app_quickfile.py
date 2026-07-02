@@ -54,7 +54,7 @@ def _require_active_profile() -> str:
 
     bucket_id = resolve_active_bucket_id()
     if bucket_id is None:
-        raise CliRefusedBoundaryError(tr("cli.config.errors.no_active_profile"))
+        raise CliRefusedBoundaryError(translated_message="cli.config.errors.no_active_profile")
     return bucket_id
 
 

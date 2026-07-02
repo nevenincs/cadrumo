@@ -279,10 +279,25 @@ _REVIEWED_PRODUCTION_FILE_WRITES = {
         "out.write_text",
     ): "explicit operator-directed profile export to a caller-chosen path",
     (
+        "src/aeat/entrypoints/cli/_config/_profile_bundle.py",
+        "config_profile_subject_access_request",
+        "out.write_text",
+    ): "explicit operator-directed GDPR right-of-access export to a caller-chosen path",
+    (
         "src/aeat/application/ledger/_actions_export.py",
         "export_ledger_transactions",
         "command.output_path.write_bytes",
     ): "explicit operator-directed ledger transaction export to a caller-chosen path",
+    (
+        "src/aeat/core/observability/_store.py",
+        "save_envelope",
+        "target.write_text",
+    ): "determinism-replay golden-capture surface persists already-CLI-redacted envelope documents only",
+    (
+        "src/aeat/agent/_workspace.py",
+        "_write",
+        "write_text",
+    ): "agent-harness workspace materialiser writes shipped static rules/personas/skills markdown only, no user data",
 }
 
 

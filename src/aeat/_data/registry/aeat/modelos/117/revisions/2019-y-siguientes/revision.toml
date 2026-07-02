@@ -207,6 +207,60 @@ requires_snapshot = true
 legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-108", "orden-eha-3435-2007:anexo-i"]
 source_refs = ["boe-modelo-117-form-text", "boe-modelo-117-form-layout"]
 
+# Snapshot-workflow surfaces required once the revision declares a calculation
+# formula (modelo-117-total-liquidacion / modelo-117-resultado-ingresar): a
+# formula-bearing construct must expose the full calculation/verification/
+# review/approval/reconciliation/workflow surface set.
+[[revisions."2019-y-siguientes".application_links]]
+id = "modelo-117-review"
+surface = "review"
+consumer = "aeat.application.filing.review"
+requires_snapshot = true
+legal_refs = ["orden-eha-3435-2007:anexo-i"]
+source_refs = ["aeat-modelo-117-procedure"]
+
+[[revisions."2019-y-siguientes".application_links]]
+id = "modelo-117-approval"
+surface = "approval"
+consumer = "aeat.application.workflow.approval"
+requires_snapshot = true
+legal_refs = ["orden-eha-3435-2007:anexo-i"]
+source_refs = ["aeat-modelo-117-procedure"]
+
+[[revisions."2019-y-siguientes".application_links]]
+id = "modelo-117-reconciliation"
+surface = "reconciliation"
+consumer = "aeat.application.reconciliation"
+requires_snapshot = true
+legal_refs = ["orden-eha-3435-2007:anexo-i"]
+source_refs = ["aeat-modelo-117-procedure"]
+
+[[revisions."2019-y-siguientes".application_links]]
+id = "modelo-117-workflow"
+surface = "workflow"
+consumer = "aeat.application.workflow"
+requires_snapshot = true
+legal_refs = ["orden-eha-3435-2007:anexo-i"]
+source_refs = ["aeat-modelo-117-procedure"]
+
+[[revisions."2019-y-siguientes".constructs]]
+id = "modelo-117-total-liquidacion-calculation"
+title = "Modelo 117 total liquidación / resultado a ingresar"
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-108", "orden-eha-3435-2007:anexo-i"]
+source_refs = ["boe-modelo-117-form-text", "boe-modelo-117-form-layout", "aeat-modelo-117-procedure"]
+casilla_ids = ["09", "11"]
+formulas = ["modelo-117-total-liquidacion", "modelo-117-resultado-ingresar"]
+application_links = [
+    "modelo-117-calculation",
+    "modelo-117-deadline",
+    "modelo-117-filing",
+    "modelo-117-2019-y-siguientes-verification",
+    "modelo-117-review",
+    "modelo-117-approval",
+    "modelo-117-reconciliation",
+    "modelo-117-workflow",
+]
+
 [[revisions."2019-y-siguientes".deadline_windows]]
 id = "modelo-117-2025-1t"
 filing_year = 2025

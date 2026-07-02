@@ -247,7 +247,7 @@ def test_m100_2024_cuota_integra_estatal_is_positive(m100_2024_snapshot: Registr
 # Casilla 0513 (mínimo por descendientes, this module's engine) is likewise
 # computed from the active profile's real descendientes facts, via the
 # ``renta-2024-profile-minimo-descendientes-estatal`` binding
-# (`modelo-100-minimo-descendientes-engine` ADR, Option A) — no fabricated
+# (Option A engine) — no fabricated
 # manual input on 0513 for an unrelated Art. 57.2 age concept.
 #
 # Pere age 70 profile (contract-A): base liquidable general 35,400 EUR.
@@ -317,7 +317,7 @@ def _base_binding_values() -> dict[BindingId, Decimal]:
         "renta-2024-profile-cotizaciones-ss-madre": Decimal("0"),
         "renta-2024-profile-descendientes-menores-3": Decimal("0"),
         # Art. 58/61 LIRPF mínimo por descendientes aggregate
-        # (modelo-100-minimo-descendientes-engine ADR): zero baseline for a
+        # (Option A engine): zero baseline for a
         # childless profile; scenarios that exercise real descendientes
         # override this key directly.
         "renta-2024-profile-minimo-descendientes-estatal": Decimal("0"),

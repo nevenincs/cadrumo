@@ -9,9 +9,6 @@ related:
   - "[[2026-07-02-arch-remediation-data-budget-plan]]"
 ---
 
-
-
-
 # Extend the packaging gate to assert the wheel contains the required data roots plus py.typed, the BIP-39 wordlist, and external_constants.toml so the exclude cannot silently strip functional payload
 
 ## Scope
@@ -27,4 +24,3 @@ related:
 The exclude cannot silently strip functional payload — both directions of the boundary are asserted against the built wheel.
 
 ## Notes
-

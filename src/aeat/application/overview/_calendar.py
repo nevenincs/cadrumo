@@ -49,14 +49,14 @@ from ...core.time import now
 from ...domain.calculations.registry.applicability import ApplicabilityVerdict, derive_modelo_applicability
 from ...domain.calculations.registry.applicability import taxpayer_model_is_declared as _taxpayer_model_is_declared
 from ...domain.deadlines import DeadlineEngine as _DeadlineEngine
-from ...domain.deadlines import ScheduleProducer as _ScheduleProducer
-from ...domain.deadlines import NoDeadlineWindowsError as _NoDeadlineWindowsError
 from ...domain.deadlines import DeadlineValidationError as _DeadlineValidationError
-from ...domain.deadlines import shift_deadline as _shift_deadline
 from ...domain.deadlines import ModeloDeadline as _ModeloDeadline
+from ...domain.deadlines import NoDeadlineWindowsError as _NoDeadlineWindowsError
 from ...domain.deadlines import ObligationStatus as _ObligationStatus
 from ...domain.deadlines import Schedule as _Schedule
+from ...domain.deadlines import ScheduleProducer as _ScheduleProducer
 from ...domain.deadlines import TaxpayerProfile as _TaxpayerProfile
+from ...domain.deadlines import shift_deadline as _shift_deadline
 from ...domain.modelos import WorkUnit as _WorkUnit
 from ...domain.modelos import WorkUnitState as _WorkUnitState
 from ._calendar_models import (
@@ -104,9 +104,7 @@ if TYPE_CHECKING:
     from ...adapters.outbound.aeat.sede import FiledDeclaracionObservation
     from ...domain.justificante import Justificante
     from ...domain.modelos import ModeloRecord
-    from ..live import PersistedExpedientesSnapshot
-    from ..live import JustificanteCaptureSnapshot
-    from ..live import PersistedNotificationsSnapshot
+    from ..live import JustificanteCaptureSnapshot, PersistedExpedientesSnapshot, PersistedNotificationsSnapshot
 
 _log = _get_logger(__name__)
 _IVA_REGIME_MODELOS = IVA_REGIME_MODELOS

@@ -124,9 +124,7 @@ def test_committed_snapshot_exposes_expected_metadata(
     assert modelo_130_snapshot.sources["aeat-dr-130-2019-v12"].evidence_tier == "layout_authority"
     assert tuple(modelo_130_snapshot.extraction_profiles) == ("modelo-130-declaracion-pdf",)
     assert set(modelo_130_snapshot.live_cross_references) == _EXPECTED_LIVE_CROSS_REFERENCES
-    assert (
-        modelo_130_snapshot.live_cross_references["modelo-130-static-official"].evidence_tier == "layout_authority"
-    )
+    assert modelo_130_snapshot.live_cross_references["modelo-130-static-official"].evidence_tier == "layout_authority"
     filed_read = modelo_130_snapshot.live_cross_references["modelo-130-filed-declarations-read"]
     assert filed_read.surface == "authenticated_read_surface"
     assert set(filed_read.allowed_methods).issubset({"GET", "HEAD", "OPTIONS"})

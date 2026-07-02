@@ -55,10 +55,10 @@ from xml.etree import ElementTree
 from defusedxml import ElementTree as DefusedElementTree
 from pydantic import BaseModel, Field, field_validator
 
-from ...core import Modelo
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
-from ...core import Period
 from ...core import (
+    Modelo,
+    Period,
     ResultDisposition,
     result_disposition_is_refund,
 )
@@ -68,22 +68,19 @@ from ...core.hashing import sha256_file, sha256_hex
 from ...core.logging import get_logger
 from ...core.money import round_to_cents
 from ...core.time import now
-from ...domain.calculations.registry import CalculationCompletenessManifest, CasillaFieldKind
-from ...domain.calculations.registry import RegistryValidationError
-from ...domain.calculations.registry import (
-    XmlDictionaryEntry,
-    parse_export_payload,
-    xml_dictionary_entries,
-)
 from ...domain.calculations.registry import (
     BindingId,
+    CalculationCompletenessManifest,
+    CasillaFieldKind,
     CasillaId,
-)
-from ...domain.calculations.registry import SourceReference
-from ...domain.calculations.registry import (
     ExportFieldDefinition,
     ExportLayoutDefinition,
     ExportRecordDefinition,
+    RegistryValidationError,
+    SourceReference,
+    XmlDictionaryEntry,
+    parse_export_payload,
+    xml_dictionary_entries,
 )
 from ...domain.contribuyente import modelo100_ecivil_export_code
 from ...domain.filing import (

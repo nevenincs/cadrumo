@@ -9,9 +9,6 @@ related:
   - "[[2026-07-02-arch-remediation-engine-lifecycle-plan]]"
 ---
 
-
-
-
 # Confirm the existing session-lifecycle and profile-navigation suites pass with the scattered disposals removed and the use-time readiness guards untouched
 
 ## Scope

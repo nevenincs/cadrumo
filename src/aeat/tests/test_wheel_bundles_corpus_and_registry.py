@@ -62,14 +62,27 @@ def _git_ls_files_data() -> list[str]:
 
 
 def _expected_archive_paths(tracked: list[str]) -> set[str]:
-    """Translate worktree paths to their expected wheel-archive locations."""
+    """Translate worktree paths to their expected wheel-archive locations.
+
+    Excludes any ``tests/`` subtree under the shipped data root: the build
+    config sheds
+    every ``tests/`` package from the wheel — including the test-only
+    ``corpus/tests`` module pool, which serves no installed consumer — and
+    :mod:`test_wheel_content_boundary` is the dedicated gate proving that
+    exclude end-to-end both ways. This gate's job is bundling parity for the
+    shipped *functional* payload, so it must not expect the excluded test
+    pool to appear in the archive.
+    """
 
     prefix = "src/aeat/_data/"
     expected: set[str] = set()
     for path in tracked:
         if not path.startswith(prefix):
             raise AssertionError(f"git ls-files returned a path outside src/aeat/_data/: {path!r}")
-        expected.add(f"{_WHEEL_DATA_PREFIX}/{path[len(prefix) :]}")
+        relative = path[len(prefix) :]
+        if any(part == "tests" for part in Path(relative).parts):
+            continue
+        expected.add(f"{_WHEEL_DATA_PREFIX}/{relative}")
     return expected
 
 

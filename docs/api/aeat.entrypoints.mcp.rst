@@ -17,5 +17,6 @@ Submodules
    aeat.entrypoints.mcp._dispatch
    aeat.entrypoints.mcp._faithfulness
    aeat.entrypoints.mcp._hitl
+   aeat.entrypoints.mcp._persona_scope
    aeat.entrypoints.mcp._server
    aeat.entrypoints.mcp._tools

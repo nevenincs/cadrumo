@@ -9,9 +9,6 @@ related:
   - "[[2026-07-02-arch-remediation-engine-lifecycle-plan]]"
 ---
 
-
-
-
 # Confirm the harness synthetic-session roundtrip suites pass against the unified lifecycle
 
 ## Scope
@@ -29,4 +26,3 @@ All harness roundtrip suites pass against the unified lifecycle.
 Landed in commit `38e62c216`.
 
 ## Notes
-

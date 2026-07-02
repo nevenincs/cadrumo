@@ -9,9 +9,6 @@ related:
   - "[[2026-07-01-import-centralization-plan]]"
 ---
 
-
-
-
 # Promote `CalcSheetsApplyResult`, `DriveConfig`, `PullResult`, `RowSetEdit`, `apply_export_plan`, `compute_from_pull`, `delete_session`, `load_client`, `load_drive_config`, `load_metadata`, `load_token`, `pull_operator_edits`, `resolve_active_profile`, `run_login_flow`, `save_client`, `save_drive_config`, `save_metadata`, `save_token` to `aeat.adapters.outbound.google.__all__` with eager re-exports so the 26 existing cross-package consumer site(s) can import from the facade
 
 ## Scope

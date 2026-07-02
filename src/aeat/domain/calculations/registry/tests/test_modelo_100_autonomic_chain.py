@@ -60,6 +60,30 @@ _EXPECTED_CCAA_KEYS: frozenset[str] = frozenset(
 _SUPPORTED_EJERCICIOS: tuple[str, ...] = ("2020", "2021", "2022", "2023", "2024", "2025")
 
 
+def _lookup_bracket_by_ccaa_nodes(expression: object) -> list[object]:
+    """Collect every ``lookup_bracket_by_ccaa`` node in an expression tree.
+
+    From the 2024/2025 revisions the autonomic escala formulas (0529/0531) wrap
+    their ``lookup_bracket_by_ccaa`` operators inside the LIRPF art. 64/75
+    anualidades separate-escala ``if_then_else`` régimen predicate (#532), so the
+    dispatch table is no longer at the top level. The pre-régimen (flat) years
+    yield exactly one node; the modelled years yield several (each escala term of
+    the conditional). Every node must satisfy the CCAA-dispatch invariants.
+    """
+    nodes: list[object] = []
+    op = getattr(expression, "op", None)
+    if op == "lookup_bracket_by_ccaa":
+        nodes.append(expression)
+    for arg in getattr(expression, "args", ()) or ():
+        nodes.extend(_lookup_bracket_by_ccaa_nodes(arg))
+    return nodes
+
+
+def _dispatch_leaves(expression: object) -> list[object]:
+    """Return the dispatch_table leaf (args[2]) of every lookup_bracket_by_ccaa node."""
+    return [node.args[2] for node in _lookup_bracket_by_ccaa_nodes(expression)]
+
+
 def _committed_modelo_100() -> ModeloDefinition:
     modelo, _catalogues = _committed_modelo("100")
     return modelo
@@ -100,9 +124,11 @@ def test_autonomic_formula_uses_lookup_bracket_by_ccaa_op(
     revision = modelo_100.revisions[ejercicio]
     formula = next(item for item in revision.formulas if item.target_casilla_id == target_casilla_id)
 
-    assert formula.expression.op == "lookup_bracket_by_ccaa", (
-        f"ejercicio {ejercicio} casilla {target_casilla_id}: op is {formula.expression.op!r}, "
-        f"expected 'lookup_bracket_by_ccaa'"
+    nodes = _lookup_bracket_by_ccaa_nodes(formula.expression)
+    assert nodes, (
+        f"ejercicio {ejercicio} casilla {target_casilla_id}: no 'lookup_bracket_by_ccaa' node found "
+        f"(top-level op is {formula.expression.op!r}). A regression to 'lookup_bracket' (state-scale) "
+        f"or any other op would silently revert the CCAA-dispatch behaviour."
     )
 
 
@@ -121,19 +147,21 @@ def test_autonomic_formula_dispatch_table_covers_every_ccaa(
     revision = modelo_100.revisions[ejercicio]
     formula = next(item for item in revision.formulas if item.target_casilla_id == target_casilla_id)
 
-    dispatch_leaf = formula.expression.args[2]
-    assert dispatch_leaf.dispatch_table is not None, (
-        f"ejercicio {ejercicio} casilla {target_casilla_id}: args[2] is not a dispatch_table leaf"
-    )
-    observed_keys = frozenset(dispatch_leaf.dispatch_table)
-    missing = _EXPECTED_CCAA_KEYS - observed_keys
-    extra = observed_keys - _EXPECTED_CCAA_KEYS
-    assert not missing, (
-        f"ejercicio {ejercicio} casilla {target_casilla_id}: dispatch_table missing CCAA keys {sorted(missing)}"
-    )
-    assert not extra, (
-        f"ejercicio {ejercicio} casilla {target_casilla_id}: dispatch_table has unexpected keys {sorted(extra)}"
-    )
+    dispatch_leaves = _dispatch_leaves(formula.expression)
+    assert dispatch_leaves, f"ejercicio {ejercicio} casilla {target_casilla_id}: no dispatch_table leaf found"
+    for dispatch_leaf in dispatch_leaves:
+        assert dispatch_leaf.dispatch_table is not None, (
+            f"ejercicio {ejercicio} casilla {target_casilla_id}: args[2] is not a dispatch_table leaf"
+        )
+        observed_keys = frozenset(dispatch_leaf.dispatch_table)
+        missing = _EXPECTED_CCAA_KEYS - observed_keys
+        extra = observed_keys - _EXPECTED_CCAA_KEYS
+        assert not missing, (
+            f"ejercicio {ejercicio} casilla {target_casilla_id}: dispatch_table missing CCAA keys {sorted(missing)}"
+        )
+        assert not extra, (
+            f"ejercicio {ejercicio} casilla {target_casilla_id}: dispatch_table has unexpected keys {sorted(extra)}"
+        )
 
 
 @pytest.mark.parametrize("ejercicio", _SUPPORTED_EJERCICIOS)
@@ -148,22 +176,24 @@ def test_autonomic_formula_dispatch_values_resolve_to_declared_parameters(
     this data_type for the lookup_bracket_by_ccaa op)."""
     revision = modelo_100.revisions[ejercicio]
     formula = next(item for item in revision.formulas if item.target_casilla_id == target_casilla_id)
-    dispatch_leaf = formula.expression.args[2]
-    assert dispatch_leaf.dispatch_table is not None
+    dispatch_leaves = _dispatch_leaves(formula.expression)
+    assert dispatch_leaves, f"ejercicio {ejercicio} casilla {target_casilla_id}: no dispatch_table leaf found"
     parameters_by_id = {parameter.id: parameter for parameter in revision.parameters}
 
-    for ccaa, parameter_id in dispatch_leaf.dispatch_table.items():
-        assert parameter_id in parameters_by_id, (
-            f"ejercicio {ejercicio} casilla {target_casilla_id} ccaa {ccaa}: "
-            "dispatch_table references unknown parameter "
-            f"{parameter_id!r}"
-        )
-        parameter = parameters_by_id[parameter_id]
-        assert parameter.data_type == "bracket_table", (
-            f"ejercicio {ejercicio} casilla {target_casilla_id} ccaa {ccaa}: "
-            f"parameter {parameter_id!r} has data_type "
-            f"{parameter.data_type!r}, expected 'bracket_table'"
-        )
+    for dispatch_leaf in dispatch_leaves:
+        assert dispatch_leaf.dispatch_table is not None
+        for ccaa, parameter_id in dispatch_leaf.dispatch_table.items():
+            assert parameter_id in parameters_by_id, (
+                f"ejercicio {ejercicio} casilla {target_casilla_id} ccaa {ccaa}: "
+                "dispatch_table references unknown parameter "
+                f"{parameter_id!r}"
+            )
+            parameter = parameters_by_id[parameter_id]
+            assert parameter.data_type == "bracket_table", (
+                f"ejercicio {ejercicio} casilla {target_casilla_id} ccaa {ccaa}: "
+                f"parameter {parameter_id!r} has data_type "
+                f"{parameter.data_type!r}, expected 'bracket_table'"
+            )
 
 
 @pytest.mark.parametrize("ejercicio", _SUPPORTED_EJERCICIOS)
@@ -181,17 +211,19 @@ def test_autonomic_dispatch_parameters_follow_canonical_naming_pattern(
     canonical id shape."""
     revision = modelo_100.revisions[ejercicio]
     formula = next(item for item in revision.formulas if item.target_casilla_id == target_casilla_id)
-    dispatch_leaf = formula.expression.args[2]
-    assert dispatch_leaf.dispatch_table is not None
+    dispatch_leaves = _dispatch_leaves(formula.expression)
+    assert dispatch_leaves, f"ejercicio {ejercicio} casilla {target_casilla_id}: no dispatch_table leaf found"
 
-    for ccaa, parameter_id in dispatch_leaf.dispatch_table.items():
-        ccaa_slug = ccaa.replace("_", "-")
-        expected_id = f"renta-{ejercicio}-escala-autonomica-{ccaa_slug}-base-general"
-        assert parameter_id == expected_id, (
-            f"ejercicio {ejercicio} casilla {target_casilla_id} ccaa {ccaa}: "
-            f"parameter id is {parameter_id!r}, "
-            f"expected {expected_id!r}"
-        )
+    for dispatch_leaf in dispatch_leaves:
+        assert dispatch_leaf.dispatch_table is not None
+        for ccaa, parameter_id in dispatch_leaf.dispatch_table.items():
+            ccaa_slug = ccaa.replace("_", "-")
+            expected_id = f"renta-{ejercicio}-escala-autonomica-{ccaa_slug}-base-general"
+            assert parameter_id == expected_id, (
+                f"ejercicio {ejercicio} casilla {target_casilla_id} ccaa {ccaa}: "
+                f"parameter id is {parameter_id!r}, "
+                f"expected {expected_id!r}"
+            )
 
 
 @pytest.mark.parametrize("ejercicio", _SUPPORTED_EJERCICIOS)

@@ -67,7 +67,12 @@ def _ensure_result_schemas_registered() -> None:
 
 
 def command_schema_refs() -> tuple[CommandSchemaRef, ...]:
-    """Project the populated ``SCHEMA_REGISTRY`` into manifest references."""
+    """Project the populated ``SCHEMA_REGISTRY`` into manifest references.
+
+    Returns:
+        One :class:`CommandSchemaRef` per registered command, sorted by
+        command name.
+    """
     _ensure_result_schemas_registered()
     return tuple(
         CommandSchemaRef(command=command, schema_name=schema.__name__)

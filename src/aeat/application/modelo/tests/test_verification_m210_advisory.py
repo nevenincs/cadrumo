@@ -10,7 +10,7 @@ unexpected on that branch and must surface a non-blocking advisory rather
 than silently granting ``VERIFICADO_COMPLETO``, per no-silent-under-declaration.
 
 Also covers the ``modelo-210-2025-inmobiliaria-implica-base-imponible``
-ADVISORY guard (m210-categorical-conditional-predicate ADR): the
+ADVISORY guard (the m210 categorical-conditional predicate decision): the
 inmobiliaria branch's silent-zero risk is gated on a categorical equality
 (``tipo_renta == "inmobiliaria"``), evaluated against the operator-entered
 raw text value rather than the Decimal casilla_values projection.
@@ -25,9 +25,9 @@ import pytest
 from ....core.resources import resources
 from ....domain.calculations.registry import (
     CasillaId,
-    VerificationPredicateDefinition,
     validated_casilla_id,
 )
+from ....domain.calculations.registry import VerificationPredicateDefinition
 from ....domain.modelos import (
     ModeloVerificationFindingKind,
     ModeloVerificationFindingSeverity,

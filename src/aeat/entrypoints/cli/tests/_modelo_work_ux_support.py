@@ -15,6 +15,7 @@ from ....adapters.persistence.storage.sql.engine import dispose_engine
 # startup does.
 from ....application.wizard import _catalogue as _wizard_catalogue
 from ....application.wizard import _persistence as _wizard_persistence
+from ....core.aggregation import BindingSourceKind
 from ....core.config import override_settings
 from ....tests.cli_runner import invoke_cached_cli
 from ....tests.secure_sql import isolated_profile_storage_root
@@ -157,7 +158,7 @@ def _seed_m111_retencion_observation() -> None:
     """
     observation = json.dumps(
         {
-            "source_kind": "ledger_transaction",
+            "source_kind": BindingSourceKind.LEDGER_TRANSACTION.value,
             "source_object_id": "m111-work-income-row-001",
             "perceptor_nif": "A12345678",
             "perceptor_name": "Empresa Pagadora SL",
