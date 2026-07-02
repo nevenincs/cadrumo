@@ -9,6 +9,15 @@ related:
   - '[[2026-07-02-agent-harness-refoundation-adr]]'
 ---
 
+<!-- LINK RULES:
+     - [[wiki-links]] are ONLY for .vault/ documents in the
+       related: field above.
+     - The related: field carries the AUTHORISING documents
+       (ADR, research, reference, prior plan) for every Step in
+       this plan. Steps inherit this chain; per-row reference
+       footers do not exist.
+     - NEVER use [[wiki-links]] or markdown links in the
+       document body. -->
 
 # `agent-harness-refoundation` plan
 
@@ -68,7 +77,7 @@ Enforce the CONFIRM tier through MCP elicitation with the decided capability-deg
 
 - [x] `W03.P05.S19` - Add the elicitation module with the capability-degradation matrix over accept, decline, and cancel, a destructiveHint fallback, and a default handoff refusal when elicitation is absent; `src/aeat/entrypoints/mcp/_elicitation.py`.
 - [x] `W03.P05.S20` - Enforce the CONFIRM tier through elicitation in the call-tool path; `src/aeat/entrypoints/mcp/_server.py`.
-- [ ] `W03.P05.S21` - Add tests for elicitation enforcement and the degradation matrix; `src/aeat/entrypoints/mcp/tests/test_elicitation.py`.
+- [x] `W03.P05.S21` - Add tests for elicitation enforcement and the degradation matrix; `src/aeat/entrypoints/mcp/tests/test_elicitation.py`.
 
 ### Phase `W03.P06` - Faithfulness serving path, handoff deny, and telemetry
 
