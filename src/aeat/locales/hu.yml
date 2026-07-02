@@ -303,8 +303,10 @@ aggregation:
       bucket_mismatch: A tranzakciós tár vödre nem egyezik a kért aggregálási vödörrel.
       candidate_outside_period: 'Belső hiba: az IVA-jelölt az aggregálási időszakon
         kívül esik.'
-      domestic_counterparty_on_intra_community_transaction: 'Spanyol partner nem érvényes Közösségen belüli ügylethez.'
-      eu_member_state_on_export_transaction: 'Export vagy exporttal egy tekintet alá eső ügylet nem tartalmazhat EU-tagállamot; kapott érték: %{member_state}.'
+      domestic_counterparty_on_intra_community_transaction: Spanyol partner nem érvényes
+        Közösségen belüli ügylethez.
+      eu_member_state_on_export_transaction: 'Export vagy exporttal egy tekintet alá
+        eső ügylet nem tartalmazhat EU-tagállamot; kapott érték: %{member_state}.'
       unsupported_iva_category: 'Belső hiba: nem támogatott IVA-kategória az aggregáláshoz.'
   modelo_bindings:
     errors:
@@ -1165,6 +1167,8 @@ application:
         feloldott %{resolved_ref}.'
   wizard:
     errors:
+      command_input_invalid: 'A profiladatok érvényesítése sikertelen: %{details}'
+      command_input_invalid_fallback: Egy vagy több profilmező érvényesítése sikertelen
       create_missing_filing_baseline: 'A profil létrehozásához hiányoznak a bevallási
         azonosító adatok. Adja hozzá ezeket a kapcsolókat, és futtassa újra a parancsot:
         %{missing_flags}'
@@ -1179,8 +1183,6 @@ application:
         "default" tartalék).
       quiet_missing_flags: 'Ennek a --quiet futtatásnak hiányoznak a kötelező adatok.
         Adja hozzá ezeket a kapcsolókat, és futtassa újra a parancsot: %{missing_flags}'
-      command_input_invalid: 'A profiladatok érvényesítése sikertelen: %{details}'
-      command_input_invalid_fallback: 'Egy vagy több profilmező érvényesítése sikertelen'
     next_hint:
       modelo_work_create: aeat app modelo work create
     notices:
@@ -1583,9 +1585,13 @@ cli:
           ideiglenes felülbírálással, az állapot megváltoztatása nélkül
         unknown_keys: 'Ismeretlen --binding kulcs(ok): {keys}; ismert kötések a(z)
           {code}@{revision} ({period}) számára: {suggestion}.'
+        unscoped_revision_suggestion: Mielott az ids ertekeket work calculate parancsba
+          masolod, futtasd ujra --modelo MODELO --year YEAR --period PERIOD kapcsolokkal
+          a cel munkaegyseghez.
+        unscoped_revision_warning: A koteslista nincs %{missing_filters} szerint szukitve;
+          olyan revizio kotesazonositoit is tartalmazhatja, amely nem egyezik a work
+          calculate altal hasznalt munkaegyseggel.
         year_help: A nyomtatvány adóéve (pl. 2026).
-        unscoped_revision_warning: 'A koteslista nincs %{missing_filters} szerint szukitve; olyan revizio kotesazonositoit is tartalmazhatja, amely nem egyezik a work calculate altal hasznalt munkaegyseggel.'
-        unscoped_revision_suggestion: 'Mielott az ids ertekeket work calculate parancsba masolod, futtasd ujra --modelo MODELO --year YEAR --period PERIOD kapcsolokkal a cel munkaegyseghez.'
       casilla:
         casilla_help: Leirando mezoazonosito vagy nyomtatott mezoszam (pl. 0596).
         help: Megjeleniti egy mezo cimkejet, jogi alapjat, bemeneti tipusat es kepletet
@@ -2532,8 +2538,8 @@ cli:
         a csomagban tárolt név. Akkor használja, ha a tárolt címke már foglalt.'
       import_label_taken: Már létezik %{name} nevű profil. Futtassa újra `--label
         ÚJ_NÉV` kapcsolóval más névvel való importáláshoz.
-      import_label_taken_different_id: A(z) %{name} profilcímke már használatban
-        van. Az importáláshoz adjon meg másik címkét a --label ÚJ_NÉV kapcsolóval.
+      import_label_taken_different_id: A(z) %{name} profilcímke már használatban van.
+        Az importáláshoz adjon meg másik címkét a --label ÚJ_NÉV kapcsolóval.
       import_missing_bundle: 'A profilcsomag nem található: %{path}'
       import_missing_filing_baseline: 'A profilcsomagból hiányoznak a bevallási azonosító
         adatok. Javítsa a csomagot, vagy exportáljon újra teljes profilt ezekkel a
@@ -3547,7 +3553,8 @@ cli:
     period_help: 'Bevallási időszak AEAT tokenként: 1T-4T (negyedévek), 0A (éves),
       01-12 (hónapok). A --year kapcsolóval adja meg az évet.'
     post_filing:
-      pending: '%{count} AEAT bevallás utáni esemény igényel figyelmet: %{kinds}. Tekintsd át őket az ''aeat app live notifications list'' paranccsal.'
+      pending: '%{count} AEAT bevallás utáni esemény igényel figyelmet: %{kinds}.
+        Tekintsd át őket az ''aeat app live notifications list'' paranccsal.'
     status:
       drafts_empty: Nincs mentett bevallástervezet.
       drafts_empty_with_work_units: Nincs mentett bevallástervezet – ez normális,
@@ -4403,7 +4410,8 @@ errors:
     source_file_not_found: 'A forrásfájl nem létezik: {path}'
     source_file_too_large: 'A forrásfájl túl nagy: {path} ({size_bytes} bytes; maximum
       {max_bytes} bytes)'
-    unsupported_date_format: 'Érvénytelen dátumformátum a(z) {label} mezőben: {raw}. Várt forma: {expected_format}.'
+    unsupported_date_format: 'Érvénytelen dátumformátum a(z) {label} mezőben: {raw}.
+      Várt forma: {expected_format}.'
   identity:
     cif_check_char_mismatch_mixed: 'A CIF ellenőrző karaktere helytelen (típus: {kind}):
       {expected} vagy {alt} volt a várt, de {got} érkezett.'
@@ -5288,14 +5296,14 @@ wizard:
         help: A munkavállaló kiküldött-adózásba lépésének dátuma (ÉÉÉÉ-HH-NN). Csak
           akkor, ha az irpf-special-regime értéke "impatriado". RIRPF 116. cikkely.
           Az adózási rend a 6. naptári év végén jár le.
+      iva-group-dominant-entity-enrolled:
+        help: IVA-csoport dominans szervezetekent bejelentkezett
+      iva-group-member-enrolled:
+        help: IVA-csoport tag szervezetekent bejelentkezett
       iva-intracommunity-operations-exceed-50000-eur:
         help: Intraközösségi ügyletek meghaladják az 50 000 EUR-t
       iva-oss-enrolled:
         help: OSS-be bejelentkezett
-      iva-group-member-enrolled:
-        help: IVA-csoport tag szervezetekent bejelentkezett
-      iva-group-dominant-entity-enrolled:
-        help: IVA-csoport dominans szervezetekent bejelentkezett
       iva-redeme-enrolled:
         help: Az adózó be van-e jegyezve a REDEME-be
       iva-regime:
@@ -5429,14 +5437,14 @@ wizard:
       lakóhely és családi adatok, ha relevánsak. Mentés után ellenőrizze az előrehaladást
       a következővel: .'
     iva:
+      iva-group-dominant-entity-enrolled:
+        prompt: IVA-csoport dominans szervezetekent bejelentkezett
+      iva-group-member-enrolled:
+        prompt: IVA-csoport tag szervezetekent bejelentkezett
       iva-intracommunity-operations-exceed-50000-eur:
         prompt: Intraközösségi ügyletek meghaladják az 50 000 EUR-t
       iva-oss-enrolled:
         prompt: OSS-be bejelentkezett
-      iva-group-member-enrolled:
-        prompt: IVA-csoport tag szervezetekent bejelentkezett
-      iva-group-dominant-entity-enrolled:
-        prompt: IVA-csoport dominans szervezetekent bejelentkezett
       iva-redeme-enrolled:
         prompt: REDEME-ben bejegyzett (havi IVA visszaigénylési nyilvántartás)
       iva-regime:
