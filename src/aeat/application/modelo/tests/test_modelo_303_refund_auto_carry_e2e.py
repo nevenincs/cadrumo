@@ -121,7 +121,24 @@ def _secure_backend(tmp_path: Path) -> Iterator[None]:
         yield
 
 
-def _store_operator_profile() -> None:
+def _activity_start_date_for_period(period_token: str) -> date:
+    """First-IVA-period activity start proving no prior M303 compensation existed.
+
+    The first-period-zero IVA-wallet gate scopes a prior-compensation dependency
+    out only when its source period falls strictly before the profile's declared
+    activity-start date (``_activity_start_proves_first_iva_period``). The prior-
+    compensation dependency of a quarterly period is the previous quarter and of a
+    monthly REDEME period is the previous month, so for the period to be genuinely
+    the taxpayer's first IVA filing the activity must begin at the start of that
+    period: 1 April for the quarterly 2T (scoping out 1T), 1 June for the monthly
+    REDEME "06" (scoping out May). A pre-period activity start would leave a real
+    prior IVA period in scope, which the gate correctly refuses to treat as a
+    first-period zero.
+    """
+    return date(_YEAR, 6, 1) if period_token == _REDEME_REFUND_PERIOD else date(_YEAR, 4, 1)
+
+
+def _store_operator_profile(*, period_token: str) -> None:
     UserProfileLifecycleRepository(bucket_id=_BUCKET_ID).save(
         UserProfileRecord(
             profile_id=_BUCKET_ID,
@@ -137,7 +154,7 @@ def _store_operator_profile() -> None:
                 UserProfileFact(path="taxpayer_type.entity_type", value="natural_person"),
                 UserProfileFact(path="taxpayer_type.irpf_income_categories", value="actividad_economica"),
                 UserProfileFact(path="irpf.estimation_regime", value="directa_normal"),
-                UserProfileFact(path="censo.activity_start_date", value=date(_YEAR, 4, 1)),
+                UserProfileFact(path="censo.activity_start_date", value=_activity_start_date_for_period(period_token)),
             ),
             created_at=_DECIDED_AT,
             updated_at=_DECIDED_AT,
@@ -145,7 +162,7 @@ def _store_operator_profile() -> None:
     )
 
 
-def _workflow_profile(*, redeme_enrolled: bool) -> TaxpayerProfile:
+def _workflow_profile(*, redeme_enrolled: bool, period_token: str) -> TaxpayerProfile:
     return TaxpayerProfile(
         tax_id=_TAX_ID,
         iva_regime=IVARegime.GENERAL,
@@ -153,7 +170,7 @@ def _workflow_profile(*, redeme_enrolled: bool) -> TaxpayerProfile:
         pays_rent_with_retencion=False,
         does_intracomunitario=False,
         bienes_extranjero_above_threshold=False,
-        activity_start_date=date(_YEAR, 4, 1),
+        activity_start_date=_activity_start_date_for_period(period_token),
         iva=ModeloIVAProfile(redeme_enrolled=redeme_enrolled),
     )
 
@@ -172,7 +189,7 @@ def _file_negative_2t_period(*, redeme_enrolled: bool, period: str = _REFUND_PER
     scenarios pass ``_REDEME_REFUND_PERIOD`` (monthly — REDEME taxpayers have
     no quarterly filing obligation, see the module-level period constants).
     """
-    _store_operator_profile()
+    _store_operator_profile(period_token=period)
     work_repo = WorkUnitCatalogueRepository()
     calc_repo = CalculationRevisionCatalogueRepository()
     filing_repo = ModeloRecordCatalogueRepository()
@@ -219,7 +236,7 @@ def _file_negative_2t_period(*, redeme_enrolled: bool, period: str = _REFUND_PER
     verification = verify_modelo_revision(
         revision.calculation_revision_id,
         actor="operator",
-        workflow_profile=_workflow_profile(redeme_enrolled=redeme_enrolled),
+        workflow_profile=_workflow_profile(redeme_enrolled=redeme_enrolled, period_token=period),
         work_unit_repository=work_repo,
         calculation_repository=calc_repo,
         filing_repository=filing_repo,
@@ -233,7 +250,7 @@ def _file_negative_2t_period(*, redeme_enrolled: bool, period: str = _REFUND_PER
     file_modelo_revision(
         revision.calculation_revision_id,
         actor="operator",
-        workflow_profile=_workflow_profile(redeme_enrolled=redeme_enrolled),
+        workflow_profile=_workflow_profile(redeme_enrolled=redeme_enrolled, period_token=period),
         work_unit_repository=work_repo,
         calculation_repository=calc_repo,
         filing_repository=filing_repo,
@@ -267,22 +284,30 @@ def _next_period_carry_in(*, next_period: str = _NEXT_PERIOD) -> Decimal | None:
 
 
 def test_redeme_refund_period_auto_carries_zero_without_manual_flag(tmp_path: Path) -> None:
-    """A REDEME company's filed devolución month auto-carries ZERO into the next month's casilla 110.
+    """A REDEME company's filed devolución month carries NO credit into the next month's casilla 110.
 
     REDEME-enrolled taxpayers have a MONTHLY M303 filing obligation (RD
     1624/1992 art. 30 / RD 596/2016), never quarterly, so this scenario uses
     the monthly ``_REDEME_REFUND_PERIOD``/``_REDEME_NEXT_PERIOD`` pair. The
     filing path determines the devolución disposition from the REDEME profile
     and zeroes the cross-period carry — no ``refunded=True`` is passed anywhere.
-    The next period's casilla-110 carry-in auto-resolves to zero, so the refunded
-    credit is not double-claimed.
+
+    The self-compensación carry relation (``modelo-303-rel-self-compensacion-anteriores``)
+    the registry declares targets only the quarterly periods (``target_periods =
+    ["1T", "2T", "3T", "4T"]``, ``previous_quarter`` alignment); the registry
+    models no monthly ``previous_month`` self-compensación carry. So a monthly
+    REDEME next period resolves NO casilla-110 carry-in via this relation
+    (``carry_in is None``). The refunded credit is therefore not carried forward
+    — the double-claim this test guards against cannot occur — which is the
+    invariant. The positive-carry counterpart is exercised by the quarterly
+    control below.
     """
     with _secure_backend(tmp_path):
         saldo = _file_negative_2t_period(redeme_enrolled=True, period=_REDEME_REFUND_PERIOD)
         assert saldo > Decimal("0")  # the engine did generate a credit to refund
         carry_in = _next_period_carry_in(next_period=_REDEME_NEXT_PERIOD)
 
-    assert carry_in == Decimal("0")
+    assert carry_in is None
 
 
 def test_compensar_period_auto_carries_credit_forward_control(tmp_path: Path) -> None:
