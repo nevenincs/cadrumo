@@ -4,6 +4,8 @@ description: >-
   Onboard a new taxpayer: create the profile, capture identity (NIF/CIF/DNI/NIE/
   NII), establish read-only AEAT access, and confirm the workspace is ready. Use
   at the start of a new engagement before any ledger or modelo work.
+applies_when:
+  workflow_phase: onboarding
 ---
 
 # Onboard a taxpayer
