@@ -6,7 +6,7 @@ must observe ``override_settings`` ContextVar values without any test
 manipulating the actual environment. This file proves that contract.
 
 Real ``AeatAccessGate`` constructed inline from a real
-``Settings``-derived state under each override. No mocks.
+``Settings``-derived state under each override, without test doubles.
 """
 
 from __future__ import annotations
@@ -26,35 +26,32 @@ def _build_gate() -> AeatAccessGate:
     return AeatAccessGate(settings=load_settings())
 
 
-def test_override_to_one_unblocks_live_read() -> None:
-    """An override of aeat_live_tests_enabled to '1' admits live reads."""
-    with override_settings(aeat_live_tests_enabled="1"):
-        _build_gate().require_live_read()
+def test_live_read_override_allows_literal_one_or_operator_context() -> None:
+    """Live reads are admitted by literal '1' in tests or by non-pytest operator context."""
+
+    for _case_id, enabled, pytest_current_test in (
+        ("literal-one", "1", None),
+        ("operator-context", "0", ""),
+    ):
+        with override_settings(aeat_live_tests_enabled=enabled):
+            _build_gate().require_live_read(pytest_current_test=pytest_current_test)
 
 
-def test_operator_context_does_not_require_live_test_opt_in() -> None:
-    """Outside pytest, live-read gating continues to operational auth/profile checks."""
-    with override_settings(aeat_live_tests_enabled="0"):
-        _build_gate().require_live_read(pytest_current_test="")
-
-
-def test_override_to_zero_blocks_live_read() -> None:
+def test_live_read_override_blocks_non_one_values_during_pytest() -> None:
     """During pytest, an override to anything other than '1' raises the typed refusal."""
-    with override_settings(aeat_live_tests_enabled="0"), pytest.raises(AeatLiveReadNotEnabledError):
-        _build_gate().require_live_read()
 
-
-def test_loaded_pytest_module_blocks_live_read_when_current_test_env_is_hidden() -> None:
-    """Click isolation can hide PYTEST_CURRENT_TEST; loaded pytest still marks test execution."""
-    with override_settings(aeat_live_tests_enabled="0"), pytest.raises(AeatLiveReadNotEnabledError):
-        assert "pytest" in __import__("sys").modules
-        _build_gate().require_live_read(pytest_current_test=None)
-
-
-def test_override_to_true_string_still_blocks() -> None:
-    """The gate is strict on the literal string '1' — 'true' does not pass."""
-    with override_settings(aeat_live_tests_enabled="true"), pytest.raises(AeatLiveReadNotEnabledError):
-        _build_gate().require_live_read()
+    assert "pytest" in __import__("sys").modules
+    for case_id, enabled, use_default_current_test in (
+        ("zero-current-test", "0", True),
+        ("zero-hidden-env", "0", False),
+        ("true-string", "true", True),
+    ):
+        with override_settings(aeat_live_tests_enabled=enabled), pytest.raises(AeatLiveReadNotEnabledError) as excinfo:
+            if use_default_current_test:
+                _build_gate().require_live_read()
+            else:
+                _build_gate().require_live_read(pytest_current_test=None)
+        assert excinfo.type is AeatLiveReadNotEnabledError, case_id
 
 
 def test_override_restoration_after_block_exits() -> None:
