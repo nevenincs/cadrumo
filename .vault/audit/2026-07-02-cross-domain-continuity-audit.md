@@ -12,7 +12,7 @@ related:
 
 ## Scope
 
-Reviewed the W09.P45 operator-surface fixes for S356, S358, S219, S331, S330, S226, and S328.
+Reviewed the W09.P45 operator-surface fixes for S356, S358, S219, S331, S330, S226, S328, and S204.
 
 - S356 adds operator-visible `iva_category` rendering to human `ledger list` output while preserving the existing typed JSON row contract. The audit covered the projection code, the real CLI regression test, the S356 plan row close, and the S356 execution record.
 - S358 adds royalty/SGAE guidance to the existing `ledger classify --irpf-category` help text without adding automatic classification heuristics. The audit covered the locale leaves, the real CLI help regression, the S358 plan row close, and the S358 execution record.
@@ -21,6 +21,7 @@ Reviewed the W09.P45 operator-surface fixes for S356, S358, S219, S331, S330, S2
 - S330 localizes modelo lifecycle state labels in text renderers while preserving raw enum tokens in JSON payloads. The audit covered the shared modelo renderer, locale leaves, real object-based renderer tests, the S330 plan row close, and the S330 execution record.
 - S226 localizes calculation result-summary casilla labels through registry-provided `localized_labels` while preserving official Spanish fallbacks and raw machine ids. The audit covered result-summary row construction, text and JSON payload rendering, focused isolated-storage regression coverage, the S226 plan row close, and the S226 execution record.
 - S328 localizes overview calendar text-mode shift labels for known deadline-shift tokens while preserving raw `shift_reason` tokens in JSON payloads. The audit covered the overview text renderer, locale leaves, focused CLI/formatter regressions, the S328 plan row close, and the S328 execution record.
+- S204 verifies that the project-wide i18n placeholder parity validator no longer reports SURPLUS kwargs for production `tr()` call sites. The audit covered the S32 parity validator, focused SURPLUS test, full placeholder parity module, locale audit, the S204 plan row close, and the S204 execution record.
 
 ## Findings
 
@@ -60,6 +61,12 @@ No scoped findings for the overview-calendar shift-label localization fix. Text 
 
 Residual edge noted by review: the focused coverage exercises English text rows, Catalan weekend-token formatting, accented Spanish locale output, and JSON token preservation. It does not enumerate every supported language across every shift token, but locale scaffold and audit cover the key set.
 
+### w09-p45-s204 | low | no scoped findings
+
+No scoped findings for the SURPLUS-kwarg placeholder parity closure. The live S32 parity validator reports no surplus `tr()` kwargs for the production source tree, and the full placeholder parity module is green across ORPHAN, SURPLUS, and SHADOW checks.
+
+Residual edge noted by review: the AST validator intentionally skips dynamic translation keys whose first argument is not a string literal. That leaves dynamic-key interpolation correctness to targeted call-site tests, but S204's named static-key surplus set is closed.
+
 ## Recommendations
 
-No follow-up required for S356, S358, S219, S331, the scoped S330 renderer fix, the scoped S226 result-summary localization fix, or the scoped S328 overview-calendar shift-label fix.
+No follow-up required for S356, S358, S219, S331, the scoped S330 renderer fix, the scoped S226 result-summary localization fix, the scoped S328 overview-calendar shift-label fix, or the S204 SURPLUS-kwarg parity closure.
