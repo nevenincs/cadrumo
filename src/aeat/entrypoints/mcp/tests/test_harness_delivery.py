@@ -1,7 +1,7 @@
 """The operating layer reaches a client through the floor tool and resources.
 
-Proves W02.P03: the ``harness.load`` floor tool returns the shipped operator
-rules and the active persona verbatim (ADR R4's tools-only floor), and the
+Proves that the ``harness.load`` floor tool returns the shipped operator
+rules and the active persona verbatim (decision record R4's tools-only floor), and the
 ``aeat://`` resource surface enumerates exactly the shipped skills, rules, and
 personas, resolves each to its verbatim ``text/markdown`` document, and refuses
 an unknown URI cleanly. The SDK-independent surface is asserted directly; the

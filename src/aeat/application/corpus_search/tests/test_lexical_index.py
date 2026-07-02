@@ -1,4 +1,4 @@
-"""Real-behavior tests for the FTS5 lexical corpus index (W06.P12.S77)."""
+"""Real-behavior tests for the FTS5 lexical corpus index."""
 
 from __future__ import annotations
 

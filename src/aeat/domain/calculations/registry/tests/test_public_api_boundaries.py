@@ -6,7 +6,7 @@ The cross-package raw-registry-orchestration check this module carried
 project-wide ratcheting import-hygiene gate,
 ``src/aeat/tests/test_import_hygiene_gate.py`` (backed by
 ``dev/import_hygiene_scan.py`` and ``dev/import_hygiene_baseline.json``), per
-the ``import-centralization`` ADR Ruling 8. Its former allowlist
+the ``import-centralization`` decision record's Ruling 8. Its former allowlist
 (``_authority.py``, both package ``__init__.py`` files,
 ``legal_parameters.py``, ``_imputacion_parameters.py``,
 ``_recargo_equivalencia.py``) is empty in practice at supersession time: none

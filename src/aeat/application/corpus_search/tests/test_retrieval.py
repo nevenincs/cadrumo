@@ -1,4 +1,4 @@
-"""Real-behavior tests for hybrid retrieval and RRF fusion (W06.P13.S84).
+"""Real-behavior tests for hybrid retrieval and RRF fusion.
 
 The retrieval logic (FTS5 lexical + numpy cosine + RRF fusion + citation
 short-circuit + lexical-only degrade) is exercised over a small real

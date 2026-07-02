@@ -1,4 +1,4 @@
-"""Licence/footprint shippability gate for the corpus-search surface (W06.P12.S87).
+"""Licence/footprint shippability gate for the corpus-search surface.
 
 Confirms the wheel ships the light, licence-clean data (the extracted
 corpus triples the index builds from) and NOT the heavy model footprint:

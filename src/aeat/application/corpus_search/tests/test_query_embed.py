@@ -1,4 +1,4 @@
-"""Real-behavior tests for the runtime query embedder (W06.P13.S80).
+"""Real-behavior tests for the runtime query embedder.
 
 model2vec rides the ``aeat[search]`` extra. These tests never skip: they
 branch on its real presence and assert the correct behavior for the

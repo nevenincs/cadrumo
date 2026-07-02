@@ -1,7 +1,7 @@
-"""Modelo 303 régimen simplificado de IVA módulos-engine-vs-declared-C48 ADVISORY predicate.
+"""Modelo 303 régimen simplificado de IVA módulos-engine-vs-declared-C48 advisory predicate.
 
-Phase 2 of the estimación-objetiva régimen-simplificado IVA módulos engine
-(2026-07-01-modelo-303-regimen-simplificado-adr) keeps casilla 48 ("RS - 4T -
+The estimación-objetiva régimen-simplificado IVA módulos engine (see the
+"modelo-303-regimen-simplificado" decision record) keeps casilla 48 ("RS - 4T -
 Suma cuotas derivadas régimen simplificado conjunto actividades") a manual
 operator input while wiring a computed reference figure
 (``modulos-iva-cuota-derivada``) for a bounded first-slice of tabled IAE
