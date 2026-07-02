@@ -11,20 +11,18 @@ from ._generator_shared import format_amount
 pytestmark = [pytest.mark.unit, pytest.mark.hex_inbound_adapter]
 
 
-@pytest.mark.parametrize(
-    ("value", "expected"),
-    [
-        (Decimal("0"), "0,00"),
-        (Decimal("0.00"), "0,00"),
-        (Decimal("1234.56"), "1.234,56"),
-        (Decimal("1000000"), "1.000.000,00"),
-        (Decimal("-42.50"), "-42,50"),
-        (Decimal("0.01"), "0,01"),
-    ],
-)
-def test_format_amount_matches_aeat_style(value: Decimal, expected: str) -> None:
+def test_format_amount_matches_aeat_style() -> None:
     """Spanish-style thousands (`.`) + comma decimal (`,`) — matches AEAT's receipts."""
-    assert format_amount(value) == expected
+    cases = (
+        ("zero-int", Decimal("0"), "0,00"),
+        ("zero-decimal", Decimal("0.00"), "0,00"),
+        ("thousands", Decimal("1234.56"), "1.234,56"),
+        ("millions", Decimal("1000000"), "1.000.000,00"),
+        ("negative", Decimal("-42.50"), "-42,50"),
+        ("cents", Decimal("0.01"), "0,01"),
+    )
+    for case_id, value, expected in cases:
+        assert format_amount(value) == expected, case_id
 
 
 def test_format_amount_quantises_to_two_decimals() -> None:
@@ -32,15 +30,12 @@ def test_format_amount_quantises_to_two_decimals() -> None:
     assert format_amount(Decimal("100.555")) == "100,56"  # ROUND_HALF_EVEN -> 56
 
 
-@pytest.mark.parametrize(
-    ("value", "sep", "expected"),
-    [
-        (Decimal("1234.56"), "\xa0", "1\xa0234,56"),  # U+00A0 NBSP
-        (Decimal("1234.56"), " ", "1 234,56"),  # U+202F narrow NBSP
-        (Decimal("1000000"), "\xa0", "1\xa0000\xa0000,00"),  # multi-group NBSP
-    ],
-    ids=["nbsp", "narrow-nbsp", "multi-group-nbsp"],
-)
-def test_format_amount_nbsp_thousands(value: Decimal, sep: str, expected: str) -> None:
+def test_format_amount_nbsp_thousands() -> None:
     """Generator must be able to render NBSP / narrow-NBSP thousands."""
-    assert format_amount(value, thousands_sep=sep) == expected
+    cases = (
+        ("nbsp", Decimal("1234.56"), "\xa0", "1\xa0234,56"),
+        ("plain-space", Decimal("1234.56"), " ", "1 234,56"),
+        ("multi-group-nbsp", Decimal("1000000"), "\xa0", "1\xa0000\xa0000,00"),
+    )
+    for case_id, value, sep, expected in cases:
+        assert format_amount(value, thousands_sep=sep) == expected, case_id
