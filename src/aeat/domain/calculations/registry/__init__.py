@@ -30,11 +30,11 @@ See Also:
         :class:`CasillaObservation` rows with legal and source provenance.
     :class:`DataBindingDefinition`
         Declarative binding contract resolved by application source owners.
-    :mod:`aeat.application.aggregation`
+    :mod:`application.aggregation`
         Source-mesh contract that supplies
-        :class:`~aeat.application.aggregation.CalculationSourceResolution`
+        :class:`application.aggregation.CalculationSourceResolution`
         envelopes before registry calculation.
-    :mod:`aeat.application.calculations`
+    :mod:`application.calculations`
         Prior-filing, relation-prefill, IVA-wallet, and row-set stores that feed
         registry binding and relation inputs.
 """
