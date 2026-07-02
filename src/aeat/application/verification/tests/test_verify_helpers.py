@@ -42,7 +42,7 @@ from typing import Any
 import pytest
 
 from ....adapters.inbound.declaracion._schema import (
-    DeclaracionObservation,
+    InboundDeclaracionObservation,
     TemplateRevision,
 )
 from ....adapters.inbound.pdf._shared import ExtractedCasilla
@@ -200,8 +200,8 @@ def test_classify_discrepancy_round_trips_casilla_id_and_delta() -> None:
 # ---------------------------------------------------------------------------
 
 
-def _declaracion(casilla_ids: tuple[CasillaId, ...]) -> DeclaracionObservation:
-    """Build a real :class:`DeclaracionObservation` with the given casillas.
+def _declaracion(casilla_ids: tuple[CasillaId, ...]) -> InboundDeclaracionObservation:
+    """Build a real :class:`InboundDeclaracionObservation` with the given casillas.
 
     Uses the actual pydantic model with no stand-ins. Required
     PDF-provenance fields are filled with stable test-only values
@@ -216,7 +216,7 @@ def _declaracion(casilla_ids: tuple[CasillaId, ...]) -> DeclaracionObservation:
         )
         for cid in casilla_ids
     )
-    return DeclaracionObservation(
+    return InboundDeclaracionObservation(
         modelo="100",
         period=Period.from_year_and_code(2025, "0A"),
         ejercicio="2025",

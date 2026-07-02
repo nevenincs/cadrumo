@@ -2,7 +2,7 @@
 
 The package exposes :func:`parse_declaracion` for filesystem PDF input and
 :func:`parse_declaracion_bytes` for in-memory or decrypted PDF bytes. Both entry
-points return :class:`DeclaracionObservation` records interpreted through a
+points return :class:`InboundDeclaracionObservation` records interpreted through a
 validated :class:`~aeat.domain.calculations.registry.RegistrySnapshot`.
 
 Parsing resolves :class:`TemplateRevision` and period, selects one
@@ -30,7 +30,7 @@ remains public, while malformed, ambiguous, or low-coverage extraction raises
 Public API::
 
     from aeat.adapters.inbound.declaracion import (
-        DeclaracionObservation,
+        InboundDeclaracionObservation,
         DeclaracionParseError,
         ExtractionWarning,
         TemplateNotDetectedError,
@@ -54,15 +54,15 @@ from __future__ import annotations
 from ._errors import DeclaracionParseError, TemplateNotDetectedError
 from ._parser import parse_declaracion, parse_declaracion_bytes
 from ._schema import (
-    DeclaracionObservation,
     ExtractionWarning,
+    InboundDeclaracionObservation,
     TemplateRevision,
 )
 
 __all__ = [
-    "DeclaracionObservation",
     "DeclaracionParseError",
     "ExtractionWarning",
+    "InboundDeclaracionObservation",
     "TemplateNotDetectedError",
     "TemplateRevision",
     "parse_declaracion",
