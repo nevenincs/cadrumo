@@ -268,7 +268,10 @@ adapters:
           sidecar_not_object: El sidecar local {sidecar_path} no es un objeto JSON.
           sidecar_write_failed: El almacenamiento local no pudo escribir el sidecar
             del objeto.
-          sidecar_write_path_too_long: 'El almacenamiento local no pudo escribir el sidecar del objeto: la ruta supera el límite de longitud de ruta de Windows. Traslade AEAT_LOCAL_STORAGE_ROOT a una ruta más corta o habilite LongPathsEnabled (véase `aeat config check`).'
+          sidecar_write_path_too_long: 'El almacenamiento local no pudo escribir el
+            sidecar del objeto: la ruta supera el límite de longitud de ruta de Windows.
+            Traslade AEAT_LOCAL_STORAGE_ROOT a una ruta más corta o habilite LongPathsEnabled
+            (véase `aeat config check`).'
   persistence:
     profile:
       assets:
@@ -932,9 +935,15 @@ application:
         con la revision de registro %{work_unit_revision}, pero la revision determinada
         por ley para el modelo %{modelo} %{filing_year} %{period} es ahora %{law_revision}.
         Vuelva a crear la unidad de trabajo para vincularla a la revision actual.
+      workflow_gate_no_pending_obligation: 'No hay ninguna obligación de presentación
+        pendiente para este modelo/periodo en la fecha actual (la ventana de obligación
+        de presentación de la AEAT no está abierta). La presentación a fichero no
+        requiere este paso: exporta la revisión verificada-completa con ''aeat app
+        modelo export''; ese es el punto final local. ''work file'' es el paso interno
+        opcional para marcar como presentado cuando la ventana de obligación esté
+        abierta.'
       workflow_input_mismatch: La solicitud de entrada del flujo de trabajo no coincide
         con la revisión de cálculo.
-      workflow_gate_no_pending_obligation: 'No hay ninguna obligación de presentación pendiente para este modelo/periodo en la fecha actual (la ventana de obligación de presentación de la AEAT no está abierta). La presentación a fichero no requiere este paso: exporta la revisión verificada-completa con ''aeat app modelo export''; ese es el punto final local. ''work file'' es el paso interno opcional para marcar como presentado cuando la ventana de obligación esté abierta.'
     findings:
       art20_reduccion_next_action: Verifique si sus otras rentas distintas de las
         del trabajo excluidas las exentas del ejercicio no superan 6500 EUR; en ese
@@ -950,6 +959,9 @@ application:
         %{predicate_id} are non-zero before verifying.
       cross_casilla_invariant_violated: 'cross-casilla invariant %{predicate_id} violated:
         %{expression}'
+      cross_period_modelo_not_applicable:
+        message: 'Las dependencias entre periodos de modelos origen que el contribuyente no presenta se excluyeron como no aplicables: {modelos}. Para retenciones soportadas, introduce el importe del certificado de ingresos con --binding CLAVE=VALOR, no con --casilla. CLAVE=VALOR significa que el id del binding va a la izquierda de un unico signo igual y el valor a la derecha. Para pagos fraccionados mutuamente excluyentes, confirma el regimen de estimacion de actividad en el perfil.'
+        next_action: 'Usa `aeat app modelo bindings list --missing` para identificar el binding de retenciones. Aporta el importe del certificado con --binding CLAVE=VALOR cuando corresponda: pon el id del binding a la izquierda de un unico signo igual y el importe a la derecha. Confirma el regimen de estimacion de IRPF del perfil si se excluyo un modelo de pago fraccionado mutuamente excluyente.'
       cross_period_non_official_local_chain:
         message: 'el arrastre entre periodos uso un periodo anterior presentado localmente
           en el mismo ejercicio sin evidencia externa de la AEAT: modelo=%{source_modelo}
@@ -2092,8 +2104,9 @@ cli:
         invalid_work_unit_id: work_unit_id debe ser una cadena hex en minúsculas de
           64 caracteres (resumen SHA-256)
         kv_empty_key_error: La clave de {flag} no puede estar vacía; se recibió {spec}.
-        kv_format_error: '{flag} debe tener el formato {key_label}={value_label};
-          se recibió {spec}.'
+        kv_format_error: '{flag} debe escribirse como {key_label}={value_label}. Es
+          una entrada clave-valor: pon el nombre del campo a la izquierda de un unico
+          signo igual y el valor a la derecha. Se recibio {spec}.'
         list_help: Listar las unidades de trabajo registradas, opcionalmente filtradas
           por perfil
         meses_trabajo_con_hijo_menor_3_help: 'Meses trabajados mientras el hijo menor
@@ -2242,7 +2255,9 @@ cli:
           nif=12345678A porcentaje=40 importe=10000''. Ejemplo M349: --row ''operador
           codigo_pais=DE nif_comunitario=DE123456789 razon_social="DE Auto GmbH" clave_operacion=E
           importe=50000''.'
-        row_kv_format_error: El campo --row {token} debe tener el formato CLAVE=VALOR.
+        row_kv_format_error: 'El campo --row {token} debe escribirse como CLAVE=VALOR.
+          Es una entrada clave-valor: pon el nombre del campo de la fila a la izquierda
+          de un unico signo igual y su valor a la derecha.'
         row_m349_invalid_nif: '--row operador: nif_comunitario {nif} no coincide con
           el formato NIF-IVA esperado para el país {pais} (Directiva 2006/112/CE Anexo
           XI)'
@@ -2545,19 +2560,33 @@ cli:
     profile:
       already_exists: El perfil %{name} ya existe. Elige otro identificador de destino.
       archive:
-        export_full_backup_info: 'Este archivo es una copia de seguridad COMPLETA: está cifrado AEAD en reposo e incluye los bytes de evidencia de justificantes, el registro de auditoría y las entradas de cálculo entre periodos, además del perfil, el libro contable, los cálculos y el historial de presentaciones. Guárdalo en un lugar seguro; restáuralo con ''aeat config profile archive import''.'
-        export_help: 'Escribe un archivo de copia de seguridad completa, sellado y cifrado, en RUTA.'
-        export_name_help: 'Perfil a respaldar; por defecto el activo.'
-        export_out_help: 'Ruta de destino del archivo.'
-        export_recovery_wrap_help: 'Frase de paso opcional para sellar el archivo, en lugar de la clave activa del bucket; obligatoria si el archivo saldrá de este equipo.'
-        help: 'Copia de seguridad y restauración de un perfil como archivo sellado y cifrado AEAD (el transporte de recuperación de custodia completa).'
-        import_active_switch_info: 'El perfil restaurado es ahora el perfil ACTIVO; los siguientes comandos operan sobre él. Ejecuta ''aeat config switch <nombre>'' para cambiar el perfil activo.'
-        import_force_help: 'Sobrescribe un perfil existente que comparta el identificador de bucket del archivo.'
-        import_help: 'Restaura un perfil desde un archivo sellado y cifrado en RUTA.'
-        import_path_help: 'Ruta del archivo sellado.'
-        import_recovery_wrap_help: 'Frase de paso para desellar el archivo; obligatoria si se exportó con una.'
-        inspect_help: 'Muestra la cabecera de un archivo sellado sin descifrarlo ni restaurarlo.'
-        inspect_path_help: 'Ruta del archivo sellado.'
+        export_full_backup_info: 'Este archivo es una copia de seguridad COMPLETA:
+          está cifrado AEAD en reposo e incluye los bytes de evidencia de justificantes,
+          el registro de auditoría y las entradas de cálculo entre periodos, además
+          del perfil, el libro contable, los cálculos y el historial de presentaciones.
+          Guárdalo en un lugar seguro; restáuralo con ''aeat config profile archive
+          import''.'
+        export_help: Escribe un archivo de copia de seguridad completa, sellado y
+          cifrado, en RUTA.
+        export_name_help: Perfil a respaldar; por defecto el activo.
+        export_out_help: Ruta de destino del archivo.
+        export_recovery_wrap_help: Frase de paso opcional para sellar el archivo,
+          en lugar de la clave activa del bucket; obligatoria si el archivo saldrá
+          de este equipo.
+        help: Copia de seguridad y restauración de un perfil como archivo sellado
+          y cifrado AEAD (el transporte de recuperación de custodia completa).
+        import_active_switch_info: El perfil restaurado es ahora el perfil ACTIVO;
+          los siguientes comandos operan sobre él. Ejecuta 'aeat config switch <nombre>'
+          para cambiar el perfil activo.
+        import_force_help: Sobrescribe un perfil existente que comparta el identificador
+          de bucket del archivo.
+        import_help: Restaura un perfil desde un archivo sellado y cifrado en RUTA.
+        import_path_help: Ruta del archivo sellado.
+        import_recovery_wrap_help: Frase de paso para desellar el archivo; obligatoria
+          si se exportó con una.
+        inspect_help: Muestra la cabecera de un archivo sellado sin descifrarlo ni
+          restaurarlo.
+        inspect_path_help: Ruta del archivo sellado.
       capabilities:
         capability_help: Servicio que se quiere activar o desactivar.
         capability_label: capacidad
@@ -3036,7 +3065,12 @@ cli:
       help: Clasificar un movimiento del libro en el perfil activo
       id_help: Id del movimiento del libro a clasificar
       id_required: Se requiere un id de transacción cuando no se usa --from-csv.
-      irpf_category_help: 'Id de categoria de IRPF. Usa aeat app ledger categories. Facturas profesionales cobradas netas usan actividad_economica; alquileres pagados netos usan arrendamiento_local/arrendamiento_vivienda_afecto. Royalties/SGAE: art. 25.4 puede ser capital mobiliario cuando el contribuyente no es el autor; usa actividad_economica solo para actividad por cuenta propia bajo LIRPF art. 27.'
+      irpf_category_help: 'Id de categoria de IRPF. Usa aeat app ledger categories.
+        Facturas profesionales cobradas netas usan actividad_economica; alquileres
+        pagados netos usan arrendamiento_local/arrendamiento_vivienda_afecto. Royalties/SGAE:
+        art. 25.4 puede ser capital mobiliario cuando el contribuyente no es el autor;
+        usa actividad_economica solo para actividad por cuenta propia bajo LIRPF art.
+        27.'
       iva_amount_help: Importe de IVA
       iva_category_help: Categoría de IVA explícita para esta transacción (p. ej.
         intra_community_supply, export_third_country_zero_rated, export_assimilated_zero_rated,

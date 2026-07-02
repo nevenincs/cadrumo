@@ -263,7 +263,10 @@ adapters:
           sidecar_not_object: El sidecar local {sidecar_path} no es un objecte JSON.
           sidecar_write_failed: L emmagatzematge local no ha pogut escriure el sidecar
             de l objecte.
-          sidecar_write_path_too_long: 'L''emmagatzematge local no ha pogut escriure el sidecar de l''objecte: el camí supera el límit de longitud de camí de Windows. Trasllada AEAT_LOCAL_STORAGE_ROOT a un camí més curt o activa LongPathsEnabled (vegeu `aeat config check`).'
+          sidecar_write_path_too_long: 'L''emmagatzematge local no ha pogut escriure
+            el sidecar de l''objecte: el camí supera el límit de longitud de camí
+            de Windows. Trasllada AEAT_LOCAL_STORAGE_ROOT a un camí més curt o activa
+            LongPathsEnabled (vegeu `aeat config check`).'
   persistence:
     profile:
       assets:
@@ -920,9 +923,14 @@ application:
         amb la revisio de registre %{work_unit_revision}, pero la revisio determinada
         per llei per al model %{modelo} %{filing_year} %{period} ara es %{law_revision}.
         Torneu a crear la unitat de treball per vincular-la a la revisio actual.
+      workflow_gate_no_pending_obligation: 'No hi ha cap obligació de presentació
+        pendent per a aquest model/període en la data actual (la finestra d''obligació
+        de presentació de l''AEAT no és oberta). La presentació a fitxer no requereix
+        aquest pas: exporteu la revisió verificada-completa amb ''aeat app modelo
+        export''; aquest és el punt final local. ''work file'' és el pas intern opcional
+        per marcar com a presentat quan la finestra d''obligació sigui oberta.'
       workflow_input_mismatch: La sol·licitud d'entrada del flux de treball no coincideix
         amb la revisió de càlcul.
-      workflow_gate_no_pending_obligation: 'No hi ha cap obligació de presentació pendent per a aquest model/període en la data actual (la finestra d''obligació de presentació de l''AEAT no és oberta). La presentació a fitxer no requereix aquest pas: exporteu la revisió verificada-completa amb ''aeat app modelo export''; aquest és el punt final local. ''work file'' és el pas intern opcional per marcar com a presentat quan la finestra d''obligació sigui oberta.'
     findings:
       art20_reduccion_next_action: Verifiqueu si les vostres altres rendes diferents
         de les del treball excloses les exemptes de l'exercici no superen 6500 EUR;
@@ -938,6 +946,9 @@ application:
         %{predicate_id} are non-zero before verifying.
       cross_casilla_invariant_violated: 'cross-casilla invariant %{predicate_id} violated:
         %{expression}'
+      cross_period_modelo_not_applicable:
+        message: 'Les dependencies entre periodes de models origen que el contribuent no presenta s han exclos com a no aplicables: {modelos}. Per a retencions suportades, introdueix l import del certificat d ingressos amb --binding CLAU=VALOR, no amb --casilla. CLAU=VALOR vol dir que l id del binding va a l esquerra d un unic signe igual i el valor a la dreta. Per a pagaments fraccionats mutuament excloents, confirma el regim d estimacio d activitat al perfil.'
+        next_action: 'Usa `aeat app modelo bindings list --missing` per identificar el binding de retencions. Aporta l import del certificat amb --binding CLAU=VALOR quan correspongui: posa l id del binding a l esquerra d un unic signe igual i l import a la dreta. Confirma el regim d estimacio d IRPF del perfil si s ha exclos un model de pagament fraccionat mutuament excloent.'
       cross_period_non_official_local_chain:
         message: 'l''arrossegament entre periodes va usar un periode anterior presentat
           localment al mateix exercici sense evidencia externa de l''AEAT: model=%{source_modelo}
@@ -2067,8 +2078,9 @@ cli:
         invalid_work_unit_id: work_unit_id ha de ser una cadena hex en minúscules
           de 64 caràcters (resum SHA-256)
         kv_empty_key_error: La clau de {flag} no pot estar buida; s'ha rebut {spec}.
-        kv_format_error: '{flag} ha de tenir el format {key_label}={value_label};
-          s''ha rebut {spec}.'
+        kv_format_error: '{flag} s''ha d''escriure com {key_label}={value_label}.
+          Es una entrada clau-valor: posa el nom del camp a l''esquerra d''un unic
+          signe igual i el valor a la dreta. S''ha rebut {spec}.'
         list_help: Llistar les unitats de treball registrades, opcionalment filtrades
           per perfil
         meses_trabajo_con_hijo_menor_3_help: 'Mesos treballats mentre el fill menor
@@ -2217,7 +2229,9 @@ cli:
           porcentaje=40 importe=10000''. Exemple M349: --row ''operador codigo_pais=DE
           nif_comunitario=DE123456789 razon_social="DE Auto GmbH" clave_operacion=E
           importe=50000''.'
-        row_kv_format_error: El camp --row {token} ha de tenir el format CLAU=VALOR.
+        row_kv_format_error: 'El camp --row {token} s''ha d''escriure com CLAU=VALOR.
+          Es una entrada clau-valor: posa el nom del camp de la fila a l''esquerra
+          d''un unic signe igual i el seu valor a la dreta.'
         row_m349_invalid_nif: '--row operador: nif_comunitario {nif} no coincideix
           amb el format NIF-IVA esperat per al país {pais} (Directiva 2006/112/CE
           Annex XI)'
@@ -2519,19 +2533,33 @@ cli:
       already_exists: El perfil %{name} ja existeix. Tria un altre identificador de
         destinació.
       archive:
-        export_full_backup_info: 'Aquest arxiu és una còpia de seguretat COMPLETA: està xifrat AEAD en repòs i inclou els bytes d''evidència de justificants, el registre d''auditoria i les entrades de càlcul entre períodes, a més del perfil, el llibre comptable, els càlculs i l''historial de presentacions. Desa''l en un lloc segur; restaura''l amb ''aeat config profile archive import''.'
-        export_help: 'Escriu un arxiu de còpia de seguretat completa, segellat i xifrat, a CAMÍ.'
-        export_name_help: 'Perfil a copiar; per defecte l''actiu.'
-        export_out_help: 'Camí de destinació de l''arxiu.'
-        export_recovery_wrap_help: 'Frase de pas opcional per segellar l''arxiu, en lloc de la clau activa del bucket; obligatòria si l''arxiu sortirà d''aquest equip.'
-        help: 'Fes còpia de seguretat i restaura un perfil com a arxiu segellat i xifrat AEAD (el transport de recuperació de custòdia completa).'
-        import_active_switch_info: 'El perfil restaurat és ara el perfil ACTIU; les ordres següents hi operen. Executa ''aeat config switch <nom>'' per canviar el perfil actiu.'
-        import_force_help: 'Sobreescriu un perfil existent que comparteixi l''identificador de bucket de l''arxiu.'
-        import_help: 'Restaura un perfil des d''un arxiu segellat i xifrat a CAMÍ.'
-        import_path_help: 'Camí de l''arxiu segellat.'
-        import_recovery_wrap_help: 'Frase de pas per desxifrar l''arxiu; obligatòria si es va exportar amb una.'
-        inspect_help: 'Mostra la capçalera d''un arxiu segellat sense desxifrar-lo ni restaurar-lo.'
-        inspect_path_help: 'Camí de l''arxiu segellat.'
+        export_full_backup_info: 'Aquest arxiu és una còpia de seguretat COMPLETA:
+          està xifrat AEAD en repòs i inclou els bytes d''evidència de justificants,
+          el registre d''auditoria i les entrades de càlcul entre períodes, a més
+          del perfil, el llibre comptable, els càlculs i l''historial de presentacions.
+          Desa''l en un lloc segur; restaura''l amb ''aeat config profile archive
+          import''.'
+        export_help: Escriu un arxiu de còpia de seguretat completa, segellat i xifrat,
+          a CAMÍ.
+        export_name_help: Perfil a copiar; per defecte l'actiu.
+        export_out_help: Camí de destinació de l'arxiu.
+        export_recovery_wrap_help: Frase de pas opcional per segellar l'arxiu, en
+          lloc de la clau activa del bucket; obligatòria si l'arxiu sortirà d'aquest
+          equip.
+        help: Fes còpia de seguretat i restaura un perfil com a arxiu segellat i xifrat
+          AEAD (el transport de recuperació de custòdia completa).
+        import_active_switch_info: El perfil restaurat és ara el perfil ACTIU; les
+          ordres següents hi operen. Executa 'aeat config switch <nom>' per canviar
+          el perfil actiu.
+        import_force_help: Sobreescriu un perfil existent que comparteixi l'identificador
+          de bucket de l'arxiu.
+        import_help: Restaura un perfil des d'un arxiu segellat i xifrat a CAMÍ.
+        import_path_help: Camí de l'arxiu segellat.
+        import_recovery_wrap_help: Frase de pas per desxifrar l'arxiu; obligatòria
+          si es va exportar amb una.
+        inspect_help: Mostra la capçalera d'un arxiu segellat sense desxifrar-lo ni
+          restaurar-lo.
+        inspect_path_help: Camí de l'arxiu segellat.
       capabilities:
         capability_help: Servei que es vol activar o desactivar.
         capability_label: capacitat
@@ -3004,7 +3032,11 @@ cli:
       help: Classificar un moviment del llibre al perfil actiu
       id_help: Id del moviment del llibre a classificar
       id_required: Cal un id de transacció quan no s'usa --from-csv.
-      irpf_category_help: 'Id de categoria d''IRPF. Usa aeat app ledger categories. Factures professionals cobrades netes usen actividad_economica; lloguers pagats nets usen arrendamiento_local/arrendamiento_vivienda_afecto. Royalties/SGAE: art. 25.4 pot ser capital mobiliario quan el contribuent no es l''autor; usa actividad_economica nomes per activitat per compte propi sota LIRPF art. 27.'
+      irpf_category_help: 'Id de categoria d''IRPF. Usa aeat app ledger categories.
+        Factures professionals cobrades netes usen actividad_economica; lloguers pagats
+        nets usen arrendamiento_local/arrendamiento_vivienda_afecto. Royalties/SGAE:
+        art. 25.4 pot ser capital mobiliario quan el contribuent no es l''autor; usa
+        actividad_economica nomes per activitat per compte propi sota LIRPF art. 27.'
       iva_amount_help: Import d'IVA
       iva_category_help: Categoria d'IVA explícita per a aquesta transacció (p. ex.
         intra_community_supply, export_third_country_zero_rated, export_assimilated_zero_rated,

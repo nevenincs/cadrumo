@@ -248,7 +248,10 @@ adapters:
           sidecar_missing: A helyi objektum sidecarja hianyzik.
           sidecar_not_object: A helyi sidecar {sidecar_path} nem JSON objektum.
           sidecar_write_failed: A helyi tarhely nem tudta irni az objektum sidecarjat.
-          sidecar_write_path_too_long: 'A helyi tárhely nem tudta kiírni az objektum sidecar fájlját: az elérési út meghaladja a Windows elérésiút-hossz korlátját. Helyezze át az AEAT_LOCAL_STORAGE_ROOT beállítást egy rövidebb útvonalra, vagy engedélyezze a LongPathsEnabled beállítást (lásd `aeat config check`).'
+          sidecar_write_path_too_long: 'A helyi tárhely nem tudta kiírni az objektum
+            sidecar fájlját: az elérési út meghaladja a Windows elérésiút-hossz korlátját.
+            Helyezze át az AEAT_LOCAL_STORAGE_ROOT beállítást egy rövidebb útvonalra,
+            vagy engedélyezze a LongPathsEnabled beállítást (lásd `aeat config check`).'
   persistence:
     profile:
       assets:
@@ -868,9 +871,14 @@ application:
         nyilvántartási revízióval jött létre, de a(z) %{modelo} %{filing_year} %{period}
         modellhez törvény által meghatározott revízió most %{law_revision}. Hozza
         létre újra a munkaegységet.
+      workflow_gate_no_pending_obligation: 'Nincs függőben lévő benyújtási kötelezettség
+        ehhez a modellhez/időszakhoz az aktuális dátumon (az AEAT benyújtási kötelezettségi
+        ablaka nincs nyitva). A fichero-exporthoz nem szükséges ez a lépés: exportáld
+        az ellenőrzötten teljes revíziót az ''aeat app modelo export'' paranccsal;
+        ez a helyi befejezési pont. A ''work file'' az opcionális belső megjelölés
+        benyújtottnak, amikor a kötelezettségi ablak nyitva van.'
       workflow_input_mismatch: A munkafolyamat bemeneti kérelme nem egyezik a számítási
         revízióval.
-      workflow_gate_no_pending_obligation: 'Nincs függőben lévő benyújtási kötelezettség ehhez a modellhez/időszakhoz az aktuális dátumon (az AEAT benyújtási kötelezettségi ablaka nincs nyitva). A fichero-exporthoz nem szükséges ez a lépés: exportáld az ellenőrzötten teljes revíziót az ''aeat app modelo export'' paranccsal; ez a helyi befejezési pont. A ''work file'' az opcionális belső megjelölés benyújtottnak, amikor a kötelezettségi ablak nyitva van.'
     findings:
       art20_reduccion_next_action: Ellenorizze, hogy a nem munkabol szarmazo egyeb
         jovedelme a mentes jovedelem nelkul az adoevben nem haladja-e meg a 6500 EUR-t;
@@ -886,6 +894,9 @@ application:
         %{predicate_id} are non-zero before verifying.
       cross_casilla_invariant_violated: 'cross-casilla invariant %{predicate_id} violated:
         %{expression}'
+      cross_period_modelo_not_applicable:
+        message: 'Azok a keresztidoszaki fuggosegek, amelyek olyan forras modellekre mutatnak, amelyeket az adozo nem nyujt be, nem alkalmazhatokent ki lettek zarva: {modelos}. Levont adok eseten az igazolas osszeget --binding KULCS=ÉRTÉK formaban add meg, ne --casilla ertekkent. A KULCS=ÉRTÉK azt jelenti, hogy a binding azonositoja az egyetlen egyenlosegjel bal oldalan all, az ertek pedig a jobb oldalan. Kolcsonosen kizaro reszletfizetesi modellek eseten erositsd meg a profil tevekenysegi becslesi rendszeret.'
+        next_action: 'Az `aeat app modelo bindings list --missing` paranccsal azonositsd a retenciones bindinget. Ha alkalmazhato, add meg az igazolas osszeget --binding KULCS=ÉRTÉK formaban: a binding azonositoja az egyetlen egyenlosegjel bal oldalan all, az osszeg pedig a jobb oldalan. Erositsd meg a profil IRPF becslesi rendszeret, ha egy kolcsonosen kizaro reszletfizetesi modell lett kizarva.'
       cross_period_non_official_local_chain:
         message: 'az idoszakok kozotti atvitel egy ugyanabban az adoevben helyileg
           benyujtott korabbi idoszakot hasznalt kulso AEAT-bizonyitek nelkul: modelo=%{source_modelo}
@@ -2007,8 +2018,10 @@ cli:
         invalid_work_unit_id: A work_unit_id értékének 64 karakteres kisbetűs hex-karakterláncnak
           kell lennie (SHA-256 kivonat).
         kv_empty_key_error: 'A(z) {flag} kulcsa nem lehet üres; kapott: {spec}.'
-        kv_format_error: 'A(z) {flag} értékének {key_label}={value_label} formátumúnak
-          kell lennie; kapott: {spec}.'
+        kv_format_error: 'A(z) {flag} erteket {key_label}={value_label} alakban kell
+          megadni. Ez egy kulcs-érték bejegyzés: A kulcs a bal oldalon all, utana
+          egyetlen egyenlosegjel kovetkezik, az ertek pedig a jobb oldalon. Kapott
+          ertek: {spec}.'
         list_help: Regisztrált munkaegységek listázása, opcionálisan profil szerint
           szűrve.
         meses_trabajo_con_hijo_menor_3_help: 'A 3 évesnél fiatalabb gyermekkel végzett
@@ -2160,8 +2173,9 @@ cli:
           porcentaje=40 importe=10000''. M349 példa: --row ''operador codigo_pais=DE
           nif_comunitario=DE123456789 razon_social="DE Auto GmbH" clave_operacion=E
           importe=50000''.'
-        row_kv_format_error: A --row {token} mezőnek KULCS=ÉRTÉK formátumúnak kell
-          lennie.
+        row_kv_format_error: 'A --row {token} mezot KULCS=ÉRTÉK alakban kell megadni.
+          Ez egy kulcs-érték bejegyzés: a sor mezoneve a bal oldalon all, utana egyetlen
+          egyenlosegjel kovetkezik, az ertek pedig a jobb oldalon.'
         row_m349_invalid_nif: '--row operador: a nif_comunitario {nif} nem felel meg
           {pais} ország elvárt NIF-IVA formátumának (2006/112/EK irányelv XI. melléklet)'
         row_unknown_type: 'Ismeretlen --row típus: {row_type!r}; támogatott típusok:
@@ -2467,19 +2481,32 @@ cli:
     profile:
       already_exists: A(z) %{name} profil már létezik. Válasszon másik célazonosítót.
       archive:
-        export_full_backup_info: 'Ez az archívum egy TELJES biztonsági mentés: nyugalmi állapotban AEAD-titkosított, és a profilon, a főkönyvön, a számításokon és a bevallási előzményeken kívül tartalmazza a bizonylatok byte-jait, az auditnaplót és az időszakok közötti számítási bemeneteket is. Tárold biztonságos helyen; az ''aeat config profile archive import'' paranccsal állítsd vissza.'
-        export_help: 'Lezárt, titkosított teljes biztonsági mentés írása az ÚTVONAL helyre.'
-        export_name_help: 'A mentendő profil; alapértelmezés szerint az aktív.'
-        export_out_help: 'Az archívum célútvonala.'
-        export_recovery_wrap_help: 'Opcionális jelmondat az archívum lezárásához az aktív bucket-kulcs helyett; kötelező, ha az archívum elhagyja ezt a gépet.'
-        help: 'Profil biztonsági mentése és visszaállítása lezárt, AEAD-titkosított archívumként (a teljes körű helyreállítási átvitel).'
-        import_active_switch_info: 'A visszaállított profil most az AKTÍV profil; a következő parancsok ezen dolgoznak. Futtasd az ''aeat config switch <name>'' parancsot az aktív profil módosításához.'
-        import_force_help: 'Felülírja a meglévő profilt, amely megosztja az archívum bucket-azonosítóját.'
-        import_help: 'Profil visszaállítása egy lezárt, titkosított archívumból az ÚTVONAL helyről.'
-        import_path_help: 'A lezárt archívum útvonala.'
-        import_recovery_wrap_help: 'Jelmondat az archívum feloldásához; kötelező, ha ezzel exportálták.'
-        inspect_help: 'Megjeleníti egy lezárt archívum fejlécét visszafejtés vagy visszaállítás nélkül.'
-        inspect_path_help: 'A lezárt archívum útvonala.'
+        export_full_backup_info: 'Ez az archívum egy TELJES biztonsági mentés: nyugalmi
+          állapotban AEAD-titkosított, és a profilon, a főkönyvön, a számításokon
+          és a bevallási előzményeken kívül tartalmazza a bizonylatok byte-jait, az
+          auditnaplót és az időszakok közötti számítási bemeneteket is. Tárold biztonságos
+          helyen; az ''aeat config profile archive import'' paranccsal állítsd vissza.'
+        export_help: Lezárt, titkosított teljes biztonsági mentés írása az ÚTVONAL
+          helyre.
+        export_name_help: A mentendő profil; alapértelmezés szerint az aktív.
+        export_out_help: Az archívum célútvonala.
+        export_recovery_wrap_help: Opcionális jelmondat az archívum lezárásához az
+          aktív bucket-kulcs helyett; kötelező, ha az archívum elhagyja ezt a gépet.
+        help: Profil biztonsági mentése és visszaállítása lezárt, AEAD-titkosított
+          archívumként (a teljes körű helyreállítási átvitel).
+        import_active_switch_info: A visszaállított profil most az AKTÍV profil; a
+          következő parancsok ezen dolgoznak. Futtasd az 'aeat config switch <name>'
+          parancsot az aktív profil módosításához.
+        import_force_help: Felülírja a meglévő profilt, amely megosztja az archívum
+          bucket-azonosítóját.
+        import_help: Profil visszaállítása egy lezárt, titkosított archívumból az
+          ÚTVONAL helyről.
+        import_path_help: A lezárt archívum útvonala.
+        import_recovery_wrap_help: Jelmondat az archívum feloldásához; kötelező, ha
+          ezzel exportálták.
+        inspect_help: Megjeleníti egy lezárt archívum fejlécét visszafejtés vagy visszaállítás
+          nélkül.
+        inspect_path_help: A lezárt archívum útvonala.
       capabilities:
         capability_help: A be- vagy kikapcsolandó szolgáltatás.
         capability_label: képesség
@@ -2963,7 +2990,11 @@ cli:
       help: Egyetlen főkönyvi tranzakció besorolása az aktív profilban.
       id_help: A besorolandó főkönyvi tranzakció azonosítója.
       id_required: Tranzakció-azonosító szükséges, ha a --from-csv nincs megadva.
-      irpf_category_help: 'IRPF-kategoria azonositoja. Hasznalja: aeat app ledger categories. Netto szakmai szamlakhoz actividad_economica; netto berleti dijhoz arrendamiento_local/arrendamiento_vivienda_afecto. Jogdij/SGAE: a 25.4 cikk szerint capital mobiliario lehet, ha az adozo nem a szerzo; actividad_economica csak sajat szamlas tevekenyseghez a LIRPF 27. cikk szerint.'
+      irpf_category_help: 'IRPF-kategoria azonositoja. Hasznalja: aeat app ledger
+        categories. Netto szakmai szamlakhoz actividad_economica; netto berleti dijhoz
+        arrendamiento_local/arrendamiento_vivienda_afecto. Jogdij/SGAE: a 25.4 cikk
+        szerint capital mobiliario lehet, ha az adozo nem a szerzo; actividad_economica
+        csak sajat szamlas tevekenyseghez a LIRPF 27. cikk szerint.'
       iva_amount_help: IVA-összeg.
       iva_category_help: Explicit IVA-kategória felülbírálat erre a tranzakcióra (pl.
         intra_community_supply, export_third_country_zero_rated, export_assimilated_zero_rated,
