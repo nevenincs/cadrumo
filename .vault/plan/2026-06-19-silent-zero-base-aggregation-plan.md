@@ -12,6 +12,16 @@ related:
   - '[[2026-06-10-calculation-aggregation-taxonomy-adr]]'
 ---
 
+<!-- LINK RULES:
+     - [[wiki-links]] are ONLY for .vault/ documents in the
+       related: field above.
+     - The related: field carries the AUTHORISING documents
+       (ADR, research, reference, prior plan) for every Step in
+       this plan. Steps inherit this chain; per-row reference
+       footers do not exist.
+     - NEVER use [[wiki-links]] or markdown links in the
+       document body. -->
+
 # `silent-zero-base-aggregation` plan
 
 Close the remaining silent-zero regulated-base and dropped-cuota gaps by
@@ -57,7 +67,7 @@ Bind the prorrata volume casillas to the IVA ledger base aggregation so the LIVA
 - [ ] `W01.P02.S03` - SUPERSEDED for the common case by the S05 formula default; `a per-period base_amount_sum binding for volumen-total would ship a wrong prorrata for mixed traders (the regulated prorrata is the prior-year definitive percent applied provisionally + Q4 regularisation), so the faithful mechanism is deferred to a cross-period prorrata model; src/aeat/_data/registry/aeat/modelos/303/revisions/2023-y-siguientes/bindings/; `src/aeat/_data/registry/aeat/modelos/303/revisions/2023-y-siguientes/bindings/`.
 - [ ] `W01.P02.S04` - SUPERSEDED/deferred with S03: volumen-con-derecho per-period binding is not the regulated provisional+regularised prorrata; `deferred to the cross-period prorrata model; src/aeat/_data/registry/aeat/modelos/303/revisions/2023-y-siguientes/bindings/; `src/aeat/_data/registry/aeat/modelos/303/revisions/2023-y-siguientes/bindings/`.
 - [x] `W01.P02.S05` - fix the prorrata-porcentaje no-volume-data default from 0 to 100 (full right to deduct, LIVA art-94) so a fully-taxable trader's export unblocks, with a regression test - the correct peer-clean fix for defect C2; `src/aeat/_data/registry/aeat/modelos/303/revisions/2023-y-siguientes/revision.toml; `src/aeat/_data/registry/aeat/modelos/303/`.
-- [ ] `W01.P02.S06` - add a real-CLI end-to-end test that a fully-taxable M303 trader reaches a granted `.boe` with no prorrata-divergence error and no manual prorrata input; `src/aeat/application/modelo/tests/`.
+- [x] `W01.P02.S06` - add a real-CLI end-to-end test that a fully-taxable M303 trader reaches a granted `.boe` with no prorrata-divergence error and no manual prorrata input; `src/aeat/application/modelo/tests/`.
 
 ### Phase `W01.P03` - recargo de equivalencia rate axis
 
