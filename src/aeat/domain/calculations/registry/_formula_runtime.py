@@ -1414,14 +1414,15 @@ class _M131ResolveModulosPrevioArgs:
     """Resolved registry ids for the M131 estimación-objetiva módulos Fase 1ª dispatcher."""
 
     epigrafe_casilla_id: CasillaId
-    modulo_unit_casilla_ids: tuple[CasillaId, CasillaId, CasillaId, CasillaId]
+    modulo_unit_casilla_ids: tuple[CasillaId, CasillaId, CasillaId, CasillaId, CasillaId, CasillaId, CasillaId]
     coefficient_parameter: ParameterId
 
 
 #: Módulo slot count the M131 first-slice coefficient tables carry (the
-#: highest-cardinality tabled activity, 972.1 peluquería, uses all four; the
-#: 3-módulo activities pass a literal ``0`` for the unused 4th slot).
-_M131_MODULOS_SLOT_COUNT = 4
+#: highest-cardinality tabled activities — 644.1 "Comercio al por menor de
+#: pan, pastelería..." and 644.2/644.3 — use all seven; activities with fewer
+#: signos pass a literal ``0`` for the unused trailing slots).
+_M131_MODULOS_SLOT_COUNT = 7
 
 
 def _m131_resolve_modulos_previo_args(expression: FormulaExpression) -> _M131ResolveModulosPrevioArgs:
@@ -1461,7 +1462,15 @@ def _m131_resolve_modulos_previo_args(expression: FormulaExpression) -> _M131Res
                 "expected_kind": "parameter",
             },
         )
-    modulo_ids = (resolved_modulo_ids[0], resolved_modulo_ids[1], resolved_modulo_ids[2], resolved_modulo_ids[3])
+    modulo_ids = (
+        resolved_modulo_ids[0],
+        resolved_modulo_ids[1],
+        resolved_modulo_ids[2],
+        resolved_modulo_ids[3],
+        resolved_modulo_ids[4],
+        resolved_modulo_ids[5],
+        resolved_modulo_ids[6],
+    )
     return _M131ResolveModulosPrevioArgs(
         epigrafe_casilla_id=epigrafe_arg.casilla_id,
         modulo_unit_casilla_ids=modulo_ids,
@@ -1508,8 +1517,9 @@ def _evaluate_m131_resolve_modulos_previo(expression: FormulaExpression, ctx: _E
     LIRPF art. 31 + the annual Orden de módulos (Anexo II) fix the mechanism:
     rendimiento neto previo = Σ(unidades_módulo × rendimiento anual por unidad
     antes de amortización), per IAE epígrafe. This op reads the operator-
-    declared IAE epígrafe (a text casilla) and up to four módulo unit-count
-    casillas, looks up each módulo's coefficient in the registry-declared
+    declared IAE epígrafe (a text casilla) and up to seven módulo unit-count
+    casillas (the highest signo count among the tabled activities), looks up
+    each módulo's coefficient in the registry-declared
     :class:`~aeat.domain.calculations.registry.ParameterDefinition`
     (``data_type='keyed_bracket_table'``, key ``"<epígrafe>:<módulo>"``), and
     sums the per-módulo products.

@@ -5,20 +5,32 @@
 # no interval-overlap semantics because the domain is a discrete (epígrafe,
 # módulo) catalogue, not a numeric-continuous base.
 #
-# Bounded first slice (2026-07-01-modelo-131-eo-modulos-engine-adr, Option B):
-# only the highest-prevalence activities named in the ADR/#516 are tabled here.
-# An epígrafe absent from this table is NOT computed by the engine; casilla 01
-# stays reachable as a manual operator input and the
+# Phased dataset (2026-07-01-modelo-131-eo-modulos-engine-adr, Option B): only
+# activities GROUNDED and cross-checked against the bundled corpus are tabled
+# here; the ~80+-activity Orden Anexo II remains a phased, incremental
+# authoring backlog (#516). An epígrafe absent from this table is NOT computed
+# by the engine; casilla 01 stays reachable as a manual operator input and the
 # "modelo-131-2025-modulos-computed-diverges-de-c01" advisory fires instead of a
 # silent zero (no-silent-under-declaration).
 #
+# Phase 1 (2026-07-01): transporte por autotaxis (721.2), transporte de
+# mercancías por carretera (722), peluquería (972.1).
+# Phase 2 (2026-07-02): café-bar / restaurante (671.4, 671.5, 672.1-2-3, 673.1,
+# 673.2) and comercio al por menor de alimentación (642.1-2-3-4, 642.5, 642.6,
+# 643.1-2, 644.1, 644.2, 644.3, 644.6, 647.1, 647.2-3) — the ADR's named
+# next-priority groups.
+#
 # Cross-checked against the bundled consolidated Orden HAC/1347/2024 Anexo II
-# (corpus/normatives/html/orden-hac-1347-2024.html, rows at IAE epígrafe
-# 721.2 / 722 / 972.1) AND against the AEAT Manual práctico de Renta 2025,
-# Parte 1, Capítulo 8 "Apéndice: Rendimientos anuales por unidad de módulo
-# antes de amortización aplicables en el ejercicio 2025" — both sources state
-# byte-identical euro figures for every row below
-# (legal-grounding-verifies-bundled-authoritative-corpus).
+# (corpus/normatives/html/orden-hac-1347-2024.html) AND against the AEAT Manual
+# práctico de Renta 2025, Parte 1, Capítulo 8 "Apéndice: Rendimientos anuales
+# por unidad de módulo antes de amortización aplicables en el ejercicio 2025"
+# — both sources state byte-identical euro figures for every row below
+# (legal-grounding-verifies-bundled-authoritative-corpus). One noted anomaly:
+# the bundled Orden HTML (corpus row at 651.3 y 5, key "651.3", not tabled
+# here) carries a literal typo "11.998.85" (period instead of comma decimal
+# separator) verbatim in the official BOE-published HTML; no row below is
+# affected by this anomaly, flagged here for the next author who reaches that
+# epígrafe.
 [[revisions."2025".parameters]]
 id = "m131-modulos-coeficientes-2025"
 data_type = "keyed_bracket_table"
@@ -102,6 +114,658 @@ valid_to = 2025-12-31
 [[revisions."2025".parameters.keyed_brackets]]
 key = "972.1:4"
 value = "81.88"
+valid_from = 2025-01-01
+valid_to = 2025-12-31
+
+# Phase 2 (2026-07-01-modelo-131-eo-modulos-engine-adr, next-priority
+# activities): comercio al por menor (64x epígrafes) and café-bar /
+# restaurante (671/672/673 epígrafes), cross-checked byte-identical between
+# the bundled consolidated Orden HAC/1347/2024 Anexo II
+# (corpus/normatives/html/orden-hac-1347-2024.html) AND the AEAT Manual
+# práctico de Renta 2025, Parte 1, Capítulo 8 "Apéndice: Rendimientos anuales
+# por unidad de módulo antes de amortización aplicables en el ejercicio 2025"
+# (legal-grounding-verifies-bundled-authoritative-corpus).
+
+# Epígrafe IAE 671.4 — Restaurantes de dos tenedores.
+# Módulo 1 Personal asalariado (persona): 3.709,88
+[[revisions."2025".parameters.keyed_brackets]]
+key = "671.4:1"
+value = "3709.88"
+valid_from = 2025-01-01
+valid_to = 2025-12-31
+
+# Módulo 2 Personal no asalariado (persona): 17.434,55
+[[revisions."2025".parameters.keyed_brackets]]
+key = "671.4:2"
+value = "17434.55"
+valid_from = 2025-01-01
+valid_to = 2025-12-31
+
+# Módulo 3 Potencia eléctrica (KW contratado): 201,55
+[[revisions."2025".parameters.keyed_brackets]]
+key = "671.4:3"
+value = "201.55"
+valid_from = 2025-01-01
+valid_to = 2025-12-31
+
+# Módulo 4 Mesas (mesa): 585,77
+[[revisions."2025".parameters.keyed_brackets]]
+key = "671.4:4"
+value = "585.77"
+valid_from = 2025-01-01
+valid_to = 2025-12-31
+
+# Módulo 5 Máquinas tipo «A» (máquina tipo «A»): 1.077,06
+[[revisions."2025".parameters.keyed_brackets]]
+key = "671.4:5"
+value = "1077.06"
+valid_from = 2025-01-01
+valid_to = 2025-12-31
+
+# Módulo 6 Máquinas tipo «B» (máquina tipo «B»): 3.810,65
+[[revisions."2025".parameters.keyed_brackets]]
+key = "671.4:6"
+value = "3810.65"
+valid_from = 2025-01-01
+valid_to = 2025-12-31
+
+# Epígrafe IAE 671.5 — Restaurantes de un tenedor.
+# Módulo 1 Personal asalariado (persona): 3.602,80
+[[revisions."2025".parameters.keyed_brackets]]
+key = "671.5:1"
+value = "3602.80"
+valid_from = 2025-01-01
+valid_to = 2025-12-31
+
+# Módulo 2 Personal no asalariado (persona): 16.174,82
+[[revisions."2025".parameters.keyed_brackets]]
+key = "671.5:2"
+value = "16174.82"
+valid_from = 2025-01-01
+valid_to = 2025-12-31
+
+# Módulo 3 Potencia eléctrica (KW contratado): 125,97
+[[revisions."2025".parameters.keyed_brackets]]
+key = "671.5:3"
+value = "125.97"
+valid_from = 2025-01-01
+valid_to = 2025-12-31
+
+# Módulo 4 Mesas (mesa): 220,45
+[[revisions."2025".parameters.keyed_brackets]]
+key = "671.5:4"
+value = "220.45"
+valid_from = 2025-01-01
+valid_to = 2025-12-31
+
+# Módulo 5 Máquinas tipo «A» (máquina tipo «A»): 1.077,06
+[[revisions."2025".parameters.keyed_brackets]]
+key = "671.5:5"
+value = "1077.06"
+valid_from = 2025-01-01
+valid_to = 2025-12-31
+
+# Módulo 6 Máquinas tipo «B» (máquina tipo «B»): 3.810,65
+[[revisions."2025".parameters.keyed_brackets]]
+key = "671.5:6"
+value = "3810.65"
+valid_from = 2025-01-01
+valid_to = 2025-12-31
+
+# Epígrafe IAE 672.1, 2 y 3 — Cafeterías.
+# Módulo 1 Personal asalariado (persona): 1.448,68
+[[revisions."2025".parameters.keyed_brackets]]
+key = "672.1:1"
+value = "1448.68"
+valid_from = 2025-01-01
+valid_to = 2025-12-31
+
+# Módulo 2 Personal no asalariado (persona): 13.743,56
+[[revisions."2025".parameters.keyed_brackets]]
+key = "672.1:2"
+value = "13743.56"
+valid_from = 2025-01-01
+valid_to = 2025-12-31
+
+# Módulo 3 Potencia eléctrica (KW contratado): 478,69
+[[revisions."2025".parameters.keyed_brackets]]
+key = "672.1:3"
+value = "478.69"
+valid_from = 2025-01-01
+valid_to = 2025-12-31
+
+# Módulo 4 Mesas (mesa): 377,92
+[[revisions."2025".parameters.keyed_brackets]]
+key = "672.1:4"
+value = "377.92"
+valid_from = 2025-01-01
+valid_to = 2025-12-31
+
+# Módulo 5 Máquinas tipo «A» (máquina tipo «A»): 957,39
+[[revisions."2025".parameters.keyed_brackets]]
+key = "672.1:5"
+value = "957.39"
+valid_from = 2025-01-01
+valid_to = 2025-12-31
+
+# Módulo 6 Máquinas tipo «B» (máquina tipo «B»): 3.747,67
+[[revisions."2025".parameters.keyed_brackets]]
+key = "672.1:6"
+value = "3747.67"
+valid_from = 2025-01-01
+valid_to = 2025-12-31
+
+# Epígrafe IAE 673.1 — Cafés y bares de categoría especial.
+# Módulo 1 Personal asalariado (persona): 4.056,30
+[[revisions."2025".parameters.keyed_brackets]]
+key = "673.1:1"
+value = "4056.30"
+valid_from = 2025-01-01
+valid_to = 2025-12-31
+
+# Módulo 2 Personal no asalariado (persona): 15.538,66
+[[revisions."2025".parameters.keyed_brackets]]
+key = "673.1:2"
+value = "15538.66"
+valid_from = 2025-01-01
+valid_to = 2025-12-31
+
+# Módulo 3 Potencia eléctrica (KW contratado): 321,23
+[[revisions."2025".parameters.keyed_brackets]]
+key = "673.1:3"
+value = "321.23"
+valid_from = 2025-01-01
+valid_to = 2025-12-31
+
+# Módulo 4 Mesas (mesa): 233,04
+[[revisions."2025".parameters.keyed_brackets]]
+key = "673.1:4"
+value = "233.04"
+valid_from = 2025-01-01
+valid_to = 2025-12-31
+
+# Módulo 5 Longitud de barra (metro): 371,62
+[[revisions."2025".parameters.keyed_brackets]]
+key = "673.1:5"
+value = "371.62"
+valid_from = 2025-01-01
+valid_to = 2025-12-31
+
+# Módulo 6 Máquinas tipo «A» (máquina tipo «A»): 957,39
+[[revisions."2025".parameters.keyed_brackets]]
+key = "673.1:6"
+value = "957.39"
+valid_from = 2025-01-01
+valid_to = 2025-12-31
+
+# Módulo 7 Máquinas tipo «B» (máquina tipo «B»): 2.903,66
+[[revisions."2025".parameters.keyed_brackets]]
+key = "673.1:7"
+value = "2903.66"
+valid_from = 2025-01-01
+valid_to = 2025-12-31
+
+# Epígrafe IAE 673.2 — Otros cafés y bares.
+# Módulo 1 Personal asalariado (persona): 1.643,93
+[[revisions."2025".parameters.keyed_brackets]]
+key = "673.2:1"
+value = "1643.93"
+valid_from = 2025-01-01
+valid_to = 2025-12-31
+
+# Módulo 2 Personal no asalariado (persona): 11.413,08
+[[revisions."2025".parameters.keyed_brackets]]
+key = "673.2:2"
+value = "11413.08"
+valid_from = 2025-01-01
+valid_to = 2025-12-31
+
+# Módulo 3 Potencia eléctrica (KW contratado): 94,48
+[[revisions."2025".parameters.keyed_brackets]]
+key = "673.2:3"
+value = "94.48"
+valid_from = 2025-01-01
+valid_to = 2025-12-31
+
+# Módulo 4 Mesas (mesa): 119,67
+[[revisions."2025".parameters.keyed_brackets]]
+key = "673.2:4"
+value = "119.67"
+valid_from = 2025-01-01
+valid_to = 2025-12-31
+
+# Módulo 5 Longitud de barra (metro): 163,76
+[[revisions."2025".parameters.keyed_brackets]]
+key = "673.2:5"
+value = "163.76"
+valid_from = 2025-01-01
+valid_to = 2025-12-31
+
+# Módulo 6 Máquinas tipo «A» (máquina tipo «A»): 806,23
+[[revisions."2025".parameters.keyed_brackets]]
+key = "673.2:6"
+value = "806.23"
+valid_from = 2025-01-01
+valid_to = 2025-12-31
+
+# Módulo 7 Máquinas tipo «B» (máquina tipo «B»): 2.947,75
+[[revisions."2025".parameters.keyed_brackets]]
+key = "673.2:7"
+value = "2947.75"
+valid_from = 2025-01-01
+valid_to = 2025-12-31
+
+# Epígrafe IAE 642.1, 2, 3 y 4 — Comercio al por menor de carne y despojos;
+# de productos y derivados cárnicos elaborados.
+# Módulo 1 Personal asalariado (persona): 2.355,68
+[[revisions."2025".parameters.keyed_brackets]]
+key = "642.1:1"
+value = "2355.68"
+valid_from = 2025-01-01
+valid_to = 2025-12-31
+
+# Módulo 2 Personal no asalariado (persona): 10.991,07
+[[revisions."2025".parameters.keyed_brackets]]
+key = "642.1:2"
+value = "10991.07"
+valid_from = 2025-01-01
+valid_to = 2025-12-31
+
+# Módulo 3 Superficie del local independiente (m2): 35,90
+[[revisions."2025".parameters.keyed_brackets]]
+key = "642.1:3"
+value = "35.90"
+valid_from = 2025-01-01
+valid_to = 2025-12-31
+
+# Módulo 4 Superficie del local no independiente (m2): 81,88
+[[revisions."2025".parameters.keyed_brackets]]
+key = "642.1:4"
+value = "81.88"
+valid_from = 2025-01-01
+valid_to = 2025-12-31
+
+# Módulo 5 Consumo de energía eléctrica (100 kWh): 39,05
+[[revisions."2025".parameters.keyed_brackets]]
+key = "642.1:5"
+value = "39.05"
+valid_from = 2025-01-01
+valid_to = 2025-12-31
+
+# Epígrafe IAE 642.5 — Comercio al por menor de huevos, aves, conejos de
+# granja, caza; y de productos derivados de los mismos.
+# Módulo 1 Personal asalariado (persona): 3.382,36
+[[revisions."2025".parameters.keyed_brackets]]
+key = "642.5:1"
+value = "3382.36"
+valid_from = 2025-01-01
+valid_to = 2025-12-31
+
+# Módulo 2 Personal no asalariado (persona): 11.337,49
+[[revisions."2025".parameters.keyed_brackets]]
+key = "642.5:2"
+value = "11337.49"
+valid_from = 2025-01-01
+valid_to = 2025-12-31
+
+# Módulo 3 Consumo de energía eléctrica (100 kWh): 25,19
+[[revisions."2025".parameters.keyed_brackets]]
+key = "642.5:3"
+value = "25.19"
+valid_from = 2025-01-01
+valid_to = 2025-12-31
+
+# Módulo 4 Superficie del local independiente (m2): 27,08
+[[revisions."2025".parameters.keyed_brackets]]
+key = "642.5:4"
+value = "27.08"
+valid_from = 2025-01-01
+valid_to = 2025-12-31
+
+# Módulo 5 Superficie del local no independiente (m2): 58,57
+[[revisions."2025".parameters.keyed_brackets]]
+key = "642.5:5"
+value = "58.57"
+valid_from = 2025-01-01
+valid_to = 2025-12-31
+
+# Epígrafe IAE 642.6 — Comercio al por menor, en casquerías, de vísceras y
+# despojos procedentes de animales de abasto, frescos y congelados.
+# Módulo 1 Personal asalariado (persona): 2.254,90
+[[revisions."2025".parameters.keyed_brackets]]
+key = "642.6:1"
+value = "2254.90"
+valid_from = 2025-01-01
+valid_to = 2025-12-31
+
+# Módulo 2 Personal no asalariado (persona): 11.098,14
+[[revisions."2025".parameters.keyed_brackets]]
+key = "642.6:2"
+value = "11098.14"
+valid_from = 2025-01-01
+valid_to = 2025-12-31
+
+# Módulo 3 Superficie del local independiente (m2): 27,71
+[[revisions."2025".parameters.keyed_brackets]]
+key = "642.6:3"
+value = "27.71"
+valid_from = 2025-01-01
+valid_to = 2025-12-31
+
+# Módulo 4 Superficie local no independiente (m2): 69,28
+[[revisions."2025".parameters.keyed_brackets]]
+key = "642.6:4"
+value = "69.28"
+valid_from = 2025-01-01
+valid_to = 2025-12-31
+
+# Módulo 5 Consumo de energía eléctrica (100 kWh): 35,90
+[[revisions."2025".parameters.keyed_brackets]]
+key = "642.6:5"
+value = "35.90"
+valid_from = 2025-01-01
+valid_to = 2025-12-31
+
+# Epígrafe IAE 643.1 y 2 — Comercio al por menor de pescados y otros
+# productos de la pesca y de la acuicultura y de caracoles.
+# Módulo 1 Personal asalariado (persona): 3.823,25
+[[revisions."2025".parameters.keyed_brackets]]
+key = "643.1:1"
+value = "3823.25"
+valid_from = 2025-01-01
+valid_to = 2025-12-31
+
+# Módulo 2 Personal no asalariado (persona): 13.296,36
+[[revisions."2025".parameters.keyed_brackets]]
+key = "643.1:2"
+value = "13296.36"
+valid_from = 2025-01-01
+valid_to = 2025-12-31
+
+# Módulo 3 Superficie del local independiente (m2): 36,53
+[[revisions."2025".parameters.keyed_brackets]]
+key = "643.1:3"
+value = "36.53"
+valid_from = 2025-01-01
+valid_to = 2025-12-31
+
+# Módulo 4 Superficie del local no independiente (m2): 113,37
+[[revisions."2025".parameters.keyed_brackets]]
+key = "643.1:4"
+value = "113.37"
+valid_from = 2025-01-01
+valid_to = 2025-12-31
+
+# Módulo 5 Consumo de energía eléctrica (100 kWh): 28,98
+[[revisions."2025".parameters.keyed_brackets]]
+key = "643.1:5"
+value = "28.98"
+valid_from = 2025-01-01
+valid_to = 2025-12-31
+
+# Epígrafe IAE 644.1 — Comercio al por menor de pan, pastelería, confitería y
+# similares y de leche y productos lácteos.
+# Módulo 1 Personal asalariado de fabricación (persona): 6.248,22
+[[revisions."2025".parameters.keyed_brackets]]
+key = "644.1:1"
+value = "6248.22"
+valid_from = 2025-01-01
+valid_to = 2025-12-31
+
+# Módulo 2 Resto personal asalariado (persona): 1.058,17
+[[revisions."2025".parameters.keyed_brackets]]
+key = "644.1:2"
+value = "1058.17"
+valid_from = 2025-01-01
+valid_to = 2025-12-31
+
+# Módulo 3 Personal no asalariado (persona): 14.530,89
+[[revisions."2025".parameters.keyed_brackets]]
+key = "644.1:3"
+value = "14530.89"
+valid_from = 2025-01-01
+valid_to = 2025-12-31
+
+# Módulo 4 Superficie del local de fabricación (m2): 49,13
+[[revisions."2025".parameters.keyed_brackets]]
+key = "644.1:4"
+value = "49.13"
+valid_from = 2025-01-01
+valid_to = 2025-12-31
+
+# Módulo 5 Resto superficie local independiente (m2): 34,01
+[[revisions."2025".parameters.keyed_brackets]]
+key = "644.1:5"
+value = "34.01"
+valid_from = 2025-01-01
+valid_to = 2025-12-31
+
+# Módulo 6 Resto superficie local no independiente (m2): 125,97
+[[revisions."2025".parameters.keyed_brackets]]
+key = "644.1:6"
+value = "125.97"
+valid_from = 2025-01-01
+valid_to = 2025-12-31
+
+# Módulo 7 Superficie del horno (100 decímetros cuadrados): 629,86
+[[revisions."2025".parameters.keyed_brackets]]
+key = "644.1:7"
+value = "629.86"
+valid_from = 2025-01-01
+valid_to = 2025-12-31
+
+# Epígrafe IAE 644.2 — Despachos de pan, panes especiales y bollería.
+# Módulo 1 Personal asalariado de fabricación (persona): 6.134,85
+[[revisions."2025".parameters.keyed_brackets]]
+key = "644.2:1"
+value = "6134.85"
+valid_from = 2025-01-01
+valid_to = 2025-12-31
+
+# Módulo 2 Resto personal asalariado (persona): 1.039,27
+[[revisions."2025".parameters.keyed_brackets]]
+key = "644.2:2"
+value = "1039.27"
+valid_from = 2025-01-01
+valid_to = 2025-12-31
+
+# Módulo 3 Personal no asalariado (persona): 14.266,34
+[[revisions."2025".parameters.keyed_brackets]]
+key = "644.2:3"
+value = "14266.34"
+valid_from = 2025-01-01
+valid_to = 2025-12-31
+
+# Módulo 4 Superficie del local de fabricación (m2): 48,50
+[[revisions."2025".parameters.keyed_brackets]]
+key = "644.2:4"
+value = "48.50"
+valid_from = 2025-01-01
+valid_to = 2025-12-31
+
+# Módulo 5 Resto superficie local independiente (m2): 33,38
+[[revisions."2025".parameters.keyed_brackets]]
+key = "644.2:5"
+value = "33.38"
+valid_from = 2025-01-01
+valid_to = 2025-12-31
+
+# Módulo 6 Resto superficie local no independiente (m2): 125,97
+[[revisions."2025".parameters.keyed_brackets]]
+key = "644.2:6"
+value = "125.97"
+valid_from = 2025-01-01
+valid_to = 2025-12-31
+
+# Módulo 7 Superficie del horno (100 decímetros cuadrados): 629,86
+[[revisions."2025".parameters.keyed_brackets]]
+key = "644.2:7"
+value = "629.86"
+valid_from = 2025-01-01
+valid_to = 2025-12-31
+
+# Epígrafe IAE 644.3 — Comercio al por menor de productos de pastelería,
+# bollería y confitería.
+# Módulo 1 Personal asalariado de fabricación (persona): 6.367,89
+[[revisions."2025".parameters.keyed_brackets]]
+key = "644.3:1"
+value = "6367.89"
+valid_from = 2025-01-01
+valid_to = 2025-12-31
+
+# Módulo 2 Resto personal asalariado (persona): 1.014,08
+[[revisions."2025".parameters.keyed_brackets]]
+key = "644.3:2"
+value = "1014.08"
+valid_from = 2025-01-01
+valid_to = 2025-12-31
+
+# Módulo 3 Personal no asalariado (persona): 12.912,15
+[[revisions."2025".parameters.keyed_brackets]]
+key = "644.3:3"
+value = "12912.15"
+valid_from = 2025-01-01
+valid_to = 2025-12-31
+
+# Módulo 4 Superficie del local de fabricación (m2): 43,46
+[[revisions."2025".parameters.keyed_brackets]]
+key = "644.3:4"
+value = "43.46"
+valid_from = 2025-01-01
+valid_to = 2025-12-31
+
+# Módulo 5 Resto superficie local independiente (m2): 34,01
+[[revisions."2025".parameters.keyed_brackets]]
+key = "644.3:5"
+value = "34.01"
+valid_from = 2025-01-01
+valid_to = 2025-12-31
+
+# Módulo 6 Resto superficie local no independiente (m2): 113,37
+[[revisions."2025".parameters.keyed_brackets]]
+key = "644.3:6"
+value = "113.37"
+valid_from = 2025-01-01
+valid_to = 2025-12-31
+
+# Módulo 7 Superficie del horno (100 decímetros cuadrados): 522,78
+[[revisions."2025".parameters.keyed_brackets]]
+key = "644.3:7"
+value = "522.78"
+valid_from = 2025-01-01
+valid_to = 2025-12-31
+
+# Epígrafe IAE 644.6 — Comercio al por menor de masas fritas, con o sin
+# coberturas o rellenos, patatas fritas, productos de aperitivo, frutos
+# secos, golosinas, preparados de chocolate y bebidas refrescantes.
+# Módulo 1 Personal asalariado de fabricación (persona): 6.852,88
+[[revisions."2025".parameters.keyed_brackets]]
+key = "644.6:1"
+value = "6852.88"
+valid_from = 2025-01-01
+valid_to = 2025-12-31
+
+# Módulo 2 Resto personal asalariado (persona): 2.254,90
+[[revisions."2025".parameters.keyed_brackets]]
+key = "644.6:2"
+value = "2254.90"
+valid_from = 2025-01-01
+valid_to = 2025-12-31
+
+# Módulo 3 Personal no asalariado (persona): 13.214,47
+[[revisions."2025".parameters.keyed_brackets]]
+key = "644.6:3"
+value = "13214.47"
+valid_from = 2025-01-01
+valid_to = 2025-12-31
+
+# Módulo 4 Superficie del local de fabricación (m2): 27,71
+[[revisions."2025".parameters.keyed_brackets]]
+key = "644.6:4"
+value = "27.71"
+valid_from = 2025-01-01
+valid_to = 2025-12-31
+
+# Módulo 5 Resto superficie local independiente (m2): 21,41
+[[revisions."2025".parameters.keyed_brackets]]
+key = "644.6:5"
+value = "21.41"
+valid_from = 2025-01-01
+valid_to = 2025-12-31
+
+# Módulo 6 Resto superficie local no independiente (m2): 36,53
+[[revisions."2025".parameters.keyed_brackets]]
+key = "644.6:6"
+value = "36.53"
+valid_from = 2025-01-01
+valid_to = 2025-12-31
+
+# Epígrafe IAE 647.1 — Comercio al por menor de cualquier clase de productos
+# alimenticios y de bebidas en establecimientos con vendedor.
+# Módulo 1 Personal asalariado (persona): 1.026,67
+[[revisions."2025".parameters.keyed_brackets]]
+key = "647.1:1"
+value = "1026.67"
+valid_from = 2025-01-01
+valid_to = 2025-12-31
+
+# Módulo 2 Personal no asalariado (persona): 10.839,90
+[[revisions."2025".parameters.keyed_brackets]]
+key = "647.1:2"
+value = "10839.90"
+valid_from = 2025-01-01
+valid_to = 2025-12-31
+
+# Módulo 3 Superficie del local independiente (m2): 20,15
+[[revisions."2025".parameters.keyed_brackets]]
+key = "647.1:3"
+value = "20.15"
+valid_from = 2025-01-01
+valid_to = 2025-12-31
+
+# Módulo 4 Superficie del local no independiente (m2): 68,65
+[[revisions."2025".parameters.keyed_brackets]]
+key = "647.1:4"
+value = "68.65"
+valid_from = 2025-01-01
+valid_to = 2025-12-31
+
+# Módulo 5 Consumo de energía eléctrica (100 kWh): 8,81
+[[revisions."2025".parameters.keyed_brackets]]
+key = "647.1:5"
+value = "8.81"
+valid_from = 2025-01-01
+valid_to = 2025-12-31
+
+# Epígrafe IAE 647.2 y 3 — Comercio al por menor de cualquier clase de
+# productos alimenticios y de bebidas en régimen de autoservicio o mixto en
+# establecimientos cuya sala de ventas tenga una superficie inferior a 400
+# metros cuadrados.
+# Módulo 1 Personal asalariado (persona): 1.788,80
+[[revisions."2025".parameters.keyed_brackets]]
+key = "647.2:1"
+value = "1788.80"
+valid_from = 2025-01-01
+valid_to = 2025-12-31
+
+# Módulo 2 Personal no asalariado (persona): 10.827,31
+[[revisions."2025".parameters.keyed_brackets]]
+key = "647.2:2"
+value = "10827.31"
+valid_from = 2025-01-01
+valid_to = 2025-12-31
+
+# Módulo 3 Superficie del local (m2): 23,31
+[[revisions."2025".parameters.keyed_brackets]]
+key = "647.2:3"
+value = "23.31"
+valid_from = 2025-01-01
+valid_to = 2025-12-31
+
+# Módulo 4 Consumo de energía eléctrica (100 kWh): 32,75
+[[revisions."2025".parameters.keyed_brackets]]
+key = "647.2:4"
+value = "32.75"
 valid_from = 2025-01-01
 valid_to = 2025-12-31
 
