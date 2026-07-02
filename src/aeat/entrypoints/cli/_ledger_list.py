@@ -1,9 +1,9 @@
 """Projection helpers for the ``aeat app ledger list`` CLI command.
 
 The CLI parser turns ``--filter`` clauses into
-:class:`~aeat.application.review.LedgerReviewFilterSpec`, asks
-:func:`~aeat.application.ledger.query_ledger_review_rows` for review-derived
-rows, and emits :class:`~aeat.entrypoints.cli._ledger_payloads.LedgerListRowPayload`
+:class:`LedgerReviewFilterSpec`, asks
+:func:`query_ledger_review_rows` for review-derived
+rows, and emits :class:`LedgerListRowPayload`
 instances.
 """
 
@@ -36,7 +36,7 @@ from ._ledger_payloads import LedgerListRowPayload
 
 @dataclass(frozen=True)
 class LedgerListProjection:
-    """Rendered :class:`~aeat.entrypoints.cli._ledger_payloads.LedgerListRowPayload` inputs for ``ledger list``."""
+    """Rendered :class:`LedgerListRowPayload` inputs for ``ledger list``."""
 
     bucket_id: str
     rows: list[LedgerListRowPayload]
@@ -49,12 +49,12 @@ class LedgerListProjection:
 
 
 def parse_ledger_list_filter_spec(filters: list[str]) -> LedgerReviewFilterSpec:
-    """Parse ``ledger list --filter`` clauses and return a :class:`~aeat.application.review.LedgerReviewFilterSpec`."""
+    """Parse ``ledger list --filter`` clauses and return a :class:`LedgerReviewFilterSpec`."""
     return LedgerReviewFilterSpec.from_strings(filters)
 
 
 def ledger_filter_parse_error_message(exc: FilterParseError, *, year: int | None = None) -> str:
-    """Render a CLI message for a parsed :class:`~aeat.application.review.FilterParseError`."""
+    """Render a CLI message for a parsed :class:`FilterParseError`."""
     if exc.reason == "invalid-value-ledger-period":
         return tr("cli.common.errors.period_unrecognised", raw=_filter_period_value(exc))
     if exc.reason == "ledger-period-year-pairing":
@@ -176,8 +176,8 @@ LLM_DECISION_EVENT_TYPES = (
 def latest_llm_decision_is_rejection(event_catalogue: BucketEventHistoryCatalogue, transaction_id: str) -> bool:
     """Return True when the row's most recent LLM decision was a rejection.
 
-    Reads :class:`~aeat.domain.buckets.BucketEventHistoryCatalogue` entries whose
-    type belongs to :data:`~aeat.entrypoints.cli._ledger_list.LLM_DECISION_EVENT_TYPES`.
+    Reads :class:`BucketEventHistoryCatalogue` entries whose
+    type belongs to :data:`LLM_DECISION_EVENT_TYPES`.
     The standing LLM decision is the latest of {classified, llm-suggestion-rejected}
     for the transaction. A row whose latest such event is a rejection has been
     reviewed-and-declined and should drop out of the pending review queue when the
@@ -212,10 +212,10 @@ def project_ledger_list(
 ) -> LedgerListProjection:
     """Project, page, and render one ``ledger list`` result set.
 
-    Returns a :class:`~aeat.entrypoints.cli._ledger_list.LedgerListProjection`.
+    Returns a :class:`LedgerListProjection`.
 
     When ``sort_by`` is supplied the result set is stably sorted on that closed
-    :class:`~aeat.core.LedgerSortField` axis (ascending by default,
+    :class:`LedgerSortField` axis (ascending by default,
     ``sort_order=DESC`` for descending), applied *after* the C6 filter and the
     ``--group`` selection and *before* paging, with a deterministic final
     tie-break on the content-addressed ``transaction_id`` (D5). ``--by-group``
