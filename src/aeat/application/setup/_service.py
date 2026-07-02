@@ -12,11 +12,11 @@ from __future__ import annotations
 from ...core.logging import get_logger
 from ...domain.user_profile import UserProfileFact, new_profile_id
 from ..auth import AuthProviderReservedError, configure_operator_auth
-from ..user_profile._orchestration import (
+from ..user_profile import (
     profile_create_storage_span,
     register_active_profile,
 )
-from ..workflow._persistence import workflow_state_repository
+from ..workflow import workflow_state_repository
 from ._contracts import InitializeWorkspaceCommand, InitializeWorkspaceResult
 
 _log = get_logger(__name__)

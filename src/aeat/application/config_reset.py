@@ -164,7 +164,7 @@ def reset_config(scope: ConfigResetScope, *, confirmed: bool) -> ConfigResetRepo
 
     if scope in {ConfigResetScope.PROFILE, ConfigResetScope.ALL}:
         from .user_profile import UserProfileLifecycleRepository
-        from .workflow._profile_bucket_scan import list_profile_buckets
+        from .workflow import list_profile_buckets
 
         # Registered profiles are a filesystem-manifest scan, not a
         # persisted WorkflowState field. Each profile is identified by
@@ -203,7 +203,7 @@ def reset_config(scope: ConfigResetScope, *, confirmed: bool) -> ConfigResetRepo
         )
 
     if profile_bucket_ids_to_remove:
-        from .user_profile._orchestration import remove_profile_bucket_directory
+        from .user_profile import remove_profile_bucket_directory
 
         for profile_id in profile_bucket_ids_to_remove:
             # The bucket manifest is the existence claim; removing the

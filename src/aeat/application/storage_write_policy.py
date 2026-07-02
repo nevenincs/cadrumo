@@ -334,7 +334,7 @@ def _delegates_to_leaf_refusal(
     modelo = _option_value(argv_tokens or (), "--modelo")
     if modelo is None:
         return False
-    from .modelo._work_create_policy import STUB_ONLY_MODELOS
+    from .modelo import STUB_ONLY_MODELOS
 
     modelo_code = modelo.strip()
     if modelo_code not in STUB_ONLY_MODELOS:

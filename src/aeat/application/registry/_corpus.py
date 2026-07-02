@@ -46,6 +46,7 @@ from ...domain.calculations.registry import (
 from ...domain.manuals import (
     ManualCasillaReference,
     ManualId,
+    ManualNotFoundError,
     ManualPart,
     ManualVerificationIssue,
     ManualVerificationReport,
@@ -57,7 +58,6 @@ from ...domain.manuals import (
 from ...domain.manuals import (
     load_catalogue as load_manual_catalogue,
 )
-from ...domain.manuals._errors import ManualNotFoundError
 from ._corpus_manual_helpers import load_manual_manifest as _load_manual_manifest
 from ._corpus_manual_helpers import (
     manual_report_with_registry_casilla_issues as _manual_report_with_registry_casilla_issues,

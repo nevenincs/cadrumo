@@ -39,11 +39,10 @@ from ...domain.calculations.registry import (
     resolve_invoice_binding_row_values,
     resolve_invoice_binding_values,
 )
-from ...domain.invoices import Invoice, InvoiceCatalogueRepository
-from ...domain.invoices._protocols import InvoiceCatalogueRepositoryProtocol
+from ...domain.invoices import Invoice, InvoiceCatalogueRepository, InvoiceCatalogueRepositoryProtocol
 from ...domain.iva import InvoiceKind, IvaCategory
 from ...domain.modelos import Modelo349OperadorRow, validate_m349_country_prefix_context
-from ..aggregation._source_mesh import (
+from ..aggregation import (
     CalculationSourceContext,
     CalculationSourceProvenance,
     CalculationSourceResolution,
