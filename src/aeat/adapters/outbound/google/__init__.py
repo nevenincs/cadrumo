@@ -63,9 +63,11 @@ See Also:
 """
 
 from ._active_profile import resolve_active_profile
+from ._api import GoogleApiResponseBody, GoogleDriveFile, GoogleSheetsRange, GoogleSpreadsheet
 from ._calc_sheets_apply import CalcSheetsApplyResult, apply_export_plan
 from ._calc_sheets_pull import (
     PullResult,
+    RowSetCellEdit,
     RowSetEdit,
     compute_from_pull,
     pull_operator_edits,
@@ -131,10 +133,15 @@ __all__ = [
     "GoogleAuthScopeInsufficientError",
     "GoogleAuthUnsecuredModeRefusedError",
     "GoogleAuthValidationError",
+    "GoogleApiResponseBody",
+    "GoogleDriveFile",
+    "GoogleSheetsRange",
+    "GoogleSpreadsheet",
     "OAuthClient",
     "OAuthMetadata",
     "OAuthToken",
     "PullResult",
+    "RowSetCellEdit",
     "RowSetEdit",
     "apply_export_plan",
     "compute_from_pull",
