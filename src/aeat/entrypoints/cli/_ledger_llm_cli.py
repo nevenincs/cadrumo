@@ -8,7 +8,7 @@ verdict classifies the transaction in place from that lone child's selections.
 The model emits no euro amount or regulated number; the registry derives every
 child's base and IVA (``llm-selects-system-derives-tax-numbers``).
 
-Also owns :func:`~aeat.entrypoints.cli._ledger_llm_cli.split_recommendation_notice`,
+Also owns :func:`split_recommendation_notice`,
 the typed ``info`` notice that ``classify --read-evidence`` emits when the model
 flags the invoice as multi-component
 (``cli-notices-are-the-only-diagnostic-channel``).
@@ -75,7 +75,7 @@ def emit_llm_rejection(
 
     The fourth decision terminal: the row is NOT classified, but the rejection is
     captured as a ``ledger.transaction.llm_suggestion.rejected`` audit event. An
-    ``info`` :class:`~aeat.core.json_contract.Notice` confirms the log and
+    ``info`` :class:`Notice` confirms the log and
     points at the manual-override next step
     (``cli-notices-are-the-only-diagnostic-channel``).
     """
@@ -122,7 +122,7 @@ def emit_llm_rejection(
 
 
 def split_recommendation_notice(transaction_id: str, *, provider: LLMProvider | None) -> Notice:
-    """Build the typed ``info`` :class:`~aeat.core.json_contract.Notice` recommending an evidence-driven split.
+    """Build the typed ``info`` :class:`Notice` recommending an evidence-driven split.
 
     Fired when the evidence read judged the invoice multi-component. The
     ``suggestion`` is the exact runnable command that actions the split, preserving
@@ -430,7 +430,7 @@ def ledger_classify_llm(
 
     Without ``--apply`` the model's suggestion is printed for review and nothing
     is persisted. With ``--apply`` the decision is written via
-    :func:`~aeat.application.ledger.apply_llm_classification` with
+    :func:`apply_llm_classification` with
     ``llm:<model>`` provenance. With ``--reject`` the suggestion is recorded as a
     declined audit event and the row is left unchanged. ``--llm`` is mutually
     exclusive with the manual ``--classification`` / ``--from-csv`` override.
@@ -597,7 +597,7 @@ def ledger_saturate_llm(
     """Run the saturating LLM suggest / apply / reject loop for ``classify --llm --saturate``.
 
     Extends the stage-1 loop to the rich tax substrate: the model selects an
-    :class:`~aeat.domain.iva.IvaCategory` and the system DERIVES the rate, base,
+    :class:`IvaCategory` and the system DERIVES the rate, base,
     and amount from the registry — never the model. Without ``--apply`` the full
     saturated suggestion is previewed and nothing is persisted; with ``--apply``
     it is written through the manual-command write with ``llm:<model>``
@@ -782,7 +782,7 @@ def ledger_operator_iva_derive(
     declines (returns ``unknown``) or the operator already knows the category,
     pick it with ``--iva-category`` and the system derives the base, rate, and
     amount from the registry — the same grounded
-    :func:`~aeat.application.ledger.derive_operator_iva_substrate` path the LLM
+    :func:`derive_operator_iva_substrate` path the LLM
     saturate uses, but operator-initiated and stamped with ``derived:``
     provenance. Only the IVA substrate is touched; the business classification
     and its provenance are left intact.
