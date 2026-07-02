@@ -328,10 +328,7 @@ def _ledger_list_rows_and_lines(
     rows: list[LedgerListRowPayload] = []
     lines = [
         tr("cli.ledger.list.header"),
-        tr(
-            "cli.ledger.list.column_header",
-            default="id\tfull_id\tdate\tamount\tdescription\treview_status",
-        ),
+        _ledger_list_column_header(),
     ]
     display_width = compute_display_id_width(all_transaction_ids)
     current_group: str | None = None
@@ -359,11 +356,24 @@ def _ledger_list_rows_and_lines(
                 },
             ),
         )
+        iva_category = review_payload.iva_category or ""
         lines.append(
             f"{display_id}\t{transaction.transaction_id}\t{review_payload.date}\t"
-            f"{review_payload.amount}\t{review_payload.description}\t{review_status}",
+            f"{review_payload.amount}\t{review_payload.description}\t{iva_category}\t{review_status}",
         )
     return rows, lines
+
+
+def _ledger_list_column_header() -> str:
+    base_header = tr(
+        "cli.ledger.list.column_header",
+        default="id\tfull_id\tdate\tamount\tdescription\treview_status",
+    )
+    iva_category_label = tr("cli.ledger.labels.iva_category")
+    columns = base_header.split("\t")
+    if len(columns) >= 2:
+        return "\t".join((*columns[:-1], iva_category_label, columns[-1]))
+    return f"{base_header}\t{iva_category_label}"
 
 
 __all__ = [
