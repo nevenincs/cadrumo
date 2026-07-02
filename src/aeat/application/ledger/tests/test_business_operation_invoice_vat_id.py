@@ -34,17 +34,17 @@ _INVALID_EU_IVA_IDS = (
 )
 
 
-@pytest.mark.parametrize(("raw", "expected"), _VALID_EU_IVA_IDS)
-def test_valid_eu_iva_id_normalises_to_canonical_form(raw: str, expected: str) -> None:
-    assert validate_eu_iva_id(raw) == expected
+def test_valid_eu_iva_id_normalises_to_canonical_form() -> None:
+    for raw, expected in _VALID_EU_IVA_IDS:
+        assert validate_eu_iva_id(raw) == expected, raw
 
 
-@pytest.mark.parametrize(("raw", "message_fragment"), _INVALID_EU_IVA_IDS)
-def test_invalid_eu_iva_id_is_rejected(raw: str, message_fragment: str | None) -> None:
-    if message_fragment is None:
-        with pytest.raises(BusinessOperationInvoiceInputError):
+def test_invalid_eu_iva_id_is_rejected() -> None:
+    for raw, message_fragment in _INVALID_EU_IVA_IDS:
+        if message_fragment is None:
+            with pytest.raises(BusinessOperationInvoiceInputError):
+                validate_eu_iva_id(raw)
+            continue
+
+        with pytest.raises(BusinessOperationInvoiceInputError, match=message_fragment):
             validate_eu_iva_id(raw)
-        return
-
-    with pytest.raises(BusinessOperationInvoiceInputError, match=message_fragment):
-        validate_eu_iva_id(raw)
