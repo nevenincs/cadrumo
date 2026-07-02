@@ -182,7 +182,7 @@ class StorageRuntime(BaseModel):
 
 def runtime_not_ready_error(message: str, *, message_key: str) -> StorageValidationError:
     """Build a localized storage-runtime readiness failure returning a :class:`StorageValidationError`."""
-    from ....core.i18n._render import tr
+    from ....core.i18n import tr
 
     return StorageValidationError(
         message,
@@ -210,7 +210,7 @@ def _readiness_issue(
 
 
 def _render_readiness_details(issues: tuple[StorageRuntimeReadinessIssue, ...]) -> str:
-    from ....core.i18n._render import tr
+    from ....core.i18n import tr
 
     locale = _settings_output_language()
     rendered = tuple(tr(issue.message_key, locale=locale) for issue in issues)
