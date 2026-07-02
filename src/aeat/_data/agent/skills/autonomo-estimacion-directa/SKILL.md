@@ -7,6 +7,14 @@ description: >-
   `irpf_income_categories` including actividad económica and
   `irpf_estimation_regime` is estimación directa (normal or simplificada). Never
   hard-codes the obligation set; derives it from the overview surface.
+applies_when:
+  profile_facts:
+    - fact: irpf_income_categories
+      match: contains
+      values: [actividad_economica]
+    - fact: irpf_estimation_regime
+      match: equals
+      values: [directa_normal, directa_simplificada]
 ---
 
 # Autónomo, estimación directa
