@@ -33,7 +33,7 @@ from ....adapters.persistence.storage.sql.engine import dispose_engine
 from ....core.config import override_settings
 from ....entrypoints.cli import command_schema_refs
 from ....entrypoints.cli.tests.envelope_helpers import unwrap_schema_envelope
-from ....entrypoints.mcp._tools import build_tool_descriptors
+from ....entrypoints.mcp import build_tool_descriptors
 from ....tests.cli_runner import invoke_cached_cli
 from ....tests.secure_sql import isolated_profile_storage_root
 from .. import ProfileConfirmationScenario, check_profile_confirmation_scenario

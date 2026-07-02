@@ -32,11 +32,11 @@ import pytest
 from ....core import Period
 from ....domain.calculations.registry import (
     BindingId,
+    RegistryValidationError,
+    load_modelo_directory,
     resolve_ledger_impatriado_income_aggregation_binding_values,
     validate_ledger_impatriado_income_aggregation_binding_definition,
 )
-from ....domain.calculations.registry._errors import RegistryValidationError
-from ....domain.calculations.registry._loader import load_modelo_directory
 from ....domain.transactions import (
     BusinessClassification,
     RawProvenance,
@@ -202,9 +202,7 @@ def test_trabajo_income_admitted_into_m151_base_but_excluded_from_m130() -> None
     # Same row through the M130 / M100 actividad-económica pipeline is excluded.
     m130 = aggregate_renta_m100_income_ledger(catalogue, bucket_id="test", period=_ANNUAL_2024)
     assert not m130.observations
-    assert any(
-        issue.reason is RentaIncomeLedgerAggregationIssueReason.TRABAJO_INCOME for issue in m130.issues
-    )
+    assert any(issue.reason is RentaIncomeLedgerAggregationIssueReason.TRABAJO_INCOME for issue in m130.issues)
 
 
 def test_outgoing_row_is_not_owned_by_the_impatriado_base_pipeline() -> None:
@@ -247,11 +245,7 @@ def test_registry_binding_resolves_es_source_total_into_base() -> None:
 def test_registry_binding_definition_validates_and_rejects_wrong_casilla() -> None:
     """The build-time validator accepts the shipped binding and rejects an off-target one."""
     revision = load_modelo_directory(_M151_REGISTRY_DIR).revisions["2015-y-siguientes"]
-    binding = next(
-        b
-        for b in revision.bindings
-        if b.id == "modelo-151-impatriado-base-liquidable-general"
-    )
+    binding = next(b for b in revision.bindings if b.id == "modelo-151-impatriado-base-liquidable-general")
     # Shipped binding validates.
     validate_ledger_impatriado_income_aggregation_binding_definition(binding)
 

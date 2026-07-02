@@ -19,20 +19,20 @@ import pytest
 from ....application.ledger._actions_common import _blocking_modelo_references
 from ....core import Period
 from ....domain.calculations.registry import CasillaId, validated_casilla_id
-from ....domain.modelos._calculation_repository import (
-    CalculationRevisionCatalogueRepository,
-    upsert_calculation_revision,
-)
-from ....domain.modelos._calculation_revision import (
+from ....domain.modelos import (
     CalculationRevision,
+    CalculationRevisionCatalogueRepository,
     CalculationRevisionState,
+    ModeloCode,
+    ModeloRecordCatalogueRepository,
+    TransactionParticipationIndexRepository,
+    WorkUnit,
+    WorkUnitCatalogueRepository,
     derive_calculation_revision_id,
+    derive_work_unit_id,
+    upsert_calculation_revision,
+    upsert_work_unit,
 )
-from ....domain.modelos._codes import ModeloCode
-from ....domain.modelos._filing_repository import ModeloRecordCatalogueRepository
-from ....domain.modelos._participation_index import TransactionParticipationIndexRepository
-from ....domain.modelos._repository import WorkUnitCatalogueRepository, upsert_work_unit
-from ....domain.modelos._work_unit import WorkUnit, derive_work_unit_id
 from ....tests.secure_sql import isolated_runtime_profile
 from .._revision_persistence import persist_filed_revision
 from .._verification_actions import _persist_verified_revision_evidence

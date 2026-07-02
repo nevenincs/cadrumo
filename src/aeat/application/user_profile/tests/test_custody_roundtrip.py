@@ -63,7 +63,7 @@ def _seed_bucket_event(bucket_id: str) -> str:
 
 def test_structured_profile_excludes_attachment_evidence_bytes(tmp_path: Path) -> None:
     """The cleartext (structured) profile must not carry FINANCIAL attachment bytes."""
-    from ....adapters.persistence.storage._namespace_registry import StorageCustodyProfile
+    from ....adapters.persistence.storage import StorageCustodyProfile
 
     with isolated_two_bucket_runtime(tmp_path=tmp_path) as runtime:
         AttachmentStore().put_bytes(_EVIDENCE_BYTES)
@@ -87,8 +87,11 @@ def test_structured_profile_excludes_attachment_evidence_bytes(tmp_path: Path) -
 
 
 def _seed_attachment_manifest(sha: str) -> None:
-    from ....domain.attachments._enums import AttachmentKind, AttachmentSource
-    from ....domain.attachments._models import Attachment
+    from ....domain.attachments import (
+        Attachment,
+        AttachmentKind,
+        AttachmentSource,
+    )
 
     AttachmentStore().write_manifest(
         Attachment(
@@ -107,8 +110,8 @@ def _seed_attachment_manifest(sha: str) -> None:
 def _seed_justificante() -> str:
     from decimal import Decimal
 
-    from ....core import Period
     from ....adapters.persistence.profile.justificante import JustificanteRepository
+    from ....core import Period
     from ....domain.justificante import Justificante
 
     csv = "ABCD1234EFGH5678"
@@ -130,7 +133,7 @@ def _seed_justificante() -> str:
 
 
 def test_full_custody_carry_restores_evidence_bytes_and_audit_trail(tmp_path: Path) -> None:
-    from ....adapters.persistence.storage._namespace_registry import StorageCustodyProfile
+    from ....adapters.persistence.storage import StorageCustodyProfile
 
     with isolated_two_bucket_runtime(tmp_path=tmp_path) as runtime:
         source_bucket = runtime.primary.bucket_id
