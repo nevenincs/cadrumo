@@ -23,6 +23,7 @@ from typing import TYPE_CHECKING
 
 from pydantic import ValidationError
 
+from ....core.external_constants import UTF_8_ENCODING
 from ....core.logging import get_logger
 from ....core.time import now
 from ....domain.categories import (
@@ -76,7 +77,7 @@ def load_usage_ratios(*, bucket_id: str, objects: SecureObjectRepository | None 
         if record is None:
             _LOGGER.debug("usage-ratios object not found; returning empty profile bucket_id=%s", bucket_id)
             return UsageRatioProfile()
-        envelope = Envelope[UsageRatioProfile].model_validate_json(record.payload.decode("utf-8"))
+        envelope = Envelope[UsageRatioProfile].model_validate_json(record.payload.decode(UTF_8_ENCODING))
         if envelope.classification is not SensitivityClass.FINANCIAL:
             raise ClassificationError(
                 f"usage-ratio profile object has classification {envelope.classification}; "
@@ -156,7 +157,7 @@ def save_usage_ratios(
             classification=SensitivityClass.FINANCIAL,
             schema_version=_USAGE_RATIO_VERSION,
             written_at=envelope.written_at,
-            payload=envelope.model_dump_json().encode("utf-8"),
+            payload=envelope.model_dump_json().encode(UTF_8_ENCODING),
         )
     except OSError as exc:
         _LOGGER.error("usage-ratios database write failed", exc_info=True)
