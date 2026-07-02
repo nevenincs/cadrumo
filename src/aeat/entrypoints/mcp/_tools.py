@@ -2,8 +2,9 @@
 
 Each operator-callable registry command becomes one SDK-independent
 :class:`McpToolDescriptor`: a namespaced tool name, a description drawn from the
-family's operator intent, an input schema (the CLI argument vector), the
-command's registered result model as the output schema, and the mutability
+family's operator intent, a per-verb input schema derived from the command's own
+click parameters (via :func:`~aeat.entrypoints.mcp._input_schema.build_verb_input_schemas`),
+the command's registered result model as the output schema, and the mutability
 annotations. The server shell adapts these into the MCP SDK's ``Tool`` /
 ``ToolAnnotations`` types. This module owns no protocol detail and is unit-tested.
 """
@@ -22,6 +23,7 @@ from ...application.operator_surface import (
 from ...core.json_contract import ENVELOPE_SCHEMA_VERSION, SCHEMA_REGISTRY
 from ._annotations import McpAnnotations, annotations_for_command
 from ._dispatch import is_exposable_command, tool_name_for_command
+from ._input_schema import VerbInputSchema, build_verb_input_schemas
 
 _STRICT_FROZEN = ConfigDict(frozen=True, strict=True, validate_assignment=True, extra="forbid")
 
@@ -30,22 +32,16 @@ _STRICT_FROZEN = ConfigDict(frozen=True, strict=True, validate_assignment=True, 
 # default that asks for confirmation more often, never less.
 _READ_ONLY_OVERRIDES: frozenset[str] = frozenset({"contract"})
 
-_ARGS_INPUT_SCHEMA: dict[str, Any] = {
-    "type": "object",
-    "properties": {
-        "args": {
-            "type": "array",
-            "items": {"type": "string"},
-            "description": "Command-line arguments for the aeat command (flags and values).",
-        },
-    },
-    "required": [],
-    "additionalProperties": False,
-}
-
 
 class McpToolDescriptor(BaseModel):
-    """SDK-independent description of one exposed MCP tool."""
+    """SDK-independent description of one exposed MCP tool.
+
+    ``input_schema`` is the rendered per-verb JSON Schema a client reads to build
+    a typed argument form; ``verb_schema`` is the structured source of that render
+    plus the resolved CLI path, which the server consumes to reconstruct the argv
+    from named arguments. The two are always in lock-step: ``input_schema`` is
+    exactly ``verb_schema.json_schema()``.
+    """
 
     model_config = _STRICT_FROZEN
 
@@ -55,6 +51,7 @@ class McpToolDescriptor(BaseModel):
     input_schema: dict[str, Any]
     output_schema: dict[str, Any]
     annotations: McpAnnotations
+    verb_schema: VerbInputSchema
 
 
 def _family_mutability() -> dict[str, OperatorMutability]:
@@ -104,25 +101,26 @@ def build_tool_descriptors() -> tuple[McpToolDescriptor, ...]:
     ).contract
     intent_map = {family.child.replace("-", "_"): family.operator_question for family in contract.command_families}
 
+    exposable_keys = tuple(ref.command for ref in refs if is_exposable_command(ref.command))
+    verb_schemas = build_verb_input_schemas(exposable_keys)
+
     descriptors: list[McpToolDescriptor] = []
-    for ref in refs:
-        key = ref.command
-        if not is_exposable_command(key):
-            continue
+    for key in exposable_keys:
         mutability = _mutability_for_key(key, family_map)
         cli_form = "aeat app " + key.replace(".", " ")
         intent = _family_intent(key, intent_map)
         description = f"Run `{cli_form}`." + (f" {intent}." if intent else "")
         annotations = annotations_for_command(command_key=key, mutability=mutability, title=cli_form)
-        output_schema = _output_schema_for(key)
+        verb_schema = verb_schemas[key]
         descriptors.append(
             McpToolDescriptor(
                 name=tool_name_for_command(key),
                 command_key=key,
                 description=description,
-                input_schema=_ARGS_INPUT_SCHEMA,
-                output_schema=output_schema,
+                input_schema=verb_schema.json_schema(),
+                output_schema=_output_schema_for(key),
                 annotations=annotations,
+                verb_schema=verb_schema,
             ),
         )
     return tuple(descriptors)

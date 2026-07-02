@@ -4,7 +4,8 @@ from __future__ import annotations
 
 import pytest
 
-from .._dispatch import command_key_for_tool, tool_name_for_command, tool_request_argv
+from .._dispatch import command_key_for_tool, tool_name_for_command
+from .._input_schema import cli_argv_for
 from .._tools import build_tool_descriptors
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
@@ -30,6 +31,15 @@ def test_descriptors_are_well_formed() -> None:
         assert descriptor.annotations.title
 
 
+def test_every_descriptor_carries_a_per_verb_schema_not_the_args_bag() -> None:
+    for descriptor in build_tool_descriptors():
+        # The retired ``{args: [string]}`` bag must not survive anywhere.
+        assert "args" not in descriptor.input_schema["properties"]
+        # The rendered schema is exactly the structured verb schema's projection.
+        assert descriptor.input_schema == descriptor.verb_schema.json_schema()
+        assert descriptor.verb_schema.command_key == descriptor.command_key
+
+
 def test_mutability_projects_onto_annotations() -> None:
     by_key = {d.command_key: d for d in build_tool_descriptors()}
     assert by_key["contract"].annotations.read_only_hint is True
@@ -48,8 +58,10 @@ def test_tool_name_round_trips_including_segment_underscores() -> None:
     assert command_key_for_tool("aeat_not_a_real_tool", command_keys=keys) is None
 
 
-def test_argv_places_format_json_at_root_and_keeps_args() -> None:
-    assert tool_request_argv("modelo.work.calculate", ["wu_123"]) == [
+def test_descriptor_argv_places_format_json_at_root_and_maps_named_arguments() -> None:
+    by_key = {d.command_key: d for d in build_tool_descriptors()}
+    calculate = by_key["modelo.work.calculate"].verb_schema
+    assert cli_argv_for(calculate, {"work_unit_id": "wu_123"}) == [
         "--format",
         "json",
         "app",
@@ -58,8 +70,9 @@ def test_argv_places_format_json_at_root_and_keeps_args() -> None:
         "calculate",
         "wu_123",
     ]
-    # config and app.live keys carry their own leading root segment.
-    assert tool_request_argv("config.profile.create", ["acme"]) == [
+    # config keys carry their own leading root segment.
+    create = by_key["config.profile.create"].verb_schema
+    assert cli_argv_for(create, {"profile_name": "acme"}) == [
         "--format",
         "json",
         "config",
@@ -67,4 +80,6 @@ def test_argv_places_format_json_at_root_and_keeps_args() -> None:
         "create",
         "acme",
     ]
-    assert tool_request_argv("app.live.filed.pull", [])[2:4] == ["app", "live"]
+    # The resolved path uses the hyphenated command name click dispatches on.
+    pull = by_key["app.live.iva_wallet.pull"].verb_schema
+    assert cli_argv_for(pull, {})[2:5] == ["app", "live", "iva-wallet"]

@@ -30,8 +30,9 @@ import json
 import subprocess
 import sys
 
-from ._dispatch import command_key_for_tool, tool_request_argv
+from ._dispatch import command_key_for_tool
 from ._hitl import ConfirmationPolicy, confirmation_for_tool
+from ._input_schema import cli_argv_for
 from ._persona_scope import AgentPersona, active_persona, is_tool_in_persona_scope
 from ._tools import McpToolDescriptor, build_tool_descriptors
 
@@ -77,6 +78,10 @@ def filter_descriptors_for_persona(
     ``persona=None`` (no active persona) returns ``descriptors`` unchanged -
     the full, unscoped surface. This is the ``_list_tools``-side half of D1;
     it is SDK-independent and pure so it is unit-tested directly.
+
+    Returns:
+        The subset of :class:`McpToolDescriptor` entries in scope for
+        *persona*.
     """
     if persona is None:
         return descriptors
@@ -133,9 +138,17 @@ def build_sdk_tools(descriptors: tuple[McpToolDescriptor, ...]) -> list[object]:
     return tools
 
 
-def _run_subprocess_tool(descriptor: McpToolDescriptor, args: list[str]) -> tuple[dict[str, object], bool]:
-    """Run one tool's CLI command in a subprocess and return (envelope, is_error)."""
-    argv = ["aeat", *tool_request_argv(descriptor.command_key, args)]
+def _run_subprocess_tool(
+    descriptor: McpToolDescriptor,
+    arguments: dict[str, object],
+) -> tuple[dict[str, object], bool]:
+    """Run one tool's CLI command in a subprocess and return (envelope, is_error).
+
+    The argv is reconstructed from the descriptor's per-verb input schema and the
+    named ``arguments`` the client supplied - positional arguments in CLI order,
+    then options - so the retired ``{args: [string]}`` bag has no path back in.
+    """
+    argv = ["aeat", *cli_argv_for(descriptor.verb_schema, arguments)]
     completed = subprocess.run(argv, capture_output=True, text=True, check=False)  # noqa: S603
     raw = completed.stdout.strip() or completed.stderr.strip()
     try:
@@ -193,11 +206,7 @@ def _run_server(
                 content=[TextContent(type="text", text="refused: AEAT live-write is permanently forbidden")],
                 isError=True,
             )
-        # TYPE-IGNORE-RATIONALE-MCP-TOOL-ARGS: ``arguments`` is the untyped
-        # ``dict[str, object]`` MCP call-tool payload; ``.get("args", [])``
-        # is iterated defensively and every element coerced through ``str()``.
-        args = [str(value) for value in arguments.get("args", [])]  # type: ignore[union-attr]
-        envelope, is_error = _run_subprocess_tool(descriptor, args)
+        envelope, is_error = _run_subprocess_tool(descriptor, arguments)
         return CallToolResult(
             content=[TextContent(type="text", text=json.dumps(envelope, indent=2))],
             structuredContent=envelope,
