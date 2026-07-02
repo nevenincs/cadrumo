@@ -147,56 +147,36 @@ def test_modelo_100_base_and_attribution_roles_are_legally_grounded_across_revis
             assert _FRACTIONAL_PAYMENT_ARTICLE_REF not in casilla.legal_refs, (filing_year, casilla.id)
 
 
-@pytest.mark.parametrize(
-    ("filing_year", "expected_order_ref"),
-    (
-        (2020, "orden-hac-248-2021:art-10"),
-        (2021, "orden-hfp-207-2022:art-10"),
-        (2022, "orden-hfp-310-2023:art-11"),
-        (2023, "orden-hac-265-2024:art-11"),
-        (2024, "orden-hac-242-2025:art-11"),
-        (2025, "orden-hac-277-2026:art-10"),
-    ),
-)
-def test_modelo_100_tfi_detail_fields_cite_revision_order_documentation_article(
-    filing_year: int,
-    expected_order_ref: str,
-) -> None:
-    revision = _modelo_100_snapshot(filing_year).revision
-    detail_roles = {"irpf_re_tfi_entidad_denominacion", "irpf_re_tfi_imputacion_importe"}
-    casillas_by_role = {
-        casilla.semantic_role: casilla for casilla in revision.casillas if casilla.semantic_role in detail_roles
-    }
-
-    assert set(casillas_by_role) == detail_roles
-    for casilla in casillas_by_role.values():
-        assert "ley-35-2006:art-91" in casilla.legal_refs, casilla.id
-        assert expected_order_ref in casilla.legal_refs, casilla.id
-
-
-@pytest.mark.parametrize(
-    ("filing_year", "expected_order_ref"),
-    (
-        (2020, "orden-hac-248-2021:art-3"),
-        (2021, "orden-hfp-207-2022:art-3"),
-        (2022, "orden-hfp-310-2023:art-3"),
-        (2023, "orden-hac-265-2024:art-3"),
-        (2024, "orden-hac-242-2025:art-3"),
-        (2025, "orden-hac-277-2026:art-3"),
-    ),
-)
-def test_modelo_100_revision_declares_annual_form_order(
-    filing_year: int,
-    expected_order_ref: str,
-) -> None:
+def test_modelo_100_annual_order_refs_are_declared_and_cited() -> None:
     modelos_by_id, catalogues = _loaded_registry()
     modelo = modelos_by_id["100"]
-    revision = modelo.revisions[str(filing_year)]
+    detail_roles = {"irpf_re_tfi_entidad_denominacion", "irpf_re_tfi_imputacion_importe"}
+    expected_refs = {
+        2020: ("orden-hac-248-2021:art-3", "orden-hac-248-2021:art-10"),
+        2021: ("orden-hfp-207-2022:art-3", "orden-hfp-207-2022:art-10"),
+        2022: ("orden-hfp-310-2023:art-3", "orden-hfp-310-2023:art-11"),
+        2023: ("orden-hac-265-2024:art-3", "orden-hac-265-2024:art-11"),
+        2024: ("orden-hac-242-2025:art-3", "orden-hac-242-2025:art-11"),
+        2025: ("orden-hac-277-2026:art-3", "orden-hac-277-2026:art-10"),
+    }
 
-    assert expected_order_ref in catalogues.legal
-    assert expected_order_ref in modelo.legal_refs
-    assert expected_order_ref in revision.legal_refs
-    assert revision.orden_aplicabilidad == (expected_order_ref,)
+    for filing_year, (annual_order_ref, tfi_order_ref) in expected_refs.items():
+        revision = modelo.revisions[str(filing_year)]
+
+        assert annual_order_ref in catalogues.legal, filing_year
+        assert annual_order_ref in modelo.legal_refs, filing_year
+        assert annual_order_ref in revision.legal_refs, filing_year
+        assert revision.orden_aplicabilidad == (annual_order_ref,), filing_year
+
+        casillas_by_role = {
+            casilla.semantic_role: casilla
+            for casilla in revision.casillas
+            if casilla.semantic_role in detail_roles
+        }
+        assert set(casillas_by_role) == detail_roles, filing_year
+        for casilla in casillas_by_role.values():
+            assert "ley-35-2006:art-91" in casilla.legal_refs, (filing_year, casilla.id)
+            assert tfi_order_ref in casilla.legal_refs, (filing_year, casilla.id)
 
 
 def test_modelo_100_2025_zec_reduced_rate_parameter_cites_special_rate_article() -> None:
