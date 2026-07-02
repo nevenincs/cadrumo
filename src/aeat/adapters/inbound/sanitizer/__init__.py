@@ -12,7 +12,7 @@ or general-purpose anonymisation. Cleartext mappings belong in operator-local
 scratch files; the committed artefact should be the sanitised PDF plus the
 cleartext-free audit output from :class:`SanitizationResult`.
 
-Callers outside :mod:`aeat.adapters.inbound.sanitizer` must import
+Callers outside :mod:`adapters.inbound.sanitizer` must import
 exclusively from this module — the private modules
 (``_records``, ``_errors``, ``_pipeline``, ``_streams``,
 ``_metadata``, ``_dynamic``, ``_structtree``, ``_determinism``)
