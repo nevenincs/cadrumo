@@ -70,6 +70,9 @@ related:
 - Reviewed W09.P45.S224 changes to `src/aeat/adapters/inbound/financial/providers/_csv.py`, provider CSV tests, and focused ledger import UX tests.
 - Checked that missing and blank CSV currency still default to the configured default currency, while malformed nonblank currency is refused at import with row and column context before `RawTransaction` or `LedgerTransactionPayload` validation can leak.
 - Checked validation evidence from focused CSV provider tests, focused ledger import UX integration tests, touched-file ruff, reviewer output, and RAG grounding.
+- Reviewed W09.P45.S222 changes to financial-provider date parsing, CSV row error wrapping, localized financial error leaves, and focused ledger import UX tests.
+- Checked that malformed CSV dates now render the inner date-format reason through `errors.financial.unsupported_date_format` while retaining row, column, raw value, and expected-format context.
+- Checked validation evidence from focused CSV provider and ledger import UX tests, locale scaffold/audit, touched-file ruff, reviewer output, and RAG grounding.
 
 ## Findings
 
@@ -148,6 +151,10 @@ No findings for the overview calendar output-language parity fix. The CLI verb n
 ### w09-p45-s224 | low | no findings
 
 No findings for the CSV currency/list-view validation closure. The fix keeps defaulting for absent or blank currency cells, rejects malformed nonblank currency at the CSV provider boundary with row and column context, and leaves strict ledger read-payload currency validation intact. Residual risk is limited to mixed-language provider detail inside the localized import wrapper, which matches existing provider diagnostic practice but remains a possible future localization-hardening domain.
+
+### w09-p45-s222 | low | no findings
+
+No findings for the CSV date-parse localization fix. Unsupported financial-source dates now carry a translated message key with label, raw value, and expected-format context; the CSV wrapper resolves that message before adding row context, so non-English ledger import refusals no longer leak the raw English `unsupported date format` string. Residual risk is limited to invalid compact-date behavior being manually verified by review rather than covered by a committed dedicated regression.
 
 ## Recommendations
 
