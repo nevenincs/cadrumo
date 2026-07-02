@@ -41,9 +41,12 @@ from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.identity import ProfileId
 from ...core.logging import get_logger
 from ...core.time import now
-from ...domain.buckets._protocols import BucketEventHistoryRepositoryProtocol
-from ...domain.user_profile._values import UserProfileFact, UserProfileRecord
-from ..live._censo import (
+from ...domain.buckets import BucketEventHistoryRepositoryProtocol
+from ...domain.user_profile import (
+    UserProfileFact,
+    UserProfileRecord,
+)
+from ..live import (
     CensoSnapshot,
     CensoSnapshotService,
 )
@@ -224,7 +227,7 @@ class CensoSyncService:
             CensoNotAvailableError: when AEAT publishes no censo for
                 the operator's NIF (empty CensoFactSet).
         """
-        from ...adapters.outbound.aeat.sede._censo_live import (
+        from ...adapters.outbound.aeat.sede import (
             G313_LAUNCHER_URL,
             censo_fact_set_to_mapping,
             fetch_g313_censo,
@@ -400,11 +403,10 @@ class CensoSyncService:
         the empty tuple is returned. Operator-set overrides on
         non-HOME_OFFICE categories are preserved.
         """
+        from ...adapters.persistence.profile.usage_ratios import load_usage_ratios, save_usage_ratios
         from ...domain.usage_ratios import (
             UsageRatioProfile,
             derive_home_office_ratios_from_censo,
-            load_usage_ratios,
-            save_usage_ratios,
             usage_ratio_bucket_lock,
         )
 

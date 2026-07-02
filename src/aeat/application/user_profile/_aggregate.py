@@ -23,9 +23,8 @@ from pydantic import BaseModel, ConfigDict, Field, field_validator, model_valida
 
 from ...adapters.persistence.storage.bucket import ManifestKdfParams
 from ...core.identity import ProfileId as _ProfileId
-from ...core.time._utc import validate_utc_aware
-from ...domain.user_profile import UserProfileRecord, UserProfileStatus
-from ...domain.user_profile._errors import UserProfileValidationError
+from ...core.time import validate_utc_aware
+from ...domain.user_profile import UserProfileRecord, UserProfileStatus, UserProfileValidationError
 
 _PROFILE_AGGREGATE_CONFIG = ConfigDict(strict=True, frozen=True, extra="forbid", hide_input_in_errors=True)
 

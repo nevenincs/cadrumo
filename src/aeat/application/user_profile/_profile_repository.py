@@ -80,9 +80,9 @@ from ...domain.user_profile import (
     ProfileSchemaDefinition,
     UserProfileFact,
     UserProfileStatus,
+    UserProfileValidationError,
     new_profile_id,
 )
-from ...domain.user_profile._errors import UserProfileValidationError
 from . import RegisterProfileCommand, RemoveProfileCommand, RenameProfileCommand
 from ._aggregate import ProfileAggregate
 from ._integrity import verify_profile_integrity
@@ -484,13 +484,13 @@ class ProfileRepository:
             UserProfileValidationError: If ``new_label`` is blank after
                 stripping.
         """
-        from ..workflow._profile_bucket_scan import read_profile_bucket
+        from ..workflow import read_profile_bucket
         from ._orchestration import ProfileAlreadyRegisteredError
 
         aggregate = self.load(profile_id)
         trimmed = new_label.strip()
         if not trimmed:
-            from ...domain.user_profile._errors import UserProfileValidationError
+            from ...domain.user_profile import UserProfileValidationError
 
             raise UserProfileValidationError(
                 translated_message="application.user_profile.errors.profile_label_blank",
@@ -681,7 +681,7 @@ class ProfileRepository:
         case-insensitively. The refusal fires before any store write,
         so there is no staged state to roll back.
         """
-        from ..workflow._profile_bucket_scan import read_profile_bucket
+        from ..workflow import read_profile_bucket
         from ._orchestration import ProfileAlreadyRegisteredError
 
         if read_profile_bucket(label, root=self._root) is None:

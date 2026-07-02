@@ -14,8 +14,7 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 
-from ...domain.deadlines import TaxpayerProfile, taxpayer_profile_from_mapping
-from ...domain.deadlines._models import IVARegime
+from ...domain.deadlines import IVARegime, TaxpayerProfile, taxpayer_profile_from_mapping
 from ...domain.user_profile import (
     ProfileSchemaDefinition,
     UserProfileFact,

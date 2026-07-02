@@ -14,7 +14,7 @@ from typing import TYPE_CHECKING, Literal
 
 from pydantic import BaseModel, Field
 
-from ..calculations._export_field_kind import CasillaFieldKind
+from ..calculations import CasillaFieldKind
 from ._schema import ProfileSchemaDefinition
 
 if TYPE_CHECKING:

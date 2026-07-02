@@ -28,7 +28,7 @@ from ...core.external_constants import (
     MINIMO_DESCENDIENTE_MAX_AGE,
     MINIMO_MENOR_TRES_MAX_AGE,
 )
-from ...core.parsing._dates import _parse_iso8601_date
+from ...core.parsing import parse_iso8601_date
 from ._errors import ProfileValidationError
 
 # Comunidad de Madrid "Por nacimiento o adopción de hijos" deducción autonómica
@@ -75,7 +75,7 @@ _MAX_AGE_MENOR_TRES = MINIMO_MENOR_TRES_MAX_AGE
 def _coerce_iso_date_field(value: object) -> object:
     """Delegate for @field_validator date fields: parse ISO strings, pass through everything else."""
     if isinstance(value, str):
-        return _parse_iso8601_date(value)
+        return parse_iso8601_date(value)
     return value
 
 
