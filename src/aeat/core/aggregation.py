@@ -198,6 +198,8 @@ class RowSetGroupingKind(StrEnum):
       ↔ ``ATRIBUCION`` (``"atribucion"``)
     - ``BindingSourceKind.REFUND_OPERATION`` (``"refund_operation"``)
       ↔ ``REFUND`` (``"refund"``)
+    - ``BindingSourceKind.DONATIVO_DONOR`` (``"donativo_donor"``)
+      ↔ ``DONATIVO`` (``"donativo"``)
     """
 
     WITHHOLDING = "withholding"
@@ -205,6 +207,7 @@ class RowSetGroupingKind(StrEnum):
     FOREIGN_ASSET = "foreign_asset"
     ATRIBUCION = "atribucion"
     REFUND = "refund"
+    DONATIVO = "donativo"
 
 
 class BindingSourceKind(StrEnum):
@@ -319,13 +322,22 @@ class BindingSourceKind(StrEnum):
     LEDGER_TRANSACTION = "ledger_transaction"
     PURCHASE_INVOICE_EVIDENCE = "purchase_invoice_evidence"
     # Detail-record families. WITHHOLDING / FOREIGN_ASSET reuse the
-    # RowSetGroupingKind value; the other three carry their distinct
+    # RowSetGroupingKind value; the other four carry their distinct
     # source-token value (see ROW_SET_GROUPING_FOR_BINDING_SOURCE).
     WITHHOLDING = RowSetGroupingKind.WITHHOLDING.value
     FOREIGN_ASSET = RowSetGroupingKind.FOREIGN_ASSET.value
     RELATED_PARTY_OPERATION = "related_party_operation"
     ATRIBUCION_MEMBER = "atribucion_member"
     REFUND_OPERATION = "refund_operation"
+    # Modelo 182 (Ley 49/2002 art. 24, Orden EHA/3021/2007) per-donor register:
+    # the "registro tipo 2" detail row carrying the donor's NIF, importe
+    # donado, porcentaje de deducción aplicable, and the recurrencia flag
+    # (donativo plurianual a la misma entidad, LIRPF art. 68.3 / LIS art. 20).
+    # No live resolver yet — Sheets-pull-only, the same shape as the sibling
+    # detail-record families (ATRIBUCION_MEMBER, FOREIGN_ASSET,
+    # RELATED_PARTY_OPERATION, REFUND_OPERATION); registered in
+    # DEFERRED_SOURCE_KINDS (application/aggregation/_source_mesh.py).
+    DONATIVO_DONOR = "donativo_donor"
 
 
 ROW_SET_GROUPING_FOR_BINDING_SOURCE: Final[Mapping[BindingSourceKind, RowSetGroupingKind]] = MappingProxyType(
@@ -335,6 +347,7 @@ ROW_SET_GROUPING_FOR_BINDING_SOURCE: Final[Mapping[BindingSourceKind, RowSetGrou
         BindingSourceKind.RELATED_PARTY_OPERATION: RowSetGroupingKind.RELATED_PARTY,
         BindingSourceKind.ATRIBUCION_MEMBER: RowSetGroupingKind.ATRIBUCION,
         BindingSourceKind.REFUND_OPERATION: RowSetGroupingKind.REFUND,
+        BindingSourceKind.DONATIVO_DONOR: RowSetGroupingKind.DONATIVO,
     },
 )
 """Explicit detail-record binding-source ↔ row-assembly grouping correspondence.

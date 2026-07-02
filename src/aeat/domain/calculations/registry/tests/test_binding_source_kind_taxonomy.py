@@ -98,19 +98,28 @@ _MESH_ONLY_SOURCE_KINDS: frozenset[BindingSourceKind] = frozenset(
 # ARE registry-declared and merely lack a live resolver), these are advisory-backed
 # feeds whose registry binding waits on a separately-deferred upstream. The
 # ``bienes_inversion_regularizacion`` capital-goods regularización source (LIVA
-# arts. 107-110) is deferred until the prorrata-definitiva source lands, per ADR
-# ``2026-07-01-iva-bienes-inversion-regularizacion``; it surfaces an advisory rather
-# than resolving silently to zero. A member here that later gains a registry binding
-# must be removed from this carve-out (the disjointness assertion below fails
-# otherwise).
+# arts. 107-110) is deferred until the prorrata-definitiva source lands; it
+# surfaces an advisory rather than resolving silently to zero. A member here
+# that later gains a registry binding must be removed from this carve-out (the
+# disjointness assertion below fails otherwise).
 _DEFERRED_UNDECLARED_SOURCE_KINDS: frozenset[BindingSourceKind] = frozenset(
     {
         BindingSourceKind.BIENES_INVERSION_REGULARIZACION,
         # LIVA arts. 104-105 annual prorrata-general regularización — deferred until
         # the provisional-carry store is wired; surfaces an advisory rather than
-        # resolving silently to zero, per ADR
-        # ``2026-07-01-iva-complexity-hardening-scope``.
+        # resolving silently to zero.
         BindingSourceKind.PRORRATA_REGULARIZACION,
+        # Modelo 182 (Ley 49/2002 art. 24, Orden EHA/3021/2007) per-donor
+        # detail-record source. The binding-source-kind taxonomy, the
+        # per-family selector/validator module, and the DEFERRED_SOURCE_KINDS
+        # mesh registration have landed (matching the M184/M232/M720/M360
+        # detail-record shape), but the modelo-182 registry TOML skeleton
+        # (manifest.toml / revision.toml) that would declare a
+        # ``donativo_donor`` binding is temporarily absent from the working
+        # tree pending an unrelated in-flight registry-restructure sweep.
+        # Move this member's declaration into the M182 revision bindings and
+        # remove the carve-out entry once that skeleton is restored.
+        BindingSourceKind.DONATIVO_DONOR,
     },
 )
 
@@ -171,14 +180,15 @@ def test_invoice_frozenset_is_the_invoice_subset_of_the_enum() -> None:
     assert set(BindingSourceKind) >= INVOICE_BINDING_SOURCE_KINDS
 
 
-def test_ledger_frozenset_covers_all_five_ledger_members() -> None:
-    """``LEDGER_BINDING_SOURCE_KINDS`` is exactly the five ledger members.
+def test_ledger_frozenset_covers_all_six_ledger_members() -> None:
+    """``LEDGER_BINDING_SOURCE_KINDS`` is exactly the six ledger members.
 
     Guards against the historical regression where the set listed only two of
     the ledger kinds (OSS and renta-income were missing), which silently
     excluded those modelos from the ledger preflight. The fifth member is the
     M130 deductible-expense (gasto) aggregation source, the OUTGOING sibling of
-    the renta-income source.
+    the renta-income source; the sixth is the M151 impatriado (Ley Beckham)
+    Spanish-source base aggregation source.
     """
     assert {
         BindingSourceKind.LEDGER_OSS_AGGREGATION,
@@ -186,9 +196,10 @@ def test_ledger_frozenset_covers_all_five_ledger_members() -> None:
         BindingSourceKind.LEDGER_RENTA_EXPENSE_AGGREGATION,
         BindingSourceKind.LEDGER_RENTA_INCOME_AGGREGATION,
         BindingSourceKind.LEDGER_RENTA_GASTO_AGGREGATION,
+        BindingSourceKind.LEDGER_IMPATRIADO_INCOME_AGGREGATION,
     } == LEDGER_BINDING_SOURCE_KINDS
     assert set(BindingSourceKind) >= LEDGER_BINDING_SOURCE_KINDS
-    assert len(LEDGER_BINDING_SOURCE_KINDS) == 5
+    assert len(LEDGER_BINDING_SOURCE_KINDS) == 6
 
 
 def test_counterpart_frozenset_is_a_subset_of_the_enum() -> None:
