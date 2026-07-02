@@ -40,6 +40,7 @@ import pytest
 from ....core import Period
 from ....domain.buckets import BucketEventHistoryRepository
 from ....domain.calculations.registry import (
+    MODELO_303_IVA_COMPENSATION_BINDING_ID,
     CasillaId,
     RegistryModeloObservation,
     validated_casilla_id,
@@ -51,7 +52,7 @@ from ....domain.modelos._verification_repository import VerificationReportCatalo
 from ....domain.user_profile import UserProfileFact, UserProfileRecord
 from ....tests.registry_observations import registry_grounded_observations
 from ....tests.secure_sql import isolated_runtime_profile
-from ...calculations import MODELO_303_IVA_COMPENSATION_BINDING_ID, CalculationObservationRepository
+from ...calculations import CalculationObservationRepository
 from ...calculations._cross_period_clean_state import _OFFICIAL_SOURCE_KINDS
 from ...user_profile import UserProfileLifecycleRepository
 from .. import (
