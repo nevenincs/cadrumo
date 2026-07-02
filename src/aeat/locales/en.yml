@@ -2841,9 +2841,7 @@ cli:
       help: Classify one ledger transaction in the active profile
       id_help: Ledger transaction id to classify
       id_required: A transaction id is required when --from-csv is not provided.
-      irpf_category_help: IRPF category id. Use aeat app ledger categories; net-paid
-        professional invoices use actividad_economica and net-paid rent uses arrendamiento_local
-        or arrendamiento_vivienda_afecto.
+      irpf_category_help: 'IRPF category id. Use aeat app ledger categories. Net-paid professional invoices use actividad_economica; net-paid rent uses arrendamiento_local/arrendamiento_vivienda_afecto. Royalties/SGAE: Art. 25.4 can be capital mobiliario when the taxpayer is not the author; use actividad_economica only for own-account activity under LIRPF Art. 27.'
       iva_amount_help: IVA amount
       iva_category_help: Explicit IVA category override for this transaction (e.g.
         intra_community_supply, export_third_country_zero_rated, export_assimilated_zero_rated,

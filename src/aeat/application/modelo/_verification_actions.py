@@ -50,7 +50,10 @@ from ...domain.buckets._event_repository import BucketEventHistoryRepository
 from ...domain.buckets._protocols import BucketEventHistoryRepositoryProtocol
 from ...domain.calculations.registry._applicability_modelo202 import derive_modelo_202_modality
 from ...domain.calculations.registry._bindings import CasillaObservation
-from ...domain.calculations.registry._formula_runtime import M210_RATE_SENTINELS
+from ...domain.calculations.registry._formula_runtime import (
+    RegistryCalculationUnresolvedOutcome,
+    RegistryUnresolvedOutcomeReason,
+)
 from ...domain.calculations.registry._ids import CasillaId, validated_casilla_id
 from ...domain.calculations.registry._schema import (
     KNOWN_PROFILE_FLAG_ADVISORY_FIELDS,
@@ -579,52 +582,37 @@ def _evaluate_predicate_expression(
     return True
 
 
-def _rewrite_m210_sentinels(
-    observations: tuple[CasillaObservation, ...],
+_M210_UNRESOLVED_RATE_REASONS = frozenset(
+    {
+        RegistryUnresolvedOutcomeReason.M210_BASELINE_TIPO_DEFERRED,
+        RegistryUnresolvedOutcomeReason.M210_CONVENIO_RATE_MISSING,
+    },
+)
+
+
+def _m210_unresolved_outcome_findings(
+    unresolved_outcomes: tuple[RegistryCalculationUnresolvedOutcome, ...],
     *,
     profile: TaxpayerProfile,
     snapshot: RegistrySnapshot,
     year: int,
     tipo_renta: str,
-) -> tuple[tuple[CasillaObservation, ...], list[ModeloVerificationFinding]]:
-    """Sweep engine observations for M210 rate sentinels and rewrite them.
+) -> list[ModeloVerificationFinding]:
+    """Convert typed M210 unresolved engine outcomes into verification findings.
 
-    The ``irnr_resolve_tipo_gravamen`` formula op emits one of the
-    ``M210_RATE_SENTINELS`` Decimals (``-1``, ``-2``) when the
-    rate cannot be deterministically resolved from registry parameters
-    at evaluation time. The verification sweep here:
-
-    1. Finds every observation whose ``value`` matches a sentinel.
-    2. Re-invokes :func:`_resolve_m210_rate` to compute the
-       authoritative ``(rate, finding)`` pair from the profile +
-       snapshot.
-    3. Replaces the sentinel observation with one carrying the
-       resolved rate (or ``Decimal(0)`` when the helper returns
-       ``rate is None``, which is the safe operator-facing default
-       for a rate the registry could not determine).
-    4. Aggregates every emitted finding into the returned list.
-
-    A pure function over the inputs; no state mutation. The non-
-    sentinel observations pass through unchanged. The ``tipo_renta``
-    argument is the text input the operator declared for the M210
-    work unit; it is the discriminator the formula op consumed
-    upstream and is therefore the discriminator the resolution
-    helper must consume here.
+    The formula runtime reports an unresolvable IRNR rate beside the Decimal
+    value channels as :class:`RegistryCalculationUnresolvedOutcome`. This
+    verification-layer consumer replays the application M210 rate resolver over
+    each M210 rate outcome and returns any BLOCKING findings it emits.
     """
     findings: list[ModeloVerificationFinding] = []
-    rewritten: list[CasillaObservation] = []
-    for obs in observations:
-        if obs.value not in M210_RATE_SENTINELS:
-            rewritten.append(obs)
+    for outcome in unresolved_outcomes:
+        if outcome.reason not in _M210_UNRESOLVED_RATE_REASONS:
             continue
-        rate, obs_findings = _resolve_m210_rate(profile, tipo_renta, year, snapshot)
+        resolved_tipo_renta = tipo_renta or outcome.context.get("tipo_renta", "")
+        _rate, obs_findings = _resolve_m210_rate(profile, resolved_tipo_renta, year, snapshot)
         findings.extend(obs_findings)
-        new_value = rate if rate is not None else Decimal(0)
-        rewritten.append(obs.model_copy(update={"value": new_value}))
-    return tuple(rewritten), findings
-
-
-rewrite_m210_sentinels = _rewrite_m210_sentinels
+    return findings
 
 
 def _evaluate_advisory_predicate_fires(
@@ -1559,6 +1547,22 @@ def _collect_revision_verification_findings(
             target.casilla_values,
             predicate_profile,
             target.input_values_by_casilla_id,
+        ),
+    )
+
+    # Typed unresolved-outcome gate: the engine reports an unresolvable IRNR rate
+    # beside the Decimal value channels (its casilla is omitted, not filled with a
+    # sentinel). Convert each persisted outcome into a BLOCKING finding. The
+    # consumer filters by reason, so the call is modelo-neutral: it no-ops for a
+    # revision that carries no rate outcome. ``tipo_renta`` is left empty here so
+    # the consumer reads it from the outcome's own captured context.
+    findings.extend(
+        _m210_unresolved_outcome_findings(
+            target.unresolved_outcomes,
+            profile=predicate_profile,
+            snapshot=snapshot,
+            year=work_unit.filing_year,
+            tipo_renta="",
         ),
     )
 

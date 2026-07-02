@@ -18,7 +18,7 @@ The :class:`Topic` records are core-level resources: they depend only
 on core primitives and the bundled registry path. They are loaded into
 a :class:`TopicCatalogue` by :func:`load_topic_catalogue` and consumed
 through the
-:class:`~aeat.core.resources._repos.topics.TopicCatalogueRepository`
+:class:`core.resources._repos.topics.TopicCatalogueRepository`
 singleton, keeping ``core`` free of any import into the application
 layer.
 """

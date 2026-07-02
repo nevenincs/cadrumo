@@ -522,6 +522,7 @@ def calculate_modelo_revision(
         borrador_snapshot_id=prepared.channels.borrador_snapshot_id,
         bindings_sourced_from_borrador=prepared.channels.bindings_sourced_from_borrador,
         observations=typed_observations,
+        unresolved_outcomes=engine_result.unresolved_outcomes,
         detail_rows=detail_rows,
         formula_count=len(engine_result.entries),
         actor=actor,

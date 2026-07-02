@@ -261,6 +261,10 @@ def isolated_runtime_profile(
         )
         with activate_session(session):
             runtime = inspect_storage_runtime(settings)
+            # Building the repository through the runtime acquires and
+            # registers the bucket engine on ``session``; closing the
+            # session in the teardown below disposes it via the unified
+            # lifecycle, so no separate ``dispose_engine`` teardown is needed.
             repository = secure_object_repository_for_active_bucket()
             try:
                 yield TestRuntimeProfile(
@@ -272,7 +276,7 @@ def isolated_runtime_profile(
                     repository=repository,
                 )
             finally:
-                dispose_engine(settings)
+                session.close()
 
 
 @dataclass(frozen=True)
@@ -398,7 +402,11 @@ def isolated_two_bucket_runtime(
                     _secondary_session=secondary_session,
                 )
             finally:
-                dispose_engine(settings)
+                # Each session owns and disposes its bucket engine on close;
+                # closing both sweeps the two buckets' engines via the
+                # unified lifecycle.
+                secondary_session.close()
+                primary_session.close()
 
 
 @contextmanager
@@ -430,7 +438,11 @@ def isolated_cli_runtime_profile(
             label=label,
         ) as profile,
     ):
-        dispose_engine(profile.settings)
+        # The active session opened by ``isolated_runtime_profile`` already
+        # owns a valid engine for this bucket; disposing it here would strand
+        # the session's registered handle. The added directory overrides do
+        # not change the database route, so the engine stays valid for the
+        # CLI test and is disposed on the session's close.
         yield profile
 
 

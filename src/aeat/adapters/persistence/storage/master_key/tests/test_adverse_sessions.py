@@ -135,10 +135,18 @@ def test_torn_bucket_manifest_activation_fails_without_opening_bucket_session(tm
     assert has_active_bucket_session() is False
 
 
-def test_bucket_session_close_falls_back_when_explicit_database_url_blocks_target_route(
+def test_bucket_session_close_disposes_by_bucket_identity_under_explicit_database_url(
     tmp_path: Path,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
+    """Close seals cleanly under an explicit database URL, disposing by bucket id.
+
+    Engine disposal keys on the session's bucket identity, so it never
+    re-derives a database route from live settings. An explicit database
+    URL — which cannot be resolved to a bucket route — therefore no longer
+    forces a broad fallback dispose; the close is a clean bucket-scoped
+    disposal that seals the session and leaks no storage-root path.
+    """
     session = BucketSession.open(
         bucket_id="explicit-route",
         kek=_KEK,
@@ -158,7 +166,6 @@ def test_bucket_session_close_falls_back_when_explicit_database_url_blocks_targe
         session.close()
 
     assert session.sealed is True
-    assert "bucket session targeted engine eviction unavailable" in caplog.text
     assert str(tmp_path) not in caplog.text
 
 

@@ -203,16 +203,14 @@ def reset_config(scope: ConfigResetScope, *, confirmed: bool) -> ConfigResetRepo
         )
 
     if profile_bucket_ids_to_remove:
-        from ..adapters.persistence.storage.sql import dispose_engine
         from .user_profile._orchestration import remove_profile_bucket_directory
 
         for profile_id in profile_bucket_ids_to_remove:
-            # Dispose the cached per-bucket engine so its SQLite file
-            # handle is released before the directory is removed; an
-            # open handle blocks the rename on Windows.
-            dispose_engine()
             # The bucket manifest is the existence claim; removing the
             # directory clears the profile from the manifest scan.
+            # ``remove_profile_bucket_directory`` disposes that bucket's
+            # engine first, releasing the SQLite file handle that would
+            # otherwise block the rename on Windows.
             remove_profile_bucket_directory(profile_id)
 
     return ConfigResetReport(

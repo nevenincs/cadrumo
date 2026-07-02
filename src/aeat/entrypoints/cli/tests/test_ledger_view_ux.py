@@ -217,7 +217,8 @@ def test_classify_can_correct_and_view_iva_category(tmp_path: Path) -> None:
     A persona run marked a row ``erroneous_invoice`` while investigating a
     corrective invoice, then could not change it back to ``domestic_general_21``:
     the mutation signature ignored ``iva_category`` and ``ledger view`` hid the
-    stored value. This reproduces that flow through the real CLI.
+    stored value. This reproduces that flow through the real CLI and confirms
+    the list surface shows the same operator-visible category.
     """
     txn = _imported_transaction_id(tmp_path)
     first = _invoke(
@@ -272,6 +273,36 @@ def test_classify_can_correct_and_view_iva_category(tmp_path: Path) -> None:
     text_view = _invoke(["app", "ledger", "view", txn[:8]])
     assert text_view.exit_code == 0, text_view.output
     assert "IVA category\tdomestic_general_21" in text_view.output
+
+    listed = _invoke(["app", "ledger", "list"])
+    assert listed.exit_code == 0, listed.output
+    header = next(line for line in listed.output.splitlines() if "\tfull_id\t" in line)
+    assert header.split("\t") == [
+        "id",
+        "full_id",
+        "date",
+        "amount",
+        "description",
+        "IVA category",
+        "review_status",
+    ]
+    listed_row = next(line for line in listed.output.splitlines() if txn in line)
+    assert listed_row.split("\t")[5] == "domestic_general_21"
+
+    listed_es = _invoke(["--language", "es", "app", "ledger", "list"])
+    assert listed_es.exit_code == 0, listed_es.output
+    header_es = next(line for line in listed_es.output.splitlines() if "\tid_completo\t" in line)
+    assert header_es.split("\t") == [
+        "id",
+        "id_completo",
+        "fecha",
+        "importe",
+        "descripción",
+        "Categoria de IVA",
+        "estado_revisión",
+    ]
+    listed_es_row = next(line for line in listed_es.output.splitlines() if txn in line)
+    assert listed_es_row.split("\t")[5] == "domestic_general_21"
 
 
 def test_list_and_view_render_accented_descriptions_identically(

@@ -10,7 +10,7 @@ tracking) that needs a typed precondition rather than per-call-site
 ``if os.environ[...] != "1"`` boilerplate in tests.
 
 The gate is always constructed inline from a
-:class:`aeat.core.config.Settings` instance at the call site. It is
+:class:`core.config.Settings` instance at the call site. It is
 never injected via a constructor, never stored as state on engines,
 and never passed as a kwarg that could make a write path
 substitutable. That anti-injection stance preserves the
@@ -25,10 +25,10 @@ See Also:
     :class:`AuthorizationManifest`
         Directory-mode modelo authorization manifest re-exported by this
         package for registry capability derivation.
-    :mod:`aeat.application.live`
+    :mod:`application.live`
         Read-only application-live facade that calls the read gate before
         opening AEAT remote surfaces.
-    :mod:`aeat.adapters.outbound.aeat.export._submitters`
+    :mod:`adapters.outbound.aeat.export._submitters`
         Empty outbound namespace documenting the deliberately absent remote
         submitter transport.
 """
@@ -125,7 +125,7 @@ class AeatAccessGate:
     def require_live_read(self, *, pytest_current_test: str | None = None) -> None:
         """Refuse pytest-driven live AEAT reads unless the test opt-in is on.
 
-        Routes the check through :class:`aeat.core.config.Settings`
+        Routes the check through :class:`core.config.Settings`
         (specifically the ``aeat_live_tests_enabled`` field) so
         every config read in the codebase flows through a single
         validated surface. Outside pytest this method deliberately

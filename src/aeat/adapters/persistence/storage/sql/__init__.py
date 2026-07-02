@@ -28,7 +28,13 @@ this package facade only re-exports the SQL storage API.
 from __future__ import annotations
 
 from ._orm import Base, SecureObjectRow
-from .engine import create_engine_from_settings, dispose_engine, get_engine
+from .engine import (
+    create_engine_from_settings,
+    dispose_engine,
+    dispose_engine_handle,
+    dispose_engines_for_bucket,
+    get_engine,
+)
 from .records import CorpusArtifactRecord, ModeloCatalogueRecord, PortalAuthMethod, PortalRecord
 from .repository import (
     CorpusArtifactRepository,
@@ -67,6 +73,8 @@ __all__ = [
     "SqlRecordRepository",
     "create_engine_from_settings",
     "dispose_engine",
+    "dispose_engine_handle",
+    "dispose_engines_for_bucket",
     "get_engine",
     "get_sessionmaker",
     "session_scope",

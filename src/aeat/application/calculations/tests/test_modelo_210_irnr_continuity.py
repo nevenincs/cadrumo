@@ -20,7 +20,7 @@ rate times the declared base in both years — treaty-rate determinism across
 annual groupings.
 
 GB is chosen because it has an explicit Convenio row in the primary seed
-(the only initial country with a non-sentinel entry for tipo_renta=general),
+(the only initial country with a concrete rate entry for tipo_renta=general),
 making the override path exercisable without authoring new registry data.
 
 This module is the multi-year-renta authorization enrollment for Modelo 210.
@@ -78,7 +78,7 @@ _YEAR_N_PLUS_1 = 2026
 # row carries rate=0.24, coinciding with the TRLIRNR Art 25.1.a baseline.
 # The Convenio override path is exercised (country_of_fiscal_residence is
 # non-None); the resolved rate equals the statutory baseline. This is the
-# only primary Convenio row with a real (non-sentinel) entry for a
+# only primary Convenio row with a real concrete-rate entry for a
 # resolvable tipo_renta, making it the canonical baseline enrollment scenario.
 _COUNTRY_GB = "GB"
 _TIPO_RENTA = "general"

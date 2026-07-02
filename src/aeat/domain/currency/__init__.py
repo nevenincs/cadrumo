@@ -4,13 +4,13 @@ Normalizes :class:`MonetaryAmount` records to EUR through an injected
 :class:`ExchangeRateProvider`, so downstream tax aggregation works from a single
 currency while source currency evidence remains intact. The provider contract is
 ``original_amount * rate = eur_amount``; ECB EUR-base quote inversion and
-most-recent-prior-publication fallback live in :mod:`aeat.adapters.outbound.fx`,
+most-recent-prior-publication fallback live in :mod:`adapters.outbound.fx`,
 not in this pure domain package.
 
 The service returns :class:`NormalizedAmount` with a
 :class:`CurrencyNormalizationStatus` rather than silently assuming EUR or writing
 zero into filing-grade facts. Ledger import persists successful normalization as
-``fx_rate`` / ``value_in_eur`` on :class:`~aeat.domain.transactions.Transaction`
+``fx_rate`` / ``value_in_eur`` on :class:`domain.transactions.Transaction`
 records before application aggregation consumes the row.
 
 Major declarations:
@@ -26,16 +26,16 @@ Major declarations:
   the failure taxonomy.
 
 See Also:
-    :mod:`aeat.adapters.outbound.fx`
-        Bundled ECB :class:`~aeat.adapters.outbound.fx.EcbReferenceRateProvider`
+    :mod:`adapters.outbound.fx`
+        Bundled ECB :class:`adapters.outbound.fx.EcbReferenceRateProvider`
         adapter that implements :class:`ExchangeRateProvider`.
-    :mod:`aeat.application.ledger`
+    :mod:`application.ledger`
         Import path that applies this service and persists ``fx_rate`` /
         ``value_in_eur`` on transactions.
-    :mod:`aeat.domain.transactions`
+    :mod:`domain.transactions`
         Transaction model coupling invariants for foreign-currency rate
         provenance and EUR projection fields.
-    :mod:`aeat.application.aggregation`
+    :mod:`application.aggregation`
         Source-resolution predicates and amount projections that reject
         unconverted foreign rows instead of silently treating them as EUR.
 """

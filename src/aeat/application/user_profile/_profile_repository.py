@@ -343,13 +343,13 @@ class ProfileRepository:
         except (AeatError, OSError, ValidationError):
             # Roll back every store this create touched: the staged
             # directory + manifest are removed and the pointer is
-            # restored to its pre-create state. The per-bucket
+            # restored to its pre-create state. This bucket's per-bucket
             # SQLAlchemy engine opened by the record write is disposed
             # first: on Windows an open SQLite handle refuses the
             # directory removal.
-            from ...adapters.persistence.storage.sql.engine import dispose_engine
+            from ...adapters.persistence.storage.sql.engine import dispose_engines_for_bucket
 
-            dispose_engine()
+            dispose_engines_for_bucket(resolved_id)
             self._remove_bucket_directory(resolved_id)
             self._restore_pointer_text(rollback_pointer_text)
             raise

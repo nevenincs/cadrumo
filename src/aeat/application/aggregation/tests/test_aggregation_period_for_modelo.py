@@ -64,14 +64,12 @@ def _period(code: str, *, year: int = 2025) -> Period:
     return Period.from_year_and_code(year, code)
 
 
-@pytest.mark.parametrize("token", _LEDGER_SPAN_TOKENS, ids=[c.value for c in _LEDGER_SPAN_TOKENS])
-def test_canonical_span_token_maps_to_typed_period(
-    token: StandardPeriodCode,
-) -> None:
+def test_canonical_span_token_maps_to_typed_period() -> None:
     """Every canonical ledger-span token yields an aggregation Period."""
-    period = aggregation_period_for_modelo(filing_year=_FILING_YEAR, code=token.value)
+    for token in _LEDGER_SPAN_TOKENS:
+        period = aggregation_period_for_modelo(filing_year=_FILING_YEAR, code=token.value)
 
-    assert period.year == _FILING_YEAR
+        assert period.year == _FILING_YEAR, token.value
 
 
 def test_canonical_tokens_map_to_expected_typed_periods() -> None:
@@ -83,11 +81,11 @@ def test_canonical_tokens_map_to_expected_typed_periods() -> None:
     assert aggregation_period_for_modelo(filing_year=2025, code="12") == _period("12")
 
 
-@pytest.mark.parametrize("alias", _DELETED_ALIASES)
-def test_deleted_alias_tokens_now_raise(alias: str) -> None:
+def test_deleted_alias_tokens_now_raise() -> None:
     """Each purged legacy alias raises instead of silently translating."""
-    with pytest.raises(AggregationValidationError):
-        aggregation_period_for_modelo(filing_year=_FILING_YEAR, code=alias)
+    for alias in _DELETED_ALIASES:
+        with pytest.raises(AggregationValidationError):
+            aggregation_period_for_modelo(filing_year=_FILING_YEAR, code=alias)
 
 
 def test_lowercase_canonical_token_is_normalised_not_an_alias() -> None:

@@ -17,21 +17,20 @@ from .._renta_ledger import RentaLedgerAggregationIssueReason
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 
-@pytest.mark.parametrize(
-    "name",
-    [
+def test_both_ledgers_emit_same_string_for_shared_reason() -> None:
+    names = (
         "UNSUPPORTED_DIRECTION",
         "UNSUPPORTED_CURRENCY",
         "UNCLASSIFIED_BUSINESS_STATE",
         "PERSONAL_TRANSACTION",
         "OUTSIDE_PERIOD",
-    ],
-)
-def test_both_ledgers_emit_same_string_for_shared_reason(name: str) -> None:
-    iva_value = IvaLedgerAggregationIssueReason[name].value
-    renta_value = RentaLedgerAggregationIssueReason[name].value
-    shared = getattr(_shared_issue_reasons, name)
-    assert iva_value == renta_value == shared
+    )
+
+    for name in names:
+        iva_value = IvaLedgerAggregationIssueReason[name].value
+        renta_value = RentaLedgerAggregationIssueReason[name].value
+        shared = getattr(_shared_issue_reasons, name)
+        assert iva_value == renta_value == shared, name
 
 
 def test_iva_ledger_carries_its_domain_specific_reasons() -> None:

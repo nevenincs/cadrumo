@@ -16,27 +16,27 @@ consume these records as evidence, while live AEAT access and any persisted
 operator workflow remain outside this domain surface.
 
 Callers outside this subpackage import exclusively from
-:mod:`aeat.domain.manuals` and must not reach into private modules such as
-:mod:`~aeat.domain.manuals._schema`, :mod:`~aeat.domain.manuals._loader`,
-:mod:`~aeat.domain.manuals._verify`, :mod:`~aeat.domain.manuals._fetch`, or
-:mod:`~aeat.domain.manuals._ids`.
+:mod:`domain.manuals` and must not reach into private modules such as
+:mod:`domain.manuals._schema`, :mod:`domain.manuals._loader`,
+:mod:`domain.manuals._verify`, :mod:`domain.manuals._fetch`, or
+:mod:`domain.manuals._ids`.
 
 Registry corpus services project these records into local operator reports and
 cross-check :class:`ManualCasillaReference` rows with the same
-:class:`~aeat.domain.calculations.registry.ValidatedRegistryAuthority` used by
+:class:`domain.calculations.registry.ValidatedRegistryAuthority` used by
 runtime registry workflows. Registry source catalogues cite manual PDFs as
-:class:`~aeat.domain.calculations.registry.SourceReference` entries and validate
+:class:`domain.calculations.registry.SourceReference` entries and validate
 the cited structure through this loader before treating the corpus as official
 source guidance.
 
 See Also:
-    :mod:`aeat.application.registry`
+    :mod:`application.registry`
         Read-only application services for listing, showing, and verifying
         manual corpus material against registry authority.
-    :mod:`aeat.domain.calculations.registry`
+    :mod:`domain.calculations.registry`
         Registry legal/source catalogue that consumes manual PDF references as
         filing-grounding evidence.
-    :mod:`aeat.core.resources`
+    :mod:`core.resources`
         Resource boundary that exposes the packaged manual catalogue without
         turning it into mutable operator bucket state.
 

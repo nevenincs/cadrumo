@@ -33,3 +33,20 @@ value = "0.02"
 date_axis = "filing_period"
 valid_from = 2024-01-01
 valid_to = 2024-12-31
+
+[[revisions."2024".parameters]]
+id = "renta-2024-imputacion-inmobiliaria-year-days"
+data_type = "integer"
+unit = "days"
+legal_refs = ["ley-35-2006:art-85"]
+source_refs = ["aeat-renta-2024-manual-parte1"]
+
+[[revisions."2024".parameters.source_citations]]
+source_ref = "aeat-renta-2024-manual-parte1"
+required_text = ["62 ÷ 365", "valor catastral"]
+
+[[revisions."2024".parameters.values]]
+value = "365"
+date_axis = "filing_period"
+valid_from = 2024-01-01
+valid_to = 2024-12-31

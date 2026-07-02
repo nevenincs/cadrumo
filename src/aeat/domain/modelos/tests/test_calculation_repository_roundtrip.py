@@ -31,7 +31,13 @@ from pydantic import ValidationError
 
 from ....adapters.persistence.storage import SensitivityClass
 from ....tests.secure_sql import isolated_runtime_profile
-from ...calculations.registry import CasillaId, CasillaObservation, validated_casilla_id
+from ...calculations.registry import (
+    CasillaId,
+    CasillaObservation,
+    RegistryCalculationUnresolvedOutcome,
+    RegistryUnresolvedOutcomeReason,
+    validated_casilla_id,
+)
 from .._calculation_repository import (
     _CALCULATION_CATALOGUE_VERSION,
     _CALCULATION_NAMESPACE,
@@ -116,6 +122,21 @@ def _populated_catalogue() -> CalculationRevisionCatalogue:
         ),
     )
 
+    unresolved_outcomes = (
+        RegistryCalculationUnresolvedOutcome(
+            casilla_id=_CASILLA_12,
+            reason=RegistryUnresolvedOutcomeReason.M210_CONVENIO_RATE_MISSING,
+            formula_id="iva-cuota-devengada-general",
+            op="irnr_resolve_tipo_gravamen",
+            operand_refs=(_CASILLA_01,),
+            operand_casilla_refs=(_CASILLA_01,),
+            operand_values=(Decimal("1000.00"),),
+            legal_refs=("ley-37-1992:art-90",),
+            source_refs=("aeat-modelo-303-instrucciones-2024",),
+            context={"tipo_renta": "interest", "country": "ZW"},
+        ),
+    )
+
     revision = CalculationRevision(
         calculation_revision_id=revision_id,
         work_unit_id=work_unit_id,
@@ -125,6 +146,7 @@ def _populated_catalogue() -> CalculationRevisionCatalogue:
         source_transaction_ids=source_transaction_ids,
         casilla_values=casilla_values,
         observations=observations,
+        unresolved_outcomes=unresolved_outcomes,
         created_at=created_at,
         updated_at=verified_at,
         verified_at=verified_at,
@@ -157,6 +179,13 @@ def test_calculation_revision_catalogue_survives_encrypted_storage_roundtrip(
     assert computed.operand_casilla_refs == (_CASILLA_01,)
     assert computed.legal_refs == ("ley-37-1992:art-90",)
     assert computed.source_refs == ("aeat-modelo-303-instrucciones-2024",)
+    # The typed unresolved-outcome envelope must survive the boundary with its
+    # reason, grounding, and captured context intact.
+    assert len(revision.unresolved_outcomes) == 1
+    (outcome,) = revision.unresolved_outcomes
+    assert outcome.reason is RegistryUnresolvedOutcomeReason.M210_CONVENIO_RATE_MISSING
+    assert outcome.legal_refs == ("ley-37-1992:art-90",)
+    assert outcome.context == {"tipo_renta": "interest", "country": "ZW"}
     assert (profile.paths.db_dir / "aeat.db").is_file()
 
 

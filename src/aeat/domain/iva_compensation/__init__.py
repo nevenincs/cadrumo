@@ -26,21 +26,21 @@ Repositories, secure-object custody, live wallet acquisition, and bucket event
 emission remain application responsibilities.
 
 See Also:
-    :class:`aeat.application.calculations.IvaCompensationHistoryRepository`
+    :class:`application.calculations.IvaCompensationHistoryRepository`
         Encrypted local period-state history consumed by carry reconstruction.
-    :class:`aeat.application.calculations.IvaWalletDecisionRepository`
+    :class:`application.calculations.IvaWalletDecisionRepository`
         Persisted wallet-authority decisions selected before Modelo 303
         calculation consumes casilla ``110``.
-    :mod:`aeat.application.calculations`
+    :mod:`application.calculations`
         Application source resolvers for previous-filing carries, IVA wallet
         decisions, and Modelo 390 annual carry partitioning.
-    :mod:`aeat.application.live`
+    :mod:`application.live`
         Read-only AEAT wallet and filed-history capture surface that supplies
         external evidence without performing live writes.
-    :mod:`aeat.application.modelo`
+    :mod:`application.modelo`
         Work-unit calculation and IVA-wallet gate that apply the persisted
         authority decision to registry snapshots.
-    :class:`aeat.domain.buckets.BucketEventHistoryRepository`
+    :class:`domain.buckets.BucketEventHistoryRepository`
         Bucket audit trail for persisted decisions and capture orchestration,
         outside this pure domain package.
 """

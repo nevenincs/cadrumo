@@ -3,7 +3,7 @@
 Each module under this package defines one
 :class:`ResourceCacheRepository` subclass plus its typed key model
 where needed. The :class:`ResourceRegistry` aggregates them in
-:mod:`aeat.core.resources._registry`.
+:mod:`core.resources._registry`.
 """
 
 from __future__ import annotations

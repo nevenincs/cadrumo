@@ -11,11 +11,11 @@ represent document bytes, not an external pointer.
 
 Persistence is a protocol boundary. Domain helpers accept an
 :class:`AttachmentStoreProtocol`; the concrete
-:class:`~aeat.adapters.persistence.storage.AttachmentStore` lives in the
+:class:`adapters.persistence.storage.AttachmentStore` lives in the
 adapter layer and stores encrypted blob rows plus manifest
-:class:`~aeat.adapters.persistence.storage.Envelope` rows through
-:class:`~aeat.adapters.persistence.storage.SecureObjectRepository` at
-``FINANCIAL`` :class:`~aeat.adapters.persistence.storage.SensitivityClass`.
+:class:`adapters.persistence.storage.Envelope` rows through
+:class:`adapters.persistence.storage.SecureObjectRepository` at ``FINANCIAL``
+:class:`adapters.persistence.storage.SensitivityClass`.
 This package does not own a plaintext or on-disk repository implementation.
 
 Service helpers :func:`add_attachment` and :func:`add_attachment_bytes` hash
@@ -31,16 +31,16 @@ helpers from ``aeat.domain.attachments`` and must not reach into private
 underscore modules inside this package.
 
 See Also:
-    :mod:`aeat.application.ledger`
+    :mod:`application.ledger`
         Ledger lifecycle that verifies attachment existence, byte custody, and
         bucket ownership before a transaction claims attachment evidence.
-    :mod:`aeat.domain.invoices`
+    :mod:`domain.invoices`
         Purchase-invoice evidence records that remain distinct from generic
         encrypted attachment bytes while sharing ledger evidence workflows.
-    :mod:`aeat.application.aggregation`
+    :mod:`application.aggregation`
         Calculation-source and evidence-advisory surfaces that consume
         transaction evidence links without reading plaintext files from disk.
-    :mod:`aeat.adapters.persistence.storage`
+    :mod:`adapters.persistence.storage`
         Secure-object and encrypted blob storage that implements
         :class:`AttachmentStoreProtocol`.
 """

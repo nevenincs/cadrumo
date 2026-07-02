@@ -130,7 +130,6 @@ class StorageRuntime(BaseModel):
         """Create a :class:`SecureObjectRepository` attached to this runtime's bucket."""
         self.require_ready()
         self._require_current_active_session()
-        from .sql.engine import get_engine
         from .sql.secure_objects import SecureObjectRepository
 
         active = current_active_bucket_session()
@@ -139,7 +138,10 @@ class StorageRuntime(BaseModel):
             aeat_local_storage_root=self.storage_root,
             aeat_active_profile=self.bucket_id,
         )
-        engine = get_engine(settings)
+        # The active bucket session owns the engine lifecycle: acquire the
+        # engine through it so the handle is registered on the session and
+        # disposed on session close/switch, rather than left to a caller.
+        engine = active.acquire_engine(settings)
         return SecureObjectRepository(
             engine=engine,
             namespace_registry=STORAGE_NAMESPACE_REGISTRY,

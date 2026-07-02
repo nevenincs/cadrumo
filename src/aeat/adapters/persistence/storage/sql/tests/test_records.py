@@ -79,12 +79,12 @@ def test_portal_record_requires_enum_auth_method() -> None:
         )
 
 
-@pytest.mark.parametrize("invalid_sha256", ["short", "a" * 63, "a" * 65])
-def test_corpus_artifact_record_requires_sha256_length(invalid_sha256: str) -> None:
+def test_corpus_artifact_record_requires_sha256_length() -> None:
     """CorpusArtifactRecord.sha256 must be exactly 64 hex characters."""
     ok_digest = "a" * 64
     record = CorpusArtifactRecord.model_validate(_corpus_artifact_payload(sha256=ok_digest))
     assert record.sha256 == ok_digest
 
-    with pytest.raises(ValidationError):
-        CorpusArtifactRecord.model_validate(_corpus_artifact_payload(sha256=invalid_sha256))
+    for invalid_sha256 in ("short", "a" * 63, "a" * 65):
+        with pytest.raises(ValidationError):
+            CorpusArtifactRecord.model_validate(_corpus_artifact_payload(sha256=invalid_sha256))

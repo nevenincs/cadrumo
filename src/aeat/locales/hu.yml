@@ -2962,9 +2962,7 @@ cli:
       help: Egyetlen főkönyvi tranzakció besorolása az aktív profilban.
       id_help: A besorolandó főkönyvi tranzakció azonosítója.
       id_required: Tranzakció-azonosító szükséges, ha a --from-csv nincs megadva.
-      irpf_category_help: 'IRPF-kategoria azonositoja. Hasznalja: aeat app ledger
-        categories; netto szakmai szamlaknal actividad_economica, netto berleti dijnal
-        arrendamiento_local vagy arrendamiento_vivienda_afecto.'
+      irpf_category_help: 'IRPF-kategoria azonositoja. Hasznalja: aeat app ledger categories. Netto szakmai szamlakhoz actividad_economica; netto berleti dijhoz arrendamiento_local/arrendamiento_vivienda_afecto. Jogdij/SGAE: a 25.4 cikk szerint capital mobiliario lehet, ha az adozo nem a szerzo; actividad_economica csak sajat szamlas tevekenyseghez a LIRPF 27. cikk szerint.'
       iva_amount_help: IVA-összeg.
       iva_category_help: Explicit IVA-kategória felülbírálat erre a tranzakcióra (pl.
         intra_community_supply, export_third_country_zero_rated, export_assimilated_zero_rated,

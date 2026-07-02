@@ -20,13 +20,28 @@ from __future__ import annotations
 import json
 import time
 from collections.abc import Iterator, Sequence
+from datetime import UTC, date, datetime
+from decimal import Decimal
 from pathlib import Path
 
 import pytest
 from click.testing import Result
 
 from ....adapters.persistence.storage.sql.engine import dispose_engine
+from ....core import Period
 from ....core.config import override_settings
+from ....domain.iva_compensation._reconciliation import IvaCompensationReconciliationDecision
+from ....domain.transactions import (
+    BusinessClassification,
+    RawProvenance,
+    RawTransaction,
+    SourceFormat,
+    Transaction,
+    TransactionCatalogue,
+    TransactionCatalogueRepository,
+    TransactionDirection,
+)
+from ....domain.user_profile import UserProfileFact
 from ....tests.cli_runner import invoke_cached_cli
 from ....tests.secure_sql import isolated_profile_storage_root
 from .envelope_helpers import unwrap_envelope_notices as _notices
@@ -47,6 +62,7 @@ _TRANSIENT_REGISTRY_RACE_MARKERS = (
     "duplicate catalogue ids",
     "references unknown source id",
 )
+_IVA_WALLET_DECIDED_AT = datetime(2026, 4, 5, 10, 0, tzinfo=UTC)
 
 
 def _invoke(args: Sequence[str], *, attempts: int = 8) -> Result:
@@ -123,6 +139,147 @@ def _seed_m115_retencion_observation() -> None:
     assert result.exit_code == 0, result.output
 
 
+def _seed_m303_profile_facts() -> str:
+    from ....application.user_profile import UserProfileLifecycleRepository
+    from ....application.user_profile._orchestration import profile_storage_session
+    from ....core import resolve_active_bucket_id
+
+    bucket_id = resolve_active_bucket_id()
+    assert bucket_id is not None, "profile create must install an active-profile pointer"
+    with profile_storage_session(bucket_id):
+        repository = UserProfileLifecycleRepository(bucket_id=bucket_id)
+        record = repository.load(bucket_id)
+        additions = (
+            UserProfileFact(path="tax_residence.ccaa", value="madrid"),
+            UserProfileFact(path="tax_residence.jurisdiction_scope", value="common_regime"),
+            UserProfileFact(path="iva.regime", value="GENERAL"),
+            UserProfileFact(path="taxpayer_type.entity_type", value="natural_person"),
+            UserProfileFact(path="taxpayer_type.irpf_income_categories", value="actividad_economica"),
+            UserProfileFact(path="irpf.estimation_regime", value="directa_normal"),
+            UserProfileFact(path="censo.activity_start_date", value=date(2026, 1, 1)),
+        )
+        facts_by_path = {fact.path: fact for fact in record.facts}
+        facts_by_path.update({fact.path: fact for fact in additions})
+        repository.save(
+            record.model_copy(
+                update={
+                    "facts": tuple(facts_by_path[path] for path in sorted(facts_by_path)),
+                    "updated_at": record.created_at,
+                },
+            ),
+        )
+    return bucket_id
+
+
+def _raw_m303_transaction(provider_id: str, *, booked_date: date, amount: Decimal) -> RawTransaction:
+    return RawTransaction(
+        provider_transaction_id=provider_id,
+        booked_date=booked_date,
+        value_date=booked_date,
+        amount=amount,
+        currency="EUR",
+        counterparty="Cliente o proveedor",
+        description=f"M303 quickfile {provider_id}",
+        provenance=RawProvenance(
+            source_path=Path(__file__),
+            source_sha256="7" * 64,
+            source_row_index=1,
+            source_format=SourceFormat.MANUAL,
+            ingested_at=_IVA_WALLET_DECIDED_AT,
+            provider_name="manual-ledger",
+        ),
+        raw_fields={"source_kind": "ledger_transaction"},
+    )
+
+
+def _m303_transaction(
+    provider_id: str,
+    *,
+    direction: TransactionDirection,
+    taxable_base: Decimal,
+    iva_amount: Decimal,
+    purchase_invoice_evidence_id: str | None = None,
+) -> Transaction:
+    booked_date = date(2026, 2, 15)
+    payload: dict[str, object] = {
+        "raw": _raw_m303_transaction(
+            provider_id,
+            booked_date=booked_date,
+            amount=taxable_base + iva_amount,
+        ),
+        "direction": direction,
+        "group_label": None,
+        "source_jurisdiction": "ES",
+        "business_classification": BusinessClassification.BUSINESS,
+        "category_id": "test_iva_operation",
+        "taxable_base": taxable_base,
+        "iva_rate": Decimal("0.21"),
+        "iva_amount": iva_amount,
+        "classified_at": _IVA_WALLET_DECIDED_AT,
+        "classified_by": "manual",
+    }
+    if purchase_invoice_evidence_id is not None:
+        payload["purchase_invoice_evidence_id"] = purchase_invoice_evidence_id
+    return Transaction.model_validate(payload)
+
+
+def _seed_m303_ledger_and_wallet(bucket_id: str) -> None:
+    from ....application.calculations._observations_repository import IvaWalletDecisionRepository
+    from ....application.invoices import build_catalogue_invoice
+    from ....application.user_profile._orchestration import profile_storage_session
+    from ....domain.invoices import InvoiceCatalogue, InvoiceCatalogueRepository
+    from ....domain.iva import InvoiceKind
+
+    purchase_invoice = build_catalogue_invoice(
+        bucket_id=bucket_id,
+        kind=InvoiceKind.RECEIVED,
+        counterparty_name="Proveedor Quickfile SL",
+        counterparty_tax_id="A58818501",
+        counterparty_country="ES",
+        invoice_number="REC-2026-1T",
+        issued_at=date(2026, 2, 15),
+        taxable_base=Decimal("200.00"),
+        iva_rate=Decimal("21"),
+        currency="EUR",
+    )
+    sale = _m303_transaction(
+        "quickfile-sale-general",
+        direction=TransactionDirection.INCOMING,
+        taxable_base=Decimal("1000.00"),
+        iva_amount=Decimal("210.00"),
+    )
+    purchase = _m303_transaction(
+        "quickfile-purchase-general",
+        direction=TransactionDirection.OUTGOING,
+        taxable_base=Decimal("200.00"),
+        iva_amount=Decimal("42.00"),
+        purchase_invoice_evidence_id=purchase_invoice.invoice_id,
+    )
+    with profile_storage_session(bucket_id):
+        TransactionCatalogueRepository(bucket_id=bucket_id).save(
+            TransactionCatalogue.from_transactions((sale, purchase)),
+        )
+        InvoiceCatalogueRepository(bucket_id=bucket_id).save(InvoiceCatalogue.from_invoices((purchase_invoice,)))
+        IvaWalletDecisionRepository().save_decision(
+            IvaCompensationReconciliationDecision(
+                taxpayer_nif="12345678Z",
+                target_year=2026,
+                target_period=Period.from_year_and_code(2026, "1T"),
+                selected_authority="aeat_wallet",
+                selected_amount=Decimal("0.00"),
+                wallet_amount=Decimal("0.00"),
+                local_recurrence_amount=Decimal("0.00"),
+                override_amount=None,
+                divergence="match",
+                blocked=False,
+                stale_wallet=False,
+                reason="quickfile M303 first-period neutral balance",
+                wallet_captured_at=_IVA_WALLET_DECIDED_AT,
+                decided_at=_IVA_WALLET_DECIDED_AT,
+            ),
+        )
+
+
 def _stage_status(payload: dict[str, object]) -> dict[str, str]:
     return {stage["stage"]: stage["status"] for stage in payload["stages"]}
 
@@ -178,6 +335,46 @@ def test_quickfile_runs_full_chain_to_exported_fichero(tmp_path: Path) -> None:
     assert payload["export"]["output_path"] == str(out)
     assert out.exists()
     assert out.stat().st_size > 0
+
+
+def test_quickfile_m303_fully_taxable_ledger_reaches_granted_boe_without_prorrata_input(
+    tmp_path: Path,
+) -> None:
+    """A fully taxable M303 ledger path reaches granted verification and fichero-BOE export."""
+
+    _create_profile()
+    bucket_id = _seed_m303_profile_facts()
+    _seed_m303_ledger_and_wallet(bucket_id)
+    out = tmp_path / "modelo-303-1T.boe"
+
+    result = _invoke(
+        [
+            "--format", "json",
+            "app", "quickfile",
+            "--modelo", "303", "--year", "2026", "--period", "1T",
+            "--output", str(out),
+        ],
+    )  # fmt: skip
+
+    assert result.exit_code == 0, result.output
+    assert "Traceback" not in result.output
+    payload = _payload(result.output)
+    assert payload["completed"] is True, result.output
+    assert payload["stopped_at_stage"] is None
+    assert payload["granted_verificado_completo"] is True
+
+    statuses = _stage_status(payload)
+    assert statuses["calculate"] == "ok"
+    assert statuses["verify"] == "ok"
+    assert statuses["export"] == "ok"
+
+    notice_text = json.dumps(_notices(result.output), sort_keys=True)
+    assert "prorrata" not in notice_text.lower()
+    assert payload["export"] is not None
+    assert payload["export"]["output_path"] == str(out)
+    exported = out.read_bytes()
+    assert exported
+    assert b"12345678Z" in exported
 
 
 def test_quickfile_stops_instructively_when_verify_refuses(tmp_path: Path) -> None:

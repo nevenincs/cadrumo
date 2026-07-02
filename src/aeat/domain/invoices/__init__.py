@@ -13,13 +13,13 @@ The IVA bridge re-exports :class:`IvaRate`, :class:`PaymentStatus`,
 :func:`invoice_line_to_iva_observation`, and rate helpers. The standard helper
 covers domestic IVA rate slots; reverse-charge, intra-community, OSS/IOSS, and
 other non-domestic cases use explicit substrate fields such as
-:class:`~aeat.domain.iva.IvaCategory` already carried on :class:`Invoice`.
+:class:`domain.iva.IvaCategory` already carried on :class:`Invoice`.
 
 Service helpers such as :func:`link_transaction`,
 :func:`suggest_reconciliations`, and :func:`verify_link_consistency` are pure
 operations over :class:`InvoiceCatalogue` and
-:class:`~aeat.domain.transactions.TransactionCatalogue`; persisted
-cross-catalogue workflows belong in :mod:`~aeat.application.invoices`.
+:class:`domain.transactions.TransactionCatalogue`; persisted cross-catalogue
+workflows belong in :mod:`application.invoices`.
 Ledger ``purchase_invoice_evidence_id`` references must resolve to
 bucket-owned :class:`Invoice` records with matching ``linked_transaction_ids``
 before aggregation treats them as purchase evidence.
@@ -28,9 +28,9 @@ Persistence is exposed through the concrete
 :class:`InvoiceCatalogueRepository` and the narrow
 :class:`InvoiceCatalogueRepositoryProtocol`. The repository stores the
 active-bucket catalogue singleton through
-:class:`~aeat.adapters.persistence.storage.SecureObjectRepository` as
-``FINANCIAL`` :class:`~aeat.adapters.persistence.storage.SensitivityClass`
-payloads wrapped in :class:`~aeat.adapters.persistence.storage.Envelope`; no
+:class:`adapters.persistence.storage.SecureObjectRepository` as
+``FINANCIAL`` :class:`adapters.persistence.storage.SensitivityClass`
+payloads wrapped in :class:`adapters.persistence.storage.Envelope`; no
 plaintext invoice row, JSON catalogue, or envelope file is the durable store.
 Callers must import public objects from ``aeat.domain.invoices`` and must not
 reach into the private underscore modules inside this package.
@@ -44,16 +44,16 @@ See Also:
     :class:`InvoiceCatalogueRepository`
         Governed repository that stores the catalogue through secure-object
         persistence.
-    :class:`~aeat.domain.invoices.InvoiceCatalogueRepositoryProtocol`
+    :class:`InvoiceCatalogueRepositoryProtocol`
         Narrow port used by application services that only need load/save
         semantics.
-    :mod:`~aeat.application.invoices`
+    :mod:`application.invoices`
         Persisted invoice import, reconciliation, repository linking, and
-        :class:`~aeat.application.invoices.InvoiceCatalogueSourceResolver`.
-    :mod:`~aeat.application.ledger`
+        :class:`application.invoices.InvoiceCatalogueSourceResolver`.
+    :mod:`application.ledger`
         Ledger lifecycle that attaches ``purchase_invoice_evidence_id`` to
         bucket-scoped transactions after evidence ownership checks.
-    :mod:`~aeat.application.aggregation`
+    :mod:`application.aggregation`
         Calculation-source resolvers that consume invoice and purchase-evidence
         records for modelo bindings.
 """

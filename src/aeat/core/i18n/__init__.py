@@ -8,7 +8,7 @@ never reuses these translation keys.
 Major declarations:
 
 * :func:`tr` — translate a key to the active language.
-* :func:`~aeat.core.i18n.output_language` and
+* :func:`output_language` and
   :data:`OUTPUT_LANGUAGE_ENV_VAR` — resolve and override the active
   :class:`OutputLanguage`, drawn from
   :data:`SUPPORTED_OUTPUT_LANGUAGES`.

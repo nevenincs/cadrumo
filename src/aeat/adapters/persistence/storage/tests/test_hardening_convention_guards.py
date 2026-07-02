@@ -103,7 +103,7 @@ def hardening_inventory() -> _HardeningInventory:
 
 def test_bucket_session_cleanup_observability_does_not_use_suppression_markers() -> None:
     path = repo_path("src/aeat/adapters/persistence/storage/master_key/_bucket_session.py")
-    function = _function_named(path, "_evict_engine")
+    function = _function_named(path, "_dispose_engine")
     segment = _source_segment(path, function)
 
     assert "# noqa" not in segment

@@ -11,14 +11,14 @@ unknown codes raise :class:`UnknownScopeError`.
 The package only defines the scope vocabulary and validation rules. Persisted
 represented-party configuration, active-bucket routing, and the permanent
 refusal of live AEAT-side apoderamiento mutation are application concerns owned
-by :class:`~aeat.application.auth.ApoderadoService`.
+by :class:`application.auth.ApoderadoService`.
 
 See Also:
-    - :mod:`aeat.domain.auth` for the parent re-export facade.
-    - :class:`~aeat.application.auth.ApoderadoService` for the encrypted
+    - :mod:`domain.auth` for the parent re-export facade.
+    - :class:`application.auth.ApoderadoService` for the encrypted
       bucket-scoped configuration service that consumes these parsed scope
       codes.
-    - :mod:`aeat.entrypoints.cli._config._apoderado` for CLI commands that
+    - :mod:`entrypoints.cli._config._apoderado` for CLI commands that
       collect repeated ``--scope`` options before calling the application
       service.
 """

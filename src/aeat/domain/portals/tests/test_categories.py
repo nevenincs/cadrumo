@@ -11,10 +11,10 @@ from .._hosts import portal_host_name
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 
-@pytest.mark.parametrize(
-    ("enum_cls", "expected_members"),
-    [
-        pytest.param(
+def test_category_family_enum_members() -> None:
+    """Category-family enums expose exactly the committed members."""
+    cases = (
+        (
             PortalCategory,
             {
                 PortalCategory.AUTH,
@@ -25,9 +25,8 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
                 PortalCategory.PAYMENT,
                 PortalCategory.CALENDAR_REFERENCE,
             },
-            id="portal-category",
         ),
-        pytest.param(
+        (
             AuthMethod,
             {
                 AuthMethod.ANONYMOUS,
@@ -38,9 +37,8 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
                 AuthMethod.DNIE,
                 AuthMethod.REFERENCE_NUMBER,
             },
-            id="auth-method",
         ),
-        pytest.param(
+        (
             UrlStability,
             {
                 UrlStability.STABLE_PROTOCOL_GRADE,
@@ -48,17 +46,12 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
                 UrlStability.VOLATILE_APP_PATH,
                 UrlStability.RETIRED,
             },
-            id="url-stability",
         ),
-    ],
-)
-def test_category_family_enum_members(
-    enum_cls: type[PortalCategory | AuthMethod | UrlStability],
-    expected_members: set[PortalCategory | AuthMethod | UrlStability],
-) -> None:
-    """Category-family enums expose exactly the committed members."""
-    assert set(enum_cls) == expected_members
-    assert len(list(enum_cls)) == len(expected_members)
+    )
+
+    for enum_cls, expected_members in cases:
+        assert set(enum_cls) == expected_members, enum_cls.__name__
+        assert len(list(enum_cls)) == len(expected_members), enum_cls.__name__
 
 
 def test_subdomain_has_exactly_7_members() -> None:
@@ -91,11 +84,8 @@ def test_subdomain_hosts_resolve_from_external_constants() -> None:
     assert {portal_host_name(subdomain) for subdomain in PortalHost} == expected_hosts
 
 
-@pytest.mark.parametrize(
-    "enum_cls",
-    [PortalCategory, AuthMethod, UrlStability],
-)
-def test_enum_values_are_lowercase(enum_cls: type[PortalCategory | AuthMethod | UrlStability]) -> None:
+def test_enum_values_are_lowercase() -> None:
     """Category-family enums use lowercase snake_case values."""
-    for member in enum_cls:
-        assert member.value == member.value.lower()
+    for enum_cls in (PortalCategory, AuthMethod, UrlStability):
+        for member in enum_cls:
+            assert member.value == member.value.lower(), member

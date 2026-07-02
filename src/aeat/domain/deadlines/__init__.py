@@ -23,7 +23,7 @@ services consume the resulting :class:`Schedule` rather than rebuilding deadline
 or recovery logic.
 
 See Also:
-    :class:`~aeat.domain.calculations.registry.ValidatedRegistryAuthority`
+    :class:`domain.calculations.registry.ValidatedRegistryAuthority`
         Registry authority that supplies modelo deadline windows and
         applicability predicates consumed by :class:`DeadlineEngine`.
     :func:`compute_obligation_schedule`
@@ -32,10 +32,10 @@ See Also:
     :func:`taxpayer_profile_from_mapping`
         Profile-value mapper used by application profile projections before
         calling this domain engine.
-    :mod:`aeat.application.workflow`
+    :mod:`application.workflow`
         Application workflow gate that evaluates deadline obligations before
         verification and local filing steps.
-    :mod:`aeat.application.overview`
+    :mod:`application.overview`
         Local overview read model that merges this schedule with stored filing
         evidence.
 

@@ -1,9 +1,9 @@
 """Lazy application facade for schema-driven user-profile operations.
 
 This package is the application boundary for the centralised profile
-backend. The domain layer (:mod:`aeat.domain.user_profile`) owns the
+backend. The domain layer (:mod:`domain.user_profile`) owns the
 schema, value records, selector registry contract, and portable-export
-payload type :class:`~aeat.domain.user_profile.UserProfilePortableExport`.
+payload type :class:`domain.user_profile.UserProfilePortableExport`.
 This package owns the command/result records and service entry points
 that operate on that contract: lifecycle orchestration, validation and
 preflight checks, Censo synchronisation, capability and custody helpers,
@@ -14,26 +14,24 @@ The records here have no business logic; they are the typed contract
 passed between CLI adapters, secure-storage persistence wiring,
 bucket-maintenance flows, Modelo readiness gates, workflow adapters, and
 calculation/filing/aggregation consumers. The aggregate passed across
-service boundaries is :class:`~aeat.domain.user_profile.UserProfileRecord`.
+service boundaries is :class:`domain.user_profile.UserProfileRecord`.
 The service implementations live in sibling modules and are exposed as
 lazy facade members, including
-:class:`~aeat.application.user_profile.ProfileLifecycleService`,
-:class:`~aeat.application.user_profile.UserProfileSnapshotRepository`,
-:class:`~aeat.application.user_profile.ProfileValidationService`, and
-:class:`~aeat.application.user_profile.ProfilePreflightService`.
+:class:`ProfileLifecycleService`,
+:class:`UserProfileSnapshotRepository`,
+:class:`ProfileValidationService`, and
+:class:`ProfilePreflightService`.
 
 Portable export composition follows the same split.
-:func:`~aeat.application.user_profile.serialize_profile_bundle` and
-:func:`~aeat.application.user_profile.deserialize_profile_bundle` live on
-this facade so CLI config and bucket-maintenance code compose through
+:func:`serialize_profile_bundle` and :func:`deserialize_profile_bundle` live
+on this facade so CLI config and bucket-maintenance code compose through
 top-level re-exports, while the bundle payload remains the domain-layer
-:class:`~aeat.domain.user_profile.UserProfilePortableExport`. The current
-v3 bundle is the only accepted import shape. Its default
-:class:`~aeat.adapters.persistence.storage.StorageCustodyProfile.STRUCTURED`
-scope carries the typed profile, work-unit, ledger, calculation, and
-filing categories plus registry-selected secure-object rows. Sealed
-bucket backup requests
-:class:`~aeat.adapters.persistence.storage.StorageCustodyProfile.FULL`,
+:class:`domain.user_profile.UserProfilePortableExport`. The current v3 bundle
+is the only accepted import shape. Its default
+:attr:`adapters.persistence.storage.StorageCustodyProfile.STRUCTURED` scope
+carries the typed profile, work-unit, ledger, calculation, and filing categories
+plus registry-selected secure-object rows. Sealed bucket backup requests
+:attr:`adapters.persistence.storage.StorageCustodyProfile.FULL`,
 which asserts every populated secure-object namespace has a registry
 custody disposition before export. Generic carried rows use their natural
 object keys rather than stored HMAC lookup digests, so import can
@@ -41,50 +39,47 @@ re-save them through the target bucket's secure-object substrate and
 re-encrypt under the recipient bucket DEK.
 
 Custody helpers exposed here are application commands over storage-owned
-secret-store primitives. :func:`~aeat.application.user_profile.mint_recovery_code`,
-:func:`~aeat.application.user_profile.verify_recovery_code`,
-:func:`~aeat.application.user_profile.rekey_secret_store`, and
-:func:`~aeat.application.user_profile.recover_secret_store` resolve
-runtime settings, update active-bucket recovery metadata when needed,
-and return typed result records while leaving key wrapping and recovery
-envelope persistence in :mod:`aeat.adapters.persistence.storage`.
+secret-store primitives. :func:`mint_recovery_code`,
+:func:`verify_recovery_code`, :func:`rekey_secret_store`, and
+:func:`recover_secret_store` resolve runtime settings, update active-bucket
+recovery metadata when needed, and return typed result records while leaving key
+wrapping and recovery envelope persistence in :mod:`adapters.persistence.storage`.
 
 Projection and baseline helpers such as
-:func:`~aeat.application.user_profile.record_to_path_values`,
-:func:`~aeat.application.user_profile.projection_for_taxpayer`, and
-:func:`~aeat.application.user_profile.missing_filing_baseline_flags`
-provide the canonical schema-path and deadline-engine shapes consumed by
-filing gates instead of recreating profile fact decoding downstream.
+:func:`record_to_path_values`, :func:`projection_for_taxpayer`, and
+:func:`missing_filing_baseline_flags` provide the canonical schema-path and
+deadline-engine shapes consumed by filing gates instead of recreating profile
+fact decoding downstream.
 
 Every re-exported name is resolved on demand through module-level
 ``__getattr__`` (PEP 562). Top-level imports in this file are reserved
-for genuinely lightweight setup (:class:`~aeat.core.identity.ProfileId`
+for genuinely lightweight setup (:class:`core.identity.ProfileId`
 and the active-profile language-resolver registration) so the boundary
 itself does not drag the domain portable-export / registry / service
 module surfaces into ``sys.modules``. The state-free CLI surfaces
 (``aeat``, ``aeat --version``, ``aeat --help``) must not pay the
 registry cost via this boundary, which the
-:mod:`aeat.entrypoints.cli.test_lazy_command_tree` gate and the
+:mod:`entrypoints.cli.test_lazy_command_tree` gate and the
 producer-side probe in
-:mod:`aeat.application.user_profile.test_lazy_boundary` both enforce.
+:mod:`application.user_profile.test_lazy_boundary` both enforce.
 
 See Also:
-    :mod:`aeat.domain.user_profile`
+    :mod:`domain.user_profile`
         Domain schema, value records, registry-selector contract, and lazy
         portable-export payload consumed by this facade.
-    :class:`~aeat.application.user_profile.ProfileLifecycleService`
+    :class:`ProfileLifecycleService`
         Application service for register, edit, rename, duplicate, snapshot, and
-        remove operations over :class:`~aeat.domain.user_profile.UserProfileRecord`.
-    :class:`~aeat.application.user_profile.CensoSyncService`
+        remove operations over :class:`domain.user_profile.UserProfileRecord`.
+    :class:`CensoSyncService`
         Censo snapshot comparison and profile-fact application service.
-    :mod:`aeat.application.bucket_maintenance`
+    :mod:`application.bucket_maintenance`
         Bucket lifecycle facade that composes this package's portable-bundle
         serialiser and deserialiser for sealed export/import.
-    :mod:`aeat.adapters.persistence.storage`
+    :mod:`adapters.persistence.storage`
         Secure-object repository, namespace custody registry, and master-key
         recovery primitives composed by this facade without owning storage
         policy.
-    :mod:`aeat.application.modelo`
+    :mod:`application.modelo`
         Filing-grade modelo workflows that consume profile preflight and
         projection helpers from this boundary.
 """

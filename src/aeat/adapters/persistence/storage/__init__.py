@@ -302,7 +302,13 @@ from .sql import (
     SecureObjectRepository,
     SecureObjectWrite,
 )
-from .sql.engine import create_engine_from_settings, dispose_engine, get_engine
+from .sql.engine import (
+    create_engine_from_settings,
+    dispose_engine,
+    dispose_engine_handle,
+    dispose_engines_for_bucket,
+    get_engine,
+)
 from .sql.records import CorpusArtifactRecord, ModeloCatalogueRecord, PortalAuthMethod, PortalRecord
 from .sql.repository import CorpusArtifactRepository, ModeloRepository, PortalRepository, SqlRecordRepository
 from .sql.session import get_sessionmaker, session_scope
@@ -493,6 +499,8 @@ __all__ = [
     "default_rules_for_class",
     "derive_key",
     "dispose_engine",
+    "dispose_engine_handle",
+    "dispose_engines_for_bucket",
     "encode_mnemonic",
     "encrypt_record",
     "exclusive_file_lock",
