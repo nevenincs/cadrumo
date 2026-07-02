@@ -4,6 +4,12 @@ Pure name and argv mapping: an MCP tool name round-trips to its registry command
 key, and a command key plus operator-supplied arguments project onto the CLI argv
 the server runs. The actual invocation lives in the server shell; this module is
 deterministic and unit-tested.
+
+The live serving path builds its argv from the command's per-verb input schema
+via :func:`~aeat.entrypoints.mcp._input_schema.cli_argv_for` (named arguments in,
+resolved CLI path out); :func:`tool_request_argv` remains the pure
+``(command_key, cli_tokens) -> argv`` mapper the determinism-replay eval uses to
+reconstruct a recorded raw-token call.
 """
 
 from __future__ import annotations
@@ -52,10 +58,13 @@ def _cli_path_tokens(command_key: str) -> list[str]:
 
 
 def tool_request_argv(command_key: str, args: Iterable[str]) -> list[str]:
-    """Build the CLI argv for a tool call.
+    """Build the CLI argv for a recorded raw-token tool call.
 
     ``--format json`` is a root option (it precedes the command path), so the
-    machine envelope is always requested. Operator-supplied ``args`` are appended
-    after the command path.
+    machine envelope is always requested. The pre-resolved ``args`` tokens are
+    appended after the command path. The live serving path instead builds its
+    argv from the per-verb schema via
+    :func:`~aeat.entrypoints.mcp._input_schema.cli_argv_for`; this mapper serves
+    the determinism-replay eval, which records raw CLI-token calls.
     """
     return ["--format", "json", *_cli_path_tokens(command_key), *args]
