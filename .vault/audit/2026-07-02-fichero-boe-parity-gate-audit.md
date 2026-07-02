@@ -185,6 +185,30 @@ casilla to reproduce a real thin file, and the parity test mirrors the restricte
 required set. This also downgrades the row_field-only vector further: an optional
 row_field-only casilla is now excluded by the computed/required filter too.
 
+### manifest-classification-audit | low | the gate's required-set classification is sound across all 12 gated modelos
+
+A systematic classification audit ran over every manifest-bearing gated modelo
+(130 111 115 123 131 303 200 190 180 349 232 720), categorising each manifest
+casilla by `input_kind` (COMPUTED / BOUND / MANUAL / INFORMATIONAL) against the
+gate's `formula-or-schema-required` predicate. Findings, all confirming the design:
+(1) the registry validator ties `COMPUTED` one-to-one to declaring a formula, so
+the gate's formula check is exactly the COMPUTED set. (2) The `required` flag
+correctly OVERRIDES `input_kind`: a mandatory field is gated whatever its
+provenance -- Modelo 349's four intracom operation totals are BOUND yet
+schema-required (so gated), and Modelo 232/720's `ejercicio`/`CNAE` are
+INFORMATIONAL yet schema-required (so gated). This means NO gated modelo has a
+vacuous gate; each requires at least its mandatory fields (an initial assumption
+that 349/232/720 were vacuous was wrong -- they require their mandatory metadata).
+(3) The gate excludes only NON-required, NON-computed casillas: optional BOUND
+ledger-materialised values (Modelo 303 IVA cuotas repercutido/soportado/
+autorepercutido, Modelo 130 retenciones), optional MANUAL inputs, and non-required
+INFORMATIONAL fields -- all legitimately zero/blank when the taxpayer has no such
+operations, so requiring them would false-panic on a valid zero-data filing. No
+mis-classification (e.g. a formula casilla mis-marked MANUAL) was found. The
+classification is now locked by `test_manifest_classification.py` (36 cases) in
+both drift directions -- under-strict (a COMPUTED/required casilla dropped) and
+over-strict (an optional casilla added).
+
 ## Recommendations
 
 - Correct the codified `modelo-export-mirrors-official-structure` rule text to say
