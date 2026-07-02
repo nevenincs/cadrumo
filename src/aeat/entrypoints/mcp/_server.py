@@ -12,9 +12,10 @@ advertises the ``search`` / ``execute`` meta-tools and the ``harness.load`` floo
 tool (the universal operating-layer channel of ADR R4), and serves the operating
 layer through real ``resources`` handlers - the concrete ``aeat://`` skill / rule
 / persona set, the three ``aeat://<kind>/{name}`` templates, and a ``read``
-resolver. The ``prompts`` capability stays registered empty until W02.P04 (S14)
-populates it from ``_prompts.py``. :func:`build_server` owns that registration
-and is unit-tested against the real SDK without the stdio transport.
+resolver - and through real ``prompts`` handlers: the guided-workflow catalogue
+and each prompt's embedded skill / rules, derived from ``_prompts.py``.
+:func:`build_server` owns that registration and is unit-tested against the real
+SDK without the stdio transport.
 
 Per D1 of ``2026-07-01-agent-harness-adr``, the server also enforces the
 persona-scoped tool boundary declared in ``_persona_scope.py``:
@@ -48,6 +49,7 @@ from ._hitl import ConfirmationPolicy, confirmation_for_tool
 from ._input_schema import cli_argv_for
 from ._meta_tools import meta_execute, search_commands
 from ._persona_scope import AgentPersona, active_persona, is_tool_in_persona_scope
+from ._prompts import PromptNotFoundError, build_prompt_catalogue, prompt_document
 from ._resources import (
     HarnessResourceNotFoundError,
     list_harness_resource_templates,
@@ -240,13 +242,13 @@ def build_server(
     """Build the MCP ``Server`` with the tool, prompt, and resource handlers.
 
     Registers the persona-scoped per-verb tools plus the ``search`` / ``execute``
-    meta-tools, and empty-but-valid prompt and resource handlers so the server
-    advertises the ``prompts`` and ``resources`` capabilities during negotiation -
-    W02 populates the handler bodies. Extracted from the stdio runner so the
+    meta-tools and the ``harness.load`` floor tool, and the operating-layer
+    ``prompts`` and ``resources`` handlers so the server advertises those
+    capabilities during negotiation. Extracted from the stdio runner so the
     handler registration and capability negotiation are unit-tested against the
     real SDK. ``persona`` scopes the per-verb tool list and the direct call-tool
-    refusal per D1; the meta-tools are always advertised and ``execute`` applies
-    the persona gate internally.
+    refusal per D1; the meta-tools and the floor tool are always advertised and
+    ``execute`` applies the persona gate internally.
 
     Returns:
         The configured :class:`mcp.server.Server`.
@@ -255,11 +257,14 @@ def build_server(
     from mcp.server.lowlevel.helper_types import ReadResourceContents
     from mcp.types import (
         CallToolResult,
+        EmbeddedResource,
         GetPromptResult,
         Prompt,
+        PromptMessage,
         Resource,
         ResourceTemplate,
         TextContent,
+        TextResourceContents,
         Tool,
     )
     from pydantic import AnyUrl
@@ -338,17 +343,42 @@ def build_server(
             isError=is_error,
         )
 
-    # Empty-but-valid prompt handlers: registering them makes the server
-    # advertise the ``prompts`` capability during negotiation; W02.P04 (S14)
-    # populates their bodies from ``_prompts.py``. Registering an empty ``list``
-    # and a not-found ``get`` is the minimal valid surface until then.
+    # Guided-workflow prompt channel (ADR R4): the slash-command surface a client
+    # renders for the USER. The catalogue and each prompt's embedded skill (plus
+    # the operating rules for orientation) are derived from the shipped harness in
+    # ``_prompts.py``; ``get`` returns the operating brief as a user message
+    # followed by each embedded document as an ``EmbeddedResource``.
     @server.list_prompts()
     async def _list_prompts() -> list[Prompt]:
-        return []
+        return [
+            Prompt(name=entry.name, title=entry.title, description=entry.description, arguments=[])
+            for entry in build_prompt_catalogue()
+        ]
 
     @server.get_prompt()
     async def _get_prompt(name: str, arguments: dict[str, str] | None = None) -> GetPromptResult:
-        raise ValueError(f"unknown prompt: {name}")
+        try:
+            document = prompt_document(name)
+        except PromptNotFoundError as exc:
+            raise ValueError(str(exc)) from exc
+        messages: list[PromptMessage] = [
+            PromptMessage(role="user", content=TextContent(type="text", text=document.brief_text)),
+        ]
+        messages.extend(
+            PromptMessage(
+                role="user",
+                content=EmbeddedResource(
+                    type="resource",
+                    resource=TextResourceContents(
+                        uri=AnyUrl(embedded.uri),
+                        mimeType=embedded.mime_type,
+                        text=embedded.text,
+                    ),
+                ),
+            )
+            for embedded in document.embedded
+        )
+        return GetPromptResult(description=document.prompt.description, messages=messages)
 
     # Operating-layer resource channel (ADR R4): the concrete ``aeat://`` resource
     # set and the three ``aeat://<kind>/{name}`` templates are derived from the
