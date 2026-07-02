@@ -4,8 +4,8 @@ Provides the canonical :data:`STRICT_FROZEN_CONFIG` used across domain,
 application, and adapter pydantic models that require strict-mode, frozen,
 no-extra-fields configuration. It is a :class:`pydantic.ConfigDict` value shared
 by records that need immutable boundary contracts, including
-:class:`aeat.domain.calculations.registry.RegistryModel`,
-:class:`aeat.core._optional_extras.OptionalExtra`, and encrypted-storage
+:class:`domain.calculations.registry.RegistryModel`,
+:class:`core._optional_extras.OptionalExtra`, and encrypted-storage
 envelope records.
 
 The constant is intentionally only a config value, not a base class or a
@@ -19,8 +19,8 @@ Modules with intentionally divergent ``ConfigDict`` values (e.g.
 ``validate_assignment=True`` in JSON contract models) must keep their own
 module-local config constant and must NOT import :data:`STRICT_FROZEN_CONFIG`
 from here. The CLI JSON contract is such an exception:
-:class:`aeat.core.json_contract.OutputSchema` and
-:class:`aeat.core.json_contract.SchemaEnvelope` add assignment validation for
+:class:`core.json_contract.OutputSchema` and
+:class:`core.json_contract.SchemaEnvelope` add assignment validation for
 machine-output conformance.
 """
 
