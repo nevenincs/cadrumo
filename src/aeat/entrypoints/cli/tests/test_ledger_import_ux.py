@@ -116,6 +116,38 @@ def test_short_csv_currency_refuses_at_import_with_currency_column_message(tmp_p
     assert "config repair" not in result.output.lower()
 
 
+@pytest.mark.parametrize(
+    ("locale", "inner_fragment"),
+    [
+        ("es", "Formato de fecha no válido"),
+        ("ca", "Format de data no vàlid"),
+        ("hu", "Érvénytelen dátumformátum"),
+    ],
+)
+def test_malformed_csv_date_import_localises_inner_reason(
+    tmp_path: Path,
+    locale: str,
+    inner_fragment: str,
+) -> None:
+    """A malformed CSV date keeps row and column context without leaking raw English."""
+    statement = tmp_path / f"bad-date-{locale}.csv"
+    statement.write_text(
+        _N26_HEADER + "not-a-date,Client SL,Invoice 1,121.00,EUR,n26-001\n",
+        encoding="utf-8",
+    )
+
+    result = _invoke(["--language", locale, "app", "ledger", "import", str(statement), "--provider", "csv"])
+
+    assert result.exit_code != 0
+    flattened = " ".join(result.output.split())
+    assert "CSV row 2" in flattened
+    assert "Date" in flattened
+    assert "not-a-date" in flattened
+    assert "YYYY-MM-DD" in flattened
+    assert inner_fragment in flattened
+    assert "unsupported date format" not in flattened
+
+
 def test_import_of_a_headers_only_csv_explains_zero_rows(tmp_path: Path) -> None:
     """A parsed-but-empty CSV explains the zero result, never silently.
 
