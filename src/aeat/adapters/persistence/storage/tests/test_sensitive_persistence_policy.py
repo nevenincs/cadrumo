@@ -59,6 +59,16 @@ _FORBIDDEN_TEXT = (
 _SENSITIVE_DIRECT_WRITE_EXCEPTIONS: dict[tuple[str, str, str], str] = {}
 _REVIEWED_PRODUCTION_FILE_WRITES = {
     (
+        "src/aeat/adapters/persistence/storage/bucket/_output_language_hint.py",
+        "_atomic_write_text",
+        "open",
+    ): "output-language UI preference hint; writes a normalized language-code string, no user financial data",
+    (
+        "src/aeat/entrypoints/mcp/_telemetry.py",
+        "record",
+        "self.path.open",
+    ): "payload-free local session telemetry; appends per-call trajectory metadata JSON lines, no sensitive/user data",
+    (
         "src/aeat/adapters/persistence/storage/_rotation.py",
         "_atomic_write",
         "tempfile.NamedTemporaryFile",
