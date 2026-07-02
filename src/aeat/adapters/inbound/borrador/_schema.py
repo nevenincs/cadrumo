@@ -79,7 +79,7 @@ class BorradorExtractionProfile(Protocol):
     The parser consumes this structural protocol only when
     :class:`BorradorParseMode.REGISTRY_PROFILE` is requested. It is supplied by
     the caller; the inbound adapter does not look up
-    :class:`~aeat.domain.calculations.registry.RegistrySnapshot` data itself.
+    :class:`~domain.calculations.registry.RegistrySnapshot` data itself.
     """
 
     @property
@@ -96,7 +96,7 @@ class InboundBorradorObservation(BaseModel):
     """Observed Modelo 100 PDF data.
 
     Strict, frozen pydantic record produced by
-    :func:`aeat.adapters.inbound.borrador.parse_borrador`.
+    :func:`adapters.inbound.borrador.parse_borrador`.
 
     Attributes:
         modelo: Always ``"100"`` for this record.
@@ -104,7 +104,7 @@ class InboundBorradorObservation(BaseModel):
         tax_id: NIF / NIE of the filer.
         artefact_kind: Which of the three PDF types was detected.
         values: Tuple of
-            :class:`~aeat.adapters.inbound.pdf.ExtractedCasilla` records
+            :class:`~adapters.inbound.pdf.ExtractedCasilla` records
             observed in the PDF.
         registry_extraction_profile_id: Registry extraction profile applied
             to this parse, when the caller requested coverage validation.
