@@ -9,9 +9,9 @@ not own; the inner primitives keep emitting their lifecycle events
 perspectives in the bucket-event history.
 
 This module uses :class:`BucketEventHistoryRepository` for event
-emission, :class:`~aeat.domain.user_profile.UserProfilePortableExport`
+emission, :class:`~domain.user_profile.UserProfilePortableExport`
 for sealed export/import payloads, and
-:class:`~aeat.adapters.persistence.storage.bucket.ExportArchiveHeader`
+:class:`~adapters.persistence.storage.bucket.ExportArchiveHeader`
 for archive frontmatter. The archive file is an explicit operator
 handoff artifact; bucket state remains owned by the profile and secure
 repository primitives the service composes.
@@ -279,7 +279,7 @@ class BucketMaintenanceService:
         active bucket, so its master-key session is activated the same way the
         export path activates it) and reads the encrypted filing catalogue, then
         delegates the pure floor evaluation to
-        :func:`~aeat.domain.retention.assess_retention_floor`.
+        :func:`~domain.retention.assess_retention_floor`.
         """
         from ...domain.modelos import ModeloRecordCatalogueRepository
         from ...domain.retention import assess_retention_floor
@@ -474,7 +474,7 @@ class BucketMaintenanceService:
         Archives without one are same-host backups and require the active bucket
         DEK to match the archive payload. New buckets are provisioned through
         the canonical profile create span before the
-        :class:`~aeat.domain.user_profile.UserProfilePortableExport` payload is
+        :class:`~domain.user_profile.UserProfilePortableExport` payload is
         restored. The archive header's manifest digest is authenticated through
         AEAD associated data during decryption; it is not recomputed against the
         imported host manifest.
