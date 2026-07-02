@@ -209,13 +209,13 @@ def iva_wallet_pull_cmd(
         ),
     ] = None,
 ) -> None:
-    """Pull the authenticated AEAT IVA wallet into an :class:`~aeat.application.live.IvaWalletCaptureReport`.
+    """Pull the authenticated AEAT IVA wallet into an :class:`IvaWalletCaptureReport`.
 
-    The command delegates to
-    :func:`~aeat.application.live.capture_iva_compensation_wallet`. It can
-    trigger the configured authentication provider, including Cl@ve Móvil
-    manual approval, but the only remote action is the guarded wallet read
-    query; reconciliation and blocking decisions are profile-local evidence.
+    Delegates to :func:`capture_iva_compensation_wallet` and emits
+    :class:`IvaWalletPullResult`. The command can trigger the configured
+    authentication provider, including Cl@ve Móvil manual approval, but the only
+    remote action is the guarded wallet read query; reconciliation and blocking
+    decisions are profile-local evidence.
     """
     from ...application.live import capture_iva_compensation_wallet
 
@@ -284,11 +284,12 @@ def iva_wallet_history_cmd(
         typer.Option("--as-of-year", min=2000, max=2099, help=tr("cli.app.live.iva_wallet.as_of_year_help")),
     ] = None,
 ) -> None:
-    """List stored :class:`~aeat.application.live.IvaCompensationHistoryReport` evidence.
+    """List stored :class:`IvaCompensationHistoryReport` evidence.
 
-    This local-only read reloads compensation history, carry-forward lots, and
-    wallet authority decisions from secure profile storage without contacting
-    AEAT.
+    Delegates to :func:`list_iva_compensation_history` and emits
+    :class:`IvaWalletHistoryResult`. This local-only read reloads compensation
+    history, carry-forward lots, and wallet authority decisions from secure
+    profile storage without contacting AEAT.
     """
     from ...application.live import list_iva_compensation_history
 
@@ -470,11 +471,13 @@ def iva_wallet_pull_history_cmd(
         ),
     ] = Path("var/aeat/live/iva-compensation-history"),
 ) -> None:
-    """Pull Modelo 303 filed history into an :class:`~aeat.application.live.IvaCompensationHistoryCaptureReport`.
+    """Pull Modelo 303 filed history into an :class:`IvaCompensationHistoryCaptureReport`.
 
-    The live read captures filed-history evidence, promotes calculation
-    observations, then verifies the secure profile-local reload count. It does
-    not query the wallet/cartera surface or submit AEAT form choices.
+    Delegates to :func:`capture_iva_compensation_history` and emits
+    :class:`IvaWalletCaptureHistoryResult`. The live read captures filed-history
+    evidence, promotes calculation observations, then verifies the secure
+    profile-local reload count. It does not query the wallet/cartera surface or
+    submit AEAT form choices.
     """
     from ...application.live import capture_iva_compensation_history
 
@@ -556,13 +559,13 @@ def iva_wallet_pull_evidence_cmd(
 ) -> None:
     """Capture filed-history and wallet/cartera evidence as an IVA remote-state report.
 
-    The application service returns a redacted
-    :class:`~aeat.application.live.IvaRemoteStateAcquisitionReport`, persists a
-    :class:`~aeat.application.live.IvaRemoteStateAcquisitionManifest`, and keeps
-    :class:`~aeat.application.live.LiveIvaReadOutcome` rows separate per surface.
-    Filed-history evidence can therefore survive a wallet/cartera failure and
-    vice versa. The command never performs AEAT filing, payment, or
-    representative submission actions.
+    Delegates to :func:`capture_iva_remote_state`, emits
+    :class:`IvaWalletPullEvidenceResult`, returns a redacted
+    :class:`IvaRemoteStateAcquisitionReport`, persists a
+    :class:`IvaRemoteStateAcquisitionManifest`, and keeps
+    :class:`LiveIvaReadOutcome` rows separate per surface. Filed-history evidence
+    can therefore survive a wallet/cartera failure and vice versa. The command
+    never performs AEAT filing, payment, or representative submission actions.
     """
     from ...application.live import capture_iva_remote_state
 
