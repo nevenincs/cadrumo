@@ -58,6 +58,9 @@ related:
 - Reviewed W09.P45.S238 changes to `src/aeat/entrypoints/cli/_modelo_discovery_cli.py`, focused Modelo bindings CLI tests, the missing-filter fixture test, and locale catalogues.
 - Checked that unscoped `modelo bindings list` output remains available for discovery but now warns through the shared typed `notices` channel and text output before operators copy binding ids into `work calculate`.
 - Checked validation evidence from focused bindings CLI tests, schema conformance tests, placeholder parity, locale scaffold/audit, touched-file ruff, reviewer output, and RAG grounding.
+- Reviewed W09.P45.S293 as a no-production closure against current missing-required verification finding language behavior and `src/aeat/application/modelo/tests/test_verification_finding_language.py`.
+- Checked that current `_missing_required_casilla_finding` already renders through `tr()` and that the new regression switches a real active-profile language from Catalan to Spanish against a real Modelo 130 registry casilla definition.
+- Checked validation evidence from the new focused application test, existing missing-required localization/provenance tests, touched-file ruff, reviewer output, and RAG grounding.
 
 ## Findings
 
@@ -120,6 +123,10 @@ No findings for the ledger silent-profile-gate row. The current code no longer s
 ### w09-p45-s238 | low | no findings
 
 No findings for the Modelo bindings unscoped-list warning. The implementation preserves broad discovery but emits `modelo.bindings.list.unscoped_revision` through the shared `Notice` envelope and mirrors it into text output when `--year` or `--period` is missing. The regression tests cover both missing filters, only `--period` missing, and the fully scoped no-warning path. Residual risk is limited to non-English translation wording quality; locale scaffold, audit, and placeholder parity passed.
+
+### w09-p45-s293 | low | no findings
+
+No findings for the missing-required-casilla Catalan drift closure. Production already uses `tr("application.modelo.findings.missing_required_casilla")` in the live verification-finding helper, and the new regression proves active-profile Catalan renders `La casella obligatòria` while Spanish renders `La casilla requerida` for the same real Modelo 130 casilla. Residual risk is limited to substring-level language assertions; existing tests cover key fallback, casilla interpolation, and registry provenance.
 
 ## Recommendations
 
