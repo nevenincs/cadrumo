@@ -53,10 +53,11 @@ def test_valid_filing_entry_constructs() -> None:
     assert metadata.portal is Portal.PORTAL_M303_IVA_AUTOLIQUIDACION
 
 
-@pytest.mark.parametrize(
-    ("overrides", "match"),
-    [
-        pytest.param(
+def test_invalid_metadata_payloads_are_rejected() -> None:
+    """Invalid metadata payloads fail through the real pydantic model."""
+    invalid_cases: tuple[tuple[str, dict[str, object], str], ...] = (
+        (
+            "non-https-url",
             {
                 "url": _sede_url(portal_path("portal_m303_iva_autoliquidacion")).replace(
                     "https://",
@@ -65,63 +66,63 @@ def test_valid_filing_entry_constructs() -> None:
                 ),
             },
             r"url scheme must be https",
-            id="non-https-url",
         ),
-        pytest.param(
+        (
+            "host-subdomain-mismatch",
             {"url": _www1_url(portal_path("portal_m303_iva_autoliquidacion"))},
             r"does not match subdomain",
-            id="host-subdomain-mismatch",
         ),
-        pytest.param(
+        (
+            "filing-non-gcode-path",
             {"url": _sede_url(PORTAL_NON_GCODE_PATH_CANARY)},
             r"url path must match",
-            id="filing-non-gcode-path",
         ),
-        pytest.param(
+        (
+            "censo-non-gcode-path",
             {
                 "portal": Portal.PORTAL_M036_CENSAL,
                 "category": PortalCategory.CENSO,
                 "url": _sede_url(PORTAL_CENSO_NON_GCODE_PATH_CANARY),
             },
             r"url path must match",
-            id="censo-non-gcode-path",
         ),
-        pytest.param(
+        (
+            "anonymous-mixed-auth",
             {"auth_methods": frozenset({AuthMethod.ANONYMOUS, AuthMethod.CERTIFICATE})},
             r"AuthMethod.ANONYMOUS must be the sole method",
-            id="anonymous-mixed-auth",
         ),
-        pytest.param(
+        (
+            "empty-auth-methods",
             {"auth_methods": frozenset()},
             r"at least 1 item",
-            id="empty-auth-methods",
         ),
-        pytest.param(
+        (
+            "external-modelo-field",
             {"modelo": "303"},
             r"Extra inputs are not permitted",
-            id="external-modelo-field",
         ),
-        pytest.param(
+        (
+            "label-non-string",
             {"label": {"en": "x", "hu": "x"}},
             r"valid string",
-            id="label-non-string",
         ),
-        pytest.param(
+        (
+            "label-blank",
             {"label": " "},
             r"label must not be empty or whitespace-only",
-            id="label-blank",
         ),
-        pytest.param(
+        (
+            "purpose-blank",
             {"purpose": "   "},
             r"purpose must not be empty or whitespace-only",
-            id="purpose-blank",
         ),
-        pytest.param(
+        (
+            "active-with-replacement",
             {"replaced_by": Portal.PORTAL_M036_CENSAL},
             r"replaced_by must be None when active is True",
-            id="active-with-replacement",
         ),
-        pytest.param(
+        (
+            "retired-without-replacement-notes",
             {
                 "portal": Portal.PORTAL_M037_CENSAL_SIMPLIFICADA,
                 "category": PortalCategory.CENSO,
@@ -131,14 +132,15 @@ def test_valid_filing_entry_constructs() -> None:
                 "notes": (),
             },
             r"retired portal without replaced_by must carry a non-empty notes",
-            id="retired-without-replacement-notes",
         ),
-    ],
-)
-def test_invalid_metadata_payloads_are_rejected(overrides: dict[str, object], match: str) -> None:
-    """Invalid metadata payloads fail through the real pydantic model."""
-    with pytest.raises(ValidationError, match=match):
-        PortalMetadata.model_validate(_base_kwargs(**overrides))
+    )
+
+    for case_id, overrides, match in invalid_cases:
+        try:
+            with pytest.raises(ValidationError, match=match):
+                PortalMetadata.model_validate(_base_kwargs(**overrides))
+        except AssertionError as exc:
+            raise AssertionError(f"invalid metadata payload case failed: {case_id}") from exc
 
 
 def test_retired_filing_skips_gcode_check() -> None:
