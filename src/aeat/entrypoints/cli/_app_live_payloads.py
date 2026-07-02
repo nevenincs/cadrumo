@@ -660,14 +660,15 @@ class VerifyObservationPayload(OutputSchema):
 
 @register_schema("app.live.justificante.pull")
 class JustificanteCaptureResult(OutputSchema):
-    """Result envelope for a persisted :class:`~aeat.application.live.JustificanteCaptureSnapshot`.
+    """Result envelope for a persisted :class:`JustificanteCaptureSnapshot`.
 
     The pull command stores the signed receipt PDF through
-    :class:`~aeat.application.live.JustificanteCaptureSnapshotService` and
-    reports both the content-addressed ``pdf_sha256`` snapshot identity inputs
-    and the best-effort local enrolment outcome. ``filing_evidence_stamped`` is
-    false when no current local filing record exists; the live capture remains
-    persisted and can still back calendar evidence once metadata parses.
+    :class:`JustificanteCaptureSnapshotService` and reports both the
+    content-addressed ``pdf_sha256`` snapshot identity inputs and the
+    best-effort local enrolment outcome from :class:`JustificanteCaptureOutcome`.
+    ``filing_evidence_stamped`` is false when no current local filing record
+    exists; the live capture remains persisted and can still back calendar
+    evidence once metadata parses.
     """
 
     bucket_id: str
@@ -689,7 +690,11 @@ class JustificanteCaptureResult(OutputSchema):
 
 
 class JustificanteSnapshotSummaryPayload(OutputSchema):
-    """Summary projection of one :class:`~aeat.application.live.JustificanteCaptureSnapshot`."""
+    """Summary projection of one :class:`JustificanteCaptureSnapshot`.
+
+    Used by :class:`JustificanteListResult` for active snapshots returned from
+    :class:`JustificanteCaptureSnapshotService`.
+    """
 
     snapshot_id: str
     modelo: str
@@ -702,12 +707,13 @@ class JustificanteSnapshotSummaryPayload(OutputSchema):
 
 @register_schema("app.live.justificante.list")
 class JustificanteListResult(OutputSchema):
-    """List result from :class:`~aeat.application.live.JustificanteCaptureSnapshotService`.
+    """List result from :class:`JustificanteCaptureSnapshotService`.
 
-    Rows are active justificante-capture snapshots for the active bucket,
-    ordered by capture time and carrying the period token, lifecycle state, and
-    raw-PDF hash needed to identify the official receipt without exposing the
-    encrypted PDF bytes.
+    ``rows`` contains :class:`JustificanteSnapshotSummaryPayload` projections
+    for active :class:`JustificanteCaptureSnapshot` records in the active
+    bucket, ordered by capture time and carrying the period token,
+    :class:`SnapshotLifecycleState`, and raw-PDF hash needed to identify the
+    official receipt without exposing the encrypted PDF bytes.
     """
 
     bucket_id: str
@@ -717,11 +723,12 @@ class JustificanteListResult(OutputSchema):
 
 @register_schema("app.live.justificante.view")
 class JustificanteViewResult(OutputSchema):
-    """Detail view for one persisted :class:`~aeat.application.live.JustificanteCaptureSnapshot`.
+    """Detail view for one persisted :class:`JustificanteCaptureSnapshot`.
 
-    The view surfaces the AEAT expediente, CSV, official ``source_kind``,
-    lifecycle state, and ``pdf_sha256`` so operators can reconcile the local
-    evidence chain without printing the stored receipt body.
+    The view resolves through :class:`JustificanteCaptureSnapshotService` and
+    surfaces the AEAT expediente, CSV, official ``source_kind``,
+    :class:`SnapshotLifecycleState`, and ``pdf_sha256`` so operators can
+    reconcile the local evidence chain without printing the stored receipt body.
     """
 
     bucket_id: str
