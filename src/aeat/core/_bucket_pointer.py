@@ -17,11 +17,11 @@ TOML and pydantic validation failures are deliberate hard failures for
 would silently fall back to root storage.
 
 This module is also distinct from the application-layer manifest scanners:
-:class:`~aeat.application.workflow.ProfileBucketPointer` records are derived
+:class:`~application.workflow.ProfileBucketPointer` records are derived
 from ``buckets/*/manifest.toml`` and prove registered profile metadata. A
 ``BucketPointer`` only names the intended active bucket; it does not prove the
 bucket exists, read a manifest, or validate lifecycle status. The companion
-:mod:`aeat.core._bucket_pointer_io` module owns the file boundary, while this
+:mod:`core._bucket_pointer_io` module owns the file boundary, while this
 module owns strict validation and deterministic serialisation only.
 """
 
