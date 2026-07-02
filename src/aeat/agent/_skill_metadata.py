@@ -289,7 +289,11 @@ def parse_skill_frontmatter(text: str) -> Mapping[str, object]:
 
 
 def parse_skill_metadata(text: str) -> SkillMetadata:
-    """Parse and validate the full frontmatter of a ``SKILL.md`` document."""
+    """Parse and validate the full frontmatter of a ``SKILL.md`` document.
+
+    Returns:
+        A :class:`SkillMetadata`.
+    """
     data = parse_skill_frontmatter(text)
     try:
         return SkillMetadata.model_validate(dict(data))

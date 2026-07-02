@@ -126,6 +126,9 @@ def arguments_faithfulness(
     never produced must not enter the irreversible artefact call). An empty
     window with amount-shaped arguments on the handoff path blocks — figures
     from nowhere are exactly the fabrication this gate exists to stop.
+
+    Returns:
+        A :class:`FaithfulnessResult`.
     """
     return faithfulness_check(
         agent_text=arguments_json,

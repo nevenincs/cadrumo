@@ -96,6 +96,9 @@ def iter_skill_metadata() -> Iterator[SkillMetadata]:
     predicate has not yet been lifted from prose still loads, with
     ``applies_when`` set to ``None`` - strict presence is enforced by the coverage
     gate, not this load path, so the tree stays loadable while the lifts land.
+
+    Returns:
+        A :class:`SkillMetadata`.
     """
     from ._skill_metadata import SkillMetadataError
 

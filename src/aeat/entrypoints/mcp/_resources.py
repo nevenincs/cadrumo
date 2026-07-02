@@ -152,12 +152,19 @@ def list_harness_resources() -> tuple[HarnessResourceRef, ...]:
 
     One row per shipped skill, operator rule, and persona - the addressable set
     a ``resources/list`` advertises.
+
+    Returns:
+        A :class:`HarnessResourceRef`.
     """
     return tuple(_ref_for(kind, name) for kind, name, _document in _iter_entries())
 
 
 def list_harness_resource_templates() -> tuple[HarnessResourceTemplate, ...]:
-    """Return the three ``aeat://<kind>/{name}`` resource templates."""
+    """Return the three ``aeat://<kind>/{name}`` resource templates.
+
+    Returns:
+        A :class:`HarnessResourceTemplate`.
+    """
     return tuple(
         HarnessResourceTemplate(
             uri_template=f"{_URI_PREFIX}{kind.value}/{{name}}",
@@ -198,6 +205,9 @@ def read_harness_resource(uri: str) -> HarnessResourceContent:
     Raises:
         HarnessResourceNotFoundError: The URI is malformed or names a document
             that is not in the shipped tree.
+
+    Returns:
+        A :class:`HarnessResourceContent`.
     """
     kind, name = _parse_uri(uri)
     if kind is HarnessResourceKind.CORPUS:
