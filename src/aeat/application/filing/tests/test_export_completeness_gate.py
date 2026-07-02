@@ -15,6 +15,7 @@ from pathlib import Path
 import pytest
 
 from ....domain.filing._errors import FilingExportError
+from ....domain.filing._schema import ModeloValueKind
 from .._export import boe_representable_casilla_ids, export_draft
 from ._export_support import (
     _approved_registry_draft,
@@ -47,25 +48,39 @@ def test_complete_fixed_width_draft_exports_without_panic(tmp_path: Path) -> Non
 
 
 def test_thin_fixed_width_draft_panics_before_writing(tmp_path: Path) -> None:
+    # Reproduce the REAL production thin state, not an artificial one: build_draft
+    # emits a ModeloValue for every declared casilla and marks an unsupplied one
+    # EMPTY (value=None), so its id is present in draft.values even though it would
+    # render as a blank slot. The gate must key on value presence, not id
+    # membership, so setting a required-applicable casilla to EMPTY must panic.
     provider = _schema_provider()
     draft = _approved_registry_draft()
     headers = _modelo_130_export_headers()
     layout = provider.get_subview("130").export_layouts[0]
 
     required_applicable = _required_applicable_130(provider, layout, headers)
-    present_required = sorted(required_applicable & {value.casilla_id for value in draft.values})
-    assert present_required, "fixture must declare at least one required-applicable casilla to drop"
-    dropped = present_required[0]
-
-    thin_draft = draft.model_copy(
-        update={"values": tuple(value for value in draft.values if value.casilla_id != dropped)}
+    present_valued = sorted(
+        required_applicable & {value.casilla_id for value in draft.values if value.value is not None}
     )
+    assert present_valued, "fixture must declare at least one required-applicable casilla with a real value"
+    emptied = present_valued[0]
+
+    thin_values = tuple(
+        value.model_copy(update={"value": None, "kind": ModeloValueKind.EMPTY})
+        if value.casilla_id == emptied
+        else value
+        for value in draft.values
+    )
+    # The emptied casilla id is STILL present in draft.values (the production
+    # failure mode), just with no value.
+    thin_draft = draft.model_copy(update={"values": thin_values})
+    assert emptied in {value.casilla_id for value in thin_draft.values}
     output = tmp_path / "modelo-130-thin.txt"
 
     with pytest.raises(FilingExportError) as exc_info:
         export_draft(thin_draft, output_path=output, headers=headers, schema_provider=provider)
 
-    # The panic names the omitted casilla and never writes the thin file.
-    assert dropped in str(exc_info.value)
+    # The panic names the emptied casilla and never writes the thin file.
+    assert emptied in str(exc_info.value)
     assert "structurally-thin" in str(exc_info.value)
     assert not output.exists()
