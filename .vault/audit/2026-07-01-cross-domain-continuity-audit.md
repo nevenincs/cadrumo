@@ -179,6 +179,10 @@ No findings for the Convenio Espana-Marruecos follow-up reconciliation. The curr
 
 No findings for the Art 25.1.b pension follow-up reconciliation. The current Modelo 210 registry carries `m210-pension-tarifa-2025` as a grounded three-tranche bracket table under `trlirnr-rdleg-5-2004:art-25.1.b`, and the Spain-Argentina `AR` / `pension` treaty row delegates through `allocation_domestic_tariff` instead of a scalar fixed rate. The focused M210 convenio-rate regression file passed before closure. No production, registry data, or test code changed.
 
+### w09-p41-s396 | low | no findings
+
+No findings for the imputed-real-estate follow-up reconciliation. The current Modelo 210 registry carries `trlirnr-rdleg-5-2004:art-13.1.h`, the `aeat-irnr-renta-imputada-inmueble-urbano` source, imputation casillas and parameters, and the `m210_resolve_base_imponible` `tipo_renta="inmobiliaria"` branch. Focused M210 registry/application tests pass. No production, registry data, or test code changed.
+
 ## Recommendations
 
 No open code changes recommended from these reviews. Keep W09.P41.S307 and W09.P41.S324 as separate implementation steps. Keep the full M131 módulos coefficient-table oracle as future work outside S297 and S398; S297 closes the grounded datos-base binding projection, and S398 closes only the advisory regulatory-floor predicate and evidence guard.
