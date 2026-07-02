@@ -1874,6 +1874,16 @@ cli:
         pull_help: Letolti egy munkaegyseg igazolasat az AEAT-tol, es egyeztet ellene.
           Kapcsolatba lep az AEAT-tal (csak olvasas).
         work_unit_id_help: Munkaegység-azonosító (SHA-256 vagy egyértelmű előtag).
+      requires:
+        help: 'Megjeleníti az egy adott modelo-hoz és időszakhoz szükséges adatok ellenőrzőlistáját: mely mezőket kell kézzel kitölteni, melyek opcionálisak, melyeket tölti ki automatikusan a könyvelési napló, és melyek származnak az aktív profilból.'
+        missing_profile_coefficient: 'Az aktív profilban nincs beállítva a következő, ehhez a modelo-hoz szükséges együttható(k): %{missing}.'
+        modelo_help: 'Adóbevallási forma kódja (pl. 303, 130, 100).'
+        no_active_profile: 'Nincs aktív profil beállítva, ezért nem lehetett ellenőrizni a profiltól függő együtthatókat (pl. otthoni iroda használati arányát).'
+        period_help: 'Az időszak-token a modelo revíziójának feloldásához: 0A éves, 1T-4T negyedévek, 01-12 hónapok; a censo modelo-khoz (036) használja: alta, modificacion vagy baja.'
+        section_ledger: 'konyvelesi_naplobol_szarmazo'
+        section_optional: 'opcionalis_kezi_mezok'
+        section_profile: 'profilbol_szarmazo'
+        section_required: 'kotelezo_kezi_mezok'
       verification_report:
         app_help: Rögzített ellenőrzési jelentések vizsgálata.
         list_help: Ellenőrzési jelentések listázása, opcionálisan egy számítási revízióra
@@ -3620,69 +3630,47 @@ cli:
       text_template: '%{message} Következő: %{command}'
   overview:
     agenda:
-      allow_incomplete_help: A napirend megjelenítése akkor is, ha a profiladatok
-        hiányosak.
+      allow_incomplete_help: 'A napirend megjelenítése akkor is, ha a profiladatok hiányosak.'
       date_help: 'A napirend referencia-dátuma (ISO ÉÉÉÉ-HH-NN); alapértelmezés: ma.'
       errors:
-        invalid_horizon: A --horizon értékének pozitív egésznek kell lennie (napok).
-      help: A közelgő és lejárt kötelezettségek rangsorolása egy referencia-dátum
-        köré. Egyetlen `next_due` értéket és ma lejáró / hamarosan lejáró / lejárt
-        csoportokat mutat. Csak helyi; soha nem lép kapcsolatba az AEAT-tal.
-      horizon_help: Az előre tekintő időablak (napokban), amelyet a `due_soon` csoport
-        figyelembe vesz.
-    app_help: Az aktív adómunkaterület áttekintése.
+        invalid_horizon: 'A --horizon értékének pozitív egésznek kell lennie (napok).'
+      help: 'A közelgő és lejárt kötelezettségek rangsorolása egy referencia-dátum köré. Egyetlen `next_due` értéket és ma lejáró / hamarosan lejáró / lejárt csoportokat mutat. Csak helyi; soha nem lép kapcsolatba az AEAT-tal.'
+      horizon_help: 'Az előre tekintő időablak (napokban), amelyet a `due_soon` csoport figyelembe vesz.'
+    app_help: 'Az aktív adómunkaterület áttekintése.'
     backlog:
-      allow_incomplete_help: A hátralék megjelenítése akkor is, ha a profiladatok
-        hiányosak.
-      from_help: 'A kezdő dátum (ISO ÉÉÉÉ-HH-NN, beleszámítva); alapértelmezés: 365
-        nappal ezelőtt.'
-      help: Az üzemeltető által még be nem nyújtott lejárt kötelezettségek listázása.
-        A legelőbb lejárt elemek kerülnek előre. Csak helyi; soha nem lép kapcsolatba
-        az AEAT-tal.
+      allow_incomplete_help: 'A hátralék megjelenítése akkor is, ha a profiladatok hiányosak.'
+      from_help: 'A kezdő dátum (ISO ÉÉÉÉ-HH-NN, beleszámítva); alapértelmezés: 365 nappal ezelőtt.'
+      help: 'Az üzemeltető által még be nem nyújtott lejárt kötelezettségek listázása. A legelőbb lejárt elemek kerülnek előre. Csak helyi; soha nem lép kapcsolatba az AEAT-tal.'
       to_help: 'A záró dátum (ISO ÉÉÉÉ-HH-NN, beleszámítva); alapértelmezés: ma.'
     calendar:
-      all_profiles_help: Az összes regisztrált profil naptárát jeleníti meg az aktív
-        helyett. Minden blokk egy profilfejléc-sorral kezdődik.
-      allow_incomplete_help: A naptár megjelenítése akkor is, ha a profiladatok hiányosak.
-      from_help: A naptárablak kezdő dátuma (ISO ÉÉÉÉ-HH-NN, beleszámítva).
-      help: A határidő-naptár megjelenítése az aktív profilhoz a megadott dátumablakon
-        belül. Festivos és munkanapszámítás alkalmazásával. Csak helyi; soha nem lép
-        kapcsolatba az AEAT-tal.
+      all_profiles_help: 'Az összes regisztrált profil naptárát jeleníti meg az aktív helyett. Minden blokk egy profilfejléc-sorral kezdődik.'
+      allow_incomplete_help: 'A naptár megjelenítése akkor is, ha a profiladatok hiányosak.'
+      from_help: 'A naptárablak kezdő dátuma (ISO ÉÉÉÉ-HH-NN, beleszámítva).'
+      help: 'A határidő-naptár megjelenítése az aktív profilhoz a megadott dátumablakon belül. Festivos és munkanapszámítás alkalmazásával. Csak helyi; soha nem lép kapcsolatba az AEAT-tal.'
       shift:
         business_day: 'Munkanap'
         calendar_unavailable: 'Naptár nem elérhető'
         domingo: 'Vasárnap'
         modelo_exception: 'Modelo-kivétel'
         sabado: 'Szombat'
-      show_suppressed_help: Elnyomott bejegyzések megjelenítése is a naptárban.
-      to_help: A naptárablak záró dátuma (ISO ÉÉÉÉ-HH-NN, beleszámítva).
-    calendar_local_filing_evidence_unavailable: Az attekinto naptar helyi bevallasi
-      bizonyiteka nem erheto el; a megjelenites megtagadva perzisztalt AEAT bevallasi
-      allapot nelkul.
-    calendar_local_live_events_unavailable: Ehhez a naptársorhoz nem érhető el helyi
-      élő eseménybizonyíték.
-    calendar_local_modelo_events_unavailable: Ehhez a naptársorhoz nem érhető el helyi
-      modelo eseménybizonyíték.
-    calendar_refused_incomplete: 'A naptárnak megoldatlan profilellenőrzései vannak:
-      %{keys}. Futtassa a figyelmeztetés javító parancsát, vagy adja meg a --allow-incomplete
-      kapcsolót az ideiglenes naptár megtekintéséhez.'
+      show_suppressed_help: 'Elnyomott bejegyzések megjelenítése is a naptárban.'
+      to_help: 'A naptárablak záró dátuma (ISO ÉÉÉÉ-HH-NN, beleszámítva).'
+    calendar_local_filing_evidence_unavailable: 'Az attekinto naptar helyi bevallasi bizonyiteka nem erheto el; a megjelenites megtagadva perzisztalt AEAT bevallasi allapot nelkul.'
+    calendar_local_live_events_unavailable: 'Ehhez a naptársorhoz nem érhető el helyi élő eseménybizonyíték.'
+    calendar_local_modelo_events_unavailable: 'Ehhez a naptársorhoz nem érhető el helyi modelo eseménybizonyíték.'
+    calendar_refused_incomplete: 'A naptárnak megoldatlan profilellenőrzései vannak: %{keys}. Futtassa a figyelmeztetés javító parancsát, vagy adja meg a --allow-incomplete kapcsolót az ideiglenes naptár megtekintéséhez.'
     coverage:
       investigate: '%{count} bevallasi kotelezettseget nem sikerult egyertelmuen megallapitani
         ehhez a profilhoz, es bevallatlan maradhat: %{modelos}. Vizsgalja meg mindegyiket
         az ''aeat app overview explain <modelo>'' paranccsal.'
-    drafts: Tervezetek
+    drafts: 'Tervezetek'
     explain:
-      help: Egy nyomtatvány alkalmazhatóságának elemzése az aktív profillal szemben.
-        Megjeleníti az alkalmazható jelzőt, a nyilvántartás alapú indoklást és a döntés
-        alapját képező profiladatokat. Csak helyi; soha nem lép kapcsolatba az AEAT-tal.
-      modelo_help: AEAT-nyomtatványazonosító (pl. 303, 130, 100).
-      year_help: 'Az alkalmazhatóság-értékelés adóéve; alapértelmezés: az aktuális
-        év.'
-    local_work_units_unavailable: Az áttekintés helyi Modelo munkaegység-állapota
-      nem érhető el; nem jeleníthető meg megőrzött munkaállapot nélkül.
-    period: Időszak
-    period_help: 'Bevallási időszak AEAT tokenként: 1T-4T (negyedévek), 0A (éves),
-      01-12 (hónapok). A --year kapcsolóval adja meg az évet.'
+      help: 'Egy nyomtatvány alkalmazhatóságának elemzése az aktív profillal szemben. Megjeleníti az alkalmazható jelzőt, a nyilvántartás alapú indoklást és a döntés alapját képező profiladatokat. Csak helyi; soha nem lép kapcsolatba az AEAT-tal.'
+      modelo_help: 'AEAT-nyomtatványazonosító (pl. 303, 130, 100).'
+      year_help: 'Az alkalmazhatóság-értékelés adóéve; alapértelmezés: az aktuális év.'
+    local_work_units_unavailable: 'Az áttekintés helyi Modelo munkaegység-állapota nem érhető el; nem jeleníthető meg megőrzött munkaállapot nélkül.'
+    period: 'Időszak'
+    period_help: 'Bevallási időszak AEAT tokenként: 1T-4T (negyedévek), 0A (éves), 01-12 (hónapok). A --year kapcsolóval adja meg az évet.'
     post_filing:
       pending: '%{count} AEAT bevallás utáni esemény igényel figyelmet: %{kinds}.
         Tekintsd át őket az ''aeat app live notifications list'' paranccsal.'
@@ -3736,11 +3724,11 @@ cli:
       work_units_present_with_discarded: '%{count} aktív modellómunka-egység (%{discarded}
         eldobott) a helyi tárban – az aktív modellómunkája mentve van; folytassa:
         `aeat app modelo work list`.'
-    status_help: Profil, főkönyv és nyomtatvány-készültség megjelenítése.
+    status_help: 'Profil, főkönyv és nyomtatvány-készültség megjelenítése.'
     taxpayer_model_undeclared: Az aktív profil nem tartalmaz adózói modellt; frissítse
       a profilt, vagy futtassa újra a hiányos profil felülbírálásával.
-    verbose_help: Részletek és következő lépés megjelenítése, ha elérhető.
-    year_help: Bevallási év a --period kapcsolóhoz (pl. 2024).
+    verbose_help: 'Részletek és következő lépés megjelenítése, ha elérhető.'
+    year_help: 'Bevallási év a --period kapcsolóhoz (pl. 2024).'
   registry:
     app_help: Adónyomtatvány-nyilvántartás kezelése.
     audit_oracles_environment_help: Az élő paritási katalógus környezete az audit

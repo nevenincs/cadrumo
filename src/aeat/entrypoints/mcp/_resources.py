@@ -128,8 +128,7 @@ _TEMPLATE_DESCRIPTIONS: dict[HarnessResourceKind, str] = {
     HarnessResourceKind.RULE: "Operator operating-rule documents, addressed by rule name.",
     HarnessResourceKind.PERSONA: "Tax-advisor persona documents, addressed by persona name.",
     HarnessResourceKind.CORPUS: (
-        "Verbatim BOE/AEAT legal text, addressed by citation id or corpus_ref "
-        "(e.g. ley-58-2003:art-27.2)."
+        "Verbatim BOE/AEAT legal text, addressed by citation id or corpus_ref (e.g. ley-58-2003:art-27.2)."
     ),
 }
 

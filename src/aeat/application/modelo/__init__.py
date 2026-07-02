@@ -126,15 +126,6 @@ from ._calculate_input import (
     is_detail_casilla_override_key,
     modelo_202_modality_for_work_unit,
 )
-from ._calculation_source_policy import (
-    BUCKET_AGGREGATION_LOCK_SOURCES,
-    CALLER_OVERRIDABLE_CARRY_SOURCES,
-)
-from ._data_inventory import (
-    DataInventoryCasilla,
-    DataInventoryChecklist,
-    data_inventory_checklist,
-)
 from ._calculation_actions import (
     BucketAggregationCalculationResult,
     assert_no_novel_source_kinds,
@@ -144,6 +135,15 @@ from ._calculation_actions import (
     get_calculation_revision,
     list_calculation_revisions,
     mark_revision_verificado_completo,
+)
+from ._calculation_source_policy import (
+    BUCKET_AGGREGATION_LOCK_SOURCES,
+    CALLER_OVERRIDABLE_CARRY_SOURCES,
+)
+from ._data_inventory import (
+    DataInventoryCasilla,
+    DataInventoryChecklist,
+    data_inventory_checklist,
 )
 from ._export import (
     ModeloExportCommand,
@@ -296,7 +296,6 @@ from ._result_summary import (
     ResultSummaryRow,
     calculation_result_summary,
 )
-from ._semantic_role_resolution import casilla_id_for_unique_revision_semantic_role
 from ._selectors import (
     ModeloCalculationRevisionCandidate,
     ModeloCalculationRevisionDefault,
@@ -326,6 +325,7 @@ from ._selectors import (
     select_modelo_calculation_revision,
     visible_target_work_units,
 )
+from ._semantic_role_resolution import casilla_id_for_unique_revision_semantic_role
 from ._taxation_comparison import (
     TaxationComparisonError,
     TaxationComparisonResult,
@@ -555,8 +555,8 @@ __all__ = [
     "calculate_modelo_revision_from_bucket_aggregation",
     "calculate_modelo_revision_from_bucket_aggregation_with_diagnostics",
     "calculate_modelo_work_revision",
-    "casilla_id_for_unique_revision_semantic_role",
     "calculation_result_summary",
+    "casilla_id_for_unique_revision_semantic_role",
     "ceded_autonomic_modelo_locale_key",
     "compare_modelo_years",
     "compare_taxation_for_work_address",

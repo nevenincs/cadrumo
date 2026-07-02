@@ -158,9 +158,13 @@ def test_committed_modelo_202_order_chain_is_boe_corpus_backed() -> None:
 
 def test_committed_modelo_202_closed_revisions_use_period_matching_instruction_sources() -> None:
     modelo, catalogues = _load_modelo_202()
-    for revision_id, expected_source_ref, applies_from, applies_to, forbidden_source_refs in (
-        _M202_CLOSED_REVISION_SOURCE_CASES
-    ):
+    for (
+        revision_id,
+        expected_source_ref,
+        applies_from,
+        applies_to,
+        forbidden_source_refs,
+    ) in _M202_CLOSED_REVISION_SOURCE_CASES:
         revision = modelo.revisions[revision_id]
         instruction_source = catalogues.sources[expected_source_ref]
 
@@ -343,8 +347,7 @@ def test_committed_modelo_202_b2_resultado_previo_feeds_modalidad_40_3_resultado
         # "max" that would zero or misstate one lane).
         combination_nodes = [node for node in _iter_expression_nodes(expression) if node.op == "add"]
         assert any(
-            {getattr(arg, "casilla_id", None) for arg in node.args} == {"18", "26"}
-            for node in combination_nodes
+            {getattr(arg, "casilla_id", None) for arg in node.args} == {"18", "26"} for node in combination_nodes
         ), "expected an add(clave 18, clave 26) node combining the B1 and B2 resultado previo lanes"
 
         predicate_ids = {p.predicate_id for p in revision.verification_predicates}
