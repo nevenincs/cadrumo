@@ -110,6 +110,7 @@ MOUNTED_COMMAND_FAMILIES: tuple[MountedCommandFamily, ...] = (
             "logout",
             "status",
             "censo",
+            "descendiente",
             "history",
             "capabilities",
             "preflight",
