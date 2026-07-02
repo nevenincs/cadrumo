@@ -1,16 +1,16 @@
 """Typed payload schemas for modelo reconciliation and taxation comparison.
 
 Every declared payload is a
-:class:`~aeat.entrypoints.cli._schemas.OutputSchema` subclass registered with
-:func:`~aeat.entrypoints.cli._schemas.register_schema` for the modelo
+:class:`OutputSchema` subclass registered with
+:func:`register_schema` for the modelo
 reconciliation and taxation-comparison JSON-contract surface. The application
 facade remains authoritative for
-:class:`~aeat.application.modelo.ModeloReconciliationReport` and
-:class:`~aeat.application.modelo.TaxationComparisonResult`; this module only
+:class:`ModeloReconciliationReport` and
+:class:`TaxationComparisonResult`; this module only
 documents the CLI transport shape that enters
-:class:`~aeat.entrypoints.cli._schemas.SchemaEnvelope` through
+:class:`SchemaEnvelope` through
 :func:`~aeat.entrypoints.cli._common._emit_envelope`. The parent
-:mod:`aeat.entrypoints.cli._modelo_payloads` module re-exports these split
+:mod:`~aeat.entrypoints.cli._modelo_payloads` module re-exports these split
 schemas so modelo emitters keep one payload import surface.
 """
 
@@ -25,7 +25,7 @@ class ModeloReconciliationDiffPayload(OutputSchema):
     """One disagreement surfaced in a reconciliation report.
 
     Nested in :class:`ModeloReconcileResult` and mirrors
-    :class:`~aeat.application.modelo.ModeloReconciliationDiff`. Justificante
+    :class:`ModeloReconciliationDiff`. Justificante
     reconciliation compares header evidence (modelo, period, ejercicio, tax id)
     and, where the revision declares ``reconciliation_total_casilla_ids``, the
     filed total against the canonical computed result casilla. ``diff_kind`` is
@@ -47,9 +47,9 @@ class ModeloReconciliationDiffPayload(OutputSchema):
 class ModeloReconciliationAdvisoryPayload(OutputSchema):
     """One non-blocking reconciliation advisory carried alongside the diffs.
 
-    Mirrors :class:`~aeat.application.modelo.ModeloReconciliationAdvisory`. The
+    Mirrors :class:`ModeloReconciliationAdvisory`. The
     CLI also folds each advisory into a typed
-    :class:`~aeat.core.json_contract.Notice` on the envelope ``notices`` channel;
+    :class:`Notice` on the envelope ``notices`` channel;
     this payload preserves the structured ``code`` / ``context`` in the result
     for machine consumers per ``cli-notices-are-the-only-diagnostic-channel``.
     """
@@ -65,13 +65,14 @@ class ModeloReconcileResult(OutputSchema):
     """Result payload for ``modelo reconcile file`` and ``modelo reconcile pull``.
 
     Both verbs share
-    :class:`~aeat.application.modelo.ModeloReconciliationReport` from
+    :class:`ModeloReconciliationReport` from
     :func:`~aeat.application.modelo.modelo_reconcile` or
-    :func:`~aeat.application.modelo.modelo_reconcile_bytes`: a work-unit-level
-    :class:`~aeat.application.modelo.ModeloReconciliationVerdict`, bucket scope,
-    :class:`~aeat.application.modelo.ModeloReconciliationEvidenceKind`, evidence
-    path/reference, :class:`ModeloReconciliationDiffPayload` list,
-    reconciliation timestamp, and optional narrative.
+    :func:`~aeat.application.modelo.modelo_reconcile_bytes`: a
+    work-unit-level :obj:`WorkUnitId`, :obj:`BucketId` scope,
+    :class:`ModeloReconciliationVerdict`,
+    :class:`ModeloReconciliationEvidenceKind`, evidence path/reference,
+    :class:`ModeloReconciliationDiffPayload` list, reconciliation timestamp,
+    and optional narrative.
     """
 
     work_unit_id: WorkUnitId
@@ -89,12 +90,12 @@ class ModeloReconcileResult(OutputSchema):
 class WorkCompareTaxationResult(OutputSchema):
     """Result payload for ``aeat app modelo work compare-taxation``.
 
-    Projects :class:`~aeat.application.modelo.TaxationComparisonResult` returned
+    Projects :class:`TaxationComparisonResult` returned
     by :func:`~aeat.application.modelo.compare_taxation_for_work_address`.
     It surfaces the semantic-role-selected cuota resultante de la
     autoliquidación and cuota diferencial / resultado for both conjunta and
     individual filing modes, plus the signed delta and
-    :class:`~aeat.application.modelo.TaxationRecommendation`.
+    :class:`TaxationRecommendation`.
     """
 
     operation: str = "modelo.work.compare_taxation"
