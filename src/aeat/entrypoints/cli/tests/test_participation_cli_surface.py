@@ -17,11 +17,11 @@ import typer
 from click.testing import Result
 from typer.core import TyperGroup
 
+from ....adapters.persistence.profile.participation_index import TransactionParticipationIndexRepository
 from ....application.ledger import get_transaction_participation
 from ....core import Period
 from ....domain.modelos import (
     ModeloCode,
-    TransactionParticipationIndexRepository,
     TransactionRevisionParticipation,
     TransactionRevisionParticipationIndex,
 )
