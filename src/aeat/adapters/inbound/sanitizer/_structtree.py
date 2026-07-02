@@ -1,4 +1,4 @@
-"""StructTree drop for :mod:`aeat.adapters.inbound.sanitizer`.
+"""StructTree drop for :mod:`adapters.inbound.sanitizer`.
 
 The Tagged-PDF structure tree (``Root.StructTreeRoot``) carries
 accessibility text via ``/ActualText``, ``/Alt``, and ``/E``

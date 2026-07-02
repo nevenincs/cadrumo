@@ -71,7 +71,7 @@ def active_bucket_id_from_settings(settings: Settings) -> str | None:
 def active_profile_storage_span(settings: Settings | None = None):
     """Return a storage context for the active profile, or a no-op when absent."""
     from ...adapters.persistence.storage import has_active_bucket_session
-    from ..user_profile._orchestration import profile_storage_session
+    from ..user_profile import profile_storage_session
 
     with auth_operator_settings_scope(settings) as resolved_settings:
         bucket_id = active_bucket_id_from_settings(resolved_settings)

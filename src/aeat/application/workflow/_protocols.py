@@ -46,7 +46,7 @@ from ...domain.deadlines import Schedule, TaxpayerProfile
 # engine re-exports them here so adapters can import the contract from
 # the workflow package without taking a second divergent definition.
 from ...domain.filing import ModeloInputs, ModeloInputScalar, ModeloInputValue
-from ...domain.submission._protocols import ModeloDraftLike
+from ...domain.submission import ModeloDraftLike
 
 
 @runtime_checkable

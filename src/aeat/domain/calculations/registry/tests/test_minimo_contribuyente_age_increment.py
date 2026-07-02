@@ -102,6 +102,7 @@ def _calc_2024(birth_date: date) -> Mapping[CasillaId, Decimal]:
             "renta-2024-profile-guarderia-gastos-reales": Decimal("0"),
             "renta-2024-profile-cotizaciones-ss-madre": Decimal("0"),
             "renta-2024-profile-descendientes-menores-3": Decimal("0"),
+            "renta-2024-profile-minimo-descendientes-estatal": Decimal("0"),
             "renta-2024-profile-marriage-full-year": Decimal("0"),
             "renta-2024-profile-marriage-month-start": Decimal("0"),
             "renta-2024-profile-marriage-month-end": Decimal("0"),
@@ -133,6 +134,11 @@ def _calc_2025(birth_date: date) -> Mapping[CasillaId, Decimal]:
             "renta-2025-profile-marriage-month-end": Decimal("0"),
             # BIN-pendiente fresh-filer baseline (2025 binding).
             "renta-2025-base-liquidable-negativa-general-anterior": Decimal("0"),
+            # Madrid nacimiento/adopción deducción (casilla 1039) profile-derived
+            # facts; neutral zero when the chain under test is unrelated.
+            "renta-2025-profile-madrid-nacimiento-adopcion-eligible-count": Decimal("0"),
+            "renta-2025-profile-unidad-familiar-otros-miembros-base": Decimal("0"),
+            "renta-2025-profile-minimo-descendientes-estatal": Decimal("0"),
         },
         enum_binding_values={"renta-2025-profile-tax-residence-ccaa": "madrid"},
         relation_values=_REL_2025,

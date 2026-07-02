@@ -55,7 +55,7 @@ from .....domain.calculations.registry import (
     resolve_relation_values_from_observations,
     validated_casilla_id,
 )
-from .....domain.iva_compensation._carry_forward import derive_303_compensation_available
+from .....domain.iva_compensation import derive_303_compensation_available
 from ....inbound.declaracion import DeclaracionParseError, parse_declaracion_bytes
 from ._browser_constants import SEDE_BODY_ENCODING as _SEDE_BODY_ENCODING
 from ._declarations_schema import Declaracion

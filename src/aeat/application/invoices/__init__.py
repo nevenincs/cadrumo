@@ -48,7 +48,7 @@ See Also:
 
 from __future__ import annotations
 
-from ...domain.invoices._service import (
+from ...domain.invoices import (
     find_invoice,
     find_unmatched,
     link_transaction,

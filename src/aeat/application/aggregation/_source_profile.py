@@ -66,7 +66,7 @@ class ProfileSourceResolver:
                 period=context.period.registry_token,
             )
 
-        from ..modelo._profile_binding import resolve_profile_sourced_bindings
+        from ..modelo import resolve_profile_sourced_bindings
 
         return resolve_profile_sourced_bindings(
             snapshot,

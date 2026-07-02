@@ -30,7 +30,7 @@ from .._common import activate_subcommand_output_language as _activate_subcomman
 from .._errors import CliRefusedBoundaryError as _CliRefusedBoundaryError
 
 if TYPE_CHECKING:
-    from ....application.workflow._models import ProfileBucketPointer
+    from ....application.workflow import ProfileBucketPointer
 
 
 def register_bucket_archive_commands(

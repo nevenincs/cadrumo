@@ -59,6 +59,7 @@ _M100_PAGOS_FRACCIONADOS_INGRESADOS_CASILLA: CasillaId = validated_casilla_id(
 )
 _M100_MADRID_NACIMIENTO_ADOPCION_ELIGIBLE_COUNT_BINDING = "renta-2025-profile-madrid-nacimiento-adopcion-eligible-count"
 _M100_UNIDAD_FAMILIAR_OTROS_MIEMBROS_BASE_BINDING = "renta-2025-profile-unidad-familiar-otros-miembros-base"
+_M100_MINIMO_DESCENDIENTES_ESTATAL_BINDING = "renta-2025-profile-minimo-descendientes-estatal"
 _M131_PAGOS_FRACCIONADOS_CASILLA: CasillaId = validated_casilla_id(
     "15",
     surface="_M131_PAGOS_FRACCIONADOS_CASILLA",
@@ -531,6 +532,7 @@ def test_modelo_100_payment_calculation_resolves_cross_model_periodic_and_annual
             "renta-2025-base-liquidable-negativa-general-anterior": Decimal("0"),
             _M100_MADRID_NACIMIENTO_ADOPCION_ELIGIBLE_COUNT_BINDING: Decimal("0"),
             _M100_UNIDAD_FAMILIAR_OTROS_MIEMBROS_BASE_BINDING: Decimal("0"),
+            _M100_MINIMO_DESCENDIENTES_ESTATAL_BINDING: Decimal("0"),
         },
         enum_binding_values={"renta-2025-profile-tax-residence-ccaa": "madrid"},
         date_binding_values={"renta-2025-profile-taxpayer-birth-date": date(1980, 1, 1)},
@@ -622,6 +624,7 @@ def test_modelo_184_attribution_income_folds_into_modelo_100_casilla_1577(
             "renta-2025-base-liquidable-negativa-general-anterior": Decimal("0"),
             _M100_MADRID_NACIMIENTO_ADOPCION_ELIGIBLE_COUNT_BINDING: Decimal("0"),
             _M100_UNIDAD_FAMILIAR_OTROS_MIEMBROS_BASE_BINDING: Decimal("0"),
+            _M100_MINIMO_DESCENDIENTES_ESTATAL_BINDING: Decimal("0"),
         },
         enum_binding_values={"renta-2025-profile-tax-residence-ccaa": "madrid"},
         date_binding_values={"renta-2025-profile-taxpayer-birth-date": date(1980, 1, 1)},
@@ -693,6 +696,7 @@ def test_modelo_100_payment_calculation_consumes_real_modelo_130_quarterly_regis
             "renta-2025-base-liquidable-negativa-general-anterior": Decimal("0"),
             _M100_MADRID_NACIMIENTO_ADOPCION_ELIGIBLE_COUNT_BINDING: Decimal("0"),
             _M100_UNIDAD_FAMILIAR_OTROS_MIEMBROS_BASE_BINDING: Decimal("0"),
+            _M100_MINIMO_DESCENDIENTES_ESTATAL_BINDING: Decimal("0"),
         },
         enum_binding_values={"renta-2025-profile-tax-residence-ccaa": "madrid"},
         date_binding_values={"renta-2025-profile-taxpayer-birth-date": date(1980, 1, 1)},

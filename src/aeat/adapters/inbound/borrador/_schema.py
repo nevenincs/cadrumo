@@ -26,7 +26,7 @@ from pydantic import BaseModel, Field
 from ....core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ....core import Modelo
 from ....domain.calculations.registry import CasillaId
-from ..pdf._shared import ExtractedCasilla
+from ..pdf import ExtractedCasilla
 
 
 class ArtefactKind(StrEnum):

@@ -33,7 +33,11 @@ from ...adapters.persistence.storage import STORAGE_NAMESPACE_REGISTRY, StorageC
 from ...core.errors import AeatError
 
 if TYPE_CHECKING:
-    from ...domain.user_profile._portable_export import CarriedSecureObject, CoverageManifest, UserProfilePortableExport
+    from ...domain.user_profile import (
+        CarriedSecureObject,
+        CoverageManifest,
+        UserProfilePortableExport,
+    )
 
 
 #: Versions the import path will accept.  This is a pre-beta project with no
@@ -71,11 +75,13 @@ def serialize_profile_bundle(
     each object under its own bucket data-encryption key through the
     standard repository save paths on import.
     """
-    from ...domain.modelos._calculation_repository import CalculationRevisionCatalogueRepository
-    from ...domain.modelos._filing_repository import ModeloRecordCatalogueRepository
-    from ...domain.modelos._repository import WorkUnitCatalogueRepository
-    from ...domain.transactions._repository import TransactionCatalogueRepository
-    from ...domain.user_profile._portable_export import UserProfilePortableExport
+    from ...domain.modelos import (
+        CalculationRevisionCatalogueRepository,
+        ModeloRecordCatalogueRepository,
+        WorkUnitCatalogueRepository,
+    )
+    from ...domain.transactions import TransactionCatalogueRepository
+    from ...domain.user_profile import UserProfilePortableExport
     from ._orchestration import build_lifecycle_service
 
     record = build_lifecycle_service(bucket_id=bucket_id).read(bucket_id)
@@ -114,7 +120,7 @@ def _normalize_custody_profile(custody_profile: StorageCustodyProfile | str) -> 
     try:
         return StorageCustodyProfile(custody_profile)
     except ValueError as exc:
-        from ...domain.user_profile._errors import ProfileExportError
+        from ...domain.user_profile import ProfileExportError
 
         raise ProfileExportError(
             f"unsupported custody_profile {custody_profile!r}; expected one of "
@@ -142,7 +148,7 @@ def _build_secure_object_custody_payload(
     custody_profile: StorageCustodyProfile,
 ) -> tuple[tuple[CarriedSecureObject, ...], CoverageManifest]:
     from ...adapters.persistence.storage import secure_object_repository_for_bucket
-    from ...domain.user_profile._portable_export import CoverageManifest
+    from ...domain.user_profile import CoverageManifest
     from ._custody_carry import carried_namespace_definitions, serialize_carried_objects
 
     repository = secure_object_repository_for_bucket(bucket_id)
@@ -196,7 +202,7 @@ def _assert_full_custody_coverage(
     missing = tuple(namespace for namespace in populated_namespaces if namespace not in covered_namespaces)
     if not missing:
         return
-    from ...domain.user_profile._errors import ProfileExportError
+    from ...domain.user_profile import ProfileExportError
 
     raise ProfileExportError(
         "full custody profile found a populated secure-object namespace with no registry "
@@ -266,13 +272,16 @@ def _rebuild_participation_index(*, target_bucket_id: str) -> None:
     ``ledger-participation-index-is-derived-rebuildable``); it is regenerated from
     the restored revision, work-unit, and filing catalogues.
     """
-    from ..modelo._participation_index_rebuild import rebuild_participation_index
+    from ..modelo import rebuild_participation_index
 
     rebuild_participation_index(bucket_id=target_bucket_id)
 
 
 def _import_work_units(bundle: UserProfilePortableExport, *, target_bucket_id: str) -> None:
-    from ...domain.modelos._repository import WorkUnitCatalogueRepository, upsert_work_unit
+    from ...domain.modelos import (
+        WorkUnitCatalogueRepository,
+        upsert_work_unit,
+    )
 
     if not bundle.work_units:
         return
@@ -284,8 +293,11 @@ def _import_work_units(bundle: UserProfilePortableExport, *, target_bucket_id: s
 
 
 def _import_ledger_transactions(bundle: UserProfilePortableExport, *, target_bucket_id: str) -> None:
-    from ...domain.transactions._models import Transaction, TransactionCatalogue
-    from ...domain.transactions._repository import TransactionCatalogueRepository
+    from ...domain.transactions import (
+        Transaction,
+        TransactionCatalogue,
+        TransactionCatalogueRepository,
+    )
 
     if not bundle.ledger_transactions:
         return
@@ -298,7 +310,7 @@ def _import_ledger_transactions(bundle: UserProfilePortableExport, *, target_buc
 
 
 def _import_calculation_revisions(bundle: UserProfilePortableExport, *, target_bucket_id: str) -> None:
-    from ...domain.modelos._calculation_repository import (
+    from ...domain.modelos import (
         CalculationRevisionCatalogueRepository,
         upsert_calculation_revision,
     )
@@ -313,7 +325,10 @@ def _import_calculation_revisions(bundle: UserProfilePortableExport, *, target_b
 
 
 def _import_filing_records(bundle: UserProfilePortableExport, *, target_bucket_id: str) -> None:
-    from ...domain.modelos._filing_repository import ModeloRecordCatalogueRepository, upsert_filing_record
+    from ...domain.modelos import (
+        ModeloRecordCatalogueRepository,
+        upsert_filing_record,
+    )
 
     if not bundle.filing_records:
         return

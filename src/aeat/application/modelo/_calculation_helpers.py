@@ -36,8 +36,12 @@ from ...domain.calculations.registry import (
     RegistrySnapshot,
     casillas_by_id,
 )
-from ...domain.modelos._calculation_revision import CalculationRevision
-from ...domain.modelos._work_unit import WorkUnit, WorkUnitCatalogue, WorkUnitState
+from ...domain.modelos import (
+    CalculationRevision,
+    WorkUnit,
+    WorkUnitCatalogue,
+    WorkUnitState,
+)
 from ._action_errors import (
     CalculationRegistryUnavailableError,
     CasillaProvenanceMissingError,

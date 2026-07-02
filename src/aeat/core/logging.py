@@ -33,7 +33,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Any, overload, override
 
 if TYPE_CHECKING:
-    from .observability._context import RunContextInfo
+    from .observability import RunContextInfo
 from .redaction import redact_for_log
 
 _CONFIGURED = False
@@ -268,7 +268,7 @@ def _install_run_context_record_factory() -> None:
         nonlocal cached_vars
         record = previous_factory(*args, **kwargs)
         if cached_vars is None:
-            from .observability._context import (
+            from .observability import (
                 RUN_CONTEXT_VAR,
                 STEP_CONTEXT_VAR,
             )

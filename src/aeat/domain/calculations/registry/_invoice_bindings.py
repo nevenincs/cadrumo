@@ -690,7 +690,7 @@ def _build_operator_clave_period_rows(
 
 
 def _m349_export_nif_number(party_tax_id: str, country_code: str) -> str:
-    from ...modelos._row_models import m349_nif_number_for_export
+    from ...modelos import m349_nif_number_for_export
 
     try:
         return m349_nif_number_for_export(party_tax_id, country_code)

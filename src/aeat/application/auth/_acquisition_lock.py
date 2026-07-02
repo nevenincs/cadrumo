@@ -25,8 +25,8 @@ from ...core.errors import AeatError
 from ...core.external_constants import UTF_8_ENCODING
 from ...core.i18n import tr
 from ...core.logging import get_logger
+from ...core.time import coerce_utc_aware
 from ...core.time import now as _utc_now
-from ...core.time._utc import coerce_utc_aware
 from . import AuthProviderKind
 
 if TYPE_CHECKING:

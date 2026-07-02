@@ -28,7 +28,7 @@ def resolve_active_profile_output_language() -> str | None:
     if not has_active_bucket_session():
         return None
 
-    from ..workflow._persistence import workflow_state_repository
+    from ..workflow import workflow_state_repository
     from ._orchestration import fact_value
 
     record = workflow_state_repository().load().active_profile_record()

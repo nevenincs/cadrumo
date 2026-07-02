@@ -7,7 +7,7 @@ from typing import Final
 from argon2.low_level import Type as _Argon2Type
 from argon2.low_level import hash_secret_raw as _argon2_hash_secret_raw
 
-from ..crypto._crypto import KEY_SIZE
+from ..crypto import KEY_SIZE
 
 ARGON2_MEMORY_COST_KIB: Final[int] = 19 * 1024
 """Argon2id ``memory_cost`` in KiB (19 MiB — OWASP-current top tier)."""

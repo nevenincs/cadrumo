@@ -38,7 +38,7 @@ from ...core.hashing import sha256_hex as _sha256_hex
 from ...core.i18n import tr
 from ...core.logging import get_logger
 from ...core.time import now
-from ...domain._identifiers import canonical_decimal_string
+from ...domain import canonical_decimal_string
 from ...domain.categories import CategoryProfile, SpendingCategory, resolve_category_profiles
 from ...domain.filing import (
     CasillaSchemaProvider,
@@ -48,7 +48,7 @@ from ...domain.filing import (
     ModeloValidator,
     derive_validation_status,
 )
-from ...domain.submission._protocols import ModeloDraftStatus
+from ...domain.submission import ModeloDraftStatus
 from ...domain.transactions import Transaction, TransactionCatalogue
 
 _logger = get_logger(__name__)

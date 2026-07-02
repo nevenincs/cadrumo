@@ -1,0 +1,11 @@
+[[revisions."esquema-importacion".bindings]]
+id = "modelo-369-importacion-de-low-value-21pct"
+source = "ledger_oss_aggregation"
+selector = { regime = "import_scheme", destination_member_state = "de", rate_kind = "general", invoice_direction = "issued", transaction_kinds = ["ioss_distance_sale_low_value"], fact = "iva_amount_sum" }
+aggregation = { op = "sum" }
+legal_refs = ["ley-37-1992:art-163-quinvicies", "orden-hac-610-2021:art-1"]
+source_refs = ["aeat-dr-369-2021", "aeat-modelo-369-procedure", "boe-modelo-369-2021-form"]
+
+[[revisions."esquema-importacion".bindings.source_citations]]
+source_ref = "aeat-modelo-369-procedure"
+required_text = ["modelo 369"]

@@ -1202,7 +1202,7 @@ def override_settings(**overrides: object) -> Iterator[Settings]:
     # GC'd block's Settings address can be reused by the next block, so the
     # cache must be invalidated at both boundaries or a stale language leaks
     # across blocks. Lazy import: ``i18n._render`` imports this module.
-    from .i18n._render import clear_output_language_cache
+    from .i18n import clear_output_language_cache
 
     token = _settings_override.set(new_settings)
     clear_output_language_cache()

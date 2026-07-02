@@ -30,10 +30,10 @@ from ...core.hashing import sha256_file
 from ...core.i18n import tr
 from ...domain.buckets import (
     BucketEvent,
+    BucketEventHistoryRepositoryProtocol,
     BucketEventObjectType,
     BucketEventType,
 )
-from ...domain.buckets._protocols import BucketEventHistoryRepositoryProtocol
 from ...domain.currency import (
     CurrencyNormalizationService,
     CurrencyNormalizationStatus,
@@ -46,12 +46,12 @@ from ...domain.transactions import (
     RawTransaction,
     Transaction,
     TransactionCatalogue,
+    TransactionCatalogueRepositoryProtocol,
     TransactionValidationError,
     derive_import_fingerprint,
     derive_movement_day_key,
     derive_transaction_id,
 )
-from ...domain.transactions._protocols import TransactionCatalogueRepositoryProtocol
 from ..transactions import LedgerImportDiagnostic, import_ledger_with_diagnostics
 from ._actions_common import (
     _append_bucket_events,

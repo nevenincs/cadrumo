@@ -26,21 +26,24 @@ from dataclasses import dataclass
 from decimal import Decimal
 from enum import StrEnum
 
-from ...core._modelo import Modelo
-from ...core._period import Period
-from ...domain.modelos._work_unit import WorkUnit
-from ...domain.transactions._enums import (
+from ...core import Modelo
+from ...core import Period
+from ...domain.modelos import WorkUnit
+from ...domain.transactions import (
     BusinessClassification,
     TransactionDirection,
     TransactionLifecycleState,
 )
-from ...domain.transactions._irpf_categories import (
+from ...domain.transactions import (
     IRPF_CATEGORY_ACTIVIDAD_ECONOMICA,
     IRPF_CATEGORY_TRABAJO,
 )
-from ...domain.transactions._models import Transaction, TransactionCatalogue
-from ...domain.transactions._protocols import TransactionCatalogueRepositoryProtocol
-from ...domain.transactions._repository import TransactionCatalogueRepository
+from ...domain.transactions import (
+    Transaction,
+    TransactionCatalogue,
+)
+from ...domain.transactions import TransactionCatalogueRepositoryProtocol
+from ...domain.transactions import TransactionCatalogueRepository
 
 _THRESHOLD = Decimal("0.70")
 _ZERO = Decimal("0")
@@ -85,11 +88,12 @@ def derive_art109_activity_income_coverage_for_work_unit(
 ) -> Art109ActivityIncomeCoverage:
     """Derive the Art. 109 current-payment-period coverage fact for an M130 work unit.
 
-    The returned fact is proven only from current-period ledger rows, not from
-    M130 output casillas. A row proves the denominator and withholding status
-    only when it carries invoice substrate (``taxable_base`` and ``iva_amount``);
-    gross-only bank movements fail closed because they cannot prove whether the
-    receipt was subject to withholding.
+    The returned :class:`Art109ActivityIncomeCoverage` is proven only from
+    current-period ledger rows, not from M130 output casillas. A row proves
+    the denominator and withholding status only when it carries invoice
+    substrate (``taxable_base`` and ``iva_amount``); gross-only bank
+    movements fail closed because they cannot prove whether the receipt was
+    subject to withholding.
     """
     if str(work_unit.modelo) != Modelo.M130.value:
         return _insufficient("not_modelo_130")
@@ -113,6 +117,9 @@ def derive_art109_activity_income_coverage(
         catalogue: :class:`~aeat.domain.transactions.TransactionCatalogue`
             containing the ledger rows to classify for the target period.
         period: Filing period whose date span selects the current-payment rows.
+
+    Returns:
+        The proven or insufficient :class:`Art109ActivityIncomeCoverage`.
     """
     if not period.has_date_span():
         return _insufficient("period_without_date_span")

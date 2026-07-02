@@ -34,18 +34,18 @@ from ...domain.calculations.registry import (
     RegistrySnapshotError,
     derive_modelo_applicability,
 )
-from ...domain.modelos._work_unit import WorkUnit
+from ...domain.modelos import WorkUnit
 from ...domain.user_profile import ProfileNotFoundError, UserProfileRecord
 from ..user_profile import (
     ProfilePreflightReport,
     ProfilePreflightRequirement,
+    ProfilePreflightService,
     ProfileValidationIssue,
     ProfileValidationService,
     UserProfileLifecycleRepository,
     projection_for_taxpayer,
     record_to_path_values,
 )
-from ..user_profile._preflight import ProfilePreflightService
 from ._action_errors import ModeloProfileReadinessError
 
 _PROFILE_ACTIVITY_START_PATH = "censo.activity_start_date"

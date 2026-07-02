@@ -23,13 +23,14 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from ....core.logging import get_logger
-from ....domain.fincas._enums import ExpenseCategory, UseType
-from ....domain.fincas._models import (
+from ....domain.fincas import (
     Arrendamiento,
+    ExpenseCategory,
     Finca,
     FincaAmortizacionLedgerEntry,
     FincaGasto,
     FincaRendimientoRecord,
+    UseType,
 )
 
 if TYPE_CHECKING:  # pragma: no cover — type-only imports

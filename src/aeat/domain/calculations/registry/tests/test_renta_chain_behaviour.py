@@ -153,8 +153,10 @@ def _base_2025_inputs() -> dict[CasillaId, Decimal]:
         # 0511 and 0512 are now computed via lookup_parameter against
         # renta-2025-minimo-contribuyente-base-2025 (state and per-CCAA
         # autonomic), and cannot be supplied as inputs.
-        _C0513: Decimal("0"),
-        _C0514: Decimal("0"),
+        # 0513 and 0514 are now computed via the mínimo por descendientes
+        # engine (renta-2025-profile-minimo-descendientes-estatal binding,
+        # modelo-100-minimo-descendientes-engine ADR) and cannot be supplied
+        # as inputs; see the binding_values entry in _scenario_2025.
         _C0515: Decimal("0"),
         _C0516: Decimal("0"),
         _C0517: Decimal("0"),
@@ -215,6 +217,9 @@ def _scenario_2025(
             "renta-2025-profile-marriage-month-end": Decimal("0"),
             # BIN-pendiente fresh-filer baseline (2025 binding).
             "renta-2025-base-liquidable-negativa-general-anterior": Decimal("0"),
+            # Childless profile: Art. 58/61 LIRPF mínimo por descendientes
+            # aggregate is zero (modelo-100-minimo-descendientes-engine ADR).
+            "renta-2025-profile-minimo-descendientes-estatal": Decimal("0"),
         },
         enum_binding_values={"renta-2025-profile-tax-residence-ccaa": "madrid"},
         relation_values=_RELATION_ZERO_VALUES_2025,
@@ -251,16 +256,19 @@ def test_minimo_personal_split_min_uses_smaller_of_base_liquidable_and_total_min
     for a contributor with no age/discapacidad/descendientes mínimos, so
     0519 = 5550.
 
-    0505 is computed as max(0, 0500 - 0527). Supplying 0003 (rendimientos trabajo)
-    = 1000 with all reductions and anualidades at 0 produces 0505 = 1000.
+    0505 is computed as max(0, 0500 - 0527). Casilla 0019 ("otros gastos", art.
+    19.2.f LIRPF) deducts min(2.000, rendimiento íntegro) before 0432, so
+    0003 (rendimientos trabajo) = 3000 nets to 0432 = 3000 - 2000 = 1000 with
+    all reductions and anualidades at 0, producing 0505 = 1000.
     With 0505 = 1000 < 0519 = 5550, 0521 must clip to 0505 = 1000.
     """
     expected_minimo = Decimal("5550.00")
     scenario = _scenario_2025(
         "minimo-clip-to-base-liquidable",
-        # 0003 → 0025 → 0432 = 1000 → 0435 = 1000 → 0500 = 1000 (no reductions)
+        # 0003 = 3000 → 0019 (otros gastos) = min(2000, 3000) = 2000
+        # → 0025 → 0432 = 3000 - 2000 = 1000 → 0435 = 1000 → 0500 = 1000 (no reductions)
         # → 0505 = max(0, 1000 - 0) = 1000  (0527 anualidades alimentos = 0)
-        overrides={_C0003: Decimal("1000.00")},
+        overrides={_C0003: Decimal("3000.00")},
         expected=(
             _expected_output(target_casilla_id=_C0500, value=Decimal("1000.00")),
             _expected_output(target_casilla_id=_C0505, value=Decimal("1000.00")),
@@ -292,10 +300,12 @@ def test_base_imponible_general_subtracts_negative_capital_gains_balance() -> No
     #   0421 = max(0, 0419 - 0418) = 5000
     #   0433 = min(0421, 25% of 0432) = min(5000, 7500) = 5000
     # Expected: 0435 = 30000 - 5000 - 0 = 25000.
+    # 0003 = 32000 nets to 0432 = 30000 after the 0019 "otros gastos" deduction
+    # (art. 19.2.f LIRPF, min(2000, rendimiento íntegro)).
     scenario = _scenario_2025(
         "base-imponible-with-negative-capital-gains",
         overrides={
-            _C0003: Decimal("30000.00"),  # trabajo income → propagates to 0025 → 0432
+            _C0003: Decimal("32000.00"),  # trabajo income → nets to 0432 = 30000 after otros gastos
             _C1585: Decimal("5000.00"),  # G/P pérdidas → 1607 → 0419 → 0421 → 0433 cap
         },
         expected=(
@@ -321,7 +331,9 @@ def test_base_liquidable_general_applies_reductions() -> None:
     base_inputs = _base_2025_inputs()
     base_inputs.update(
         {
-            _C0003: Decimal("40000.00"),  # → 0432 = 40000 → 0435 = 40000
+            # 0003 = 42000 nets to 0432 = 40000 after the 0019 "otros gastos"
+            # deduction (art. 19.2.f LIRPF, min(2000, rendimiento íntegro)).
+            _C0003: Decimal("42000.00"),  # → 0432 = 40000 → 0435 = 40000
             _C0501: Decimal("1000.00"),  # compensación bases liquidables negativas
         },
     )
@@ -344,6 +356,9 @@ def test_base_liquidable_general_applies_reductions() -> None:
             "renta-2025-profile-marriage-month-end": Decimal("0"),
             # BIN-pendiente fresh-filer baseline (2025 binding).
             "renta-2025-base-liquidable-negativa-general-anterior": Decimal("0"),
+            # Childless profile: Art. 58/61 LIRPF mínimo por descendientes
+            # aggregate is zero (modelo-100-minimo-descendientes-engine ADR).
+            "renta-2025-profile-minimo-descendientes-estatal": Decimal("0"),
         },
         enum_binding_values={"renta-2025-profile-tax-residence-ccaa": "madrid"},
         relation_values=_RELATION_ZERO_VALUES_2025,
@@ -364,7 +379,8 @@ def test_plan_de_empleo_reduccion_below_caps_full_amount() -> None:
     """0468 = min(0467, 10000, 30% * 0432) — aportación below both caps, full reducción applies.
 
     Oracle derivation (Art. 52 LIRPF, AEAT Renta 2025 Manual Parte 1):
-      trabajo rendimientos (0003) = 56,500 → 0025 = 0432 = 56,500
+      trabajo rendimientos (0003) = 58,500 → 0019 (otros gastos, art. 19.2.f)
+        = min(2000, 58500) = 2,000 → 0025 = 0432 = 58,500 - 2,000 = 56,500
       30% cap = 0.30 * 56,500 = 16,950
       plan de empleo aportación (0426) = 4,200 → 0467 = 4,200
       0468 = min(4200, 10000, 16950) = 4,200   (below both caps)
@@ -376,7 +392,7 @@ def test_plan_de_empleo_reduccion_below_caps_full_amount() -> None:
     scenario = _scenario_2025(
         "plan-empleo-reduccion-below-caps",
         overrides={
-            _C0003: Decimal("56500.00"),  # trabajo → 0432 = 56,500
+            _C0003: Decimal("58500.00"),  # trabajo → nets to 0432 = 56,500 after otros gastos
             _C0426: Decimal("4200.00"),  # plan de empleo aportación → 0467 = 4,200
         },
         expected=(
@@ -406,7 +422,8 @@ def test_individual_aportaciones_prevision_social_reduce_base_general() -> None:
     "Reducciones por aportaciones a sistemas de previsión social"): an
     individual aportación below the general €1.500 individual limit and below
     the 30 % net-yield limit is fully reducible from the base general.
-      trabajo rendimientos (0003) = 30,000 → 0025 = 0432 = 30,000
+      trabajo rendimientos (0003) = 32,000 → 0019 (otros gastos, art. 19.2.f)
+        = min(2000, 32000) = 2,000 → 0025 = 0432 = 32,000 - 2,000 = 30,000
       30% cap = 0.30 * 30,000 = 9,000
       individual aportación (0463) = 1,200 → 0467 = 1,200
       1,200 < 1,500 (individual limit) and 1,200 < 9,000 (30% limit)
@@ -417,7 +434,7 @@ def test_individual_aportaciones_prevision_social_reduce_base_general() -> None:
     scenario = _scenario_2025(
         "individual-aportaciones-prevision-social-reduces-base",
         overrides={
-            _C0003: Decimal("30000.00"),  # trabajo → 0432 = 30,000
+            _C0003: Decimal("32000.00"),  # trabajo → nets to 0432 = 30,000 after otros gastos
             _C0463: Decimal("1200.00"),  # individual aportación → 0467 = 1,200
         },
         expected=(
@@ -442,7 +459,8 @@ def test_plan_de_empleo_employer_contribution_reduces_base_general() -> None:
     names explicitly.
 
     Oracle derivation (Art. 51/52 LIRPF, AEAT Renta 2025 Manual Parte 1):
-      trabajo rendimientos (0003) = 40,000 → 0025 = 0432 = 40,000
+      trabajo rendimientos (0003) = 42,000 → 0019 (otros gastos, art. 19.2.f)
+        = min(2000, 42000) = 2,000 → 0025 = 0432 = 42,000 - 2,000 = 40,000
       30% cap = 0.30 * 40,000 = 12,000
       employer contribution (0427) = 6,000 → 0467 = 6,000
       0468 = min(6000, 10000, 12000) = 6,000   (below both caps)
@@ -452,7 +470,7 @@ def test_plan_de_empleo_employer_contribution_reduces_base_general() -> None:
     scenario = _scenario_2025(
         "plan-empleo-employer-contribution-reduces-base",
         overrides={
-            _C0003: Decimal("40000.00"),  # trabajo → 0432 = 40,000
+            _C0003: Decimal("42000.00"),  # trabajo → nets to 0432 = 40,000 after otros gastos
             _C0427: Decimal("6000.00"),  # employer contribution → 0467 = 6,000
         },
         expected=(
@@ -469,7 +487,8 @@ def test_plan_de_empleo_reduccion_capped_at_10000() -> None:
     """0468 capped at €10,000 absolute limit when aportación exceeds the cap.
 
     Oracle derivation (Art. 52 LIRPF):
-      trabajo rendimientos (0003) = 80,000 → 0432 = 80,000
+      trabajo rendimientos (0003) = 82,000 → 0019 (otros gastos, art. 19.2.f)
+        = min(2000, 82000) = 2,000 → 0432 = 82,000 - 2,000 = 80,000
       30% cap = 0.30 * 80,000 = 24,000
       plan de empleo aportación (0426) = 15,000 → 0467 = 15,000
       0468 = min(15000, 10000, 24000) = 10,000   (€10k absolute cap applies)
@@ -478,7 +497,7 @@ def test_plan_de_empleo_reduccion_capped_at_10000() -> None:
     scenario = _scenario_2025(
         "plan-empleo-reduccion-capped-10k",
         overrides={
-            _C0003: Decimal("80000.00"),  # trabajo → 0432 = 80,000
+            _C0003: Decimal("82000.00"),  # trabajo → nets to 0432 = 80,000 after otros gastos
             _C0426: Decimal("15000.00"),  # plan de empleo aportación → 0467 = 15,000
         },
         expected=(

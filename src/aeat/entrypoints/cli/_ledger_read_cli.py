@@ -34,8 +34,10 @@ from ...application.ledger import (
 )
 from ...application.review import FilterParseError
 from ...core import LedgerSortField, LedgerSortOrder, Period, resolve_active_bucket_id
+from ...core.decimal import coerce_decimal_strict
 from ...core.i18n import tr
 from ...core.json_contract import Notice, NoticeSeverity
+from ...core.parsing import parse_iso8601_date
 from ...domain.buckets import (
     BucketEvent,
     BucketEventHistoryRepository,
@@ -194,7 +196,7 @@ def _register_ledger_llm_diagnostics_command(app: typer.Typer) -> None:
 
         since_date = _parse_iso_date(since, "--since")
         until_date = _parse_iso_date(until, "--until")
-        threshold = Decimal(str(low_confidence_below))
+        threshold = coerce_decimal_strict(low_confidence_below)
         if not Decimal("0") <= threshold <= Decimal("1"):
             raise _bad(
                 tr(
@@ -292,7 +294,7 @@ def _parse_iso_date(value: str | None, option: str) -> date | None:
     if value is None:
         return None
     try:
-        return date.fromisoformat(value.strip())
+        return parse_iso8601_date(value.strip())
     except ValueError as exc:
         raise _bad(
             tr(
@@ -927,8 +929,8 @@ def _register_ledger_status_command(app: typer.Typer) -> None:
                     _ledger_status_readiness_issue_line(transaction, reason=issue.reason.value, detail=issue.detail),
                 )
         from ...application.aggregation import stale_filed_revisions
-        from ...domain.modelos._calculation_repository import CalculationRevisionCatalogueRepository
-        from ...domain.modelos._repository import WorkUnitCatalogueRepository
+        from ...domain.modelos import CalculationRevisionCatalogueRepository
+        from ...domain.modelos import WorkUnitCatalogueRepository
 
         revisions = CalculationRevisionCatalogueRepository().load().revisions
         work_units = WorkUnitCatalogueRepository().load()

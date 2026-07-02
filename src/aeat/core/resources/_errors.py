@@ -10,8 +10,7 @@ error.
 
 from __future__ import annotations
 
-from ..errors import AeatError
-from ..errors._not_found import CoreNotFoundError
+from ..errors import AeatError, CoreNotFoundError
 
 
 class ResourceLoadError(AeatError):

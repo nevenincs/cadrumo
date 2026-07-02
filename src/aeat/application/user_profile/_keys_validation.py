@@ -29,7 +29,7 @@ from ...domain.contribuyente import (
     ProfileKeyRequirement,
     optional_profile_keys,
 )
-from ...domain.contribuyente._keys import _profile_keys as _get_profile_keys
+from ...domain.contribuyente import profile_keys as _get_profile_keys
 from ._completeness import IVA_REGIME_PATH, conditional_profile_required_paths, iva_regime_required
 
 

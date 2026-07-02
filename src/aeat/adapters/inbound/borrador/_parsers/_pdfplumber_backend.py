@@ -16,7 +16,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from ...pdf._pdfplumber import extract_pages_text_from_path
+from ...pdf import extract_pages_text_from_path
 from .._errors import BorradorParseError
 
 

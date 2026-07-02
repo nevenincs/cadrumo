@@ -43,7 +43,7 @@ from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core import Period
 from ...core.errors import BaseSeverity
 from ...domain.filing import ModeloDraft
-from ...domain.submission._protocols import ModeloDraftStatus
+from ...domain.submission import ModeloDraftStatus
 from .errors import ModeloCalculateError
 
 

@@ -51,8 +51,18 @@ from .....core.locks import fsync_parent_dir
 from .....core.logging import get_logger
 from .....core.time import now
 from .._namespace_registry import BLOB_MANIFEST_SCHEMA_VERSION, STORAGE_NAMESPACE_REGISTRY
-from ..crypto._crypto import KEY_SIZE, EncryptedBlob, decrypt_record, encrypt_record
-from ..envelope._envelope import EncryptionMetadata, Envelope, load_envelope, save_envelope
+from ..crypto import (
+    KEY_SIZE,
+    EncryptedBlob,
+    decrypt_record,
+    encrypt_record,
+)
+from ..envelope import (
+    EncryptionMetadata,
+    Envelope,
+    load_envelope,
+    save_envelope,
+)
 from ..errors import (
     BlobIntegrityError,
     BlobNotFoundError,
@@ -61,8 +71,7 @@ from ..errors import (
     EncryptionError,
     EnvelopeVersionError,
 )
-from ..master_key._active_session import get_active_master_key
-from ..master_key._master_key import MasterKeyProvider
+from ..master_key import MasterKeyProvider, get_active_master_key
 
 _log = get_logger(__name__)
 

@@ -22,8 +22,8 @@ from decimal import Decimal
 
 from ...core.i18n import tr
 from ...domain.calculations.registry import CasillaId
-from ...domain.modelos._errors import ModeloError
-from ...domain.modelos._verification_report import (
+from ...domain.modelos import (
+    ModeloError,
     ModeloVerificationFinding,
     ModeloVerificationFindingKind,
     ModeloVerificationFindingSeverity,

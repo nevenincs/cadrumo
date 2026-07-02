@@ -37,14 +37,14 @@ from enum import StrEnum
 
 from pydantic import BaseModel
 
-from ...core._modelo import OUT_OF_SCOPE_OBLIGATIONS as _OUT_OF_SCOPE_OBLIGATIONS
-from ...core._modelo import UNMODELED_OBLIGATIONS as _UNMODELED_OBLIGATIONS
-from ...core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ...core import OUT_OF_SCOPE_OBLIGATIONS as _OUT_OF_SCOPE_OBLIGATIONS
+from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ...core import UNMODELED_OBLIGATIONS as _UNMODELED_OBLIGATIONS
 from ...domain.calculations.registry.applicability import (
     ApplicabilityVerdict,
     derive_modelo_applicability,
 )
-from ...domain.deadlines._models import TaxpayerProfile
+from ...domain.deadlines import TaxpayerProfile
 
 
 class CoverageAdviceReason(StrEnum):
@@ -153,7 +153,7 @@ def build_obligation_coverage(
     # Deferred to break a module-load cycle: application.modelo is a heavier
     # sibling package and importing it at module scope would couple overview's
     # import graph to it. The lookup itself is cheap (cached authority).
-    from ..modelo._registry_discovery import registry_modelo_codes
+    from ..modelo import registry_modelo_codes
 
     surfaced_set = frozenset(surfaced_modelos)
     registry_codes = frozenset(registry_modelo_codes())

@@ -22,13 +22,13 @@ from types import MappingProxyType
 
 from pydantic import BaseModel, Field, field_serializer, field_validator, model_validator
 
-from ...core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
-from ...core._period import Period as _Period
-from ...core._post_filing_event import PostFilingEventKind as _PostFilingEventKind
+from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ...core import Period as _Period
+from ...core import PostFilingEventKind as _PostFilingEventKind
 from ...domain.calculations.registry.applicability import ApplicabilityVerdict
-from ...domain.deadlines._festivos import HolidayJurisdiction as _HolidayJurisdiction
-from ...domain.deadlines._models import ObligationStatus as _ObligationStatus
-from ...domain.deadlines._models import Recovery as _Recovery
+from ...domain.deadlines import HolidayJurisdiction as _HolidayJurisdiction
+from ...domain.deadlines import ObligationStatus as _ObligationStatus
+from ...domain.deadlines import Recovery as _Recovery
 from ._coverage import ObligationCoverageReport
 
 

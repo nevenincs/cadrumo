@@ -401,6 +401,7 @@ def test_registry_snapshot_unresolved_finding_is_localised() -> None:
         work_unit=work_unit,
         target=target,
         profile=_resident_profile(),
+        transaction_repository=None,
     )
 
     assert len(findings) == 1
@@ -740,6 +741,7 @@ def test_revision_replay_does_not_resubmit_m100_formula_informational_casilla() 
         "renta-2024-profile-guarderia-gastos-reales": Decimal("0"),
         "renta-2024-profile-cotizaciones-ss-madre": Decimal("0"),
         "renta-2024-profile-descendientes-menores-3": Decimal("0"),
+        "renta-2024-profile-minimo-descendientes-estatal": Decimal("0"),
         "renta-2024-profile-marriage-full-year": Decimal("0"),
         "renta-2024-profile-marriage-month-start": Decimal("0"),
         "renta-2024-profile-marriage-month-end": Decimal("0"),

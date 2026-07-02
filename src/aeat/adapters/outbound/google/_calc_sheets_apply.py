@@ -59,7 +59,7 @@ from ....application.storage.calc_sheets import (
 )
 from ....core import STRICT_FROZEN_CONFIG
 from ....core.config import Settings as _Settings
-from ...outbound.storage._errors import (
+from ..storage import (
     OutboundStorageConflictError,
     OutboundStorageNetworkError,
     OutboundStorageValidationError,

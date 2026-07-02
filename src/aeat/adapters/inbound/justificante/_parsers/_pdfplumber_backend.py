@@ -16,8 +16,11 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from .....domain.justificante._errors import JustificanteParseError
-from ...pdf._pdfplumber import extract_pages_text_concatenated, extract_pages_text_from_bytes
+from .....domain.justificante import JustificanteParseError
+from ...pdf import (
+    extract_pages_text_concatenated,
+    extract_pages_text_from_bytes,
+)
 
 
 def extract_text_pdfplumber(pdf_path: Path) -> str:

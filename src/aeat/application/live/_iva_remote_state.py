@@ -75,16 +75,14 @@ from ...core.errors import AeatError as _AeatError
 from ...core.hashing import sha256_hex as _sha256_hex
 from ...core.resources import resources as _resources
 from ...core.time import now
-from ...domain.iva_compensation._carry_forward import IvaCompensationCarryForwardLot as _IvaCompensationCarryForwardLot
-from ...domain.iva_compensation._carry_forward import IvaCompensationPeriodState as _IvaCompensationPeriodState
-from ...domain.iva_compensation._carry_forward import (
+from ...domain.iva_compensation import IvaCompensationAuthoritySource as _IvaCompensationAuthoritySource
+from ...domain.iva_compensation import IvaCompensationCarryForwardLot as _IvaCompensationCarryForwardLot
+from ...domain.iva_compensation import IvaCompensationPeriodState as _IvaCompensationPeriodState
+from ...domain.iva_compensation import IvaCompensationReconciliationDecision as _IvaCompensationReconciliationDecision
+from ...domain.iva_compensation import (
     build_iva_compensation_carry_forward_report as _build_iva_compensation_carry_forward_report,
 )
-from ...domain.iva_compensation._reconciliation import IvaCompensationAuthoritySource as _IvaCompensationAuthoritySource
-from ...domain.iva_compensation._reconciliation import (
-    IvaCompensationReconciliationDecision as _IvaCompensationReconciliationDecision,
-)
-from ..user_profile._orchestration import profile_storage_session as _profile_storage_session
+from ..user_profile import profile_storage_session as _profile_storage_session
 from ._errors import LiveApplicationError, LiveApplicationInputError, LiveIvaSurfaceTimeoutError
 from ._filed_data_capture import capture_report_path as _capture_report_path
 from ._filed_observation_persistence import latest_declarations_by_period as _latest_declarations_by_period

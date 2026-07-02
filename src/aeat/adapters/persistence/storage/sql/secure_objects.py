@@ -19,7 +19,7 @@ from .....core.i18n import tr
 from .....core.logging import get_logger
 from .....core.time import now as _utc_now
 from .._namespace_registry import SecureObjectNamespaceDefinition, StorageHierarchyRegistry
-from ..crypto._encrypted_columns import (
+from ..crypto import (
     decrypt_secure_object_payload,
     encrypt_secure_object_payload,
     secure_object_key_digest,

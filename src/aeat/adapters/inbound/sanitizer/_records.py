@@ -1,4 +1,4 @@
-"""Strict pydantic v2 records for the :mod:`aeat.adapters.inbound.sanitizer` subpackage.
+"""Strict pydantic v2 records for the :mod:`adapters.inbound.sanitizer` subpackage.
 
 Every record in this module is `frozen`, `extra="forbid"`,
 `strict=True`. Cleartext PII lives exclusively in

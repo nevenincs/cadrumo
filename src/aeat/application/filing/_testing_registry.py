@@ -27,8 +27,7 @@ from pydantic import TypeAdapter, ValidationError
 
 from ...core import Period
 from ...domain.calculations.registry import BindingId, CasillaId, validated_casilla_id
-from ...domain.filing._protocols import ModeloInputs
-from ...domain.filing._schema import ModeloDraft
+from ...domain.filing import ModeloDraft, ModeloInputs
 from ...domain.submission import ModeloDraftStatus
 from ...domain.transactions import TransactionCatalogue
 from . import ModeloBuilderError, approve_draft, build_draft, build_runtime_schema_provider

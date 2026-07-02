@@ -1,21 +1,21 @@
 """Encrypted SQL persistence for the capital-goods IVA regularización register.
 
-The :class:`~aeat.domain.bienes_inversion.BienesInversionIvaRegister` document is
+The :class:`domain.bienes_inversion.BienesInversionIvaRegister` document is
 stored as a ``FINANCIAL``
-:class:`~aeat.adapters.persistence.storage.SensitivityClass` secure object in the
+:class:`adapters.persistence.storage.SensitivityClass` secure object in the
 primary database through
-:class:`~aeat.adapters.persistence.storage.SecureObjectRepository`. The singleton
+:class:`adapters.persistence.storage.SecureObjectRepository`. The singleton
 namespace, default object key, schema version, and custody contracts come from
-:data:`aeat.adapters.persistence.storage.PROFILE_BIENES_INVERSION_IVA_REGISTER_NAMESPACE`.
+:data:`adapters.persistence.storage.PROFILE_BIENES_INVERSION_IVA_REGISTER_NAMESPACE`.
 
 The register is authoritative primary state (the operator declares each tracked
 capital good), not a rebuildable cache; it therefore carries a strict
 save/load/equality roundtrip plus an anti-tautology proof.
 
 See Also:
-    :mod:`aeat.domain.bienes_inversion`
+    :mod:`domain.bienes_inversion`
         Typed register payload models persisted here.
-    :mod:`aeat.adapters.persistence.profile.assets`
+    :mod:`adapters.persistence.profile.assets`
         Sibling profile-local secure-object adapter whose shape this mirrors.
 """
 
@@ -92,9 +92,9 @@ class BienesInversionIvaRegisterRepository:
     """Governed repository for the encrypted register singleton.
 
     The singleton row is owned by
-    :data:`aeat.adapters.persistence.storage.PROFILE_BIENES_INVERSION_IVA_REGISTER_NAMESPACE`
+    :data:`adapters.persistence.storage.PROFILE_BIENES_INVERSION_IVA_REGISTER_NAMESPACE`
     and persisted through
-    :class:`~aeat.adapters.persistence.storage.SecureObjectRepository`.
+    :class:`adapters.persistence.storage.SecureObjectRepository`.
     """
 
     def __init__(self, *, objects: SecureObjectRepository | None = None) -> None:

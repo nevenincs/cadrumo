@@ -43,7 +43,7 @@ from ...domain.calculations.registry import (
     RelationId,
     SourceRefId,
 )
-from ...domain.modelos._row_models import ModeloDetailRow
+from ...domain.modelos import ModeloDetailRow
 from ._errors import AggregationValidationError, t
 
 
@@ -241,6 +241,10 @@ def precedence_ladder_sources(disposition: CallerOverrideDisposition) -> frozens
     The single derivation the caller-override policy sets read, so a source kind's
     lock-vs-carry disposition is declared once in
     :data:`CALLER_OVERRIDE_PRECEDENCE_LADDER` rather than hand-listed per set.
+
+    Returns:
+        The :class:`BindingSourceKind` members carried by every ladder tier
+        whose disposition matches *disposition*.
     """
     return frozenset(
         kind

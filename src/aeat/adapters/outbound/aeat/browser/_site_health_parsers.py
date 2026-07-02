@@ -27,8 +27,7 @@ from collections.abc import Mapping
 from datetime import UTC, datetime
 from email.utils import parsedate_to_datetime
 
-from .....core.time import now
-from .....core.time._utc import coerce_utc_aware
+from .....core.time import coerce_utc_aware, now
 from ._site_health import (
     _URL_ADAPTER,
     SiteHealthEvidence,

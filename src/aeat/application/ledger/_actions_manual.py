@@ -24,15 +24,15 @@ if TYPE_CHECKING:
 
 from ...core import BindingSourceKind, Period
 from ...core.external_constants import CLASSIFIED_BY_MANUAL
-from ...domain.attachments._protocols import AttachmentStoreProtocol as _AttachmentStoreProtocol
+from ...domain.attachments import AttachmentStoreProtocol as _AttachmentStoreProtocol
 from ...domain.buckets import (
     BucketEvent,
+    BucketEventHistoryRepositoryProtocol,
     BucketEventObjectType,
     BucketEventType,
 )
-from ...domain.buckets._protocols import BucketEventHistoryRepositoryProtocol
-from ...domain.invoices._protocols import InvoiceCatalogueRepositoryProtocol
-from ...domain.modelos._protocols import (
+from ...domain.invoices import InvoiceCatalogueRepositoryProtocol
+from ...domain.modelos import (
     CalculationRevisionCatalogueRepositoryProtocol,
     WorkUnitCatalogueRepositoryProtocol,
 )
@@ -43,6 +43,7 @@ from ...domain.transactions import (
     SourceFormat,
     Transaction,
     TransactionCatalogue,
+    TransactionCatalogueRepositoryProtocol,
     TransactionDirection,
     TransactionEditLineageEntry,
     TransactionEvidenceProvenanceEntry,
@@ -51,7 +52,6 @@ from ...domain.transactions import (
     TransactionValidationError,
     derive_import_fingerprint,
 )
-from ...domain.transactions._protocols import TransactionCatalogueRepositoryProtocol
 from ...domain.usage_ratios import (
     UsageRatioProfile,
 )

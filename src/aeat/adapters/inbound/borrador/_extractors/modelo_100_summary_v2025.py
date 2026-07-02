@@ -31,9 +31,13 @@ from typing import ClassVar
 from .....core import Modelo
 from .....core.time import now
 from .....domain.calculations.registry import CasillaId, validated_casilla_id
-from ...pdf._label_regex import SPANISH_AMOUNT_GROUP, parse_spanish_decimal
-from ...pdf._shared import ExtractedCasilla
-from ...pdf._utils import sha256_file, source_pdf_reference_path
+from ...pdf import (
+    SPANISH_AMOUNT_GROUP,
+    ExtractedCasilla,
+    parse_spanish_decimal,
+    sha256_file,
+    source_pdf_reference_path,
+)
 from .._errors import BorradorParseError
 from .._parsers import extract_pages_text
 from .._schema import ArtefactKind, BorradorExtractionProfile, InboundBorradorObservation

@@ -20,20 +20,24 @@ from ...core.external_constants import (
     DEFAULT_CURRENCY,
 )
 from ...core.identity import BucketId, TransactionId
-from ...domain.iva._schema import EUMemberState, IvaCategory
-from ...domain.modelos._ids import CalculationRevisionId, WorkUnitId
+from ...domain.iva import (
+    EUMemberState,
+    IvaCategory,
+)
+from ...domain.modelos import (
+    CalculationRevisionId,
+    WorkUnitId,
+)
 from ...domain.transactions import (
     BucketTransactionRef,
     BusinessClassification,
     ImportSummary,
     Transaction,
     TransactionDirection,
-    TransactionValidationError,
-)
-from ...domain.transactions._models import (
     TransactionEditLineageEntry,
     TransactionEvidenceProvenanceEntry,
     TransactionLifecycleLineageEntry,
+    TransactionValidationError,
 )
 from ..export import ExportSerializationFormat
 from ..review import LedgerReviewStatus

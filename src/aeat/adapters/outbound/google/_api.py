@@ -20,7 +20,7 @@ from __future__ import annotations
 import json
 from typing import Any, Protocol, TypedDict
 
-from ...outbound.storage._errors import (
+from ..storage import (
     OutboundStorageError,
     OutboundStorageNetworkError,
     OutboundStorageNotFoundError,

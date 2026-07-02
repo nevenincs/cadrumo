@@ -28,7 +28,7 @@ from datetime import date
 from decimal import Decimal
 
 from ...core import Period
-from ...domain._identifiers import canonical_decimal_string as _canonical_decimal_str
+from ...domain import canonical_decimal_string as _canonical_decimal_str
 from ...domain.calculations.registry import (
     BindingId,
     CasillaId,
@@ -37,7 +37,7 @@ from ...domain.calculations.registry import (
     RelationId,
     validated_casilla_id,
 )
-from ...domain.modelos._work_unit import WorkUnit
+from ...domain.modelos import WorkUnit
 from ..aggregation import CalculationSourceResolution, merge_source_resolutions_by_precedence
 from ..live import Borrador100SnapshotRepository
 from ._binding_resolution import (

@@ -157,7 +157,7 @@ class EvidenceBundleService:
         provenance metadata populated and has already been saved through
         :class:`EvidenceBundleRepository`.
         """
-        from ...domain.buckets._event import BucketEventObjectType
+        from ...domain.buckets import BucketEventObjectType
 
         records = tuple(
             EvidenceRecordRef(

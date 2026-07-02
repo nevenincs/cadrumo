@@ -2,18 +2,18 @@
 
 :class:`InventoryLedger` payloads are grouped in
 :class:`InventoryLedgerDocument` and stored as
-``FINANCIAL`` :class:`~aeat.adapters.persistence.storage.SensitivityClass`
+``FINANCIAL`` :class:`adapters.persistence.storage.SensitivityClass`
 secure objects in the primary database through
-:class:`~aeat.adapters.persistence.storage.SecureObjectRepository`. The
+:class:`adapters.persistence.storage.SecureObjectRepository`. The
 singleton namespace, default object key, schema version, and custody contract
 come from
-:data:`aeat.adapters.persistence.storage.PROFILE_INVENTORY_LEDGER_NAMESPACE`.
+:data:`adapters.persistence.storage.PROFILE_INVENTORY_LEDGER_NAMESPACE`.
 
 See Also:
-    :mod:`aeat.domain.contribuyente.inventory`
+    :mod:`domain.contribuyente.inventory`
         Typed inventory ledger, movement, and valuation payload models persisted
         here.
-    :mod:`aeat.application.inventory`
+    :mod:`application.inventory`
         Application service layer that validates inventory commands before this
         adapter writes the encrypted secure object.
 """
@@ -65,7 +65,7 @@ def save_inventory(ledgers: tuple[InventoryLedger, ...]) -> Path:
     """Persist ``ledgers`` as a governed FINANCIAL-class secure object.
 
     The storage contract comes from
-    :data:`aeat.adapters.persistence.storage.PROFILE_INVENTORY_LEDGER_NAMESPACE`.
+    :data:`adapters.persistence.storage.PROFILE_INVENTORY_LEDGER_NAMESPACE`.
 
     Args:
         ledgers: Inventory ledgers to persist.
@@ -117,9 +117,9 @@ class InventoryLedgerRepository:
     """Governed repository for the encrypted :class:`InventoryLedgerDocument` singleton.
 
     The singleton row is owned by
-    :data:`aeat.adapters.persistence.storage.PROFILE_INVENTORY_LEDGER_NAMESPACE`
+    :data:`adapters.persistence.storage.PROFILE_INVENTORY_LEDGER_NAMESPACE`
     and persisted through
-    :class:`~aeat.adapters.persistence.storage.SecureObjectRepository`.
+    :class:`adapters.persistence.storage.SecureObjectRepository`.
     """
 
     def __init__(self, *, objects: SecureObjectRepository | None = None) -> None:
@@ -129,7 +129,7 @@ class InventoryLedgerRepository:
             objects: Optional injected secure-object repository. When
                 supplied, every encrypted-store read and write is routed
                 through it instead of a
-                :class:`~aeat.adapters.persistence.storage.SecureObjectRepository`
+                :class:`adapters.persistence.storage.SecureObjectRepository`
                 resolved from the pydantic-settings :class:`Settings`
                 object. This is the dependency-injection seam
                 real-adapter tests use to bind a single explicit SQLite
@@ -187,7 +187,7 @@ class InventoryLedgerRepository:
 
         The classification, schema version, namespace, and object key are taken
         from
-        :data:`aeat.adapters.persistence.storage.PROFILE_INVENTORY_LEDGER_NAMESPACE`.
+        :data:`adapters.persistence.storage.PROFILE_INVENTORY_LEDGER_NAMESPACE`.
 
         Args:
             document: Ledger document to encrypt and write.

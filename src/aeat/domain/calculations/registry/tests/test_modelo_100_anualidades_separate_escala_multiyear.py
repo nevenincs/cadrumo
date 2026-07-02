@@ -120,6 +120,7 @@ def _run(
         f"renta-{year}-modelo-111-retenciones-periodicas": Decimal("0"),
         f"renta-{year}-modelo-123-retenciones-periodicas": Decimal("0"),
         f"renta-{year}-profile-anualidades-sin-minimo-descendientes": flag,
+        f"renta-{year}-profile-minimo-descendientes-estatal": Decimal("0"),
     }
     relation_values = {
         f"renta-{year}-rel-130-pagos-fraccionados": Decimal("0"),
@@ -222,9 +223,7 @@ def test_regime_off_shared_custody_reduces_to_single_escala(
 
 
 @pytest.mark.parametrize("year", _SEPARATE_ESCALA_YEARS)
-def test_regime_off_when_anualidades_reach_base(
-    registry_authority: ValidatedRegistryAuthority, year: int
-) -> None:
+def test_regime_off_when_anualidades_reach_base(registry_authority: ValidatedRegistryAuthority, year: int) -> None:
     """Anualidades >= base liquidable general → régimen off (art. 64 condition)."""
     snapshot = _snapshot(registry_authority, year)
     over = _run(snapshot, year, anualidades=_ANUALIDADES_ABOVE_BASE)
@@ -273,6 +272,7 @@ def test_2021_casilla_0527_is_manual_and_not_derived_from_anexo_c_pension_fields
         "renta-2021-modelo-111-retenciones-periodicas": Decimal("0"),
         "renta-2021-modelo-123-retenciones-periodicas": Decimal("0"),
         "renta-2021-profile-anualidades-sin-minimo-descendientes": Decimal("1"),
+        "renta-2021-profile-minimo-descendientes-estatal": Decimal("0"),
     }
     relation_values = {
         "renta-2021-rel-130-pagos-fraccionados": Decimal("0"),

@@ -75,7 +75,10 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 # Oracle constants derived from LIRPF 2024 + Madrid escala 2024 — see module
 # docstring for full step-by-step derivation.
 # ---------------------------------------------------------------------------
-_BASE_LIQUIDABLE_GENERAL = Decimal("55500")
+# The 0003 leaf input feeds 0018 (rendimiento íntegro), which casilla 0019
+# ("otros gastos", art. 19.2.f LIRPF) reduces by min(2.000, 0018) before 0432 /
+# 0500. 57,500 nets to the intended 55,500 EUR base liquidable general.
+_BASE_LIQUIDABLE_GENERAL = Decimal("57500")
 _RETENCIONES_ARRENDAMIENTOS = Decimal("1824")
 _DATE_BINDINGS_2024: dict[BindingId, date] = {"renta-2024-profile-taxpayer-birth-date": date(1975, 6, 15)}
 _M100_TRABAJO_RENDIMIENTO_NETO_CASILLA: CasillaId = validated_casilla_id(
@@ -163,6 +166,7 @@ def _binding_values() -> dict[BindingId, Decimal]:
         "renta-2024-profile-guarderia-gastos-reales": Decimal("0"),
         "renta-2024-profile-cotizaciones-ss-madre": Decimal("0"),
         "renta-2024-profile-descendientes-menores-3": Decimal("0"),
+        "renta-2024-profile-minimo-descendientes-estatal": Decimal("0"),
         "renta-2024-profile-marriage-full-year": Decimal("0"),
         "renta-2024-profile-marriage-month-start": Decimal("0"),
         "renta-2024-profile-marriage-month-end": Decimal("0"),

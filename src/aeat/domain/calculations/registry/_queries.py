@@ -17,9 +17,7 @@ from typing import Literal, cast
 
 from pydantic import BaseModel, ConfigDict, Field
 
-from ....core import BindingSourceKind, Modelo
-from ....core._period import Period
-from ....core._tax_domain import TaxDomain
+from ....core import BindingSourceKind, Modelo, Period, TaxDomain
 from ._authority import ValidatedRegistryAuthority
 from ._binding_selector_utils import BooleanBindingEncodedValue, boolean_binding_encoded_values
 from ._errors import AmbiguousRevisionSelectionError, RegistryValidationError

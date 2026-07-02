@@ -170,7 +170,7 @@ def _active_profile_record() -> UserProfileRecord | None:
     try:
         if not has_active_bucket_session():
             return None
-        from ..workflow._persistence import workflow_state_repository
+        from ..workflow import workflow_state_repository
 
         return workflow_state_repository().load().active_profile_record()
     except PersistenceError:

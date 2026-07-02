@@ -145,6 +145,7 @@ if TYPE_CHECKING:
         RemoveProfileCommand,
         RenameProfileCommand,
     )
+    from ._completeness import iva_regime_required
     from ._custody import (
         CustodyRecoverResult,
         CustodyRecoveryEnrollment,
@@ -324,6 +325,10 @@ def __getattr__(name: str):
         from ._filing_baseline import missing_filing_baseline_flags
 
         return missing_filing_baseline_flags
+    if name == "iva_regime_required":
+        from ._completeness import iva_regime_required
+
+        return iva_regime_required
     if name in ("list_profile_key_records", "validate_profile_values"):
         from . import _keys_validation
 
@@ -437,6 +442,7 @@ __all__ = [
     "fact_value",
     "facts_to_values",
     "inspect_recovery_status",
+    "iva_regime_required",
     "list_profile_key_records",
     "logout_active_profile",
     "mint_recovery_code",

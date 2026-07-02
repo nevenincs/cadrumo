@@ -41,12 +41,17 @@ from .....core.errors import CoreValidationError
 from .....core.external_constants import UTF_8_ENCODING
 from .....core.locks import exclusive_file_lock
 from .....core.logging import get_logger
-from .....core.time import now
-from .....core.time._utc import validate_utc_aware
+from .....core.time import now, validate_utc_aware
 from .._namespace_registry import SECRET_RECORD_SCHEMA_VERSION
-from ..blob_store._blob_store import BlobReference, EncryptedBlobStore
-from ..crypto._crypto import KEY_SIZE, derive_key
-from ..envelope._envelope import Envelope
+from ..blob_store import (
+    BlobReference,
+    EncryptedBlobStore,
+)
+from ..crypto import (
+    KEY_SIZE,
+    derive_key,
+)
+from ..envelope import Envelope
 from ..errors import (
     BlobIntegrityError,
     BlobNotFoundError,
@@ -58,8 +63,7 @@ from ..errors import (
 from ..errors import (
     storage_validation_error as _storage_validation_error,
 )
-from ..master_key._active_session import get_active_master_key
-from ..master_key._master_key import MasterKeyProvider
+from ..master_key import MasterKeyProvider, get_active_master_key
 
 _log = get_logger(__name__)
 

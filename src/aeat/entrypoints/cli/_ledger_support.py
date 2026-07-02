@@ -18,8 +18,8 @@ from pydantic_core import ErrorDetails
 from ...application.ledger import list_manual_transactions, resolve_transaction_id
 from ...core.i18n import tr
 from ...domain.categories import SpendingCategory
-from ...domain.contribuyente._renta_codes import FiscalResidency
-from ...domain.deadlines._models import IrpfSpecialRegime
+from ...domain.contribuyente import FiscalResidency
+from ...domain.deadlines import IrpfSpecialRegime
 from ...domain.transactions import (
     TransactionCatalogueRepository,
     TransactionIdPrefixError,

@@ -12,7 +12,7 @@ from ...core.time import now as utc_now
 from ._models import AuthState
 
 if TYPE_CHECKING:
-    from ..workflow._models import WorkflowState
+    from ..workflow import WorkflowState
 
 
 def update_auth(

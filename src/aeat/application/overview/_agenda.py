@@ -21,10 +21,9 @@ from datetime import date, datetime, timedelta
 
 from pydantic import BaseModel, Field
 
-from ...core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.time import now
-from ...domain.deadlines._engine import DeadlineEngine
-from ...domain.deadlines._models import TaxpayerProfile
+from ...domain.deadlines import DeadlineEngine, TaxpayerProfile
 from ._calendar import build_overview_calendar
 from ._calendar_models import (
     CalendarCompleteness,

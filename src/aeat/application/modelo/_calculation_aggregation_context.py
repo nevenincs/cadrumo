@@ -3,8 +3,7 @@
 from __future__ import annotations
 
 from ...domain.calculations.registry import RegistrySnapshotError
-from ...domain.modelos._protocols import WorkUnitCatalogueRepositoryProtocol
-from ...domain.modelos._work_unit import WorkUnitState
+from ...domain.modelos import WorkUnitCatalogueRepositoryProtocol, WorkUnitState
 from ._action_errors import (
     CalculationRegistryUnavailableError,
     WorkUnitMutationRefusedError,

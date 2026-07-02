@@ -23,7 +23,7 @@ import re
 from typing import Final, Protocol, cast
 
 from ....domain.attachments import AttachmentSource
-from ...outbound.storage._errors import (
+from ..storage import (
     OutboundStorageError,
     OutboundStorageNetworkError,
     OutboundStoragePermissionError,

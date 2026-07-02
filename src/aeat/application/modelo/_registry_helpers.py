@@ -40,7 +40,10 @@ from ...domain.calculations.registry import (
     undeclared_casilla_ids,
     validated_casilla_id,
 )
-from ...domain.modelos._calculation_revision import CalculationRevision, derive_calculation_revision_id
+from ...domain.modelos import (
+    CalculationRevision,
+    derive_calculation_revision_id,
+)
 from ._action_errors import (
     AmendmentOverrideCasillaError,
     AmendmentVerificationRefusedError,

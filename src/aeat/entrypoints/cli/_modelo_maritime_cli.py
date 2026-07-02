@@ -28,7 +28,7 @@ from ...application.modelo import preview_maritime_exemption_for_active_profile
 from ...core.errors import resolve_error_message
 from ...core.external_constants import OutputLanguage
 from ...core.i18n import tr
-from ...domain.renta._errors import RentaValidationError
+from ...domain.renta import RentaValidationError
 from ._common import _emit_envelope
 from ._modelo_payloads import (
     CasillaObservationPayload,

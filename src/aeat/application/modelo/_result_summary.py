@@ -41,8 +41,7 @@ from ...core import Period
 from ...core.errors import AeatError
 from ...core.logging import get_logger
 from ...domain.calculations.registry import CasillaId
-from ...domain.modelos._calculation_revision import CalculationRevision
-from ...domain.modelos._work_unit import WorkUnit
+from ...domain.modelos import CalculationRevision, WorkUnit
 from ._calculation_helpers import resolve_registry_snapshot_for_work_unit as _resolve_registry_snapshot_for_work_unit
 from ._work_lifecycle import get_work_unit
 

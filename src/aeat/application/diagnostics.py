@@ -73,9 +73,8 @@ from ._errors import DiagnosticModelError
 if TYPE_CHECKING:
     from ..adapters.outbound.aeat.browser import SiteHealthStatus
     from ..adapters.persistence.storage import SecureObjectNamespaceIntegrity
-    from .wizard._status import WizardStatusReport
-    from .workflow._models import WorkflowState
-    from .workflow._profile_health import ActiveProfileHealth
+    from .wizard import WizardStatusReport
+    from .workflow import ActiveProfileHealth, WorkflowState
 
 _log = get_logger(__name__)
 
@@ -276,7 +275,7 @@ def _ensure_models_rebuilt() -> None:
     from ..adapters.persistence.storage import (
         SecureObjectNamespaceIntegrity,  # noqa: F401  # model_rebuild local namespace
     )
-    from .wizard._status import WizardStatusReport  # noqa: F401  # model_rebuild local namespace
+    from .wizard import WizardStatusReport  # noqa: F401  # model_rebuild local namespace
 
     SecureObjectIntegrityReport.model_rebuild(_types_namespace=locals())
     ConfigRepairReport.model_rebuild(_types_namespace={**globals(), **locals()})
@@ -393,9 +392,8 @@ def build_config_repair_report(registry_root: Path | None = None) -> ConfigRepai
         try:
             from ..adapters.persistence.storage import get_master_key_provider, has_active_bucket_session
             from ..core import resolve_active_bucket_id
-            from .wizard._status import build_wizard_status
-            from .workflow import workflow_state_repository
-            from .workflow._profile_health import assess_active_profile_health
+            from .wizard import build_wizard_status
+            from .workflow import assess_active_profile_health, workflow_state_repository
 
             if not has_active_bucket_session() and resolve_active_bucket_id() is not None:
                 provider_context = get_master_key_provider()
@@ -417,7 +415,7 @@ def build_config_repair_report(registry_root: Path | None = None) -> ConfigRepai
             checks.append(_profile_check(setup_report, profile_health=profile_health, state=state))
             checks.append(_auth_check(setup_report))
         except Exception as exc:  # pragma: no cover - concrete failure mode depends on local secure backend.
-            from .workflow._profile_health import assess_active_profile_health
+            from .workflow import assess_active_profile_health
 
             _log.debug("config repair secure state probe failed", exc_info=True)
             profile_health = assess_active_profile_health()
@@ -856,7 +854,7 @@ def _unset_profile_key_findings(state: WorkflowState | None) -> tuple[Diagnostic
     into an actionable list: the operator sees precisely which fields
     are unset and the one command that walks them through filling each.
     """
-    from .user_profile._keys_validation import list_profile_key_records
+    from .user_profile import list_profile_key_records
 
     if state is None:
         return ()
@@ -870,7 +868,7 @@ def _unset_profile_key_findings(state: WorkflowState | None) -> tuple[Diagnostic
     if record is None:
         return ()
 
-    from .user_profile._projections import record_to_path_values
+    from .user_profile import record_to_path_values
 
     values = record_to_path_values(record)
     findings: list[DiagnosticFinding] = []

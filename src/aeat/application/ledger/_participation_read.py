@@ -10,7 +10,7 @@ declared".
 
 from __future__ import annotations
 
-from ...domain.modelos._participation_index import (
+from ...domain.modelos import (
     TransactionParticipationIndexRepository,
     TransactionRevisionParticipationIndex,
 )

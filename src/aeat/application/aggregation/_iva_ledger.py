@@ -54,7 +54,7 @@ from ...domain.iva import (
     lookup_rate,
     validate_prorrata_reference,
 )
-from ...domain.iva._schema import IvaExemptionArticle
+from ...domain.iva import IvaExemptionArticle
 from ...domain.transactions import (
     BusinessClassification,
     Transaction,
@@ -694,8 +694,7 @@ def _validate_intracom_export_counterparty(
                 "aggregation.iva_ledger.errors.eu_member_state_on_export_transaction",
                 member_state=eu_member_state.value,
                 default=(
-                    "Export or export-assimilated operations must not carry an EU member state; "
-                    "got %{member_state}."
+                    "Export or export-assimilated operations must not carry an EU member state; got %{member_state}."
                 ),
             ),
         )
@@ -703,7 +702,7 @@ def _validate_intracom_export_counterparty(
 
 
 def validate_iva_ledger_counterparty_category(transaction: Transaction) -> IvaLedgerAggregationIssue | None:
-    """Return the D5 counterparty/category gate issue for a ledger transaction."""
+    """Return the D5 counterparty/category gate :class:`IvaLedgerAggregationIssue` for a ledger transaction."""
     category = transaction.iva_category
     if category is None:
         return None

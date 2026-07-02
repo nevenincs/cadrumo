@@ -13,6 +13,8 @@ legal_refs = [
     "ley-35-2006:art-49",
     "ley-35-2006:art-50",
     "ley-35-2006:art-56",
+    "ley-35-2006:art-58",
+    "ley-35-2006:art-61",
     "ley-35-2006:art-62",
     "ley-35-2006:art-63",
     "ley-35-2006:art-64",
@@ -33,6 +35,8 @@ source_refs = [
     "lirpf-cuota-chain-authority",
 ]
 formulas = [
+    "renta-2020-minimo-descendientes-estatal",
+    "renta-2020-minimo-descendientes-autonomico",
     "renta-2020-minimo-personal-y-familiar-estatal",
     "renta-2020-minimo-personal-y-familiar-autonomica",
     "renta-2020-minimo-personal-base-liquidable-general-estatal",

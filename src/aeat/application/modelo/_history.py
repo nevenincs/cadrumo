@@ -43,20 +43,20 @@ from ...core import STRICT_FROZEN_CONFIG
 from ...core.identity import BucketId
 from ...domain.buckets import (
     BucketEventHistoryRepository,
+    BucketEventHistoryRepositoryProtocol,
     BucketEventObjectType,
     BucketEventType,
 )
-from ...domain.buckets._protocols import BucketEventHistoryRepositoryProtocol
-from ...domain.modelos._calculation_repository import CalculationRevisionCatalogueRepository
-from ...domain.modelos._filing_repository import ModeloRecordCatalogueRepository
-from ...domain.modelos._ids import WorkUnitId
-from ...domain.modelos._protocols import (
+from ...domain.modelos import (
+    CalculationRevisionCatalogueRepository,
     CalculationRevisionCatalogueRepositoryProtocol,
+    ModeloRecordCatalogueRepository,
     ModeloRecordCatalogueRepositoryProtocol,
+    VerificationReportCatalogueRepository,
     VerificationReportCatalogueRepositoryProtocol,
+    WorkUnitCatalogueRepository,
+    WorkUnitId,
 )
-from ...domain.modelos._repository import WorkUnitCatalogueRepository
-from ...domain.modelos._verification_repository import VerificationReportCatalogueRepository
 from ._action_errors import WorkUnitNotFoundError
 
 

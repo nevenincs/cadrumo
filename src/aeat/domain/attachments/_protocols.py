@@ -2,7 +2,7 @@
 
 Domain-layer protocol that the adapter-layer concrete implementation
 must satisfy. The concrete implementation is exported as
-:class:`~aeat.adapters.persistence.storage.AttachmentStore`; this module keeps
+:class:`adapters.persistence.storage.AttachmentStore`; this module keeps
 the domain free of adapter imports.
 """
 
@@ -21,7 +21,7 @@ class AttachmentStoreProtocol(Protocol):
 
     The domain service layer (``_service.py``) accepts any object that
     satisfies this protocol. The concrete SQL-backed implementation is
-    :class:`~aeat.adapters.persistence.storage.AttachmentStore`.
+    :class:`adapters.persistence.storage.AttachmentStore`.
     """
 
     def put_bytes(self, data: bytes) -> str:

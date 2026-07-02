@@ -38,7 +38,7 @@ from ..errors import CoreValidationError as _CoreValidationError
 from ..hashing import sha256_hex as _sha256_hex
 from ..logging import get_logger as _get_logger
 from ..time import now as _clock_now
-from ..time._utc import validate_utc_aware
+from ..time import validate_utc_aware
 from ._errors import CorpusManifestDriftError, CorpusManifestError, CorpusManifestTamperError
 
 _logger = _get_logger(__name__)

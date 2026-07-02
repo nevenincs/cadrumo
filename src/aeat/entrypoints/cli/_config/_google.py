@@ -43,14 +43,12 @@ from ....adapters.outbound.google import (
     GoogleAuthExpiredError,
     GoogleAuthValidationError,
     OAuthClient,
-)
-from ....adapters.outbound.google._active_profile import resolve_active_profile
-from ....adapters.outbound.google._oauth_flow import run_login_flow
-from ....adapters.outbound.google._session_store import (
     delete_session,
     load_client,
     load_metadata,
     load_token,
+    resolve_active_profile,
+    run_login_flow,
     save_client,
     save_metadata,
     save_token,

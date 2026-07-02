@@ -28,22 +28,22 @@ from __future__ import annotations
 from pydantic import BaseModel, Field
 
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
-from ...domain.modelos._calculation_repository import CalculationRevisionCatalogueRepository
-from ...domain.modelos._calculation_revision import CalculationRevisionState
-from ...domain.modelos._filing_record import ExternalEvidence, ModeloRecord, ModeloRecordCatalogue
-from ...domain.modelos._filing_repository import ModeloRecordCatalogueRepository
-from ...domain.modelos._participation_index import (
+from ...domain.modelos import (
+    CalculationRevisionCatalogueRepository,
+    CalculationRevisionCatalogueRepositoryProtocol,
+    CalculationRevisionState,
+    ExternalEvidence,
+    ModeloRecord,
+    ModeloRecordCatalogue,
+    ModeloRecordCatalogueRepository,
+    ModeloRecordCatalogueRepositoryProtocol,
     TransactionParticipationIndexRepository,
     TransactionRevisionParticipation,
     TransactionRevisionParticipationIndex,
+    WorkUnitCatalogueRepository,
+    WorkUnitCatalogueRepositoryProtocol,
     upsert_transaction_participation,
 )
-from ...domain.modelos._protocols import (
-    CalculationRevisionCatalogueRepositoryProtocol,
-    ModeloRecordCatalogueRepositoryProtocol,
-    WorkUnitCatalogueRepositoryProtocol,
-)
-from ...domain.modelos._repository import WorkUnitCatalogueRepository
 
 _FINALIZED_REVISION_STATES = frozenset(
     {

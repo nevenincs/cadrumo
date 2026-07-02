@@ -27,7 +27,7 @@ from datetime import date
 from decimal import Decimal
 
 from ...core.logging import get_logger
-from ...domain.modelos._work_unit import WorkUnit
+from ...domain.modelos import WorkUnit
 
 _LOG = get_logger(__name__)
 
@@ -92,9 +92,7 @@ def modelo_work_plazo_summary(
         :func:`aeat.entrypoints.cli._modelo_rendering._work_unit_deadline_output_from_summary`:
             Converts the summary into operator-facing payloads and notices.
     """
-    from ...domain.deadlines._errors import DeadlineValidationError
-    from ...domain.deadlines._plazo import resolve_filing_closes_on
-    from ...domain.deadlines._recargo import build_recovery_for_overdue
+    from ...domain.deadlines import DeadlineValidationError, build_recovery_for_overdue, resolve_filing_closes_on
 
     closes_on = resolve_filing_closes_on(
         str(work_unit.modelo),

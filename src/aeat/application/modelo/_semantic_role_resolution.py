@@ -23,7 +23,7 @@ from collections.abc import Iterable
 from dataclasses import dataclass
 
 from ...domain.calculations.registry import CasillaId, RegistrySnapshot, validated_casilla_id
-from ...domain.modelos._errors import ModeloError
+from ...domain.modelos import ModeloError
 
 
 @dataclass(frozen=True, slots=True)

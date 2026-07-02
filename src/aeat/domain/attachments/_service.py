@@ -1,8 +1,7 @@
 """Service-layer helpers over :class:`AttachmentStoreProtocol`.
 
-Thin orchestration on top of the storage primitives in
-:mod:`aeat.domain.attachments._protocols`: ingest a file from disk,
-build the corresponding :class:`~aeat.domain.attachments._models.Attachment`
+Thin orchestration on top of :class:`AttachmentStoreProtocol` primitives:
+ingest a file from disk, build the corresponding :class:`Attachment`
 manifest, persist it, and expose simple read paths for callers that
 do not need the full repository API.
 """
@@ -81,10 +80,10 @@ def add_attachment(
             manifest persistence.
         path: Local filesystem path to the bytes being ingested.
         kind: Logical
-            :class:`~aeat.domain.attachments._enums.AttachmentKind`
+            :class:`AttachmentKind`
             for the attachment.
         source: Originating
-            :class:`~aeat.domain.attachments._enums.AttachmentSource`
+            :class:`AttachmentSource`
             channel.
         source_reference: Caller-supplied opaque reference into the
             originating system (e.g. invoice number, e-mail UID).
@@ -101,7 +100,7 @@ def add_attachment(
 
     Returns:
         The persisted
-        :class:`~aeat.domain.attachments._models.Attachment` manifest.
+        :class:`Attachment` manifest.
     """
     _logger.debug("ingesting attachment from %s kind=%s source=%s", path, kind.value, source.value)
     sha256, bytes_size = store.put_file(path)
@@ -143,7 +142,7 @@ def add_attachment_bytes(
 
     The byte-bearing companion to :func:`add_attachment`: it accepts the
     already-fetched document ``data`` (e.g. a Drive download resolved via
-    :func:`aeat.adapters.outbound.google.resolve_document_link`) instead of a
+    :func:`adapters.outbound.google.resolve_document_link`) instead of a
     filesystem path, stores the encrypted blob through the same
     ``put_bytes`` / ``write_manifest`` path, and records the *real* SHA-256
     and supplied ``mime_type``. The stored bytes' SHA-256 is the attachment id,
@@ -154,8 +153,8 @@ def add_attachment_bytes(
     Args:
         store: Backing :class:`AttachmentStoreProtocol`.
         data: The already-fetched document bytes to encrypt and store.
-        kind: Logical :class:`~aeat.domain.attachments._enums.AttachmentKind`.
-        source: Originating :class:`~aeat.domain.attachments._enums.AttachmentSource`.
+        kind: Logical :class:`AttachmentKind`.
+        source: Originating :class:`AttachmentSource`.
         source_reference: The original link / reference recorded as provenance.
         mime_type: MIME type of the fetched bytes.
         captured_at: Wall-clock timestamp when the bytes were captured.
@@ -166,7 +165,7 @@ def add_attachment_bytes(
         notes: Free-form operator notes; defaults to empty.
 
     Returns:
-        The persisted :class:`~aeat.domain.attachments._models.Attachment`
+        The persisted :class:`Attachment`
         manifest carrying the real ``sha256`` and ``mime_type``.
     """
     sha256 = store.put_bytes(data)
@@ -197,7 +196,7 @@ def load_attachment(store: AttachmentStoreProtocol, attachment_id: str) -> Attac
         attachment_id: SHA-256 of the attachment bytes.
 
     Returns:
-        The :class:`~aeat.domain.attachments._models.Attachment`
+        The :class:`Attachment`
         manifest for ``attachment_id``.
     """
     return store.load_manifest(attachment_id)
@@ -217,7 +216,7 @@ def list_attachments(
             ``linked_transaction_ids`` or ``linked_invoice_ids``
             tuple contains this id.
         kind: When provided, return only attachments of this
-            :class:`~aeat.domain.attachments._enums.AttachmentKind`.
+            :class:`AttachmentKind`.
 
     Returns:
         Filtered tuple of :class:`Attachment` manifests in store iteration

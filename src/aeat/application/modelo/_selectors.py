@@ -29,17 +29,21 @@ from typing import Annotated, Literal
 from pydantic import BaseModel, Field, StringConstraints, field_validator
 
 from ...core import STRICT_FROZEN_CONFIG, Period, resolve_active_bucket_id
-from ...domain.modelos._calculation_repository import CalculationRevisionCatalogueRepository
-from ...domain.modelos._calculation_revision import CalculationRevision, CalculationRevisionState
-from ...domain.modelos._codes import ModeloCode
-from ...domain.modelos._errors import ModeloError, ModeloValidationError
-from ...domain.modelos._ids import CalculationRevisionId, WorkUnitId
-from ...domain.modelos._protocols import (
+from ...domain.modelos import (
+    CalculationRevision,
+    CalculationRevisionCatalogueRepository,
     CalculationRevisionCatalogueRepositoryProtocol,
+    CalculationRevisionId,
+    CalculationRevisionState,
+    ModeloCode,
+    ModeloError,
+    ModeloValidationError,
+    WorkUnit,
+    WorkUnitCatalogueRepository,
     WorkUnitCatalogueRepositoryProtocol,
+    WorkUnitId,
+    WorkUnitState,
 )
-from ...domain.modelos._repository import WorkUnitCatalogueRepository
-from ...domain.modelos._work_unit import WorkUnit, WorkUnitState
 
 _BucketId = Annotated[
     str,

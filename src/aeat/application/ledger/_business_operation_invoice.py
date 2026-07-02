@@ -48,14 +48,14 @@ from ...core.external_constants import DEFAULT_CURRENCY
 from ...core.hashing import content_hash_hex
 from ...core.identity import BucketId
 from ...core.time import now as _utc_now
-from ...domain._identifiers import canonical_decimal_string
+from ...domain import canonical_decimal_string
 from ...domain.buckets import (
     BucketEventHistoryRepository,
+    BucketEventHistoryRepositoryProtocol,
     BucketEventObjectType,
     BucketEventType,
     append_bucket_event,
 )
-from ...domain.buckets._protocols import BucketEventHistoryRepositoryProtocol
 
 
 class BusinessOperationInvoiceDirection(StrEnum):
@@ -359,7 +359,10 @@ def _emit_invoice_event(
     occurred_at: datetime,
     actor: str,
 ) -> str:
-    from ...domain.buckets._event import BucketEvent, derive_bucket_event_id
+    from ...domain.buckets import (
+        BucketEvent,
+        derive_bucket_event_id,
+    )
 
     object_type = _OBJECT_TYPE_MAP[record.source_kind.value]
     payload = {

@@ -13,14 +13,14 @@ from ...core.i18n import Translatable as tr
 from ...core.setup_answers import SetupAnswers
 from ...core.wizard_catalogue import register_wizard_catalogue
 from ...domain.contribuyente import (
+    CCAA,
     RentaDeclaracionType,
     RentaDisabilityGrade,
     RentaMaritalStatus,
     RentaSexCode,
     SituacionFamiliar,
 )
-from ...domain.contribuyente._ccaa import CCAA
-from ...domain.deadlines._models import (
+from ...domain.deadlines import (
     EntityType,
     FiscalResidency,
     IrpfEstimationRegime,

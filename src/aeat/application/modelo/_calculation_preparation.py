@@ -26,8 +26,11 @@ from decimal import Decimal
 from ...core import Modelo
 from ...domain.calculations.registry import BindingId, CasillaId, ModeloRevision, RelationId
 from ...domain.deadlines import IVARegime
-from ...domain.modelos._protocols import WorkUnitCatalogueRepositoryProtocol
-from ...domain.modelos._work_unit import WorkUnit, WorkUnitCatalogue
+from ...domain.modelos import (
+    WorkUnit,
+    WorkUnitCatalogue,
+    WorkUnitCatalogueRepositoryProtocol,
+)
 from ...domain.period import period_end_date, period_start_date
 from ...domain.transactions import (
     BusinessClassification,
@@ -35,7 +38,7 @@ from ...domain.transactions import (
     TransactionDirection,
     TransactionLifecycleState,
 )
-from ..calculations._observations_repository import IvaWalletDecisionRepository
+from ..calculations import IvaWalletDecisionRepository
 from ..live import Borrador100SnapshotRepository
 from . import _iva_wallet_gate
 from ._action_errors import ModeloAggregationBindingError
@@ -223,8 +226,7 @@ def _resolved_binding_ids_for_required_binding_gate(
 
 def _iva_regime_for_bucket(bucket_id: str) -> str | None:
     from ...domain.user_profile import ProfileNotFoundError
-    from ..user_profile._profile_repository import ProfileRepository
-    from ..user_profile._projections import record_to_path_values
+    from ..user_profile import ProfileRepository, record_to_path_values
 
     try:
         profile = ProfileRepository().load(bucket_id)

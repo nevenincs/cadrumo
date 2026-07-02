@@ -55,7 +55,7 @@ from ..errors import (
 from ..errors import (
     storage_validation_error as _storage_validation_error,
 )
-from ..master_key._active_session import get_active_master_key
+from ..master_key import get_active_master_key
 from ._crypto import EncryptedBlob, decrypt_record, derive_key, encrypt_record
 
 

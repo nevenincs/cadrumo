@@ -26,11 +26,11 @@ from ...core.external_constants import DEFAULT_IVA_GENERAL_RATE_PCT
 from ...core.time import now as _now_utc
 from ...domain.buckets import (
     BucketEventHistoryRepository,
+    BucketEventHistoryRepositoryProtocol,
     BucketEventObjectType,
     BucketEventType,
     append_bucket_event,
 )
-from ...domain.buckets._protocols import BucketEventHistoryRepositoryProtocol
 from ...domain.contribuyente.inventory import (
     InventoryLedger,
     InventoryLedgerDocument,
@@ -134,7 +134,10 @@ def _emit_inventory_event(
     occurred_at: datetime,
     payload: dict[str, str],
 ) -> str:
-    from ...domain.buckets._event import BucketEvent, derive_bucket_event_id
+    from ...domain.buckets import (
+        BucketEvent,
+        derive_bucket_event_id,
+    )
 
     object_id = f"{actividad_id}:{year}"
     event = BucketEvent(

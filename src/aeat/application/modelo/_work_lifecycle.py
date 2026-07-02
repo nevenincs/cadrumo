@@ -31,13 +31,23 @@ from datetime import datetime
 
 from ...core import Period
 from ...core.time import now as _utc_now
-from ...domain.buckets import BucketEventHistoryRepository, BucketEventObjectType, BucketEventType
-from ...domain.buckets._protocols import BucketEventHistoryRepositoryProtocol
-from ...domain.contribuyente._ccaa import CCAA
-from ...domain.modelos._codes import ModeloCode
-from ...domain.modelos._protocols import WorkUnitCatalogueRepositoryProtocol
-from ...domain.modelos._repository import WorkUnitCatalogueRepository, upsert_work_unit
-from ...domain.modelos._work_unit import WorkUnit, WorkUnitCatalogue, WorkUnitState, derive_work_unit_id
+from ...domain.buckets import (
+    BucketEventHistoryRepository,
+    BucketEventHistoryRepositoryProtocol,
+    BucketEventObjectType,
+    BucketEventType,
+)
+from ...domain.contribuyente import CCAA
+from ...domain.modelos import (
+    ModeloCode,
+    WorkUnit,
+    WorkUnitCatalogue,
+    WorkUnitCatalogueRepository,
+    WorkUnitCatalogueRepositoryProtocol,
+    WorkUnitState,
+    derive_work_unit_id,
+    upsert_work_unit,
+)
 from ._action_errors import WorkUnitAlreadyDiscardedError, WorkUnitMutationRefusedError, WorkUnitNotFoundError
 from ._registry_resources import reject_unknown_period_for_revision, reject_unknown_revision
 from ._revision_persistence import emit_bucket_event as _emit_bucket_event

@@ -22,7 +22,7 @@ from pydantic import BaseModel, Field, field_serializer, field_validator
 
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.errors import CoreValidationError
-from ...core.time._utc import validate_utc_aware
+from ...core.time import validate_utc_aware
 from ._errors import TransactionValidationError
 
 

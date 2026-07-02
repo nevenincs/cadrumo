@@ -65,8 +65,7 @@ from ...domain.iva import (
     is_last_filing_period_of_year,
     refund_disposition_available,
 )
-from ...domain.modelos._calculation_revision import CalculationRevision
-from ...domain.modelos._work_unit import WorkUnit
+from ...domain.modelos import CalculationRevision, WorkUnit
 from ._action_errors import ModeloRefundElectionNotEligibleError
 
 #: Provisional fallback "Tipo de declaración" disposition for a modelo that

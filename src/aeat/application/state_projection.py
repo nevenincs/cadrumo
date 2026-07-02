@@ -93,16 +93,17 @@ from ..domain.deadlines import (
 )
 from ..domain.filing import ModeloDraftRepository
 from ..domain.invoices import InvoiceCatalogueRepository
-from ..domain.modelos._calculation_repository import CalculationRevisionCatalogueRepository
-from ..domain.modelos._repository import WorkUnitCatalogueRepository
-from ..domain.modelos._work_unit import WorkUnitState
+from ..domain.modelos import CalculationRevisionCatalogueRepository, WorkUnitCatalogueRepository, WorkUnitState
 from ..domain.transactions import TransactionCatalogueRepository
 from .auth import AuthProviderKind, select_provider
 from .ledger import LedgerPreflightIssue, preflight_ledger_tax_readiness
 from .user_profile import ProfilePreflightRequirement
-from .workflow._models import WorkflowState
-from .workflow._persistence import workflow_state_repository
-from .workflow._profile_health import ActiveProfileHealth, assess_active_profile_health
+from .workflow import (
+    ActiveProfileHealth,
+    WorkflowState,
+    assess_active_profile_health,
+    workflow_state_repository,
+)
 
 if TYPE_CHECKING:
     from ..domain.calculations.registry import RegistrySnapshot
@@ -537,7 +538,7 @@ def _taxpayer_profile_from_state(state: WorkflowState) -> TaxpayerProfile:
     compute.
     """
     from ..domain.deadlines import taxpayer_profile_from_mapping
-    from .user_profile._projections import record_to_values
+    from .user_profile import record_to_values
 
     record = state.active_profile_record()
     raw = record_to_values(record) if record is not None else {}
@@ -721,7 +722,7 @@ def _build_modelo_readiness(
         modelo_work_profile_preflight_report,
         pre_activity_period_refusal,
     )
-    from .user_profile._orchestration import build_lifecycle_service
+    from .user_profile import build_lifecycle_service
     from .workflow import read_profile_bucket_by_id
 
     pointer = read_profile_bucket_by_id(active_profile_id)

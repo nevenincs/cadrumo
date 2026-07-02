@@ -41,7 +41,7 @@ from ...domain.modelos import (
 )
 
 if TYPE_CHECKING:
-    from ...domain.calculations.registry._schema_formula import ParameterDefinition
+    from ...domain.calculations.registry import ParameterDefinition
 
 _ZERO = Decimal("0")
 

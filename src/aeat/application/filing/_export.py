@@ -56,9 +56,12 @@ from defusedxml import ElementTree as DefusedElementTree
 from pydantic import BaseModel, Field, field_validator
 
 from ...core import Modelo
-from ...core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
-from ...core._period import Period
-from ...core._result_disposition import ResultDisposition, result_disposition_is_refund
+from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ...core import Period
+from ...core import (
+    ResultDisposition,
+    result_disposition_is_refund,
+)
 from ...core.decimal import coerce_decimal
 from ...core.external_constants import UTF_8_ENCODING as _UTF_8
 from ...core.hashing import sha256_file, sha256_hex
@@ -66,27 +69,30 @@ from ...core.logging import get_logger
 from ...core.money import round_to_cents
 from ...core.time import now
 from ...domain.calculations.registry import CalculationCompletenessManifest, CasillaFieldKind
-from ...domain.calculations.registry._errors import RegistryValidationError
-from ...domain.calculations.registry._export_parse import (
+from ...domain.calculations.registry import RegistryValidationError
+from ...domain.calculations.registry import (
     XmlDictionaryEntry,
     parse_export_payload,
     xml_dictionary_entries,
 )
-from ...domain.calculations.registry._ids import BindingId, CasillaId
-from ...domain.calculations.registry._schema_references import SourceReference
-from ...domain.calculations.registry._schema_surfaces import (
+from ...domain.calculations.registry import (
+    BindingId,
+    CasillaId,
+)
+from ...domain.calculations.registry import SourceReference
+from ...domain.calculations.registry import (
     ExportFieldDefinition,
     ExportLayoutDefinition,
     ExportRecordDefinition,
 )
-from ...domain.contribuyente._renta_codes import modelo100_ecivil_export_code
+from ...domain.contribuyente import modelo100_ecivil_export_code
 from ...domain.filing import (
     FilingExportError,
     FilingExportValidationError,
     ModeloCasillaProvenance,
     ModeloDraft,
 )
-from ...domain.submission._protocols import ModeloDraftStatus
+from ...domain.submission import ModeloDraftStatus
 from .runtime import RegistrySchemaAccessor, build_runtime_schema_provider
 
 _logger = get_logger(__name__)
@@ -1131,15 +1137,20 @@ def rendered_casilla_ids(
 ) -> frozenset[CasillaId]:
     """Return the representable casillas whose value actually reaches disk.
 
-    A representable casilla reaches disk only when the draft carries a value for
-    it; a representable casilla absent from ``draft.values`` renders as a blank
-    fixed-width slot (or an omitted xml element), which is the structurally-thin
-    file the completeness gate exists to refuse. This is the rendered set the
-    gate compares against the manifest-required-and-representable set.
+    A representable casilla reaches disk only when the :class:`ModeloDraft`
+    carries a value for it; a representable casilla absent from
+    ``draft.values`` renders as a blank fixed-width slot (or an omitted xml
+    element), which is the structurally-thin file the completeness gate
+    exists to refuse. This is the rendered set the gate compares against the
+    manifest-required-and-representable set.
     """
-    draft_casillas = {value.casilla_id for value in draft.values}
+    # build_draft emits a ModeloValue for every declared casilla, using
+    # value=None (kind=EMPTY) as the "nothing here" marker, so casilla-id
+    # membership in draft.values is NOT value presence: an EMPTY casilla would
+    # render as a blank slot. Filter to real values (value is None iff EMPTY).
+    valued_casillas = {value.casilla_id for value in draft.values if value.value is not None}
     return frozenset(
-        boe_representable_casilla_ids(layout, headers=headers, schema_provider=schema_provider) & draft_casillas
+        boe_representable_casilla_ids(layout, headers=headers, schema_provider=schema_provider) & valued_casillas
     )
 
 
@@ -1155,7 +1166,7 @@ def assert_export_mirrors_manifest(
 
     The completeness gate: every casilla the official record files that the
     calculation-completeness manifest also requires (``manifest ∩ representable``
-    for this draft's disposition) MUST carry a value on disk. A required,
+    for this :class:`ModeloDraft`'s disposition) MUST carry a value on disk. A required,
     representable casilla the draft omits would render as a blank fixed-width slot
     (or an omitted xml element) while the SHA-256 digest stays valid -- the
     structurally-thin file this gate refuses. A shortfall raises a hard

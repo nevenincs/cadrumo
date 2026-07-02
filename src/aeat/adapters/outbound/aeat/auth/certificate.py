@@ -49,7 +49,7 @@ from .....core import STRICT_FROZEN_CONFIG
 from .....core.config import CertificateBackend
 from .....core.external_constants import UTF_8_ENCODING
 from .....core.logging import get_logger
-from .....core.time._utc import coerce_utc_aware
+from .....core.time import coerce_utc_aware
 from ._errors import AeatLoginAssertionError, AeatSessionExpiredError, AuthError, AuthValidationError
 
 if TYPE_CHECKING:

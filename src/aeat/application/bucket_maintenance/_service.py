@@ -24,33 +24,33 @@ import json
 import secrets
 from typing import TYPE_CHECKING, NamedTuple
 
-from ...adapters.persistence.storage._namespace_registry import StorageCustodyProfile
+from ...adapters.persistence.storage import StorageCustodyProfile
 from ...core.external_constants import UTF_8_ENCODING
 from ...core.time import now
-from ...domain.buckets._errors import BucketDeleteRefusedError, BucketImportError
-from ...domain.buckets._event import (
+from ...domain.buckets import (
+    BucketDeleteRefusedError,
     BucketEvent,
+    BucketEventHistoryRepository,
     BucketEventObjectType,
     BucketEventType,
+    BucketImportError,
+    append_bucket_event,
     derive_bucket_event_id,
 )
-from ...domain.buckets._event_repository import BucketEventHistoryRepository, append_bucket_event
-from ..user_profile._bundle import (
+from ..user_profile import (
     SUPPORTED_BUNDLE_SCHEMA_VERSIONS,
-    deserialize_profile_bundle,
-    serialize_profile_bundle,
-)
-from ..user_profile._filing_baseline import missing_filing_baseline_flags
-from ..user_profile._orchestration import (
     delete_profile_with_lifecycle_span,
+    deserialize_profile_bundle,
+    missing_filing_baseline_flags,
     profile_create_storage_span,
     profile_storage_session,
+    record_to_path_values,
     register_active_profile,
     remove_profile_bucket_directory,
     rename_profile,
+    serialize_profile_bundle,
 )
-from ..user_profile._projections import record_to_path_values
-from ..workflow._profile_bucket_scan import read_profile_bucket_by_id
+from ..workflow import read_profile_bucket_by_id
 from ._contracts import (
     BrowseBucketCommand,
     BrowseBucketResult,
@@ -71,9 +71,9 @@ from ._manifest_digest import compute_manifest_digest
 if TYPE_CHECKING:  # pragma: no cover - import-cycle guard
     from datetime import datetime
 
-    from ...domain.buckets._protocols import BucketEventHistoryRepositoryProtocol
+    from ...domain.buckets import BucketEventHistoryRepositoryProtocol
     from ...domain.retention import RetentionFloorAssessment
-    from ...domain.user_profile._portable_export import UserProfilePortableExport
+    from ...domain.user_profile import UserProfilePortableExport
 
 
 _RENAME_PAYLOAD_VERSION = 1
@@ -145,7 +145,7 @@ class BucketMaintenanceService:
         """
         pointer = read_profile_bucket_by_id(command.bucket_id)
         if pointer is None:
-            from ...domain.user_profile._errors import ProfileNotFoundError
+            from ...domain.user_profile import ProfileNotFoundError
 
             raise ProfileNotFoundError(
                 translated_message="application.user_profile.errors.no_active_profile_selected",
@@ -205,7 +205,7 @@ class BucketMaintenanceService:
         Returns:
             :class:`DeleteBucketResult`: The result of the delete operation.
         """
-        from ...core._bucket_pointer_io import resolve_active_bucket_id
+        from ...core import resolve_active_bucket_id
 
         if not command.confirmed:
             raise BucketDeleteRefusedError(
@@ -219,7 +219,7 @@ class BucketMaintenanceService:
             )
         pointer = read_profile_bucket_by_id(command.bucket_id)
         if pointer is None:
-            from ...domain.user_profile._errors import ProfileNotFoundError
+            from ...domain.user_profile import ProfileNotFoundError
 
             raise ProfileNotFoundError(
                 translated_message="application.user_profile.errors.no_active_profile_selected",
@@ -281,7 +281,7 @@ class BucketMaintenanceService:
         delegates the pure floor evaluation to
         :func:`~aeat.domain.retention.assess_retention_floor`.
         """
-        from ...domain.modelos._filing_repository import ModeloRecordCatalogueRepository
+        from ...domain.modelos import ModeloRecordCatalogueRepository
         from ...domain.retention import assess_retention_floor
 
         with profile_storage_session(bucket_id):
@@ -364,23 +364,25 @@ class BucketMaintenanceService:
         Returns:
             An :class:`ExportBucketResult` describing the written sealed archive.
         """
-        from ...adapters.persistence.storage.bucket._export_header import ExportArchiveHeader
-        from ...adapters.persistence.storage.bucket._layout import bucket_paths
-        from ...adapters.persistence.storage.bucket._manifest_io import read_manifest
-        from ...adapters.persistence.storage.bucket._sealed_archive_writer import write_sealed_archive
-        from ...adapters.persistence.storage.crypto._crypto import encrypt_record
-        from ...adapters.persistence.storage.master_key._active_session import get_active_master_key
-        from ...adapters.persistence.storage.master_key._master_key_derivation import (
+        from ...adapters.persistence.storage.bucket import (
+            ExportArchiveHeader,
+            bucket_paths,
+            read_manifest,
+            write_sealed_archive,
+        )
+        from ...adapters.persistence.storage.crypto import encrypt_record
+        from ...adapters.persistence.storage.master_key import (
             ARGON2_MEMORY_COST_KIB,
             ARGON2_PARALLELISM,
             ARGON2_TIME_COST,
             derive_kek_with_params,
+            get_active_master_key,
         )
         from ...core.config import load_settings
 
         pointer = read_profile_bucket_by_id(command.bucket_id)
         if pointer is None:
-            from ...domain.user_profile._errors import ProfileNotFoundError
+            from ...domain.user_profile import ProfileNotFoundError
 
             raise ProfileNotFoundError(
                 translated_message="application.user_profile.errors.no_active_profile_selected",
@@ -480,11 +482,13 @@ class BucketMaintenanceService:
         Returns:
             An :class:`ImportBucketResult` describing the restored bucket.
         """
-        from ...adapters.persistence.storage.bucket._sealed_archive_reader import read_sealed_archive
-        from ...adapters.persistence.storage.crypto._crypto import EncryptedBlob, decrypt_record
-        from ...adapters.persistence.storage.master_key._active_session import get_active_master_key
-        from ...adapters.persistence.storage.master_key._master_key_derivation import derive_kek_with_params
-        from ...domain.user_profile._portable_export import UserProfilePortableExport
+        from ...adapters.persistence.storage.bucket import read_sealed_archive
+        from ...adapters.persistence.storage.crypto import (
+            EncryptedBlob,
+            decrypt_record,
+        )
+        from ...adapters.persistence.storage.master_key import derive_kek_with_params, get_active_master_key
+        from ...domain.user_profile import UserProfilePortableExport
 
         contents = read_sealed_archive(command.source_path)
         header = contents.header
@@ -596,7 +600,7 @@ class BucketMaintenanceService:
         Returns:
             An :class:`InspectBucketArchiveResult` describing the archive header.
         """
-        from ...adapters.persistence.storage.bucket._sealed_archive_reader import read_sealed_archive
+        from ...adapters.persistence.storage.bucket import read_sealed_archive
 
         contents = read_sealed_archive(command.source_path)
         header = contents.header
@@ -654,7 +658,7 @@ class BucketMaintenanceService:
 
     @staticmethod
     def _provision_imported_bucket(bundle: UserProfilePortableExport) -> None:
-        from ..workflow._persistence import workflow_state_repository
+        from ..workflow import workflow_state_repository
 
         profile_id = bundle.profile.profile_id
         with profile_create_storage_span(profile_id) as routing_profile_id:

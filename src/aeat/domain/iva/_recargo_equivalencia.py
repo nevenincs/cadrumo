@@ -91,8 +91,7 @@ def _load_rates() -> LivaArt161RecargoRates:
     # load_registry_tree path pulls in registry._bindings which imports
     # from aeat.domain.iva, triggering a circular import at this very
     # module's import time.
-    from ..calculations.registry import RegistryError
-    from ..calculations.registry._loader import load_legal_parameters_only
+    from ..calculations.registry import RegistryError, load_legal_parameters_only
 
     try:
         parameters = load_legal_parameters_only(bundled_path("registry", "aeat"))

@@ -73,8 +73,11 @@ _BASE_INPUTS: dict[CasillaId, Decimal] = _casilla_values(
         "0501": Decimal("0"),
         "0506": Decimal("0"),
         "0507": Decimal("0"),
-        "0513": Decimal("0"),
-        "0514": Decimal("0"),
+        # 0513/0514 (mínimo por descendientes) are computed (Option A engine,
+        # modelo-100-minimo-descendientes-engine ADR); the zero for these
+        # childless test couples is supplied via the
+        # renta-2025-profile-minimo-descendientes-estatal binding in
+        # _BASE_BINDINGS below, not as a manual casilla input.
         "0515": Decimal("0"),
         "0516": Decimal("0"),
         "0517": Decimal("0"),
@@ -121,6 +124,14 @@ _BASE_BINDINGS = {
     # Fresh-filer scenarios: no prior-period BL negativa to compensate
     # (LIRPF art. 50.3 carry-forward; defaults to 0 for new couples).
     "renta-2025-base-liquidable-negativa-general-anterior": Decimal("0"),
+    # No other unidad-familiar members' base for the Madrid nacimiento/adopción
+    # límite-unidad-familiar check (madrid-dl-1-2010:art-18).
+    "renta-2025-profile-unidad-familiar-otros-miembros-base": Decimal("0"),
+    # No Madrid nacimiento/adopción-eligible descendants in these scenarios.
+    "renta-2025-profile-madrid-nacimiento-adopcion-eligible-count": Decimal("0"),
+    # Childless couple: Art. 58/61 LIRPF mínimo por descendientes aggregate is
+    # zero (modelo-100-minimo-descendientes-engine ADR, Option A engine).
+    "renta-2025-profile-minimo-descendientes-estatal": Decimal("0"),
 }
 
 _BASE_ENUM_BINDINGS = {"renta-2025-profile-tax-residence-ccaa": "madrid"}
@@ -245,7 +256,7 @@ def test_comparison_result_structure_is_typed(snapshot_2025: RegistrySnapshot) -
 def test_individual_branch_honesty_caveat_surfaces(snapshot_2025: RegistrySnapshot) -> None:
     """Every comparison result discloses the single-earner-only scope limit.
 
-    ADR ``2026-07-01-tributacion-conjunta-individual-adr``: the individual run
+    The individual run
     reuses the unidad familiar's single input set, so it faithfully models only
     a single-earner household. The result MUST carry an explicit, operator-facing
     caveat so a two-earner individual figure is never presented as authoritative

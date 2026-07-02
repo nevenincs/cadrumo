@@ -24,10 +24,10 @@ from pydantic import BaseModel, Field, field_serializer, field_validator
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.classification import SensitivityClass
 from ...core.time import now as utc_now
-from ..modelos._calculation_revision import CalculationRevision as _CalculationRevision
-from ..modelos._filing_record import ModeloRecord as _ModeloRecord
-from ..modelos._work_unit import WorkUnit as _WorkUnit
-from ..transactions._models import Transaction as _Transaction
+from ..modelos import CalculationRevision as _CalculationRevision
+from ..modelos import ModeloRecord as _ModeloRecord
+from ..modelos import WorkUnit as _WorkUnit
+from ..transactions import Transaction as _Transaction
 from ._values import UserProfileRecord
 
 

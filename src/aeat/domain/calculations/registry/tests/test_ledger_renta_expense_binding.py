@@ -202,6 +202,13 @@ def test_modelo_100_2025_renta_ledger_expense_bindings_resolve_to_bound_casillas
             # provide the same explicit neutral opening balance used by the
             # Renta chain tests.
             "renta-2025-base-liquidable-negativa-general-anterior": Decimal("0"),
+            # Madrid nacimiento/adopción deducción (casilla 1039) profile-derived
+            # facts; neutral zero when the chain under test is unrelated.
+            "renta-2025-profile-madrid-nacimiento-adopcion-eligible-count": Decimal("0"),
+            "renta-2025-profile-unidad-familiar-otros-miembros-base": Decimal("0"),
+            # Childless profile: Art. 58/61 LIRPF mínimo por descendientes
+            # aggregate is zero (modelo-100-minimo-descendientes-engine ADR).
+            "renta-2025-profile-minimo-descendientes-estatal": Decimal("0"),
         },
         enum_binding_values={"renta-2025-profile-tax-residence-ccaa": "madrid"},
         relation_values={relation.id: Decimal("0") for relation in revision.relations},

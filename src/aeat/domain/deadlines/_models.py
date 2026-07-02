@@ -23,7 +23,10 @@ from ...core.external_constants import (
     MULTIPLE_PAGADORES_SECONDARY_THRESHOLD_EUR,
     WORK_INCOME_MULTIPLE_PAGADORES_REDUCED_LIMIT_EUR_BY_YEAR,
 )
-from ..contribuyente._renta_codes import UE_EEA_COUNTRY_CODES, FiscalResidency
+from ..contribuyente import (
+    FiscalResidency,
+    UE_EEA_COUNTRY_CODES,
+)
 from ._errors import DeadlineValidationError
 
 
@@ -509,28 +512,6 @@ class TaxpayerProfile(BaseModel):
     art109_activity_income_withholding_ge_70pct: bool = False
     pays_rent_with_retencion: bool = False
     pays_capital_income_with_retencion: bool = False
-    pays_non_resident_income: bool = False
-    member_of_large_multinational_group: bool = False
-    eu_business_seeking_spanish_vat_refund: bool = False
-    reports_client_securities_insurance_annuities: bool = False
-    markets_long_term_savings_plans: bool = False
-    crs_reporting_financial_institution: bool = False
-    manages_pension_plan_contributions: bool = False
-    payment_service_provider_cesop: bool = False
-    subject_to_lottery_prize_special_levy: bool = False
-    issues_new_entity_investor_certifications: bool = False
-    intermediates_tourist_housing_rental: bool = False
-    credit_institution_reporting_property_loans: bool = False
-    receives_deductible_donations: bool = False
-    authorized_childcare_center: bool = False
-    reporting_platform_operator: bool = False
-    pays_lottery_prizes_special_levy: bool = False
-    member_of_fiscal_consolidation_group: bool = False
-    dac6_reportable_arrangement_party: bool = False
-    files_public_registry_operations: bool = False
-    opts_maternity_deduction_advance_payment: bool = False
-    reagp_compensation_reintegro: bool = False
-    performs_iva_import_equivalent_operations: bool = False
     objective_estimation_prior_year_gross_income_eur: Decimal | None = None
     objective_estimation_prior_year_invoice_gross_income_eur: Decimal | None = None
     objective_estimation_prior_year_agri_livestock_forest_gross_eur: Decimal | None = None

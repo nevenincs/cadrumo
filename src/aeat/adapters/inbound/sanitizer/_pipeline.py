@@ -1,4 +1,4 @@
-"""Top-level orchestrator for :mod:`aeat.adapters.inbound.sanitizer`.
+"""Top-level orchestrator for :mod:`adapters.inbound.sanitizer`.
 
 Implements the canonical sanitiser pipeline:
 

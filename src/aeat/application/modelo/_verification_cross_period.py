@@ -27,20 +27,19 @@ from ...domain.calculations.registry import (
     derive_modelo_applicability,
 )
 from ...domain.deadlines import IrpfIncomeCategory, TaxpayerProfile
-from ...domain.modelos._calculation_revision import CalculationRevision
-from ...domain.modelos._errors import ModeloError
-from ...domain.modelos._protocols import (
+from ...domain.modelos import (
+    CalculationRevision,
     CalculationRevisionCatalogueRepositoryProtocol,
+    ModeloError,
     ModeloRecordCatalogueRepositoryProtocol,
-    VerificationReportCatalogueRepositoryProtocol,
-)
-from ...domain.modelos._verification_report import (
     ModeloVerificationFinding,
     ModeloVerificationFindingKind,
     ModeloVerificationFindingSeverity,
+    VerificationReportCatalogueRepositoryProtocol,
+    WorkUnit,
 )
-from ...domain.modelos._work_unit import WorkUnit
 from ..calculations import (
+    M111_NO_RETENCIONES_PROFILE_PATH,
     CalculationObservationRepository,
     CrossPeriodCleanStateBlocker,
     CrossPeriodCleanStateVerdict,
@@ -48,9 +47,6 @@ from ..calculations import (
     CrossPeriodDependencyRequirement,
     CrossPeriodExpectedMemberSet,
     evaluate_cross_period_clean_state,
-)
-from ..calculations._m111_no_retenciones import (
-    M111_NO_RETENCIONES_PROFILE_PATH,
     m111_no_retenciones_periods_for_bucket,
 )
 from ._action_errors import ModeloCrossPeriodCleanStateError

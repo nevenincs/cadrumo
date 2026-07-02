@@ -33,7 +33,7 @@ from ...domain.iva_compensation import (
     build_iva_compensation_carry_forward_report,
     derive_iva_compensation_year_end_carry_partition,
 )
-from ..aggregation._source_mesh import (
+from ..aggregation import (
     CalculationSourceContext,
     CalculationSourceDiagnostic,
     CalculationSourceProvenance,

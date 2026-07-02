@@ -32,8 +32,7 @@ from pydantic import BaseModel, ConfigDict, Field, SecretStr, SkipValidation, Va
 from ...core import STRICT_FROZEN_CONFIG
 from ...core.errors import AeatError
 from ...core.logging import get_logger
-from ...core.time import now
-from ...core.time._utc import validate_utc_aware
+from ...core.time import now, validate_utc_aware
 from . import AuthProviderKind, select_provider
 from ._acquisition_lock import (
     AuthAcquisitionLockRecord,
@@ -518,8 +517,11 @@ def _active_profile_tax_identity() -> str:
     )
     from ...core import resolve_active_bucket_id
     from ...domain.user_profile import ProfileNotFoundError
-    from ..user_profile._orchestration import build_lifecycle_service
-    from ..user_profile._projections import record_to_path_values, record_to_values
+    from ..user_profile import (
+        build_lifecycle_service,
+        record_to_path_values,
+        record_to_values,
+    )
 
     bucket_id = resolve_active_bucket_id()
     if bucket_id is None:

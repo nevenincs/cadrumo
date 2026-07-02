@@ -58,7 +58,7 @@ from ...domain.iva_compensation import (
     derive_iva_compensation_year_end_carry_partition,
     iva_compensation_period_sort_key,
 )
-from ...domain.iva_compensation._errors import (
+from ...domain.iva_compensation import (
     IvaCompensationCasillaReferenceError,
     IvaCompensationDecimalParseError,
     IvaCompensationSeedConflictError,
@@ -196,6 +196,7 @@ class IvaCompensationHistoryRepository(SecureBoundRepository[IvaCompensationPeri
         The returned tuple is sorted in chronological filing order using the
         same period sort key consumed by the domain carry-forward projection.
         """
+
         def _sort_key(item: IvaCompensationPeriodState) -> tuple[int, tuple[int, str]]:
             return (item.filing_year, iva_compensation_period_sort_key(item.period))
 

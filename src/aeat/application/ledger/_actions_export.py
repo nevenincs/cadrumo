@@ -20,16 +20,16 @@ if TYPE_CHECKING:
 
 from ...core import Period
 from ...domain.buckets import (
+    BucketEventHistoryRepositoryProtocol,
     BucketEventObjectType,
     BucketEventType,
 )
-from ...domain.buckets._protocols import BucketEventHistoryRepositoryProtocol
 from ...domain.transactions import (
     Transaction,
     TransactionCatalogue,
+    TransactionCatalogueRepositoryProtocol,
     TransactionLifecycleState,
 )
-from ...domain.transactions._protocols import TransactionCatalogueRepositoryProtocol
 from ..export import serialize_tabular_rows
 from ._actions_common import (
     _bucket_event_repository,

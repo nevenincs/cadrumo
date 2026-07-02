@@ -17,7 +17,7 @@ from pydantic import BaseModel, Field, field_validator
 from .....core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from .....core.errors import CoreValidationError
 from .....core.identity import BucketId
-from .....core.time._utc import validate_utc_aware
+from .....core.time import validate_utc_aware
 
 _SHA256_HEX_LEN = 64
 _LOWER_HEX_DIGITS = frozenset("0123456789abcdef")

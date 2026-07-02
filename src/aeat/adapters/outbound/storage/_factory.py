@@ -72,7 +72,10 @@ def build_google_credentials(*, profile: str) -> Credentials:
     upstream library lazily so unit tests for the local backend do not pay the
     cost.
     """
-    from ..google._session_store import load_client, load_token
+    from ..google import (
+        load_client,
+        load_token,
+    )
 
     client = load_client(profile)
     if client is None:
@@ -110,13 +113,13 @@ def build_google_credentials(*, profile: str) -> Credentials:
 
 
 def _required_scopes() -> tuple[str, ...]:
-    from ..google._records import REQUIRED_SCOPES
+    from ..google import REQUIRED_SCOPES
 
     return REQUIRED_SCOPES
 
 
 def _resolve_profile() -> str:
-    from ..google._active_profile import resolve_active_profile
+    from ..google import resolve_active_profile
 
     return resolve_active_profile()
 
@@ -134,7 +137,7 @@ def resolve_drive_root_folder_id(*, profile: str, settings: Settings) -> str:
 
     Returns the empty string when neither source is configured.
     """
-    from ..google._session_store import load_drive_config
+    from ..google import load_drive_config
 
     if settings.aeat_google_drive_root_folder_id:
         return str(settings.aeat_google_drive_root_folder_id).strip()

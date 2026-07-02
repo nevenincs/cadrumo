@@ -29,7 +29,7 @@ from ...adapters.persistence.storage import (
     SecureBoundRepository,
     SensitivityClass,
 )
-from ...domain.transactions._classification_rule import LedgerClassificationRule
+from ...domain.transactions import LedgerClassificationRule
 
 
 class LedgerClassificationRuleRepository(SecureBoundRepository[LedgerClassificationRule]):
