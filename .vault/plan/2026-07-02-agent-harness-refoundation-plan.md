@@ -9,15 +9,6 @@ related:
   - '[[2026-07-02-agent-harness-refoundation-adr]]'
 ---
 
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the
-       related: field above.
-     - The related: field carries the AUTHORISING documents
-       (ADR, research, reference, prior plan) for every Step in
-       this plan. Steps inherit this chain; per-row reference
-       footers do not exist.
-     - NEVER use [[wiki-links]] or markdown links in the
-       document body. -->
 
 # `agent-harness-refoundation` plan
 
@@ -106,8 +97,8 @@ Drive the real console with live subagent personas, score observed calls, enforc
 - [x] `W04.P08.S28` - Build the live subagent-persona harness substrate that starts the real server, drives a real client session, and captures the trajectory; `src/aeat/agent/eval/_live_harness.py`.
 - [x] `W04.P08.S29` - Score observed calls against golden scenarios plus faithfulness and confirmation with the zero-live-submit and zero-handoff-faithfulness invariants; `src/aeat/agent/eval/_live_scoring.py`.
 - [x] `W04.P08.S30` - Extend the golden-scenario models for live-persona trajectory capture and scoring; `src/aeat/agent/eval/_models.py`.
-- [ ] `W04.P08.S31` - Add the flywheel that promotes live failures into new golden scenarios; `src/aeat/agent/eval/_flywheel.py`.
-- [ ] `W04.P08.S32` - Add the local measurement report artefact; `src/aeat/agent/eval/_report.py`.
+- [x] `W04.P08.S31` - Add the flywheel that promotes live failures into new golden scenarios; `src/aeat/agent/eval/_flywheel.py`.
+- [x] `W04.P08.S32` - Add the local measurement report artefact; `src/aeat/agent/eval/_report.py`.
 - [ ] `W04.P08.S33` - Add the live-harness test; `src/aeat/agent/eval/tests/test_live_harness.py`.
 
 ## Wave `W05` - Situation-keyed skills
