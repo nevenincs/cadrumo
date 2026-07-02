@@ -11,6 +11,7 @@ related:
   - '[[2026-07-02-arch-remediation-lazy-import-policy-P01-S03]]'
   - '[[2026-07-02-arch-remediation-lazy-import-policy-P02-S04]]'
   - '[[2026-07-02-arch-remediation-lazy-import-policy-P02-S05]]'
+  - '[[2026-07-02-arch-remediation-lazy-import-policy-P03-S06]]'
   - '[[2026-07-02-arch-remediation-lazy-import-policy-adr]]'
   - '[[2026-07-02-arch-remediation-lazy-import-policy-plan]]'
 ---
@@ -32,6 +33,7 @@ Auto-generated index of all documents tagged with `#arch-remediation-lazy-import
 - `2026-07-02-arch-remediation-lazy-import-policy-P01-S03` - Make an unclassified site outside the allowlist fail the gate with the site path and the five sanctioned classes named in the message
 - `2026-07-02-arch-remediation-lazy-import-policy-P02-S04` - Sweep every current unsanctioned function-local import site and record each in the allowlist with its class, reason, and restructuring disposition, entering the error-registry deferred-bind queue and named cycle-breakers with their existing ADR citations
 - `2026-07-02-arch-remediation-lazy-import-policy-P02-S05` - Add the allowlist-length and per-class count ratchet so an increase requires editing the declaration in the same commit while a decrease is free
+- `2026-07-02-arch-remediation-lazy-import-policy-P03-S06` - Add the grimp runtime-graph pass as a documented axis in the swarm-audit cadence rule at its vaultspec source and run vaultspec-core sync, so the executed import graph is re-measured on the standing structural-audit rhythm
 
 ### plan
 

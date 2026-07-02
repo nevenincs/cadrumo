@@ -42,7 +42,7 @@ Populate the allowlist for every current unsanctioned function-local import site
 
 Add the grimp runtime-graph pass to the standing swarm-audit axes as a documented audit-brief axis so hidden coupling is re-measured on the same cadence as the other structural audits.
 
-- [ ] `P03.S06` - Add the grimp runtime-graph pass as a documented axis in the swarm-audit cadence rule at its vaultspec source and run vaultspec-core sync, so the executed import graph is re-measured on the standing structural-audit rhythm; `.vaultspec/rules/aeat-swarm-audit-cadence.md`.
+- [x] `P03.S06` - Add the grimp runtime-graph pass as a documented axis in the swarm-audit cadence rule at its vaultspec source and run vaultspec-core sync, so the executed import graph is re-measured on the standing structural-audit rhythm; `.vaultspec/rules/aeat-swarm-audit-cadence.md`.
 
 ## Description
 
