@@ -24,10 +24,10 @@ if TYPE_CHECKING:
 from ...domain.buckets import (
     BucketEvent,
     BucketEventHistoryRepository,
+    BucketEventHistoryRepositoryProtocol,
     BucketEventType,
 )
-from ...domain.buckets._protocols import BucketEventHistoryRepositoryProtocol
-from ...domain.modelos._protocols import (
+from ...domain.modelos import (
     CalculationRevisionCatalogueRepositoryProtocol,
     WorkUnitCatalogueRepositoryProtocol,
 )
@@ -41,12 +41,12 @@ from ...domain.transactions import (
     Transaction,
     TransactionCatalogue,
     TransactionCatalogueRepository,
+    TransactionCatalogueRepositoryProtocol,
     TransactionLifecycleLineageEntry,
     TransactionLifecycleState,
     TransactionValidationError,
     derive_split_group_id,
 )
-from ...domain.transactions._protocols import TransactionCatalogueRepositoryProtocol
 from ._actions_common import (
     _blocking_modelo_references,
     _bucket_event_repository,

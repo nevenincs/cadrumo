@@ -44,17 +44,17 @@ from ...core.external_constants import PDF_EXTENSION, PDF_MIME_TYPE
 from ...core.hashing import content_hash_hex
 from ...core.identity import BucketId
 from ...core.time import now as _utc_now
-from ...domain._identifiers import canonical_decimal_string
+from ...domain import canonical_decimal_string
 from ...domain.attachments import Attachment, AttachmentKind, AttachmentSource
 from ...domain.buckets import (
     BucketEvent,
     BucketEventHistoryRepository,
+    BucketEventHistoryRepositoryProtocol,
     BucketEventObjectType,
     BucketEventType,
     append_bucket_event,
     derive_bucket_event_id,
 )
-from ...domain.buckets._protocols import BucketEventHistoryRepositoryProtocol
 
 _PDF_EXTENSIONS = frozenset({PDF_EXTENSION})
 _IMAGE_EXTENSIONS = frozenset({".png", ".jpg", ".jpeg", ".tif", ".tiff", ".webp", ".heic", ".heif"})

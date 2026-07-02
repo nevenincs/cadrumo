@@ -21,42 +21,41 @@ from ...core.time import now
 if TYPE_CHECKING:
     pass
 
-from ...core.time._utc import coerce_utc_aware
+from ...adapters.persistence.profile.usage_ratios import load_usage_ratios
+from ...core.time import coerce_utc_aware
 from ...domain.attachments import AttachmentNotFoundError, AttachmentValidationError
-from ...domain.attachments._protocols import AttachmentStoreProtocol as _AttachmentStoreProtocol
+from ...domain.attachments import AttachmentStoreProtocol as _AttachmentStoreProtocol
 from ...domain.buckets import (
     BucketEvent,
     BucketEventHistoryRepository,
+    BucketEventHistoryRepositoryProtocol,
     BucketEventObjectType,
     BucketEventType,
     append_bucket_event,
     derive_bucket_event_id,
 )
-from ...domain.buckets._protocols import BucketEventHistoryRepositoryProtocol
-from ...domain.invoices import InvoiceCatalogue, InvoiceCatalogueRepository
-from ...domain.invoices._protocols import InvoiceCatalogueRepositoryProtocol
+from ...domain.invoices import InvoiceCatalogue, InvoiceCatalogueRepository, InvoiceCatalogueRepositoryProtocol
 from ...domain.iva import InvoiceKind
-from ...domain.modelos._calculation_repository import CalculationRevisionCatalogueRepository
-from ...domain.modelos._calculation_revision import CalculationRevisionState
-from ...domain.modelos._protocols import (
+from ...domain.modelos import (
+    CalculationRevisionCatalogueRepository,
     CalculationRevisionCatalogueRepositoryProtocol,
+    CalculationRevisionState,
+    WorkUnitCatalogueRepository,
     WorkUnitCatalogueRepositoryProtocol,
 )
-from ...domain.modelos._repository import WorkUnitCatalogueRepository
 from ...domain.transactions import (
     TX_BUCKET_NAMESPACE,
     BucketTransactionRef,
     Transaction,
     TransactionCatalogue,
     TransactionCatalogueRepository,
+    TransactionCatalogueRepositoryProtocol,
     TransactionNotFoundError,
     TransactionValidationError,
 )
-from ...domain.transactions._protocols import TransactionCatalogueRepositoryProtocol
 from ...domain.usage_ratios import (
     UsageRatioProfile,
     UsageRatioValidationError,
-    load_usage_ratios,
     validate_usage_ratio_reference,
 )
 from ._models import (

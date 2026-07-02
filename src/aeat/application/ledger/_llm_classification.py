@@ -54,14 +54,13 @@ from ...adapters.persistence.storage import AttachmentStore, secure_object_repos
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.config import Settings, load_settings
 from ...core.logging import get_logger
-from ...core.time import now
-from ...core.time._utc import coerce_utc_aware
+from ...core.time import coerce_utc_aware, now
 from ...domain.buckets import (
     BucketEventHistoryRepository,
+    BucketEventHistoryRepositoryProtocol,
     BucketEventObjectType,
     BucketEventType,
 )
-from ...domain.buckets._protocols import BucketEventHistoryRepositoryProtocol
 from ...domain.categories import SpendingCategory
 from ...domain.iva import IvaCategory, resolve_category_rate, split_gross_at_rate
 from ...domain.transactions import (
@@ -72,6 +71,7 @@ from ...domain.transactions import (
     LLMSplitResponse,
     PromptSpec,
     Transaction,
+    TransactionCatalogueRepositoryProtocol,
     TransactionLifecycleState,
     TransactionNotFoundError,
     TransactionValidationError,
@@ -81,7 +81,6 @@ from ...domain.transactions import (
     resolve_split_proposer,
     set_classification,
 )
-from ...domain.transactions._protocols import TransactionCatalogueRepositoryProtocol
 from ._actions_common import (
     _build_bucket_event,
     _result,
