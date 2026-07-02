@@ -12,6 +12,8 @@ related:
   - '[[2026-07-02-agent-harness-refoundation-W01-P01-S04]]'
   - '[[2026-07-02-agent-harness-refoundation-W01-P01-S05]]'
   - '[[2026-07-02-agent-harness-refoundation-W01-P02-S06]]'
+  - '[[2026-07-02-agent-harness-refoundation-W01-P02-S07]]'
+  - '[[2026-07-02-agent-harness-refoundation-W01-P02-S08]]'
   - '[[2026-07-02-agent-harness-refoundation-W05-P09-S34]]'
   - '[[2026-07-02-agent-harness-refoundation-W05-P09-S35]]'
   - '[[2026-07-02-agent-harness-refoundation-W05-P09-S36]]'
@@ -45,6 +47,16 @@ related:
   - '[[2026-07-02-agent-harness-refoundation-W05-P10-S64]]'
   - '[[2026-07-02-agent-harness-refoundation-W05-P11-S65]]'
   - '[[2026-07-02-agent-harness-refoundation-W05-P11-S66]]'
+  - '[[2026-07-02-agent-harness-refoundation-W05-P11-S67]]'
+  - '[[2026-07-02-agent-harness-refoundation-W05-P11-S68]]'
+  - '[[2026-07-02-agent-harness-refoundation-W05-P11-S69]]'
+  - '[[2026-07-02-agent-harness-refoundation-W05-P11-S70]]'
+  - '[[2026-07-02-agent-harness-refoundation-W05-P11-S71]]'
+  - '[[2026-07-02-agent-harness-refoundation-W05-P11-S72]]'
+  - '[[2026-07-02-agent-harness-refoundation-W05-P11-S73]]'
+  - '[[2026-07-02-agent-harness-refoundation-W05-P11-S74]]'
+  - '[[2026-07-02-agent-harness-refoundation-W05-P11-S75]]'
+  - '[[2026-07-02-agent-harness-refoundation-W05-P11-S76]]'
   - '[[2026-07-02-agent-harness-refoundation-adr]]'
   - '[[2026-07-02-agent-harness-refoundation-plan]]'
   - '[[2026-07-02-agent-harness-refoundation-research]]'
@@ -68,6 +80,8 @@ Auto-generated index of all documents tagged with `#agent-harness-refoundation`.
 - `2026-07-02-agent-harness-refoundation-W01-P01-S04` - Assert readOnlyHint and destructiveHint annotation coverage on every descriptor and close any gap
 - `2026-07-02-agent-harness-refoundation-W01-P01-S05` - Extend the tool-descriptor tests for per-verb schemas, toolsets, and annotation coverage
 - `2026-07-02-agent-harness-refoundation-W01-P02-S06` - Add the search-plus-execute meta-tool pair for verbs outside the curated toolsets
+- `2026-07-02-agent-harness-refoundation-W01-P02-S07` - Register the prompts and resources server capabilities on the stdio server
+- `2026-07-02-agent-harness-refoundation-W01-P02-S08` - Add tests for the meta-tool fallback and capability registration
 - `2026-07-02-agent-harness-refoundation-W05-P09-S34` - Define the structured applies_when frontmatter schema and its parser over TaxpayerProfile facts and lifecycle state
 - `2026-07-02-agent-harness-refoundation-W05-P09-S35` - Validate the applies_when field at skill load
 - `2026-07-02-agent-harness-refoundation-W05-P09-S36` - Add the applies_when coverage gate asserting every skill declares a structured predicate
@@ -101,6 +115,16 @@ Auto-generated index of all documents tagged with `#agent-harness-refoundation`.
 - `2026-07-02-agent-harness-refoundation-W05-P10-S64` - Lift the retenedor-empleador selection predicate from prose into the applies_when frontmatter field
 - `2026-07-02-agent-harness-refoundation-W05-P11-S65` - Author the regularizar-atrasos skill sequencing the overview backlog past-due and recargo extemporaneo surface
 - `2026-07-02-agent-harness-refoundation-W05-P11-S66` - Add the regularizar-atrasos golden scenario
+- `2026-07-02-agent-harness-refoundation-W05-P11-S67` - Author the cierre-trimestre skill sequencing the quarter-boundary agenda obligations
+- `2026-07-02-agent-harness-refoundation-W05-P11-S68` - Add the cierre-trimestre golden scenario
+- `2026-07-02-agent-harness-refoundation-W05-P11-S69` - Author the resumen-anual skill sequencing the annual-window obligations
+- `2026-07-02-agent-harness-refoundation-W05-P11-S70` - Add the resumen-anual golden scenario
+- `2026-07-02-agent-harness-refoundation-W05-P11-S71` - Author the rectificar-declaracion skill driving work amend and the complementaria and sustitutiva path
+- `2026-07-02-agent-harness-refoundation-W05-P11-S72` - Add the rectificar-declaracion golden scenario
+- `2026-07-02-agent-harness-refoundation-W05-P11-S73` - Author the inicio-actividad skill over the activity-start-date and 036 alta path
+- `2026-07-02-agent-harness-refoundation-W05-P11-S74` - Add the inicio-actividad golden scenario
+- `2026-07-02-agent-harness-refoundation-W05-P11-S75` - Author the cese-actividad skill over the activity-end-date and 036 baja path
+- `2026-07-02-agent-harness-refoundation-W05-P11-S76` - Add the cese-actividad golden scenario
 
 ### plan
 
