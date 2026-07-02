@@ -2934,6 +2934,10 @@ cli:
   contract:
     app_help: 'Emite el manifiesto de capacidades del operador: raices, familias de
       comandos, ciclo de vida y esquemas de resultado.'
+    schema_module_load_failed: 'Superficie de capacidades degradada: el módulo de
+      esquema de resultados ''{module}'' no se pudo cargar ({error}); los comandos
+      que registra no aparecen en este manifiesto. Suele deberse a un cambio de código
+      en curso no relacionado, no a un problema de datos.'
     summary_commands: 'Comandos registrados: {count}'
     summary_families: 'Familias de comandos: {count}'
     summary_heading: Manifiesto de la superficie del operador

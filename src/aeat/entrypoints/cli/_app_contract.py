@@ -23,13 +23,14 @@ import importlib
 import pkgutil
 
 import typer
+from pydantic import BaseModel, ConfigDict, Field
 
 from ...application.operator_surface import (
     CommandSchemaRef,
     build_operator_surface_manifest,
 )
 from ...core.i18n import tr
-from ...core.json_contract import ENVELOPE_SCHEMA_VERSION, SCHEMA_REGISTRY
+from ...core.json_contract import ENVELOPE_SCHEMA_VERSION, SCHEMA_REGISTRY, Notice, NoticeSeverity
 from ...core.logging import get_logger
 from ._app_contract_payloads import ContractManifestResult
 from ._common import _emit_envelope
@@ -47,7 +48,24 @@ _PAYLOAD_PACKAGES: tuple[str, ...] = (
 )
 
 
-def _ensure_result_schemas_registered() -> None:
+class SchemaModuleLoadFailure(BaseModel):
+    """One payload module that failed to import during registry population.
+
+    Carried so the contract command can DEGRADE GRACEFULLY: a single broken
+    payload module (typically an unrelated in-flight refactor that trips a
+    transitive import) must not crash the whole capability surface — the
+    operator rules mandate reading the contract FIRST, so it is the one command
+    that must survive a broken peer module and NAME what failed rather than
+    emitting an opaque internal error.
+    """
+
+    model_config = ConfigDict(frozen=True, strict=True, extra="forbid")
+
+    module: str = Field(min_length=1)
+    error: str = Field(min_length=1)
+
+
+def _ensure_result_schemas_registered() -> tuple[SchemaModuleLoadFailure, ...]:
     """Import every ``*_payloads`` module so ``SCHEMA_REGISTRY`` is complete.
 
     The CLI registers result schemas through module-level
@@ -58,26 +76,79 @@ def _ensure_result_schemas_registered() -> None:
     a strict ``_payloads`` suffix) is deliberate: the payload modules use three
     naming shapes - ``_<area>_payloads``, ``_payloads_<area>``, and
     ``_<area>_payloads_<variant>`` - and all must be loaded.
+
+    RESILIENT: each payload module import is isolated in its own ``try`` so a
+    single broken module contributes ONE :class:`SchemaModuleLoadFailure` and
+    the walk continues loading the rest. Nothing here raises for a per-module
+    failure - the caller decides how to surface the failures (the contract
+    command turns each into a ``warning`` notice; the MCP tool builder simply
+    proceeds with the schemas that did load). A broken payload module thus
+    degrades the manifest by exactly one command, never crashes the whole
+    surface.
+
+    Returns:
+        The load failures, empty when every payload module imported cleanly.
     """
+    failures: list[SchemaModuleLoadFailure] = []
     for package_name in _PAYLOAD_PACKAGES:
-        package = importlib.import_module(package_name)
+        try:
+            package = importlib.import_module(package_name)
+        except Exception as exc:
+            failures.append(SchemaModuleLoadFailure(module=package_name, error=f"{type(exc).__name__}: {exc}"))
+            continue
         for module_info in pkgutil.iter_modules(package.__path__):
             if "payload" in module_info.name and not module_info.ispkg:
-                importlib.import_module(f"{package_name}.{module_info.name}")
+                module_name = f"{package_name}.{module_info.name}"
+                try:
+                    importlib.import_module(module_name)
+                except Exception as exc:
+                    failures.append(SchemaModuleLoadFailure(module=module_name, error=f"{type(exc).__name__}: {exc}"))
+    return tuple(failures)
+
+
+def _project_registry() -> tuple[CommandSchemaRef, ...]:
+    """Project the currently-populated ``SCHEMA_REGISTRY`` into manifest references."""
+    return tuple(
+        CommandSchemaRef(command=command, schema_name=schema.__name__)
+        for command, schema in sorted(SCHEMA_REGISTRY.items())
+    )
 
 
 def command_schema_refs() -> tuple[CommandSchemaRef, ...]:
-    """Project the populated ``SCHEMA_REGISTRY`` into manifest references.
+    """Populate the registry (resiliently) and project it into manifest references.
+
+    Discards the per-module load failures - the consumers that need only the
+    command set (the MCP tool builder, conformance tests) proceed with whatever
+    schemas loaded, unbroken by a single bad module. The contract command reads
+    the failures separately via :func:`_ensure_result_schemas_registered` to
+    surface them as notices.
 
     Returns:
         One :class:`CommandSchemaRef` per registered command, sorted by
         command name.
     """
     _ensure_result_schemas_registered()
-    return tuple(
-        CommandSchemaRef(command=command, schema_name=schema.__name__)
-        for command, schema in sorted(SCHEMA_REGISTRY.items())
-    )
+    return _project_registry()
+
+
+def _schema_load_notices(failures: tuple[SchemaModuleLoadFailure, ...]) -> list[Notice]:
+    """One ``warning`` notice per payload module that failed to load."""
+    return [
+        Notice(
+            severity=NoticeSeverity.WARNING,
+            code="contract.schema_module_load_failed",
+            message=tr(
+                "cli.contract.schema_module_load_failed",
+                module=failure.module,
+                error=failure.error,
+                default="Capability surface degraded: the result-schema module '{module}' failed to load "
+                "({error}); the commands it registers are absent from this manifest. This is usually an "
+                "unrelated in-flight code change, not a data problem.",
+            ),
+            context={"module": failure.module, "error": failure.error},
+        )
+        for failure in failures
+    ]
 
 
 app = typer.Typer(
@@ -100,7 +171,13 @@ def _contract_root(ctx: typer.Context) -> None:
     """
     if ctx.invoked_subcommand is not None:
         return
-    command_schemas = command_schema_refs()
+    # Populate the registry resiliently: a broken payload module degrades the
+    # manifest by one command and becomes a warning notice, never an opaque
+    # crash of the grounding entry point (the command the operator rules read
+    # first). Both calls walk an already-cached import set, so the second is a
+    # near-no-op.
+    load_failures = _ensure_result_schemas_registered()
+    command_schemas = _project_registry()
     manifest = build_operator_surface_manifest(
         envelope_schema_version=ENVELOPE_SCHEMA_VERSION,
         command_schemas=command_schemas,
@@ -111,6 +188,7 @@ def _contract_root(ctx: typer.Context) -> None:
         command="contract",
         result=result,
         lines=_render_contract_lines(manifest.contract, len(command_schemas)),
+        notices=_schema_load_notices(load_failures),
     )
     raise typer.Exit()
 

@@ -2858,6 +2858,10 @@ cli:
   contract:
     app_help: 'Kibocsatja az operator kepesseg-jegyzeket: gyokerek, parancscsaladok,
       eletciklus es eredmenysemak.'
+    schema_module_load_failed: 'A képességfelület korlátozott: a(z) ''{module}'' eredményséma-modul
+      betöltése sikertelen ({error}); az általa regisztrált parancsok hiányoznak ebből
+      a jegyzékből. Ezt általában egy nem kapcsolódó, folyamatban lévő kódmódosítás
+      okozza, nem adathiba.'
     summary_commands: 'Regisztralt parancsok: {count}'
     summary_families: 'Parancscsaladok: {count}'
     summary_heading: Operatorfelulet-jegyzek
