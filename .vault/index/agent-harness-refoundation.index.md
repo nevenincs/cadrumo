@@ -38,6 +38,7 @@ related:
   - '[[2026-07-02-agent-harness-refoundation-W04-P08-S30]]'
   - '[[2026-07-02-agent-harness-refoundation-W04-P08-S31]]'
   - '[[2026-07-02-agent-harness-refoundation-W04-P08-S32]]'
+  - '[[2026-07-02-agent-harness-refoundation-W04-P08-S33]]'
   - '[[2026-07-02-agent-harness-refoundation-W05-P09-S34]]'
   - '[[2026-07-02-agent-harness-refoundation-W05-P09-S35]]'
   - '[[2026-07-02-agent-harness-refoundation-W05-P09-S36]]'
@@ -86,6 +87,7 @@ related:
   - '[[2026-07-02-agent-harness-refoundation-W06-P12-S79]]'
   - '[[2026-07-02-agent-harness-refoundation-W06-P12-S87]]'
   - '[[2026-07-02-agent-harness-refoundation-W06-P13-S80]]'
+  - '[[2026-07-02-agent-harness-refoundation-W06-P13-S88]]'
   - '[[2026-07-02-agent-harness-refoundation-W06-P14-S89]]'
   - '[[2026-07-02-agent-harness-refoundation-W06-P14-S90]]'
   - '[[2026-07-02-agent-harness-refoundation-adr]]'
@@ -137,6 +139,7 @@ Auto-generated index of all documents tagged with `#agent-harness-refoundation`.
 - `2026-07-02-agent-harness-refoundation-W04-P08-S30` - Extend the golden-scenario models for live-persona trajectory capture and scoring
 - `2026-07-02-agent-harness-refoundation-W04-P08-S31` - Add the flywheel that promotes live failures into new golden scenarios
 - `2026-07-02-agent-harness-refoundation-W04-P08-S32` - Add the local measurement report artefact
+- `2026-07-02-agent-harness-refoundation-W04-P08-S33` - Add the live-harness test
 - `2026-07-02-agent-harness-refoundation-W05-P09-S34` - Define the structured applies_when frontmatter schema and its parser over TaxpayerProfile facts and lifecycle state
 - `2026-07-02-agent-harness-refoundation-W05-P09-S35` - Validate the applies_when field at skill load
 - `2026-07-02-agent-harness-refoundation-W05-P09-S36` - Add the applies_when coverage gate asserting every skill declares a structured predicate
@@ -185,6 +188,7 @@ Auto-generated index of all documents tagged with `#agent-harness-refoundation`.
 - `2026-07-02-agent-harness-refoundation-W06-P12-S79` - Precompute the corpus embeddings at build time with model2vec potion-multilingual-128M and ship the numpy matrix as bundled data
 - `2026-07-02-agent-harness-refoundation-W06-P12-S87` - Confirm the potion-multilingual-128M packaged footprint and that the wheel ships the precomputed vectors but no model weights, onnxruntime, or caches
 - `2026-07-02-agent-harness-refoundation-W06-P13-S80` - Add the runtime query embedder with model2vec potion-multilingual-128M behind the capability-gated extra with a pinned revision, app-controlled cache dir, and install hint
+- `2026-07-02-agent-harness-refoundation-W06-P13-S88` - Add brute-force numpy cosine vector search with RRF k=60 fusion in plain Python and a lexical-only FTS5-plus-citation degraded mode
 - `2026-07-02-agent-harness-refoundation-W06-P14-S89` - Pin the search-stack dependencies snowballstemmer, model2vec, and numpy in the capability-gated search extra with a lexical-only degraded default
 - `2026-07-02-agent-harness-refoundation-W06-P14-S90` - Author the third-party notices attribution for the potion-multilingual-128M lineage distilled from BGE-m3 on the C4 ODC-BY corpus
 
