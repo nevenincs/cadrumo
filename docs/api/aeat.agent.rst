@@ -21,4 +21,5 @@ Submodules
 .. toctree::
    :maxdepth: 4
 
+   aeat.agent._skill_metadata
    aeat.agent._workspace
