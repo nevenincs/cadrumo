@@ -94,12 +94,19 @@ Promote the `corpus_search` errors from plain `Exception` to registered
 **9. Findings from the live-model persona measurement (2026-07-02).** Three
 real Claude-Opus personas operating the harness surfaced these — none reachable
 by a scripted driver, which is why they matter:
-- **The grounding entry point is brittle (MEDIUM).** `aeat app contract` — the
-  manifest the operator rules mandate reading first — crashes when ANY payload
-  module is broken, because `_ensure_result_schemas_registered()` eagerly walks
-  every payload module. Make the capability surface degrade gracefully and name
-  the failing module rather than crashing the whole contract opaquely. This is
-  structural, independent of the transient peer break that exposed it.
+- **The grounding entry point is brittle (MEDIUM) — RESOLVED
+  (commit `9a3ad86f96`).** `aeat app contract` — the manifest the operator rules
+  mandate reading first — crashed when ANY payload module was broken, because
+  `_ensure_result_schemas_registered()` eagerly walked every payload module and
+  let the first bad import propagate. Now each payload-module import is isolated:
+  a failure contributes one typed `SchemaModuleLoadFailure`, the walk continues,
+  and the manifest degrades by exactly one command while naming the failing
+  module in a `contract.schema_module_load_failed` warning notice
+  (`cli.contract.schema_module_load_failed`, translated en/es/ca/hu).
+  `command_schema_refs()` stays resilient for the MCP tool builder / conformance
+  consumers. Gate: `test_app_contract_resilience.py` drives a deliberately-broken
+  payload module on `sys.path` and asserts failure-collected-not-raised,
+  degrade-by-one, warning-notice-projection, and clean-load-yields-no-notices.
 - **`regularizar-atrasos` presupposes work state the target taxpayer lacks
   (MEDIUM).** `overview backlog`/`calendar` refuse without persisted work-unit
   state, and `--allow-incomplete` does not relax it — but a behind-on-everything
