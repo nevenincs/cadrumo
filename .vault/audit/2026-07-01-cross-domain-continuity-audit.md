@@ -167,6 +167,10 @@ No findings for the retroactive locale-scaffold compliance closure. The two requ
 
 The initial S223 regression was helper-level and overstated its protection. The correction adds a real `build_draft` replay-path test with `renta-2024-profile-tax-residence-ccaa = "madrid"` in the flat input map, keeps the helper assertions as diagnostics, updates the Step Record wording, and removes unrelated generated feature-index drift. Residual risk is limited to not running a full CLI `work verify` journey.
 
+### w09-p41-s392 | low | no findings
+
+No findings for the historical M210 acceptance-test reconciliation. The current focused `test_modelo_210_convenio_rate_resolution.py` file contains Olivia GB/general, Khadija MA/interest, Felipe AR/pension domestic-tariff delegation, ZW non-Convenio missing-row handling, sentinel rewrite, representante predicate truth-table, and MA/interest anti-tautology mutation-pair gates. The focused M210 regression file passed before closure. No production or test code changed.
+
 ## Recommendations
 
 No open code changes recommended from these reviews. Keep W09.P41.S307 and W09.P41.S324 as separate implementation steps. Keep the full M131 módulos coefficient-table oracle as future work outside S297 and S398; S297 closes the grounded datos-base binding projection, and S398 closes only the advisory regulatory-floor predicate and evidence guard.
