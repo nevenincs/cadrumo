@@ -171,6 +171,10 @@ The initial S223 regression was helper-level and overstated its protection. The 
 
 No findings for the historical M210 acceptance-test reconciliation. The current focused `test_modelo_210_convenio_rate_resolution.py` file contains Olivia GB/general, Khadija MA/interest, Felipe AR/pension domestic-tariff delegation, ZW non-Convenio missing-row handling, sentinel rewrite, representante predicate truth-table, and MA/interest anti-tautology mutation-pair gates. The focused M210 regression file passed before closure. No production or test code changed.
 
+### w09-p41-s394 | low | no findings
+
+No findings for the Convenio Espana-Marruecos follow-up reconciliation. The current cross-cutting treaty authority carries `MA` / `interest` as a `ceiling` row at `0.10`, grounded in `convenio-es-ma-1978:art-11` and `BOE-A-1985-9280`; the old Art 14 drift is absent from the scoped treaty and Modelo 210 surfaces. No stale `MA/general` row remains under Modelo 210, and the current resolver intentionally emits the missing-row blocking path when a treaty country has no matching income-type override. The focused M210 convenio-rate regression file passed before closure. No production or registry data changed.
+
 ## Recommendations
 
 No open code changes recommended from these reviews. Keep W09.P41.S307 and W09.P41.S324 as separate implementation steps. Keep the full M131 módulos coefficient-table oracle as future work outside S297 and S398; S297 closes the grounded datos-base binding projection, and S398 closes only the advisory regulatory-floor predicate and evidence guard.
