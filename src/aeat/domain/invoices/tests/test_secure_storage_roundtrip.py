@@ -119,12 +119,12 @@ def test_invoice_catalogue_tampered_identity_field_surfaces_at_load(tmp_path: Pa
 
     from sqlalchemy import select
 
-    from ....adapters.persistence.storage.crypto._encrypted_columns import (
+    from ....adapters.persistence.storage.crypto import (
         decrypt_secure_object_payload,
         encrypt_secure_object_payload,
         secure_object_payload_aad,
     )
-    from ....adapters.persistence.storage.sql._orm import SecureObjectRow
+    from ....adapters.persistence.storage.sql import SecureObjectRow
     from ....adapters.persistence.storage.sql.session import session_scope
 
     with isolated_runtime_profile(tmp_path=tmp_path) as profile:

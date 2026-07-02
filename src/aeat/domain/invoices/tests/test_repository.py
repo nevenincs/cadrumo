@@ -25,9 +25,9 @@ from ...transactions import (
     SourceFormat,
     Transaction,
     TransactionCatalogue,
+    TransactionCatalogueRepository,
     TransactionDirection,
 )
-from ...transactions._repository import TransactionCatalogueRepository
 from .._enums import IvaRate, PaymentStatus
 from .._models import Invoice, InvoiceCatalogue, InvoiceLine
 from .._repository import InvoiceCatalogueRepository

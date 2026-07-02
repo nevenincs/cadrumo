@@ -176,6 +176,7 @@ class TestDt12ReduccionPlanPensiones:
         )
         assert result == Decimal("24000.00")
 
+
 class TestSalReservaEspecialDotacion:
     """Oracle tests for the Ley 44/2015 art. 14 SAL/SLL reserva especial dotacion."""
 
@@ -237,6 +238,7 @@ class TestSalReservaEspecialDotacion:
             capital_social=Decimal("100000"),
         )
         assert result == Decimal("0.00")
+
 
 class TestPensionReduccionErrorEnvelope:
     """PensionReduccionError carries structured context, registry code, and ancestry.
