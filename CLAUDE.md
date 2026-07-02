@@ -39,6 +39,7 @@ You MUST respect these rules at all times:
 @.claude/rules/composition-service-no-parallel-write-path.md
 @.claude/rules/core-struct-docstring-links.md
 @.claude/rules/cross-period-suppression-grounded-in-registry-classification.md
+@.claude/rules/dynamic-import-targets-the-public-facade.md
 @.claude/rules/firmware-reference-parity.builtin.md
 @.claude/rules/fixture-provenance-declared-in-sidecar.md
 @.claude/rules/full-tree-gate-must-distinguish-owner.md
