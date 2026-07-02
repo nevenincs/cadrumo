@@ -12,6 +12,7 @@ from click.testing import Result
 
 from ....adapters.outbound.aeat.sede import Declaracion
 from ....adapters.outbound.aeat.sede._notifications import NotificationsSnapshot, RemoteNotification
+from ....adapters.persistence.profile.justificante import JustificanteRepository
 from ....adapters.persistence.storage import SensitivityClass
 from ....adapters.persistence.storage.runtime_repository import secure_object_repository_for_active_bucket
 from ....application.live import ExpedientesCapture, ExpedientesService, NotificationsService
@@ -21,7 +22,6 @@ from ....application.workflow._persistence import workflow_state_repository
 from ....core import Period
 from ....core.external_constants import SUPPORTED_OUTPUT_LANGUAGES
 from ....core.time import now
-from ....domain.justificante import JustificanteRepository
 from ....domain.modelos import (
     ExternalEvidenceKind,
     ModeloRecordCatalogueRepository,

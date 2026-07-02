@@ -8,9 +8,9 @@ from pathlib import Path
 
 import pytest
 
+from ....adapters.persistence.profile.justificante import JustificanteRepository
 from ....core import Modelo, Period
 from ....domain.buckets import BucketEventHistoryRepository, BucketEventType
-from ....domain.justificante import JustificanteRepository
 from ....domain.modelos import (
     ExternalEvidence,
     ExternalEvidenceKind,

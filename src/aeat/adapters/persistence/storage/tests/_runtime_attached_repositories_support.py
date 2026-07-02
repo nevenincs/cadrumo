@@ -13,6 +13,7 @@ from pathlib import Path
 import pytest
 from pydantic import AnyHttpUrl, TypeAdapter
 
+from .....adapters.persistence.profile.justificante import JustificanteRepository
 from .....application.auth import ApoderadoService
 from .....application.auth._diagnostics import list_auth_diagnostics
 from .....application.calculations import (
@@ -89,7 +90,7 @@ from .....domain.invoices import (
 from .....domain.iva import InvoiceKind
 from .....domain.iva_compensation._carry_forward import IvaCompensationPeriodState
 from .....domain.iva_compensation._reconciliation import IvaCompensationReconciliationDecision
-from .....domain.justificante import Justificante, JustificanteRepository
+from .....domain.justificante import Justificante
 from .....domain.modelos import ModeloCode
 from .....domain.modelos._calculation_repository import CalculationRevisionCatalogueRepository
 from .....domain.modelos._calculation_revision import (
