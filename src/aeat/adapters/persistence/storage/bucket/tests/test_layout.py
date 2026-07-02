@@ -75,16 +75,10 @@ def test_provision_rejects_empty_bucket_id(tmp_path: Path) -> None:
         provision_bucket_directory(tmp_path, "")
 
 
-@pytest.mark.parametrize(
-    "bucket_id",
-    (
-        pytest.param("a/b", id="forward-slash"),
-        pytest.param("a\\b", id="backslash"),
-    ),
-)
-def test_provision_rejects_path_separator_in_bucket_id(tmp_path: Path, bucket_id: str) -> None:
-    with pytest.raises(BucketValidationError, match="path separator"):
-        provision_bucket_directory(tmp_path, bucket_id)
+def test_provision_rejects_path_separator_in_bucket_id(tmp_path: Path) -> None:
+    for bucket_id in ("a/b", "a\\b"):
+        with pytest.raises(BucketValidationError, match="path separator"):
+            provision_bucket_directory(tmp_path, bucket_id)
 
 
 def test_bucket_paths_is_pure_no_filesystem_side_effects(tmp_path: Path) -> None:
