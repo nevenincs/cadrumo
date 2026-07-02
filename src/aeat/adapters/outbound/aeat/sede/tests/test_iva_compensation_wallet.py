@@ -375,16 +375,13 @@ def test_iva_wallet_read_guard_rejects_unclassified_browser_action() -> None:
         _assert_read_browser_action("wallet-unreviewed-click")
 
 
-def test_iva_wallet_read_guard_allows_own_name_representation_gate() -> None:
-    _assert_read_browser_action(_EXTERNAL.aeat.pre303.representation_own_name_action_label)
-
-
-def test_iva_wallet_read_guard_allows_wallet_execute_read_query() -> None:
-    _assert_read_browser_action(_EXTERNAL.aeat.pre303.wallet_execute_read_action_label)
-
-
-def test_iva_wallet_read_guard_allows_discovered_entrypoint_open() -> None:
-    _assert_read_browser_action(_EXTERNAL.aeat.pre303.wallet_discovered_entrypoint_action_label)
+def test_iva_wallet_read_guard_allows_reviewed_browser_read_actions() -> None:
+    for action_label in (
+        _EXTERNAL.aeat.pre303.representation_own_name_action_label,
+        _EXTERNAL.aeat.pre303.wallet_execute_read_action_label,
+        _EXTERNAL.aeat.pre303.wallet_discovered_entrypoint_action_label,
+    ):
+        _assert_read_browser_action(action_label)
 
 
 def test_own_name_representation_guard_accepts_dialogo_dispatcher_shape() -> None:
@@ -411,81 +408,63 @@ def test_own_name_representation_guard_accepts_dialogo_dispatcher_shape() -> Non
     )
 
 
-def test_own_name_representation_guard_rejects_representative_selection() -> None:
+def test_own_name_representation_guard_rejects_representative_context() -> None:
     landing_url = f"{_EXTERNAL.aeat.domains.www6}{_EXTERNAL.aeat.clave_movil.dialogo_representacion_path}"
-    html = f"""
-    <html><body>
-      <form id="repForm" method="get" action="{_EXTERNAL.aeat.clave_movil.dialogo_representacion_path}">
-        <input id="propio" name="representacion" type="radio" />
-        <input id="representante" name="representacion" type="radio" checked="checked" />
-        <button type="submit">Continuar</button>
-      </form>
-    </body></html>
-    """
-
-    with pytest.raises(SedeNavigationError, match="representative mode selected"):
-        _assert_own_name_representation_form_html(
-            html,
-            landing_url=landing_url,
-            expected_path=_EXTERNAL.aeat.sede_paths.iva_compensation_wallet,
-        )
-
-
-def test_own_name_representation_guard_rejects_prefilled_represented_taxpayer_text() -> None:
-    landing_url = f"{_EXTERNAL.aeat.domains.www6}{_EXTERNAL.aeat.clave_movil.dialogo_representacion_path}"
-    html = f"""
-    <html><body>
-      <form id="repForm" method="get" action="{_EXTERNAL.aeat.clave_movil.dialogo_representacion_path}">
-        <input id="propio" name="representacion" type="radio" checked="checked" />
-        <input id="representante" name="representacion" type="radio" />
-        <input id="nif" name="nif" type="text" value="represented-taxpayer-canary" />
-        <button type="submit">Continuar</button>
-      </form>
-    </body></html>
-    """
-
-    with pytest.raises(SedeNavigationError, match="represented-taxpayer text fields"):
-        _assert_own_name_representation_form_html(
-            html,
-            landing_url=landing_url,
-            expected_path=_EXTERNAL.aeat.sede_paths.iva_compensation_wallet,
-        )
-
-
-def test_discover_iva_compensation_wallet_entrypoint_from_pre303_link() -> None:
-    query = "ignored=token"
-    html = f"""
-    <html><body>
-      <a href="{_EXTERNAL.aeat.sede_paths.iva_compensation_wallet}?{query}">
-        Consulta de la cartera de cuotas de IVA a compensar
-      </a>
-    </body></html>
-    """
-
-    discovered = discover_iva_compensation_wallet_entrypoint(
-        html,
-        base_url=PRE303_PRESENTATION_SERVICE_URL,
+    cases = (
+        (
+            f"""
+            <html><body>
+              <form id="repForm" method="get" action="{_EXTERNAL.aeat.clave_movil.dialogo_representacion_path}">
+                <input id="propio" name="representacion" type="radio" />
+                <input id="representante" name="representacion" type="radio" checked="checked" />
+                <button type="submit">Continuar</button>
+              </form>
+            </body></html>
+            """,
+            "representative mode selected",
+        ),
+        (
+            f"""
+            <html><body>
+              <form id="repForm" method="get" action="{_EXTERNAL.aeat.clave_movil.dialogo_representacion_path}">
+                <input id="propio" name="representacion" type="radio" checked="checked" />
+                <input id="representante" name="representacion" type="radio" />
+                <input id="nif" name="nif" type="text" value="represented-taxpayer-canary" />
+                <button type="submit">Continuar</button>
+              </form>
+            </body></html>
+            """,
+            "represented-taxpayer text fields",
+        ),
     )
 
-    assert discovered == f"{IVA_COMPENSATION_WALLET_URL}?{query}"
+    for html, message in cases:
+        with pytest.raises(SedeNavigationError, match=message):
+            _assert_own_name_representation_form_html(
+                html,
+                landing_url=landing_url,
+                expected_path=_EXTERNAL.aeat.sede_paths.iva_compensation_wallet,
+            )
 
 
-def test_discover_iva_compensation_wallet_entrypoint_drops_fragment() -> None:
+def test_discover_iva_compensation_wallet_entrypoint_preserves_query_and_drops_fragment() -> None:
     query = "ignored=token"
-    html = f"""
-    <html><body>
-      <a href="{_EXTERNAL.aeat.sede_paths.iva_compensation_wallet}?{query}#fragment">
-        Consulta de la cartera de cuotas de IVA a compensar
-      </a>
-    </body></html>
-    """
 
-    discovered = discover_iva_compensation_wallet_entrypoint(
-        html,
-        base_url=PRE303_PRESENTATION_SERVICE_URL,
-    )
+    for fragment in ("", "#fragment"):
+        html = f"""
+        <html><body>
+          <a href="{_EXTERNAL.aeat.sede_paths.iva_compensation_wallet}?{query}{fragment}">
+            Consulta de la cartera de cuotas de IVA a compensar
+          </a>
+        </body></html>
+        """
 
-    assert discovered == f"{IVA_COMPENSATION_WALLET_URL}?{query}"
+        discovered = discover_iva_compensation_wallet_entrypoint(
+            html,
+            base_url=PRE303_PRESENTATION_SERVICE_URL,
+        )
+
+        assert discovered == f"{IVA_COMPENSATION_WALLET_URL}?{query}", fragment
 
 
 def test_discover_iva_compensation_wallet_entrypoint_rejects_non_aeat_host() -> None:
