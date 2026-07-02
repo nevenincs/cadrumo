@@ -75,10 +75,10 @@ Land the AST ratchet gate that inventories per-modelo tokens across a named list
 
 Inventory per-modelo tokens across named generic modules and ratchet the count down with an allowlist.
 
-- [ ] `W04.P04.S18` - Add an AST gate that inventories per-modelo tokens matching Modelo.M-star and underscore-M-digits patterns across a named list of generic domain and application modules; `src/aeat/tests/test_generic_module_modelo_carveouts.py`.
-- [ ] `W04.P04.S19` - Record the post-W1-through-W3 per-modelo token count as the ratchet baseline and assert the count may only decrease; `src/aeat/tests/test_generic_module_modelo_carveouts.py`.
-- [ ] `W04.P04.S20` - Declare the named generic-module allowlist so a new per-modelo branch in a generic module fails the gate unless the allowlist is consciously extended; `src/aeat/tests/test_generic_module_modelo_carveouts.py`.
-- [ ] `W04.P04.S21` - Confirm the ratchet gate passes at the recorded baseline and fails on an injected per-modelo branch probe; `src/aeat/tests/test_generic_module_modelo_carveouts.py`.
+- [x] `W04.P04.S18` - Add an AST gate that inventories per-modelo tokens matching Modelo.M-star and underscore-M-digits patterns across a named list of generic domain and application modules; `src/aeat/tests/test_generic_module_modelo_carveouts.py`.
+- [x] `W04.P04.S19` - Record the post-W1-through-W3 per-modelo token count as the ratchet baseline and assert the count may only decrease; `src/aeat/tests/test_generic_module_modelo_carveouts.py`.
+- [x] `W04.P04.S20` - Declare the named generic-module allowlist so a new per-modelo branch in a generic module fails the gate unless the allowlist is consciously extended; `src/aeat/tests/test_generic_module_modelo_carveouts.py`.
+- [x] `W04.P04.S21` - Confirm the ratchet gate passes at the recorded baseline and fails on an injected per-modelo branch probe; `src/aeat/tests/test_generic_module_modelo_carveouts.py`.
 
 ## Description
 
