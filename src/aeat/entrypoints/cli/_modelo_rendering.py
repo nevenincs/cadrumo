@@ -144,6 +144,20 @@ def _effective_work_unit_state(unit) -> str:
     return state
 
 
+def _human_state_label(state: str) -> str:
+    if state == CalculationRevisionState.BORRADOR.value:
+        return tr("cli.app.modelo.work.state_label_borrador", default="draft")
+    if state == CalculationRevisionState.VERIFICADO_COMPLETO.value:
+        return tr("cli.app.modelo.work.state_label_verificado_completo", default="verified complete")
+    if state == CalculationRevisionState.PRESENTADO.value:
+        return tr("cli.app.modelo.work.state_label_presentado", default="filed")
+    if state == CalculationRevisionState.PRESENTADO_SUPERSEDIDO.value:
+        return tr("cli.app.modelo.work.state_label_presentado_supersedido", default="superseded filing")
+    if state == CalculationRevisionState.DESCARTADO.value:
+        return tr("cli.app.modelo.work.state_label_descartado", default="discarded")
+    return state
+
+
 def work_unit_payload(unit) -> WorkUnitPayload:
     return WorkUnitPayload(
         work_unit_id=unit.work_unit_id,
@@ -179,7 +193,7 @@ def work_unit_lines(unit) -> list[str]:
         f"period\t{unit.period.registry_token}",
         f"revision_id\t{unit.revision_id}",
         f"name\t{unit.name}",
-        f"state\t{_effective_work_unit_state(unit)}",
+        f"state\t{_human_state_label(_effective_work_unit_state(unit))}",
         f"current_calculation_revision_id\t{unit.current_calculation_revision_id or ''}",
         f"short_current_calculation_revision_id\t{short_id(unit.current_calculation_revision_id) or ''}",
         f"filed_calculation_revision_id\t{unit.filed_calculation_revision_id or ''}",
@@ -218,7 +232,7 @@ def work_unit_list_lines(units, *, bucket_id: str | None, include_discarded: boo
                 str(unit.filing_year),
                 unit.period.registry_token,
                 unit.revision_id,
-                _effective_work_unit_state(unit),
+                _human_state_label(_effective_work_unit_state(unit)),
                 short_id(unit.current_calculation_revision_id) or "",
                 short_id(unit.filed_calculation_revision_id) or "",
                 unit.name,
@@ -358,7 +372,7 @@ def work_unit_deadline_output(unit) -> tuple[WorkPlazoDeadlinePayload | None, li
 
 
 def detail_row_payloads(rev) -> tuple[DetailRowPayload, ...]:
-    """Return materialised detail rows for the JSON calculation payload."""
+    """Return materialised :class:`DetailRowPayload` rows for the JSON calculation payload."""
     rows: list[DetailRowPayload] = []
     for index, detail_row in enumerate(rev.detail_rows, start=1):
         dumped = detail_row.model_dump(mode="json", exclude={"row_type"})
@@ -501,7 +515,7 @@ def calculation_revision_lines(rev, *, verbose: bool = False) -> list[str]:
     lines = [
         f"calculation_revision_id\t{rev.calculation_revision_id}",
         f"work_unit_id\t{rev.work_unit_id}",
-        f"state\t{rev.state.value}",
+        f"state\t{_human_state_label(rev.state.value)}",
         f"created_at\t{rev.created_at.isoformat()}",
         f"updated_at\t{rev.updated_at.isoformat()}",
     ]
@@ -540,7 +554,7 @@ def calculation_observation_lines(rev) -> list[str]:
     lines = [
         f"calculation_revision_id\t{payload.calculation_revision_id}",
         f"work_unit_id\t{payload.work_unit_id}",
-        f"state\t{payload.state}",
+        f"state\t{_human_state_label(payload.state)}",
         f"observation_count\t{len(observations)}",
         "casilla_id\tvalue\tformula_id\tlegal_refs\tsource_refs\toperand_refs\toperand_casilla_refs\toperand_values",
     ]
@@ -563,7 +577,7 @@ def calculation_observation_lines(rev) -> list[str]:
 
 
 def filing_record_payload(record) -> ModeloRecordPayload:
-    """Project a :class:`~aeat.domain.modelos.ModeloRecord` into JSON payload form.
+    """Project a :class:`~aeat.domain.modelos.ModeloRecord` into :class:`ModeloRecordPayload` JSON form.
 
     When the record carries :class:`~aeat.domain.modelos.ExternalEvidence`, the
     evidence fields are nested in :class:`ExternalEvidencePayload`; local filing

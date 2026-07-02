@@ -2221,6 +2221,11 @@ cli:
         year_help: A munkaegység adóéve (pl. 2026).
         year_out_of_range: A(z) %{year} benyújtási év kívül esik a tartományon; adjon
           meg évet %{minimum} és %{maximum} között.
+        state_label_borrador: 'Piszkozat'
+        state_label_verificado_completo: 'Teljesen ellenorizve'
+        state_label_presentado: 'Beadva'
+        state_label_presentado_supersedido: 'Felulirt beadas'
+        state_label_descartado: 'Eldobva'
   common:
     errors:
       draft_id_not_found: A(z) %{draft_id} azonosítójú piszkozat nem található

@@ -2303,6 +2303,11 @@ cli:
         year_help: Ejercicio fiscal de la unidad de trabajo (p. ej. 2026)
         year_out_of_range: El ejercicio fiscal %{year} está fuera de rango; indique
           un año entre %{minimum} y %{maximum}.
+        state_label_borrador: 'Borrador'
+        state_label_verificado_completo: 'Verificado completo'
+        state_label_presentado: 'Presentado'
+        state_label_presentado_supersedido: 'Presentacion sustituida'
+        state_label_descartado: 'Descartado'
   common:
     errors:
       draft_id_not_found: ID de borrador %{draft_id} no encontrado
