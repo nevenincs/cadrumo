@@ -1,14 +1,14 @@
 """Private text-backend dispatch for the inbound justificante adapter.
 
-Callers outside :mod:`aeat.adapters.inbound.justificante` must never import
+Callers outside :mod:`adapters.inbound.justificante` must never import
 from here. Backends expose a common ``extract_text`` entry point that
 returns the raw concatenated text of a justificante PDF; all field-level
-extraction happens in :mod:`aeat.adapters.inbound.justificante._extract`.
+extraction happens in :mod:`adapters.inbound.justificante._extract`.
 
 The dispatch is keyed on
-:class:`~aeat.domain.justificante.JustificanteParserBackend`, and parse
+:class:`domain.justificante.JustificanteParserBackend`, and parse
 failures are normalised as
-:class:`~aeat.domain.justificante.JustificanteParseError`. The path entry point
+:class:`domain.justificante.JustificanteParseError`. The path entry point
 caches concatenated text by source digest, backend, size, and mtime; the bytes
 entry point stays uncached so secure-storage callers do not need to materialise
 or persist plaintext files.
