@@ -63,7 +63,6 @@ See Also:
 """
 
 from ._binding_prefill import (
-    MODELO_303_IVA_COMPENSATION_BINDING_ID,
     BindingPrefillReport,
     LocalIvaCompensationRecurrence,
     PrefilledBinding,
@@ -148,7 +147,6 @@ IvaCompensationReconciliationReport.model_rebuild()
 
 __all__ = [
     "M111_NO_RETENCIONES_PROFILE_PATH",
-    "MODELO_303_IVA_COMPENSATION_BINDING_ID",
     "AssembledObservations",
     "BindingPrefillReport",
     "CalculationObservationRepository",

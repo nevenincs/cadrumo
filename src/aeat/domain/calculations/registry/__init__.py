@@ -247,6 +247,7 @@ from ._formula_runtime import (
     calculate_registry_snapshot,
     read_parameter,
 )
+from ._formula_runtime_ops import resolve_parameter
 from ._formula_text_inputs import validate_text_input_targets, validated_text_input_casilla_ids
 from ._groi_oracle import (
     GROI_ORACLE_ID,
@@ -340,6 +341,10 @@ from ._relations import (
     relation_source_requirements,
     resolve_relation_values,
     resolve_relation_values_from_observations,
+)
+from ._validate_relation_sources import (
+    IVA_WALLET_OWNED_RELATION_TARGET_BINDINGS,
+    MODELO_303_IVA_COMPENSATION_BINDING_ID,
 )
 from ._remote_state_guard import (
     AEAT_WRITE_FORBIDDEN_ACTIONS,
@@ -469,9 +474,11 @@ __all__ = [
     "CENSO_MODELO_SERVICE_OWNER",
     "GROI_ORACLE_ID",
     "INVOICE_BINDING_SOURCE_KINDS",
+    "IVA_WALLET_OWNED_RELATION_TARGET_BINDINGS",
     "KNOWN_PROFILE_FLAG_ADVISORY_FIELDS",
     "KNOWN_VERIFICATION_PREDICATE_OPERATORS",
     "LEDGER_BINDING_SOURCE_KINDS",
+    "MODELO_303_IVA_COMPENSATION_BINDING_ID",
     "AeatNifIvaCheckerOracle",
     "AeatNifIvaObservation",
     "AmbiguousRevisionSelectionError",
@@ -780,6 +787,7 @@ __all__ = [
     "resolve_ledger_renta_gasto_aggregation_binding_values",
     "resolve_ledger_renta_income_aggregation_binding_values",
     "resolve_observed_requirement_value",
+    "resolve_parameter",
     "resolve_previous_filing_binding_values",
     "resolve_refund_binding_row_values",
     "resolve_related_party_binding_row_values",

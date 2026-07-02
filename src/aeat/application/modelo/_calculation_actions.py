@@ -54,7 +54,12 @@ from ...core.money import round_to_cents
 from ...core.time import now as _utc_now
 from ...domain.buckets._event_repository import BucketEventHistoryRepository
 from ...domain.buckets._protocols import BucketEventHistoryRepositoryProtocol
-from ...domain.calculations.registry import selector_as_dict, validated_text_input_casilla_ids
+from ...domain.calculations.registry import (
+    IVA_WALLET_OWNED_RELATION_TARGET_BINDINGS,
+    MODELO_303_IVA_COMPENSATION_BINDING_ID,
+    selector_as_dict,
+    validated_text_input_casilla_ids,
+)
 from ...domain.calculations.registry._bindings import CasillaObservation, bound_casilla_binding_ids
 from ...domain.calculations.registry._casilla_membership import casillas_by_id
 from ...domain.calculations.registry._formula_runtime import calculate_registry_snapshot
@@ -1100,8 +1105,6 @@ def _previous_filing_resolution_excluding_iva_compensation(
     is immutable, the exclusion returns a copied resolution with only the 303
     compensation binding and its provenance removed.
     """
-    from ..calculations import MODELO_303_IVA_COMPENSATION_BINDING_ID
-
     excluded = MODELO_303_IVA_COMPENSATION_BINDING_ID
     if excluded not in resolution.binding_values:
         return resolution
@@ -1113,11 +1116,13 @@ def _previous_filing_resolution_excluding_iva_compensation(
     )
 
 
-def _iva_compensation_previous_filing_exclusions() -> frozenset[BindingId]:
-    """Binding ids previous-filing must not resolve because the IVA wallet owns them."""
-    from ..calculations import MODELO_303_IVA_COMPENSATION_BINDING_ID
+def _iva_compensation_previous_filing_exclusions() -> frozenset[str]:
+    """Binding ids previous-filing must not resolve because the IVA wallet owns them.
 
-    return frozenset({MODELO_303_IVA_COMPENSATION_BINDING_ID})
+    The single canonical iva-wallet-owned set declared in the registry domain; the
+    registry relation-source validator consumes the same declaration.
+    """
+    return IVA_WALLET_OWNED_RELATION_TARGET_BINDINGS
 
 
 def _source_resolution_excluding_iva_compensation(
@@ -1125,8 +1130,6 @@ def _source_resolution_excluding_iva_compensation(
     resolution: CalculationSourceResolution,
 ) -> CalculationSourceResolution:
     """Keep Modelo 303 prior-compensation owned exclusively by the IVA wallet."""
-    from ..calculations import MODELO_303_IVA_COMPENSATION_BINDING_ID
-
     excluded = MODELO_303_IVA_COMPENSATION_BINDING_ID
     relation_ids = frozenset(rel.id for rel in revision.relations if rel.target_binding == excluded)
     if excluded not in resolution.binding_values and not relation_ids.intersection(resolution.relation_values):
