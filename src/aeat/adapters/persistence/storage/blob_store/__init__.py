@@ -9,7 +9,7 @@ data-encryption key.
 This package also exposes the path-shaped secret bridge used by SDKs that
 cannot consume in-memory bytes. :func:`materialise_secret` and
 :func:`export_to_temp_path` read encrypted records through
-:class:`~aeat.adapters.persistence.storage.secret_store.SecretStore`, write a
+:class:`adapters.persistence.storage.secret_store.SecretStore`, write a
 short-lived private tempfile, and leave cleanup ownership explicit. Domain
 repositories and calculation sources should depend on higher-level secure-object
 or repository APIs, not on blob paths directly.
