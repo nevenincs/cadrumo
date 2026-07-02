@@ -34,7 +34,7 @@ from .._live_harness import LiveCallTool
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
-# INTENTIONAL: local-eval-harness scope because "live" in this filename names the
+# INTENTIONAL: local-eval-harness because "live" in this filename names the
 # live-EVAL harness under test (a local ``aeat-mcp`` stdio session it spawns),
 # not live-AEAT network access — so no ``AEAT_LIVE_TESTS_ENABLED`` gate applies.
 
