@@ -7,6 +7,10 @@ description: >-
   file. Use when the taxpayer is a member entity of an IVA grupo de entidades
   (régimen especial del grupo de entidades) filing its own monthly individual
   self-assessment.
+applies_when:
+  profile_facts:
+    - fact: iva.group_member_enrolled
+      match: is_true
 ---
 
 # Prepare Modelo 322
