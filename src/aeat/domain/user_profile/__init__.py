@@ -14,14 +14,14 @@ in the application/workflow layers, not in these schema records.
 The :class:`UserProfilePortableExport` re-export is resolved on demand
 through a module-level ``__getattr__`` (PEP 562). The portable-export
 bundle composes four heavy domain types
-(:class:`~aeat.domain.modelos.CalculationRevision`,
-:class:`~aeat.domain.modelos.WorkUnit`,
-:class:`~aeat.domain.transactions.Transaction`, and
-:class:`~aeat.domain.modelos.ModeloRecord`) whose imports cascade into the
+:class:`domain.modelos.CalculationRevision`,
+:class:`domain.modelos.WorkUnit`,
+:class:`domain.transactions.Transaction`, and
+:class:`domain.modelos.ModeloRecord`) whose imports cascade into the
 calculation registry; eagerly re-exporting it at this boundary would drag the
 full registry into every consumer that touches the package surface, including
 the state-free CLI surfaces enforced by
-:mod:`aeat.entrypoints.cli.test_lazy_command_tree`. :class:`CarriedSecureObject`
+:mod:`entrypoints.cli.test_lazy_command_tree`. :class:`CarriedSecureObject`
 and :class:`CoverageManifest` are declared in the same
 ``_portable_export`` module and share the same lazy-resolution path so
 importing either does not trigger the same cascade. Every other
@@ -30,20 +30,20 @@ registry-contract) stays eager because each is genuinely lightweight
 and every consumer pays for it unconditionally.
 
 See Also:
-    :class:`~aeat.domain.user_profile.UserProfileRecord`
+    :class:`UserProfileRecord`
         Canonical runtime aggregate carrying profile facts and lifecycle state.
-    :class:`~aeat.domain.user_profile.UserProfilePortableExport`
+    :class:`UserProfilePortableExport`
         Lazy-resolved cross-bucket bundle payload that includes profile,
         work-unit, ledger, calculation, and filing history.
-    :func:`~aeat.domain.user_profile.validate_user_profile_registry_contract`
+    :func:`validate_user_profile_registry_contract`
         Registry-selector coverage check binding schema paths to modelo
         calculation requirements.
-    :func:`~aeat.domain.user_profile.new_profile_id`
+    :func:`new_profile_id`
         Identity authority for UUID-backed profile and bucket ids.
-    :mod:`aeat.application.user_profile`
+    :mod:`application.user_profile`
         Application facade for lifecycle services, Censo sync, preflight,
         projections, custody, and portable-bundle serialisation.
-    :mod:`aeat.application.workflow`
+    :mod:`application.workflow`
         Active-profile pointer and bucket-manifest readers that resolve the
         current storage slice before application services load records.
 """
