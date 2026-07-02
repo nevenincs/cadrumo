@@ -10,6 +10,7 @@ from pathlib import Path
 
 import pytest
 
+from ....adapters.persistence.profile.usage_ratios import save_usage_ratios
 from ....core import Period
 from ....core.errors import ERROR_REGISTRY
 from ....domain.calculations.registry import RegistryModeloObservation
@@ -27,7 +28,7 @@ from ....domain.transactions import (
     TransactionCatalogueRepository,
     TransactionDirection,
 )
-from ....domain.usage_ratios import UsageRatioProfile, save_usage_ratios
+from ....domain.usage_ratios import UsageRatioProfile
 from ....domain.user_profile import UserProfileFact
 from ....tests.cli_runner import invoke_cached_cli
 from ....tests.registry_observations import registry_grounded_observations

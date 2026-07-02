@@ -392,8 +392,8 @@ def test_apply_seeds_home_office_usage_ratios_from_censo(
 
     from decimal import Decimal
 
+    from ....adapters.persistence.profile.usage_ratios import load_usage_ratios
     from ....domain.categories import SpendingCategory
-    from ....domain.usage_ratios import load_usage_ratios
 
     profiles = UserProfileLifecycleRepository(bucket_id=_BUCKET_ID, objects=secure_store)
     profiles.save(

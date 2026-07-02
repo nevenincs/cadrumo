@@ -12,6 +12,9 @@ consume the child modules directly:
   secure-object :class:`domain.bienes_inversion.BienesInversionIvaRegister`.
 * :mod:`adapters.persistence.profile.fincas` for ORM-backed finca,
   arrendamiento, rendimiento, gasto, and amortización repositories.
+* :mod:`adapters.persistence.profile.usage_ratios` for the FINANCIAL
+  secure-object :class:`domain.usage_ratios.UsageRatioProfile` load / save
+  helpers and the censo refuse-load guard.
 """
 
 __all__: list[str] = []
