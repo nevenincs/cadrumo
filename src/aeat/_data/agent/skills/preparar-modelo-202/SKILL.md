@@ -7,6 +7,11 @@ description: >-
   hand off for the taxpayer to file. Use for each of the three annual
   instalments (1P/2P/3P) a sociedad is obliged to pay on account of the year's
   Modelo 200.
+applies_when:
+  profile_facts:
+    - fact: entity_type
+      match: equals
+      values: [legal_entity]
 ---
 
 # Prepare Modelo 202
