@@ -71,7 +71,7 @@ def modelo_130_snapshot(registry_snapshot: Callable[[str, int, str], RegistrySna
     return registry_snapshot("130", 2024, "3T")
 
 
-def test_formula_expression_accepts_dispatch_table_entries() -> None:
+def test_formula_expression_dispatch_table_entry_contract() -> None:
     expression = FormulaExpression.model_validate(
         {
             "dispatch_table_entries": [
@@ -86,8 +86,6 @@ def test_formula_expression_accepts_dispatch_table_entries() -> None:
         "cataluna": "renta-2025-escala-autonomica-cataluna-base-general",
     }
 
-
-def test_formula_expression_rejects_duplicate_dispatch_table_entries() -> None:
     with pytest.raises(ValidationError, match="duplicate key 'madrid'"):
         FormulaExpression.model_validate(
             {
@@ -98,8 +96,6 @@ def test_formula_expression_rejects_duplicate_dispatch_table_entries() -> None:
             },
         )
 
-
-def test_formula_expression_rejects_mixed_dispatch_table_shapes() -> None:
     with pytest.raises(ValidationError, match="dispatch_table or dispatch_table_entries"):
         FormulaExpression.model_validate(
             {
@@ -111,57 +107,32 @@ def test_formula_expression_rejects_mixed_dispatch_table_shapes() -> None:
         )
 
 
-@pytest.mark.parametrize(("attr_path", "expected"), _SNAPSHOT_HEADER_EXPECTATIONS)
-def test_committed_snapshot_resolves_header_field(
-    modelo_130_snapshot: RegistrySnapshot, attr_path: str, expected: object
-) -> None:
-    """Snapshot ``(modelo, revision, filing_year, period)`` tuple matches the committed registry coordinates."""
-    actual: object = modelo_130_snapshot
-    for segment in attr_path.split("."):
-        actual = getattr(actual, segment)
-    assert actual == expected
-
-
-def test_committed_snapshot_indexes_legal_reference_with_authority_tier(modelo_130_snapshot: RegistrySnapshot) -> None:
-    """Legal-reference is indexed and its evidence_tier reads as legal_authority."""
-    assert "rd-439-2007:art-110" in modelo_130_snapshot.legal
-    assert modelo_130_snapshot.legal["rd-439-2007:art-110"].evidence_tier == "legal_authority"
-
-
-def test_committed_snapshot_indexes_source_reference_with_layout_tier(modelo_130_snapshot: RegistrySnapshot) -> None:
-    """Source-reference is indexed and its evidence_tier reads as layout_authority."""
-    assert "aeat-dr-130-2019-v12" in modelo_130_snapshot.sources
-    assert modelo_130_snapshot.sources["aeat-dr-130-2019-v12"].evidence_tier == "layout_authority"
-
-
-def test_committed_snapshot_lists_single_extraction_profile(modelo_130_snapshot: RegistrySnapshot) -> None:
-    assert tuple(modelo_130_snapshot.extraction_profiles) == ("modelo-130-declaracion-pdf",)
-
-
-def test_committed_snapshot_lists_expected_live_cross_references(modelo_130_snapshot: RegistrySnapshot) -> None:
-    assert set(modelo_130_snapshot.live_cross_references) == _EXPECTED_LIVE_CROSS_REFERENCES
-
-
-def test_committed_snapshot_static_cross_reference_carries_layout_tier(modelo_130_snapshot: RegistrySnapshot) -> None:
-    assert modelo_130_snapshot.live_cross_references["modelo-130-static-official"].evidence_tier == "layout_authority"
-
-
-def test_committed_snapshot_filed_declarations_read_is_authenticated_read_surface(
+def test_committed_snapshot_exposes_expected_metadata(
     modelo_130_snapshot: RegistrySnapshot,
 ) -> None:
-    """The filed-declarations cross-reference must declare an authenticated read surface."""
+    """Committed M130 snapshot metadata matches the registry authority contracts."""
+
+    for attr_path, expected in _SNAPSHOT_HEADER_EXPECTATIONS:
+        actual: object = modelo_130_snapshot
+        for segment in attr_path.split("."):
+            actual = getattr(actual, segment)
+        assert actual == expected, attr_path
+
+    assert "rd-439-2007:art-110" in modelo_130_snapshot.legal
+    assert modelo_130_snapshot.legal["rd-439-2007:art-110"].evidence_tier == "legal_authority"
+    assert "aeat-dr-130-2019-v12" in modelo_130_snapshot.sources
+    assert modelo_130_snapshot.sources["aeat-dr-130-2019-v12"].evidence_tier == "layout_authority"
+    assert tuple(modelo_130_snapshot.extraction_profiles) == ("modelo-130-declaracion-pdf",)
+    assert set(modelo_130_snapshot.live_cross_references) == _EXPECTED_LIVE_CROSS_REFERENCES
+    assert (
+        modelo_130_snapshot.live_cross_references["modelo-130-static-official"].evidence_tier == "layout_authority"
+    )
     filed_read = modelo_130_snapshot.live_cross_references["modelo-130-filed-declarations-read"]
     assert filed_read.surface == "authenticated_read_surface"
     assert set(filed_read.allowed_methods).issubset({"GET", "HEAD", "OPTIONS"})
     assert filed_read.requires_authentication is True
     assert filed_read.requires_aeat_authorization is True
-
-
-def test_committed_snapshot_lists_single_workbook_parity_ref(modelo_130_snapshot: RegistrySnapshot) -> None:
     assert tuple(modelo_130_snapshot.workbook_parity_refs) == ("modelo-130-dr-xls",)
-
-
-def test_committed_snapshot_lists_verification_expectations(modelo_130_snapshot: RegistrySnapshot) -> None:
     # The coverage-gated calculation contract plus the exhaustive
     # reconcile-when-present contract (situational computed casillas value-checked
     # when present, excluded from the coverage denominator).
@@ -169,10 +140,9 @@ def test_committed_snapshot_lists_verification_expectations(modelo_130_snapshot:
         "modelo-130-calculation-verification",
         "modelo-130-2019-y-siguientes-reconcile-when-present",
     )
-
-
-def test_committed_snapshot_declares_no_support_removal_decisions(modelo_130_snapshot: RegistrySnapshot) -> None:
     assert modelo_130_snapshot.support_removal_decisions == {}
+    assert tuple(modelo_130_snapshot.deadline_windows) == _EXPECTED_DEADLINE_WINDOWS
+    assert set(modelo_130_snapshot.application_links) >= _REQUIRED_APPLICATION_LINKS
 
 
 def test_committed_registry_contains_no_zero_casilla_revisions(
@@ -208,14 +178,6 @@ def test_revision_without_casillas_is_registry_validation_failure() -> None:
         match="revision must declare at least one casilla",
     ):
         _validate_revision(modelo, catalogues, empty_revision)
-
-
-def test_committed_snapshot_lists_registered_quarterly_deadline_windows(modelo_130_snapshot: RegistrySnapshot) -> None:
-    assert tuple(modelo_130_snapshot.deadline_windows) == _EXPECTED_DEADLINE_WINDOWS
-
-
-def test_committed_snapshot_application_links_cover_required_surfaces(modelo_130_snapshot: RegistrySnapshot) -> None:
-    assert set(modelo_130_snapshot.application_links) >= _REQUIRED_APPLICATION_LINKS
 
 
 def test_model_law_coverage_ledger_does_not_count_layout_source_as_guidance() -> None:
