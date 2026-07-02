@@ -132,6 +132,7 @@ from ._persistence import (
 
 # ---- profile-bucket scan (depends on _models only) --------------------------
 from ._profile_bucket_scan import (
+    list_profile_bucket_scan_issues,
     list_profile_buckets,
     read_profile_bucket,
     read_profile_bucket_by_id,
