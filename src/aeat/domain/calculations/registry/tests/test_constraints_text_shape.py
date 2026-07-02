@@ -65,16 +65,15 @@ class TestConstraintsShapeRejects:
         with pytest.raises(ValidationError, match="min_length"):
             _make(min_length=10, max_length=3)
 
-    @pytest.mark.parametrize(
-        "fields",
-        (
-            pytest.param({"min_length": -1}, id="min-length"),
-            pytest.param({"max_length": -1}, id="max-length"),
-        ),
-    )
-    def test_negative_length_bound_rejected(self, fields: _ConstraintFields) -> None:
-        with pytest.raises(ValidationError):
-            _make(**fields)
+    def test_negative_length_bound_rejected(self) -> None:
+        cases: tuple[_ConstraintFields, ...] = (
+            {"min_length": -1},
+            {"max_length": -1},
+        )
+
+        for fields in cases:
+            with pytest.raises(ValidationError):
+                _make(**fields)
 
     def test_empty_enum_rejected(self) -> None:
         with pytest.raises(ValidationError, match="at least one"):
@@ -107,21 +106,15 @@ class TestViolatesText:
         c = _make(min_length=2, max_length=5)
         assert c.violates_text("abc") is None
 
-    @pytest.mark.parametrize(
-        ("fields", "value", "reason"),
-        (
-            pytest.param({"min_length": 3}, "ab", "min_length", id="below-min"),
-            pytest.param({"max_length": 3}, "abcde", "max_length", id="above-max"),
-        ),
-    )
-    def test_value_outside_length_bounds_rejected(
-        self,
-        fields: _ConstraintFields,
-        value: str,
-        reason: str,
-    ) -> None:
-        c = _make(**fields)
-        assert reason in _reason(c, value)
+    def test_value_outside_length_bounds_rejected(self) -> None:
+        cases: tuple[tuple[_ConstraintFields, str, str], ...] = (
+            ({"min_length": 3}, "ab", "min_length"),
+            ({"max_length": 3}, "abcde", "max_length"),
+        )
+
+        for fields, value, reason in cases:
+            c = _make(**fields)
+            assert reason in _reason(c, value)
 
     def test_value_not_matching_pattern_rejected(self) -> None:
         c = _make(pattern=r"^[A-Z]{2}$")
