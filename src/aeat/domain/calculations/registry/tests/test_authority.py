@@ -22,6 +22,7 @@ from .. import (
     validated_casilla_id,
 )
 from .._loader import _collect_registry_tree_fingerprints, clear_fingerprint_cache
+from ._loader_directory_mode_support import write_fragmented_revision
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -224,11 +225,10 @@ def test_authority_cache_invalidates_when_fragmented_revision_changes(tmp_path: 
     (legal_dir / "catalogue.toml").write_text(_MINIMAL_CATALOGUE_TOML, encoding="utf-8")
     (registry_root / "modelos" / "999" / "manifest.toml").write_text(_MINIMAL_MANIFEST_TOML, encoding="utf-8")
 
-    revision_path = revision_dir / "revision.toml"
-    revision_path.write_text(_MINIMAL_REVISION_TOML_TEMPLATE.format(label="before"), encoding="utf-8")
+    write_fragmented_revision(revision_dir, _MINIMAL_REVISION_TOML_TEMPLATE.format(label="before"))
 
     first = ValidatedRegistryAuthority.load(registry_root, source_root=tmp_path)
-    revision_path.write_text(_MINIMAL_REVISION_TOML_TEMPLATE.format(label="after cache invalidation"), encoding="utf-8")
+    write_fragmented_revision(revision_dir, _MINIMAL_REVISION_TOML_TEMPLATE.format(label="after cache invalidation"))
 
     from .._loader import clear_fingerprint_cache
 
@@ -256,8 +256,7 @@ def test_authority_uses_fingerprint_backed_process_cache_and_invalidates(tmp_pat
     (legal_dir / "catalogue.toml").write_text(_MINIMAL_CATALOGUE_TOML, encoding="utf-8")
     (registry_root / "modelos" / "999" / "manifest.toml").write_text(_MINIMAL_MANIFEST_TOML, encoding="utf-8")
 
-    revision_path = revision_dir / "revision.toml"
-    revision_path.write_text(_MINIMAL_REVISION_TOML_TEMPLATE.format(label="before"), encoding="utf-8")
+    write_fragmented_revision(revision_dir, _MINIMAL_REVISION_TOML_TEMPLATE.format(label="before"))
 
     clear_fingerprint_cache()
 
@@ -270,7 +269,7 @@ def test_authority_uses_fingerprint_backed_process_cache_and_invalidates(tmp_pat
     assert auth2 is auth1
 
     # Modify file to invalidate cache
-    revision_path.write_text(_MINIMAL_REVISION_TOML_TEMPLATE.format(label="after"), encoding="utf-8")
+    write_fragmented_revision(revision_dir, _MINIMAL_REVISION_TOML_TEMPLATE.format(label="after"))
     clear_fingerprint_cache()
 
     # Load 3: changed fingerprint must build and validate a fresh authority.
@@ -295,10 +294,7 @@ def test_authority_cache_invalidates_when_source_evidence_changes(tmp_path: Path
 
     (legal_dir / "catalogue.toml").write_text(_MINIMAL_CATALOGUE_TOML, encoding="utf-8")
     (registry_root / "modelos" / "999" / "manifest.toml").write_text(_MINIMAL_MANIFEST_TOML, encoding="utf-8")
-    (revision_dir / "revision.toml").write_text(
-        _MINIMAL_REVISION_TOML_TEMPLATE.format(label="before"),
-        encoding="utf-8",
-    )
+    write_fragmented_revision(revision_dir, _MINIMAL_REVISION_TOML_TEMPLATE.format(label="before"))
 
     clear_fingerprint_cache()
     first = ValidatedRegistryAuthority.load(registry_root, source_root=tmp_path)
@@ -345,7 +341,7 @@ data_type = "integer"
 legal_refs = ["test-ley-001:art-1"]
 source_refs = ["test-source-001"]
 """
-    (revision_dir / "revision.toml").write_text(ambiguous_revision, encoding="utf-8")
+    write_fragmented_revision(revision_dir, ambiguous_revision)
 
     clear_fingerprint_cache()
     fingerprints = _collect_registry_tree_fingerprints(registry_root)
@@ -399,7 +395,7 @@ legal_refs = ["test-ley-001:art-1"]
 source_refs = ["test-source-001"]
 """
     )
-    (revision_dir / "revision.toml").write_text(ambiguous_revision, encoding="utf-8")
+    write_fragmented_revision(revision_dir, ambiguous_revision)
 
     clear_fingerprint_cache()
 

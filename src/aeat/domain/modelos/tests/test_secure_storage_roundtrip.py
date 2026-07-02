@@ -20,6 +20,7 @@ from pathlib import Path
 import pytest
 from pydantic import ValidationError
 
+from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ....adapters.persistence.storage import SensitivityClass
 from ....core import Period
 from ....tests.secure_sql import isolated_runtime_profile
@@ -28,7 +29,6 @@ from .._repository import (
     _WORK_UNIT_CATALOGUE_VERSION,
     _WORK_UNIT_NAMESPACE,
     _WORK_UNIT_OBJECT_KEY,
-    WorkUnitCatalogueRepository,
     WorkUnitPersistenceError,
 )
 from .._work_unit import (

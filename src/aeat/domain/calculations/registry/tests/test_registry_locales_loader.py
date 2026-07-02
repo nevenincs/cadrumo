@@ -12,6 +12,7 @@ from .....locales import ModeloLocaleFieldKind, ModeloLocaleManager
 from .._errors import RegistryValidationError
 from .._loader import load_modelo_directory
 from .._schema import ModeloDefinition
+from ._loader_directory_mode_support import write_fragmented_revision
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -69,10 +70,11 @@ def _setup_modelo_dir(
     revisions_dir = target_dir / "revisions"
     revisions_dir.mkdir(exist_ok=True)
 
-    # We write revision.toml directly or as fragment files
+    # The revision's sections are materialised as per-section fragment files;
+    # revision.toml carries only scalar metadata (fragmented-layout invariant).
     rev_id_dir = revisions_dir / "2019-y-siguientes"
     rev_id_dir.mkdir(exist_ok=True)
-    (rev_id_dir / "revision.toml").write_text(revision, encoding="utf-8")
+    write_fragmented_revision(rev_id_dir, revision)
 
     if modelo_locales:
         locales_dir = target_dir / "locales"

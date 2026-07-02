@@ -47,6 +47,7 @@ from datetime import date, datetime
 from decimal import Decimal
 from typing import TYPE_CHECKING
 
+from ...adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ...core import Modelo
 from ...core.aggregation import BindingSourceKind
 from ...core.decimal import coerce_decimal_strict
@@ -78,7 +79,6 @@ from ...domain.modelos import (
     Modelo349RectificacionRow,
     ModeloDetailRow,
     WorkUnit,
-    WorkUnitCatalogueRepository,
     WorkUnitCatalogueRepositoryProtocol,
     upsert_calculation_revision,
 )

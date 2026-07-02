@@ -353,8 +353,8 @@ def compare_taxation_for_work_unit(work_unit_id: str) -> TaxationComparisonResul
             Performs the pure snapshot comparison after this function resolves
             work-unit state.
     """
+    from ...adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
     from ...domain.calculations.registry import RegistrySnapshotError
-    from ...domain.modelos import WorkUnitCatalogueRepository
     from ..aggregation import CalculationSourceContext, ProfileSourceResolver
     from ._action_errors import WorkUnitNotFoundError
     from ._binding_resolution import (

@@ -272,6 +272,7 @@ def test_modification_refused_when_row_feeds_finalized_modelo() -> None:
     from datetime import UTC, datetime
     from decimal import Decimal
 
+    from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
     from ....core import Period, resolve_active_bucket_id
     from ....domain.modelos import (
         CalculationRevision,
@@ -281,7 +282,6 @@ def test_modification_refused_when_row_feeds_finalized_modelo() -> None:
         ModeloCode,
         WorkUnit,
         WorkUnitCatalogue,
-        WorkUnitCatalogueRepository,
         derive_calculation_revision_id,
         derive_work_unit_id,
     )

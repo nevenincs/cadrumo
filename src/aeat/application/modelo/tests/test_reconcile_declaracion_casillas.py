@@ -31,6 +31,7 @@ import pytest
 
 from ....adapters.inbound.declaracion import InboundDeclaracionObservation, TemplateRevision
 from ....adapters.inbound.pdf import ExtractedCasilla
+from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ....core import Period
 from ....core.resources import resources
 from ....core.time import now
@@ -41,7 +42,6 @@ from ....domain.modelos import (
     CalculationRevisionState,
     ModeloCode,
     WorkUnit,
-    WorkUnitCatalogueRepository,
     derive_calculation_revision_id,
     derive_work_unit_id,
     upsert_calculation_revision,

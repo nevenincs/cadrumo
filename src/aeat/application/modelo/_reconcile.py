@@ -338,7 +338,7 @@ def _require_declaration_enrolled_modelo(work_unit_id: WorkUnitId) -> None:
     file is opened, rather than only after a parse attempt happens to fail for
     an unrelated reason.
     """
-    from ...domain.modelos import WorkUnitCatalogueRepository
+    from ...adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 
     catalogue = WorkUnitCatalogueRepository().load()
     work_unit = catalogue.work_units.get(work_unit_id)
@@ -454,7 +454,7 @@ def _reconcile_parsed_justificante(
     actor: str,
     justificante: Justificante,
 ) -> ModeloReconciliationReport:
-    from ...domain.modelos import WorkUnitCatalogueRepository
+    from ...adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
     from ..workflow import workflow_state_repository
 
     active_bucket_id = workflow_state_repository().load().active_profile_bucket_id()
@@ -513,7 +513,7 @@ def _reconcile_parsed_declaracion(
     actor: str,
     declaracion: InboundDeclaracionObservation,
 ) -> ModeloReconciliationReport:
-    from ...domain.modelos import WorkUnitCatalogueRepository
+    from ...adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
     from ..workflow import workflow_state_repository
 
     active_bucket_id = workflow_state_repository().load().active_profile_bucket_id()

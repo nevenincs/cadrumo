@@ -41,6 +41,7 @@ from datetime import datetime
 from pathlib import Path
 from typing import TYPE_CHECKING
 
+from ...adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ...core import RefundElection
 from ...core.config import Settings
 from ...core.time import now as _utc_now
@@ -61,7 +62,6 @@ from ...domain.modelos import (
     VerificationReport,
     VerificationReportCatalogueRepository,
     VerificationReportCatalogueRepositoryProtocol,
-    WorkUnitCatalogueRepository,
     WorkUnitCatalogueRepositoryProtocol,
 )
 from ..calculations import CalculationObservationRepository, CrossPeriodExpectedMemberSet

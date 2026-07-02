@@ -28,6 +28,7 @@ from typing import Annotated, Literal
 
 from pydantic import BaseModel, Field, StringConstraints, field_validator
 
+from ...adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ...core import STRICT_FROZEN_CONFIG, Period, resolve_active_bucket_id
 from ...domain.modelos import (
     CalculationRevision,
@@ -39,7 +40,6 @@ from ...domain.modelos import (
     ModeloError,
     ModeloValidationError,
     WorkUnit,
-    WorkUnitCatalogueRepository,
     WorkUnitCatalogueRepositoryProtocol,
     WorkUnitId,
     WorkUnitState,

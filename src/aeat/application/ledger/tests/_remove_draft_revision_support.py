@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from datetime import datetime
 
+from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ....core import Period
 from ....domain.calculations.registry import CasillaId, validated_casilla_id
 from ....domain.modelos import (
@@ -14,7 +15,6 @@ from ....domain.modelos import (
     ModeloCode,
     WorkUnit,
     WorkUnitCatalogue,
-    WorkUnitCatalogueRepository,
     derive_calculation_revision_id,
     derive_work_unit_id,
 )

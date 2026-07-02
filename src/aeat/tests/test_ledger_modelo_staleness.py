@@ -19,6 +19,7 @@ from pathlib import Path
 
 import pytest
 
+from ..adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ..adapters.persistence.storage.sql import SecureObjectRepository
 from ..application.aggregation import (
     compute_ledger_filing_snapshot,
@@ -36,7 +37,6 @@ from ..domain.modelos import (
     ModeloCode,
     WorkUnit,
     WorkUnitCatalogue,
-    WorkUnitCatalogueRepository,
     derive_calculation_revision_id,
     derive_work_unit_id,
 )

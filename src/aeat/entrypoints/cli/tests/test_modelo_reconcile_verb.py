@@ -13,13 +13,13 @@ from pathlib import Path
 
 import pytest
 
+from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ....application.user_profile import profile_create_storage_span, register_minimal_profile
 from ....application.workflow import workflow_state_repository
 from ....core import Period
 from ....domain.modelos import (
     ModeloCode,
     WorkUnit,
-    WorkUnitCatalogueRepository,
     derive_work_unit_id,
     upsert_work_unit,
 )
