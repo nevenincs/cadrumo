@@ -25,16 +25,14 @@ from pathlib import Path
 import typer
 
 from ...application import overview as _overview_application
-from ...application.overview._calendar import (
+from ...application.overview import (
+    OverviewCalendar,
+    OverviewCalendarEvent,
+    OverviewCalendarRange,
     build_overview_calendar,
     build_overview_calendar_events,
     calendar_events_from_modelo_records,
     calendar_filing_evidence_from_sources,
-)
-from ...application.overview._calendar_models import (
-    OverviewCalendar,
-    OverviewCalendarEvent,
-    OverviewCalendarRange,
 )
 from ...core.external_constants import OutputLanguage
 from ...core.hashing import sha256_hex
@@ -96,10 +94,8 @@ def _local_live_calendar_events(
     :func:`build_overview_calendar_events` builder performs the projection
     without contacting AEAT.
     """
-    from ...application.live._expedientes import ExpedientesService
-    from ...application.live._justificante import JustificanteCaptureSnapshotService
-    from ...application.live._notifications import NotificationsService
-    from ...domain.justificante._repository import JustificanteRepository
+    from ...application.live import ExpedientesService, JustificanteCaptureSnapshotService, NotificationsService
+    from ...domain.justificante import JustificanteRepository
 
     try:
         expedientes = ExpedientesService().list_snapshots(bucket_id=bucket_id)
@@ -144,8 +140,8 @@ def _local_modelo_record_calendar_events(
     filing records and justificante metadata.
     """
     try:
-        from ...domain.justificante._repository import JustificanteRepository
-        from ...domain.modelos._filing_repository import ModeloRecordCatalogueRepository
+        from ...domain.justificante import JustificanteRepository
+        from ...domain.modelos import ModeloRecordCatalogueRepository
 
         filing_records = tuple(ModeloRecordCatalogueRepository(bucket_id=bucket_id).load().values())
         justificantes = tuple(JustificanteRepository().iter_justificantes())
@@ -175,8 +171,8 @@ def _local_modelo_record_calendar_events(
 def _local_modelo_work_units(bucket_id: str):
     """Return active local Modelo work units for overview obligation surfaces."""
     try:
-        from ...application.modelo._work_lifecycle import list_work_units
-        from ...domain.modelos._repository import WorkUnitCatalogueRepository
+        from ...application.modelo import list_work_units
+        from ...domain.modelos import WorkUnitCatalogueRepository
 
         repository = WorkUnitCatalogueRepository(bucket_id=bucket_id)
         return list_work_units(bucket_id=bucket_id, include_discarded=False, repository=repository)
@@ -201,7 +197,10 @@ def _live_censo_verified_profile_keys(record) -> tuple[str, ...]:
     """Return profile paths whose current value was stamped from live censo sync."""
     if record is None:
         return ()
-    from ...application.user_profile._censo_sync import CENSO_DERIVED_SOURCE_TAG, CENSO_SOURCE_TAG
+    from ...application.user_profile import (
+        CENSO_DERIVED_SOURCE_TAG,
+        CENSO_SOURCE_TAG,
+    )
 
     verified_sources = {CENSO_SOURCE_TAG, CENSO_DERIVED_SOURCE_TAG}
     return tuple(
@@ -213,7 +212,10 @@ def _live_censo_verified_profile_keys(record) -> tuple[str, ...]:
 
 def _overview_status_period(period: str, *, year: int | None):
     """Resolve ``overview status --period`` through the registry-token union."""
-    from ...core._period import Period, PeriodError
+    from ...core import (
+        Period,
+        PeriodError,
+    )
 
     token = period.strip()
     if not token:
@@ -239,11 +241,11 @@ def _local_calendar_filing_evidence(
     AEAT submission.
     """
     try:
-        from ...adapters.outbound.aeat.sede._observation_store import FiledDeclaracionObservationStore
-        from ...application.calculations._observations_repository import CalculationObservationRepository
-        from ...application.live._justificante import JustificanteCaptureSnapshotService
-        from ...domain.justificante._repository import JustificanteRepository
-        from ...domain.modelos._filing_repository import ModeloRecordCatalogueRepository
+        from ...adapters.outbound.aeat.sede import FiledDeclaracionObservationStore
+        from ...application.calculations import CalculationObservationRepository
+        from ...application.live import JustificanteCaptureSnapshotService
+        from ...domain.justificante import JustificanteRepository
+        from ...domain.modelos import ModeloRecordCatalogueRepository
 
         filing_records = tuple(ModeloRecordCatalogueRepository(bucket_id=bucket_id).load().values())
         justificantes = tuple(JustificanteRepository().iter_justificantes())
@@ -461,8 +463,8 @@ def overview_status(
     :func:`build_overview_status_report`; the period branch emits only the
     matching draft rows.
     """
-    from ...application.user_profile._projections import record_to_values
-    from ...core._bucket_pointer_io import resolve_active_bucket_id
+    from ...application.user_profile import record_to_values
+    from ...core import resolve_active_bucket_id
 
     current = _state() if resolve_active_bucket_id() is not None else None
     if period is not None:
@@ -607,7 +609,7 @@ def overview_calendar(
     persisted :class:`OverviewCalendarEvent` and filing-evidence rows, and then
     delegates the legal calendar projection to :func:`build_overview_calendar`.
     """
-    from ...application.user_profile._projections import record_to_values
+    from ...application.user_profile import record_to_values
 
     activate_subcommand_output_language(ctx, output_language)
 
@@ -732,10 +734,13 @@ def _overview_calendar_all_profiles(
     registered for ``overview.calendar``.
     """
     from ...adapters.persistence.storage.bucket import BucketLifecycleStatus
-    from ...application.user_profile._orchestration import profile_storage_session
-    from ...application.user_profile._profile_repository import ProfileRepository
-    from ...application.user_profile._projections import projection_for_taxpayer, record_to_values
-    from ...application.workflow._profile_bucket_scan import list_profile_buckets
+    from ...application.user_profile import (
+        ProfileRepository,
+        profile_storage_session,
+        projection_for_taxpayer,
+        record_to_values,
+    )
+    from ...application.workflow import list_profile_buckets
 
     today = _date.today()
     buckets = list_profile_buckets()
@@ -892,8 +897,8 @@ def overview_agenda(
     and only adapts the application DTO to the CLI envelope and tabular text
     lines.
     """
-    from ...application.overview._agenda import build_overview_agenda
-    from ...application.user_profile._projections import record_to_values
+    from ...application.overview import build_overview_agenda
+    from ...application.user_profile import record_to_values
 
     current = _state()
     as_of_date = _parse_iso_date(as_of, label="--date") if as_of else _date.today()
@@ -995,8 +1000,8 @@ def overview_backlog(
     :func:`build_overview_backlog`; it does not resume or mutate modelo
     workflows.
     """
-    from ...application.overview._backlog import build_overview_backlog
-    from ...application.user_profile._projections import record_to_values
+    from ...application.overview import build_overview_backlog
+    from ...application.user_profile import record_to_values
 
     current = _state()
     parsed_from = _parse_iso_date(from_date, label="--from") if from_date else None
@@ -1079,8 +1084,7 @@ def overview_explain(
     The explanation comes from :func:`build_overview_explain`; this adapter only
     maps application errors to CLI validation and renders the typed envelope.
     """
-    from ...application.overview._errors import OverviewExplainError
-    from ...application.overview._explain import build_overview_explain
+    from ...application.overview import OverviewExplainError, build_overview_explain
 
     current = _state()
     try:

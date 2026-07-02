@@ -35,7 +35,7 @@ from ...domain.calculations.registry import (
     RevisionId,
     SourceRefId,
 )
-from ...domain.modelos._ids import (
+from ...domain.modelos import (
     CalculationRevisionId,
     FilingRecordId,
     VerificationReportId,

@@ -40,13 +40,13 @@ from ...application.ledger import (
 from ...core import resolve_active_bucket_id
 from ...core.i18n import tr
 from ...core.json_contract import Notice, NoticeSeverity
-from ...domain.iva._schema import IvaCategory
+from ...domain.iva import IvaCategory
 from ...domain.transactions import (
     BusinessClassification,
     LLMClassifierError,
+    TransactionCatalogueRepositoryProtocol,
     TransactionValidationError,
 )
-from ...domain.transactions._protocols import TransactionCatalogueRepositoryProtocol
 from ._common import _bad, _emit_envelope, _state, _tx_repo
 from ._ledger_support import _ledger_validation_bad, _parse_decimal, _resolve_id
 

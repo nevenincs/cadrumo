@@ -70,7 +70,7 @@ def _register_set(capabilities_app: typer.Typer) -> None:
     ) -> None:
         """Opt the active profile in or out of one service capability."""
         from ....application.user_profile import set_active_fields
-        from ....application.workflow._persistence import workflow_state_repository
+        from ....application.workflow import workflow_state_repository
         from ....domain.user_profile import UserProfileFact
 
         profile_id = resolve_active_bucket_id()

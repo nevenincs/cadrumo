@@ -12,10 +12,14 @@ from __future__ import annotations
 
 from collections.abc import Sequence
 
-from ...application.overview._calendar import actionable_post_filing_events
-from ...application.overview._calendar_models import OverviewCalendarEvent, OverviewStatusReport
-from ...application.overview._coverage import CoverageAdviceReason, ObligationCoverageReport
-from ...core._modelo import Modelo
+from ...application.overview import (
+    CoverageAdviceReason,
+    ObligationCoverageReport,
+    OverviewCalendarEvent,
+    OverviewStatusReport,
+    actionable_post_filing_events,
+)
+from ...core import Modelo
 from ...core.i18n import tr
 from ...core.json_contract import Notice, NoticeSeverity
 

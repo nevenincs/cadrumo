@@ -35,8 +35,7 @@ from ...application.modelo import (
 from ...core import Period, PeriodError
 from ...core.i18n import tr
 from ...domain.calculations.registry import CasillaId, validated_casilla_id
-from ...domain.modelos import ModeloCode
-from ...domain.modelos._errors import ModeloValidationError
+from ...domain.modelos import ModeloCode, ModeloValidationError
 from ._common import _emit_envelope, _profile_to_taxpayer
 from ._modelo_payloads import (
     FilingRecordImportResult,

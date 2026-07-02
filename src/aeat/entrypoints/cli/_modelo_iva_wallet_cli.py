@@ -20,7 +20,7 @@ from ...application.modelo import (
 )
 from ...core import Period
 from ...core.i18n import tr
-from ...domain.iva_compensation._errors import IvaCompensationSeedConflictError
+from ...domain.iva_compensation import IvaCompensationSeedConflictError
 from ._common import _emit_envelope
 from ._modelo_payloads import IvaWalletBalanceResult, IvaWalletOverrideResult, IvaWalletSeedResult
 from ._modelo_payloads_m036 import IvaWalletCorrectResult
