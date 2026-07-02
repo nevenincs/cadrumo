@@ -12,11 +12,15 @@ from __future__ import annotations
 from pydantic import BaseModel
 
 from ...core import STRICT_FROZEN_CONFIG, resolve_active_bucket_id
-from ...domain.deadlines._models import TaxpayerProfile
-from ..user_profile._completeness import iva_regime_required
-from ..user_profile._keys_validation import list_profile_key_records, validate_profile_values
-from ..user_profile._projections import projection_for_taxpayer, record_to_path_values
-from ..workflow._models import WorkflowState
+from ...domain.deadlines import TaxpayerProfile
+from ..user_profile import (
+    iva_regime_required,
+    list_profile_key_records,
+    projection_for_taxpayer,
+    record_to_path_values,
+    validate_profile_values,
+)
+from ..workflow import WorkflowState
 from . import _compiler as _compiler  # side-effect: registers PROFILE_KEYS before _keys_validation
 from ._errors import WizardError
 

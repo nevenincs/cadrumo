@@ -24,11 +24,16 @@ from pydantic import BaseModel, Field, field_validator
 
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.i18n import Translatable as tr
-from ...core.time._utc import validate_utc_aware
+from ...core.time import validate_utc_aware
 from ...domain.contribuyente import normalise_key
 from ...domain.invoices import Invoice
 from ...domain.transactions import Transaction
 from ..filing import ModeloValidationFinding
+
+# CYCLE-BREAK-RATIONALE-WORKFLOW-REVIEW: see the matching rationale in
+# ``_actions.py`` -- ``application.workflow`` imports ``application.review``
+# from inside its own ``_models`` module, so the facade import here would
+# re-enter the partially-initialised workflow package.
 from ..workflow._models import WorkflowEvent
 from ..workflow._utils import utc_now
 from ._enums import ReviewItemKind, ReviewSeverity

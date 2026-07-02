@@ -314,8 +314,11 @@ def load_default_filing_profile(
         ModeloBuilderError: When no profile is active in the workflow
             state.
     """
-    from ..wizard._status import WizardStatusError, load_active_taxpayer_profile
-    from ..workflow._persistence import workflow_state_repository
+    from ..wizard import (
+        WizardStatusError,
+        load_active_taxpayer_profile,
+    )
+    from ..workflow import workflow_state_repository
 
     state = workflow_state_repository().load()
     try:

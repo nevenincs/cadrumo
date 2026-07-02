@@ -93,7 +93,7 @@ def _ccaa_choice_values() -> list[str]:
     localised redirect rather than a generic "not one of" error, but they
     are refused by the wizard persistence layer via ``ForalRegimeError``.
     """
-    from ...domain.contribuyente._ccaa import CCAA
+    from ...domain.contribuyente import CCAA
 
     common = [member.value for member in CCAA]
     foral = ["pais_vasco", "navarra"]
@@ -105,7 +105,7 @@ _CCAA_CHOICE_VALUES: list[str] = _ccaa_choice_values()
 
 def _fiscal_residency_choice_values() -> list[str]:
     """Return the FiscalResidency choice tokens accepted by ``--fiscal-residency``."""
-    from ...domain.deadlines._models import FiscalResidency
+    from ...domain.deadlines import FiscalResidency
 
     return [member.value for member in FiscalResidency]
 
@@ -123,7 +123,7 @@ def _taxpayer_type_choice_values() -> tuple[list[str], list[str], list[str], lis
     flag choices never drift from the values the wizard catalogue and
     the profile schema validate against.
     """
-    from ...domain.deadlines._models import (
+    from ...domain.deadlines import (
         EntityType,
         IrpfEstimationRegime,
         IrpfIncomeCategory,
@@ -155,7 +155,7 @@ def _irpf_personal_choice_values() -> tuple[list[str], list[str]]:
     the wizard catalogue and the profile schema validate against.
     """
     from ...domain.contribuyente import SituacionFamiliar
-    from ...domain.deadlines._models import IrpfSpecialRegime
+    from ...domain.deadlines import IrpfSpecialRegime
 
     return (
         [member.value for member in IrpfSpecialRegime],
@@ -734,7 +734,7 @@ def _run_patch_edit(flow: WizardFlow, explicit_flags: dict[str, str], *, profile
     ``SetupAnswers`` model construction, no descriptor-default seeding.
     """
     from ..user_profile import profile_storage_session, read_active_profile, record_to_path_values
-    from ..workflow._persistence import workflow_state_repository
+    from ..workflow import workflow_state_repository
     from ._persistence import persist_patch, profile_values_from_patch, project_answers
 
     patched_values = profile_values_from_patch(flow, explicit_flags)
@@ -792,7 +792,7 @@ def _run_full_flow(
         read_active_profile,
         record_to_path_values,
     )
-    from ..workflow._persistence import workflow_state_repository
+    from ..workflow import workflow_state_repository
     from ._persistence import persist_answers, project_answers, serialise_answers
 
     if accept_defaults:
@@ -929,7 +929,7 @@ def _resolve_profile_id_for_mode(flow: WizardFlow, mode: WizardPersistMode, prof
     """Resolve or mint the immutable profile id for the requested wizard mode."""
     from ...domain.user_profile import new_profile_id
     from ..user_profile import refuse_duplicate_label, require_registered_label
-    from ..workflow._profile_bucket_scan import read_profile_bucket
+    from ..workflow import read_profile_bucket
 
     if mode == "create":
         refuse_duplicate_label(profile_name)
@@ -1107,7 +1107,7 @@ def _ccaa_was_defaulted(
     path prompts for the value and is likewise excluded, as is ``edit``
     (whose CCAA already exists on the profile).
     """
-    from ...domain.contribuyente._ccaa import CCAA
+    from ...domain.contribuyente import CCAA
 
     return (
         mode == "create"
@@ -1143,7 +1143,7 @@ def _emit_wizard_success(
     from ...core.click_context import json_output_requested
     from ...core.json_contract import Notice, NoticeSeverity, emit_json_success
     from ...core.output_rendering import render_command_output
-    from ...domain.contribuyente._ccaa import CCAA
+    from ...domain.contribuyente import CCAA
 
     verb = tr("wizard.commands.status.created" if mode == "create" else "wizard.commands.status.updated")
     notices: list[Notice] = [

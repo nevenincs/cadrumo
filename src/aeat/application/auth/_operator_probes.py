@@ -37,8 +37,8 @@ def _live_auth_identity_state(
     if provider_kind is not AuthProviderKind.CLAVE_MOVIL:
         return False, provider_kind is AuthProviderKind.CERTIFICATE, "not_applicable"
     try:
-        from ..user_profile._projections import record_to_path_values
-        from ..workflow._persistence import workflow_state_repository
+        from ..user_profile import record_to_path_values
+        from ..workflow import workflow_state_repository
 
         record = workflow_state_repository().load().active_profile_record()
         values = record_to_path_values(record) if record is not None else {}

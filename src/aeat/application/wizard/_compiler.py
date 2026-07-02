@@ -15,7 +15,10 @@ from __future__ import annotations
 from collections.abc import Iterator, Sequence
 
 from ...core.i18n import Translatable as tr
-from ...domain.contribuyente._keys import ProfileKey, ProfileKeyRequirement
+from ...domain.contribuyente import (
+    ProfileKey,
+    ProfileKeyRequirement,
+)
 from ._errors import WizardCompileError
 from ._models import WizardCondition, WizardFlow, WizardQuestion, WizardVisibility
 
@@ -122,7 +125,7 @@ def _register_compiled_keys() -> None:
     compiled tuple so the domain layer never needs to import application
     modules to populate its registry.
     """
-    from ...domain.contribuyente._keys import register_profile_keys
+    from ...domain.contribuyente import register_profile_keys
     from . import _catalogue  # local import to avoid circular dependency at module level
 
     register_profile_keys(compile_profile_keys(_catalogue.WIZARD_FLOWS))
