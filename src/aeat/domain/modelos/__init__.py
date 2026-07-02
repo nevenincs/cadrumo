@@ -85,7 +85,12 @@ from ._dt12_reduccion import (
     compute_dt12_reduccion_plan_pensiones,
     dt12_regime_window_eligibility,
 )
-from ._errors import ModeloError, ModeloExportError, ModeloValidationError
+from ._errors import (
+    ModeloError,
+    ModeloExportError,
+    ModeloValidationError,
+    raise_catalogue_integrity_error,
+)
 from ._filing_record import (
     ExternalEvidence,
     ExternalEvidenceKind,
@@ -219,6 +224,7 @@ __all__ = (
     "dt12_regime_window_eligibility",
     "m349_nif_number_for_export",
     "materialize_m232_related_party_rows",
+    "raise_catalogue_integrity_error",
     "resolve_modelo_repository_bucket_id",
     "secure_objects_for_modelo_bucket",
     "snapshot_fingerprint",
