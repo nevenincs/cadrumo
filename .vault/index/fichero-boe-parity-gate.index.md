@@ -18,6 +18,7 @@ related:
   - '[[2026-07-01-fichero-boe-parity-gate-P04-S15]]'
   - '[[2026-07-01-fichero-boe-parity-gate-P04-S17]]'
   - '[[2026-07-01-fichero-boe-parity-gate-P04-S18]]'
+  - '[[2026-07-01-fichero-boe-parity-gate-P05-S19]]'
   - '[[2026-07-01-fichero-boe-parity-gate-adr]]'
   - '[[2026-07-01-fichero-boe-parity-gate-plan]]'
   - '[[2026-07-01-fichero-boe-parity-gate-research]]'
@@ -52,6 +53,7 @@ Auto-generated index of all documents tagged with `#fichero-boe-parity-gate`.
 - `2026-07-01-fichero-boe-parity-gate-P04-S15` - Add an offline fichero-BOE parity test asserting required-applicable casillas reach disk across export-capable covered modelos
 - `2026-07-01-fichero-boe-parity-gate-P04-S17` - Add a disposition-suppressed case proving the applicable restriction prevents a false panic on a non-refund draft
 - `2026-07-01-fichero-boe-parity-gate-P04-S18` - Add an anti-tautology drift case mutating a rendered field number or order and asserting the gate panics
+- `2026-07-01-fichero-boe-parity-gate-P05-S19` - Extend the modelo-export-mirrors-official-structure rule source to bind the fichero-BOE transport and mandate full-structure mirror-or-panic, then run vaultspec-core sync
 
 ### plan
 
