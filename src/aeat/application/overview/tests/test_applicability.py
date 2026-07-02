@@ -520,11 +520,19 @@ def test_modelo_390_tracks_modelo_303_verdict() -> None:
 # ---------------------------------------------------------------------
 
 
-def test_modelo_111_applicable_when_taxpayer_pays_salaries() -> None:
-    """Modelo 111 applies when the taxpayer positively declares paying
-    salaries (rendimientos del trabajo) subject to retención."""
+def test_payer_fact_modelos_apply_when_required_fact_is_declared() -> None:
+    """Payer-fact modelos apply when their specific taxpayer fact is positively declared."""
 
-    profile = TaxpayerProfile(
+    m123_legal_refs = (
+        "ley-35-2006:art-25",
+        "ley-35-2006:art-99",
+        "orden-eha-3435-2007:anexo-ii",
+        "orden-hac-56-2024:art-1",
+        "rd-439-2007:art-108",
+        "rd-439-2007:art-90",
+        "ley-35-2006:art-101",
+    )
+    autonomo_pays_salaries = TaxpayerProfile(
         tax_id="A4567890B",
         entity_type=EntityType.NATURAL_PERSON,
         irpf_income_categories=frozenset({IrpfIncomeCategory.ACTIVIDAD_ECONOMICA}),
@@ -532,24 +540,58 @@ def test_modelo_111_applicable_when_taxpayer_pays_salaries() -> None:
         iva_regime=IVARegime.GENERAL,
         has_employees=True,
     )
-    result = derive_modelo_applicability(profile, "111")
-    assert result.verdict is ApplicabilityVerdict.APPLICABLE
-    assert result.applicable is True
-
-
-def test_modelo_111_applicable_when_taxpayer_pays_professionals() -> None:
-    """Modelo 111 applies equally when the taxpayer pays professional
-    fees subject to retención."""
-
-    profile = TaxpayerProfile(
+    autonomo_pays_rent = TaxpayerProfile(
+        tax_id="A4567890B",
+        entity_type=EntityType.NATURAL_PERSON,
+        irpf_income_categories=frozenset({IrpfIncomeCategory.ACTIVIDAD_ECONOMICA}),
+        irpf_estimation_regime=IrpfEstimationRegime.DIRECTA_NORMAL,
+        iva_regime=IVARegime.GENERAL,
+        pays_rent_with_retencion=True,
+    )
+    autonomo_above_347_threshold = TaxpayerProfile(
+        tax_id="A4567890B",
+        entity_type=EntityType.NATURAL_PERSON,
+        irpf_income_categories=frozenset({IrpfIncomeCategory.ACTIVIDAD_ECONOMICA}),
+        irpf_estimation_regime=IrpfEstimationRegime.DIRECTA_NORMAL,
+        iva_regime=IVARegime.GENERAL,
+        third_party_transactions_above_347_threshold=True,
+    )
+    legal_entity_pays_professionals = TaxpayerProfile(
         tax_id="B12345674",
         entity_type=EntityType.LEGAL_ENTITY,
         legal_entity_form=LegalEntityForm.SL,
         iva_regime=IVARegime.GENERAL,
         pays_professionals_with_retencion=True,
     )
-    result = derive_modelo_applicability(profile, "111")
-    assert result.verdict is ApplicabilityVerdict.APPLICABLE
+    legal_entity_pays_capital_income = TaxpayerProfile(
+        tax_id="B12345674",
+        entity_type=EntityType.LEGAL_ENTITY,
+        legal_entity_form=LegalEntityForm.SL,
+        iva_regime=IVARegime.GENERAL,
+        pays_capital_income_with_retencion=True,
+    )
+    legal_entity_intracommunity = TaxpayerProfile(
+        tax_id="B12345674",
+        entity_type=EntityType.LEGAL_ENTITY,
+        legal_entity_form=LegalEntityForm.SL,
+        iva_regime=IVARegime.GENERAL,
+        does_intracomunitario=True,
+    )
+    cases = (
+        ("m111-salaries", autonomo_pays_salaries, "111", None),
+        ("m111-professionals", legal_entity_pays_professionals, "111", None),
+        ("m115-rent", autonomo_pays_rent, "115", None),
+        ("m123-capital-income", legal_entity_pays_capital_income, "123", m123_legal_refs),
+        ("m349-intracommunity", legal_entity_intracommunity, "349", None),
+        ("m347-third-party-threshold", autonomo_above_347_threshold, "347", None),
+    )
+
+    for case_id, profile, modelo, expected_legal_refs in cases:
+        result = derive_modelo_applicability(profile, modelo)
+        assert result.verdict is ApplicabilityVerdict.APPLICABLE, case_id
+        assert result.applicable is True, case_id
+        if expected_legal_refs is not None:
+            assert result.legal_refs == expected_legal_refs, case_id
 
 
 def test_modelo_111_incomplete_when_payer_fact_not_declared() -> None:
@@ -584,45 +626,6 @@ def test_modelo_190_tracks_modelo_111_payer_fact() -> None:
     assert derive_modelo_applicability(_attribution_entity(), "190").verdict is (ApplicabilityVerdict.INCOMPLETE)
 
 
-def test_modelo_115_applicable_when_taxpayer_pays_rent() -> None:
-    """Modelo 115 applies when the taxpayer positively declares paying
-    rent (arrendamiento urbano) subject to retención."""
-
-    profile = TaxpayerProfile(
-        tax_id="A4567890B",
-        entity_type=EntityType.NATURAL_PERSON,
-        irpf_income_categories=frozenset({IrpfIncomeCategory.ACTIVIDAD_ECONOMICA}),
-        irpf_estimation_regime=IrpfEstimationRegime.DIRECTA_NORMAL,
-        iva_regime=IVARegime.GENERAL,
-        pays_rent_with_retencion=True,
-    )
-    result = derive_modelo_applicability(profile, "115")
-    assert result.verdict is ApplicabilityVerdict.APPLICABLE
-
-
-def test_modelo_123_applicable_when_taxpayer_pays_capital_income_with_retencion() -> None:
-    profile = TaxpayerProfile(
-        tax_id="B12345674",
-        entity_type=EntityType.LEGAL_ENTITY,
-        legal_entity_form=LegalEntityForm.SL,
-        iva_regime=IVARegime.GENERAL,
-        pays_capital_income_with_retencion=True,
-    )
-
-    result = derive_modelo_applicability(profile, "123")
-
-    assert result.verdict is ApplicabilityVerdict.APPLICABLE
-    assert result.legal_refs == (
-        "ley-35-2006:art-25",
-        "ley-35-2006:art-99",
-        "orden-eha-3435-2007:anexo-ii",
-        "orden-hac-56-2024:art-1",
-        "rd-439-2007:art-108",
-        "rd-439-2007:art-90",
-        "ley-35-2006:art-101",
-    )
-
-
 @pytest.mark.parametrize(
     "modelo",
     ("115", "123", "349", "347"),
@@ -648,37 +651,6 @@ def test_modelo_180_tracks_modelo_115_payer_fact() -> None:
     )
     assert derive_modelo_applicability(paying, "180").verdict is (ApplicabilityVerdict.APPLICABLE)
     assert derive_modelo_applicability(_sociedad_limitada(), "180").verdict is (ApplicabilityVerdict.INCOMPLETE)
-
-
-def test_modelo_349_applicable_when_taxpayer_trades_intracommunity() -> None:
-    """Modelo 349 applies when the taxpayer declares carrying on
-    operaciones intracomunitarias."""
-
-    profile = TaxpayerProfile(
-        tax_id="B12345674",
-        entity_type=EntityType.LEGAL_ENTITY,
-        legal_entity_form=LegalEntityForm.SL,
-        iva_regime=IVARegime.GENERAL,
-        does_intracomunitario=True,
-    )
-    result = derive_modelo_applicability(profile, "349")
-    assert result.verdict is ApplicabilityVerdict.APPLICABLE
-
-
-def test_modelo_347_applicable_when_third_party_threshold_exceeded() -> None:
-    """Modelo 347 applies when the taxpayer declares exceeding the
-    third-party transaction threshold."""
-
-    profile = TaxpayerProfile(
-        tax_id="A4567890B",
-        entity_type=EntityType.NATURAL_PERSON,
-        irpf_income_categories=frozenset({IrpfIncomeCategory.ACTIVIDAD_ECONOMICA}),
-        irpf_estimation_regime=IrpfEstimationRegime.DIRECTA_NORMAL,
-        iva_regime=IVARegime.GENERAL,
-        third_party_transactions_above_347_threshold=True,
-    )
-    result = derive_modelo_applicability(profile, "347")
-    assert result.verdict is ApplicabilityVerdict.APPLICABLE
 
 
 @pytest.mark.parametrize(
