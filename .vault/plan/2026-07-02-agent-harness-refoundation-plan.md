@@ -9,15 +9,6 @@ related:
   - '[[2026-07-02-agent-harness-refoundation-adr]]'
 ---
 
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the
-       related: field above.
-     - The related: field carries the AUTHORISING documents
-       (ADR, research, reference, prior plan) for every Step in
-       this plan. Steps inherit this chain; per-row reference
-       footers do not exist.
-     - NEVER use [[wiki-links]] or markdown links in the
-       document body. -->
 
 # `agent-harness-refoundation` plan
 
@@ -191,10 +182,10 @@ Add the runtime query embedder behind the capability-gated extra, brute-force nu
 
 - [x] `W06.P13.S80` - Add the runtime query embedder with model2vec potion-multilingual-128M behind the capability-gated extra with a pinned revision, app-controlled cache dir, and install hint; `src/aeat/application/corpus_search/_query_embed.py`.
 - [x] `W06.P13.S88` - Add brute-force numpy cosine vector search with RRF k=60 fusion in plain Python and a lexical-only FTS5-plus-citation degraded mode; `src/aeat/application/corpus_search/_retrieval.py`.
-- [ ] `W06.P13.S81` - Expose the corpus search MCP tool; `src/aeat/entrypoints/mcp/_corpus_tools.py`.
-- [ ] `W06.P13.S82` - Add aeat corpus ref resources resolving citations to verbatim authoritative text; `src/aeat/entrypoints/mcp/_resources.py`.
-- [ ] `W06.P13.S83` - Expose the terminology handbook search tool; `src/aeat/entrypoints/mcp/_terminology_tools.py`.
-- [ ] `W06.P13.S84` - Add retrieval, RRF fusion, and lexical-only degraded-mode tests; `src/aeat/application/corpus_search/tests/test_retrieval.py`.
+- [x] `W06.P13.S81` - Expose the corpus search MCP tool; `src/aeat/entrypoints/mcp/_corpus_tools.py`.
+- [x] `W06.P13.S82` - Add aeat corpus ref resources resolving citations to verbatim authoritative text; `src/aeat/entrypoints/mcp/_resources.py`.
+- [x] `W06.P13.S83` - Expose the terminology handbook search tool; `src/aeat/entrypoints/mcp/_terminology_tools.py`.
+- [x] `W06.P13.S84` - Add retrieval, RRF fusion, and lexical-only degraded-mode tests; `src/aeat/application/corpus_search/tests/test_retrieval.py`.
 
 ### Phase `W06.P14` - Packaging, search extra, and attribution
 
