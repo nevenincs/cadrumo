@@ -890,7 +890,10 @@ application:
         %{period}; completa abans aquestes dades de perfil: %{missing}.'
       profile_readiness_profile_missing: No existeix cap perfil actiu persistit per
         a aquest treball de model; crea o repara el perfil abans de continuar.
-      reconcile_declaration_unsupported: 'La reconciliació per casella des de PDF de declaració encara no està habilitada per a aquest model; reconcilia un justificant descarregat amb aeat app modelo reconcile file, o espera que aquest model estigui habilitat.'
+      reconcile_declaration_unsupported: La reconciliació per casella des de PDF de
+        declaració encara no està habilitada per a aquest model; reconcilia un justificant
+        descarregat amb aeat app modelo reconcile file, o espera que aquest model
+        estigui habilitat.
       reconcile_no_active_bucket: No hi ha cap perfil actiu; executa `aeat config
         profile create NAME` abans de reconciliar una unitat de treball.
       refund_election_not_eligible: S'ha triat tornar per al Model %{modelo} %{filing_year}
@@ -1928,14 +1931,19 @@ cli:
           quines caselles cal emplenar manualment, quines són opcionals, quines s''emplenen
           automàticament des del llibre de moviments, i quines provenen del perfil
           actiu.'
-        missing_profile_coefficient: 'El perfil actiu no té establert el(s) següent(s) coeficient(s) necessari(s) per a aquest model: %{missing}.'
+        missing_profile_coefficient: 'El perfil actiu no té establert el(s) següent(s)
+          coeficient(s) necessari(s) per a aquest model: %{missing}.'
         modelo_help: Codi del model tributari (p. ex. 303, 130, 100).
-        no_active_profile: 'No hi ha cap perfil actiu, per la qual cosa no s''ha pogut comprovar si falten coeficients dependents del perfil (p. ex. el percentatge d''ús de l''habitatge per a l''activitat econòmica).'
-        period_help: 'Testimoni de període utilitzat per resoldre la revisió del model: 0A anual, 1T-4T trimestres, 01-12 mesos; per als models censals (036) utilitza alta, modificacio o baixa.'
-        section_ledger: 'derivades_del_llibre_de_moviments'
-        section_optional: 'caselles_opcionals_manuals'
-        section_profile: 'derivades_del_perfil'
-        section_required: 'caselles_obligatories_manuals'
+        no_active_profile: No hi ha cap perfil actiu, per la qual cosa no s'ha pogut
+          comprovar si falten coeficients dependents del perfil (p. ex. el percentatge
+          d'ús de l'habitatge per a l'activitat econòmica).
+        period_help: 'Testimoni de període utilitzat per resoldre la revisió del model:
+          0A anual, 1T-4T trimestres, 01-12 mesos; per als models censals (036) utilitza
+          alta, modificacio o baixa.'
+        section_ledger: derivades_del_llibre_de_moviments
+        section_optional: caselles_opcionals_manuals
+        section_profile: derivades_del_perfil
+        section_required: caselles_obligatories_manuals
       verification_report:
         app_help: Inspeccionar els informes de verificació registrats
         list_help: Llistar els informes de verificació, opcionalment filtrats per
@@ -3401,6 +3409,21 @@ cli:
       year_help: Any de declaració (p. ex. 2024).
     providers:
       help: Llista els proveïdors LLM en subprocés amb CLI disponible al PATH.
+    pull_folder:
+      errors:
+        folder_id_unrecognised: cli.ledger.pull_folder.errors.folder_id_unrecognised
+        folder_refused: cli.ledger.pull_folder.errors.folder_refused
+      folder_help: cli.ledger.pull_folder.folder_help
+      help: cli.ledger.pull_folder.help
+      labels:
+        fetched: cli.ledger.pull_folder.labels.fetched
+        folder_id: cli.ledger.pull_folder.labels.folder_id
+        refused: cli.ledger.pull_folder.labels.refused
+        skipped: cli.ledger.pull_folder.labels.skipped
+        total: cli.ledger.pull_folder.labels.total
+      note_help: cli.ledger.pull_folder.note_help
+      notices:
+        files_refused: cli.ledger.pull_folder.notices.files_refused
     remove:
       actor_help: Nom de l'operador registrat a l'esdeveniment del bucket
       dry_run_help: Informar els efectes sense eliminar el moviment del llibre
@@ -3656,47 +3679,71 @@ cli:
       text_template: '%{message} Ordre suggerida: %{command}'
   overview:
     agenda:
-      allow_incomplete_help: 'Generar l''agenda encara que les dades del perfil siguin incompletes.'
-      date_help: 'Data de referència per a l''agenda (ISO YYYY-MM-DD); per defecte, avui.'
+      allow_incomplete_help: Generar l'agenda encara que les dades del perfil siguin
+        incompletes.
+      date_help: Data de referència per a l'agenda (ISO YYYY-MM-DD); per defecte,
+        avui.
       errors:
-        invalid_horizon: '--horizon ha de ser un nombre enter positiu (dies).'
-      help: 'Classifica les obligacions properes i vençudes al voltant d''una data de referència. Indica un únic `next_due` més les cohorts due-today / due-soon / overdue. Local; mai contacta amb AEAT.'
-      horizon_help: 'Finestra cap endavant (en dies) que considera la cohort `due_soon`.'
-    app_help: 'Revisar l''estat actual de l''espai de treball fiscal'
+        invalid_horizon: --horizon ha de ser un nombre enter positiu (dies).
+      help: Classifica les obligacions properes i vençudes al voltant d'una data de
+        referència. Indica un únic `next_due` més les cohorts due-today / due-soon
+        / overdue. Local; mai contacta amb AEAT.
+      horizon_help: Finestra cap endavant (en dies) que considera la cohort `due_soon`.
+    app_help: Revisar l'estat actual de l'espai de treball fiscal
     backlog:
-      allow_incomplete_help: 'Generar el backlog encara que les dades del perfil siguin incompletes.'
-      from_help: 'Data d''inici inclusiva (ISO YYYY-MM-DD); per defecte 365 dies abans d''avui.'
-      help: 'Llista les obligacions vençudes que l''operador encara no ha presentat. Ordenades de més antiga a més recent per prioritzar el triatge. Local; mai contacta amb AEAT.'
-      to_help: 'Data de fi inclusiva (ISO YYYY-MM-DD); per defecte, avui.'
+      allow_incomplete_help: Generar el backlog encara que les dades del perfil siguin
+        incompletes.
+      from_help: Data d'inici inclusiva (ISO YYYY-MM-DD); per defecte 365 dies abans
+        d'avui.
+      help: Llista les obligacions vençudes que l'operador encara no ha presentat.
+        Ordenades de més antiga a més recent per prioritzar el triatge. Local; mai
+        contacta amb AEAT.
+      to_help: Data de fi inclusiva (ISO YYYY-MM-DD); per defecte, avui.
     calendar:
-      all_profiles_help: 'Mostra el calendari de tots els perfils registrats en lloc de l''actiu. Cada bloc va precedit d''una línia de capçalera amb el nom del perfil.'
-      allow_incomplete_help: 'Generar el calendari encara que les dades del perfil siguin incompletes.'
-      from_help: 'Data d''inici inclusiva del calendari (ISO YYYY-MM-DD).'
-      help: 'Genera el calendari de terminis per al perfil actiu a la finestra de dates indicada. Aplica festius i desplaçaments de dia hàbil. Local; mai contacta amb AEAT.'
+      all_profiles_help: Mostra el calendari de tots els perfils registrats en lloc
+        de l'actiu. Cada bloc va precedit d'una línia de capçalera amb el nom del
+        perfil.
+      allow_incomplete_help: Generar el calendari encara que les dades del perfil
+        siguin incompletes.
+      from_help: Data d'inici inclusiva del calendari (ISO YYYY-MM-DD).
+      help: Genera el calendari de terminis per al perfil actiu a la finestra de dates
+        indicada. Aplica festius i desplaçaments de dia hàbil. Local; mai contacta
+        amb AEAT.
       shift:
-        business_day: 'Dia hàbil'
-        calendar_unavailable: 'Calendari no disponible'
-        domingo: 'Diumenge'
-        modelo_exception: 'Excepció del model'
-        sabado: 'Dissabte'
-      show_suppressed_help: 'Mostra també les entrades suprimides (no aplicables) al calendari.'
-      to_help: 'Data de fi inclusiva del calendari (ISO YYYY-MM-DD).'
-    calendar_local_filing_evidence_unavailable: 'L''evidencia local de presentacio del calendari no esta disponible; es rebutja el renderitzat sense estat de presentacio AEAT persistit.'
-    calendar_local_live_events_unavailable: 'L''evidencia local d''esdeveniments en viu no esta disponible per a aquesta fila del calendari.'
-    calendar_local_modelo_events_unavailable: 'L''evidencia local d''esdeveniments de modelo no esta disponible per a aquesta fila del calendari.'
-    calendar_refused_incomplete: 'El calendari te comprovacions de perfil sense resoldre: %{keys}. Executeu l ordre de correccio de l avís o useu --allow-incomplete per inspeccionar el calendari provisional.'
+        business_day: Dia hàbil
+        calendar_unavailable: Calendari no disponible
+        domingo: Diumenge
+        modelo_exception: Excepció del model
+        sabado: Dissabte
+      show_suppressed_help: Mostra també les entrades suprimides (no aplicables) al
+        calendari.
+      to_help: Data de fi inclusiva del calendari (ISO YYYY-MM-DD).
+    calendar_local_filing_evidence_unavailable: L'evidencia local de presentacio del
+      calendari no esta disponible; es rebutja el renderitzat sense estat de presentacio
+      AEAT persistit.
+    calendar_local_live_events_unavailable: L'evidencia local d'esdeveniments en viu
+      no esta disponible per a aquesta fila del calendari.
+    calendar_local_modelo_events_unavailable: L'evidencia local d'esdeveniments de
+      modelo no esta disponible per a aquesta fila del calendari.
+    calendar_refused_incomplete: 'El calendari te comprovacions de perfil sense resoldre:
+      %{keys}. Executeu l ordre de correccio de l avís o useu --allow-incomplete per
+      inspeccionar el calendari provisional.'
     coverage:
       investigate: 'No s''han pogut determinar amb certesa %{count} obligacio(ns)
         de presentacio per a aquest perfil i podrien quedar sense declarar: %{modelos}.
         Investigueu cadascuna amb ''aeat app overview explain <modelo>''.'
-    drafts: 'Esborranys'
+    drafts: Esborranys
     explain:
-      help: 'Descompon l''aplicabilitat d''un modelo davant del perfil actiu. Mostra l''indicador binari, el text registral de justificació i les dades del perfil de les quals depèn la decisió. Local; mai contacta amb AEAT.'
-      modelo_help: 'Identificador del modelo AEAT (p. ex. 303, 130, 100).'
-      year_help: 'Exercici fiscal per avaluar l''aplicabilitat; per defecte, l''any actual.'
-    local_work_units_unavailable: 'L''estat local de les unitats de treball de Model del resum no està disponible; no es pot mostrar sense un estat de treball persistit.'
-    period: 'Període'
-    period_help: 'Període de declaració com a testimoni AEAT: 1T-4T (trimestres), 0A (anual), 01-12 (mesos). Combineu-lo amb --year per triar l''any.'
+      help: Descompon l'aplicabilitat d'un modelo davant del perfil actiu. Mostra
+        l'indicador binari, el text registral de justificació i les dades del perfil
+        de les quals depèn la decisió. Local; mai contacta amb AEAT.
+      modelo_help: Identificador del modelo AEAT (p. ex. 303, 130, 100).
+      year_help: Exercici fiscal per avaluar l'aplicabilitat; per defecte, l'any actual.
+    local_work_units_unavailable: L'estat local de les unitats de treball de Model
+      del resum no està disponible; no es pot mostrar sense un estat de treball persistit.
+    period: Període
+    period_help: 'Període de declaració com a testimoni AEAT: 1T-4T (trimestres),
+      0A (anual), 01-12 (mesos). Combineu-lo amb --year per triar l''any.'
     post_filing:
       pending: '%{count} esdeveniment(s) posteriors a la presentació d''AEAT requereixen
         atenció: %{kinds}. Revisa''ls amb ''aeat app live notifications list''.'
@@ -3752,11 +3799,11 @@ cli:
       work_units_present_with_discarded: '%{count} unitat(s) de treball de models
         actives (%{discarded} descartada(es)) en aquest emmagatzematge local; la teva
         feina de models activa esta desada, repren-la amb `aeat app modelo work list`.'
-    status_help: 'Mostrar l''estat del perfil, llibre, factures i declaracions'
+    status_help: Mostrar l'estat del perfil, llibre, factures i declaracions
     taxpayer_model_undeclared: El perfil actiu no declara aquest model fiscal; actualitza
       el perfil o torna a executar amb l'anul·lació de perfil incomplet.
-    verbose_help: 'Mostrar detalls i la següent acció quan existeixi'
-    year_help: 'Any de declaració per a --period (p. ex. 2024).'
+    verbose_help: Mostrar detalls i la següent acció quan existeixi
+    year_help: Any de declaració per a --period (p. ex. 2024).
   registry:
     app_help: Gestió del registre de models fiscals
     audit_oracles_environment_help: Entorn del catàleg de paritat en viu a auditar

@@ -901,7 +901,10 @@ application:
         %{filing_year} %{period}; completa antes estos datos de perfil: %{missing}.'
       profile_readiness_profile_missing: No existe un perfil activo persistido para
         este trabajo de modelo; crea o repara el perfil antes de continuar.
-      reconcile_declaration_unsupported: 'La reconciliación por casilla desde PDF de declaración aún no está habilitada para este modelo; reconcilia un justificante descargado con aeat app modelo reconcile file, o espera a que este modelo se habilite.'
+      reconcile_declaration_unsupported: La reconciliación por casilla desde PDF de
+        declaración aún no está habilitada para este modelo; reconcilia un justificante
+        descargado con aeat app modelo reconcile file, o espera a que este modelo
+        se habilite.
       reconcile_no_active_bucket: No hay un perfil activo; ejecuta `aeat config profile
         create NAME` antes de reconciliar una unidad de trabajo.
       refund_election_not_eligible: Se eligio devolver para el Modelo %{modelo} %{filing_year}
@@ -3443,6 +3446,21 @@ cli:
       year_help: Año de declaración (p. ej. 2024).
     providers:
       help: Lista los proveedores LLM en subproceso con CLI disponible en PATH.
+    pull_folder:
+      errors:
+        folder_id_unrecognised: 'La referencia de carpeta de Drive %{reference} no contiene un id de carpeta reconocible. Indica una URL de carpeta de Drive o su id.'
+        folder_refused: 'No se puede listar la carpeta de Drive %{folder_id}%{scope_hint}: la carpeta debe ser accesible bajo el permiso drive.file (creada por la app o elegida explicitamente por el operador), o concede el permiso de Google requerido y vuelve a intentarlo.'
+      folder_help: 'URL de la carpeta de Drive o su id para obtener en bloque las facturas PDF/imagen.'
+      help: 'Obtiene en bloque cada PDF/imagen de factura en una carpeta de Drive y guarda cada una como evidencia cifrada (sin vincular a ningun movimiento; vincula con ''aeat app ledger attach'' o ''link'').'
+      labels:
+        fetched: 'obtenidos'
+        folder_id: 'id_carpeta'
+        refused: 'rechazados'
+        skipped: 'omitidos_no_documento'
+        total: 'total_documentos'
+      note_help: 'Nota opcional registrada en cada archivo adjunto obtenido.'
+      notices:
+        files_refused: '%{refused_count} archivo(s) de esta carpeta no se pudieron obtener bajo el permiso drive.file; descargalos manualmente y adjuntalos con ''aeat app ledger attach --attachment-id ...''.'
     remove:
       actor_help: Nombre del operador registrado en el evento del bucket
       dry_run_help: Informar los efectos sin eliminar el movimiento del libro
@@ -3700,47 +3718,72 @@ cli:
       text_template: '%{message} Comando sugerido: %{command}'
   overview:
     agenda:
-      allow_incomplete_help: 'Generar la agenda aunque los datos del perfil estén incompletos.'
-      date_help: 'Fecha de referencia para la agenda (ISO YYYY-MM-DD); por defecto, hoy.'
+      allow_incomplete_help: Generar la agenda aunque los datos del perfil estén incompletos.
+      date_help: Fecha de referencia para la agenda (ISO YYYY-MM-DD); por defecto,
+        hoy.
       errors:
-        invalid_horizon: '--horizon debe ser un número entero positivo (días).'
-      help: 'Clasifica las obligaciones próximas y vencidas alrededor de una fecha de referencia. Indica un único `next_due` más cohortes due-today / due-soon / overdue. Local; nunca contacta con AEAT.'
-      horizon_help: 'Ventana hacia adelante (en días) que considera la cohorte `due_soon`.'
-    app_help: 'Revisar el estado actual del espacio de trabajo fiscal'
+        invalid_horizon: --horizon debe ser un número entero positivo (días).
+      help: Clasifica las obligaciones próximas y vencidas alrededor de una fecha
+        de referencia. Indica un único `next_due` más cohortes due-today / due-soon
+        / overdue. Local; nunca contacta con AEAT.
+      horizon_help: Ventana hacia adelante (en días) que considera la cohorte `due_soon`.
+    app_help: Revisar el estado actual del espacio de trabajo fiscal
     backlog:
-      allow_incomplete_help: 'Generar el backlog aunque los datos del perfil estén incompletos.'
-      from_help: 'Fecha de inicio inclusiva (ISO YYYY-MM-DD); por defecto 365 días antes de hoy.'
-      help: 'Lista las obligaciones vencidas que el operador aún no ha presentado. Ordenadas de más antigua a más reciente para priorizar la triaje. Local; nunca contacta con AEAT.'
-      to_help: 'Fecha de fin inclusiva (ISO YYYY-MM-DD); por defecto, hoy.'
+      allow_incomplete_help: Generar el backlog aunque los datos del perfil estén
+        incompletos.
+      from_help: Fecha de inicio inclusiva (ISO YYYY-MM-DD); por defecto 365 días
+        antes de hoy.
+      help: Lista las obligaciones vencidas que el operador aún no ha presentado.
+        Ordenadas de más antigua a más reciente para priorizar la triaje. Local; nunca
+        contacta con AEAT.
+      to_help: Fecha de fin inclusiva (ISO YYYY-MM-DD); por defecto, hoy.
     calendar:
-      all_profiles_help: 'Mostrar el calendario de todos los perfiles registrados en lugar del activo. Cada bloque va precedido de una línea de cabecera con el nombre del perfil.'
-      allow_incomplete_help: 'Generar el calendario aunque los datos del perfil estén incompletos.'
-      from_help: 'Fecha de inicio inclusiva del calendario (ISO YYYY-MM-DD).'
-      help: 'Genera el calendario de plazos para el perfil activo en la ventana de fechas indicada. Aplica festivos y desplazamientos de día hábil. Local; nunca contacta con AEAT.'
+      all_profiles_help: Mostrar el calendario de todos los perfiles registrados en
+        lugar del activo. Cada bloque va precedido de una línea de cabecera con el
+        nombre del perfil.
+      allow_incomplete_help: Generar el calendario aunque los datos del perfil estén
+        incompletos.
+      from_help: Fecha de inicio inclusiva del calendario (ISO YYYY-MM-DD).
+      help: Genera el calendario de plazos para el perfil activo en la ventana de
+        fechas indicada. Aplica festivos y desplazamientos de día hábil. Local; nunca
+        contacta con AEAT.
       shift:
-        business_day: 'Día hábil'
-        calendar_unavailable: 'Calendario no disponible'
-        domingo: 'Domingo'
-        modelo_exception: 'Excepción del modelo'
-        sabado: 'Sábado'
-      show_suppressed_help: 'Mostrar también las entradas suprimidas (no aplicables) en el calendario.'
-      to_help: 'Fecha de fin inclusiva del calendario (ISO YYYY-MM-DD).'
-    calendar_local_filing_evidence_unavailable: 'La evidencia local de presentacion del calendario no esta disponible; se rechaza el renderizado sin estado de presentacion AEAT persistido.'
-    calendar_local_live_events_unavailable: 'La evidencia local de eventos en vivo no esta disponible para esta fila del calendario.'
-    calendar_local_modelo_events_unavailable: 'La evidencia local de eventos de modelo no esta disponible para esta fila del calendario.'
-    calendar_refused_incomplete: 'El calendario tiene comprobaciones de perfil sin resolver: %{keys}. Ejecuta el comando de correccion del aviso o usa --allow-incomplete para inspeccionar el calendario provisional.'
+        business_day: Día hábil
+        calendar_unavailable: Calendario no disponible
+        domingo: Domingo
+        modelo_exception: Excepción del modelo
+        sabado: Sábado
+      show_suppressed_help: Mostrar también las entradas suprimidas (no aplicables)
+        en el calendario.
+      to_help: Fecha de fin inclusiva del calendario (ISO YYYY-MM-DD).
+    calendar_local_filing_evidence_unavailable: La evidencia local de presentacion
+      del calendario no esta disponible; se rechaza el renderizado sin estado de presentacion
+      AEAT persistido.
+    calendar_local_live_events_unavailable: La evidencia local de eventos en vivo
+      no esta disponible para esta fila del calendario.
+    calendar_local_modelo_events_unavailable: La evidencia local de eventos de modelo
+      no esta disponible para esta fila del calendario.
+    calendar_refused_incomplete: 'El calendario tiene comprobaciones de perfil sin
+      resolver: %{keys}. Ejecuta el comando de correccion del aviso o usa --allow-incomplete
+      para inspeccionar el calendario provisional.'
     coverage:
       investigate: 'No se han podido determinar con certeza %{count} obligacion(es)
         de presentacion para este perfil y podrian quedar sin declarar: %{modelos}.
         Investigue cada una con ''aeat app overview explain <modelo>''.'
-    drafts: 'Borradores'
+    drafts: Borradores
     explain:
-      help: 'Descompone la aplicabilidad de un modelo frente al perfil activo. Muestra el indicador binario, el texto registral de justificación y los datos del perfil de los que depende la decisión. Local; nunca contacta con AEAT.'
-      modelo_help: 'Identificador del modelo AEAT (p. ej. 303, 130, 100).'
-      year_help: 'Ejercicio fiscal para evaluar la aplicabilidad; por defecto, el año actual.'
-    local_work_units_unavailable: 'El estado local de las unidades de trabajo de Modelo del resumen no está disponible; no se puede mostrar sin un estado de trabajo persistido.'
-    period: 'Periodo'
-    period_help: 'Periodo de declaración como token AEAT: 1T-4T (trimestres), 0A (anual), 01-12 (meses). Combínelo con --year para elegir el año.'
+      help: Descompone la aplicabilidad de un modelo frente al perfil activo. Muestra
+        el indicador binario, el texto registral de justificación y los datos del
+        perfil de los que depende la decisión. Local; nunca contacta con AEAT.
+      modelo_help: Identificador del modelo AEAT (p. ej. 303, 130, 100).
+      year_help: Ejercicio fiscal para evaluar la aplicabilidad; por defecto, el año
+        actual.
+    local_work_units_unavailable: El estado local de las unidades de trabajo de Modelo
+      del resumen no está disponible; no se puede mostrar sin un estado de trabajo
+      persistido.
+    period: Periodo
+    period_help: 'Periodo de declaración como token AEAT: 1T-4T (trimestres), 0A (anual),
+      01-12 (meses). Combínelo con --year para elegir el año.'
     post_filing:
       pending: '%{count} evento(s) posteriores a la presentación de AEAT requieren
         atención: %{kinds}. Revísalos con ''aeat app live notifications list''.'
@@ -3798,11 +3841,11 @@ cli:
       work_units_present_with_discarded: '%{count} unidad(es) de trabajo de modelos
         activas (%{discarded} descartada(s)) en este almacenamiento local; tu trabajo
         de modelos activo esta guardado, retomalo con `aeat app modelo work list`.'
-    status_help: 'Mostrar el estado del perfil, libro y modelos'
+    status_help: Mostrar el estado del perfil, libro y modelos
     taxpayer_model_undeclared: El perfil activo no declara este modelo fiscal; actualiza
       el perfil o vuelve a ejecutar con la anulación de perfil incompleto.
-    verbose_help: 'Mostrar detalles y siguiente acción cuando existan'
-    year_help: 'Año de declaración para --period (p. ej. 2024).'
+    verbose_help: Mostrar detalles y siguiente acción cuando existan
+    year_help: Año de declaración para --period (p. ej. 2024).
   registry:
     app_help: Gestión del registro de modelos fiscales
     audit_oracles_environment_help: Entorno del catálogo de paridad en vivo a auditar
