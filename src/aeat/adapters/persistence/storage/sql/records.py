@@ -1,11 +1,11 @@
 """Public pydantic v2 record models for the storage layer.
 
 These types are the boundary-crossing surface of
-:mod:`aeat.adapters.persistence.storage`. Callers outside the subpackage
+:mod:`adapters.persistence.storage`. Callers outside the subpackage
 always work with these records — never with the internal SQLAlchemy
-mapper classes from :mod:`aeat.adapters.persistence.storage.sql._orm`.
+mapper classes from :mod:`adapters.persistence.storage.sql._orm`.
 
-Every record consumes the canonical :data:`~aeat.core.STRICT_FROZEN_CONFIG`
+Every record consumes the canonical :data:`~core.STRICT_FROZEN_CONFIG`
 (``strict=True``, ``frozen=True``, ``extra="forbid"``) per the project pydantic
 mandate, so an unexpected column projected from the ORM boundary is refused
 rather than silently dropped.
@@ -13,7 +13,7 @@ rather than silently dropped.
 Note:
     str string fields (``name``, ``label``) are plain :class:`str`
     today. Once the shared multilingual primitive lands, these fields will be
-    migrated to the :class:`~aeat.core.i18n.Translatable` shape.
+    migrated to the :class:`~core.i18n.Translatable` shape.
 """
 
 from __future__ import annotations
