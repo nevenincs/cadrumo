@@ -240,6 +240,18 @@ packaging-smoke-docker: packaging-smoke-dependencies packaging-smoke-preflight-t
 # Local release-artifact smoke gates that do not need host package-manager access.
 packaging-smoke: packaging-smoke-dependencies packaging-smoke-preflight-tests packaging-smoke-core packaging-smoke-pip-core packaging-smoke-sdist-core packaging-smoke-extras packaging-smoke-browser
 
+# ── Devcontainer ─────────────────────────────────────────────────────────────
+
+# Build the reproducible dev image (.devcontainer/devcontainer.json + Dockerfile).
+devcontainer-build:
+    docker build -t aeat-devcontainer -f Dockerfile .
+
+# Verify the dev image installs cleanly and its pre-baked toolchain works:
+# the editable install imports, the unit suite collects, and Playwright
+# Chromium launches headless with no further provisioning.
+devcontainer-test: devcontainer-build
+    docker run --rm aeat-devcontainer bash -lc "python -c 'import aeat; print(aeat.__file__)' && python -m pytest --collect-only -q -m unit && python -m playwright install --dry-run chromium"
+
 # Verify codebase security posture using semgrep scans.
 [unix]
 check-security:
