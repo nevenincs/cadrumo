@@ -63,9 +63,7 @@ _HARDENED_ERROR_KEYS: frozenset[str] = frozenset(
 _SUPPORTED_LOCALES: tuple[str, ...] = ("en", "es", "ca", "hu")
 
 
-@pytest.mark.parametrize("locale", _SUPPORTED_LOCALES)
-@pytest.mark.parametrize("key", sorted(_HARDENED_ERROR_KEYS))
-def test_hardened_error_key_resolves_in_catalogue(key: str, locale: str) -> None:
+def test_hardened_error_keys_resolve_in_catalogues() -> None:
     """Assert that every hardened-error locale key resolves to a non-trivial string.
 
     A "trivial" resolution is one where the returned value equals the
@@ -73,11 +71,18 @@ def test_hardened_error_key_resolves_in_catalogue(key: str, locale: str) -> None
     If the catalogue has no entry for the key python-i18n returns the key
     unchanged; the assertion below rejects that outcome.
     """
-    resolved = tr(key, locale=locale)
-    assert resolved != key, (
-        f"Locale key {key!r} is not set in the {locale!r} catalogue "
-        f"(got self-referencing placeholder {resolved!r}). "
-        f"Add a real translation via "
-        f"`python -m aeat.locales set {locale} {key!r} <value>`."
-    )
-    assert resolved, f"Locale key {key!r} resolved to an empty string in the {locale!r} catalogue."
+    failures: list[str] = []
+    for key in sorted(_HARDENED_ERROR_KEYS):
+        for locale in _SUPPORTED_LOCALES:
+            resolved = tr(key, locale=locale)
+            if resolved == key:
+                failures.append(
+                    f"Locale key {key!r} is not set in the {locale!r} catalogue "
+                    f"(got self-referencing placeholder {resolved!r}). "
+                    f"Add a real translation via "
+                    f"`python -m aeat.locales set {locale} {key!r} <value>`."
+                )
+            if not resolved:
+                failures.append(f"Locale key {key!r} resolved to an empty string in the {locale!r} catalogue.")
+
+    assert not failures, "\n".join(failures)
