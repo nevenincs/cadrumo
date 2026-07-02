@@ -56,6 +56,7 @@ Submodules
    aeat.application.modelo._projection
    aeat.application.modelo._quickfile
    aeat.application.modelo._reconcile
+   aeat.application.modelo._reconcile_casilla
    aeat.application.modelo._registry_discovery
    aeat.application.modelo._registry_helpers
    aeat.application.modelo._registry_resources
