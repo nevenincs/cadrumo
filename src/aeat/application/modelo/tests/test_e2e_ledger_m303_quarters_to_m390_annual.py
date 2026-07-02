@@ -91,6 +91,7 @@ from .. import (
     persist_filed_revision_observation,
     verify_modelo_revision,
 )
+from ._export_modelo_303_support import _MODELO_303_MANUAL_RESULTADO_CASILLA_ZEROS
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -485,6 +486,10 @@ def _calculate_m303_quarter_revision(
     revision = calculate_modelo_revision_from_bucket_aggregation(
         work_unit.work_unit_id,
         actor="system",
+        # Manual, formula-operand "resultado" casillas (58/68/70/76/77/109/18)
+        # the fichero-BOE completeness manifest requires but the engine never
+        # auto-zero-fills; see ``_MODELO_303_MANUAL_RESULTADO_CASILLA_ZEROS``.
+        casilla_inputs=dict(_MODELO_303_MANUAL_RESULTADO_CASILLA_ZEROS),
         binding_values={
             # No prior-period compensación carry in this scenario (each quarter
             # is net-positive); autoconsumo del promotor is nil for this filer.
