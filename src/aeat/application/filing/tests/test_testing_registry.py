@@ -9,8 +9,11 @@ from pydantic import ValidationError
 
 from ....core import Period
 from ....domain.calculations.registry import CasillaId, validated_casilla_id
-from ....domain.filing._errors import ModeloBuilderError
-from ....domain.filing._schema import ModeloDraft, ModeloValueKind
+from ....domain.filing import (
+    ModeloBuilderError,
+    ModeloDraft,
+    ModeloValueKind,
+)
 from ....domain.submission import ModeloDraftStatus
 from .._testing_registry import build_registry_filing_draft, build_registry_filing_draft_from_decimals
 

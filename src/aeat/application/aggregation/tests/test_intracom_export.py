@@ -29,9 +29,11 @@ import pytest
 
 from ....core import Period
 from ....core.resources import resources
-from ....domain.calculations.registry import BindingId, CasillaId, validated_casilla_id
-from ....domain.calculations.registry._ledger_bindings import (
+from ....domain.calculations.registry import (
+    BindingId,
+    CasillaId,
     resolve_ledger_iva_aggregation_binding_values,
+    validated_casilla_id,
 )
 from ....domain.iva import EUMemberState, IvaCategory
 from ....domain.transactions import (

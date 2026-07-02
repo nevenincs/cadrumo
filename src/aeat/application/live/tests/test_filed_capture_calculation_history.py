@@ -19,7 +19,7 @@ from ....domain.calculations.registry import (
     RegistryModeloObservation,
     RegistryValidationError,
 )
-from ....domain.iva_compensation._carry_forward import IvaCompensationPeriodState
+from ....domain.iva_compensation import IvaCompensationPeriodState
 from ....domain.modelos import (
     ExternalEvidence,
     ExternalEvidenceKind,

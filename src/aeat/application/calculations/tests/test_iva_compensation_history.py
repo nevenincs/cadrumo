@@ -9,13 +9,13 @@ import pytest
 from pydantic import ValidationError
 
 from ....core import Period
-from ....domain.iva_compensation._carry_forward import (
+from ....domain.iva_compensation import (
     IvaCompensationCarryForwardLot,
+    IvaCompensationCarryForwardPolicyError,
     IvaCompensationExpiryReviewState,
     build_iva_compensation_carry_forward_report,
     enforce_iva_compensation_four_year_window,
 )
-from ....domain.iva_compensation._errors import IvaCompensationCarryForwardPolicyError
 from .._iva_wallet_reconciliation import reconcile_iva_compensation_wallet
 from ._iva_compensation_history_support import _TAXPAYER_REF, _state, _wallet
 

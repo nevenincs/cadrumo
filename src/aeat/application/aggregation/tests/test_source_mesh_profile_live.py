@@ -22,7 +22,7 @@ from ....domain.calculations.registry import RegistrySnapshot
 from ....domain.user_profile import UserProfileFact, UserProfileRecord
 from ....tests.secure_sql import isolated_runtime_profile
 from ...calculations import IvaWalletDecisionSourceResolver, reconcile_iva_compensation_wallet
-from ...modelo._profile_binding import resolve_profile_sourced_bindings
+from ...modelo import resolve_profile_sourced_bindings
 from ...user_profile import UserProfileLifecycleRepository
 from .. import CalculationSourceContext, ProfileSourceResolver
 

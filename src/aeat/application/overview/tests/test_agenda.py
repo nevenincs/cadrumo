@@ -7,12 +7,12 @@ from datetime import date
 import pytest
 
 from ....core import Period
-from ....domain.deadlines import TaxpayerProfile
-from ....domain.deadlines._models import (
+from ....domain.deadlines import (
     EntityType,
     IrpfEstimationRegime,
     IrpfIncomeCategory,
     IVARegime,
+    TaxpayerProfile,
 )
 from .._agenda import OverviewAgenda, build_overview_agenda
 from .._errors import OverviewAgendaError

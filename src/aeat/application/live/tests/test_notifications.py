@@ -9,7 +9,7 @@ from pathlib import Path
 import pytest
 from pydantic import AnyHttpUrl
 
-from ....adapters.outbound.aeat.sede._notifications import (
+from ....adapters.outbound.aeat.sede import (
     NotificationsSnapshot,
     RemoteNotification,
 )

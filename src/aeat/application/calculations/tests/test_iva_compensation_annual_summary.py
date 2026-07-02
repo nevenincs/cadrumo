@@ -6,7 +6,7 @@ from decimal import Decimal
 
 import pytest
 
-from ....domain.iva_compensation._carry_forward import (
+from ....domain.iva_compensation import (
     IvaCompensationExpiryReviewState,
     build_iva_compensation_carry_forward_report,
     derive_iva_compensation_year_end_carry_partition,
