@@ -61,6 +61,8 @@ from ._contracts import (
     ExportBucketResult,
     ImportBucketCommand,
     ImportBucketResult,
+    InspectBucketArchiveCommand,
+    InspectBucketArchiveResult,
     RenameBucketCommand,
     RenameBucketResult,
 )
@@ -578,6 +580,34 @@ class BucketMaintenanceService:
             manifest_digest=header.manifest_digest,
             archive_schema_version=header.archive_schema_version,
             occurred_at=occurred_at,
+        )
+
+    def inspect(self, command: InspectBucketArchiveCommand) -> InspectBucketArchiveResult:
+        """Read a sealed bucket archive's header without decrypting or restoring it.
+
+        Composes :func:`read_sealed_archive` (the same reader ``import_`` uses
+        for layout and header validation) with the on-disk file size. No
+        session is opened, no key is required, and no bucket state is
+        written or read — this is a pure inspection of the archive file
+        itself, so an operator can confirm a backup's identity, age, and
+        recovery-wrap presence before deciding whether and how to restore
+        it.
+
+        Returns:
+            An :class:`InspectBucketArchiveResult` describing the archive header.
+        """
+        from ...adapters.persistence.storage.bucket._sealed_archive_reader import read_sealed_archive
+
+        contents = read_sealed_archive(command.source_path)
+        header = contents.header
+        size_bytes = command.source_path.stat().st_size
+        return InspectBucketArchiveResult(
+            bucket_id=header.bucket_id,
+            manifest_digest=header.manifest_digest,
+            recovery_wrap_present=header.recovery_wrap_present,
+            archive_schema_version=header.archive_schema_version,
+            created_at=header.created_at,
+            size_bytes=size_bytes,
         )
 
     def _append_event(

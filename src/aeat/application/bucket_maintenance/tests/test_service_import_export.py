@@ -36,7 +36,7 @@ from ....tests.secure_sql import TestRuntimeProfile, isolated_profile_storage_ro
 from ...user_profile._commands import RegisterProfileCommand
 from ...user_profile._orchestration import profile_storage_session
 from ...workflow._profile_bucket_scan import read_profile_bucket_by_id
-from .._contracts import ExportBucketCommand, ImportBucketCommand
+from .._contracts import ExportBucketCommand, ImportBucketCommand, InspectBucketArchiveCommand
 from .._service import BucketMaintenanceService, _archive_associated_data, _recovery_wrap_bytes
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -449,3 +449,69 @@ def test_import_refuses_live_bucket_collision_without_force(
                 recovery_wrap_passphrase=_recovery_phrase(),
             ),
         )
+
+
+def test_inspect_reads_header_without_decrypting_or_opening_session(
+    runtime: TestRuntimeProfile,
+    registered_profile: None,
+    tmp_path: Path,
+) -> None:
+    """``inspect`` reports the plaintext header + file size for a real archive.
+
+    Composes the same :func:`read_sealed_archive` reader ``import_`` uses,
+    so a real ``export`` followed by ``inspect`` must agree with the
+    ``export`` result on every header field. No decryption key is
+    supplied to :meth:`BucketMaintenanceService.inspect`, proving the
+    method never opens the AEAD payload.
+    """
+    del registered_profile
+    archive_path = tmp_path / "inspect-me.aeat-bucket.tar.gz"
+    exported = BucketMaintenanceService().export(
+        ExportBucketCommand(
+            bucket_id=runtime.bucket_id,
+            output_path=archive_path,
+            recovery_wrap_passphrase=_recovery_phrase(),
+        ),
+    )
+
+    inspected = BucketMaintenanceService().inspect(InspectBucketArchiveCommand(source_path=archive_path))
+
+    assert inspected.bucket_id == exported.bucket_id
+    assert inspected.manifest_digest == exported.manifest_digest
+    assert inspected.recovery_wrap_present == exported.recovery_wrap_present is True
+    assert inspected.archive_schema_version == 2
+    assert inspected.size_bytes == archive_path.stat().st_size
+    assert inspected.size_bytes > 0
+
+
+def test_inspect_same_host_archive_reports_no_recovery_wrap(
+    runtime: TestRuntimeProfile,
+    registered_profile: None,
+    tmp_path: Path,
+) -> None:
+    """A same-host archive (no recovery passphrase) inspects as recovery_wrap_present=False."""
+    del registered_profile
+    archive_path = tmp_path / "same-host.aeat-bucket.tar.gz"
+    BucketMaintenanceService().export(
+        ExportBucketCommand(bucket_id=runtime.bucket_id, output_path=archive_path),
+    )
+
+    inspected = BucketMaintenanceService().inspect(InspectBucketArchiveCommand(source_path=archive_path))
+
+    assert inspected.recovery_wrap_present is False
+
+
+def test_inspect_refuses_malformed_archive(tmp_path: Path) -> None:
+    """``inspect`` refuses a file that is not a valid sealed archive.
+
+    Anti-tautology proof: a garbage file must not silently produce a
+    fabricated header. It must raise, exactly as ``import_`` does when it
+    reads the same malformed archive.
+    """
+    from ....adapters.persistence.storage.bucket._sealed_archive_errors import SealedArchiveLayoutError
+
+    garbage_path = tmp_path / "not-an-archive.tar.gz"
+    garbage_path.write_bytes(b"this is not a gzip tar archive at all")
+
+    with pytest.raises(SealedArchiveLayoutError):
+        BucketMaintenanceService().inspect(InspectBucketArchiveCommand(source_path=garbage_path))
