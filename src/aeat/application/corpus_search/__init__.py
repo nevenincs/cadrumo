@@ -47,13 +47,19 @@ from ._models import (
     CorpusEmbeddingBuildResult,
     CorpusIndexBuildResult,
     LexicalSearchHit,
+    RetrievalHit,
+    RetrievalMode,
+    RetrievalResponse,
     SimilarChunk,
 )
 from ._query_embed import QueryEmbedder, search_extra_available, search_model_cache_dir
+from ._retrieval import PER_SIDE_CAP, RRF_K, hybrid_search
 
 __all__ = [
+    "PER_SIDE_CAP",
     "POTION_MODEL_ID",
     "POTION_MODEL_REVISION",
+    "RRF_K",
     "CitationLookup",
     "CitationResolution",
     "CorpusChunk",
@@ -65,11 +71,15 @@ __all__ = [
     "CorpusSearchInputError",
     "LexicalSearchHit",
     "QueryEmbedder",
+    "RetrievalHit",
+    "RetrievalMode",
+    "RetrievalResponse",
     "SimilarChunk",
     "build_lexical_index",
     "bundled_citation_lookup",
     "bundled_corpus_html_root",
     "embed_corpus",
+    "hybrid_search",
     "iter_corpus_chunks",
     "load_embeddings",
     "more_like_this",
