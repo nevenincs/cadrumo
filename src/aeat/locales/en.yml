@@ -2145,6 +2145,11 @@ cli:
         year_help: Tax year of the work unit (e.g. 2026)
         year_out_of_range: Filing year %{year} is out of range; supply a year between
           %{minimum} and %{maximum}.
+        state_label_borrador: 'draft'
+        state_label_verificado_completo: 'verified complete'
+        state_label_presentado: 'filed'
+        state_label_presentado_supersedido: 'superseded filing'
+        state_label_descartado: 'discarded'
   common:
     errors:
       draft_id_not_found: Draft ID %{draft_id} not found

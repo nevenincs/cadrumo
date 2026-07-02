@@ -2277,6 +2277,11 @@ cli:
         year_help: Exercici fiscal de la unitat de treball (p. ex. 2026)
         year_out_of_range: L'exercici fiscal %{year} està fora de rang; indiqueu un
           any entre %{minimum} i %{maximum}.
+        state_label_borrador: 'Esborrany'
+        state_label_verificado_completo: 'Verificat complet'
+        state_label_presentado: 'Presentat'
+        state_label_presentado_supersedido: 'Presentacio substituida'
+        state_label_descartado: 'Descartat'
   common:
     errors:
       draft_id_not_found: ID d'esborrany %{draft_id} no trobat
