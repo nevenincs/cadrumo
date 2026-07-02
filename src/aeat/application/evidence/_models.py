@@ -188,7 +188,7 @@ def derive_bundle_id(
 
 
 def utcnow() -> datetime:
-    """Return the current UTC timestamp via :func:`aeat.core.time.now`."""
+    """Return the current UTC timestamp via :func:`core.time.now`."""
     return now()
 
 
