@@ -3003,9 +3003,7 @@ cli:
       help: Classificar un moviment del llibre al perfil actiu
       id_help: Id del moviment del llibre a classificar
       id_required: Cal un id de transacció quan no s'usa --from-csv.
-      irpf_category_help: Id de categoria d'IRPF. Usa aeat app ledger categories;
-        les factures professionals cobrades netes usen actividad_economica i els lloguers
-        pagats nets usen arrendamiento_local o arrendamiento_vivienda_afecto.
+      irpf_category_help: 'Id de categoria d''IRPF. Usa aeat app ledger categories. Factures professionals cobrades netes usen actividad_economica; lloguers pagats nets usen arrendamiento_local/arrendamiento_vivienda_afecto. Royalties/SGAE: art. 25.4 pot ser capital mobiliario quan el contribuent no es l''autor; usa actividad_economica nomes per activitat per compte propi sota LIRPF art. 27.'
       iva_amount_help: Import d'IVA
       iva_category_help: Categoria d'IVA explícita per a aquesta transacció (p. ex.
         intra_community_supply, export_third_country_zero_rated, export_assimilated_zero_rated,
