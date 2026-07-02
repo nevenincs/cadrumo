@@ -15,6 +15,7 @@ related:
   - '[[2026-06-26-binding-resolver-contract-unification-P02-S07]]'
   - '[[2026-06-26-binding-resolver-contract-unification-P02-S08]]'
   - '[[2026-06-26-binding-resolver-contract-unification-P02-S09]]'
+  - '[[2026-06-26-binding-resolver-contract-unification-P03-S10]]'
   - '[[2026-06-26-binding-resolver-contract-unification-P04-S15]]'
   - '[[2026-06-26-binding-resolver-contract-unification-P04-S16]]'
   - '[[2026-06-26-binding-resolver-contract-unification-P04-S17]]'
@@ -52,6 +53,7 @@ Auto-generated index of all documents tagged with `#binding-resolver-contract-un
 - `2026-06-26-binding-resolver-contract-unification-P04-S16` - Re-base the merge_source_resolutions enrollment and the DEFERRED_SOURCE_KINDS set onto the one disposition mapping so a member's resolution state is declared once, re-reading HEAD because r2 #28 moves the withholding source from DEFERRED_SOURCE_KINDS to live enrollment on this surface, applying the apply-cached-on-collision drive against the concurrent r2 and codex WIP
 - `2026-06-26-binding-resolver-contract-unification-P04-S17` - Extend the phase-2.1 mesh parity gate to assert the disposition registry covers every BindingSourceKind member and equals the union of enrolled resolver owned_sources, reading the LIVE mesh sets at run time with no hard-coded dispositions so r2's newly-enrolled withholding source is reflected automatically, making no-dormant-source-resolvers enforceable across the union
 - `2026-06-26-binding-resolver-contract-unification-P01-S04` - Drop the deleted envelopes from the aggregation package __all__ and lazy __getattr__ re-export surface in the same commits that delete them
+- `2026-06-26-binding-resolver-contract-unification-P03-S10` - Author a counterpart 347/349 ModeloSourceResolver returning CalculationSourceResolution that delegates to aggregate_counterpart_347/349, behaviour-preserving against the existing counterpart suites
 
 ### plan
 
