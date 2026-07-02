@@ -11,6 +11,16 @@ related:
   - '[[2026-07-02-arch-remediation-ports-inversion-adr]]'
 ---
 
+<!-- LINK RULES:
+     - [[wiki-links]] are ONLY for .vault/ documents in the
+       related: field above.
+     - The related: field carries the AUTHORISING documents
+       (ADR, research, reference, prior plan) for every Step in
+       this plan. Steps inherit this chain; per-row reference
+       footers do not exist.
+     - NEVER use [[wiki-links]] or markdown links in the
+       document body. -->
+
 # `arch-remediation-ports-inversion` plan
 
 ## Wave `W01` - quiet domains
@@ -27,9 +37,9 @@ Relocate the usage_ratios service persistence behind a domain repository port wi
 
 Relocate the submission repository and engine persistence behind ports and move the deferred submission verifier concrete class to adapters behind its existing protocol.
 
-- [ ] `W01.P02.S02` - Relocate the submission repository behind its domain port in one atomic commit, deleting its pinned domain-to-adapters entries; `src/aeat/domain/submission/_repository.py`.
-- [ ] `W01.P02.S03` - Relocate the submission engine persistence behind a port in one atomic commit, deleting its pinned domain-to-adapters errors entry; `src/aeat/domain/submission/_engine.py`.
-- [ ] `W01.P02.S04` - Move the submission verifier concrete class to adapters behind the existing protocol in one atomic commit and delete the deferral comment, discharging register item D3; `src/aeat/domain/submission/_protocols.py`.
+- [x] `W01.P02.S02` - Relocate the submission repository behind its domain port in one atomic commit, deleting its pinned domain-to-adapters entries; `src/aeat/domain/submission/_repository.py`.
+- [x] `W01.P02.S03` - Relocate the submission engine persistence behind a port in one atomic commit, deleting its pinned domain-to-adapters errors entry; `src/aeat/domain/submission/_engine.py`.
+- [x] `W01.P02.S04` - Move the submission verifier concrete class to adapters behind the existing protocol in one atomic commit and delete the deferral comment, discharging register item D3; `src/aeat/domain/submission/_protocols.py`.
 
 ### Phase `W01.P03` - buckets event-repository inversion
 

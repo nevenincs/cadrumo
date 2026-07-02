@@ -7,6 +7,9 @@ date: '2026-07-02'
 modified: '2026-07-02'
 related:
   - '[[2026-07-02-arch-remediation-ports-inversion-W01-P01-S01]]'
+  - '[[2026-07-02-arch-remediation-ports-inversion-W01-P02-S02]]'
+  - '[[2026-07-02-arch-remediation-ports-inversion-W01-P02-S03]]'
+  - '[[2026-07-02-arch-remediation-ports-inversion-W01-P02-S04]]'
   - '[[2026-07-02-arch-remediation-ports-inversion-adr]]'
   - '[[2026-07-02-arch-remediation-ports-inversion-plan]]'
 ---
@@ -24,6 +27,9 @@ Auto-generated index of all documents tagged with `#arch-remediation-ports-inver
 ### exec
 
 - `2026-07-02-arch-remediation-ports-inversion-W01-P01-S01` - Relocate the usage_ratios service persistence in one atomic commit: declare the repository port in domain, move the concrete class under adapters.persistence importing substrate only from the storage package public surface, sweep consumers, update __all__, and delete the usage_ratios pinned domain-to-adapters entries
+- `2026-07-02-arch-remediation-ports-inversion-W01-P02-S02` - Relocate the submission repository behind its domain port in one atomic commit, deleting its pinned domain-to-adapters entries
+- `2026-07-02-arch-remediation-ports-inversion-W01-P02-S03` - Relocate the submission engine persistence behind a port in one atomic commit, deleting its pinned domain-to-adapters errors entry
+- `2026-07-02-arch-remediation-ports-inversion-W01-P02-S04` - Move the submission verifier concrete class to adapters behind the existing protocol in one atomic commit and delete the deferral comment, discharging register item D3
 
 ### plan
 
