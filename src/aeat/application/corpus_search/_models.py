@@ -9,6 +9,7 @@ path, document id, permalink) is contract, not decoration.
 
 from __future__ import annotations
 
+from enum import StrEnum
 from typing import Annotated
 
 from pydantic import BaseModel, Field, StringConstraints
@@ -16,6 +17,20 @@ from pydantic import BaseModel, Field, StringConstraints
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 
 _Text = Annotated[str, StringConstraints(strip_whitespace=True, min_length=1)]
+
+
+class RetrievalMode(StrEnum):
+    """How a retrieval response was produced.
+
+    ``CITATION`` — the query was an exact citation id, short-circuited to the
+    structured lookup; ``HYBRID`` — lexical FTS5 fused with semantic cosine;
+    ``LEXICAL_ONLY`` — the degraded no-model mode (search extra absent or no
+    precomputed vectors supplied).
+    """
+
+    CITATION = "citation"
+    HYBRID = "hybrid"
+    LEXICAL_ONLY = "lexical_only"
 
 
 class CorpusChunk(BaseModel):
@@ -119,6 +134,45 @@ class CorpusEmbeddingBuildResult(BaseModel):
     embedding_model_revision: _Text
 
 
+class RetrievalHit(BaseModel):
+    """One fused hybrid-retrieval result over the corpus.
+
+    ``text`` is the verbatim chunk prose (the snippet source); ``corpus_ref``
+    grounds it in the bundled source (and is the ``aeat://corpus/{ref}`` key
+    that resolves the full verbatim text). ``score`` is the fused RRF score;
+    ``lexical_rank`` / ``semantic_rank`` record the per-side contribution
+    (``None`` when a side did not surface the chunk).
+    """
+
+    model_config = _STRICT_FROZEN
+
+    chunk_id: _Text
+    corpus_ref: _Text
+    doc_title: _Text
+    text: _Text
+    score: float = Field(ge=0.0)
+    rank: int = Field(ge=0)
+    lexical_rank: int | None = None
+    semantic_rank: int | None = None
+
+
+class RetrievalResponse(BaseModel):
+    """The typed result of one corpus retrieval.
+
+    ``mode`` records how the response was produced (citation short-circuit,
+    hybrid, or lexical-only degraded). ``citation`` carries the resolved
+    citation when ``mode`` is ``CITATION``; otherwise ``hits`` carries the
+    ranked results.
+    """
+
+    model_config = _STRICT_FROZEN
+
+    query: _Text
+    mode: RetrievalMode
+    hits: tuple[RetrievalHit, ...] = ()
+    citation: CitationResolution | None = None
+
+
 __all__ = [
     "CitationResolution",
     "CorpusChunk",
@@ -126,5 +180,8 @@ __all__ = [
     "CorpusEmbeddingBuildResult",
     "CorpusIndexBuildResult",
     "LexicalSearchHit",
+    "RetrievalHit",
+    "RetrievalMode",
+    "RetrievalResponse",
     "SimilarChunk",
 ]

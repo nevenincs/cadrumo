@@ -130,7 +130,9 @@ from ._business_operation_invoice import (
     validate_eu_iva_id,
 )
 from ._evidence import (
+    MediaKind,
     PurchaseInvoiceEvidence,
+    PurchaseInvoiceEvidenceDocument,
     PurchaseInvoiceEvidenceInputError,
     PurchaseInvoiceEvidenceNotFoundError,
     PurchaseInvoiceEvidencePatch,
@@ -291,10 +293,12 @@ __all__ = [
     "ManualLedgerTransactionCommand",
     "ManualLedgerTransactionPatch",
     "ManualLedgerTransactionResult",
+    "MediaKind",
     "MergeTransactionsResult",
     "OperatorIvaDerivationResult",
     "PayableInvoiceService",
     "PurchaseInvoiceEvidence",
+    "PurchaseInvoiceEvidenceDocument",
     "PurchaseInvoiceEvidenceInputError",
     "PurchaseInvoiceEvidenceNotFoundError",
     "PurchaseInvoiceEvidencePatch",

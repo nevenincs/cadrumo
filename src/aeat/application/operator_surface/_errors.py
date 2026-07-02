@@ -1,11 +1,11 @@
 """Errors for the backend-owned operator-surface contract.
 
 :class:`OperatorSurfaceContractError` is the registered
-:class:`~aeat.core.errors.AeatError` raised by
-:func:`~aeat.application.operator_surface.require_accepted_root` and
-:func:`~aeat.application.operator_surface.resolve_source_kind_alias` when a
+:class:`~core.errors.AeatError` raised by
+:func:`~application.operator_surface.require_accepted_root` and
+:func:`~application.operator_surface.resolve_source_kind_alias` when a
 caller asks for a root, source-kind token, or command-surface shape outside the
-accepted :class:`~aeat.application.operator_surface.OperatorSurfaceContract`.
+accepted :class:`~application.operator_surface.OperatorSurfaceContract`.
 The application error registry binds it to ``REFUSED_OPERATOR_SURFACE_CONTRACT``
 so boundary adapters can render the refusal through the shared error contract.
 """

@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import ast
-from collections.abc import Mapping
 from pathlib import Path
 
 import pytest
@@ -73,14 +72,6 @@ from .._namespace_registry import (
 from ..errors import NamespaceRegistryError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
-
-
-def test_registry_rejects_duplicate_namespace_values() -> None:
-    first = WORKFLOW_STATE_NAMESPACE
-    duplicate = first.model_copy(update={"key": "workflow_state_duplicate"})
-
-    with pytest.raises(ValidationError, match="duplicate secure-object namespace value"):
-        type(STORAGE_NAMESPACE_REGISTRY)(namespaces=(first, duplicate), paths=())
 
 
 def test_secure_object_registry_names_application_namespaces() -> None:
@@ -428,20 +419,6 @@ def test_registry_path_definitions_name_persisted_hierarchy_segments() -> None:
     assert blob_manifest.schema_version == BLOB_MANIFEST_SCHEMA_VERSION
 
 
-def test_namespace_definition_rejects_pathlike_namespaces() -> None:
-    with pytest.raises(ValidationError, match="namespace must not contain path separators"):
-        SecureObjectNamespaceDefinition(
-            key="bad_namespace",
-            namespace="aeat/bad",
-            owner="aeat-test",
-            sensitivity=SensitivityClass.AUDIT,
-            schema_version=1,
-            object_key_grammar="{id}",
-            scope=StorageNamespaceScope.PROFILE_LOCAL,
-            custody_disposition=StorageCustodyDisposition.STRUCTURED_CUSTODY,
-        )
-
-
 # ---------------------------------------------------------------------------
 # contract: NamespaceRegistryError error-registry and real-behavior invariant tests
 # ---------------------------------------------------------------------------
@@ -474,69 +451,62 @@ def _make_namespace_definition(**overrides: object) -> SecureObjectNamespaceDefi
     return SecureObjectNamespaceDefinition.model_validate(defaults)
 
 
-def _assert_caused_by_namespace_registry_error(error: ValidationError) -> None:
+def _assert_caused_by_namespace_registry_error(error: ValidationError, case_id: str) -> None:
     causes = [entry.get("ctx", {}).get("error") for entry in error.errors()]
-    assert any(isinstance(cause, NamespaceRegistryError) for cause in causes)
+    assert any(isinstance(cause, NamespaceRegistryError) for cause in causes), case_id
 
 
-@pytest.mark.parametrize(
-    "overrides",
-    (
-        {"key": " whitespace_key "},
-        {"key": "path/sep"},
-        {"namespace": "aeat/bad"},
-        {"namespace": " aeat.bad "},
-        {"default_object_key": " bad "},
-        {"default_object_key": "path/sep"},
-    ),
-    ids=(
-        "key-whitespace",
-        "key-path-separator",
-        "namespace-path-separator",
-        "namespace-whitespace",
-        "default-key-whitespace",
-        "default-key-path-separator",
-    ),
-)
-def test_namespace_definition_invariant_violations_raise_namespace_registry_error(
-    overrides: Mapping[str, object],
-) -> None:
-    with pytest.raises(ValidationError) as exc_info:
-        _make_namespace_definition(**overrides)
-
-    _assert_caused_by_namespace_registry_error(exc_info.value)
-
-
-@pytest.mark.parametrize(
-    ("overrides", "expected_message"),
-    (
+def test_namespace_definition_invariant_violations_raise_namespace_registry_error() -> None:
+    cases: tuple[tuple[str, dict[str, object], str], ...] = (
+        ("key-whitespace", {"key": " whitespace_key "}, "registry key must not carry surrounding whitespace"),
+        ("key-path-separator", {"key": "path/sep"}, "registry key must be a storage-safe slug"),
+        ("namespace-path-separator", {"namespace": "aeat/bad"}, "namespace must not contain path separators"),
+        ("namespace-whitespace", {"namespace": " aeat.bad "}, "namespace must not carry surrounding whitespace"),
         (
+            "default-key-whitespace",
+            {"default_object_key": " bad "},
+            "default object key must not carry surrounding whitespace",
+        ),
+        (
+            "default-key-path-separator",
+            {"default_object_key": "path/sep"},
+            "default object key must not contain path separators",
+        ),
+    )
+
+    for case_id, overrides, expected_message in cases:
+        with pytest.raises(ValidationError) as exc_info:
+            _make_namespace_definition(**overrides)
+
+        errors = exc_info.value.errors()
+        _assert_caused_by_namespace_registry_error(exc_info.value, case_id)
+        assert any(expected_message in str(error) for error in errors), case_id
+
+
+def test_namespace_definition_remote_mirror_policy_constraints_are_enforced() -> None:
+    cases: tuple[tuple[str, dict[str, object], str], ...] = (
+        (
+            "ciphertext-requires-revision",
             {"remote_mirror_requires_revision": False},
             "ciphertext remote mirror namespaces require revision and integrity metadata",
         ),
         (
+            "ciphertext-requires-integrity-manifest",
             {"remote_mirror_requires_integrity_manifest": False},
             "ciphertext remote mirror namespaces require revision and integrity metadata",
         ),
         (
+            "test-only-rejects-metadata-requirements",
             {"remote_mirror_policy": StorageRemoteMirrorPolicy.TEST_ONLY},
             "local-only and test-only namespaces must not require remote mirror metadata",
         ),
-    ),
-    ids=(
-        "ciphertext-requires-revision",
-        "ciphertext-requires-integrity-manifest",
-        "test-only-rejects-metadata-requirements",
-    ),
-)
-def test_namespace_definition_remote_mirror_policy_constraints_are_enforced(
-    overrides: Mapping[str, object],
-    expected_message: str,
-) -> None:
-    with pytest.raises(ValidationError) as exc_info:
-        _make_namespace_definition(**overrides)
+    )
 
-    assert any(expected_message in str(error) for error in exc_info.value.errors())
+    for case_id, overrides, expected_message in cases:
+        with pytest.raises(ValidationError) as exc_info:
+            _make_namespace_definition(**overrides)
+
+        assert any(expected_message in str(error) for error in exc_info.value.errors()), case_id
 
 
 def _make_path_definition(**overrides: object) -> StoragePathDefinition:
@@ -550,58 +520,53 @@ def _make_path_definition(**overrides: object) -> StoragePathDefinition:
     return StoragePathDefinition.model_validate(defaults)
 
 
-@pytest.mark.parametrize(
-    "overrides",
-    (
-        {"key": " bad_key "},
-        {"key": "path/sep"},
-        {"segment": " bad_segment "},
-        {"segment": "path/sep"},
-    ),
-    ids=(
-        "key-whitespace",
-        "key-path-separator",
-        "segment-whitespace",
-        "segment-path-separator",
-    ),
-)
-def test_path_definition_invariant_violations_raise_namespace_registry_error(
-    overrides: Mapping[str, object],
-) -> None:
-    with pytest.raises(ValidationError) as exc_info:
-        _make_path_definition(**overrides)
-
-    _assert_caused_by_namespace_registry_error(exc_info.value)
-
-
-def test_duplicate_namespace_keys_raise_namespace_registry_error() -> None:
-    ns = _make_namespace_definition()
-    with pytest.raises(ValidationError) as exc_info:
-        StorageHierarchyRegistry(namespaces=(ns, ns), paths=())
-    errors = exc_info.value.errors()
-    assert any("duplicate secure-object namespace registry key" in str(e) for e in errors)
-
-
-def test_duplicate_namespace_values_raise_namespace_registry_error() -> None:
-    ns1 = _make_namespace_definition(key="key_a")
-    ns2 = _make_namespace_definition(key="key_b")
-    with pytest.raises(ValidationError) as exc_info:
-        StorageHierarchyRegistry(namespaces=(ns1, ns2), paths=())
-    errors = exc_info.value.errors()
-    assert any("duplicate secure-object namespace value" in str(e) for e in errors)
-
-
-def test_duplicate_path_keys_raise_namespace_registry_error() -> None:
-    path = StoragePathDefinition(
-        key="dup_path",
-        kind=StoragePathKind.DIRECTORY,
-        grammar="<root>/dup/",
-        owner="aeat-test",
+def test_path_definition_invariant_violations_raise_namespace_registry_error() -> None:
+    cases: tuple[tuple[str, dict[str, object], str], ...] = (
+        ("key-whitespace", {"key": " bad_key "}, "path key must not carry surrounding whitespace"),
+        ("key-path-separator", {"key": "path/sep"}, "path key must not contain path separators"),
+        ("segment-whitespace", {"segment": " bad_segment "}, "path segment must not carry surrounding whitespace"),
+        ("segment-path-separator", {"segment": "path/sep"}, "path segment must be a single component"),
     )
-    with pytest.raises(ValidationError) as exc_info:
-        StorageHierarchyRegistry(namespaces=(), paths=(path, path))
-    errors = exc_info.value.errors()
-    assert any("duplicate storage path registry key" in str(e) for e in errors)
+
+    for case_id, overrides, expected_message in cases:
+        with pytest.raises(ValidationError) as exc_info:
+            _make_path_definition(**overrides)
+
+        errors = exc_info.value.errors()
+        _assert_caused_by_namespace_registry_error(exc_info.value, case_id)
+        assert any(expected_message in str(error) for error in errors), case_id
+
+
+def test_duplicate_registry_entries_raise_namespace_registry_error() -> None:
+    namespace = _make_namespace_definition()
+    duplicate_workflow_state = WORKFLOW_STATE_NAMESPACE.model_copy(update={"key": "workflow_state_duplicate"})
+    path = _make_path_definition(key="dup_path", grammar="<root>/dup/")
+    cases = (
+        (
+            "namespace-key",
+            (namespace, namespace),
+            (),
+            "duplicate secure-object namespace registry key",
+        ),
+        (
+            "namespace-value",
+            (WORKFLOW_STATE_NAMESPACE, duplicate_workflow_state),
+            (),
+            "duplicate secure-object namespace value",
+        ),
+        (
+            "path-key",
+            (),
+            (path, path),
+            "duplicate storage path registry key",
+        ),
+    )
+
+    for case_id, namespaces, paths, expected_message in cases:
+        with pytest.raises(ValidationError) as exc_info:
+            StorageHierarchyRegistry(namespaces=namespaces, paths=paths)
+
+        assert any(expected_message in str(error) for error in exc_info.value.errors()), case_id
 
 
 def test_secure_object_logical_path_uses_registered_sql_grammar() -> None:

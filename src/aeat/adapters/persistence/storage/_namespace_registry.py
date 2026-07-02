@@ -27,6 +27,7 @@ BUCKET_BLOBS_DIRNAME = "blobs"
 BUCKET_AUDIT_DIRNAME = "audit"
 BUCKET_MANIFEST_FILENAME = "manifest.toml"
 BUCKET_LOCK_FILENAME = ".lock"
+BUCKET_OUTPUT_LANGUAGE_HINT_FILENAME = "output-language.hint"
 KEYSTORE_DIRNAME = "keystore"
 BUCKET_DEK_FILENAME = "bucket.dek.json"
 BLOB_MANIFEST_SCHEMA_VERSION = 1
@@ -942,6 +943,13 @@ STORAGE_PATH_DEFINITIONS = (
         grammar="<root>/buckets/<bucket_id>/.lock",
         owner="aeat.adapters.persistence.storage.bucket",
         segment=BUCKET_LOCK_FILENAME,
+    ),
+    StoragePathDefinition(
+        key="bucket_output_language_hint",
+        kind=StoragePathKind.FILE,
+        grammar="<root>/buckets/<bucket_id>/output-language.hint",
+        owner="aeat.adapters.persistence.storage.bucket",
+        segment=BUCKET_OUTPUT_LANGUAGE_HINT_FILENAME,
     ),
     StoragePathDefinition(
         key="keystore_bucket",

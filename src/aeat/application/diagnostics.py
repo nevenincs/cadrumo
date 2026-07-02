@@ -5,9 +5,9 @@ root ``aeat --version`` surface. They keep the fast path import-light unless the
 caller requests registry detail.
 
 :func:`build_config_repair_report` composes environment checks,
-:class:`~aeat.application.workflow.WorkflowState` loading,
-:class:`~aeat.application.workflow.ActiveProfileHealth` profile storage
-verdicts, :class:`~aeat.application.wizard._status.WizardStatusReport`
+:class:`~application.workflow.WorkflowState` loading,
+:class:`~application.workflow.ActiveProfileHealth` profile storage
+verdicts, :class:`~application.wizard.WizardStatusReport`
 readiness, registry summaries, and secure-object decryptability into a
 :class:`ConfigRepairReport` of :class:`DiagnosticCheck` rows. The full registry
 integrity probe is intentionally opt-in through :class:`RegistryIntegrityReport`;
@@ -16,28 +16,28 @@ validation.
 
 Every warn/fail :class:`DiagnosticCheck` is actionable by construction: it must
 carry either ``next_action`` or ``dead_end`` and the validator raises
-:class:`~aeat.application._errors.DiagnosticModelError` if a row is silent or
+:class:`~application._errors.DiagnosticModelError` if a row is silent or
 ambiguous. Renderers and CLI payloads can therefore treat the repair report as a
 typed contract, not a best-effort text scan.
 
 Secure-object repair helpers return :class:`SecureObjectIntegrityReport`
-instances shared with :mod:`aeat.application.repair_integrity`. Dry-run preview
+instances shared with :mod:`application.repair_integrity`. Dry-run preview
 and quarantine use the same decryptability probe so the committed mutation has
 the same namespace counts the operator saw before confirming it. Registry
 validation routes through
-:class:`~aeat.domain.calculations.registry.ValidatedRegistryAuthority` and the
-core :class:`~aeat.core.Modelo` identifier enum only on the explicit
+:class:`~domain.calculations.registry.ValidatedRegistryAuthority` and the
+core :class:`~core.Modelo` identifier enum only on the explicit
 repair-integrity path.
 
 See Also:
-    :mod:`aeat.application.repair_integrity` owns metadata-only repair
+    :mod:`application.repair_integrity` owns metadata-only repair
     decisions and active-bucket repair sessions.
-    :mod:`aeat.application.workflow._profile_health` supplies the redacted
+    :mod:`application.workflow._profile_health` supplies the redacted
     active-profile health verdict when secure workflow state is readable or
     degraded.
-    :mod:`aeat.application.wizard._status` supplies semantic profile/auth
+    :mod:`application.wizard._status` supplies semantic profile/auth
     readiness once the workflow state has loaded.
-    :mod:`aeat.entrypoints.cli._config._repair_cli` wires these reports into
+    :mod:`entrypoints.cli._config._repair_cli` wires these reports into
     ``aeat config repair`` commands.
 """
 
@@ -89,7 +89,7 @@ class RegistryVersionSummary(BaseModel):
     """Stable registry summary suitable for version and repair surfaces.
 
     Built from
-    :class:`~aeat.domain.calculations.registry.ValidatedRegistryAuthority` when
+    :class:`~domain.calculations.registry.ValidatedRegistryAuthority` when
     registry detail is requested, then embedded in both :class:`CliVersionReport`
     and :class:`ConfigRepairReport`.
     """
@@ -162,7 +162,7 @@ class DiagnosticCheck(BaseModel):
     (a short explanation of why no automated route exists). A row that
     supplies neither, or both, is a :class:`pydantic.ValidationError` at
     construction time by raising
-    :class:`~aeat.application._errors.DiagnosticModelError`. ``ok`` rows MUST
+    :class:`~application._errors.DiagnosticModelError`. ``ok`` rows MUST
     carry neither.
 
     ``findings`` carries the per-cause breakdown: the specific keys that
@@ -211,11 +211,11 @@ class SecureObjectIntegrityReport(BaseModel):
     cryptographically unrecoverable from this process.
 
     ``namespaces`` carries
-    :class:`~aeat.adapters.persistence.storage.SecureObjectNamespaceIntegrity`
+    :class:`~adapters.persistence.storage.SecureObjectNamespaceIntegrity`
     rows produced by the encrypted
-    :class:`~aeat.adapters.persistence.storage.SecureObjectRepository`.
+    :class:`~adapters.persistence.storage.SecureObjectRepository`.
     The same aggregate shape is shared by :class:`ConfigRepairReport`,
-    :class:`~aeat.application.repair_integrity.RepairIntegrityReport`,
+    :class:`~application.repair_integrity.RepairIntegrityReport`,
     :func:`preview_quarantine_unreadable_secure_objects`, and
     :func:`quarantine_unreadable_secure_objects`.
     """
@@ -234,8 +234,8 @@ class ConfigRepairReport(BaseModel):
     secure-object :class:`SecureObjectIntegrityReport`, and ordered
     :class:`DiagnosticCheck` rows into one operator-facing health payload.
     ``setup`` is a redacted
-    :class:`~aeat.application.wizard._status.WizardStatusReport` when
-    :class:`~aeat.application.workflow.WorkflowState` can be loaded.
+    :class:`~application.wizard.WizardStatusReport` when
+    :class:`~application.workflow.WorkflowState` can be loaded.
     :func:`build_config_repair_report` is the producer, and
     :func:`render_config_repair_text` is the compact text renderer.
     """
@@ -317,7 +317,7 @@ def build_cli_version_report(
 
     Returns a :class:`CliVersionReport` whose registry field is either the
     fast-path empty :class:`RegistryVersionSummary` or the detailed summary from
-    :class:`~aeat.domain.calculations.registry.ValidatedRegistryAuthority`.
+    :class:`~domain.calculations.registry.ValidatedRegistryAuthority`.
     """
     if with_registry:
         root = registry_root or bundled_path("registry", "aeat")
@@ -340,9 +340,9 @@ def build_config_repair_report(registry_root: Path | None = None) -> ConfigRepai
     repair command stays focused on actionable local health.
 
     The secure-state branch reads
-    :class:`~aeat.application.workflow.WorkflowState`, derives
-    :class:`~aeat.application.workflow.ActiveProfileHealth`, and builds a
-    :class:`~aeat.application.wizard._status.WizardStatusReport`. If that load
+    :class:`~application.workflow.WorkflowState`, derives
+    :class:`~application.workflow.ActiveProfileHealth`, and builds a
+    :class:`~application.wizard.WizardStatusReport`. If that load
     fails, the report still emits profile and auth rows from the redacted health
     verdict so repair remains usable on a cold or degraded storage root.
     Each emitted warning/failure row is validated by :class:`DiagnosticCheck` so
@@ -644,7 +644,7 @@ def _probe_secure_objects_integrity() -> SecureObjectIntegrityReport:
     operator can locate which application surface holds rows from a
     rotated master-key generation.
     The per-namespace rows come from
-    :meth:`~aeat.adapters.persistence.storage.SecureObjectRepository.probe_namespace_integrity`.
+    :meth:`~adapters.persistence.storage.SecureObjectRepository.probe_namespace_integrity`.
     """
     _ensure_models_rebuilt()
     from ..adapters.persistence.storage import (
@@ -732,9 +732,9 @@ def _secure_objects_integrity_check(report: SecureObjectIntegrityReport) -> Diag
 def _registry_cross_domain_integrity_check(registry_root: Path) -> DiagnosticCheck:
     """Cross-domain integrity check by exercising the snapshot-build gate.
 
-    Loads :class:`~aeat.domain.calculations.registry.ValidatedRegistryAuthority`
+    Loads :class:`~domain.calculations.registry.ValidatedRegistryAuthority`
     (which runs ``validate_registry`` at construction time) and attempts to
-    build a representative snapshot for :class:`~aeat.core.Modelo` member
+    build a representative snapshot for :class:`~core.Modelo` member
     ``M100``. The snapshot-build path wires
     :func:`_check_all_id_references` (typed-ID existence checks +
     renta first-slice routing target check + per-binding selector-
@@ -899,11 +899,11 @@ def _profile_check(
     """Render semantic profile readiness from wizard status plus workflow state.
 
     ``report`` supplies the
-    :class:`~aeat.application.wizard._status.WizardStatusReport` counters and
+    :class:`~application.wizard.WizardStatusReport` counters and
     next action. ``profile_health`` can override the row when
-    :class:`~aeat.application.workflow.ActiveProfileHealth` says the active
+    :class:`~application.workflow.ActiveProfileHealth` says the active
     profile bucket is unavailable. ``state`` lets the check expand missing
-    profile keys from :class:`~aeat.application.workflow.WorkflowState` into
+    profile keys from :class:`~application.workflow.WorkflowState` into
     per-key :class:`DiagnosticFinding` rows.
     """
     if profile_health is not None and profile_health.status in {
@@ -1129,7 +1129,7 @@ def quarantine_unreadable_secure_objects() -> SecureObjectIntegrityReport:
     """Move every undecryptable secure-object row into the quarantine table.
 
     Delegates to
-    :meth:`~aeat.adapters.persistence.storage.SecureObjectRepository.quarantine_unreadable_rows`,
+    :meth:`~adapters.persistence.storage.SecureObjectRepository.quarantine_unreadable_rows`,
     which creates the ``secure_objects_quarantine`` archive table on first use,
     copies each undecryptable row's metadata and (still encrypted) payload into
     the archive, then deletes the row from the active ``secure_objects`` table.

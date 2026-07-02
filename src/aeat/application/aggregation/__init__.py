@@ -64,8 +64,16 @@ See Also:
 from __future__ import annotations
 
 from ...core import Period, PeriodKind
-from ...core.aggregation import ForeignAssetClass, OperationKind347, OperationKind349, RetencionScheme
+from ...core.aggregation import (
+    CounterpartSourceKind,
+    ForeignAssetClass,
+    OperationKind347,
+    OperationKind349,
+    RetencionScheme,
+)
 from ...domain.calculations.registry import WithholdingObservation
+from ...domain.modelos import LedgerFilingSnapshot
+from ._business_proportion import business_proportion
 from ._counterpart import (
     CounterpartAggregation,
     CounterpartObservation,
@@ -115,6 +123,7 @@ from ._iva_ledger import (
 from ._ledger_filing_snapshot import (
     compute_ledger_filing_evidence,
     compute_ledger_filing_snapshot,
+    evaluate_ledger_filing_staleness,
     stale_filed_revisions,
 )
 from ._modelo_bindings import (
@@ -141,6 +150,7 @@ from ._percepciones_observations_repository import (
     percepcion_observation_key,
     persist_percepcion_observations,
 )
+from ._renta_income_ledger import RentaIncomeObservation, aggregate_renta_income_ledger
 from ._renta_ledger import (
     RentaLedgerAggregationIssue,
     RentaLedgerAggregationIssueReason,
@@ -192,6 +202,7 @@ from ._source_mesh import (
     CallerOverrideDisposition,
     DeferredSourceTarget,
     ModeloSourceResolver,
+    SourceMeshError,
     build_binding_source_dispositions,
     collect_unhandled_source_diagnostics,
     merge_source_resolutions,
@@ -230,6 +241,7 @@ __all__ = [
     "CasillaProvenance",
     "CounterpartAggregation",
     "CounterpartObservation",
+    "CounterpartSourceKind",
     "DeferredSourceTarget",
     "ForeignAssetClass",
     "ForeignAssetClassRollup",
@@ -240,6 +252,7 @@ __all__ = [
     "IvaLedgerAggregationIssueReason",
     "IvaLedgerCandidate",
     "IvaLedgerInputKind",
+    "LedgerFilingSnapshot",
     "LedgerImpatriadoIncomeAggregationSourceResolver",
     "LedgerIvaAggregationSourceResolver",
     "LedgerRentaExpenseAggregationSourceResolver",
@@ -259,6 +272,7 @@ __all__ = [
     "PeriodKind",
     "ProfileSourceResolver",
     "ProrrataLedgerReference",
+    "RentaIncomeObservation",
     "RentaLedgerAggregationIssue",
     "RentaLedgerAggregationIssueReason",
     "RentaLedgerExpenseAggregation",
@@ -268,6 +282,7 @@ __all__ = [
     "RetencionScheme",
     "RetencionesAggregation",
     "RetencionesAggregationSourceResolver",
+    "SourceMeshError",
     "WithholdingObservation",
     "WithholdingSourceResolver",
     "administrador_retencion_rate_advisory_observations",
@@ -281,6 +296,7 @@ __all__ = [
     "aggregate_oss_ioss_bindings",
     "aggregate_oss_ioss_from_repositories",
     "aggregate_per_modelo",
+    "aggregate_renta_income_ledger",
     "aggregate_renta_ledger_expenses",
     "aggregate_renta_ledger_expenses_from_repositories",
     "aggregate_retenciones_111",
@@ -291,6 +307,7 @@ __all__ = [
     "aggregate_retenciones_193",
     "aggregation_period_for_modelo",
     "build_binding_source_dispositions",
+    "business_proportion",
     "collect_unhandled_source_diagnostics",
     "compute_ledger_filing_evidence",
     "compute_ledger_filing_snapshot",
@@ -298,6 +315,7 @@ __all__ = [
     "declarable_class",
     "declarable_counterparty_nifs_347",
     "declarable_for_347",
+    "evaluate_ledger_filing_staleness",
     "get_per_modelo_aggregation_contract",
     "iva_ledger_missing_fact_reasons",
     "merge_source_resolutions",

@@ -85,6 +85,7 @@ from ._borrador_100 import (
 from ._censo import (
     CensoSnapshot,
     CensoSnapshotNotFoundError,
+    CensoSnapshotRepository,
     CensoSnapshotService,
     censo_snapshot_object_key,
 )
@@ -504,6 +505,7 @@ def __getattr__(name: str):
         "VerifyVerdict",
         "VerifySurface",
         "VerifyObservation",
+        "VerifyObservationRepository",
         "verify_observation_object_key",
     ):
         from . import _verify as _impl_mod
@@ -537,6 +539,7 @@ __all__ = [
     "BulkFiledDataListingReport",
     "CensoSnapshot",
     "CensoSnapshotNotFoundError",
+    "CensoSnapshotRepository",
     "CensoSnapshotService",
     "ExpedientesBulkCaptureFailureRow",
     "ExpedientesBulkCaptureReport",
@@ -581,6 +584,7 @@ __all__ = [
     "StoredIvaRemoteStateAcquisitionRow",
     "StoredIvaWalletObservationRow",
     "VerifyObservation",
+    "VerifyObservationRepository",
     "VerifyService",
     "VerifySurface",
     "VerifyVerdict",

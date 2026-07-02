@@ -9,7 +9,7 @@ This module is the single source of truth for those extras. It lives in ``core``
 — the innermost layer — so an adapter can guard its own external-library import
 without importing the application layer, and the application doctor can probe the
 same :data:`OPTIONAL_EXTRAS` registry through
-:func:`aeat.application.provisioning.probe_optional_extra`. :func:`require_optional_extra`
+:func:`application.provisioning.probe_optional_extra`. :func:`require_optional_extra`
 is the seam every feature boundary calls before its lazy import so a missing
 extra becomes one instructive :class:`MissingOptionalExtraError` naming
 ``pip install aeat[<extra>]`` instead of a raw deep-stack
@@ -17,7 +17,7 @@ extra becomes one instructive :class:`MissingOptionalExtraError` naming
 
 These records describe package availability only. They do not decide whether an
 operator has opted into Google export, browser automation, or hosted LLM usage;
-that consent surface is represented separately by :class:`~aeat.core.ServiceCapability`.
+that consent surface is represented separately by :class:`~core.ServiceCapability`.
 """
 
 from __future__ import annotations
@@ -79,11 +79,11 @@ OPTIONAL_EXTRAS: tuple[OptionalExtra, ...] = (GOOGLE_EXTRA, BROWSER_EXTRA, ANTHR
 class MissingOptionalExtraError(CoreError, ImportError):
     """Raised when a feature is reached but its optional extra is not installed.
 
-    Descends from :class:`~aeat.core.errors.CoreError` so the project-wide
-    :class:`~aeat.core.errors.AeatError` boundary sees the refusal, and from
+    Descends from :class:`~core.errors.CoreError` so the project-wide
+    :class:`~core.errors.AeatError` boundary sees the refusal, and from
     :class:`ImportError` so adapters that already catch import failures keep
     working. Application probes report the same missing package as a
-    :class:`aeat.application.provisioning.DependencyStatus`; feature guards raise
+    :class:`application.provisioning.DependencyStatus`; feature guards raise
     this exception only when the operator reaches the guarded boundary.
 
     Attributes:

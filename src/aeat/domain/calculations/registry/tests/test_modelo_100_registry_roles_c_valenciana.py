@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
+from functools import lru_cache
 
 import pytest
 
@@ -348,10 +349,16 @@ _INTENTIONAL_SINGLETON_ROWS = (
         "2025-only VA43 fondos propios 2024 pending carry-forward amount slot.",
     ),
 )
+_C_VALENCIANA_REVIEW_YEARS = tuple(sorted(_VA35_EXPECTED_ROWS))
+
+
+@lru_cache
+def _revision_for(filing_year: int):
+    return _modelo_100_snapshot(filing_year).revision
 
 
 def _assert_c_valenciana_rows(filing_year: int, expected_rows: _ExpectedRows) -> None:
-    revision = _modelo_100_snapshot(filing_year).revision
+    revision = _revision_for(filing_year)
     casillas_by_id = {casilla.id: casilla for casilla in revision.casillas if casilla.id in expected_rows}
     legacy_rows = {
         casilla.id: casilla.semantic_role
@@ -363,50 +370,45 @@ def _assert_c_valenciana_rows(filing_year: int, expected_rows: _ExpectedRows) ->
     assert set(casillas_by_id) == set(expected_rows)
     for casilla_id, (expected_label, expected_role) in expected_rows.items():
         casilla = casillas_by_id[casilla_id]
-        assert casilla.label == expected_label
-        assert tuple(casilla.section) == _C_VALENCIANA_DEDUCTION_SECTION
-        assert casilla.semantic_role == expected_role
-        assert _AUTONOMIC_DEDUCTION_ART_77_REF in casilla.legal_refs
+        assert casilla.label == expected_label, (filing_year, casilla_id)
+        assert tuple(casilla.section) == _C_VALENCIANA_DEDUCTION_SECTION, (filing_year, casilla_id)
+        assert casilla.semantic_role == expected_role, (filing_year, casilla_id)
+        assert _AUTONOMIC_DEDUCTION_ART_77_REF in casilla.legal_refs, (filing_year, casilla_id)
 
 
-@pytest.mark.parametrize("filing_year", [2021, 2022, 2023, 2024, 2025])
-def test_modelo_100_c_valenciana_va35_roles_follow_acciones_participaciones_family(filing_year: int) -> None:
-    _assert_c_valenciana_rows(filing_year, _VA35_EXPECTED_ROWS[filing_year])
+def test_modelo_100_c_valenciana_va35_roles_follow_acciones_participaciones_family() -> None:
+    for filing_year, expected_rows in _VA35_EXPECTED_ROWS.items():
+        _assert_c_valenciana_rows(filing_year, expected_rows)
 
 
-@pytest.mark.parametrize("filing_year", [2023, 2024, 2025])
-def test_modelo_100_c_valenciana_va39_roles_follow_autoconsumo_family(filing_year: int) -> None:
-    _assert_c_valenciana_rows(filing_year, _VA39_EXPECTED_ROWS[filing_year])
+def test_modelo_100_c_valenciana_va39_roles_follow_autoconsumo_family() -> None:
+    for filing_year, expected_rows in _VA39_EXPECTED_ROWS.items():
+        _assert_c_valenciana_rows(filing_year, expected_rows)
 
 
-@pytest.mark.parametrize("filing_year", [2024, 2025])
-def test_modelo_100_c_valenciana_va42_va43_roles_follow_official_families(filing_year: int) -> None:
-    _assert_c_valenciana_rows(filing_year, _VA42_VA43_EXPECTED_ROWS[filing_year])
+def test_modelo_100_c_valenciana_va42_va43_roles_follow_official_families() -> None:
+    for filing_year, expected_rows in _VA42_VA43_EXPECTED_ROWS.items():
+        _assert_c_valenciana_rows(filing_year, expected_rows)
 
 
-@pytest.mark.parametrize("filing_year", [2021, 2022, 2023, 2024, 2025])
-def test_modelo_100_c_valenciana_registry_does_not_use_legacy_generated_pending_roles(filing_year: int) -> None:
-    revision = _modelo_100_snapshot(filing_year).revision
-    legacy_rows = {
-        casilla.id: casilla.semantic_role
-        for casilla in revision.casillas
-        if tuple(casilla.section) == _C_VALENCIANA_DEDUCTION_SECTION
-        and casilla.semantic_role in _LEGACY_VALENCIANA_FAMILY_ROLES
-    }
+def test_modelo_100_c_valenciana_registry_does_not_use_legacy_generated_pending_roles() -> None:
+    for filing_year in _C_VALENCIANA_REVIEW_YEARS:
+        revision = _revision_for(filing_year)
+        legacy_rows = {
+            casilla.id: casilla.semantic_role
+            for casilla in revision.casillas
+            if tuple(casilla.section) == _C_VALENCIANA_DEDUCTION_SECTION
+            and casilla.semantic_role in _LEGACY_VALENCIANA_FAMILY_ROLES
+        }
 
-    assert not legacy_rows
+        assert not legacy_rows, filing_year
 
 
-@pytest.mark.parametrize(("filing_year", "casilla_id", "expected_role", "expected_reason"), _INTENTIONAL_SINGLETON_ROWS)
-def test_modelo_100_c_valenciana_reviewed_singletons_are_marked(
-    filing_year: int,
-    casilla_id: str,
-    expected_role: str,
-    expected_reason: str,
-) -> None:
-    revision = _modelo_100_snapshot(filing_year).revision
-    casilla = next(item for item in revision.casillas if item.id == casilla_id)
+def test_modelo_100_c_valenciana_reviewed_singletons_are_marked() -> None:
+    for filing_year, casilla_id, expected_role, expected_reason in _INTENTIONAL_SINGLETON_ROWS:
+        revision = _revision_for(filing_year)
+        casilla = next(item for item in revision.casillas if item.id == casilla_id)
 
-    assert casilla.semantic_role == expected_role
-    assert casilla.semantic_role_cardinality == "intentional_singleton"
-    assert casilla.semantic_role_cardinality_reason == expected_reason
+        assert casilla.semantic_role == expected_role, (filing_year, casilla_id)
+        assert casilla.semantic_role_cardinality == "intentional_singleton", (filing_year, casilla_id)
+        assert casilla.semantic_role_cardinality_reason == expected_reason, (filing_year, casilla_id)

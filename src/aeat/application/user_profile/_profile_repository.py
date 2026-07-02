@@ -86,7 +86,7 @@ from ...domain.user_profile import (
 from . import RegisterProfileCommand, RemoveProfileCommand, RenameProfileCommand
 from ._aggregate import ProfileAggregate
 from ._integrity import verify_profile_integrity
-from ._repository import UserProfileLifecycleRepository
+from ._repository import UserProfileLifecycleRepository, _refresh_output_language_hint
 
 if TYPE_CHECKING:
     from ._lifecycle import ProfileLifecycleService
@@ -608,6 +608,7 @@ class ProfileRepository:
                 translated_message="application.user_profile.errors.profile_tombstoned_not_selectable",
                 context={"profile": profile_id},
             )
+        _refresh_output_language_hint(bucket_id=profile_id, record=aggregate.record)
         write_pointer(self._root, BucketPointer(bucket_id=profile_id, schema_version=1))
         return aggregate
 

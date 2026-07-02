@@ -14,7 +14,7 @@ deductible input IVA; it is not yet wired into the live calculate mesh (that is
 the promotion step gated on the provisional-carry store, per ADR
 ``2026-07-01-iva-complexity-hardening-scope``). The definitive percentage itself
 comes from the full-year volume rollup fed to
-:func:`~aeat.domain.iva.compute_prorrata_definitiva_anual`; deriving it from a
+:func:`~domain.iva.compute_prorrata_definitiva_anual`; deriving it from a
 single quarter is a correctness defect (the silent-zero-base ADR).
 """
 
@@ -47,7 +47,7 @@ def build_prorrata_regularizacion_advisory(
     """Compute the annual regularización and build the deferred-source advisory.
 
     Returns the pure :class:`RegularizacionProrrataResult` plus a non-blocking
-    :class:`~aeat.core.aggregation.CalculationSourceDiagnostic` when the taxpayer
+    :class:`~application.aggregation.CalculationSourceDiagnostic` when the taxpayer
     has exempt-without-right operations in the year (``operaciones_sin_derecho_
     deduccion > 0`` — prorrata applies) and the definitive percentage differs from
     the provisional one applied across the quarters (a regularización is due). In

@@ -1,9 +1,9 @@
-"""Errors raised by :func:`~aeat.application.export.serialize_tabular_rows` and tabular export models.
+"""Errors raised by :func:`~application.export.serialize_tabular_rows` and tabular export models.
 
-:class:`~aeat.application.export._errors.ExportFormatError` rejects unsupported
-:class:`~aeat.application.export.ExportSerializationFormat` values, while
-:class:`~aeat.application.export._errors.ExportFieldError` carries
-:class:`~aeat.application.export.TabularExportResult` field and payload
+:class:`~application.export._errors.ExportFormatError` rejects unsupported
+:class:`~application.export.ExportSerializationFormat` values, while
+:class:`~application.export._errors.ExportFieldError` carries
+:class:`~application.export.TabularExportResult` field and payload
 invariant failures through the typed error registry.
 """
 
@@ -16,7 +16,7 @@ class ExportFormatError(CoreError):
     """Raised when an unsupported export serialization format is requested.
 
     The tabular export pipeline is closed over the declared
-    :class:`~aeat.application.export._tabular.ExportSerializationFormat`
+    :class:`~application.export._tabular.ExportSerializationFormat`
     enum members.  Requesting any value outside that set violates the
     pipeline contract and is surfaced as this error rather than a bare
     :class:`ValueError`.

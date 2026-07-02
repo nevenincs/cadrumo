@@ -1,9 +1,9 @@
-"""Serialize tabular rows into :class:`~aeat.application.export.TabularExportResult` payloads.
+"""Serialize tabular rows into :class:`~application.export.TabularExportResult` payloads.
 
 Rows are rendered through the closed
-:class:`~aeat.application.export.ExportSerializationFormat` surface, with
-:class:`~aeat.application.export._errors.ExportFieldError` and
-:class:`~aeat.application.export._errors.ExportFormatError` preserving
+:class:`~application.export.ExportSerializationFormat` surface, with
+:class:`~application.export._errors.ExportFieldError` and
+:class:`~application.export._errors.ExportFormatError` preserving
 validation failures as structured application errors.
 
 This module is a pure in-memory serializer. It returns bytes, media type,
@@ -49,10 +49,10 @@ _SHA256_INVALID_REASON = "sha256_invalid"
 
 
 class TabularExportResult(BaseModel):
-    """Serialized tabular payload produced by :func:`~aeat.application.export.serialize_tabular_rows`.
+    """Serialized tabular payload produced by :func:`~application.export.serialize_tabular_rows`.
 
     The result carries the raw payload plus operator-facing metadata:
-    :class:`~aeat.application.export.ExportSerializationFormat`, media type,
+    :class:`~application.export.ExportSerializationFormat`, media type,
     filename extension, byte count, SHA-256 digest, row count, and normalized
     field names.
     """
@@ -98,8 +98,8 @@ def serialize_tabular_rows(
     Field order follows ``fieldnames`` and row order follows ``rows``.
     Values are coerced to strings, missing fields become empty strings,
     and unknown fields raise
-    :class:`~aeat.application.export._errors.ExportFieldError`. Returns a
-    :class:`~aeat.application.export.TabularExportResult` with encoded bytes,
+    :class:`~application.export._errors.ExportFieldError`. Returns a
+    :class:`~application.export.TabularExportResult` with encoded bytes,
     media type, filename extension, row count, field metadata, and payload
     digest.
     """
@@ -178,7 +178,7 @@ def _serialize_xlsx(rows: tuple[dict[str, str], ...], *, fieldnames: tuple[str, 
 
     Every cell is written as text so a deterministic, locale-independent
     round-trip is preserved; the workbook re-reads through
-    :class:`~aeat.adapters.inbound.financial.providers._xlsx.XlsxProvider`,
+    :class:`~adapters.inbound.financial.providers._xlsx.XlsxProvider`,
     which shares the CSV bank-layout catalogue.
     """
     from io import BytesIO

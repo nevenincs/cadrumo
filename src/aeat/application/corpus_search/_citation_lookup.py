@@ -21,6 +21,7 @@ import json
 from collections.abc import Mapping
 from pathlib import Path
 
+from ...core.external_constants import UTF_8_ENCODING
 from ...domain.calculations.registry import LegalReference, bundled_authority
 from ._errors import CorpusSearchInputError
 from ._models import CitationResolution
@@ -81,12 +82,42 @@ class CitationLookup:
             verbatim_text=verbatim,
         )
 
+    def resolve_corpus_text(self, ref: str) -> str:
+        """Resolve a citation id OR a corpus_ref (``path#anchor``) to verbatim text.
+
+        The ``aeat://corpus/{ref}`` resource accepts either form: a retrieval
+        hit's ``corpus_ref`` or a bare citation id. A known citation id routes
+        through :meth:`resolve`; otherwise ``ref`` is read as a corpus path and
+        anchor.
+
+        Raises:
+            CorpusSearchInputError: If ``ref`` resolves to no readable text or
+                escapes the corpus root.
+        """
+        key = ref.strip()
+        if key in self._legal:
+            return self.resolve(key).verbatim_text
+        path_part, _, anchor_part = key.partition("#")
+        text = self._read_corpus_text(path_part, anchor=anchor_part or None)
+        if text is None:
+            raise CorpusSearchInputError("no readable corpus text for reference", context={"ref": ref})
+        return text
+
     def _verbatim_text(self, reference: LegalReference, *, path_part: str, anchor: str | None) -> str:
+        text = self._read_corpus_text(path_part, anchor=anchor)
+        if text is None:
+            raise CorpusSearchInputError(
+                "citation has no readable extracted corpus text",
+                context={"citation_id": reference.id, "corpus_ref": reference.corpus_ref},
+            )
+        return text
+
+    def _read_corpus_text(self, path_part: str, *, anchor: str | None) -> str | None:
         source_path = (self._source_root / path_part).resolve()
         if self._source_root not in source_path.parents:
             raise CorpusSearchInputError(
-                "citation corpus_ref escapes the corpus root",
-                context={"citation_id": reference.id, "corpus_ref": reference.corpus_ref},
+                "corpus_ref escapes the corpus root",
+                context={"path": path_part},
             )
         extracted_json = source_path.with_name(source_path.name + ".extracted.json")
         if extracted_json.is_file():
@@ -95,21 +126,18 @@ class CitationLookup:
                 return text
         extracted_md = source_path.with_name(source_path.name + ".extracted.md")
         if extracted_md.is_file():
-            text = extracted_md.read_text(encoding="utf-8").strip()
+            text = extracted_md.read_text(encoding=UTF_8_ENCODING).strip()
             if text:
                 return text
         if source_path.is_file():
             text = _text_from_html(source_path)
             if text:
                 return text
-        raise CorpusSearchInputError(
-            "citation has no readable extracted corpus text",
-            context={"citation_id": reference.id, "corpus_ref": reference.corpus_ref},
-        )
+        return None
 
 
 def _text_from_units(extracted_json: Path, *, anchor: str | None) -> str:
-    payload = json.loads(extracted_json.read_text(encoding="utf-8"))
+    payload = json.loads(extracted_json.read_text(encoding=UTF_8_ENCODING))
     units = payload.get("units") or ()
     texts = [(unit.get("anchor"), (unit.get("text") or "").strip()) for unit in units]
     texts = [(_clean_anchor(item_anchor), text) for item_anchor, text in texts if text]
@@ -135,7 +163,7 @@ def _text_from_html(html_path: Path) -> str:
     """
     from bs4 import BeautifulSoup
 
-    soup = BeautifulSoup(html_path.read_text(encoding="utf-8"), "html.parser")
+    soup = BeautifulSoup(html_path.read_text(encoding=UTF_8_ENCODING), "html.parser")
     lines = [line.strip() for line in soup.get_text(separator="\n").splitlines()]
     return "\n".join(line for line in lines if line).strip()
 

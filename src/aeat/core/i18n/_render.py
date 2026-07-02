@@ -165,7 +165,7 @@ def _output_language_cache_key() -> tuple[object, ...]:
 def _cached_output_language(_cache_key: tuple[object, ...]) -> str:
     try:
         settings = load_settings()
-    except (KeyError, ValueError, AttributeError) as exc:
+    except (CoreError, KeyError, ValueError, AttributeError) as exc:
         _log.debug(
             "i18n: unable to load settings for output language; falling back to default (%s)",
             type(exc).__name__,

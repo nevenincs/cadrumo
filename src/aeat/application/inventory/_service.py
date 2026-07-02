@@ -2,7 +2,7 @@
 
 The service persists :class:`InventoryLedgerDocument` through
 :class:`InventoryLedgerRepository`, whose runtime default is built by
-:func:`~aeat.adapters.persistence.storage.secure_object_repository_for_bucket`.
+:func:`~adapters.persistence.storage.secure_object_repository_for_bucket`.
 It does not read or write plaintext inventory JSON side stores.
 
 State-changing and audit-significant verbs append events to the
@@ -192,7 +192,7 @@ class InventoryService:
     """Bucket-scoped CRUD over per-actividad :class:`InventoryLedger` records.
 
     Runtime construction routes the repository through
-    :func:`~aeat.adapters.persistence.storage.secure_object_repository_for_bucket`,
+    :func:`~adapters.persistence.storage.secure_object_repository_for_bucket`,
     so the requested ``bucket_id`` is checked by the storage runtime instead
     of bypassing custody with a local file path. Tests may inject an
     :class:`InventoryLedgerRepository` factory or

@@ -1,6 +1,6 @@
 """Manifest-digest helper for the sealed bucket-export archive header.
 
-Used by: :class:`~aeat.application.bucket_maintenance.BucketMaintenanceService`
+Used by: :class:`~application.bucket_maintenance.BucketMaintenanceService`
 to generate export archive digests.
 
 The ``ExportArchiveHeader.manifest_digest`` field carries a
@@ -41,7 +41,7 @@ def compute_manifest_digest(manifest: BucketManifest) -> str:
 
     The output is a 64-character lowercase hex string matching the
     ``manifest_digest`` field constraint on
-    :class:`~aeat.adapters.persistence.storage.bucket.ExportArchiveHeader`.
+    :class:`~adapters.persistence.storage.bucket.ExportArchiveHeader`.
     """
     serialised = manifest.model_dump_json().encode(UTF_8_ENCODING)
     return sha256_hex(serialised)

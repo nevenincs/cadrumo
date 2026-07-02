@@ -848,6 +848,55 @@ class ModeloCasillasResult(OutputSchema):
     rows: list[CasillaRowPayload]
 
 
+class DataInventoryCasillaPayload(OutputSchema):
+    """One casilla entry on the ``modelo requires`` data-inventory checklist.
+
+    Projects :class:`~aeat.application.modelo.DataInventoryCasilla`. ``binding_id``
+    and ``binding_source`` are populated only for ``ledger_derivable`` and
+    ``profile_derivable`` rows; required and optional manual entries carry no
+    binding (they are hand-entered).
+    """
+
+    casilla_id: CasillaId
+    number: str
+    label: str
+    localized_labels: dict[str, str] = Field(default_factory=dict)
+    legal_refs: tuple[LegalRefId, ...] = Field(min_length=1)
+    source_refs: tuple[SourceRefId, ...] = Field(min_length=1)
+    binding_id: BindingId | None = None
+    binding_source: str | None = None
+
+
+@register_schema("modelo.requires")
+class ModeloRequiresResult(OutputSchema):
+    """Data-inventory checklist result returned by ``aeat app modelo requires``.
+
+    Composes the registry snapshot for one ``(modelo, filing_year, period)``
+    into the operator-facing "what data do I need" checklist: casillas the
+    operator must hand-enter (``required_manual``), casillas they may
+    optionally enter (``optional_manual``), casillas the ledger aggregation
+    mesh populates once the relevant transactions are imported and classified
+    (``ledger_derivable``), and casillas populated from the active taxpayer
+    profile (``profile_derivable``). ``unresolved_profile_bindings`` names the
+    profile-derivable bindings the active profile has not yet supplied a fact
+    for (e.g. an unset home-office usage ratio) so the operator can fix the
+    gap before calculating; ``profile_checked`` is ``False`` when no active
+    profile was available to check.
+    """
+
+    operation: str = "modelo.requires"
+    modelo: str
+    revision: str
+    filing_year: int
+    period: str
+    required_manual: list[DataInventoryCasillaPayload]
+    optional_manual: list[DataInventoryCasillaPayload]
+    ledger_derivable: list[DataInventoryCasillaPayload]
+    profile_derivable: list[DataInventoryCasillaPayload]
+    unresolved_profile_bindings: list[BindingId]
+    profile_checked: bool
+
+
 class BindingEncodedOptionPayload(OutputSchema):
     """One accepted decimal encoding of a boolean-typed decimal-channel binding.
 
@@ -1322,6 +1371,7 @@ __all__ = [
     "CrossPeriodDependencyEvidencePayload",
     "CrossPeriodDependencyInventoryItemPayload",
     "CrossPeriodDependencyRequirementPayload",
+    "DataInventoryCasillaPayload",
     "DeltaRowPayload",
     "EvidenceBundleCheckFindingPayload",
     "EvidenceRecordRefPayload",
@@ -1359,6 +1409,7 @@ __all__ = [
     "ModeloRecordListResult",
     "ModeloRecordPayload",
     "ModeloRecordShowResult",
+    "ModeloRequiresResult",
     "ModeloRowPayload",
     "ObservationPayload",
     "ResultSummaryRowPayload",

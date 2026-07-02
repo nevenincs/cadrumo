@@ -1,13 +1,13 @@
 """Filesystem persistence for run traces and JSONL event logs.
 
 One subdirectory per ``run_id`` under
-:attr:`aeat.core.config.Settings.aeat_runs_dir`, containing
+:attr:`core.config.Settings.aeat_runs_dir`, containing
 ``trace.json`` and ``events.jsonl``. Both files round-trip through the
-strict pydantic models in :mod:`aeat.core.observability._models`.
+strict pydantic models in :mod:`core.observability._models`.
 
 Run traces are DIAGNOSTIC class. The redaction rule set returned by
-:func:`aeat.core.redaction.default_rules_for_class` for
-:class:`~aeat.core.classification.SensitivityClass.DIAGNOSTIC` walks
+:func:`core.redaction.default_rules_for_class` for
+:class:`~core.classification.SensitivityClass.DIAGNOSTIC` walks
 every string leaf — NIFs SHA-256-prefixed, URLs reduced to host-only,
 bearer-shaped tokens fingerprinted, opaque bearers fingerprinted —
 before serialisation. The core redaction helper is imported lazily so
@@ -38,7 +38,7 @@ _TRACE_FILENAME = "trace.json"
 _EVENTS_FILENAME = "events.jsonl"
 _ENVELOPE_FILENAME = "envelope.json"
 
-# Run ids are minted by :func:`aeat.core.observability._context._mint_run_id`
+# Run ids are minted by :func:`core.observability._context._mint_run_id`
 # as ``uuid4().hex[:16]``. Validate every run_id reaching the filesystem
 # layer against the same shape so a crafted id (e.g. ``..`` or
 # ``/etc/passwd``) cannot cause ``runs_dir / run_id`` to escape the
@@ -56,7 +56,7 @@ def _validate_run_id(run_id: str) -> str:
 
     The canonical shape is 16 lowercase hex characters — the form
     minted by
-    :func:`aeat.core.observability._context._mint_run_id`. Validating
+    :func:`core.observability._context._mint_run_id`. Validating
     every id reaching this layer prevents path-traversal escapes
     through ``runs_dir / run_id``.
 
@@ -81,9 +81,9 @@ def runs_dir(settings: Settings | None = None) -> Path:
     """Return the configured runs directory, creating it when absent.
 
     Args:
-        settings: Optional :class:`aeat.core.config.Settings` override
+        settings: Optional :class:`core.config.Settings` override
             (used by tests). When ``None``, the active settings are
-            loaded via :func:`aeat.core.config.load_settings`.
+            loaded via :func:`core.config.load_settings`.
 
     Returns:
         Absolute path to the per-process runs root.
@@ -106,7 +106,7 @@ def _run_dir(run_id: str, *, settings: Settings | None = None) -> Path:
 
     Args:
         run_id: 16-char lowercase hex run identifier.
-        settings: Optional :class:`aeat.core.config.Settings` override.
+        settings: Optional :class:`core.config.Settings` override.
 
     Returns:
         Absolute path to the per-run subdirectory (created if absent).
@@ -124,14 +124,14 @@ def save_trace(trace: RunTrace, *, settings: Settings | None = None) -> Path:
     """Persist a :class:`RunTrace` to ``<runs_dir>/<run_id>/trace.json``.
 
     Every string leaf passes through
-    :func:`aeat.core.redaction.redact_structured` at DIAGNOSTIC class
+    :func:`core.redaction.redact_structured` at DIAGNOSTIC class
     before serialisation so the on-disk record never carries a
     plaintext NIF, bearer token, or sensitive URL path even if a caller
     fed one into ``arguments``.
 
     Args:
         trace: The :class:`RunTrace` to persist.
-        settings: Optional :class:`aeat.core.config.Settings` override.
+        settings: Optional :class:`core.config.Settings` override.
 
     Returns:
         Absolute path of the written ``trace.json`` file.
@@ -162,7 +162,7 @@ def load_trace(run_id: str, *, settings: Settings | None = None) -> RunTrace:
 
     Args:
         run_id: 16-char lowercase hex run identifier.
-        settings: Optional :class:`aeat.core.config.Settings` override.
+        settings: Optional :class:`core.config.Settings` override.
 
     Returns:
         The validated :class:`RunTrace`.
@@ -201,18 +201,18 @@ def save_envelope(
     """Persist an emitted envelope document to ``<runs_dir>/<run_id>/envelope.json``.
 
     The document is the verbatim, already-CLI-redacted
-    :class:`~aeat.core.json_contract.SchemaEnvelope` mapping captured by
-    :func:`aeat.core.observability.capture_envelopes` during the run. It
+    :class:`~core.json_contract.SchemaEnvelope` mapping captured by
+    :func:`core.observability.capture_envelopes` during the run. It
     is stored key-sorted so the on-disk artifact is byte-stable, and it
     is the golden expectation a later :func:`replay_run` asserts against.
     Re-validation into a typed envelope happens on load via
-    :func:`aeat.core.observability.validate_captured_envelope`; this
+    :func:`core.observability.validate_captured_envelope`; this
     writer stays free of any JSON-contract dependency.
 
     Args:
         run_id: 16-char lowercase hex run identifier.
         document: The emitted envelope mapping to persist.
-        settings: Optional :class:`aeat.core.config.Settings` override.
+        settings: Optional :class:`core.config.Settings` override.
 
     Returns:
         Absolute path of the written ``envelope.json`` file.
@@ -237,11 +237,11 @@ def load_envelope_document(
 
     Read-only: does not create the per-run directory. Returns the raw
     mapping; type it with
-    :func:`aeat.core.observability.validate_captured_envelope`.
+    :func:`core.observability.validate_captured_envelope`.
 
     Args:
         run_id: 16-char lowercase hex run identifier.
-        settings: Optional :class:`aeat.core.config.Settings` override.
+        settings: Optional :class:`core.config.Settings` override.
 
     Returns:
         The persisted envelope mapping.
@@ -287,7 +287,7 @@ def save_events_append(
 
     ``newline=""`` pins the on-disk line terminator to ``\\n`` on every
     platform — mirroring
-    :class:`aeat.core.observability._sink.JsonlRunSink` — so
+    :class:`core.observability._sink.JsonlRunSink` — so
     ``events.jsonl`` is byte-stable across Windows and POSIX writers.
     Every string leaf in the event is redacted at DIAGNOSTIC class
     before serialisation so the on-disk record stays free of plaintext
@@ -296,7 +296,7 @@ def save_events_append(
     Args:
         run_id: Owning run identifier.
         event: The :class:`RunEvent` to append.
-        settings: Optional :class:`aeat.core.config.Settings` override.
+        settings: Optional :class:`core.config.Settings` override.
 
     Returns:
         Absolute path of the appended ``events.jsonl`` file.
@@ -332,7 +332,7 @@ def iter_events(
 
     Args:
         run_id: 16-char lowercase hex run identifier.
-        settings: Optional :class:`aeat.core.config.Settings` override.
+        settings: Optional :class:`core.config.Settings` override.
 
     Returns:
         An iterator of :class:`RunEvent` records in append order.
@@ -380,7 +380,7 @@ def load_events(
 
     Args:
         run_id: 16-char lowercase hex run identifier.
-        settings: Optional :class:`aeat.core.config.Settings` override.
+        settings: Optional :class:`core.config.Settings` override.
 
     Returns:
         Tuple of every recorded :class:`RunEvent` in append order.
@@ -399,7 +399,7 @@ def iter_runs(*, settings: Settings | None = None) -> Iterator[tuple[str, RunTra
     directory by hand.
 
     Args:
-        settings: Optional :class:`aeat.core.config.Settings` override.
+        settings: Optional :class:`core.config.Settings` override.
 
     Yields:
         ``(run_id, trace)`` pairs in newest-first order, where each

@@ -100,7 +100,7 @@ def iter_skill_metadata() -> Iterator[SkillMetadata]:
     from ._skill_metadata import SkillMetadataError
 
     for name, skill_md in _iter_skill_dirs():
-        text = skill_md.read_text(encoding="utf-8")
+        text = skill_md.read_text(encoding=_UTF_8)
         try:
             metadata = parse_skill_metadata(text)
         except SkillMetadataError as exc:

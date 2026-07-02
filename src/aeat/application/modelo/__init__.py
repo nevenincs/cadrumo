@@ -136,6 +136,15 @@ from ._calculation_actions import (
     list_calculation_revisions,
     mark_revision_verificado_completo,
 )
+from ._calculation_source_policy import (
+    BUCKET_AGGREGATION_LOCK_SOURCES,
+    CALLER_OVERRIDABLE_CARRY_SOURCES,
+)
+from ._data_inventory import (
+    DataInventoryCasilla,
+    DataInventoryChecklist,
+    data_inventory_checklist,
+)
 from ._export import (
     ModeloExportCommand,
     ModeloExportCrossBucketRefusedError,
@@ -165,6 +174,7 @@ from ._history import (
 from ._iva_wallet_gate import (
     ModeloIvaWalletReconciliationBlocked,
     ModeloIvaWalletReconciliationBlockedError,
+    apply_iva_compensation_decision_binding,
     require_persisted_iva_compensation_decision_matches_revision,
 )
 from ._iva_wallet_seed import (
@@ -188,6 +198,7 @@ from ._local_observation_spreadsheet import parse_casilla_value_spreadsheet
 from ._m036_lifecycle import (
     M036DeclarationCommand,
     M036DeclarationResult,
+    derive_m036_declaration_id,
     list_m036_declarations,
     m036_declaration_object_key,
     read_m036_declaration,
@@ -314,6 +325,7 @@ from ._selectors import (
     select_modelo_calculation_revision,
     visible_target_work_units,
 )
+from ._semantic_role_resolution import casilla_id_for_unique_revision_semantic_role
 from ._taxation_comparison import (
     TaxationComparisonError,
     TaxationComparisonResult,
@@ -384,6 +396,8 @@ from ._workflow_gate import workflow_period_for_work_unit
 
 __all__ = [
     "APP_FILING_SOURCE_KIND",
+    "BUCKET_AGGREGATION_LOCK_SOURCES",
+    "CALLER_OVERRIDABLE_CARRY_SOURCES",
     "CEDED_AUTONOMIC_MODELOS",
     "CEDED_AUTONOMIC_MODELO_LOCALE_KEYS",
     "OPERATOR_MANUAL_OBSERVATION_SOURCE_KIND",
@@ -401,6 +415,8 @@ __all__ = [
     "CalculationRevisionState",
     "CalculationRevisionStateError",
     "CasillaProvenanceMissingError",
+    "DataInventoryCasilla",
+    "DataInventoryChecklist",
     "ExternalModeloImportError",
     "M036DeclarationCommand",
     "M036DeclarationResult",
@@ -530,6 +546,7 @@ __all__ = [
     "WorkUnitRevisionDivergenceError",
     "amend_modelo_revision",
     "apply_calculation_shortcut_inputs",
+    "apply_iva_compensation_decision_binding",
     "assemble_work_unit_history",
     "assert_no_novel_source_kinds",
     "authorization_advisory_for_modelo",
@@ -539,6 +556,7 @@ __all__ = [
     "calculate_modelo_revision_from_bucket_aggregation_with_diagnostics",
     "calculate_modelo_work_revision",
     "calculation_result_summary",
+    "casilla_id_for_unique_revision_semantic_role",
     "ceded_autonomic_modelo_locale_key",
     "compare_modelo_years",
     "compare_taxation_for_work_address",
@@ -546,7 +564,9 @@ __all__ = [
     "compare_taxation_modes",
     "correct_iva_compensation_period_for_bucket",
     "create_work_unit",
+    "data_inventory_checklist",
     "declared_modelo_period_tokens",
+    "derive_m036_declaration_id",
     "derive_taxpayer_files_economic_activity",
     "discard_work_unit",
     "ensure_modelo_work_unit_for_visible_target",

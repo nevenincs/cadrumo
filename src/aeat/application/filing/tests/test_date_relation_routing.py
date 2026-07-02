@@ -167,6 +167,9 @@ def test_build_draft_replay_routes_m100_tax_residence_ccaa_string_enum() -> None
             "renta-2024-profile-marriage-month-start": Decimal("0"),
             "renta-2024-profile-marriage-month-end": Decimal("0"),
             "renta-2024-profile-anualidades-sin-minimo-descendientes": Decimal("0"),
+            # Childless profile: Art. 58/61 LIRPF mínimo por descendientes aggregate
+            # is zero (modelo-100-minimo-descendientes-engine ADR, Option A).
+            "renta-2024-profile-minimo-descendientes-estatal": Decimal("0"),
             "renta-2024-base-liquidable-negativa-general-anterior": Decimal("0"),
             "renta-2024-rel-111-retenciones-trimestrales": Decimal("0"),
             "renta-2024-rel-111-retenciones-mensuales": Decimal("0"),

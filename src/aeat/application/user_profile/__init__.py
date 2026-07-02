@@ -159,7 +159,13 @@ if TYPE_CHECKING:
         rekey_secret_store,
         verify_recovery_code,
     )
+    from ._custody_carry import (
+        carried_namespace_definitions,
+        restore_carried_objects,
+        serialize_carried_objects,
+    )
     from ._filing_baseline import missing_filing_baseline_flags
+    from ._integrity import ProfileIntegrityError
     from ._keys_validation import list_profile_key_records, validate_profile_values
     from ._lifecycle import ProfileLifecycleService
     from ._orchestration import (
@@ -199,6 +205,7 @@ if TYPE_CHECKING:
         user_profile_snapshot_object_key,
         user_profile_value_object_key,
     )
+    from ._testing import register_minimal_profile
     from ._validation import ProfileValidationService
 
 # W09.P43.S166: replace the prior side-effect import with an explicit
@@ -380,6 +387,22 @@ def __getattr__(name: str):
         from . import _capabilities
 
         return getattr(_capabilities, name)
+    if name == "ProfileIntegrityError":
+        from ._integrity import ProfileIntegrityError
+
+        return ProfileIntegrityError
+    if name in (
+        "carried_namespace_definitions",
+        "restore_carried_objects",
+        "serialize_carried_objects",
+    ):
+        from . import _custody_carry
+
+        return getattr(_custody_carry, name)
+    if name == "register_minimal_profile":
+        from ._testing import register_minimal_profile
+
+        return register_minimal_profile
     raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
 
 
@@ -412,6 +435,7 @@ __all__ = [
     "ProfileAlreadyRegisteredError",
     "ProfileId",
     "ProfileImportResult",
+    "ProfileIntegrityError",
     "ProfileLifecycleResult",
     "ProfileLifecycleService",
     "ProfileListResult",
@@ -437,6 +461,7 @@ __all__ = [
     "UserProfileSnapshotRepository",
     "UserProfileStatus",
     "build_lifecycle_service",
+    "carried_namespace_definitions",
     "delete_profile_with_lifecycle_span",
     "deserialize_profile_bundle",
     "fact_value",
@@ -457,6 +482,7 @@ __all__ = [
     "recovery_wrap_path",
     "refuse_duplicate_label",
     "register_active_profile",
+    "register_minimal_profile",
     "rekey_secret_store",
     "remove_active_profile",
     "remove_profile_bucket_directory",
@@ -464,8 +490,10 @@ __all__ = [
     "require_registered_label",
     "resolve_active_capability",
     "resolve_capability",
+    "restore_carried_objects",
     "select_profile",
     "select_profile_with_lifecycle_span",
+    "serialize_carried_objects",
     "serialize_profile_bundle",
     "set_active_field",
     "set_active_fields",

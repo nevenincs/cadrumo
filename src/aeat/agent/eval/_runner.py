@@ -17,7 +17,7 @@ hexagonal direction, since ``entrypoints.cli`` already imports ``aeat.agent``) a
 never runs the check itself. The confirmation-gate dimension (eval-catalogue
 category 8) follows the same pattern once more: the caller invokes the real
 ``aeat.entrypoints.mcp._hitl.confirmation_for_tool`` for a step and hands the
-resulting tier in as a :class:`~aeat.agent.eval._models.ConfirmationGateCheck`;
+resulting tier in as a :class:`~agent.eval._models.ConfirmationGateCheck`;
 this module never imports ``entrypoints.mcp`` and never resolves a confirmation
 tier itself. The contradiction dimension (eval-catalogue category 4) follows the
 same pattern: the caller dispatches two independent real CLI/MCP invocations for
@@ -408,7 +408,7 @@ def check_exit_code_scenario(
       ``SchemaEnvelope`` for the expected ``command`` (a crash would emit no
       such document, or one missing the shared spine fields).
     - ``status_is_non_success``: the envelope ``status`` is neither
-      :attr:`~aeat.core.json_contract.EnvelopeStatus.SUCCESS` nor anything
+      :attr:`~core.json_contract.EnvelopeStatus.SUCCESS` nor anything
       other than the scenario's declared ``tool_result_status`` - a verdict
       must not read as a clean success.
     - ``next_action_is_continuation``: ``scenario.expected_next_action``

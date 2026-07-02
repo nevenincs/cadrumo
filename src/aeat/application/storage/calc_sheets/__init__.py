@@ -46,6 +46,7 @@ See Also:
 """
 
 from ._engine import build_export_plan, collect_row_sets, registry_sha
+from ._errors import CalcSheetsEngineError, CalcSheetsParityError, CalcSheetsRecordError
 from ._evidence import sheet_evidence_from_ledger_filing
 from ._layout import BracketRanges, SheetLayout, plan_layout
 from ._parity_harness import OperatorInputScenario, verify_modelo_parity
@@ -103,6 +104,9 @@ __all__ = [
     "ROLE_STYLES",
     "WORKBOOK_FONT_FAMILY",
     "BracketRanges",
+    "CalcSheetsEngineError",
+    "CalcSheetsParityError",
+    "CalcSheetsRecordError",
     "OfflineWorkbookEvidenceSidecar",
     "OfflineWorkbookExportResult",
     "OperatorInput",

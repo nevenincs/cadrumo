@@ -19,6 +19,16 @@
 # 673.2) and comercio al por menor de alimentación (642.1-2-3-4, 642.5, 642.6,
 # 643.1-2, 644.1, 644.2, 644.3, 644.6, 647.1, 647.2-3) — the ADR's named
 # next-priority groups.
+# Phase 3 (2026-07-02, #516): comercio al por menor de textil/calzado/mercería
+# (651.1, 651.2, 651.3-y-5, 651.4, 651.6), droguería/perfumería (652.2-y-3),
+# mueble/electrodoméstico/menaje/construcción (653.1, 653.2, 653.3, 653.4-y-5,
+# 653.9), recambios/maquinaria/neumáticos (654.2, 654.5, 654.6), oficina/
+# óptica/papelería/juguetería/semillas (659.2, 659.3, 659.6, 659.7), comercio
+# mixto (662.2), comercio ambulante (663.1, 663.2, 663.3, 663.4, 663.9),
+# hospedaje (681, 682, 683), reparaciones (691.1, 691.2, 692, 699), and
+# transporte urbano colectivo (721.1-y-3). Two epígrafe collisions (659.4,
+# 691.9 — each names two distinct activities under one IAE code) are
+# deliberately deferred; see the Phase 3 note below.
 #
 # Cross-checked against the bundled consolidated Orden HAC/1347/2024 Anexo II
 # (corpus/normatives/html/orden-hac-1347-2024.html) AND against the AEAT Manual
@@ -766,6 +776,927 @@ valid_to = 2025-12-31
 [[revisions."2025".parameters.keyed_brackets]]
 key = "647.2:4"
 value = "32.75"
+valid_from = 2025-01-01
+valid_to = 2025-12-31
+
+# Phase 3 (2026-07-02, #516): comercio al por menor de textil/calzado (651.x),
+# droguería/perfumería (652.2 y 3), mueble/electrodomésticos/menaje (653.x,
+# 654.x, 659.x, 662.2), comercio ambulante (663.x), hospedaje (681-683),
+# reparaciones (691.x, 692, 699), and transporte urbano colectivo (721.1 y 3).
+# Cross-checked byte-identical between the bundled consolidated Orden
+# HAC/1347/2024 Anexo II (corpus/normatives/html/orden-hac-1347-2024.html) AND
+# the AEAT Manual práctico de Renta 2025, Parte 1, Capítulo 8 "Apéndice:
+# Rendimientos anuales por unidad de módulo antes de amortización aplicables
+# en el ejercicio 2025" (legal-grounding-verifies-bundled-authoritative-corpus).
+#
+# Corpus-typo correction: the bundled Orden HTML módulo 2 figure for 651.3 y 5
+# reads "11.998.85" (a literal period-for-comma decimal-separator typo,
+# verbatim in the official BOE-published HTML — flagged by the Phase 2
+# author). The AEAT Manual Renta 2025 states the same row as "11.998,85"
+# (comma decimal separator, i.e. eleven thousand nine hundred ninety-eight
+# euros and eighty-five cents) with no ambiguity. The manual's figure is used
+# below; both sources otherwise agree on this row's other three módulos.
+#
+# Two epígrafe collisions deliberately deferred (NOT tabled here): 659.4
+# (two distinct activities share the same IAE code — "Comercio al por menor
+# de libros, periódicos, artículos de papelería..." vs "...de prensa,
+# revistas y libros en quioscos...") and 691.9 ("Reparación de calzado" vs
+# "Reparación de otros bienes de consumo n.c.o.p."). The keyed_bracket_table
+# key is "<epígrafe>:<módulo>" with no third axis to disambiguate two
+# same-code activities, so tabling either would silently misattribute the
+# other's coefficients. Flagged here for the next author who reaches these
+# epígrafes — resolving them needs either a registry key-shape extension
+# (a third disambiguating axis) or an explicit epígrafe-suffix convention
+# agreed with the operator before authoring.
+
+# Epígrafe IAE 651.1 — Comercio al por menor de productos textiles,
+# confecciones para el hogar, alfombras y similares y artículos de tapicería.
+# Módulo 1 Personal asalariado (persona): 3.010,74
+[[revisions."2025".parameters.keyed_brackets]]
+key = "651.1:1"
+value = "3010.74"
+valid_from = 2025-01-01
+valid_to = 2025-12-31
+
+# Módulo 2 Personal no asalariado (persona): 13.812,85
+[[revisions."2025".parameters.keyed_brackets]]
+key = "651.1:2"
+value = "13812.85"
+valid_from = 2025-01-01
+valid_to = 2025-12-31
+
+# Módulo 3 Consumo de energía eléctrica (100 kWh): 38,42
+[[revisions."2025".parameters.keyed_brackets]]
+key = "651.1:3"
+value = "38.42"
+valid_from = 2025-01-01
+valid_to = 2025-12-31
+
+# Módulo 4 Superficie del local independiente (m2): 35,28
+[[revisions."2025".parameters.keyed_brackets]]
+key = "651.1:4"
+value = "35.28"
+valid_from = 2025-01-01
+valid_to = 2025-12-31
+
+# Módulo 5 Superficie del local no independiente (m2): 107,07
+[[revisions."2025".parameters.keyed_brackets]]
+key = "651.1:5"
+value = "107.07"
+valid_from = 2025-01-01
+valid_to = 2025-12-31
+
+# Epígrafe IAE 651.2 — Comercio al por menor de toda clase de prendas para el
+# vestido y tocado.
+# Módulo 1 Personal asalariado (persona): 2.569,83
+[[revisions."2025".parameters.keyed_brackets]]
+key = "651.2:1"
+value = "2569.83"
+valid_from = 2025-01-01
+valid_to = 2025-12-31
+
+# Módulo 2 Personal no asalariado (persona): 13.995,51
+[[revisions."2025".parameters.keyed_brackets]]
+key = "651.2:2"
+value = "13995.51"
+valid_from = 2025-01-01
+valid_to = 2025-12-31
+
+# Módulo 3 Superficie del local (m2): 49,13
+[[revisions."2025".parameters.keyed_brackets]]
+key = "651.2:3"
+value = "49.13"
+valid_from = 2025-01-01
+valid_to = 2025-12-31
+
+# Módulo 4 Consumo de energía eléctrica (100 kWh): 56,69
+[[revisions."2025".parameters.keyed_brackets]]
+key = "651.2:4"
+value = "56.69"
+valid_from = 2025-01-01
+valid_to = 2025-12-31
+
+# Epígrafe IAE 651.3 y 5 — Comercio al por menor de lencería, corsetería y
+# prendas especiales.
+# Módulo 1 Personal asalariado (persona): 2.198,21
+[[revisions."2025".parameters.keyed_brackets]]
+key = "651.3:1"
+value = "2198.21"
+valid_from = 2025-01-01
+valid_to = 2025-12-31
+
+# Módulo 2 Personal no asalariado (persona): 11.998,85 — corpus-typo
+# correction (see note above); grounded in the AEAT Manual Renta 2025 figure,
+# not the bundled Orden HTML's "11.998.85" literal.
+[[revisions."2025".parameters.keyed_brackets]]
+key = "651.3:2"
+value = "11998.85"
+valid_from = 2025-01-01
+valid_to = 2025-12-31
+
+# Módulo 3 Superficie del local (m2): 47,87
+[[revisions."2025".parameters.keyed_brackets]]
+key = "651.3:3"
+value = "47.87"
+valid_from = 2025-01-01
+valid_to = 2025-12-31
+
+# Módulo 4 Consumo de energía eléctrica (100 kWh): 75,58
+[[revisions."2025".parameters.keyed_brackets]]
+key = "651.3:4"
+value = "75.58"
+valid_from = 2025-01-01
+valid_to = 2025-12-31
+
+# Epígrafe IAE 651.4 — Comercio al por menor de artículos de mercería y
+# paquetería.
+# Módulo 1 Personal asalariado (persona): 1.902,18
+[[revisions."2025".parameters.keyed_brackets]]
+key = "651.4:1"
+value = "1902.18"
+valid_from = 2025-01-01
+valid_to = 2025-12-31
+
+# Módulo 2 Personal no asalariado (persona): 10.291,93
+[[revisions."2025".parameters.keyed_brackets]]
+key = "651.4:2"
+value = "10291.93"
+valid_from = 2025-01-01
+valid_to = 2025-12-31
+
+# Módulo 3 Superficie del local (m2): 28,98
+[[revisions."2025".parameters.keyed_brackets]]
+key = "651.4:3"
+value = "28.98"
+valid_from = 2025-01-01
+valid_to = 2025-12-31
+
+# Módulo 4 Consumo de energía eléctrica (100 kWh): 58,57
+[[revisions."2025".parameters.keyed_brackets]]
+key = "651.4:4"
+value = "58.57"
+valid_from = 2025-01-01
+valid_to = 2025-12-31
+
+# Epígrafe IAE 651.6 — Comercio al por menor de calzado, artículos de piel e
+# imitación o productos sustitutivos, cinturones, carteras, bolsos, maletas y
+# artículos de viaje en general.
+# Módulo 1 Personal asalariado (persona): 3.130,41
+[[revisions."2025".parameters.keyed_brackets]]
+key = "651.6:1"
+value = "3130.41"
+valid_from = 2025-01-01
+valid_to = 2025-12-31
+
+# Módulo 2 Personal no asalariado (persona): 13.453,83
+[[revisions."2025".parameters.keyed_brackets]]
+key = "651.6:2"
+value = "13453.83"
+valid_from = 2025-01-01
+valid_to = 2025-12-31
+
+# Módulo 3 Superficie del local (m2): 27,71
+[[revisions."2025".parameters.keyed_brackets]]
+key = "651.6:3"
+value = "27.71"
+valid_from = 2025-01-01
+valid_to = 2025-12-31
+
+# Módulo 4 Consumo de energía eléctrica (100 kWh): 52,27
+[[revisions."2025".parameters.keyed_brackets]]
+key = "651.6:4"
+value = "52.27"
+valid_from = 2025-01-01
+valid_to = 2025-12-31
+
+# Epígrafe IAE 652.2 y 3 — Comercio al por menor de productos de droguería,
+# perfumería y cosmética, limpieza, pinturas, barnices, disolventes, papeles y
+# otros productos para la decoración y de productos químicos, y de artículos
+# para la higiene y el aseo personal.
+# Módulo 1 Personal asalariado (persona): 3.722,48
+[[revisions."2025".parameters.keyed_brackets]]
+key = "652.2:1"
+value = "3722.48"
+valid_from = 2025-01-01
+valid_to = 2025-12-31
+
+# Módulo 2 Personal no asalariado (persona): 12.786,18
+[[revisions."2025".parameters.keyed_brackets]]
+key = "652.2:2"
+value = "12786.18"
+valid_from = 2025-01-01
+valid_to = 2025-12-31
+
+# Módulo 3 Consumo de energía eléctrica (100 kWh): 31,49
+[[revisions."2025".parameters.keyed_brackets]]
+key = "652.2:3"
+value = "31.49"
+valid_from = 2025-01-01
+valid_to = 2025-12-31
+
+# Módulo 4 Superficie del local independiente (m2): 18,27
+[[revisions."2025".parameters.keyed_brackets]]
+key = "652.2:4"
+value = "18.27"
+valid_from = 2025-01-01
+valid_to = 2025-12-31
+
+# Módulo 5 Superficie del local no independiente (m2): 55,43
+[[revisions."2025".parameters.keyed_brackets]]
+key = "652.2:5"
+value = "55.43"
+valid_from = 2025-01-01
+valid_to = 2025-12-31
+
+# Epígrafe IAE 653.1 — Comercio al por menor de muebles.
+# Módulo 1 Personal asalariado (persona): 4.075,20
+[[revisions."2025".parameters.keyed_brackets]]
+key = "653.1:1"
+value = "4075.20"
+valid_from = 2025-01-01
+valid_to = 2025-12-31
+
+# Módulo 2 Personal no asalariado (persona): 16.200,02
+[[revisions."2025".parameters.keyed_brackets]]
+key = "653.1:2"
+value = "16200.02"
+valid_from = 2025-01-01
+valid_to = 2025-12-31
+
+# Módulo 3 Consumo de energía eléctrica (100 kWh): 50,39
+[[revisions."2025".parameters.keyed_brackets]]
+key = "653.1:3"
+value = "50.39"
+valid_from = 2025-01-01
+valid_to = 2025-12-31
+
+# Módulo 4 Superficie del local (m2): 16,38
+[[revisions."2025".parameters.keyed_brackets]]
+key = "653.1:4"
+value = "16.38"
+valid_from = 2025-01-01
+valid_to = 2025-12-31
+
+# Epígrafe IAE 653.2 — Comercio al por menor de material y aparatos
+# eléctricos, electrónicos, electrodomésticos y otros aparatos de uso
+# doméstico accionados por otro tipo de energía distinta de la eléctrica, así
+# como muebles de cocina.
+# Módulo 1 Personal asalariado (persona): 2.884,77
+[[revisions."2025".parameters.keyed_brackets]]
+key = "653.2:1"
+value = "2884.77"
+valid_from = 2025-01-01
+valid_to = 2025-12-31
+
+# Módulo 2 Personal no asalariado (persona): 14.656,86
+[[revisions."2025".parameters.keyed_brackets]]
+key = "653.2:2"
+value = "14656.86"
+valid_from = 2025-01-01
+valid_to = 2025-12-31
+
+# Módulo 3 Consumo de energía eléctrica (100 kWh): 100,78
+[[revisions."2025".parameters.keyed_brackets]]
+key = "653.2:3"
+value = "100.78"
+valid_from = 2025-01-01
+valid_to = 2025-12-31
+
+# Módulo 4 Superficie del local independiente (m2): 36,53
+[[revisions."2025".parameters.keyed_brackets]]
+key = "653.2:4"
+value = "36.53"
+valid_from = 2025-01-01
+valid_to = 2025-12-31
+
+# Módulo 5 Superficie local no independiente (m2): 113,37
+[[revisions."2025".parameters.keyed_brackets]]
+key = "653.2:5"
+value = "113.37"
+valid_from = 2025-01-01
+valid_to = 2025-12-31
+
+# Epígrafe IAE 653.3 — Comercio al por menor de artículos de menaje,
+# ferretería, adorno, regalo, o reclamo (incluyendo bisutería y pequeños
+# electrodomésticos).
+# Módulo 1 Personal asalariado (persona): 3.709,88
+[[revisions."2025".parameters.keyed_brackets]]
+key = "653.3:1"
+value = "3709.88"
+valid_from = 2025-01-01
+valid_to = 2025-12-31
+
+# Módulo 2 Personal no asalariado (persona): 15.116,66
+[[revisions."2025".parameters.keyed_brackets]]
+key = "653.3:2"
+value = "15116.66"
+valid_from = 2025-01-01
+valid_to = 2025-12-31
+
+# Módulo 3 Consumo de energía eléctrica (100 kWh): 51,02
+[[revisions."2025".parameters.keyed_brackets]]
+key = "653.3:3"
+value = "51.02"
+valid_from = 2025-01-01
+valid_to = 2025-12-31
+
+# Módulo 4 Superficie del local (m2): 21,41
+[[revisions."2025".parameters.keyed_brackets]]
+key = "653.3:4"
+value = "21.41"
+valid_from = 2025-01-01
+valid_to = 2025-12-31
+
+# Epígrafe IAE 653.4 y 5 — Comercio al por menor de materiales de
+# construcción, artículos y mobiliario de saneamiento, puertas, ventanas,
+# persianas, etc.
+# Módulo 1 Personal asalariado (persona): 3.061,12
+[[revisions."2025".parameters.keyed_brackets]]
+key = "653.4:1"
+value = "3061.12"
+valid_from = 2025-01-01
+valid_to = 2025-12-31
+
+# Módulo 2 Personal no asalariado (persona): 16.527,55
+[[revisions."2025".parameters.keyed_brackets]]
+key = "653.4:2"
+value = "16527.55"
+valid_from = 2025-01-01
+valid_to = 2025-12-31
+
+# Módulo 3 Consumo de energía eléctrica (100 kWh): 94,48
+[[revisions."2025".parameters.keyed_brackets]]
+key = "653.4:3"
+value = "94.48"
+valid_from = 2025-01-01
+valid_to = 2025-12-31
+
+# Módulo 4 Superficie del local (m2): 8,81
+[[revisions."2025".parameters.keyed_brackets]]
+key = "653.4:4"
+value = "8.81"
+valid_from = 2025-01-01
+valid_to = 2025-12-31
+
+# Epígrafe IAE 653.9 — Comercio al por menor de otros artículos para el
+# equipamiento del hogar n.c.o.p.
+# Módulo 1 Personal asalariado (persona): 4.950,71
+[[revisions."2025".parameters.keyed_brackets]]
+key = "653.9:1"
+value = "4950.71"
+valid_from = 2025-01-01
+valid_to = 2025-12-31
+
+# Módulo 2 Personal no asalariado (persona): 20.061,07
+[[revisions."2025".parameters.keyed_brackets]]
+key = "653.9:2"
+value = "20061.07"
+valid_from = 2025-01-01
+valid_to = 2025-12-31
+
+# Módulo 3 Consumo de energía eléctrica (100 kWh): 81,88
+[[revisions."2025".parameters.keyed_brackets]]
+key = "653.9:3"
+value = "81.88"
+valid_from = 2025-01-01
+valid_to = 2025-12-31
+
+# Módulo 4 Superficie del local (m2): 39,68
+[[revisions."2025".parameters.keyed_brackets]]
+key = "653.9:4"
+value = "39.68"
+valid_from = 2025-01-01
+valid_to = 2025-12-31
+
+# Epígrafe IAE 654.2 — Comercio al por menor de accesorios y piezas de
+# recambio para vehículos terrestres.
+# Módulo 1 Personal asalariado (persona): 3.098,92
+[[revisions."2025".parameters.keyed_brackets]]
+key = "654.2:1"
+value = "3098.92"
+valid_from = 2025-01-01
+valid_to = 2025-12-31
+
+# Módulo 2 Personal no asalariado (persona): 17.018,84
+[[revisions."2025".parameters.keyed_brackets]]
+key = "654.2:2"
+value = "17018.84"
+valid_from = 2025-01-01
+valid_to = 2025-12-31
+
+# Módulo 3 Consumo de energía eléctrica (100 kWh): 201,55
+[[revisions."2025".parameters.keyed_brackets]]
+key = "654.2:3"
+value = "201.55"
+valid_from = 2025-01-01
+valid_to = 2025-12-31
+
+# Módulo 4 Potencia fiscal vehículo (CVF): 617,26
+[[revisions."2025".parameters.keyed_brackets]]
+key = "654.2:4"
+value = "617.26"
+valid_from = 2025-01-01
+valid_to = 2025-12-31
+
+# Epígrafe IAE 654.5 — Comercio al por menor de toda clase de maquinaria
+# (excepto aparatos del hogar, de oficina, médicos, ortopédicos, ópticos y
+# fotográficos).
+# Módulo 1 Personal asalariado (persona): 9.422,71
+[[revisions."2025".parameters.keyed_brackets]]
+key = "654.5:1"
+value = "9422.71"
+valid_from = 2025-01-01
+valid_to = 2025-12-31
+
+# Módulo 2 Personal no asalariado (persona): 18.858,03
+[[revisions."2025".parameters.keyed_brackets]]
+key = "654.5:2"
+value = "18858.03"
+valid_from = 2025-01-01
+valid_to = 2025-12-31
+
+# Módulo 3 Consumo de energía eléctrica (100 kWh): 39,05
+[[revisions."2025".parameters.keyed_brackets]]
+key = "654.5:3"
+value = "39.05"
+valid_from = 2025-01-01
+valid_to = 2025-12-31
+
+# Módulo 4 Potencia fiscal vehículo (CVF): 132,27
+[[revisions."2025".parameters.keyed_brackets]]
+key = "654.5:4"
+value = "132.27"
+valid_from = 2025-01-01
+valid_to = 2025-12-31
+
+# Epígrafe IAE 654.6 — Comercio al por menor de cubiertas, bandas o bandajes y
+# cámaras de aire para toda clase de vehículos, excepto las actividades de
+# comercio al por mayor de los artículos citados.
+# Módulo 1 Personal asalariado (persona): 2.746,19
+[[revisions."2025".parameters.keyed_brackets]]
+key = "654.6:1"
+value = "2746.19"
+valid_from = 2025-01-01
+valid_to = 2025-12-31
+
+# Módulo 2 Personal no asalariado (persona): 14.222,25
+[[revisions."2025".parameters.keyed_brackets]]
+key = "654.6:2"
+value = "14222.25"
+valid_from = 2025-01-01
+valid_to = 2025-12-31
+
+# Módulo 3 Consumo de energía eléctrica (100 kWh): 119,67
+[[revisions."2025".parameters.keyed_brackets]]
+key = "654.6:3"
+value = "119.67"
+valid_from = 2025-01-01
+valid_to = 2025-12-31
+
+# Módulo 4 Potencia fiscal vehículo (CVF): 377,92
+[[revisions."2025".parameters.keyed_brackets]]
+key = "654.6:4"
+value = "377.92"
+valid_from = 2025-01-01
+valid_to = 2025-12-31
+
+# Epígrafe IAE 659.2 — Comercio al por menor de muebles de oficina y de
+# máquinas y equipos de oficina.
+# Módulo 1 Personal asalariado (persona): 4.157,08
+[[revisions."2025".parameters.keyed_brackets]]
+key = "659.2:1"
+value = "4157.08"
+valid_from = 2025-01-01
+valid_to = 2025-12-31
+
+# Módulo 2 Personal no asalariado (persona): 16.521,25
+[[revisions."2025".parameters.keyed_brackets]]
+key = "659.2:2"
+value = "16521.25"
+valid_from = 2025-01-01
+valid_to = 2025-12-31
+
+# Módulo 3 Consumo de energía eléctrica (100 kWh): 56,69
+[[revisions."2025".parameters.keyed_brackets]]
+key = "659.2:3"
+value = "56.69"
+valid_from = 2025-01-01
+valid_to = 2025-12-31
+
+# Módulo 4 Superficie del local (m2): 17,01
+[[revisions."2025".parameters.keyed_brackets]]
+key = "659.2:4"
+value = "17.01"
+valid_from = 2025-01-01
+valid_to = 2025-12-31
+
+# Epígrafe IAE 659.3 — Comercio al por menor de aparatos e instrumentos
+# médicos, ortopédicos, ópticos y fotográficos.
+# Módulo 1 Personal asalariado (persona): 7.174,12
+[[revisions."2025".parameters.keyed_brackets]]
+key = "659.3:1"
+value = "7174.12"
+valid_from = 2025-01-01
+valid_to = 2025-12-31
+
+# Módulo 2 Personal no asalariado (persona): 19.273,74
+[[revisions."2025".parameters.keyed_brackets]]
+key = "659.3:2"
+value = "19273.74"
+valid_from = 2025-01-01
+valid_to = 2025-12-31
+
+# Módulo 3 Consumo de energía eléctrica (100 kWh): 119,67
+[[revisions."2025".parameters.keyed_brackets]]
+key = "659.3:3"
+value = "119.67"
+valid_from = 2025-01-01
+valid_to = 2025-12-31
+
+# Módulo 4 Potencia fiscal vehículo (CVF): 1.070,76
+[[revisions."2025".parameters.keyed_brackets]]
+key = "659.3:4"
+value = "1070.76"
+valid_from = 2025-01-01
+valid_to = 2025-12-31
+
+# Epígrafe IAE 659.6 — Comercio al por menor de juguetes, artículos de
+# deporte, prendas deportivas de vestido, calzado y tocado, armas, cartuchería
+# y artículos de pirotecnia.
+# Módulo 1 Personal asalariado (persona): 2.916,26
+[[revisions."2025".parameters.keyed_brackets]]
+key = "659.6:1"
+value = "2916.26"
+valid_from = 2025-01-01
+valid_to = 2025-12-31
+
+# Módulo 2 Personal no asalariado (persona): 13.258,56
+[[revisions."2025".parameters.keyed_brackets]]
+key = "659.6:2"
+value = "13258.56"
+valid_from = 2025-01-01
+valid_to = 2025-12-31
+
+# Módulo 3 Consumo de energía eléctrica (100 kWh): 138,57
+[[revisions."2025".parameters.keyed_brackets]]
+key = "659.6:3"
+value = "138.57"
+valid_from = 2025-01-01
+valid_to = 2025-12-31
+
+# Módulo 4 Superficie del local (m2): 32,75
+[[revisions."2025".parameters.keyed_brackets]]
+key = "659.6:4"
+value = "32.75"
+valid_from = 2025-01-01
+valid_to = 2025-12-31
+
+# Epígrafe IAE 659.7 — Comercio al por menor de semillas, abonos, flores y
+# plantas y pequeños animales.
+# Módulo 1 Personal asalariado (persona): 4.988,50
+[[revisions."2025".parameters.keyed_brackets]]
+key = "659.7:1"
+value = "4988.50"
+valid_from = 2025-01-01
+valid_to = 2025-12-31
+
+# Módulo 2 Personal no asalariado (persona): 16.124,43
+[[revisions."2025".parameters.keyed_brackets]]
+key = "659.7:2"
+value = "16124.43"
+valid_from = 2025-01-01
+valid_to = 2025-12-31
+
+# Módulo 3 Potencia fiscal vehículo (CVF): 258,24
+[[revisions."2025".parameters.keyed_brackets]]
+key = "659.7:3"
+value = "258.24"
+valid_from = 2025-01-01
+valid_to = 2025-12-31
+
+# Epígrafe IAE 662.2 — Comercio al por menor de toda clase de artículos,
+# incluyendo alimentación y bebidas, en establecimientos distintos de los
+# especificados en el Grupo 661 y en el epígrafe 662.1.
+# Módulo 1 Personal asalariado (persona): 4.868,82
+[[revisions."2025".parameters.keyed_brackets]]
+key = "662.2:1"
+value = "4868.82"
+valid_from = 2025-01-01
+valid_to = 2025-12-31
+
+# Módulo 2 Personal no asalariado (persona): 9.429,01
+[[revisions."2025".parameters.keyed_brackets]]
+key = "662.2:2"
+value = "9429.01"
+valid_from = 2025-01-01
+valid_to = 2025-12-31
+
+# Módulo 3 Consumo de energía eléctrica (100 kWh): 28,98
+[[revisions."2025".parameters.keyed_brackets]]
+key = "662.2:3"
+value = "28.98"
+valid_from = 2025-01-01
+valid_to = 2025-12-31
+
+# Módulo 4 Superficie del local (m2): 37,79
+[[revisions."2025".parameters.keyed_brackets]]
+key = "662.2:4"
+value = "37.79"
+valid_from = 2025-01-01
+valid_to = 2025-12-31
+
+# Epígrafe IAE 663.1 — Comercio al por menor fuera de un establecimiento
+# comercial permanente de productos alimenticios, incluso bebidas y helados.
+# Módulo 1 Personal asalariado (persona): 1.398,29
+[[revisions."2025".parameters.keyed_brackets]]
+key = "663.1:1"
+value = "1398.29"
+valid_from = 2025-01-01
+valid_to = 2025-12-31
+
+# Módulo 2 Personal no asalariado (persona): 13.989,21
+[[revisions."2025".parameters.keyed_brackets]]
+key = "663.1:2"
+value = "13989.21"
+valid_from = 2025-01-01
+valid_to = 2025-12-31
+
+# Módulo 3 Potencia fiscal vehículo (CVF): 113,37
+[[revisions."2025".parameters.keyed_brackets]]
+key = "663.1:3"
+value = "113.37"
+valid_from = 2025-01-01
+valid_to = 2025-12-31
+
+# Epígrafe IAE 663.2 — Comercio al por menor fuera de un establecimiento
+# comercial permanente de artículos textiles y de confección.
+# Módulo 1 Personal asalariado (persona): 2.991,84
+[[revisions."2025".parameters.keyed_brackets]]
+key = "663.2:1"
+value = "2991.84"
+valid_from = 2025-01-01
+valid_to = 2025-12-31
+
+# Módulo 2 Personal no asalariado (persona): 13.982,91
+[[revisions."2025".parameters.keyed_brackets]]
+key = "663.2:2"
+value = "13982.91"
+valid_from = 2025-01-01
+valid_to = 2025-12-31
+
+# Módulo 3 Potencia fiscal vehículo (CVF): 239,34
+[[revisions."2025".parameters.keyed_brackets]]
+key = "663.2:3"
+value = "239.34"
+valid_from = 2025-01-01
+valid_to = 2025-12-31
+
+# Epígrafe IAE 663.3 — Comercio al por menor fuera de un establecimiento
+# comercial permanente de calzado, pieles y artículos de cuero.
+# Módulo 1 Personal asalariado (persona): 2.613,92
+[[revisions."2025".parameters.keyed_brackets]]
+key = "663.3:1"
+value = "2613.92"
+valid_from = 2025-01-01
+valid_to = 2025-12-31
+
+# Módulo 2 Personal no asalariado (persona): 11.186,32
+[[revisions."2025".parameters.keyed_brackets]]
+key = "663.3:2"
+value = "11186.32"
+valid_from = 2025-01-01
+valid_to = 2025-12-31
+
+# Módulo 3 Potencia fiscal vehículo (CVF): 151,16
+[[revisions."2025".parameters.keyed_brackets]]
+key = "663.3:3"
+value = "151.16"
+valid_from = 2025-01-01
+valid_to = 2025-12-31
+
+# Epígrafe IAE 663.4 — Comercio al por menor fuera de un establecimiento
+# comercial permanente de artículos de droguería y cosméticos y de productos
+# químicos en general.
+# Módulo 1 Personal asalariado (persona): 3.678,39
+[[revisions."2025".parameters.keyed_brackets]]
+key = "663.4:1"
+value = "3678.39"
+valid_from = 2025-01-01
+valid_to = 2025-12-31
+
+# Módulo 2 Personal no asalariado (persona): 12.641,30
+[[revisions."2025".parameters.keyed_brackets]]
+key = "663.4:2"
+value = "12641.30"
+valid_from = 2025-01-01
+valid_to = 2025-12-31
+
+# Módulo 3 Potencia fiscal vehículo (CVF): 113,37
+[[revisions."2025".parameters.keyed_brackets]]
+key = "663.4:3"
+value = "113.37"
+valid_from = 2025-01-01
+valid_to = 2025-12-31
+
+# Epígrafe IAE 663.9 — Comercio al por menor fuera de un establecimiento
+# comercial permanente de otras clases de mercancías n.c.o.p.
+# Módulo 1 Personal asalariado (persona): 5.448,29
+[[revisions."2025".parameters.keyed_brackets]]
+key = "663.9:1"
+value = "5448.29"
+valid_from = 2025-01-01
+valid_to = 2025-12-31
+
+# Módulo 2 Personal no asalariado (persona): 10.537,57
+[[revisions."2025".parameters.keyed_brackets]]
+key = "663.9:2"
+value = "10537.57"
+valid_from = 2025-01-01
+valid_to = 2025-12-31
+
+# Módulo 3 Potencia fiscal vehículo (CVF): 283,44
+[[revisions."2025".parameters.keyed_brackets]]
+key = "663.9:3"
+value = "283.44"
+valid_from = 2025-01-01
+valid_to = 2025-12-31
+
+# Epígrafe IAE 681 — Servicio de hospedaje en hoteles y moteles de una o dos
+# estrellas.
+# Módulo 1 Personal asalariado (persona): 6.223,02
+[[revisions."2025".parameters.keyed_brackets]]
+key = "681:1"
+value = "6223.02"
+valid_from = 2025-01-01
+valid_to = 2025-12-31
+
+# Módulo 2 Personal no asalariado (persona): 20.438,98
+[[revisions."2025".parameters.keyed_brackets]]
+key = "681:2"
+value = "20438.98"
+valid_from = 2025-01-01
+valid_to = 2025-12-31
+
+# Módulo 3 Número de plazas (plaza): 371,62
+[[revisions."2025".parameters.keyed_brackets]]
+key = "681:3"
+value = "371.62"
+valid_from = 2025-01-01
+valid_to = 2025-12-31
+
+# Epígrafe IAE 682 — Servicio de hospedaje en hostales y pensiones.
+# Módulo 1 Personal asalariado (persona): 5.145,96
+[[revisions."2025".parameters.keyed_brackets]]
+key = "682:1"
+value = "5145.96"
+valid_from = 2025-01-01
+valid_to = 2025-12-31
+
+# Módulo 2 Personal no asalariado (persona): 17.541,62
+[[revisions."2025".parameters.keyed_brackets]]
+key = "682:2"
+value = "17541.62"
+valid_from = 2025-01-01
+valid_to = 2025-12-31
+
+# Módulo 3 Número de plazas (plaza): 270,85
+[[revisions."2025".parameters.keyed_brackets]]
+key = "682:3"
+value = "270.85"
+valid_from = 2025-01-01
+valid_to = 2025-12-31
+
+# Epígrafe IAE 683 — Servicio de hospedaje en fondas y casas de huéspedes.
+# Módulo 1 Personal asalariado (persona): 4.478,31
+[[revisions."2025".parameters.keyed_brackets]]
+key = "683:1"
+value = "4478.31"
+valid_from = 2025-01-01
+valid_to = 2025-12-31
+
+# Módulo 2 Personal no asalariado (persona): 14.587,57
+[[revisions."2025".parameters.keyed_brackets]]
+key = "683:2"
+value = "14587.57"
+valid_from = 2025-01-01
+valid_to = 2025-12-31
+
+# Módulo 3 Número de plazas (plaza): 132,27
+[[revisions."2025".parameters.keyed_brackets]]
+key = "683:3"
+value = "132.27"
+valid_from = 2025-01-01
+valid_to = 2025-12-31
+
+# Epígrafe IAE 691.1 — Reparación de artículos eléctricos para el hogar.
+# Módulo 1 Personal asalariado (persona): 4.314,54
+[[revisions."2025".parameters.keyed_brackets]]
+key = "691.1:1"
+value = "4314.54"
+valid_from = 2025-01-01
+valid_to = 2025-12-31
+
+# Módulo 2 Personal no asalariado (persona): 15.538,66
+[[revisions."2025".parameters.keyed_brackets]]
+key = "691.1:2"
+value = "15538.66"
+valid_from = 2025-01-01
+valid_to = 2025-12-31
+
+# Módulo 3 Superficie del local (m2): 17,01
+[[revisions."2025".parameters.keyed_brackets]]
+key = "691.1:3"
+value = "17.01"
+valid_from = 2025-01-01
+valid_to = 2025-12-31
+
+# Epígrafe IAE 691.2 — Reparación de vehículos automóviles, bicicletas y
+# otros vehículos.
+# Módulo 1 Personal asalariado (persona): 4.157,08
+[[revisions."2025".parameters.keyed_brackets]]
+key = "691.2:1"
+value = "4157.08"
+valid_from = 2025-01-01
+valid_to = 2025-12-31
+
+# Módulo 2 Personal no asalariado (persona): 17.094,42
+[[revisions."2025".parameters.keyed_brackets]]
+key = "691.2:2"
+value = "17094.42"
+valid_from = 2025-01-01
+valid_to = 2025-12-31
+
+# Módulo 3 Superficie del local (m2): 27,08
+[[revisions."2025".parameters.keyed_brackets]]
+key = "691.2:3"
+value = "27.08"
+valid_from = 2025-01-01
+valid_to = 2025-12-31
+
+# Epígrafe IAE 692 — Reparación de maquinaria industrial.
+# Módulo 1 Personal asalariado (persona): 4.409,02
+[[revisions."2025".parameters.keyed_brackets]]
+key = "692:1"
+value = "4409.02"
+valid_from = 2025-01-01
+valid_to = 2025-12-31
+
+# Módulo 2 Personal no asalariado (persona): 18.146,29
+[[revisions."2025".parameters.keyed_brackets]]
+key = "692:2"
+value = "18146.29"
+valid_from = 2025-01-01
+valid_to = 2025-12-31
+
+# Módulo 3 Superficie del local (m2): 94,48
+[[revisions."2025".parameters.keyed_brackets]]
+key = "692:3"
+value = "94.48"
+valid_from = 2025-01-01
+valid_to = 2025-12-31
+
+# Epígrafe IAE 699 — Otras reparaciones n.c.o.p.
+# Módulo 1 Personal asalariado (persona): 3.703,58
+[[revisions."2025".parameters.keyed_brackets]]
+key = "699:1"
+value = "3703.58"
+valid_from = 2025-01-01
+valid_to = 2025-12-31
+
+# Módulo 2 Personal no asalariado (persona): 15.230,03
+[[revisions."2025".parameters.keyed_brackets]]
+key = "699:2"
+value = "15230.03"
+valid_from = 2025-01-01
+valid_to = 2025-12-31
+
+# Módulo 3 Superficie del local (m2): 88,18
+[[revisions."2025".parameters.keyed_brackets]]
+key = "699:3"
+value = "88.18"
+valid_from = 2025-01-01
+valid_to = 2025-12-31
+
+# Epígrafe IAE 721.1 y 3 — Transporte urbano colectivo y de viajeros por
+# carretera.
+# Módulo 1 Personal asalariado (persona): 2.981,02
+[[revisions."2025".parameters.keyed_brackets]]
+key = "721.1:1"
+value = "2981.02"
+valid_from = 2025-01-01
+valid_to = 2025-12-31
+
+# Módulo 2 Personal no asalariado (persona): 16.016,97
+[[revisions."2025".parameters.keyed_brackets]]
+key = "721.1:2"
+value = "16016.97"
+valid_from = 2025-01-01
+valid_to = 2025-12-31
+
+# Módulo 3 Número de asientos (asiento): 121,40
+[[revisions."2025".parameters.keyed_brackets]]
+key = "721.1:3"
+value = "121.40"
 valid_from = 2025-01-01
 valid_to = 2025-12-31
 

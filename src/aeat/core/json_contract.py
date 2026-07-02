@@ -6,27 +6,27 @@ Defines the strict pydantic v2 bases (:class:`OutputSchema`,
 (:class:`Notice`), the schema registry (:data:`SCHEMA_REGISTRY`), and
 the emit helpers (:func:`emit_json_document`, :func:`emit_json_success`)
 used by every registered machine-output path.  CLI payload modules import
-these primitives through :mod:`aeat.entrypoints.cli._schemas`, register
+these primitives through :mod:`entrypoints.cli._schemas`, register
 result models with :func:`register_schema`, and route JSON mode through
-:func:`aeat.entrypoints.cli._common._emit_envelope`.
+:func:`entrypoints.cli._common._emit_envelope`.
 
 :func:`emit_json_success` derives :class:`EnvelopeStatus` from supplied
 :class:`Notice` values via :func:`derive_status` and applies
-:func:`aeat.core.redaction.redact_structured_for_cli_output` to the
+:func:`core.redaction.redact_structured_for_cli_output` to the
 entire envelope before writing stdout.  Text output remains owned by
-:func:`aeat.core.output_rendering.render_command_output`, so redaction
+:func:`core.output_rendering.render_command_output`, so redaction
 and the ``reveal_cli_identifiers_opt_in`` switch stay consistent across
 text and JSON surfaces.
 
-Living in :mod:`aeat.core` keeps domain and adapter packages free of any
-dependency on :mod:`aeat.entrypoints.cli`: a wrapped command emits its
+Living in :mod:`core` keeps domain and adapter packages free of any
+dependency on :mod:`entrypoints.cli`: a wrapped command emits its
 strict-validated payload through :func:`emit_json_success` without
 having to know how the CLI itself wires Click options.
 
 This module owns the stdout success contract and schema registry. The
-stderr failure document is rendered by :mod:`aeat.core.errors` using the
+stderr failure document is rendered by :mod:`core.errors` using the
 same :data:`ENVELOPE_SCHEMA_VERSION`, and text-mode layout remains owned
-by :mod:`aeat.core.output_rendering`.
+by :mod:`core.output_rendering`.
 """
 
 from __future__ import annotations
@@ -76,7 +76,7 @@ class EnvelopeStatus(StrEnum):
     success-envelope authority for computing it.
 
     :func:`emit_json_success` never emits :attr:`ERROR`; blocking
-    failures route through the shared :class:`~aeat.core.errors.AeatError`
+    failures route through the shared :class:`~core.errors.AeatError`
     boundary instead of being smuggled into stdout notices.
     """
 
@@ -106,7 +106,7 @@ class Notice(BaseModel):
     ``ModeloFinding``, source-resolution advisories) are projected into
     this shape rather than re-modelled as bespoke per-command payload
     fields.  CLI helpers such as
-    :func:`aeat.entrypoints.cli._common._emit_envelope` pass these values
+    :func:`entrypoints.cli._common._emit_envelope` pass these values
     to :func:`emit_json_success`, while text renderers fold equivalent
     prose into their line output.
 
@@ -123,7 +123,7 @@ class Notice(BaseModel):
             machine-queryable sub-fields without a bespoke payload model.
 
     Blocking failures are not notices; they raise an
-    :class:`~aeat.core.errors.AeatError` and emit on stderr. Command payload
+    :class:`~core.errors.AeatError` and emit on stderr. Command payload
     schemas should also avoid reintroducing bespoke advisory, hint, or
     warning fields inside ``result`` when a :class:`Notice` can carry the
     same non-blocking diagnostic.
@@ -158,7 +158,7 @@ class OutputSchemaError(AeatError):
     Triggered by :func:`register_schema` when a non-schema class is
     decorated, when a command path is registered twice with different
     schemas, or when the command path is blank.  It deliberately inherits
-    :class:`aeat.core.errors.AeatError` so registry defects route through
+    :class:`core.errors.AeatError` so registry defects route through
     the shared CLI error boundary instead of bypassing structured output.
     """
 
@@ -329,10 +329,10 @@ def emit_json_success(
     The ``status`` is derived from the supplied notices
     (:func:`derive_status`) so the JSON outcome and the shell exit code
     never disagree. The assembled envelope is redacted through
-    :func:`aeat.core.redaction.redact_structured_for_cli_output` before
+    :func:`core.redaction.redact_structured_for_cli_output` before
     :func:`emit_json_document` writes it.
 
-    This helper is stdout-only. Any raised :class:`~aeat.core.errors.AeatError`
+    This helper is stdout-only. Any raised :class:`~core.errors.AeatError`
     is handled by the CLI error boundary, which renders the sibling stderr
     envelope instead of returning a success document with an error-shaped
     ``result``.
@@ -375,10 +375,10 @@ def _record_captured_envelope(envelope_payload: object) -> None:
     The deterministic-output substrate captures the verbatim emitted
     envelope so a recorded run can be replayed and asserted byte-identical
     after masking. Capture is off by default: when no
-    :func:`aeat.core.observability.capture_envelopes` scope is active the
+    :func:`core.observability.capture_envelopes` scope is active the
     recorder is a single ``ContextVar.get`` returning ``None``. The call
     is fully best-effort — a capture failure must never disturb the emit
-    contract. The import is lazy so :mod:`aeat.core.json_contract` keeps
+    contract. The import is lazy so :mod:`core.json_contract` keeps
     no module-load dependency on the observability layer.
     """
     if not isinstance(envelope_payload, Mapping):

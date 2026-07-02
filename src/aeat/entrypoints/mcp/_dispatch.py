@@ -6,7 +6,7 @@ the server runs. The actual invocation lives in the server shell; this module is
 deterministic and unit-tested.
 
 The live serving path builds its argv from the command's per-verb input schema
-via :func:`~aeat.entrypoints.mcp._input_schema.cli_argv_for` (named arguments in,
+via :func:`~entrypoints.mcp._input_schema.cli_argv_for` (named arguments in,
 resolved CLI path out); :func:`tool_request_argv` remains the pure
 ``(command_key, cli_tokens) -> argv`` mapper the determinism-replay eval uses to
 reconstruct a recorded raw-token call.
@@ -64,7 +64,7 @@ def tool_request_argv(command_key: str, args: Iterable[str]) -> list[str]:
     machine envelope is always requested. The pre-resolved ``args`` tokens are
     appended after the command path. The live serving path instead builds its
     argv from the per-verb schema via
-    :func:`~aeat.entrypoints.mcp._input_schema.cli_argv_for`; this mapper serves
+    :func:`~entrypoints.mcp._input_schema.cli_argv_for`; this mapper serves
     the determinism-replay eval, which records raw CLI-token calls.
     """
     return ["--format", "json", *_cli_path_tokens(command_key), *args]

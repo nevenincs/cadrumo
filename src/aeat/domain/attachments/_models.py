@@ -90,17 +90,17 @@ class Attachment(BaseModel):
     the stored bytes, and the model enforces that ``attachment_id == sha256``
     so the manifest cannot drift from the byte payload it references.
 
-    The manifest also records the originating channel (:class:`aeat.domain.attachments.AttachmentSource`),
-    the document kind (:class:`aeat.domain.attachments.AttachmentKind`), and
+    The manifest also records the originating channel (:class:`domain.attachments.AttachmentSource`),
+    the document kind (:class:`domain.attachments.AttachmentKind`), and
     optional cross-references back to transaction and invoice identifiers so
     the evidence layer is traversable in either direction.
 
     Attributes:
         attachment_id: 64-character lowercase hex SHA-256 digest. Equals
             :attr:`sha256`.
-        kind: Document kind. See :class:`aeat.domain.attachments.AttachmentKind`.
+        kind: Document kind. See :class:`domain.attachments.AttachmentKind`.
         source: Channel the bytes were captured from. See
-            :class:`aeat.domain.attachments.AttachmentSource`.
+            :class:`domain.attachments.AttachmentSource`.
         source_reference: Channel-specific reference (e.g. a Gmail message id,
             a Drive file id, a local path).
         sha256: 64-character lowercase hex SHA-256 of the stored bytes.

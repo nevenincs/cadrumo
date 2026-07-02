@@ -41,9 +41,11 @@ from typing import TYPE_CHECKING
 
 from ._categories import AuthMethod, PortalCategory, PortalHost, UrlStability
 from ._codes import Portal
+from ._entries._common import build_entry, portal_path
 from ._errors import (
     PortalIntegrityError,
     PortalRegistryError,
+    PortalValidationError,
     UnknownPortalError,
 )
 from ._hosts import portal_host_name
@@ -104,11 +106,14 @@ __all__ = (
     "PortalIntegrityError",
     "PortalMetadata",
     "PortalRegistryError",
+    "PortalValidationError",
     "UnknownPortalError",
     "UrlStability",
+    "build_entry",
     "evaluate_portal_drift",
     "get_portal",
     "portal_host_name",
+    "portal_path",
     "portals_by_category",
     "portals_for_modelo",
 )

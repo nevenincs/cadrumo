@@ -659,6 +659,9 @@ ignore_imports =
     # roundtrip-discipline tests; ignoring its adapter edge breaks the layer
     # path for every application/domain test that routes fixtures through it.
     aeat.tests.secure_sql -> aeat.adapters.**
+    # The shared justificante parse-cache test helper imports the inbound
+    # justificante adapter for roundtrip-discipline fixtures; same rationale.
+    aeat.tests._justificante_parse_cache -> aeat.adapters.**
     # ── application → entrypoints (test CLI-runner sentinels) ──
     aeat.application.setup.tests.test_cli -> aeat.tests.cli_runner
     aeat.application.tests.test_config_parity -> aeat.tests.cli_runner

@@ -2,14 +2,14 @@
 
 The overview surfaces (``explain`` / ``calendar`` / ``agenda`` /
 ``backlog``) used to treat every profile as an *autónomo en estimación
-directa*: the :class:`~aeat.domain.deadlines.DeadlineEngine` produces an
+directa*: the :class:`~domain.deadlines.DeadlineEngine` produces an
 obligation for every modelo with a registered deadline window, and no
 layer asked *which kind of taxpayer this is*. A pure landlord was told
 Modelo 130 was overdue.
 
 This module is the derivation layer: each modelo's ``applicable``
 verdict is DERIVED from the three-axis
-:class:`~aeat.domain.deadlines.TaxpayerProfile` model (entity type,
+:class:`~domain.deadlines.TaxpayerProfile` model (entity type,
 IRPF income categories, estimation regime) through a registry-grounded
 rule table. The autónomo-by-default assumption is removed.
 
@@ -1494,7 +1494,7 @@ def derive_modelo_applicability(
     """Derive a modelo's applicability from the taxpayer model.
 
     The verdict is DERIVED from the three-axis
-    :class:`~aeat.domain.deadlines.TaxpayerProfile` model — never
+    :class:`~domain.deadlines.TaxpayerProfile` model — never
     assumed. An undeclared taxpayer model yields an explicit
     :attr:`ApplicabilityVerdict.INCOMPLETE` answer; the engine never
     reports a confident wrong obligation.

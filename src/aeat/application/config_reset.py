@@ -14,30 +14,30 @@ typed :class:`ConfigResetReport`:
 - ``ALL``: combines the three scopes above.
 
 The service runs through the normal runtime storage routes.
-:class:`~aeat.application.workflow.WorkflowStateRepository` loads the typed
-:class:`~aeat.application.workflow.WorkflowState`, profile removal goes
-through :class:`~aeat.application.user_profile.UserProfileLifecycleRepository`
-plus :func:`~aeat.application.user_profile.remove_profile_bucket_directory`,
+:class:`~application.workflow.WorkflowStateRepository` loads the typed
+:class:`~application.workflow.WorkflowState`, profile removal goes
+through :class:`~application.user_profile.UserProfileLifecycleRepository`
+plus :func:`~application.user_profile.remove_profile_bucket_directory`,
 and DATA reset delegates to
-:func:`~aeat.application.diagnostics.quarantine_unreadable_secure_objects`
-for a :class:`~aeat.application.diagnostics.SecureObjectIntegrityReport`.
+:func:`~application.diagnostics.quarantine_unreadable_secure_objects`
+for a :class:`~application.diagnostics.SecureObjectIntegrityReport`.
 It does not bypass runtime readiness or directly erase readable ledger data.
 
 Each scope writes one log line through the project's standard
-:mod:`aeat.core.logging` channel so post-mortem analysis of an
+:mod:`core.logging` channel so post-mortem analysis of an
 operator's reset history is possible without an extra audit-only
 backend. The function rejects calls without explicit confirmation and
 raises :class:`ConfigResetUnconfirmedError` with a registered translated
 message key.
 
 See Also:
-    :func:`~aeat.application.workflow._persistence.reset_workflow_state`
+    :func:`~application.workflow._persistence.reset_workflow_state`
         Narrow ``aeat config repair reset-progress`` route that deletes the
         saved workflow-state envelope after producing a
-        :class:`~aeat.application.workflow.WorkflowStateResetFingerprint`.
-    :class:`~aeat.application.diagnostics.SecureObjectIntegrityReport`
+        :class:`~application.workflow.WorkflowStateResetFingerprint`.
+    :class:`~application.diagnostics.SecureObjectIntegrityReport`
         DATA-scope quarantine summary returned by the diagnostics pipeline.
-    :mod:`aeat.application.repair_integrity`
+    :mod:`application.repair_integrity`
         Policy registry for repair surfaces, including the metadata-only
         workflow-state reset plan.
 """
@@ -89,7 +89,7 @@ class ConfigResetUnconfirmedError(AeatError):
     The error carries ``errors.refused.refused_config_reset_unconfirmed`` and
     the refused :class:`ConfigResetScope` value in structured context so the
     CLI/error envelope renders through the registered
-    :class:`~aeat.core.errors.ErrorEnvelope` refusal catalogue.
+    :class:`~core.errors.ErrorEnvelope` refusal catalogue.
     """
 
 
@@ -105,7 +105,7 @@ class ConfigResetReport(BaseModel):
         quarantined_namespace_count: Number of secure-object namespaces
             whose unreadable rows were archived to the quarantine table
             during the DATA reset via
-            :class:`~aeat.application.diagnostics.SecureObjectIntegrityReport`.
+            :class:`~application.diagnostics.SecureObjectIntegrityReport`.
     """
 
     model_config = STRICT_FROZEN_CONFIG
@@ -121,16 +121,16 @@ def reset_config(scope: ConfigResetScope, *, confirmed: bool) -> ConfigResetRepo
 
     The operation is destructive and therefore refuses unless
     ``confirmed=True``. Confirmed PROFILE / ALL resets enumerate profile
-    manifests via :func:`~aeat.application.workflow.list_profile_buckets`,
+    manifests via :func:`~application.workflow.list_profile_buckets`,
     delete each profile through
-    :class:`~aeat.application.user_profile.UserProfileLifecycleRepository`, and
+    :class:`~application.user_profile.UserProfileLifecycleRepository`, and
     then remove bucket directories after disposing cached SQL engines. AUTH
     resets replace auth state inside
-    :class:`~aeat.application.workflow.WorkflowState`. DATA resets call
-    :func:`~aeat.application.diagnostics.quarantine_unreadable_secure_objects`
+    :class:`~application.workflow.WorkflowState`. DATA resets call
+    :func:`~application.diagnostics.quarantine_unreadable_secure_objects`
     for unreadable secure-object rows only.
     This broad reset surface is separate from
-    :func:`~aeat.application.workflow._persistence.reset_workflow_state`, which
+    :func:`~application.workflow._persistence.reset_workflow_state`, which
     only clears the workflow-state envelope for
     ``aeat config repair reset-progress``.
 

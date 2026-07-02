@@ -3,7 +3,7 @@
 One of three distinct prefill tiers, NOT to be merged: this is the
 RELATION tier (cross-revision aggregations declared as
 ``RelationDefinition`` records). The other two are the previous-filing
-direct-carry tier (:mod:`aeat.application.calculations._binding_prefill`)
+direct-carry tier (:mod:`application.calculations._binding_prefill`)
 and the AEAT borrador pre-fill tier (the registry ``aeat_prefilled`` flag,
 an AEAT-live source). Each names a different mechanism and source; they
 share only the word "prefill".
@@ -19,36 +19,36 @@ bindings declared on one :class:`ModeloRevision` directly:
    ``source_revision_selector``, ``source_periods``, ``source_casilla_id``,
    and ``aggregation.op``.
 2. Scanning the local
-   :class:`~aeat.application.calculations.CalculationObservationRepository`
+   :class:`~application.calculations.CalculationObservationRepository`
    for prior :class:`RegistryModeloObservation` filings matching the source
    quadruple.
 3. Folding the source filings' casilla values through the declared
    aggregation op (``sum``, ``copy``).
 4. Returning a
-   :class:`~aeat.application.storage.calc_sheets._records.RelationValues`
+   :class:`~application.storage.calc_sheets.RelationValues`
    record stamped with provenance the apply adapter writes onto the workbook
    so the pull adapter can detect stale prefills.
 
 When no prior filings exist for a relation, the resolver returns a
-:class:`~aeat.application.storage.calc_sheets._records.RelationValue` with
+:class:`~application.storage.calc_sheets.RelationValue` with
 ``value=None`` and ``provenance="operator_manual"`` so the engine emits a
 blank cell the operator must fill by hand.
 
 This is the local-tier prefill. The AEAT-live tier (parsing
 justificantes from Sede) lives in a separate adapter that produces
 the same
-:class:`~aeat.application.storage.calc_sheets._records.RelationValues`
+:class:`~application.storage.calc_sheets.RelationValues`
 shape; callers route between tiers based
 on the operator's preferences and the local store's coverage.
 
 See Also:
-    :class:`~aeat.application.calculations.RelationPrefillSourceResolver`
+    :class:`~application.calculations.RelationPrefillSourceResolver`
         Source-mesh adapter that exposes resolved relations as
-        :class:`~aeat.application.aggregation.CalculationSourceResolution`.
-    :func:`aeat.domain.calculations.registry.relation_source_requirements`
+        :class:`~application.aggregation.CalculationSourceResolution`.
+    :func:`domain.calculations.registry.relation_source_requirements`
         Registry authority that derives the source filings required by a
         relation.
-    :func:`aeat.domain.calculations.registry.materialize_relation_binding_values`
+    :func:`domain.calculations.registry.materialize_relation_binding_values`
         Bridge from resolved relation values to declared ``relation_prefill``
         binding slots.
 """
@@ -117,7 +117,7 @@ def _gather_observations_for_snapshot(
     Uses the registry relation requirement resolver to compute the set of
     ``(source_modelo, filing_year, period)`` requirements, and pulls matching
     :class:`RegistryModeloObservation` rows from
-    :class:`~aeat.application.calculations.CalculationObservationRepository`.
+    :class:`~application.calculations.CalculationObservationRepository`.
     Returns the union (deduplicated) so the runtime resolver can fold them
     through the declared aggregation in one pass. ``activity_start_date`` scopes
     out source periods strictly before the operator's activity start (a
@@ -452,7 +452,7 @@ def resolve_relations_from_local_store(
             resolved from prior observation records in the local store.
         repository: Optional observation repository. Defaults to the active
             profile's
-            :class:`~aeat.application.calculations.CalculationObservationRepository`.
+            :class:`~application.calculations.CalculationObservationRepository`.
         captured_at: Optional timestamp for relation provenance. Defaults to
             the current clock.
         modelo_202_first_year_cuota: When ``True`` (IS-3), an otherwise-unresolved
@@ -476,9 +476,9 @@ def resolve_relations_from_local_store(
             leg to explicit zero instead of requiring fake zero filings.
 
     Returns a
-    :class:`~aeat.application.storage.calc_sheets._records.RelationValues`
+    :class:`~application.storage.calc_sheets.RelationValues`
     whose ``values`` tuple has one
-    :class:`~aeat.application.storage.calc_sheets._records.RelationValue` per
+    :class:`~application.storage.calc_sheets.RelationValue` per
     relation declared in the snapshot's revision, with provenance stamped per
     entry. Relations the local store cannot resolve get ``value=None`` and
     ``provenance="operator_manual"`` so the engine emits a blank cell the
@@ -696,7 +696,7 @@ class RelationPrefillSourceResolver:
 
     Resolves registry relations through :func:`resolve_relations_from_local_store`,
     materialises resolved relation values into declared target-binding slots, and
-    returns a :class:`~aeat.application.aggregation.CalculationSourceResolution`
+    returns a :class:`~application.aggregation.CalculationSourceResolution`
     carrying relation values, binding values, diagnostics for unresolved formula
     relations, and provenance for local
     :class:`RegistryModeloObservation` filings.

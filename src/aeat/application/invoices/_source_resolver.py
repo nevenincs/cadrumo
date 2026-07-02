@@ -1,19 +1,19 @@
 """Source-mesh resolver for governed invoice records.
 
 :class:`InvoiceCatalogueSourceResolver` reads the
-:class:`~aeat.domain.invoices.InvoiceCatalogue` selected by
-:attr:`~aeat.application.aggregation.CalculationSourceContext.bucket_id` through
-:class:`~aeat.domain.invoices.InvoiceCatalogueRepository` and also adapts slim
-:class:`~aeat.application.ledger.BusinessOperationInvoice` records when their
+:class:`~domain.invoices.InvoiceCatalogue` selected by
+:attr:`~application.aggregation.CalculationSourceContext.bucket_id` through
+:class:`~domain.invoices.InvoiceCatalogueRepository` and also adapts slim
+:class:`~application.ledger.BusinessOperationInvoice` records when their
 repository is available. It projects those records into the
-calculation mesh as :class:`~aeat.application.aggregation.CalculationSourceResolution`
-values for :attr:`~aeat.core.BindingSourceKind.COLLECTIBLE_INVOICE` and
-:attr:`~aeat.core.BindingSourceKind.PAYABLE_INVOICE`.
+calculation mesh as :class:`~application.aggregation.CalculationSourceResolution`
+values for :attr:`~core.BindingSourceKind.COLLECTIBLE_INVOICE` and
+:attr:`~core.BindingSourceKind.PAYABLE_INVOICE`.
 
-The rich :class:`~aeat.domain.invoices.Invoice` aggregate remains the
+The rich :class:`~domain.invoices.Invoice` aggregate remains the
 reconciliation and link authority; the slim ledger-mounted invoice records are
 operator-editable source-kind records. Both paths converge here only after they
-can be represented as registry :class:`~aeat.domain.calculations.registry.InvoiceObservation`
+can be represented as registry :class:`~domain.calculations.registry.InvoiceObservation`
 facts, with Modelo 349 summary bindings, detail rows, transaction ids, and
 source provenance emitted through one resolver envelope.
 """

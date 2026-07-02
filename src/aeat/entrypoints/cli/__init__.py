@@ -779,18 +779,27 @@ _decorate_typer_app(app)
 
 
 def __getattr__(name: str) -> object:
-    """Lazily resolve ``command_schema_refs`` without importing ``_app_contract`` eagerly.
+    """Lazily resolve re-exported names without importing heavy submodules eagerly.
 
-    ``_app_contract`` is a registered :data:`_LAZY_COMMAND_MODULES` entry
-    precisely so constructing the ``aeat`` app object never imports the
-    registry-dependent command tree; a top-level ``from ._app_contract
-    import command_schema_refs`` would defeat that and reintroduce the
-    startup cost :mod:`._stdio` / the lazy command-tree gate guard against.
+    ``_app_contract``, ``_config._google``, and ``_modelo_rendering`` are
+    kept off the eager import path precisely so constructing the ``aeat``
+    app object never pulls the registry-dependent command tree; a
+    top-level ``from ._app_contract import command_schema_refs`` (and
+    siblings) would defeat that and reintroduce the startup cost
+    :mod:`._stdio` / the lazy command-tree gate guard against.
     """
     if name == "command_schema_refs":
         from ._app_contract import command_schema_refs
 
         return command_schema_refs
+    if name == "OAuthClientPayload":
+        from ._config._google import OAuthClientPayload
+
+        return OAuthClientPayload
+    if name in ("calculation_revision_lines", "calculation_revision_payload"):
+        from . import _modelo_rendering
+
+        return getattr(_modelo_rendering, name)
     raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
 
 
@@ -812,4 +821,13 @@ def main() -> None:
         app(prog_name="aeat")
 
 
-__all__ = ["AppRootResult", "RootStatusResult", "app", "command_schema_refs", "main"]
+__all__ = [
+    "AppRootResult",
+    "OAuthClientPayload",
+    "RootStatusResult",
+    "app",
+    "calculation_revision_lines",
+    "calculation_revision_payload",
+    "command_schema_refs",
+    "main",
+]
