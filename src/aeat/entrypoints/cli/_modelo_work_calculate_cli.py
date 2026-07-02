@@ -54,8 +54,8 @@ if TYPE_CHECKING:
     # as lazy strings so the state-free CLI surface (test_lazy_command_tree) pays
     # no runtime registry-import cost, while pyright and the any-param ratchet see
     # the concrete result/record types instead of a bare ``Any``.
-    from ...application.modelo import ModeloWorkCalculationServiceResult, WorkUnit
-    from ...domain.modelos import CalculationRevision
+    from ...application.modelo import ModeloWorkCalculationServiceResult
+    from ...domain.modelos import CalculationRevision, WorkUnit
 
 
 @dataclass(frozen=True, slots=True)
