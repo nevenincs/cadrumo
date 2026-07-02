@@ -2,34 +2,34 @@
 
 This package is the outer infrastructure layer in the hexagonal layout. It is
 intentionally import-light and exports no concrete adapter classes; callers
-should import focused child facades such as :mod:`aeat.adapters.inbound` for
-document and statement ingestion, :mod:`aeat.adapters.outbound` for external
-service integrations, and :mod:`aeat.adapters.persistence` for profile and
+should import focused child facades such as :mod:`inbound` for
+document and statement ingestion, :mod:`outbound` for external
+service integrations, and :mod:`persistence` for profile and
 secure-storage adapters.
 
-Application services own orchestration through :mod:`aeat.application`, and
-domain authorities own business semantics through :mod:`aeat.domain`. Adapter
+Application services own orchestration through :mod:`application`, and
+domain authorities own business semantics through :mod:`domain`. Adapter
 packages translate between those internal contracts and external artefacts:
 PDFs, financial statements, AEAT Sede pages, browser sessions, Google services,
 LLM providers, local profile stores, and encrypted storage. They may depend on
-core primitives from :mod:`aeat.core`, but lower layers must not import adapter
+core primitives from :mod:`core`, but lower layers must not import adapter
 internals to recover persistence or transport behavior.
 
 See Also:
-    :mod:`aeat.adapters.inbound`
+    :mod:`inbound`
         Parser and import-pipeline boundary for external files entering the
         application.
-    :mod:`aeat.adapters.outbound`
+    :mod:`outbound`
         Remote-service and export boundary for integrations leaving the
         application.
-    :mod:`aeat.adapters.persistence`
+    :mod:`persistence`
         Concrete persistence boundary for profile, storage, SQL, blob, and
         secure-object infrastructure.
-    :mod:`aeat.application`
+    :mod:`application`
         Use-case orchestration layer that wires adapters to domain authorities.
-    :mod:`aeat.domain`
+    :mod:`domain`
         Business authority layer whose records adapters populate or persist.
-    :mod:`aeat.core`
+    :mod:`core`
         Layer-neutral primitives and policies adapters may consume without
         depending inward on application workflows.
 """
