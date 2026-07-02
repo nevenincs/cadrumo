@@ -7,6 +7,13 @@ description: >-
   verify it reconciles against the four trimestrales, review the per-perceptor
   detail rows, export the fichero-BOE, and hand off for the taxpayer to file.
   Use when the taxpayer files their annual retenciones informativa summary.
+applies_when:
+  profile_match: any
+  profile_facts:
+    - fact: has_employees
+      match: is_true
+    - fact: pays_professionals_with_retencion
+      match: is_true
 ---
 
 # Prepare Modelo 190
