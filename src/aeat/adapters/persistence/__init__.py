@@ -2,8 +2,8 @@
 
 This root package is a marker only; it exports no repository or envelope
 classes. Concrete persistence surfaces live in
-:mod:`aeat.adapters.persistence.profile` for operator profile state and
-:mod:`aeat.adapters.persistence.storage` for the SQL, blob, namespace, and
+:mod:`profile` for operator profile state and
+:mod:`storage` for the SQL, blob, namespace, and
 encrypted-envelope substrate.
 
 Domain and application repositories depend on the focused storage facades when
@@ -12,11 +12,11 @@ layout and CLI smoke tests can import the persistence layer without
 materialising database, keyring, or migration machinery.
 
 See Also:
-    :mod:`aeat.adapters.persistence.profile`
+    :mod:`profile`
         Profile-scoped repository adapters for typed application/domain state.
-    :mod:`aeat.adapters.persistence.storage`
+    :mod:`storage`
         Secure-object, namespace, SQL, blob, and encrypted-envelope substrate.
-    :mod:`aeat.application.user_profile`
+    :mod:`application.user_profile`
         Application lifecycle facade that composes profile repositories with
         bucket custody and validation policy.
 """
