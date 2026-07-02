@@ -1,6 +1,6 @@
 """Error hierarchy for the justificante parser.
 
-Defines the typed exceptions raised by :mod:`aeat.domain.justificante`
+Defines the typed exceptions raised by :mod:`domain.justificante`
 when a PDF filing receipt cannot be parsed, when no Código Seguro de
 Verificación is present, or when the live AEAT verification round-trip
 fails. Every class derives from :class:`PdfModeloImportError` so PDF
@@ -26,7 +26,7 @@ class JustificanteError(PdfModeloImportError):
 class JustificanteParseError(JustificanteError):
     """Raised when a PDF cannot be parsed into a :class:`Justificante`.
 
-    Mirrors :class:`aeat.adapters.inbound.declaracion._errors.DeclaracionParseError`'s
+    Mirrors :class:`adapters.inbound.declaracion.DeclaracionParseError`'s
     structured-attribute shape so callers can assert on typed attributes rather than
     parsing the message string.
 
@@ -59,9 +59,9 @@ class JustificanteParseError(JustificanteError):
         Args:
             message: Human-readable error message.
             context: Optional structured context forwarded to the
-                :class:`~aeat.core.errors.AeatError` boundary.
+                :class:`core.errors.AeatError` boundary.
             suggestion: Optional copy-paste recovery hint forwarded to
-                :class:`~aeat.core.errors.AeatError`.
+                :class:`core.errors.AeatError`.
             translated_message: Optional locale key rendered at the CLI
                 boundary.
             missing: Field names that produced no match in the PDF text.
