@@ -1,0 +1,103 @@
+---
+tags:
+  - '#research'
+  - '#agent-harness-operability-followup'
+date: '2026-07-02'
+modified: '2026-07-02'
+related:
+  - '[[2026-07-02-agent-harness-refoundation-adr]]'
+  - '[[2026-07-02-agent-harness-refoundation-audit]]'
+  - '[[2026-07-02-agent-harness-refoundation-plan]]'
+---
+
+
+
+# `agent-harness-operability-followup` research: `operability and grounding completion (deferred from refoundation close)`
+
+The `agent-harness-refoundation` campaign delivered the harness as a FRAMEWORK
+(rules, personas, situation skills, the MCP operating console, the wired safety
+gates, and the measurement/eval substrate) and landed it structurally complete
+after a two-reviewer close. That close honestly recorded that the campaign is a
+framework landing, not a MEASURED or FULLY-GROUNDED one: four decisions carry
+gaps that were deferred rather than claimed done. This document is the
+follow-up campaign reference the close required, so each deferred item has a
+durable, gate-tracked home. It is the research seed for a follow-up campaign,
+authored at close time; the implementing waves are scoped when the campaign is
+picked up.
+
+## Findings
+
+### Deferred items carried forward from the refoundation close
+
+Each item names its close-review origin (C/H/M/L finding in
+`2026-07-02-agent-harness-refoundation-audit`) and its acceptance gate.
+
+**1. Live-model measurement (C2) — the operator's headline goal, unfinished.**
+The R7 measurement ran SCRIPTED persona drivers, not live LLM subagents. The
+`AnthropicPersonaDriver` is built and wired but never ran (no
+`ANTHROPIC_API_KEY` on the build host). Deliver: run it over the six situation
+scenarios, capture the trajectories, score them against the golden scenarios
+with the real gates, PERSIST the rendered measurement report into the vault,
+and add a live-harness test that drives at least one golden scenario
+end-to-end (the current live-harness test feeds constructed `LiveTrajectory`
+inputs to the scorer; only a single benign `harness.load` call is captured from
+a real session). Gate: a persisted report with the two hard invariants
+observed at zero under REAL model behaviour, and one e2e-driven golden scenario.
+
+**2. R3 semantic grounding provisioning (H1) — the second emphasised goal.**
+The lexical + citation grounding half is delivered and functional; the semantic
+(model2vec potion) half is code-complete but UNPROVISIONED: `embed_corpus` has
+no caller, no corpus vectors ship, and the query-embed model is not installed.
+Reconcile the S79↔S87 contradiction (S79 planned "ship the numpy matrix"; S87
+asserts and enforces that no matrix ships) by DECIDING the model explicitly —
+vectors shipped as licence-clean build-time data, OR built at release, OR built
+on first run behind the `aeat[search]` extra — then wire the build step that
+runs `embed_corpus`, and prove hybrid retrieval actually fuses lexical +
+semantic. Gate: a real hybrid query returns a semantically-recalled hit that
+lexical-only misses, with the shippability/licence gate still green.
+
+**3. R3 model footprint + download UX (H2).** The research doc's one explicit
+open verification item — the packaged byte size of `potion-multilingual-128M`
+— was reframed, not measured. Measure it; finish the `aeat[search]` runtime
+download UX (pinned revision, app cache dir, install hint, offline behaviour).
+Gate: a documented footprint and a working first-use download-or-refuse path.
+
+**4. R9 off-host consent notice (H3).** The ADR decides a first-run consent
+notice ("your words and the figures the assistant sees go to your chosen LLM
+provider; your source documents never leave your machine"); it is neither built
+nor was it a plan step. Build it as a console first-run surface. Gate: the
+notice is emitted before the first off-host-visible interaction, tested. Depends
+on R9 ratification.
+
+**5. R8 bundle signing (M1).** The `.mcpb` builds UNSIGNED (honestly — signing
+runs only with a real identity, never faked). Sign it once a release identity
+exists. Gate: a signed bundle that installs without an unverified-publisher
+warning.
+
+**6. R9 evidence-scrubbing conformance gate (MEDIUM-3).** The serving path
+relays the CLI envelope verbatim; the "evidence bytes never leave host"
+guarantee rests on the CLI never emitting bytes (true today) but has no
+conformance gate. Add one driving the amount-bearing surface and asserting no
+base64/byte-blob shape in any relayed envelope. Gate: the conformance test is
+green and would fail if a verb ever emitted bytes.
+
+**7. e2e gated-session test (M3).** The safety gates (elicitation CONFIRM,
+handoff-deny, argument-faithfulness block) are wired and unit-verified but never
+FIRED over a real gated client session. Add an e2e test that drives a
+handoff/CONFIRM verb through full dispatch and observes the gate fire over the
+wire.
+
+**8. LOW hardening.** Tighten `is_handoff_denied` to the modelo family (it
+currently matches any `export`/`file` leaf — fail-safe and masked by scope
+today, but a future ledger-exporting persona would hit a spurious refusal).
+Promote the `corpus_search` errors from plain `Exception` to registered
+`AeatError` (L1) once the contested locale catalogues settle.
+
+### Not in scope here
+
+ADR ratification (L3) is an owner decision, not a research/build item: the
+refoundation ADR is `proposed` and extends the also-`proposed` 2026-07-01 ADR;
+owner sign-off (especially R9) gates treating the D1-D7 / R1-R9 decisions as
+accepted. The measurement and grounding work above can proceed in parallel with
+ratification, but should not be declared "accepted-harness" behaviour until the
+ADRs are.

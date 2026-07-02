@@ -35,15 +35,20 @@ contradict it:
   Per-verb input schemas replaced the args bag, manifest-derived toolsets,
   `search`+`execute` meta-tools, prompts/resources capabilities negotiated. A
   latent argv bug (27 hyphenated commands mis-dispatched) was fixed in passing.
-- **R3 grounding surface — DELIVERED with a documented degradation.** The
-  lexical FTS5 half, the structured citation lookup (all 453 catalogue
-  citations resolve to verbatim text), the corpus + terminology MCP tools, and
-  the `aeat://corpus/{ref}` resources are all live and tested. The SEMANTIC
-  half (model2vec potion embeddings) is code-complete but the model is not
-  installed on this host, so hybrid retrieval runs in its lexical-only degraded
-  mode here; the exact packaged model byte-size remains the one open
-  verification item, deferred to the download-UX. This is honestly the
-  research doc's stated shape, not a hidden gap.
+- **R3 grounding surface — LEXICAL+CITATION half DELIVERED and functional;
+  the SEMANTIC half is code-complete but UNPROVISIONED (corrected after the
+  honesty review; see finding H1).** The lexical FTS5 half, the structured
+  citation lookup (all 453 catalogue citations resolve to verbatim text), the
+  corpus + terminology MCP tools, and the `aeat://corpus/{ref}` resources are
+  all live and tested. The semantic (model2vec potion) half is NOT merely
+  "degraded on this host": `embed_corpus` has no caller anywhere in the tree,
+  no corpus-vector `.npy` ships (and the S87 shippability gate asserts none
+  does — in tension with S79's plan text "ship the numpy matrix"), and the
+  model is not installed. So the service runs lexical-only + citation mode in
+  EVERY configuration today. Honest status: the semantic architecture exists
+  and is unit-tested in its degraded fallback, but the semantic CAPABILITY is
+  never provisioned — a real gap, re-recorded as deferred, not a here-only
+  degradation.
 - **R4 operating-layer delivery — DELIVERED.** `harness.load` floor tool,
   `aeat://skill|rule|persona/{name}` resource templates, 35 guided-workflow
   prompts, and the optional Claude-native `.claude/skills` mirror; one authored
@@ -51,13 +56,21 @@ contradict it:
 - **R5 situation-keyed skills — DELIVERED.** The structured `applies_when`
   schema validated against the live `TaxpayerProfile`, 28 predicate lifts, and
   the six coordinator-authored WHEN-layer skills with golden scenarios.
-- **R6 gate enforcement — DELIVERED.** Elicitation-backed CONFIRM (fail-closed
-  on every non-explicit-yes path), faithfulness wired into the serving path
-  (advisory off-handoff, hard block at export/record-marker), per-verb handoff
-  deny (verifier-only, enforced at list-time AND call-time), never-live-submit
-  as no-such-tool. A real serving bug was found and fixed during measurement:
-  the CLI child stdin was inherited from the MCP client pipe and deadlocked the
-  first CLI-backed call; isolated to DEVNULL.
+- **R6 gate enforcement — DELIVERED, with one prose-vs-reality precision fix
+  (see finding M2).** Elicitation-backed CONFIRM (fail-closed on every
+  non-explicit-yes path), per-verb handoff deny (verifier-only, enforced at
+  list-time AND call-time AND now the meta path after MEDIUM-2), and
+  never-live-submit as no-such-tool are all genuinely wired into the serving
+  path. Precision correction on faithfulness: the ADR R6(ii) prose says
+  "advisory notice on narration mismatch," but the server never sees the
+  model's narration (it is client-side), so the LIVE serving-path check is
+  ARGUMENT-faithfulness (`arguments_faithfulness` over the tool-call arguments)
+  with the hard block at the export/record-marker boundary — real, but on
+  arguments, not narration. Narration-faithfulness exists only in the eval
+  scorer, which has not run against a live model (C2). A real serving bug was
+  found and fixed during measurement: the CLI child stdin was inherited from
+  the MCP client pipe and deadlocked the first CLI-backed call; isolated to
+  DEVNULL.
 - **R7 measurement — DELIVERED as the SUBSTRATE + a SCRIPTED-driver run; the
   LIVE-MODEL run is one API key away (see the measurement finding below).**
 - **R8 distribution — DELIVERED, honestly unsigned.** The `.mcpb` manifest and
@@ -166,12 +179,64 @@ live model operates the console correctly — that is the gated follow-up.
   refusal, so it is worth tightening to the modelo family. Tracked as a LOW
   follow-up, not a close blocker.
 
+### honesty-review findings (independent fresh-context reviewer)
+
+The reviewer's bottom line, adopted verbatim as honest: **a sound FRAMEWORK
+landing, not a MEASURED one.** The two items the operator emphasised most —
+make it operable+measured (R7) and first-class grounding (R3) — carry the
+largest gaps. R1/R2/R4/R5 are clean and genuinely delivered; R6 is wired
+(precision fix above); R3/R7/R8/R9 carry the gaps below.
+
+- **C1 — the mandated close review had never run; its audit was an empty
+  scaffold. ADDRESSED.** This document IS that review, firing (late). Both
+  independent reviews are now persisted here.
+- **C2 — the R7 measurement was scripted, not live-model; "6/6 passed" is not
+  a live-capability result. RE-RECORDED HONESTY + FOLLOW-UP** (see the
+  scripted-measurement finding above; no unqualified pass claim stands).
+- **H1 — R3 semantic half entirely inert / unprovisioned + S79↔S87
+  contradiction. RE-RECORDED DEGRADED + FOLLOW-UP.** Reconciling the
+  contradiction: the AS-BUILT truth is that NO precomputed vectors and NO model
+  weights ship (S87's gate is correct and green); S79's plan text "ship the
+  numpy matrix as bundled data" was authored but never wired (no build step
+  invokes `embed_corpus`). S79 delivered the embed FUNCTION, not the
+  build-step-that-ships-vectors. The follow-up owns wiring the build step,
+  deciding whether vectors ship as data or build at release, and installing
+  the query-embed model.
+- **H2 — the research doc's one explicit open item (potion packaged byte size)
+  was reframed, not measured, yet the step reads closed. RE-RECORDED
+  DEFERRED.** The S87 note honestly says a different assertion was substituted;
+  the byte-size / download-UX for `aeat[search]` remains genuinely unverified.
+- **H3 — R9 first-run consent notice: no plan step, no implementation, not
+  tracked as deferred. NOW TRACKED as a follow-up** (gated on R9 ratification).
+- **M1 — the `.mcpb` bundle ships UNSIGNED; ADR R8's "signed" consumer path
+  does not yet exist. HONEST in code, RE-RECORDED DEFERRED** (signing is a real
+  release step needing an identity).
+- **M2 — serving-path faithfulness is argument-faithfulness, not narration
+  faithfulness. CORRECTED above** in the R6 delivered-vs-promised line.
+- **M3 — the gates are wired and unit-verified but never FIRED over a real
+  gated client session (the one live round-trip calls only a benign tool).
+  FOLLOW-UP:** an e2e test that drives a handoff/CONFIRM verb through full
+  dispatch and observes the gate fire over the wire.
+- **L1 — corpus_search errors are plain `Exception` not `AeatError`.** Honest
+  deferral documented in `_errors.py` (AeatError needs locale message keys in
+  four contested catalogues); track the promotion.
+- **L2 — subagent commit-pathspec discipline violated by a PEER** (S78/S79/S87
+  files swept into peer baseline `c955c0496d`); honestly noted, green at HEAD,
+  the pattern recurred and is surfaced. Not this campaign's code to fix.
+- **L3 — the decision chain is provisional:** the refoundation ADR is
+  `proposed` and extends the also-`proposed` 2026-07-01 ADR; the campaign lands
+  atop two unaccepted ADRs (their own Constraints flag this). Owner ratification
+  is the gate.
+
 ## Recommendations
 
-1. **Close now.** The two must-fix code-review findings (HIGH-1, MEDIUM-2) are
-   resolved with regression tests; the honesty findings are honestly recorded,
-   not buried. The campaign's structural work (R1-R6, R8) is delivered and
-   independently verified clean.
+1. **Close the STRUCTURAL work now; do NOT claim it is MEASURED.** The two
+   must-fix code-review findings (HIGH-1, MEDIUM-2) are resolved with
+   regression tests. The framework (R1/R2/R4/R5 delivered clean; R6 wired) is
+   sound and independently verified. But per the honesty review, the campaign
+   is a framework landing, not a measured or fully-grounded one — R3-semantic,
+   R7-live-model, R8-signing, R9-consent are gaps, honestly re-recorded above,
+   not delivered.
 2. **Do NOT claim "6/6 live-persona passed" as an unqualified capability
    result.** State it as recorded above: a scripted-driver functional proof
    with both hard invariants held; the live-model run is pending an
@@ -182,12 +247,44 @@ live model operates the console correctly — that is the gated follow-up.
    test that drives at least one golden scenario end-to-end (not only
    constructed `LiveTrajectory` inputs). Gated on the key, not on this
    campaign.
-4. **Follow-up hardening.** (a) The R9 evidence-scrubbing conformance gate
-   (MEDIUM-3). (b) Tighten `is_handoff_denied` to the modelo family (LOW). (c)
-   The R9 first-run off-host consent notice UI (decided in the ADR, not built).
-   (d) Confirm the `potion-multilingual-128M` packaged byte size and finish the
-   download UX for R3's semantic half.
-5. **Ratify the ADR.** `2026-07-02-agent-harness-refoundation-adr` is
-   `proposed`; owner sign-off (especially R9's off-host consent posture) is the
-   remaining gate before the decision is `accepted`.
+4. **Formally deferred follow-up campaign — the operability+grounding
+   completion.** All gate-tracked below, referenced from
+   `2026-07-02-agent-harness-operability-followup-research` (scaffolded as the
+   follow-up campaign reference this close requires):
+   (a) **C2 live-model measurement** — run `AnthropicPersonaDriver` over the six
+       scenarios once a key is available; persist the report; add an e2e
+       live-harness test driving ≥1 golden scenario (not constructed inputs).
+   (b) **H1 semantic provisioning** — wire a build step that runs
+       `embed_corpus`, decide vectors-ship-as-data vs build-at-release,
+       reconcile the S79↔S87 contradiction, install the query-embed model.
+   (c) **H2 model footprint** — measure `potion-multilingual-128M` packaged
+       byte size; finish the `aeat[search]` download UX.
+   (d) **H3 / R9 consent notice** — the first-run off-host consent notice
+       (gated on R9 ratification).
+   (e) **M1 signing** — sign the `.mcpb` bundle once a release identity exists.
+   (f) **M3 e2e gated-session test** — drive a handoff/CONFIRM verb through full
+       dispatch and observe the gate fire over the wire.
+   (g) **MEDIUM-3** — the R9 evidence-scrubbing conformance gate.
+   (h) **LOW** — tighten `is_handoff_denied` to the modelo family; promote
+       corpus_search errors to `AeatError` (L1).
+5. **Ratify the ADRs.** `2026-07-02-agent-harness-refoundation-adr` is
+   `proposed` and extends the also-`proposed` `2026-07-01-agent-harness-adr`
+   (L3); owner sign-off (especially R9's off-host consent posture) is the gate
+   before the D1-D7 / R1-R9 decisions are `accepted`.
+
+## Verdict
+
+The campaign's STRUCTURAL work is complete and independently verified: the
+framework (R1/R2/R4/R5), the wired safety gates (R6, with the two must-fix
+findings HIGH-1/MEDIUM-2 resolved and regression-tested), the lexical+citation
+grounding half of R3, and the measurement/eval SUBSTRATE (R7 harness, scorer,
+flywheel, report). It is honestly NOT a measured or fully-grounded landing: the
+R7 live-model run, the R3 semantic provisioning, R8 signing, and R9 consent are
+gaps, each re-recorded above as degraded/deferred and gate-tracked into the
+follow-up campaign. Per `aeat-campaign-close-honesty-review`, the close review
+has now run (it had not before), its findings are persisted, every must-fix is
+closed with verification, and every remaining item is formally deferred with a
+follow-up reference — so the campaign is structurally complete AS A FRAMEWORK
+LANDING, with the measurement and grounding completion explicitly carried
+forward, not silently claimed done.
 
