@@ -69,21 +69,15 @@ def test_rejects_unknown_keys() -> None:
     assert "unexpected" in str(excinfo.value)
 
 
-@pytest.mark.parametrize(
-    "missing_field",
-    (
-        pytest.param("bucket_id", id="bucket-id"),
-        pytest.param("status", id="lifecycle-status"),
-    ),
-)
-def test_rejects_missing_required_manifest_fields(missing_field: str) -> None:
-    payload = _manifest_payload()
-    del payload[missing_field]
+def test_rejects_missing_required_manifest_fields() -> None:
+    for missing_field in ("bucket_id", "status"):
+        payload = _manifest_payload()
+        del payload[missing_field]
 
-    with pytest.raises(ValidationError) as excinfo:
-        BucketManifest.model_validate(payload)
+        with pytest.raises(ValidationError) as excinfo:
+            BucketManifest.model_validate(payload)
 
-    assert missing_field in str(excinfo.value)
+        assert missing_field in str(excinfo.value)
 
 
 def test_rejects_empty_bucket_id() -> None:
@@ -91,26 +85,23 @@ def test_rejects_empty_bucket_id() -> None:
         _manifest(bucket_id="")
 
 
-@pytest.mark.parametrize(
-    ("field_name", "value"),
-    (
-        pytest.param("created_at", datetime(2026, 1, 1, 0, 0, 0), id="created-naive"),
-        pytest.param(
+def test_rejects_non_utc_manifest_timestamps() -> None:
+    cases = (
+        ("created_at", datetime(2026, 1, 1, 0, 0, 0)),
+        (
             "created_at",
             datetime(2026, 1, 1, 0, 0, 0, tzinfo=_PLUS_ONE),
-            id="created-non-utc",
         ),
-        pytest.param("last_unlocked_at", datetime(2026, 1, 1, 0, 0, 0), id="unlocked-naive"),
-        pytest.param(
+        ("last_unlocked_at", datetime(2026, 1, 1, 0, 0, 0)),
+        (
             "last_unlocked_at",
             datetime(2026, 1, 1, 0, 0, 0, tzinfo=_PLUS_ONE),
-            id="unlocked-non-utc",
         ),
-    ),
-)
-def test_rejects_non_utc_manifest_timestamps(field_name: str, value: datetime) -> None:
-    with pytest.raises(ValidationError):
-        _manifest(**{field_name: value})
+    )
+
+    for field_name, value in cases:
+        with pytest.raises(ValidationError):
+            _manifest(**{field_name: value})
 
 
 def test_rejects_non_positive_schema_version() -> None:
@@ -118,16 +109,10 @@ def test_rejects_non_positive_schema_version() -> None:
         _manifest(schema_version=0)
 
 
-@pytest.mark.parametrize(
-    ("field_name", "value"),
-    (
-        pytest.param("salt", _SHORT_SALT, id="salt-length"),
-        pytest.param("algorithm", "", id="algorithm-empty"),
-    ),
-)
-def test_rejects_invalid_kdf_parameters(field_name: str, value: object) -> None:
-    with pytest.raises(ValidationError):
-        _kdf_params(**{field_name: value})
+def test_rejects_invalid_kdf_parameters() -> None:
+    for field_name, value in (("salt", _SHORT_SALT), ("algorithm", "")):
+        with pytest.raises(ValidationError):
+            _kdf_params(**{field_name: value})
 
 
 # ── UTC helper migration: validate_utc_aware semantics ─────────────────────
