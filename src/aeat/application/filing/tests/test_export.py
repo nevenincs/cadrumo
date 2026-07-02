@@ -197,26 +197,23 @@ def test_export_result_round_trips_canonical_fields() -> None:
     assert receipt.model_dump(mode="json")["period"] == {"filing_year": 2026, "code": "1T"}
 
 
-@pytest.mark.parametrize(
-    ("digest", "match"),
-    (
-        pytest.param("A" * 64, r"file_sha256|hex|lowercase", id="uppercase"),
-        pytest.param("z" * 64, r"file_sha256|hex", id="non-hex"),
-    ),
-)
-def test_export_result_rejects_invalid_digest(digest: str, match: str) -> None:
-    with pytest.raises(ValueError, match=match):
-        DeclaracionExportResult(
-            draft_id="d",
-            modelo="130",
-            period=_PERIOD,
-            format=DeclaracionExportFormat.FICHERO_BOE,
-            output_path=_OTHER_EXPORT_PATH,
-            byte_size=1,
-            file_sha256=digest,
-            exported_at=datetime(2026, 5, 3, tzinfo=UTC),
-            narrative=_narrative(),
-        )
+def test_export_result_rejects_invalid_digest() -> None:
+    for digest, match in (
+        ("A" * 64, r"file_sha256|hex|lowercase"),
+        ("z" * 64, r"file_sha256|hex"),
+    ):
+        with pytest.raises(ValueError, match=match):
+            DeclaracionExportResult(
+                draft_id="d",
+                modelo="130",
+                period=_PERIOD,
+                format=DeclaracionExportFormat.FICHERO_BOE,
+                output_path=_OTHER_EXPORT_PATH,
+                byte_size=1,
+                file_sha256=digest,
+                exported_at=datetime(2026, 5, 3, tzinfo=UTC),
+                narrative=_narrative(),
+            )
 
 
 def test_export_result_is_frozen() -> None:
@@ -282,26 +279,20 @@ def test_verify_result_rejects_legacy_casilla_list_keys() -> None:
     assert "unchecked_casillas" in message
 
 
-@pytest.mark.parametrize(
-    ("mismatched_casilla_ids", "match"),
-    (
-        pytest.param(("", "07"), r"casilla|empty|at least 1 character", id="blank"),
-        pytest.param((" 01 ",), r"casilla|whitespace|leading|trailing", id="padded"),
-    ),
-)
-def test_verify_result_rejects_invalid_casilla_ids(
-    mismatched_casilla_ids: tuple[str, ...],
-    match: str,
-) -> None:
-    with pytest.raises(ValueError, match=match):
-        DeclaracionVerifyResult(
-            draft_id="d",
-            file_path=_OTHER_EXPORT_PATH,
-            verdict=DeclaracionVerifyVerdict.DRIFT,
-            mismatched_casilla_ids=mismatched_casilla_ids,
-            verified_at=datetime(2026, 5, 3, tzinfo=UTC),
-            narrative=_narrative(),
-        )
+def test_verify_result_rejects_invalid_casilla_ids() -> None:
+    for mismatched_casilla_ids, match in (
+        (("", "07"), r"casilla|empty|at least 1 character"),
+        ((" 01 ",), r"casilla|whitespace|leading|trailing"),
+    ):
+        with pytest.raises(ValueError, match=match):
+            DeclaracionVerifyResult(
+                draft_id="d",
+                file_path=_OTHER_EXPORT_PATH,
+                verdict=DeclaracionVerifyVerdict.DRIFT,
+                mismatched_casilla_ids=mismatched_casilla_ids,
+                verified_at=datetime(2026, 5, 3, tzinfo=UTC),
+                narrative=_narrative(),
+            )
 
 
 def test_verify_result_rejects_short_digest() -> None:
