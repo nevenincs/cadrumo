@@ -1,6 +1,6 @@
 """Storage-layer exceptions.
 
-All storage errors inherit from :class:`aeat.core.errors.AeatError` so callers can
+All storage errors inherit from :class:`core.errors.AeatError` so callers can
 catch domain-wide failures with a single base class.
 
 The class tree:
@@ -29,7 +29,7 @@ class SecureStorageError(AeatError):
 
 
 class StorageError(SecureStorageError):
-    """Base class for every error raised by :mod:`aeat.adapters.persistence.storage`."""
+    """Base class for every error raised by :mod:`adapters.persistence.storage`."""
 
 
 class RepositoryError(StorageError):
@@ -274,17 +274,17 @@ class NamespaceRegistryError(StorageError, ValueError):
     """Raised when a namespace-registry key or definition violates a boot-time invariant.
 
     Fires from Pydantic field and model validators on
-    :class:`~aeat.adapters.persistence.storage.SecureObjectNamespaceDefinition`,
-    :class:`~aeat.adapters.persistence.storage.StoragePathDefinition`, and
-    :class:`~aeat.adapters.persistence.storage.StorageHierarchyRegistry` when a
+    :class:`~adapters.persistence.storage.SecureObjectNamespaceDefinition`,
+    :class:`~adapters.persistence.storage.StoragePathDefinition`, and
+    :class:`~adapters.persistence.storage.StorageHierarchyRegistry` when a
     registry key, namespace slug, path segment, or uniqueness constraint is
     violated at construction time.  Inherits from :class:`StorageError` and
-    ultimately from :class:`~aeat.core.errors.AeatError` so callers can catch
+    ultimately from :class:`~core.errors.AeatError` so callers can catch
     it without importing Pydantic internals.
 
     Because these validators are called by Pydantic during model construction
     the exception propagates wrapped inside a :class:`pydantic.ValidationError`
     when raised from a field validator; direct callers of
-    :class:`~aeat.adapters.persistence.storage.StorageHierarchyRegistry`
+    :class:`~adapters.persistence.storage.StorageHierarchyRegistry`
     model validators receive the raw :class:`NamespaceRegistryError`.
     """
