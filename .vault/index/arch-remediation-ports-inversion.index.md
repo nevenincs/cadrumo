@@ -10,6 +10,7 @@ related:
   - '[[2026-07-02-arch-remediation-ports-inversion-W01-P02-S02]]'
   - '[[2026-07-02-arch-remediation-ports-inversion-W01-P02-S03]]'
   - '[[2026-07-02-arch-remediation-ports-inversion-W01-P02-S04]]'
+  - '[[2026-07-02-arch-remediation-ports-inversion-W02-P05-S07]]'
   - '[[2026-07-02-arch-remediation-ports-inversion-adr]]'
   - '[[2026-07-02-arch-remediation-ports-inversion-plan]]'
 ---
@@ -30,6 +31,7 @@ Auto-generated index of all documents tagged with `#arch-remediation-ports-inver
 - `2026-07-02-arch-remediation-ports-inversion-W01-P02-S02` - Relocate the submission repository behind its domain port in one atomic commit, deleting its pinned domain-to-adapters entries
 - `2026-07-02-arch-remediation-ports-inversion-W01-P02-S03` - Relocate the submission engine persistence behind a port in one atomic commit, deleting its pinned domain-to-adapters errors entry
 - `2026-07-02-arch-remediation-ports-inversion-W01-P02-S04` - Move the submission verifier concrete class to adapters behind the existing protocol in one atomic commit and delete the deferral comment, discharging register item D3
+- `2026-07-02-arch-remediation-ports-inversion-W02-P05-S07` - Relocate the justificante repository behind its domain port in one atomic commit, deleting its pinned domain-to-adapters entries
 
 ### plan
 
