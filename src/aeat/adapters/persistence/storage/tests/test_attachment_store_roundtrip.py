@@ -34,17 +34,21 @@ from sqlalchemy import select
 from .....core.config import override_settings
 from .....core.errors import build_error_envelope, resolve_error_message
 from .....core.external_constants import UTF_8_ENCODING
-from .....domain.attachments._enums import AttachmentKind, AttachmentSource
-from .....domain.attachments._errors import AttachmentPersistenceError, AttachmentValidationError
-from .....domain.attachments._models import Attachment
+from .....domain.attachments import (
+    Attachment,
+    AttachmentKind,
+    AttachmentPersistenceError,
+    AttachmentSource,
+    AttachmentValidationError,
+)
 from .....tests.secure_sql import isolated_runtime_profile
 from ..attachment import _ATTACHMENT_MANIFEST_NAMESPACE, AttachmentStore
-from ..crypto._encrypted_columns import (
+from ..crypto import (
     decrypt_secure_object_payload,
     encrypt_secure_object_payload,
     secure_object_payload_aad,
 )
-from ..sql._orm import SecureObjectRow
+from ..sql import SecureObjectRow
 from ..sql.engine import get_engine
 from ..sql.session import session_scope
 

@@ -150,7 +150,7 @@ _COTEJO_DOCUMENT_URL = f"{_AEAT.domains.www6}{_AEAT.sede_paths.cotejo_document}"
 _REGISTER_DOWNLOAD_URL = f"{_AEAT.domains.www6}{_DECLARATIONS_LISTING_BASE_PATH}/zkau?dtid=z_test&cmd_0=download"
 
 if TYPE_CHECKING:
-    from ...auth._authenticator import AeatSession
+    from ...auth import AeatSession
 
 
 @pytest.fixture(autouse=True)
@@ -656,12 +656,12 @@ def _whitespace_nif_session() -> AeatSession:
     """
     from datetime import timedelta
 
-    from ...auth._authenticator import (
+    from ...auth import (
         AeatSession,
+        AuthProviderKind,
         CertificateSessionDetail,
         HandshakeResult,
     )
-    from ...auth._providers import AuthProviderKind
 
     now = datetime(2026, 5, 28, 12, 0, 0, tzinfo=UTC)
     return AeatSession(

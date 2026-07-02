@@ -26,8 +26,12 @@ import pytest
 
 from ......core import Period
 from ......core.i18n import tr
-from ...auth._authenticator import AeatSession, CertificateSessionDetail, HandshakeResult
-from ...auth._providers import AuthProviderKind
+from ...auth import (
+    AeatSession,
+    AuthProviderKind,
+    CertificateSessionDetail,
+    HandshakeResult,
+)
 from .._auth_state import storage_state_for_session
 from .._errors import SedeNavigationError
 

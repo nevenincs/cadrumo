@@ -22,8 +22,7 @@ from sqlalchemy import Engine, text
 from ......core.config import Settings, override_settings
 from ... import EphemeralMasterKeyProvider, SensitivityClass
 from ...errors import EnvelopeVersionError, SecureObjectUnreadableError, StorageValidationError
-from ...sql import SecureObjectRepository
-from ...sql._orm import Base
+from ...sql import Base, SecureObjectRepository
 from ...sql.engine import create_engine_from_settings
 from ...sql.secure_objects import SecureObjectRecord, SecureObjectUnreadable
 from ...sql.session import session_scope

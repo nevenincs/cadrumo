@@ -14,8 +14,7 @@ import pytest
 from pydantic import AnyHttpUrl, TypeAdapter
 
 from .....adapters.persistence.profile.justificante import JustificanteRepository
-from .....application.auth import ApoderadoService
-from .....application.auth._diagnostics import list_auth_diagnostics
+from .....application.auth import ApoderadoService, list_auth_diagnostics
 from .....application.calculations import (
     CalculationObservationRepository,
     IvaCompensationHistoryRepository,
@@ -26,10 +25,12 @@ from .....application.diagnostics import (
     preview_quarantine_unreadable_secure_objects,
     secure_object_unreadable_total,
 )
-from .....application.filing import ModeloHistory, ModeloHistoryEntry
-from .....application.filing._history_repository import ModeloHistoryRepository
-from .....application.live._borrador_100 import Borrador100Snapshot, Borrador100SnapshotRepository
-from .....application.live._snapshot_base import SnapshotLifecycleState
+from .....application.filing import ModeloHistory, ModeloHistoryEntry, ModeloHistoryRepository
+from .....application.live import (
+    Borrador100Snapshot,
+    Borrador100SnapshotRepository,
+    SnapshotLifecycleState,
+)
 from .....application.repair_integrity import (
     RepairRemediationDecision,
     RepairRemediationDecisionRepository,
@@ -47,7 +48,7 @@ from .....application.workflow import (
 from .....core import Period as _Period
 from .....core.config import override_settings
 from .....core.external_constants import CLAVE_MOVIL_DIAGNOSTIC_NAMESPACE
-from .....domain._identifiers import ModeloIdentifier
+from .....domain import ModeloIdentifier
 from .....domain.attachments import AttachmentNotFoundError
 from .....domain.buckets import (
     BucketEvent,
@@ -88,34 +89,32 @@ from .....domain.invoices import (
     derive_invoice_id,
 )
 from .....domain.iva import InvoiceKind
-from .....domain.iva_compensation._carry_forward import IvaCompensationPeriodState
-from .....domain.iva_compensation._reconciliation import IvaCompensationReconciliationDecision
+from .....domain.iva_compensation import IvaCompensationPeriodState, IvaCompensationReconciliationDecision
 from .....domain.justificante import Justificante
-from .....domain.modelos import ModeloCode
-from .....domain.modelos._calculation_repository import CalculationRevisionCatalogueRepository
-from .....domain.modelos._calculation_revision import (
+from .....domain.modelos import (
     CalculationRevision,
     CalculationRevisionCatalogue,
+    CalculationRevisionCatalogueRepository,
     CalculationRevisionState,
-    derive_calculation_revision_id,
-)
-from .....domain.modelos._filing_record import (
     ExternalEvidence,
     ExternalEvidenceKind,
+    ModeloCode,
     ModeloRecord,
     ModeloRecordCatalogue,
-    derive_filing_record_id,
-)
-from .....domain.modelos._filing_repository import ModeloRecordCatalogueRepository
-from .....domain.modelos._repository import WorkUnitCatalogueRepository
-from .....domain.modelos._verification_report import (
+    ModeloRecordCatalogueRepository,
     VerificationCompletenessStatus,
     VerificationReport,
     VerificationReportCatalogue,
+    VerificationReportCatalogueRepository,
+    WorkUnit,
+    WorkUnitCatalogue,
+    WorkUnitCatalogueRepository,
+    WorkUnitState,
+    derive_calculation_revision_id,
+    derive_filing_record_id,
     derive_verification_report_id,
+    derive_work_unit_id,
 )
-from .....domain.modelos._verification_repository import VerificationReportCatalogueRepository
-from .....domain.modelos._work_unit import WorkUnit, WorkUnitCatalogue, WorkUnitState, derive_work_unit_id
 from .....domain.submission import (
     ModeloDraftStatus,
     ModeloPresentado,
@@ -142,21 +141,30 @@ from .....tests.aeat_literal_fixtures import (
     aeat_url,
 )
 from ....outbound.aeat.auth import _session_store as _session_store
-from ....outbound.aeat.sede._errors import ExpedienteNotFoundError
-from ....outbound.aeat.sede._observation_store import FiledDeclaracionObservationStore
-from ....outbound.aeat.sede._schema import FiledDeclaracionArtefact
+from ....outbound.aeat.sede import ExpedienteNotFoundError, FiledDeclaracionArtefact, FiledDeclaracionObservationStore
+from ....outbound.google import (
+    REQUIRED_SCOPES,
+    DriveConfig,
+    OAuthClient,
+    OAuthMetadata,
+    OAuthToken,
+)
 from ....outbound.google import _session_store as google_session_store
-from ....outbound.google._records import REQUIRED_SCOPES, DriveConfig, OAuthClient, OAuthMetadata, OAuthToken
-from ....outbound.llm._cache import LLMCache
-from ....outbound.llm._models import LLMProvider, LLMRequest, LLMResponse, UsageRecord
-from ....outbound.llm._usage import UsageRecorder
+from ....outbound.llm import (
+    LLMCache,
+    LLMProvider,
+    LLMRequest,
+    LLMResponse,
+    UsageRecord,
+    UsageRecorder,
+)
 from ...profile.assets import load_amortizacion_ledger, load_assets, save_amortizacion_ledger, save_assets
 from ...profile.inventory import load_inventory, save_inventory
 from ...profile.submission import SubmissionRepository
 from ...profile.usage_ratios import load_usage_ratios, save_usage_ratios
 from .. import AttachmentStore, EphemeralMasterKeyProvider, SensitivityClass, StorageValidationError
 from .._namespace_registry import LLM_USAGE_NAMESPACE
-from ..master_key._active_session import activate_session
+from ..master_key import activate_session
 from ..master_key._bucket_session import BucketSession
 from ..runtime_repository import secure_object_repository_for_active_bucket
 from ..sql.engine import dispose_engine

@@ -33,7 +33,7 @@ import pytest
 from argon2.exceptions import HashingError
 
 from ......core.errors import build_error_envelope
-from ...bucket._manifest import ManifestKdfParams
+from ...bucket import ManifestKdfParams
 from ...errors import KeyDerivationError
 from .._kdf import derive_kek
 

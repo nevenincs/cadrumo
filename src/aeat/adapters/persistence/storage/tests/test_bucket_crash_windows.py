@@ -30,8 +30,7 @@ from .....core import read_pointer
 from .....core.config import load_settings
 from .....domain.user_profile import ProfileSchemaValidationError, UserProfileFact
 from .....tests.secure_sql import isolated_profile_storage_root
-from ..bucket._layout import bucket_paths
-from ..bucket._manifest_io import manifest_path
+from ..bucket import bucket_paths, manifest_path
 from ..master_key._master_key_bucket_dek import bucket_dek_path
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
@@ -61,11 +60,11 @@ def backend(tmp_path: Path) -> Iterator[Path]:
 
 def _create_profile(profile_id: str, *, label: str, facts: Mapping[str, str]) -> None:
     """Run the production atomic create span for ``profile_id``."""
-    from .....application.user_profile._orchestration import (
+    from .....application.user_profile import (
         profile_create_storage_span,
         register_active_profile,
     )
-    from .....application.workflow._persistence import workflow_state_repository
+    from .....application.workflow import workflow_state_repository
 
     fact_tuple = tuple(UserProfileFact(path=path, value=value) for path, value in facts.items())
     with profile_create_storage_span(profile_id) as routing_profile_id:
@@ -120,10 +119,13 @@ class TestRenameProfileCrashWindow:
     """A crash between the record label (S) and the manifest label (M) is detected."""
 
     def test_partial_rename_leaves_a_drift_the_integrity_gate_refuses(self, backend: Path) -> None:
-        from .....application.user_profile._commands import RenameProfileCommand
+        from .....application.user_profile import (
+            ProfileRepository,
+            RenameProfileCommand,
+            build_lifecycle_service,
+            profile_storage_session,
+        )
         from .....application.user_profile._integrity import ProfileIntegrityError
-        from .....application.user_profile._orchestration import build_lifecycle_service, profile_storage_session
-        from .....application.user_profile._profile_repository import ProfileRepository
         from ..bucket import read_manifest
 
         _create_profile(_RENAME_PROFILE_ID, label="Original Label", facts=_VALID_FACTS)
@@ -152,8 +154,7 @@ class TestRenameProfileCrashWindow:
         # Anti-tautology: the full rename keeps the record and manifest labels
         # in sync, so the load succeeds — proving the drift test's refusal is
         # caused by the partial write, not by rename per se.
-        from .....application.user_profile._orchestration import profile_storage_session
-        from .....application.user_profile._profile_repository import ProfileRepository
+        from .....application.user_profile import ProfileRepository, profile_storage_session
         from ..bucket import read_manifest
 
         _create_profile(_RENAME_PROFILE_ID, label="Original Label", facts=_VALID_FACTS)
@@ -172,8 +173,8 @@ class TestHardDeleteCrashWindow:
     """Soft tombstone is off the live surface; a partial directory is detected and reclaimable."""
 
     def test_tombstone_without_removal_is_off_live_surface_but_repair_visible(self, backend: Path) -> None:
-        from .....application.user_profile._orchestration import delete_profile_with_lifecycle_span
-        from .....application.workflow._profile_bucket_scan import (
+        from .....application.user_profile import delete_profile_with_lifecycle_span
+        from .....application.workflow import (
             read_profile_bucket,
             read_profile_bucket_by_id,
         )
@@ -194,7 +195,7 @@ class TestHardDeleteCrashWindow:
         assert by_id.status is BucketLifecycleStatus.TOMBSTONED
 
     def test_partial_directory_is_detected_and_reclaimable_idempotently(self, backend: Path) -> None:
-        from .....application.user_profile._orchestration import (
+        from .....application.user_profile import (
             delete_profile_with_lifecycle_span,
             remove_profile_bucket_directory,
         )

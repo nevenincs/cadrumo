@@ -17,8 +17,7 @@ from .....core.config import override_settings
 from .....core.errors import resolve_error_message
 from .....core.i18n import tr
 from .....tests.secure_sql import isolated_runtime_profile
-from ...google._records import OAuthClient
-from ...google._session_store import save_client
+from ...google import OAuthClient, save_client
 from .. import OutboundStorageValidationError, ProviderKind, StorageProvider, get_storage_provider
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]

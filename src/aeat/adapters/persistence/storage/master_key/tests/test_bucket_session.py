@@ -9,7 +9,7 @@ from pathlib import Path
 
 import pytest
 
-from ...bucket._errors import BucketLockedError
+from ...bucket import BucketLockedError
 from ...errors import StorageValidationError
 from .._bucket_session import (
     BucketSession,

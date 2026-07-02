@@ -15,7 +15,7 @@ from ..errors import (
     SecureStorageError,
     StorageError,
 )
-from ..master_key._active_session import NoActiveBucketSessionError
+from ..master_key import NoActiveBucketSessionError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 
