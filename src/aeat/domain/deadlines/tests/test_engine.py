@@ -316,19 +316,17 @@ class TestStatusTransitions:
     def _find_q1(self, schedule: Schedule) -> ModeloDeadline:
         return next(o for o in schedule.obligations if o.period == _period(2026, "1T"))
 
-    @pytest.mark.parametrize(
-        ("today", "expected_status"),
-        [
+    def test_q1_status_transitions(self) -> None:
+        cases = (
             (date(2026, 4, 21), ObligationStatus.OVERDUE),
             (date(2026, 4, 20), ObligationStatus.DUE_TODAY),
             (date(2026, 4, 7), ObligationStatus.DUE_SOON),
             (date(2026, 1, 1), ObligationStatus.UPCOMING),
-        ],
-        ids=("overdue", "due-today", "due-soon", "upcoming"),
-    )
-    def test_q1_status_transitions(self, today: date, expected_status: ObligationStatus) -> None:
-        schedule = _engine().compute(_profile(), 2026, today=today)
-        assert self._find_q1(schedule).status == expected_status
+        )
+
+        for today, expected_status in cases:
+            schedule = _engine().compute(_profile(), 2026, today=today)
+            assert self._find_q1(schedule).status == expected_status, today
 
 
 class TestNextDeadline:
