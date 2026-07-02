@@ -156,6 +156,10 @@ No findings for the CSV currency/list-view validation closure. The fix keeps def
 
 No findings for the CSV date-parse localization fix. Unsupported financial-source dates now carry a translated message key with label, raw value, and expected-format context; the CSV wrapper resolves that message before adding row context, so non-English ledger import refusals no longer leak the raw English `unsupported date format` string. Residual risk is limited to invalid compact-date behavior being manually verified by review rather than covered by a committed dedicated regression.
 
+### w03-p14-s223 | medium | resolved review findings
+
+The initial S223 regression was helper-level and overstated its protection. The correction adds a real `build_draft` replay-path test with `renta-2024-profile-tax-residence-ccaa = "madrid"` in the flat input map, keeps the helper assertions as diagnostics, updates the Step Record wording, and removes unrelated generated feature-index drift. Residual risk is limited to not running a full CLI `work verify` journey.
+
 ## Recommendations
 
 No open code changes recommended from these reviews. Keep W09.P41.S307 and W09.P41.S324 as separate implementation steps. Keep the full M131 módulos coefficient-table oracle as future work outside S297 and S398; S297 closes the grounded datos-base binding projection, and S398 closes only the advisory regulatory-floor predicate and evidence guard.
