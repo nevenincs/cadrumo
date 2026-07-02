@@ -120,21 +120,14 @@ _DANGLING_CASILLA_REFERENCE_CASES: tuple[tuple[dict[str, object], str], ...] = (
 )
 
 
-@pytest.mark.parametrize(
-    ("casilla_update", "expected_match"),
-    _DANGLING_CASILLA_REFERENCE_CASES,
-    ids=("formula", "binding", "export-ref"),
-)
-def test_dangling_casilla_references_fail_snapshot_integrity(
-    casilla_update: dict[str, object],
-    expected_match: str,
-) -> None:
+def test_dangling_casilla_references_fail_snapshot_integrity() -> None:
     """Casilla-level references to missing registry ids fail snapshot construction."""
 
-    casilla = minimal_casilla(_NUMERIC_CASILLA_01).model_copy(update=casilla_update)
-    revision = minimal_revision(casillas=(casilla,))
-    with pytest.raises(RegistryValidationError, match=expected_match):
-        build_minimal_snapshot(revision)
+    for casilla_update, expected_match in _DANGLING_CASILLA_REFERENCE_CASES:
+        casilla = minimal_casilla(_NUMERIC_CASILLA_01).model_copy(update=casilla_update)
+        revision = minimal_revision(casillas=(casilla,))
+        with pytest.raises(RegistryValidationError, match=expected_match):
+            build_minimal_snapshot(revision)
 
 
 def test_bound_casilla_without_binding_definition_fails_snapshot_integrity() -> None:
