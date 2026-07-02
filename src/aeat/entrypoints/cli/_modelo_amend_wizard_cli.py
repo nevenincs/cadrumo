@@ -425,9 +425,6 @@ def _emit_amend_wizard_result(
 
     export_next_action = tr(
         "cli.app.modelo.work.amend_wizard_export_next_action",
-        modelo=str(unit.modelo),
-        year=unit.filing_year,
-        period=unit.period.registry_token,
         work_unit_id=unit.work_unit_id,
         default=(
             "Amendment filed as a draft internal record. Export the AEAT-importable "

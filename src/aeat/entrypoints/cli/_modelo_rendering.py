@@ -19,7 +19,7 @@ from __future__ import annotations
 
 from ...application.modelo._result_summary import ResultSummaryRow, calculation_result_summary
 from ...application.modelo._work_plazo import ModeloWorkPlazoSummary, modelo_work_plazo_summary
-from ...core.i18n._render import output_language, tr
+from ...core.i18n import output_language, tr
 from ...core.json_contract import Notice, NoticeSeverity
 from ...domain.calculations.registry import BooleanBindingEncodedValue
 from ...domain.modelos import CalculationRevisionState
