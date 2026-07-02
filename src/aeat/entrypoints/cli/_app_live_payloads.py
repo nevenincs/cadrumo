@@ -168,7 +168,7 @@ class FiledCaptureSourcesResult(OutputSchema):
 
 
 class IvaCompensationHistoryRowPayload(OutputSchema):
-    """JSON projection of one :class:`~aeat.application.live.IvaCompensationHistoryRow`."""
+    """JSON projection of one :class:`IvaCompensationHistoryRow`."""
 
     year: int
     period: Period
@@ -184,7 +184,7 @@ class IvaCompensationHistoryRowPayload(OutputSchema):
 
 
 class IvaCompensationCarryForwardLotPayload(OutputSchema):
-    """JSON projection of one :class:`~aeat.application.live.IvaCompensationCarryForwardLotRow`."""
+    """JSON projection of one :class:`IvaCompensationCarryForwardLotRow`."""
 
     taxpayer_ref: str
     source_filing_year: int
@@ -198,7 +198,7 @@ class IvaCompensationCarryForwardLotPayload(OutputSchema):
 
 
 class IvaWalletAuthorityDecisionPayload(OutputSchema):
-    """JSON projection of one :class:`~aeat.application.live.IvaWalletAuthorityDecisionRow`.
+    """JSON projection of one :class:`IvaWalletAuthorityDecisionRow`.
 
     The decision records which authority source won for a target
     :class:`Period`: AEAT wallet evidence, local recurrence, or an explicit
@@ -222,7 +222,7 @@ class IvaWalletAuthorityDecisionPayload(OutputSchema):
 
 @register_schema("app.live.iva_wallet.pull")
 class IvaWalletPullResult(OutputSchema):
-    """Read-only wallet capture result from :class:`~aeat.application.live.IvaWalletCaptureReport`.
+    """Read-only wallet capture result from :class:`IvaWalletCaptureReport`.
 
     The payload identifies the persisted wallet observation and reconciliation
     decision for one target :class:`Period`. It reports the selected authority,
@@ -247,7 +247,7 @@ class IvaWalletPullResult(OutputSchema):
 
 @register_schema("app.live.iva_wallet.history")
 class IvaWalletHistoryResult(OutputSchema):
-    """Stored IVA evidence report from :class:`~aeat.application.live.IvaCompensationHistoryReport`.
+    """Stored IVA evidence report from :class:`IvaCompensationHistoryReport`.
 
     This command is local-only: rows, carry-forward lots, and wallet authority
     decisions are reloaded from secure profile storage without authenticating to
@@ -266,7 +266,7 @@ class IvaWalletHistoryResult(OutputSchema):
 
 @register_schema("app.live.iva_wallet.pull_history")
 class IvaWalletCaptureHistoryResult(OutputSchema):
-    """Filed-history capture result from :class:`~aeat.application.live.IvaCompensationHistoryCaptureReport`.
+    """Filed-history capture result from :class:`IvaCompensationHistoryCaptureReport`.
 
     The report comes from read-only Modelo 303 filed-history acquisition and
     includes the secure reload count that proves persisted observations were
@@ -282,7 +282,7 @@ class IvaWalletCaptureHistoryResult(OutputSchema):
 
 
 class LiveIvaSurfaceOutcomePayload(OutputSchema):
-    """Redacted JSON projection of one :class:`~aeat.application.live.LiveIvaReadOutcome`.
+    """Redacted JSON projection of one :class:`LiveIvaReadOutcome`.
 
     Filed history and wallet/cartera outcomes are reported independently so a
     successful surface can persist evidence even when the other surface fails
@@ -300,7 +300,7 @@ class LiveIvaSurfaceOutcomePayload(OutputSchema):
 
 
 class LiveIvaAuthOutcomePayload(OutputSchema):
-    """Redacted JSON projection of :class:`~aeat.application.live.LiveIvaAuthOutcome`."""
+    """Redacted JSON projection of :class:`LiveIvaAuthOutcome`."""
 
     status: str
     outcome_mode: str
@@ -313,7 +313,7 @@ class LiveIvaAuthOutcomePayload(OutputSchema):
 
 @register_schema("app.live.iva_wallet.pull_evidence")
 class IvaWalletPullEvidenceResult(OutputSchema):
-    """Combined IVA acquisition payload for :class:`~aeat.application.live.IvaRemoteStateAcquisitionReport`.
+    """Combined IVA acquisition payload for :class:`IvaRemoteStateAcquisitionReport`.
 
     The result carries the encrypted acquisition manifest id, redacted auth
     outcome, and per-surface read outcomes for filed history and wallet/cartera.
