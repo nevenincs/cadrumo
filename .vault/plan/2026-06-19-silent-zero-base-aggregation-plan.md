@@ -87,7 +87,7 @@ Bind the income casilla and prove the rendimiento chain.
 
 - [x] `W02.P05.S12` - bind M100 casilla 0171 to the annual income aggregation (project verb uses the formula-runtime path, so no disentanglement needed) with grounded legal_refs (LIRPF art. 27/28); `src/aeat/_data/registry/aeat/modelos/100/; `src/aeat/_data/registry/aeat/modelos/100/`.
 - [x] `W02.P05.S13` - sweep the M100 tests that supply 0171 to the bound path and rerun the M100 registry, formula-runtime, and verification gates green; `src/aeat/application/modelo/tests/`.
-- [ ] `W02.P05.S14` - add a real-CLI end-to-end test that a sole-trader's M100 casilla 0171 / 0180 / 0224 populate from the ledger unaided; `src/aeat/application/modelo/tests/`.
+- [x] `W02.P05.S14` - add a real-CLI end-to-end test that a sole-trader's M100 casilla 0171 / 0180 / 0224 populate from the ledger unaided; `src/aeat/application/modelo/tests/`.
 
 ## Wave `W03` - annual reconciliation and deferred axes
 
