@@ -11,6 +11,16 @@ related:
   - '[[2026-07-02-agent-harness-content-review-audit]]'
 ---
 
+<!-- LINK RULES:
+     - [[wiki-links]] are ONLY for .vault/ documents in the
+       related: field above.
+     - The related: field carries the AUTHORISING documents
+       (ADR, research, reference, prior plan) for every Step in
+       this plan. Steps inherit this chain; per-row reference
+       footers do not exist.
+     - NEVER use [[wiki-links]] or markdown links in the
+       document body. -->
+
 # `agent-harness` plan
 
 ### Phase `P01` - D2 - retire the unused LIVE_READ mutability member
@@ -53,13 +63,13 @@ Declare the runtime manifest-read persona-scoped tool boundary backed by a build
 Build the nine-category golden-eval catalogue (cat 1,3,4,5,7,8,9 landed; 2 and 6 gated on Track-1 #7 and #1) so hallucinated numerics, dropped provenance, and lifecycle contradictions are caught by a standing gate, not self-report.
 
 - [x] `P06.S11` - status:done (pre-existing, commits 2c8020cf5/a375ed6ba/f87fff631) - anchor golden scenarios for modelo 130 and modelo 303 with AEAT numeric value-oracles; `src/aeat/agent/eval/tests/test_modelo_130_golden.py`.
-- [ ] `P06.S12` - status:uncommitted-verified - category 1 golden scenario asserting verify MUST NOT return verified_complete plus zero findings on positive input with a zero base; `src/aeat/agent/eval/tests/test_under_declaration_golden.py`.
-- [ ] `P06.S13` - status:uncommitted-verified - category 3 golden scenario dispatching a real modelo.work.calculate call and asserting legal_refs/source_refs on the response payload, not only the registry; `src/aeat/agent/eval/tests/test_response_provenance_golden.py`.
-- [ ] `P06.S14` - status:uncommitted-verified - category 4 golden scenario asserting a readiness-true versus verify-NO_PENDING_OBLIGATION contradiction triggers stop-and-report, never retry-past; `src/aeat/agent/eval/tests/test_lifecycle_contradiction_golden.py`.
-- [ ] `P06.S15` - status:uncommitted-verified - category 5 golden scenario requiring an active-profile confirmation before the first mutating verb of a sequence; `src/aeat/agent/eval/tests/test_active_profile_confirmation_golden.py`.
-- [ ] `P06.S16` - status:uncommitted-verified - category 7 golden scenario asserting a non-zero CLI exit code is read as a verdict payload plus a continuation verb, never an abort; `src/aeat/agent/eval/tests/test_exit_code_verdict_golden.py`.
-- [ ] `P06.S17` - status:uncommitted-verified - category 8 golden scenario wiring confirmation_for_tool into a run so a CONFIRM-tier step is not auto-approved even with an auto-yes flag; `src/aeat/agent/eval/tests/test_confirmation_gate_golden.py`.
-- [ ] `P06.S18` - status:uncommitted-verified - category 9 golden scenario wiring faithfulness_check against a real captured calculate JSON, advisory off-handoff and hard-block at export, grounded against the M130 oracle figure to avoid false positives; `src/aeat/agent/eval/tests/test_faithfulness_golden.py`.
+- [x] `P06.S12` - status:done (commit df75c1b63) - category 1 golden scenario asserting verify MUST NOT return verified_complete plus zero findings on positive input with a zero base; `src/aeat/agent/eval/tests/test_under_declaration_golden.py`.
+- [x] `P06.S13` - status:done (commit df75c1b63) - category 3 golden scenario dispatching a real modelo.work.calculate call and asserting legal_refs/source_refs on the response payload, not only the registry; `src/aeat/agent/eval/tests/test_response_provenance_golden.py`.
+- [x] `P06.S14` - status:done (commit df75c1b63) - category 4 golden scenario asserting a readiness-true versus verify-NO_PENDING_OBLIGATION contradiction triggers stop-and-report, never retry-past; `src/aeat/agent/eval/tests/test_lifecycle_contradiction_golden.py`.
+- [x] `P06.S15` - status:done (commit df75c1b63) - category 5 golden scenario requiring an active-profile confirmation before the first mutating verb of a sequence; `src/aeat/agent/eval/tests/test_active_profile_confirmation_golden.py`.
+- [x] `P06.S16` - status:done (commit df75c1b63) - category 7 golden scenario asserting a non-zero CLI exit code is read as a verdict payload plus a continuation verb, never an abort; `src/aeat/agent/eval/tests/test_exit_code_verdict_golden.py`.
+- [x] `P06.S17` - status:done (commit df75c1b63) - category 8 golden scenario wiring confirmation_for_tool into a run so a CONFIRM-tier step is not auto-approved even with an auto-yes flag; `src/aeat/agent/eval/tests/test_confirmation_gate_golden.py`.
+- [x] `P06.S18` - status:done (commit df75c1b63) - category 9 golden scenario wiring faithfulness_check against a real captured calculate JSON, advisory off-handoff and hard-block at export, grounded against the M130 oracle figure to avoid false positives; `src/aeat/agent/eval/tests/test_faithfulness_golden.py`.
 - [x] `P06.S19` - status:done (pre-existing) - determinism-replay pinning test confirming byte-identical trajectory replay excluding scenario-declared non-deterministic fields; `src/aeat/agent/eval/tests/test_tool_call_replay.py`.
 
 ### Phase `P07` - D5/D6 - deferred Tier-A and Tier-B skill authoring
