@@ -19,13 +19,12 @@ lexical-only surface never depends on it at import time.
 
 from __future__ import annotations
 
-import inspect
 import json
 from collections.abc import Iterable, Sequence
 from pathlib import Path
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING
 
-from ._errors import CorpusSearchDependencyError
+from ._model_loader import load_static_model, model_dimensions
 from ._models import CorpusChunk, CorpusEmbeddingBuildResult, SimilarChunk
 
 if TYPE_CHECKING:
@@ -40,8 +39,6 @@ if TYPE_CHECKING:
 # record for provenance.
 POTION_MODEL_ID = "minishlab/potion-multilingual-128M"
 POTION_MODEL_REVISION = "main"
-
-_SEARCH_EXTRA_HINT = "pip install aeat[search]"
 
 
 def embed_corpus(
@@ -76,15 +73,15 @@ def embed_corpus(
     """
     import numpy as np
 
-    model = _load_static_model(model_id, revision=revision, cache_dir=cache_dir)
+    model = load_static_model(model_id, revision=revision, cache_dir=cache_dir)
     chunk_list = list(chunks)
     chunk_ids = [chunk.chunk_id for chunk in chunk_list]
     texts = [chunk.text for chunk in chunk_list]
-    raw = model.encode(texts) if texts else np.empty((0, _model_dimensions(model)), dtype=np.float32)
+    raw = model.encode(texts) if texts else np.empty((0, model_dimensions(model)), dtype=np.float32)
     matrix = np.asarray(raw, dtype=np.float32)
     if matrix.ndim != 2:
         matrix = matrix.reshape(len(chunk_ids), -1)
-    dimensions = int(matrix.shape[1]) if matrix.size else _model_dimensions(model)
+    dimensions = int(matrix.shape[1]) if matrix.size else model_dimensions(model)
 
     matrix_path = Path(matrix_path)
     chunk_ids_path = Path(chunk_ids_path)
@@ -99,38 +96,6 @@ def embed_corpus(
         embedding_model_id=model_id,
         embedding_model_revision=revision,
     )
-
-
-def _load_static_model(model_id: str, *, revision: str, cache_dir: Path | None) -> Any:
-    try:
-        # IMPORT-RATIONALE-OPTIONAL-SEARCH-EXTRA: model2vec rides the optional
-        # aeat[search] extra; a bare-core install lacks it, so the import is
-        # lazy and its typing is unresolved until the extra is present.
-        from model2vec import StaticModel  # type: ignore[import-not-found, unused-ignore]
-    except ImportError as exc:
-        raise CorpusSearchDependencyError(
-            "the corpus-search semantic stack (model2vec) is not installed",
-            context={"model_id": model_id, "dependency": "model2vec"},
-            suggestion=_SEARCH_EXTRA_HINT,
-        ) from exc
-    kwargs: dict[str, object] = {}
-    accepted = inspect.signature(StaticModel.from_pretrained).parameters
-    if "revision" in accepted:
-        kwargs["revision"] = revision
-    if cache_dir is not None and "cache_dir" in accepted:
-        kwargs["cache_dir"] = str(cache_dir)
-    return StaticModel.from_pretrained(model_id, **kwargs)
-
-
-def _model_dimensions(model: Any) -> int:
-    dim = getattr(model, "dim", None)
-    if isinstance(dim, int) and dim > 0:
-        return dim
-    embedding = getattr(model, "embedding", None)
-    shape = getattr(embedding, "shape", None)
-    if shape is not None and len(shape) == 2:
-        return int(shape[1])
-    return 256
 
 
 def load_embeddings(matrix_path: Path, chunk_ids_path: Path) -> tuple[np.ndarray, tuple[str, ...]]:
