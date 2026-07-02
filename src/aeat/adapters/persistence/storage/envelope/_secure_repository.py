@@ -1,14 +1,14 @@
 """Generic SQL-backed envelope repository for secure objects.
 
 Concrete domain and application repositories that wrap
-:class:`~aeat.adapters.persistence.storage.SecureObjectRepository`
+:class:`adapters.persistence.storage.SecureObjectRepository`
 all share the same boilerplate:
-:class:`~aeat.adapters.persistence.storage.Envelope` wrapping, namespace,
+:class:`adapters.persistence.storage.Envelope` wrapping, namespace,
 sensitivity, schema-version, Pydantic payload type, and a function that
 extracts the natural id from the payload.
 
 This module provides
-:class:`~aeat.adapters.persistence.storage.SecureBoundRepository`, a
+:class:`adapters.persistence.storage.SecureBoundRepository`, a
 generic base class that captures that shared shape exactly once. Concrete
 subclasses override the four class-level descriptors (``namespace``,
 ``payload_type``, ``sensitivity``, ``schema_version``) and implement
@@ -17,7 +17,7 @@ subclasses override the four class-level descriptors (``namespace``,
 ``iter_records`` for free.
 
 The base class does NOT replace
-:class:`~aeat.adapters.persistence.storage.SecureObjectRepository`; it
+:class:`adapters.persistence.storage.SecureObjectRepository`; it
 composes one.
 """
 
@@ -50,7 +50,7 @@ def _active_bucket_objects_or_default(settings: Settings | None = None) -> Secur
 
     When an active profile bucket is available the repository is backed by
     the bucket's own encrypted database, resolved through
-    :func:`~aeat.adapters.persistence.storage.secure_object_repository_for_active_bucket_or_default_route`
+    :func:`adapters.persistence.storage.secure_object_repository_for_active_bucket_or_default_route`
     so the URL is derived from the live bucket path rather than the
     settings-override snapshot captured at test-fixture construction time.
     A missing active bucket uses the process-default route for explicit
@@ -66,18 +66,18 @@ class SecureBoundRepository[T: BaseModel]:
     Subclasses MUST set class attributes:
 
     - :attr:`namespace`: the
-      :class:`~aeat.adapters.persistence.storage.SecureObjectRepository`
+      :class:`adapters.persistence.storage.SecureObjectRepository`
       namespace string for this payload family
       (e.g. ``"aeat.domain.filing.drafts"``).
     - :attr:`payload_type`: the typed Pydantic model class wrapped by the
       envelope.
     - :attr:`sensitivity`: the
-      :class:`~aeat.adapters.persistence.storage.SensitivityClass` that every
+      :class:`adapters.persistence.storage.SensitivityClass` that every
       row in this namespace MUST carry; mismatches raise
-      :class:`~aeat.adapters.persistence.storage.ClassificationError`.
+      :class:`adapters.persistence.storage.ClassificationError`.
     - :attr:`schema_version`: the current envelope schema version this
       consumer expects; rows whose version differs from it raise
-      :class:`~aeat.adapters.persistence.storage.EnvelopeVersionError`.
+      :class:`adapters.persistence.storage.EnvelopeVersionError`.
 
     Subclasses MUST implement :meth:`extract_identifier` so that
     :meth:`save` and :meth:`iter_ids` can recover the natural id from
@@ -166,7 +166,7 @@ class SecureBoundRepository[T: BaseModel]:
 
         Returns:
             The
-            :class:`~aeat.adapters.persistence.storage.SecureObjectRepository`
+            :class:`adapters.persistence.storage.SecureObjectRepository`
             backing this logical repository.
         """
         return self._objects
@@ -257,7 +257,7 @@ class SecureBoundRepository[T: BaseModel]:
         rather than buffering and sorting the whole namespace in memory.
 
         Fail-closed:
-        :meth:`~aeat.adapters.persistence.storage.SecureObjectRepository.list_records`
+        :meth:`adapters.persistence.storage.SecureObjectRepository.list_records`
         scans the
         whole namespace and raises ``SecureObjectUnreadableError`` if any row
         is unreadable, so a full consumption (``tuple(...)``) never yields a
@@ -290,7 +290,7 @@ class SecureBoundRepository[T: BaseModel]:
         """Yield every persisted payload in storage order.
 
         Streams each payload straight from
-        :meth:`~aeat.adapters.persistence.storage.SecureObjectRepository.list_records`
+        :meth:`adapters.persistence.storage.SecureObjectRepository.list_records`
         without buffering the whole namespace or sorting it in memory. Order
         is storage-defined (the ``object_key`` digest order), not the
         natural-id order; a caller that needs a specific order sorts the
