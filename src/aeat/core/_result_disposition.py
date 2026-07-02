@@ -12,10 +12,10 @@ result→code derivation per modelo, so feature code (the export header composer
 emits a grounded, codified member instead of a hardcoded literal.
 
 This module stops at the base sign-to-code mapping. The application resolver
-:func:`aeat.application.modelo._result_disposition_resolution.resolve_modelo_result_disposition`
+:func:`application.modelo._result_disposition_resolution.resolve_modelo_result_disposition`
 validates the full revision in its work-unit and registry context, then layers
-:class:`~aeat.core.RefundElection` and
-:func:`~aeat.domain.iva.refund_disposition_available` for Modelo 303. Export
+:class:`~core.RefundElection` and
+:func:`~domain.iva.refund_disposition_available` for Modelo 303. Export
 and cross-period carry read that single resolved fact through
 :func:`result_disposition_is_refund`.
 
@@ -56,7 +56,7 @@ class ResultDisposition(StrEnum):
     modelo's diseño declares.
 
     See Also:
-        :class:`~aeat.core.RefundElection`
+        :class:`~core.RefundElection`
             Operator input that can request a Modelo 303 ``C`` credit be filed
             as ``D`` after the application resolver applies the refund gate.
         :func:`result_disposition_is_refund`
@@ -228,7 +228,7 @@ def result_disposition_casilla_ids(modelo: str) -> tuple[CasillaId, ...] | None:
     These are the only keys :func:`derive_result_disposition` accepts in its
     ``casilla_values`` mapping. A caller holding a full calculation revision must
     validate and filter the revision to this tuple first; passing unrelated
-    result metadata raises :class:`~aeat.core.errors.CoreValidationError`.
+    result metadata raises :class:`~core.errors.CoreValidationError`.
     """
     spec = _DISPOSITION_SPEC.get(modelo)
     if spec is None:
