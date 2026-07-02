@@ -4,28 +4,28 @@ The repository is the only sanctioned read/write path for the transaction
 catalogue. It stores **one encrypted secure-object row per transaction** —
 keyed ``transaction:{bucket_id}:{transaction_id}`` inside the
 ``aeat.domain.transactions.bucket`` namespace at
-:class:`~aeat.adapters.persistence.storage.SensitivityClass` ``FINANCIAL`` —
+:class:`~adapters.persistence.storage.SensitivityClass` ``FINANCIAL`` —
 so a single-transaction mutation rewrites only that row instead of
 re-encrypting the whole catalogue (the prior single-blob shape was O(n) write
 amplification per ledger edit). Each row wraps its
-:class:`~aeat.domain.transactions.Transaction` in an
-:class:`~aeat.adapters.persistence.storage.Envelope` before serialisation; no
+:class:`~domain.transactions.Transaction` in an
+:class:`~adapters.persistence.storage.Envelope` before serialisation; no
 plaintext transaction row, JSON catalogue, or envelope file lands on disk.
 
 Writes go through the
-:class:`~aeat.adapters.persistence.storage.SecureObjectRepository` atomic
+:class:`~adapters.persistence.storage.SecureObjectRepository` atomic
 upsert+delete batch
-(:meth:`~aeat.adapters.persistence.storage.SecureObjectRepository.apply_batch`)
+(:meth:`~adapters.persistence.storage.SecureObjectRepository.apply_batch`)
 so a multi-transaction mutation — and any sibling-catalogue co-writes
 (bucket-event history, invoices) passed to ``save_with_secure_object_writes`` —
 commit all-or-nothing, preserving the co-write atomicity the single-blob
 ``save`` had. The diff that decides which rows to write or delete is driven by
 a decryption-free
-:meth:`~aeat.adapters.persistence.storage.SecureObjectRepository.namespace_payload_hashes`
+:meth:`~adapters.persistence.storage.SecureObjectRepository.namespace_payload_hashes`
 scan, so an unchanged transaction is never rewritten.
 
 The namespace authority is
-:data:`aeat.adapters.persistence.storage.TRANSACTION_CATALOGUE_NAMESPACE`;
+:data:`adapters.persistence.storage.TRANSACTION_CATALOGUE_NAMESPACE`;
 this module derives the bucket-local transaction row keys with
 :func:`transaction_object_key` and the membership-index key with
 :func:`transaction_index_object_key`.
@@ -81,7 +81,7 @@ def transaction_index_object_key(bucket_id: str) -> str:
     """Return the per-bucket transaction-membership-index secure-object key.
 
     The index row shares
-    :data:`aeat.adapters.persistence.storage.TRANSACTION_CATALOGUE_NAMESPACE`
+    :data:`adapters.persistence.storage.TRANSACTION_CATALOGUE_NAMESPACE`
     with the per-transaction rows and bounds reads/deletions to one bucket.
     """
     trimmed = bucket_id.strip()
@@ -108,7 +108,7 @@ def transaction_object_key(bucket_id: str, transaction_id: str) -> str:
     bucket id (``transaction:{bucket_id}:{transaction_id}``); cross-bucket
     aggregation must qualify with ``(bucket_id, tx_id)`` because ``tx_id`` alone
     is unique only within one bucket. Rows live under
-    :data:`aeat.adapters.persistence.storage.TRANSACTION_CATALOGUE_NAMESPACE`.
+    :data:`adapters.persistence.storage.TRANSACTION_CATALOGUE_NAMESPACE`.
     """
     trimmed = bucket_id.strip()
     if not trimmed:
@@ -195,13 +195,13 @@ class TransactionCatalogueRepository:
     Every instance is bound to one profile bucket via ``bucket_id``. The
     catalogue is stored as one secure-object row per transaction (keyed
     ``transaction:{bucket_id}:{transaction_id}``) inside the
-    :data:`aeat.adapters.persistence.storage.TRANSACTION_CATALOGUE_NAMESPACE`
+    :data:`adapters.persistence.storage.TRANSACTION_CATALOGUE_NAMESPACE`
     namespace, so two operator profiles never share transaction storage and a
     single-transaction mutation touches a single row. Each
-    :class:`~aeat.domain.transactions.Transaction` payload and the bucket
+    :class:`~domain.transactions.Transaction` payload and the bucket
     membership index are wrapped in
-    :class:`~aeat.adapters.persistence.storage.Envelope` before
-    :class:`~aeat.adapters.persistence.storage.SecureObjectRepository`
+    :class:`~adapters.persistence.storage.Envelope` before
+    :class:`~adapters.persistence.storage.SecureObjectRepository`
     persists them.
     """
 
@@ -235,10 +235,10 @@ class TransactionCatalogueRepository:
             instance when this bucket has no transactions.
 
         Raises:
-            :class:`~aeat.adapters.persistence.storage.ClassificationError`:
+            :class:`~adapters.persistence.storage.ClassificationError`:
                 If a row's inner envelope class is not
                 ``SensitivityClass.FINANCIAL``.
-            :class:`~aeat.adapters.persistence.storage.EnvelopeVersionError`:
+            :class:`~adapters.persistence.storage.EnvelopeVersionError`:
                 If a row's inner envelope schema version is higher than the
                 consumer supports.
             StoredTransactionDriftError: If a row payload fails pydantic schema
@@ -356,7 +356,7 @@ class TransactionCatalogueRepository:
 
         Returns ``(changed writes, deletions)``. Changed-row detection is a
         decryption-free
-        :meth:`~aeat.adapters.persistence.storage.SecureObjectRepository.namespace_payload_hashes`
+        :meth:`~adapters.persistence.storage.SecureObjectRepository.namespace_payload_hashes`
         lookup keyed by the bucket-qualified HMAC digest (so it is correct even
         when several buckets share one store): an incoming transaction whose
         freshly-serialised payload hash matches the stored one is left
