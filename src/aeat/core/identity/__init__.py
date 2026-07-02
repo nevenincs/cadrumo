@@ -16,7 +16,7 @@ intentionally tiny:
 * :data:`SubjectTaxId` — pydantic-ready alias for fields that must carry a
   validated Spanish tax identifier.
 
-The module lives in :mod:`aeat.core` because identity validation is a
+The module lives in :mod:`core` because identity validation is a
 domain concern, not a persistence concern. The persistence layer's
 redaction rule patterns remain permissive (over-redaction is the safer
 failure mode); domain code that needs a strict yes/no answer consumes
