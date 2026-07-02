@@ -15,32 +15,32 @@ The main public calculations are :func:`compute_finca_aggregates`,
 :class:`GastosForYear`, and :class:`TierResolution`; no function here encodes a
 Modelo 100 casilla id or filing-line authority.
 
-Callers outside :mod:`aeat.domain.fincas` import only from this module.
+Callers outside :mod:`domain.fincas` import only from this module.
 Internal modules (``_models``, ``_enums``, ``_errors``,
 ``_repository_ports``, ``_tier_resolver``, ``_amortization_ledger``,
 ``_expense_rollup``, and ``_aggregates``) are implementation details.
 
 The concrete ORM-backed repositories that satisfy the reader ports
 declared here live in the persistence adapter
-(:mod:`aeat.adapters.persistence.profile.fincas`), not in this domain
+(:mod:`adapters.persistence.profile.fincas`), not in this domain
 package — keeping the SQLAlchemy / mapper-row coupling out of the
 domain layer.
 
 Art. 85 imputation rates and the catastral-revision window enter through the
 registry legal-parameter catalogue before the aggregate functions run. The
 aggregate records are factual source material for registry-backed Modelo 100
-bindings; :class:`~aeat.domain.calculations.registry.RegistrySnapshot` and
-:class:`~aeat.domain.calculations.registry.CasillaObservation` remain the filing
+bindings; :class:`domain.calculations.registry.RegistrySnapshot` and
+:class:`domain.calculations.registry.CasillaObservation` remain the filing
 line and provenance authorities.
 
 See Also:
-    :mod:`aeat.adapters.persistence.profile.fincas`
+    :mod:`adapters.persistence.profile.fincas`
         Concrete SQLAlchemy repositories implementing the reader ports exported
         by this domain facade.
-    :mod:`aeat.domain.calculations.registry`
+    :mod:`domain.calculations.registry`
         Registry authority that turns finca-derived factual inputs into typed
         modelo casilla observations.
-    :mod:`aeat.domain.manuals`
+    :mod:`domain.manuals`
         Bundled manual corpus that grounds the same LIRPF rental concepts
         without storing operator finca records.
 """
