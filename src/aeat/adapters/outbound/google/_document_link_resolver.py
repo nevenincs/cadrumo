@@ -145,9 +145,10 @@ def _drive_service(credentials: object) -> _DriveService:
             context={"dependency": "google-api-python-client"},
             suggestion="pip install aeat[google]",
         ) from exc
-    # CAST-RATIONALE-GOOGLE-DRIVE-SERVICE: googleapiclient.build returns a
+
     # dynamic resource; the protocol pins the files().get_media().execute
     # surface used below.
+    # CAST-RATIONALE-thirdparty: googleapiclient build() returns an untyped Resource
     return cast(_DriveService, build("drive", "v3", credentials=credentials, cache_discovery=False))
 
 
@@ -285,7 +286,11 @@ def list_drive_folder_documents(
             pageToken=page_token,
         )
         try:
-            response = execute_request(cast("Any", request), action="drive.files.list")
+            response = execute_request(
+                # CAST-RATIONALE-thirdparty: Google Drive SDK request object is untyped at the client boundary
+                cast("Any", request),
+                action="drive.files.list",
+            )
         except OutboundStoragePermissionError as exc:
             context = dict(exc.context or {})
             if "required_scope" in context:
@@ -296,6 +301,7 @@ def list_drive_folder_documents(
                 "reading an arbitrary operator folder requires drive.readonly",
                 context={"required_scope": _DRIVE_READONLY_SCOPE, "folder_id": folder_id, **context},
             ) from exc
+        # CAST-RATIONALE-thirdparty: Google Drive files-list is an untyped JSON API response
         raw_files = cast("list[GoogleDriveFile]", response.get("files", []))
         for raw_file in raw_files:
             mime_type = raw_file.get("mimeType", "")
@@ -311,6 +317,7 @@ def list_drive_folder_documents(
                     mime_type=mime_type,
                 ),
             )
+        # CAST-RATIONALE-thirdparty: Google Drive nextPageToken is an untyped JSON API response
         page_token = cast("str | None", response.get("nextPageToken"))
         if not page_token:
             break

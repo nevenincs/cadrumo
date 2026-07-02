@@ -378,6 +378,9 @@ def modelo_reconcile(command: ModeloReconciliationCommand) -> ModeloReconciliati
     The verdict is included in the event payload so downstream
     auditors can replay the reconciliation timeline without
     re-parsing the evidence.
+
+    Returns:
+        A :class:`ModeloReconciliationReport`.
     """
     if command.source_kind is ModeloReconciliationEvidenceKind.DECLARATION:
         _require_declaration_enrolled_modelo(command.work_unit_id)

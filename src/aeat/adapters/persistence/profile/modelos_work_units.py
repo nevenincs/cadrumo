@@ -20,6 +20,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
+from ....core.external_constants import UTF_8_ENCODING
 from ....core.logging import get_logger
 from ....core.time import now
 from ....domain.modelos import WorkUnitCatalogue
@@ -114,7 +115,7 @@ class WorkUnitCatalogueRepository:
         if record is None:
             _LOGGER.debug("work-unit catalogue not found; returning empty catalogue")
             return WorkUnitCatalogue()
-        envelope = Envelope[WorkUnitCatalogue].model_validate_json(record.payload.decode("utf-8"))
+        envelope = Envelope[WorkUnitCatalogue].model_validate_json(record.payload.decode(UTF_8_ENCODING))
         if envelope.classification is not SensitivityClass.FINANCIAL:
             _LOGGER.error(
                 "work-unit catalogue classification mismatch",
@@ -178,7 +179,7 @@ class WorkUnitCatalogueRepository:
             classification=SensitivityClass.FINANCIAL,
             schema_version=_WORK_UNIT_CATALOGUE_VERSION,
             written_at=envelope.written_at,
-            payload=envelope.model_dump_json().encode("utf-8"),
+            payload=envelope.model_dump_json().encode(UTF_8_ENCODING),
         )
         _LOGGER.info("saved work-unit catalogue with %d entr(y/ies)", len(catalogue))
 
