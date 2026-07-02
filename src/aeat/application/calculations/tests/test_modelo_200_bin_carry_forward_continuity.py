@@ -52,7 +52,7 @@ from ....domain.calculations.registry import (
     validated_casilla_id,
 )
 from ....domain.deadlines import IVARegime, TaxpayerProfile
-from ....domain.modelos._verification_report import ModeloVerificationFindingKind
+from ....domain.modelos import ModeloVerificationFindingKind
 from ....tests.registry_observations import registry_grounded_observations
 from ....tests.secure_sql import isolated_runtime_profile
 from ...modelo._verification_actions import _evaluate_verification_predicates

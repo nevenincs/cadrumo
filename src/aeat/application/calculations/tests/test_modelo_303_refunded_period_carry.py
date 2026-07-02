@@ -40,15 +40,16 @@ from ....domain.calculations.registry import (
     resolve_bound_inputs_by_casilla_id,
     validated_casilla_id,
 )
-from ....domain.modelos._calculation_revision import (
+from ....domain.modelos import (
     CalculationRevision,
     CalculationRevisionState,
+    ModeloCode,
+    WorkUnit,
     derive_calculation_revision_id,
+    derive_work_unit_id,
 )
-from ....domain.modelos._codes import ModeloCode
-from ....domain.modelos._work_unit import WorkUnit, derive_work_unit_id
 from ....tests.secure_sql import isolated_runtime_profile
-from ...modelo._filed_revision_observation import persist_filed_revision_observation
+from ...modelo import persist_filed_revision_observation
 from .._observations_repository import CalculationObservationRepository
 from .._relation_prefill import resolve_relations_from_local_store
 

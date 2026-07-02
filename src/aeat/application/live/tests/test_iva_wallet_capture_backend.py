@@ -17,9 +17,9 @@ from ....adapters.outbound.aeat.sede import (
 )
 from ....adapters.persistence.storage import has_active_bucket_session
 from ....core import Period
-from ....domain.iva_compensation._carry_forward import IvaCompensationPeriodState
-from ....domain.iva_compensation._reconciliation import (
+from ....domain.iva_compensation import (
     IvaCompensationAuthoritySource,
+    IvaCompensationPeriodState,
     IvaCompensationReconciliationDecision,
 )
 from ....tests.secure_sql import dev_test_database_password, isolated_profile_storage_root, isolated_runtime_profile
@@ -29,7 +29,7 @@ from ...calculations import (
     IvaWalletDecisionRepository,
     iva_wallet_decision_key,
 )
-from ...user_profile._orchestration import profile_create_storage_span
+from ...user_profile import profile_create_storage_span
 from ...user_profile._testing import register_minimal_profile
 from ...workflow import workflow_state_repository
 from .. import load_iva_remote_state, persist_and_reconcile_iva_compensation_wallet

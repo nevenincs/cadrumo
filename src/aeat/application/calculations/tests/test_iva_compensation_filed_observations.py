@@ -7,19 +7,17 @@ from pathlib import Path
 
 import pytest
 
-from ....adapters.outbound.aeat.sede._schema import ObservedCasillaValue
+from ....adapters.outbound.aeat.sede import ObservedCasillaValue
 from ....core import Period
 from ....core.errors import ERROR_REGISTRY, build_error_envelope
-from ....domain.iva_compensation._carry_forward import (
-    IvaCompensationExpiryReviewState,
-    build_iva_compensation_carry_forward_report,
-    enforce_iva_compensation_four_year_window,
-)
-from ....domain.iva_compensation._errors import (
+from ....domain.iva_compensation import (
     IvaCompensationCasillaReferenceError,
     IvaCompensationDecimalParseError,
+    IvaCompensationExpiryReviewState,
     IvaCompensationSeedConflictError,
     IvaCompensationYearRangeError,
+    build_iva_compensation_carry_forward_report,
+    enforce_iva_compensation_four_year_window,
 )
 from ....tests.secure_sql import isolated_runtime_profile
 from .._errors import IvaCompensationModeloError

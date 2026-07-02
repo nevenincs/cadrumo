@@ -22,9 +22,12 @@ from datetime import date
 
 import pytest
 
-from ....core._modelo import OUT_OF_SCOPE_OBLIGATIONS, UNMODELED_OBLIGATIONS
+from ....core import (
+    OUT_OF_SCOPE_OBLIGATIONS,
+    UNMODELED_OBLIGATIONS,
+)
 from ....domain.calculations.registry.applicability import has_applicability_rule
-from ....domain.deadlines._models import (
+from ....domain.deadlines import (
     EntityType,
     IrpfEstimationRegime,
     IrpfIncomeCategory,
@@ -32,7 +35,7 @@ from ....domain.deadlines._models import (
     LegalEntityForm,
     TaxpayerProfile,
 )
-from ...modelo._registry_discovery import registry_modelo_codes
+from ...modelo import registry_modelo_codes
 from .._agenda import build_overview_agenda
 from .._backlog import build_overview_backlog
 from .._calendar import build_overview_calendar

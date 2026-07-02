@@ -16,9 +16,7 @@ from ....domain.calculations.registry import (
 )
 from ....domain.deadlines import ObligationStatus
 from ....domain.modelos import ExternalEvidenceKind, ModeloRecord
-from ...live._expedientes import PersistedExpedientesSnapshot
-from ...live._justificante import JustificanteCaptureSnapshot
-from ...live._snapshot_base import SnapshotLifecycleState
+from ...live import JustificanteCaptureSnapshot, PersistedExpedientesSnapshot, SnapshotLifecycleState
 from .. import (
     OverviewAeatSubmissionState,
     OverviewCalendarEntry,

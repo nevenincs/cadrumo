@@ -17,8 +17,8 @@ from ....domain.modelos import (
     ModeloRecordCatalogueRepository,
 )
 from ....domain.user_profile import UserProfileFact
-from ...user_profile._orchestration import set_active_fields
-from ...workflow._persistence import workflow_state_repository
+from ...user_profile import set_active_fields
+from ...workflow import workflow_state_repository
 from .._justificante import register_capture_as_filing_evidence
 from .._snapshot_base import SnapshotLifecycleState
 from ._justificante_reconcile_support import (

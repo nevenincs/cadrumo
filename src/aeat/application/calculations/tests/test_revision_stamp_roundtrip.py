@@ -165,12 +165,12 @@ def test_stamped_revision_id_anti_tautology_null_refuses_load(tmp_path: Path) ->
     """
     from sqlalchemy import select
 
-    from ....adapters.persistence.storage.crypto._encrypted_columns import (
+    from ....adapters.persistence.storage.crypto import (
         decrypt_secure_object_payload,
         encrypt_secure_object_payload,
         secure_object_payload_aad,
     )
-    from ....adapters.persistence.storage.sql._orm import SecureObjectRow
+    from ....adapters.persistence.storage.sql import SecureObjectRow
     from ....adapters.persistence.storage.sql.engine import get_engine
     from ....adapters.persistence.storage.sql.session import session_scope
 

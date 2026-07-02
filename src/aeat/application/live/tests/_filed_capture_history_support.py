@@ -25,20 +25,22 @@ from ....core.resources import resources
 from ....domain.calculations.registry import CasillaId, validated_casilla_id
 from ....domain.modelos import (
     ExternalEvidence,
+    ModeloCode,
     ModeloRecord,
     ModeloRecordCatalogueRepository,
     ModeloRecordStatus,
+    WorkUnit,
+    WorkUnitCatalogueRepository,
     derive_filing_record_id,
+    derive_work_unit_id,
     upsert_filing_record,
+    upsert_work_unit,
 )
-from ....domain.modelos._codes import ModeloCode
-from ....domain.modelos._repository import WorkUnitCatalogueRepository, upsert_work_unit
-from ....domain.modelos._work_unit import WorkUnit, derive_work_unit_id
 from ....tests import FIXTURES_DIR
 from ....tests.secure_sql import isolated_profile_storage_root, isolated_runtime_profile
-from ...user_profile._orchestration import profile_create_storage_span
+from ...user_profile import profile_create_storage_span
 from ...user_profile._testing import register_minimal_profile
-from ...workflow._persistence import workflow_state_repository
+from ...workflow import workflow_state_repository
 
 _CAPTURED_AT = datetime(2026, 4, 20, 10, 0, 0, tzinfo=UTC)
 _SYNTHETIC_PROFILE_ID = "SYNTHETIC_PROFILE"

@@ -18,8 +18,8 @@ from ....domain.modelos import (
     ModeloRecordCatalogueRepository,
 )
 from ....domain.user_profile import UserProfileFact
-from ...user_profile._orchestration import set_active_fields
-from ...workflow._persistence import workflow_state_repository
+from ...user_profile import set_active_fields
+from ...workflow import workflow_state_repository
 from .. import capture_justificante_snapshot, capture_justificante_snapshot_outcome
 from ._justificante_reconcile_support import (
     MODELO_130_FIXTURE,

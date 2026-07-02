@@ -17,7 +17,7 @@ from ....adapters.persistence.storage import Envelope, SensitivityClass
 from ....adapters.persistence.storage.errors import ClassificationError
 from ....adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
 from ....core import Period
-from ....domain._identifiers import ModeloIdentifier
+from ....domain import ModeloIdentifier
 from .._history_models import ModeloHistory, ModeloHistoryEntry
 from .._history_repository import ModeloHistoryRepository
 

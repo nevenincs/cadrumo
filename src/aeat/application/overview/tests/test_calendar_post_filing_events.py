@@ -14,11 +14,9 @@ from datetime import UTC, date, datetime
 import pytest
 from pydantic import AnyHttpUrl
 
-from ....adapters.outbound.aeat.sede import Declaracion
-from ....adapters.outbound.aeat.sede._notifications import RemoteNotification
+from ....adapters.outbound.aeat.sede import Declaracion, RemoteNotification
 from ....core import Period, PostFilingEventKind
-from ...live._expedientes import PersistedExpedientesSnapshot
-from ...live._notifications import PersistedNotificationsSnapshot
+from ...live import PersistedExpedientesSnapshot, PersistedNotificationsSnapshot
 from .. import (
     OverviewCalendarRange,
     actionable_post_filing_events,

@@ -14,20 +14,22 @@ from ....core import Period
 from ....core.config import Settings
 from ....domain.modelos import (
     ExternalEvidence,
+    ModeloCode,
     ModeloRecord,
     ModeloRecordCatalogueRepository,
     ModeloRecordStatus,
+    WorkUnit,
+    WorkUnitCatalogueRepository,
     derive_filing_record_id,
+    derive_work_unit_id,
     upsert_filing_record,
+    upsert_work_unit,
 )
-from ....domain.modelos._codes import ModeloCode
-from ....domain.modelos._repository import WorkUnitCatalogueRepository, upsert_work_unit
-from ....domain.modelos._work_unit import WorkUnit, derive_work_unit_id
 from ....tests import FIXTURES_DIR
 from ....tests.secure_sql import isolated_profile_storage_root
-from ...user_profile._orchestration import profile_create_storage_span
+from ...user_profile import profile_create_storage_span
 from ...user_profile._testing import register_minimal_profile
-from ...workflow._persistence import workflow_state_repository
+from ...workflow import workflow_state_repository
 
 if TYPE_CHECKING:
     from ....adapters.outbound.aeat.auth import AeatSession
