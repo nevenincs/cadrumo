@@ -20,17 +20,21 @@ assume Python guarantees a deeper wipe than the language can deliver.
 from __future__ import annotations
 
 from datetime import datetime, timedelta
+from typing import TYPE_CHECKING
 
-from pydantic import ValidationError
 from sqlalchemy.exc import SQLAlchemyError
 
-from .....core.errors import CoreValidationError
 from .....core.logging import get_logger
 from ..bucket import BucketLockedError
 from ..errors import (
     storage_validation_error as _storage_validation_error,
 )
 from ._zeroise import zeroise as _zeroise
+
+if TYPE_CHECKING:
+    from sqlalchemy import Engine
+
+    from .....core.config import Settings
 
 _KEK_BYTES = 32
 _DEK_BYTES = 32
@@ -48,6 +52,7 @@ class BucketSession:
     __slots__ = (
         "_bucket_id",
         "_dek_buffer",
+        "_engine",
         "_idle_deadline",
         "_idle_window",
         "_kek_buffer",
@@ -72,6 +77,7 @@ class BucketSession:
         self._idle_deadline = idle_deadline
         self._unsecured_backend = unsecured_backend
         self._sealed = False
+        self._engine: Engine | None = None
 
     @classmethod
     def open(
@@ -174,57 +180,70 @@ class BucketSession:
             return True
         return now >= self._idle_deadline
 
+    def acquire_engine(self, settings: Settings) -> Engine:
+        """Lazily acquire and register this bucket's engine on first storage access.
+
+        The session is the single owner of the SQLAlchemy engine
+        lifecycle for its bucket: the first storage access within the
+        session resolves (or creates) the bucket engine and registers the
+        handle here, so :meth:`close` disposes exactly that engine on
+        session close or profile switch. Subsequent accesses return the
+        already-registered handle.
+
+        Args:
+            settings: The :class:`~aeat.core.config.Settings` routing to
+                this bucket's database, passed through to
+                :func:`~aeat.adapters.persistence.storage.sql.engine.get_engine`.
+
+        Returns:
+            The :class:`~sqlalchemy.engine.Engine` bound to this session.
+
+        Raises:
+            BucketLockedError: When the session has already been sealed.
+        """
+        if self._sealed:
+            raise BucketLockedError(bucket_id=self._bucket_id)
+        if self._engine is None:
+            from ..sql.engine import get_engine
+
+            self._engine = get_engine(settings)
+        return self._engine
+
     def close(self) -> None:
-        """Zeroise key buffers, evict the bucket's engine, and seal the session.
+        """Zeroise key buffers, dispose the bucket's engine, and seal the session.
 
         Idempotent: a second call after the first is a no-op.
 
-        Engine eviction:
+        Engine disposal:
 
-        The SQLAlchemy engine for this bucket's database
-        (``sqlite:///<aeat_local_storage_root>/buckets/<bucket_id>/db/aeat.db``)
-        is removed from the process-wide engine cache so the next
-        consumer that opens a different bucket does not accidentally
-        reuse this bucket's engine handle. The lookup is conservative:
-        the targeted dispose runs through the central active-profile
-        route helper; when an explicit database URL prevents deriving
-        a bucket route, every cached engine is disposed instead.
+        The session owns the engine lifecycle for its bucket. Closing the
+        session (on idle expiry, profile switch, or explicit close)
+        disposes the engine handle registered at first storage access and
+        evicts every cached engine bound to this bucket id, so the next
+        consumer that opens a different bucket — or re-opens this one —
+        never reuses a stale engine handle. Disposal keys on bucket
+        identity, so it never depends on re-deriving a database route from
+        live settings.
         """
         if self._sealed:
             return
         _zeroise(self._kek_buffer)
         _zeroise(self._dek_buffer)
         self._sealed = True
-        self._evict_engine()
+        self._dispose_engine()
 
-    def _evict_engine(self) -> None:
-        """Dispose the SQLAlchemy engine bound to this bucket's database."""
-        from .....core.config import load_settings, settings_for_active_profile_bucket
-        from ..sql.engine import dispose_engine
+    def _dispose_engine(self) -> None:
+        """Dispose the engine(s) bound to this bucket's database."""
+        from ..sql.engine import dispose_engine_handle, dispose_engines_for_bucket
 
+        engine = self._engine
+        self._engine = None
         try:
-            settings = settings_for_active_profile_bucket(self._bucket_id, load_settings())
-        except (CoreValidationError, ValidationError) as exc:
-            _log.debug(
-                "bucket session targeted engine eviction unavailable error_type=%s",
-                type(exc).__name__,
-            )
-            _evict_all_engines()
-            return
-        try:
-            dispose_engine(settings)
+            if engine is not None:
+                dispose_engine_handle(engine)
+            dispose_engines_for_bucket(self._bucket_id)
         except SQLAlchemyError as exc:
-            _log.debug("bucket session targeted engine eviction failed error_type=%s", type(exc).__name__)
-
-
-def _evict_all_engines() -> None:
-    """Dispose every cached SQLAlchemy engine when a targeted route is unavailable."""
-    from ..sql.engine import dispose_engine
-
-    try:
-        dispose_engine()
-    except SQLAlchemyError as exc:
-        _log.debug("bucket session fallback engine eviction failed error_type=%s", type(exc).__name__)
+            _log.debug("bucket session engine disposal failed error_type=%s", type(exc).__name__)
 
 
 __all__ = ["BucketSession"]

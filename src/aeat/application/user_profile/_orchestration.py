@@ -533,19 +533,20 @@ def remove_profile_bucket_directory(profile_id: str) -> None:
     import gc
     import shutil
 
-    from ...adapters.persistence.storage.sql.engine import dispose_engine
+    from ...adapters.persistence.storage.sql.engine import dispose_engines_for_bucket
 
     root = load_settings().aeat_local_storage_root
     target = bucket_paths(root, profile_id).bucket_dir
     if not target.exists():
         return
-    # Dispose cached SQLAlchemy engines before removing the bucket directory.
-    # The engine pool holds open SQLite file handles; on Windows an undisposed
-    # handle makes the crash-safe rename below fail (forcing the in-place rmtree
-    # fallback), and a cached engine keyed by this bucket's DB URL would
-    # otherwise serve stale connections to a deleted-then-recreated file. Engines
-    # re-create lazily on next use, so a broad dispose here is safe.
-    dispose_engine()
+    # Dispose this bucket's cached SQLAlchemy engine before removing the
+    # directory. The engine pool holds open SQLite file handles; on Windows an
+    # undisposed handle makes the crash-safe rename below fail (forcing the
+    # in-place rmtree fallback), and a cached engine bound to this bucket would
+    # otherwise serve stale connections to a deleted-then-recreated file. The
+    # engine re-creates lazily on next use, so the bucket-scoped dispose is safe
+    # and leaves other buckets' engines untouched.
+    dispose_engines_for_bucket(profile_id)
     gc.collect()
     trash = target.with_name(f".trash-{profile_id}-{secrets.token_hex(4)}")
     try:

@@ -66,7 +66,6 @@ def test_profile_rename_is_label_only_and_keeps_uuid_directory_and_key(
     unchanged; only ``display_name`` on the record and ``label`` on
     the manifest move from A to B.
     """
-    from ....adapters.persistence.storage.sql.engine import dispose_engine
     from ....application.workflow._profile_bucket_scan import read_profile_bucket
 
     create_profile_via_cli("alpha")
@@ -77,13 +76,11 @@ def test_profile_rename_is_label_only_and_keeps_uuid_directory_and_key(
     bucket_dir = _per_bucket_backend / "buckets" / uuid_before
     assert bucket_dir.is_dir()
 
-    dispose_engine()
     result = _invoke(("config", "profile", "rename", "alpha", "beta"))
     assert result.exit_code == 0, f"rename failed: {result.output}"
     assert "display_name\tbeta" in result.output
     assert "previous_display_name\talpha" in result.output
 
-    dispose_engine()
     # The old label no longer resolves; the new label resolves to the
     # SAME immutable UUID and the SAME on-disk directory.
     assert read_profile_bucket("alpha") is None
@@ -104,7 +101,6 @@ def test_profile_rename_keeps_record_readable_under_unchanged_key(
     no re-key happens; ``profile show`` and the lifecycle service both
     still find the record, now carrying the new display label.
     """
-    from ....adapters.persistence.storage.sql.engine import dispose_engine
     from ....application.user_profile._orchestration import build_lifecycle_service, profile_storage_session
     from ....application.workflow._profile_bucket_scan import read_profile_bucket
     from ....core.redaction import CLI_PROFILE_ID_PLACEHOLDER
@@ -114,13 +110,11 @@ def test_profile_rename_keeps_record_readable_under_unchanged_key(
     assert alice_pointer is not None
     uuid_before = alice_pointer.bucket_id
 
-    dispose_engine()
     rename_result = _invoke(("config", "profile", "rename", "alice", "bob"))
     assert rename_result.exit_code == 0, f"rename failed: {rename_result.output}"
 
     # Reading the profile record directly via the lifecycle service requires an
     # active session scoped to the bucket UUID.
-    dispose_engine()
     with profile_storage_session(uuid_before):
         svc = build_lifecycle_service(bucket_id=uuid_before)
         record = svc.read(uuid_before)
@@ -128,7 +122,6 @@ def test_profile_rename_keeps_record_readable_under_unchanged_key(
     assert record.profile_id == uuid_before
     assert record.display_name == "bob"
 
-    dispose_engine()
     show_result = _invoke(("config", "profile", "show", "bob"))
     assert show_result.exit_code == 0, f"show failed: {show_result.output}"
     assert "record_validity\tvalid" in show_result.output, show_result.output
@@ -148,7 +141,6 @@ def test_profile_rename_refuses_a_label_taken_by_another_live_profile(
     _per_bucket_backend: Path,
 ) -> None:
     """``profile rename A B`` is refused when label B already belongs to a profile."""
-    from ....adapters.persistence.storage.sql.engine import dispose_engine
 
     # Both profiles are setup-only for the rename refusal test; use seed so the
     # wizard create does not attempt the cross-bucket tax-id uniqueness scan
@@ -156,7 +148,6 @@ def test_profile_rename_refuses_a_label_taken_by_another_live_profile(
     seed("alpha")
     seed("beta")
 
-    dispose_engine()
     result = _invoke(("config", "profile", "rename", "alpha", "beta"))
     assert result.exit_code != 0, f"expected refusal, got: {result.output}"
 
@@ -165,11 +156,9 @@ def test_profile_create_refuses_case_insensitive_duplicate_label(
     _per_bucket_backend: Path,
 ) -> None:
     """Display-name uniqueness is enforced case-insensitively across live profiles."""
-    from ....adapters.persistence.storage.sql.engine import dispose_engine
 
     create_profile_via_cli("operator")
 
-    dispose_engine()
     result = _invoke(
         (
             "config",
@@ -203,13 +192,11 @@ def test_profile_import_label_refuses_duplicate_bundle_identity(
     that does not already carry that UUID; it must not mint a second local
     profile for the same bundle identity.
     """
-    from ....adapters.persistence.storage.sql.engine import dispose_engine
     from ....application.workflow._profile_bucket_scan import read_profile_bucket
 
     # Seed the source profile via the canonical path (no tax-id cross-scan issue).
     seed("operator")
 
-    dispose_engine()
     bundle_path = _per_bucket_backend / "operator-bundle.json"
     export_result = _invoke(
         ("config", "profile", "export", "operator", "--to", str(bundle_path)),
@@ -218,13 +205,11 @@ def test_profile_import_label_refuses_duplicate_bundle_identity(
     assert bundle_path.is_file()
 
     # Re-importing under the original name dead-ends on a label-taken refusal.
-    dispose_engine()
     clash = _invoke(("config", "profile", "import", str(bundle_path)))
     assert clash.exit_code != 0, clash.output
 
     # Re-importing with --label still hits the UUID collision guard; no second
     # profile is created under the requested label.
-    dispose_engine()
     relabelled = _invoke(
         ("config", "profile", "import", str(bundle_path), "--label", "operator-restored"),
     )
@@ -255,7 +240,6 @@ def test_switch_surviving_profile_after_deleting_the_active_one(
     regression active. Before the fix it refused with ``no active bucket
     session`` — the very recovery command the refusal recommended.
     """
-    from ....adapters.persistence.storage.sql.engine import dispose_engine
     from ....application.workflow._profile_bucket_scan import read_profile_bucket
     from ....core import resolve_active_bucket_id
 
@@ -265,22 +249,18 @@ def test_switch_surviving_profile_after_deleting_the_active_one(
     seed("alpha")
     seed("beta")
 
-    dispose_engine()
     assert _invoke(("config", "switch", "alpha")).exit_code == 0
 
-    dispose_engine()
     deleted = _invoke(("config", "profile", "delete", "alpha", "--yes"))
     assert deleted.exit_code == 0, deleted.output
 
     # The active-profile pointer is now cleared. ``switch`` must still
     # succeed — it is the verb that establishes a session, not one that
     # requires a pre-existing one.
-    dispose_engine()
     switched = _invoke(("config", "switch", "beta"))
     assert switched.exit_code == 0, switched.output
     assert "active_profile\tbeta" in switched.output
 
-    dispose_engine()
     survivor = read_profile_bucket("beta")
     assert survivor is not None
     assert resolve_active_bucket_id() == survivor.bucket_id
@@ -295,17 +275,13 @@ def test_first_switch_from_a_no_active_profile_state_succeeds(
     the pointer so no session resolves at root-callback time. ``switch``
     must still open its own session and activate the named profile.
     """
-    from ....adapters.persistence.storage.sql.engine import dispose_engine
     from ....core import resolve_active_bucket_id
 
     create_profile_via_cli("solo")
 
-    dispose_engine()
     assert _invoke(("config", "profile", "logout")).exit_code == 0
-    dispose_engine()
     assert resolve_active_bucket_id() is None
 
-    dispose_engine()
     switched = _invoke(("config", "switch", "solo"))
     assert switched.exit_code == 0, switched.output
     assert "active_profile\tsolo" in switched.output
@@ -321,19 +297,15 @@ def test_list_and_status_work_from_a_no_active_session_state(
     enumerates registered profiles and ``status`` reports the empty
     no-active-profile state instead of refusing.
     """
-    from ....adapters.persistence.storage.sql.engine import dispose_engine
 
     create_profile_via_cli("alpha")
 
-    dispose_engine()
     assert _invoke(("config", "profile", "logout")).exit_code == 0
 
-    dispose_engine()
     listed = _invoke(("config", "profile", "list"))
     assert listed.exit_code == 0, listed.output
     assert "alpha" in listed.output
 
-    dispose_engine()
     status = _invoke(("config", "profile", "status"))
     assert status.exit_code == 0, status.output
     assert "bucket session" not in status.output
@@ -348,14 +320,11 @@ def test_delete_active_profile_states_the_pointer_was_cleared(
     pointer. The result output must state the active profile was cleared
     and steer the operator at ``switch`` / ``create``.
     """
-    from ....adapters.persistence.storage.sql.engine import dispose_engine
 
     create_profile_via_cli("alpha")
 
-    dispose_engine()
     assert _invoke(("config", "switch", "alpha")).exit_code == 0
 
-    dispose_engine()
     deleted = _invoke(("config", "profile", "delete", "alpha", "--yes"))
     assert deleted.exit_code == 0, deleted.output
     assert "status\ttombstoned" in deleted.output
@@ -375,7 +344,6 @@ def test_delete_non_active_profile_omits_the_cleared_pointer_notice(
     deleting an inactive profile leaves the active pointer untouched and
     must not emit the notice.
     """
-    from ....adapters.persistence.storage.sql.engine import dispose_engine
 
     # Both profiles are setup for the delete test; seed both so the wizard
     # create does not hit the cross-bucket tax-id scan against a closed session.
@@ -386,7 +354,6 @@ def test_delete_non_active_profile_omits_the_cleared_pointer_notice(
     assert _invoke(("config", "switch", "beta")).exit_code == 0
 
     # ``beta`` is active; delete the inactive ``alpha``.
-    dispose_engine()
     deleted = _invoke(("config", "profile", "delete", "alpha", "--yes"))
     assert deleted.exit_code == 0, deleted.output
     assert "status\ttombstoned" in deleted.output
@@ -404,14 +371,11 @@ def test_delete_unknown_profile_refuses_with_an_unknown_profile_message(
     able to tell the name does not exist — distinct from any
     session-state diagnostic.
     """
-    from ....adapters.persistence.storage.sql.engine import dispose_engine
 
     create_profile_via_cli("alpha")
 
-    dispose_engine()
     assert _invoke(("config", "profile", "logout")).exit_code == 0
 
-    dispose_engine()
     refused = _invoke(("config", "profile", "delete", "ghost", "--yes"))
     assert refused.exit_code != 0, refused.output
     flat = refused.output.lower()
@@ -431,20 +395,16 @@ def test_delete_valid_profile_with_no_active_session_succeeds(
     state must succeed — ``delete`` opens its own bucket session scoped
     to the target, it does not require one to already be open.
     """
-    from ....adapters.persistence.storage.sql.engine import dispose_engine
     from ....application.workflow._profile_bucket_scan import read_profile_bucket
 
     create_profile_via_cli("alpha")
 
-    dispose_engine()
     assert _invoke(("config", "profile", "logout")).exit_code == 0
 
-    dispose_engine()
     deleted = _invoke(("config", "profile", "delete", "alpha", "--yes"))
     assert deleted.exit_code == 0, deleted.output
     assert "status\ttombstoned" in deleted.output
     # The profile is gone from the live surface.
-    dispose_engine()
     assert read_profile_bucket("alpha") is None
 
 
@@ -457,13 +417,11 @@ def test_deleted_profile_name_is_reusable_by_create_and_rename(
     enforced only among live profiles; a tombstoned profile's name is
     free to reuse by both ``create`` and ``rename``.
     """
-    from ....adapters.persistence.storage.sql.engine import dispose_engine
 
     seed("operator", tax_id="00000000T")
     # Route through the root CLI so the error boundary is active for all verbs.
     assert _invoke(("config", "profile", "delete", "operator", "--yes")).exit_code == 0
 
-    dispose_engine()
     created = _invoke(
         (
             "config",
@@ -490,10 +448,8 @@ def test_deleted_profile_name_is_reusable_by_create_and_rename(
 
     # And the freed name is reachable through ``rename`` too. Delete the
     # recreated profile, seed a live one, rename it onto the freed name.
-    dispose_engine()
     assert _invoke(("config", "profile", "delete", "operator", "--yes")).exit_code == 0
     seed("colleague", tax_id="00000001R")
-    dispose_engine()
     renamed = _invoke(("config", "profile", "rename", "colleague", "operator"))
     assert renamed.exit_code == 0, renamed.output
     assert "display_name\toperator" in renamed.output
@@ -510,7 +466,6 @@ def test_show_tombstoned_profile_is_session_context_independent(
     tombstoned`` — never an ``unknown profile`` refusal in one context
     and a full record in the other.
     """
-    from ....adapters.persistence.storage.sql.engine import dispose_engine
 
     # Both profiles are setup for the show/tombstone test; seed both so the
     # wizard create does not hit the cross-bucket tax-id scan.
@@ -518,19 +473,14 @@ def test_show_tombstoned_profile_is_session_context_independent(
     seed("beta")
 
     # ``beta`` is active after the second seed. Tombstone ``alpha``.
-    dispose_engine()
     assert _invoke(("config", "profile", "delete", "alpha", "--yes")).exit_code == 0
 
     # Context 1: ``beta`` session active.
-    dispose_engine()
     assert _invoke(("config", "switch", "beta")).exit_code == 0
-    dispose_engine()
     with_session = _invoke(("config", "profile", "show", "alpha"))
 
     # Context 2: no active session.
-    dispose_engine()
     assert _invoke(("config", "profile", "logout")).exit_code == 0
-    dispose_engine()
     no_session = _invoke(("config", "profile", "show", "alpha"))
 
     # Identical outcome in both session contexts: the tombstoned record
@@ -556,7 +506,6 @@ def test_profile_flag_refuses_tombstoned_uuid_like_tombstoned_label(
     identifier; otherwise a tombstoned UUID would bypass the label tombstone
     filter and route app commands into a deleted taxpayer bucket.
     """
-    from ....adapters.persistence.storage.sql.engine import dispose_engine
     from ....application.workflow._profile_bucket_scan import read_profile_bucket
     from ....core import resolve_active_bucket_id
 
@@ -565,11 +514,9 @@ def test_profile_flag_refuses_tombstoned_uuid_like_tombstoned_label(
     assert pointer is not None
     tombstoned_uuid = pointer.bucket_id
 
-    dispose_engine()
     deleted = _invoke(("config", "profile", "delete", "alpha", "--yes"))
     assert deleted.exit_code == 0, deleted.output
 
-    dispose_engine()
     by_label = _invoke(("--language", "en", "--profile", "alpha", "app", "ledger", "list"))
     by_uuid = _invoke(("--language", "en", "--profile", tombstoned_uuid, "app", "ledger", "list"))
 
@@ -586,7 +533,6 @@ def test_active_profile_env_and_pointer_refuse_tombstoned_uuid(
 ) -> None:
     """A tombstoned UUID cannot activate app commands via env or pointer routing."""
 
-    from ....adapters.persistence.storage.sql.engine import dispose_engine
     from ....application.workflow._profile_bucket_scan import read_profile_bucket
     from ....core import BucketPointer, write_pointer
     from ....core.config import load_settings, override_settings
@@ -596,11 +542,9 @@ def test_active_profile_env_and_pointer_refuse_tombstoned_uuid(
     assert pointer is not None
     tombstoned_uuid = pointer.bucket_id
 
-    dispose_engine()
     deleted = _invoke(("config", "profile", "delete", "alpha", "--yes"))
     assert deleted.exit_code == 0, deleted.output
 
-    dispose_engine()
     with override_settings(aeat_active_profile=tombstoned_uuid):
         by_env = _invoke(("--language", "en", "app", "ledger", "list"))
 
@@ -608,7 +552,6 @@ def test_active_profile_env_and_pointer_refuse_tombstoned_uuid(
         load_settings().aeat_local_storage_root,
         BucketPointer(bucket_id=tombstoned_uuid, schema_version=1),
     )
-    dispose_engine()
     with override_settings(aeat_active_profile=None):
         by_pointer = _invoke(("--language", "en", "app", "ledger", "list"))
 
@@ -623,7 +566,6 @@ def test_explicit_profile_show_reaches_tombstoned_target_with_stale_active_uuid(
 ) -> None:
     """Explicit ``show <label|uuid>`` inspects tombstones despite stale active UUIDs."""
 
-    from ....adapters.persistence.storage.sql.engine import dispose_engine
     from ....application.workflow._profile_bucket_scan import read_profile_bucket
     from ....core import BucketPointer, write_pointer
     from ....core.config import load_settings, override_settings
@@ -633,11 +575,9 @@ def test_explicit_profile_show_reaches_tombstoned_target_with_stale_active_uuid(
     assert pointer is not None
     tombstoned_uuid = pointer.bucket_id
 
-    dispose_engine()
     deleted = _invoke(("config", "profile", "delete", "alpha", "--yes"))
     assert deleted.exit_code == 0, deleted.output
 
-    dispose_engine()
     with override_settings(aeat_active_profile=tombstoned_uuid):
         by_env_label = _invoke(("--language", "en", "config", "profile", "show", "alpha"))
         by_env_uuid = _invoke(("--language", "en", "config", "profile", "show", tombstoned_uuid))
@@ -646,7 +586,6 @@ def test_explicit_profile_show_reaches_tombstoned_target_with_stale_active_uuid(
         load_settings().aeat_local_storage_root,
         BucketPointer(bucket_id=tombstoned_uuid, schema_version=1),
     )
-    dispose_engine()
     with override_settings(aeat_active_profile=None):
         by_pointer_label = _invoke(("--language", "en", "config", "profile", "show", "alpha"))
         by_pointer_uuid = _invoke(("--language", "en", "config", "profile", "show", tombstoned_uuid))
@@ -663,7 +602,6 @@ def test_no_arg_profile_show_output_language_does_not_mask_stale_active_uuid(
 ) -> None:
     """No-arg ``show --output-language en`` still depends on the active profile."""
 
-    from ....adapters.persistence.storage.sql.engine import dispose_engine
     from ....application.workflow._profile_bucket_scan import read_profile_bucket
     from ....core.config import override_settings
 
@@ -672,11 +610,9 @@ def test_no_arg_profile_show_output_language_does_not_mask_stale_active_uuid(
     assert pointer is not None
     tombstoned_uuid = pointer.bucket_id
 
-    dispose_engine()
     deleted = _invoke(("config", "profile", "delete", "alpha", "--yes"))
     assert deleted.exit_code == 0, deleted.output
 
-    dispose_engine()
     with override_settings(aeat_active_profile=tombstoned_uuid):
         no_target = _invoke(("config", "profile", "show", "--output-language", "en"))
         by_label = _invoke(("config", "profile", "show", "alpha", "--output-language", "en"))
