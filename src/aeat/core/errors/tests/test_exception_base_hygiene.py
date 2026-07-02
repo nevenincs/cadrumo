@@ -25,6 +25,20 @@ _ALLOWLIST = {
         "optional-extra fallback alias for playwright.async_api.Error; it must match the third-party "
         "exception shape when Playwright is absent and is only caught/wrapped by adapter boundaries"
     ),
+    "aeat.agent._skill_metadata.SkillMetadataError": (
+        "agent-harness skill-frontmatter/applies_when validation error; intentionally a plain "
+        "ValueError (a malformed-input signal at the harness boundary), not an operator-facing "
+        "registry-bound filing/calculation error"
+    ),
+    "aeat.agent.eval._live_harness.LiveHarnessError": (
+        "agent-harness live-eval scaffolding runtime error; intentionally a plain RuntimeError "
+        "(a harness-boundary execution signal), not an operator-facing registry-bound filing error"
+    ),
+    "aeat.application.corpus_search._errors.CorpusSearchError": (
+        "on-host corpus-search grounding-surface base error; the module docstring documents this "
+        "as an intentionally-plain Exception whose promotion to a registered AeatError (which needs "
+        "locale message_keys in all four catalogues) is deliberately deferred"
+    ),
 }
 
 
