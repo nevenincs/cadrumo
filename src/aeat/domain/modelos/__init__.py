@@ -127,7 +127,7 @@ from ._protocols import (
     VerificationReportCatalogueRepositoryProtocol,
     WorkUnitCatalogueRepositoryProtocol,
 )
-from ._repository import upsert_work_unit
+from ._repository import WorkUnitPersistenceError, upsert_work_unit
 from ._row_models import (
     Modelo184MemberRow,
     Modelo184ShareSumError,
@@ -212,6 +212,7 @@ __all__ = (
     "WorkUnitCatalogue",
     "WorkUnitCatalogueRepositoryProtocol",
     "WorkUnitId",
+    "WorkUnitPersistenceError",
     "WorkUnitState",
     "compute_dt12_reduccion_plan_pensiones",
     "compute_sal_reserva_especial_dotacion",

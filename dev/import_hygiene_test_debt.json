@@ -117,7 +117,7 @@
       },
       {
         "importer_path": "src/aeat/application/modelo/tests/test_participation_co_emission.py",
-        "lineno": 21,
+        "lineno": 22,
         "target_mod": "aeat.application.ledger._actions_common",
         "imported_names": ["_blocking_modelo_references"],
         "reason": "White-box test of the private ledger-removal blocking-reference scanner that walks live revision catalogues. Internal deletion-guard helper, not a public query API."
