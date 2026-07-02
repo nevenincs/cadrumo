@@ -33,19 +33,19 @@ persona's boundary at all. Both run in the ``PreToolUse`` layer.
 the advertised tool set) and ``_call_tool`` (refuses an out-of-scope call
 before the global HITL gate runs).
 
-KNOWN LIMITATION - family granularity: the manifest's own boundary is the
-mounted-command-family ``child`` token, not the individual verb. Three
-personas - ``modelo-preparer``, ``verifier``, and ``reconciler`` - all declare
-``families={"modelo"}`` because the manifest exposes no finer split within
-that family. This filter therefore CANNOT structurally stop, for example, the
-``modelo-preparer`` from calling ``modelo.export`` (a verifier/reconciler
-verb) or the ``verifier`` from calling ``modelo.work.create`` (a preparer
-verb): every one of the three modelo-lifecycle personas passes
-:func:`is_tool_in_persona_scope` for every ``modelo.*`` tool. The distinction
-between these three roles' actual verb usage stays prose-level, enforced by
-persona-document discipline, not by this runtime gate - see D3 in
-``2026-07-01-agent-harness-adr``. A future finer-grained manifest split would
-close this gap without changing this module's shape.
+Family granularity and the handoff deny rules: the manifest's own boundary is
+the mounted-command-family ``child`` token, not the individual verb, and the
+scope filter stays at that granularity (three personas - ``modelo-preparer``,
+``verifier``, and ``reconciler`` - all declare ``families={"modelo"}``).
+What IS verb-granular is the irreversible boundary: per decision R6(iii) of
+the ``2026-07-02-agent-harness-refoundation-adr``, :data:`PERSONA_HANDOFF_DENIALS`
+structurally denies the filing-handoff leaves (``export``, the record marker
+``file``) to every modelo-lifecycle persona except the ``verifier``, which
+D3 of the ``2026-07-01-agent-harness-adr`` made the sole owner of the
+irreversible artefact. The preparer/verifier split for NON-handoff verbs
+(e.g. the verifier calling ``modelo.work.create``) remains prose-level
+persona discipline; the deny rules close exactly the boundary whose breach
+is irreversible.
 """
 
 from __future__ import annotations
@@ -58,6 +58,7 @@ from pydantic import BaseModel, ConfigDict, Field
 
 from ...application.operator_surface import OperatorMutability, build_operator_surface_manifest
 from ...core.json_contract import ENVELOPE_SCHEMA_VERSION
+from ._hitl import HANDOFF_LEAVES
 
 _STRICT_FROZEN = ConfigDict(frozen=True, strict=True, validate_assignment=True, extra="forbid")
 
@@ -244,6 +245,41 @@ def is_tool_in_persona_scope(*, persona: AgentPersona, command_key: str) -> bool
     if family_mutability is None:
         return False
     return _MUTABILITY_RANK[family_mutability] <= _MUTABILITY_RANK[scope.mutability_ceiling]
+
+
+# Per-verb handoff deny rules (refoundation ADR R6(iii), closing the
+# 2026-07-01 ADR's D3 caveat structurally): within the shared `modelo` family,
+# only the VERIFIER may produce the irreversible filing artefacts - the export
+# and the record marker. The preparer builds, the reconciler acts after the
+# human files; neither owns the handoff. Personas outside the modelo family
+# never reach these verbs through the family scope, so they need no row.
+PERSONA_HANDOFF_DENIALS: dict[AgentPersona, frozenset[str]] = {
+    AgentPersona.MODELO_PREPARER: HANDOFF_LEAVES,
+    AgentPersona.RECONCILER: HANDOFF_LEAVES,
+}
+
+
+def is_handoff_denied(*, persona: AgentPersona, command_key: str) -> bool:
+    """True when ``command_key`` is a handoff leaf this persona is structurally denied.
+
+    Runs in the same ``PreToolUse`` layer as :func:`is_tool_in_persona_scope`
+    and is checked by both ``_list_tools`` (the denied tool is not even
+    advertised to the persona) and ``_call_tool`` (a direct call refuses).
+    """
+    denied_leaves = PERSONA_HANDOFF_DENIALS.get(persona)
+    if not denied_leaves:
+        return False
+    return command_key.rsplit(".", 1)[-1] in denied_leaves
+
+
+def handoff_denial_message(*, persona: AgentPersona, command_key: str) -> str:
+    """The instructive refusal for a denied handoff call, naming the owning persona."""
+    return (
+        f"'{command_key}' is the irreversible filing-handoff boundary, owned by "
+        f"the '{AgentPersona.VERIFIER.value}' persona; the '{persona.value}' "
+        "persona is structurally denied it. Hand the verified work unit to the "
+        "verifier session to produce the export or record marker."
+    )
 
 
 def active_persona(env: Mapping[str, str] | None = None) -> AgentPersona | None:
