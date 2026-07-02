@@ -3,7 +3,7 @@
 Justificante metadata captures AEAT verification identifiers, operator
 identity, timestamps, and verification URLs. The structured metadata is
 stored as encrypted byte objects in the primary SQL backend at
-:class:`~aeat.adapters.persistence.storage.SensitivityClass` ``AUDIT``
+:class:`adapters.persistence.storage.SensitivityClass` ``AUDIT``
 sensitivity; no plaintext metadata JSON or envelope file lands on disk.
 
 Sensitivity rationale: justificantes are AEAT-issued verification receipts
@@ -16,7 +16,7 @@ fields), not by the modelo's ``output_sensitivity`` declaration. The
 audit-sink artefact and is irreducibly AUDIT regardless of modelo.
 
 See Also:
-    :data:`aeat.adapters.persistence.storage.JUSTIFICANTE_METADATA_NAMESPACE`
+    :data:`adapters.persistence.storage.JUSTIFICANTE_METADATA_NAMESPACE`
         AUDIT namespace, schema-version, object-key, and custody contract for
         parsed AEAT receipt metadata.
 """
@@ -36,10 +36,10 @@ if TYPE_CHECKING:  # pragma: no cover — import-cycle guard
 class JustificanteRepository(SecureBoundRepository[Justificante]):
     """Encrypted AUDIT repository for :class:`Justificante` metadata.
 
-    The :class:`~aeat.adapters.persistence.storage.SecureBoundRepository` base
+    The :class:`adapters.persistence.storage.SecureBoundRepository` base
     stores each :class:`Justificante` in a
-    :class:`~aeat.adapters.persistence.storage.Envelope` row under
-    :data:`aeat.adapters.persistence.storage.JUSTIFICANTE_METADATA_NAMESPACE`.
+    :class:`adapters.persistence.storage.Envelope` row under
+    :data:`adapters.persistence.storage.JUSTIFICANTE_METADATA_NAMESPACE`.
     The AEAT CSV is the natural key, so list and iteration APIs expose
     persisted receipt metadata without reading plaintext metadata from disk.
 
