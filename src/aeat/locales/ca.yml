@@ -5268,8 +5268,10 @@ wizard:
       \ execució no en té.\nEncara no s'ha desat res.\n\nPots acabar de crear aquest\
       \ perfil de dues maneres:\n\n1. Torna a executar l'ordre des d'un terminal interactiu\
       \ per fer servir l'assistent guiat:\n     aeat config profile create NAME\n\n\
-      2. O crea'l en un sol pas indicant les dades obligatòries com a flags:\n   \
-      \  aeat config profile create NAME --quiet --tax-id NIF"
+      2. O crea un perfil de persona física resident IRPF en un sol pas indicant les
+      dades obligatòries com a flags:\n     aeat config profile create NAME --quiet
+      --tax-id NIF --entity-type natural_person --irpf-income-categories actividad_economica
+      --tax-residence-ccaa madrid --name NOM --surnames COGNOMS"
     unsupported_console_edit: "La configuració guiada no ha pogut obrir una pregunta\
       \ interactiva en aquesta execució.\nEncara no s'ha desat res.\n\nEdita aquest\
       \ perfil de manera no interactiva indicant el camp a canviar:\n  aeat config\

@@ -131,6 +131,10 @@ No findings for the mixed hardcoded-string follow-up. The accepted patch is scop
 
 No findings for the work-create registry-revision default regression. The live implementation already routes creation through `resolve_registry_revision_for_work_target`; the added CLI test pins the fresh-create no-`--revision` path against Modelo 131 and the registry authority's selected revision for the supplied year/period. The test uses the live registry authority as the expected-value source, so it proves CLI binding to the central resolver rather than acting as an independent legal oracle.
 
+### w09-p45-s235 | medium | resolved review findings
+
+The first S235 patch expanded the no-console `profile create NAME` recovery text but still advertised an unusable one-shot command because the natural-person filing baseline also requires `--name` and `--surnames`. The accepted patch adds those identity flags to the resident IRPF natural-person command in all locale catalogues and strengthens the real CLI regression to execute the advertised flag set with concrete values. The separate `profile create NAME --quiet` missing-flags refusal remains distinct, and the final code-review pass found no blocking issues.
+
 ### w09-p45-s237 | low | no findings
 
 No findings for the ledger silent-profile-gate row. The current code no longer shows a profile-completeness gate on ledger `list`, `view`, `status`, or `classify`; classify validation is caught at the ledger boundary and status emits a concrete readiness issue instead of a silent block. The Taller Norte transcript now shows the original journey succeeding on one profile: status names the unclassified-row issue, list and review read the row, classify succeeds, and status becomes ready. Residual risk is limited to lack of one single S237-named all-verb fixture; the focused tests and transcript cover the reported behavior.

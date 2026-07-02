@@ -5309,8 +5309,11 @@ wizard:
       \ esta ejecución no la tiene.\nTodavía no se ha guardado nada.\n\nPuedes terminar\
       \ de crear este perfil de dos maneras:\n \n1. Ejecuta el comando otra vez desde\
       \ una terminal interactiva para usar el asistente guiado:\n     aeat config\
-      \ profile create NAME\n\n2. O créalo en un solo paso indicando los datos obligatorios\
-      \ como flags:\n     aeat config profile create NAME --quiet --tax-id NIF/CIF/DNI/NIE"
+      \ profile create NAME\n\n2. O crea un perfil de persona física residente IRPF\
+      \ en un solo paso indicando los datos obligatorios como flags:\n     aeat config\
+      \ profile create NAME --quiet --tax-id NIF/CIF/DNI/NIE --entity-type natural_person\
+      \ --irpf-income-categories actividad_economica --tax-residence-ccaa madrid\
+      \ --name NOMBRE --surnames APELLIDOS"
     unsupported_console_edit: "No pude abrir el asistente guiado en esta ejecución.\n\
       Todavía no se ha guardado nada.\n\nEdita este perfil de forma no interactiva\
       \ indicando el campo a cambiar:\n  aeat config profile edit %{profile_name}\
