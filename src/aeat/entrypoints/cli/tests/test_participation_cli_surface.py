@@ -19,8 +19,8 @@ from typer.core import TyperGroup
 
 from ....application.ledger import get_transaction_participation
 from ....core import Period
-from ....domain.modelos import ModeloCode
-from ....domain.modelos._participation_index import (
+from ....domain.modelos import (
+    ModeloCode,
     TransactionParticipationIndexRepository,
     TransactionRevisionParticipation,
     TransactionRevisionParticipationIndex,

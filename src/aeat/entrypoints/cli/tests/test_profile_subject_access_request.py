@@ -15,7 +15,7 @@ from pathlib import Path
 import pytest
 from click.testing import Result
 
-from ....domain.user_profile._portable_export import UserProfilePortableExport
+from ....domain.user_profile import UserProfilePortableExport
 from ....tests.cli_runner import invoke_cached_cli
 from ....tests.secure_sql import isolated_profile_storage_root
 

@@ -14,17 +14,15 @@ from pathlib import Path
 
 import pytest
 
-from ....application.user_profile._orchestration import profile_create_storage_span
+from ....application.user_profile import profile_create_storage_span
 from ....application.user_profile._testing import register_minimal_profile
-from ....application.workflow._persistence import workflow_state_repository
+from ....application.workflow import workflow_state_repository
 from ....domain.buckets import (
+    BucketEvent,
     BucketEventHistoryCatalogue,
     BucketEventHistoryRepository,
-    BucketEventType,
-)
-from ....domain.buckets._event import (
-    BucketEvent,
     BucketEventObjectType,
+    BucketEventType,
     derive_bucket_event_id,
 )
 from ....tests.cli_runner import invoke_cached_cli

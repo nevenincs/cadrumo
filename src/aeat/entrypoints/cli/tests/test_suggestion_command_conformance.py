@@ -53,7 +53,7 @@ import click
 import pytest
 
 from ....application.operator_surface import HelpSurface, build_help_document
-from ....core.errors._registry import ERROR_REGISTRY
+from ....core.errors import ERROR_REGISTRY
 from ....tests.cli_runner import aeat_click_command
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]

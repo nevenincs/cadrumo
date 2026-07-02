@@ -15,9 +15,9 @@ from pathlib import Path
 
 import pytest
 
+from ....application.modelo import ModeloExportResult
 from ....core import Period
 from ....core.json_contract import NoticeSeverity
-from ....application.modelo import ModeloExportResult
 from .._modelo_export_cli import _export_notices
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]

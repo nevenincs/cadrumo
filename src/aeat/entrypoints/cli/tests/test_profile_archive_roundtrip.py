@@ -127,7 +127,7 @@ def test_archive_export_import_recovery_wrap_roundtrip(tmp_path: Path) -> None:
     than the source bucket's live DEK. This is the transport a real
     disk-failure recovery uses.
     """
-    from ....core._bucket_pointer_io import resolve_active_bucket_id
+    from ....core import resolve_active_bucket_id
 
     csv_path = tmp_path / "bank.csv"
     r_create = _create_profile("kent", tax_id="12345678Z")
@@ -146,12 +146,12 @@ def test_archive_export_import_recovery_wrap_roundtrip(tmp_path: Path) -> None:
     assert archive_path.is_file()
 
     # Load originals while still in source storage context.
-    from ....adapters.persistence.storage.master_key._master_key import (
+    from ....adapters.persistence.storage.master_key import (
         activate_master_key_provider,
         get_master_key_provider,
     )
     from ....core.config import override_settings
-    from ....domain.transactions._repository import TransactionCatalogueRepository
+    from ....domain.transactions import TransactionCatalogueRepository
 
     with (
         override_settings(aeat_active_profile=source_bucket_id),
@@ -183,7 +183,7 @@ def test_archive_export_import_recovery_wrap_roundtrip(tmp_path: Path) -> None:
 
 def test_archive_import_switches_active_profile_with_notice(tmp_path: Path) -> None:
     """Archive import provisions the restored bucket as the active profile."""
-    from ....core._bucket_pointer_io import resolve_active_bucket_id
+    from ....core import resolve_active_bucket_id
 
     r_create = _create_profile("kent2", tax_id="87654321X")
     assert r_create.exit_code == 0, r_create.output
@@ -307,7 +307,7 @@ def test_archive_import_refuses_corrupted_payload(tmp_path: Path) -> None:
 
 def test_archive_import_refuses_uuid_collision(tmp_path: Path) -> None:
     """Importing an archive whose bucket id is already registered is refused without --force."""
-    from ....core._bucket_pointer_io import resolve_active_bucket_id
+    from ....core import resolve_active_bucket_id
 
     r_create = _create_profile("kent5", tax_id="33333333P")
     assert r_create.exit_code == 0, r_create.output

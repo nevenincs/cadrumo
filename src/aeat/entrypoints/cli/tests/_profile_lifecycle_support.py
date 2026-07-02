@@ -16,16 +16,16 @@ import hashlib
 from datetime import UTC, datetime
 from uuid import UUID
 
-from ....adapters.persistence.storage.bucket._layout import provision_bucket_directory
-from ....adapters.persistence.storage.bucket._manifest import (
+from ....adapters.persistence.storage.bucket import (
     BucketLifecycleStatus,
     BucketManifest,
     ManifestKdfParams,
+    provision_bucket_directory,
+    write_manifest,
 )
-from ....adapters.persistence.storage.bucket._manifest_io import write_manifest
-from ....application.user_profile._orchestration import profile_create_storage_span
+from ....application.user_profile import profile_create_storage_span
 from ....application.user_profile._testing import register_minimal_profile
-from ....application.workflow._persistence import workflow_state_repository
+from ....application.workflow import workflow_state_repository
 from ....core.config import load_settings
 from ....core.identity import nif_check_letter
 from ....tests.cli_runner import invoke_cached_cli
@@ -87,7 +87,7 @@ def stage_bucket_manifest(bucket_id: str, *, label: str) -> None:
     # Clear the active-profile pointer after provisioning so the staged
     # profile is not reported as the active one; the torn-state tests
     # specifically test non-active torn profiles.
-    from ....application.user_profile._orchestration import logout_active_profile
+    from ....application.user_profile import logout_active_profile
 
     logout_active_profile()
 

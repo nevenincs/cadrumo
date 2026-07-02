@@ -9,9 +9,9 @@ from pathlib import Path
 import pytest
 from click.testing import Result
 
-from ....application.user_profile._orchestration import profile_create_storage_span
+from ....application.user_profile import profile_create_storage_span
 from ....application.user_profile._testing import register_minimal_profile
-from ....application.workflow._persistence import workflow_state_repository
+from ....application.workflow import workflow_state_repository
 from ....core import resolve_active_bucket_id
 from ....core.config import Settings
 from ....core.i18n import tr
@@ -160,7 +160,7 @@ def _capture_censo_with_vivienda_office(office_m2: str, total_m2: str) -> None:
     against.
     """
 
-    from ....application.live._censo import CensoSnapshotService
+    from ....application.live import CensoSnapshotService
 
     bucket_id = resolve_active_bucket_id() or ""
     service = CensoSnapshotService(bucket_id=bucket_id)

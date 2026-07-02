@@ -8,7 +8,7 @@ from pathlib import Path
 
 import pytest
 
-from ....application.calculations._iva_compensation_history import (
+from ....application.calculations import (
     IvaCompensationHistoryRepository,
     seed_iva_compensation_period,
 )

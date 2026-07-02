@@ -42,7 +42,10 @@ from ....domain.calculations.registry import (
     Modelo202Modality,
     derive_modelo_202_modality,
 )
-from ....domain.deadlines._models import IVARegime, TaxpayerProfile
+from ....domain.deadlines import (
+    IVARegime,
+    TaxpayerProfile,
+)
 from ....domain.deadlines.taxpayer_model import EntityType
 from ....tests.secure_sql import isolated_profile_storage_root
 from .envelope_helpers import unwrap_schema_envelope as _payload

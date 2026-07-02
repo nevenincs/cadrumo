@@ -633,7 +633,7 @@ def test_evidence_kind_accepts_canonical_and_hyphenated_values(raw: str, expecte
     The import command parses the alias and normalises it before
     dispatching the application action."""
 
-    from ....domain.modelos._filing_record import ExternalEvidenceKind
+    from ....domain.modelos import ExternalEvidenceKind
 
     normalised = raw.strip().replace("-", "_")
     assert ExternalEvidenceKind(normalised) is ExternalEvidenceKind(expected)
@@ -643,7 +643,7 @@ def test_evidence_kind_rejects_unrelated_token() -> None:
     """``--evidence-kind`` still rejects values that aren't a valid
     enum member after hyphen-to-underscore normalisation."""
 
-    from ....domain.modelos._filing_record import ExternalEvidenceKind
+    from ....domain.modelos import ExternalEvidenceKind
 
     raw = "aeat_bogus_evidence"
     with pytest.raises(ValueError, match="aeat_bogus_evidence"):

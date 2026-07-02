@@ -20,7 +20,7 @@ def test_parse_typed_cli_observations_round_trips_valid_json() -> None:
     """A valid JSON object is parsed into the typed model with all fields preserved."""
     import typer as _typer
 
-    from ....application.aggregation._retenciones import RetencionObservation
+    from ....application.aggregation import RetencionObservation
     from ....core.aggregation import RetencionScheme
     from .._modelo_aggregate_cli import _parse_typed_cli_observations
 
@@ -48,7 +48,7 @@ def test_parse_typed_cli_observations_rejects_invalid_json_syntax() -> None:
     """A string that is not valid JSON raises ``typer.BadParameter``."""
     import typer as _typer
 
-    from ....application.aggregation._retenciones import RetencionObservation
+    from ....application.aggregation import RetencionObservation
     from .._modelo_aggregate_cli import _parse_typed_cli_observations
 
     with pytest.raises(_typer.BadParameter):
@@ -59,7 +59,7 @@ def test_parse_typed_cli_observations_rejects_non_object_json() -> None:
     """A JSON value that is not an object (e.g. an array) raises ``typer.BadParameter``."""
     import typer as _typer
 
-    from ....application.aggregation._retenciones import RetencionObservation
+    from ....application.aggregation import RetencionObservation
     from .._modelo_aggregate_cli import _parse_typed_cli_observations
 
     with pytest.raises(_typer.BadParameter):
@@ -78,7 +78,7 @@ def test_parse_typed_cli_observations_rejects_schema_violation() -> None:
     """
     import typer as _typer
 
-    from ....application.aggregation._retenciones import RetencionObservation
+    from ....application.aggregation import RetencionObservation
     from .._modelo_aggregate_cli import _parse_typed_cli_observations
 
     missing_scheme = (

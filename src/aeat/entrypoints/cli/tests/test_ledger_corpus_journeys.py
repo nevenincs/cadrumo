@@ -273,16 +273,18 @@ def test_modification_refused_when_row_feeds_finalized_modelo() -> None:
     from decimal import Decimal
 
     from ....core import Period, resolve_active_bucket_id
-    from ....domain.modelos._calculation_repository import CalculationRevisionCatalogueRepository
-    from ....domain.modelos._calculation_revision import (
+    from ....domain.modelos import (
         CalculationRevision,
         CalculationRevisionCatalogue,
+        CalculationRevisionCatalogueRepository,
         CalculationRevisionState,
+        ModeloCode,
+        WorkUnit,
+        WorkUnitCatalogue,
+        WorkUnitCatalogueRepository,
         derive_calculation_revision_id,
+        derive_work_unit_id,
     )
-    from ....domain.modelos._codes import ModeloCode
-    from ....domain.modelos._repository import WorkUnitCatalogueRepository
-    from ....domain.modelos._work_unit import WorkUnit, WorkUnitCatalogue, derive_work_unit_id
 
     _import_bbva()
     rows = _list_rows()
