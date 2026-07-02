@@ -4,9 +4,11 @@ from __future__ import annotations
 
 import pytest
 
+from .._annotations import annotation_coverage_gaps
 from .._dispatch import command_key_for_tool, tool_name_for_command
 from .._input_schema import cli_argv_for
 from .._tools import build_tool_descriptors
+from .._toolsets import Toolset, build_toolsets
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -83,3 +85,21 @@ def test_descriptor_argv_places_format_json_at_root_and_maps_named_arguments() -
     # The resolved path uses the hyphenated command name click dispatches on.
     pull = by_key["app.live.iva_wallet.pull"].verb_schema
     assert cli_argv_for(pull, {})[2:5] == ["app", "live", "iva-wallet"]
+
+
+def test_annotation_coverage_is_total_over_the_descriptor_set() -> None:
+    descriptors = build_tool_descriptors()
+    gaps = annotation_coverage_gaps((descriptor.command_key, descriptor.annotations) for descriptor in descriptors)
+    assert gaps == ()
+
+
+def test_toolset_membership_derives_from_the_live_descriptor_set() -> None:
+    descriptor_keys = {descriptor.command_key for descriptor in build_tool_descriptors()}
+    groups = build_toolsets()
+    # Every toolset is one of the five curated domains and non-empty.
+    assert {group.toolset for group in groups} == set(Toolset)
+    for group in groups:
+        assert group.command_keys, f"toolset {group.toolset} is empty"
+        # Every grouped command is a real exposed descriptor - the toolsets
+        # derive from the live surface, never a hand-listed set that could drift.
+        assert set(group.command_keys) <= descriptor_keys
