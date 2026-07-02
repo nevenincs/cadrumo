@@ -65,8 +65,7 @@ from ...domain.calculations.registry import (
     resolve_previous_filing_binding_values,
     validated_casilla_id,
 )
-from ...domain.iva_compensation._carry_forward import IvaCompensationPeriodState
-from ...domain.iva_compensation._errors import IvaCompensationCasillaReferenceError
+from ...domain.iva_compensation import IvaCompensationCasillaReferenceError, IvaCompensationPeriodState
 from ._errors import BindingPrefillTypeError
 from ._iva_compensation_history import IvaCompensationHistoryRepository
 from ._observations_repository import CalculationObservationRepository, _ObservationEnvelopePayload

@@ -42,17 +42,17 @@ from pydantic import BaseModel, ConfigDict
 from ...core import BindingSourceKind, Modelo, Period
 from ...core.hashing import sha256_hex
 from ...domain.calculations.registry import RegistrySnapshot
-from ...domain.iva_compensation._errors import IvaCompensationReconciliationInputError
-from ...domain.iva_compensation._reconciliation import (
+from ...domain.iva_compensation import (
     DEFAULT_MAX_WALLET_AGE_DAYS,
     IvaCompensationOverride,
     IvaCompensationReconciliationDecision,
+    IvaCompensationReconciliationInputError,
     IvaCompensationWalletObservationProtocol,
     local_recurrence_authority_source,
     reconcile_iva_compensation_wallet,
     validate_wallet_matches_snapshot,
 )
-from ..aggregation._source_mesh import (
+from ..aggregation import (
     CalculationSourceContext,
     CalculationSourceProvenance,
     CalculationSourceResolution,

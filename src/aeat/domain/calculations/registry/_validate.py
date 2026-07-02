@@ -46,7 +46,7 @@ from ._validate_revision_rules import (
 from ._validate_revision_sections import validate_revision_definition
 
 if TYPE_CHECKING:
-    from ...user_profile._schema import ProfileSchemaDefinition
+    from ...user_profile import ProfileSchemaDefinition
 
 _MODELO_SOURCE_TIERS = ("official_source_guidance", "layout_authority")
 
@@ -228,8 +228,7 @@ class RegistryValidator:
         REGISTRY_VALIDATION_CACHE[cache_key] = (modelo_tuple, self._legal, self._sources, ())
 
     def _validate_user_profile_contract(self, modelos: Iterable[ModeloDefinition]) -> tuple[str, ...]:
-        from ...user_profile._loader import load_user_profile_schema
-        from ...user_profile._registry_contract import validate_user_profile_registry_contract
+        from ...user_profile import load_user_profile_schema, validate_user_profile_registry_contract
 
         schema = self._user_profile_schema or load_user_profile_schema()
         report = validate_user_profile_registry_contract(modelos, schema)

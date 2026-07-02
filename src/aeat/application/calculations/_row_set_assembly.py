@@ -51,7 +51,7 @@ from pydantic import ValidationError
 from ...core.aggregation import RetencionClave, RowSetGroupingKind
 from ...core.decimal import coerce_decimal
 from ...core.external_constants import DEFAULT_CURRENCY
-from ...core.parsing._dates import _parse_iso8601_date
+from ...core.parsing import parse_iso8601_date
 from ...domain.calculations.registry import (
     AtributionMemberObservation,
     BindingAggregationOp,
@@ -236,7 +236,7 @@ def _coerce_iso_date(value: Decimal | str | None, *, default: date) -> date:
         return default
     if isinstance(value, str):
         try:
-            return _parse_iso8601_date(value) or default
+            return parse_iso8601_date(value) or default
         except ValueError:
             return default
     return default
