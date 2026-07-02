@@ -2,11 +2,13 @@
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from decimal import Decimal
 
 import pytest
 from pydantic import ValidationError
 
+from .._calculation_revision import derive_calculation_revision_id
 from .._row_models import (
     M347_THRESHOLD_EUR,
     Modelo184MemberRow,
@@ -22,6 +24,11 @@ from ._row_model_support import (
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
+_DetailRowFactory = Callable[
+    [],
+    Modelo184MemberRow | Modelo232VinculadaRow | Modelo349OperadorRow | Modelo347ContraparteRow,
+]
+
 
 _M347_INVALID_CASES = (
     _ValidationErrorCase(
@@ -33,6 +40,52 @@ _M347_INVALID_CASES = (
         lambda: Modelo347ContraparteRow(nif="   "),
     ),
 )
+
+
+def _member_row() -> Modelo184MemberRow:
+    return Modelo184MemberRow(nif="11111111A", porcentaje=Decimal("100"), importe=Decimal("1000"))
+
+
+def _vinculada_row() -> Modelo232VinculadaRow:
+    return Modelo232VinculadaRow(nif="22222222B", importe=Decimal("2000"))
+
+
+def _operador_row() -> Modelo349OperadorRow:
+    return Modelo349OperadorRow(
+        codigo_pais="DE",
+        nif_comunitario="DE123456789",
+        razon_social="Deutschland GmbH",
+        clave_operacion="E",
+        importe=Decimal("3000"),
+    )
+
+
+def _contraparte_row() -> Modelo347ContraparteRow:
+    return Modelo347ContraparteRow(nif="44444444C", importe_Q1=Decimal("4000"))
+
+
+_REVISION_ROW_FACTORIES: tuple[tuple[str, _DetailRowFactory], ...] = (
+    ("m184-member", _member_row),
+    ("m232-vinculada", _vinculada_row),
+    ("m349-operador", _operador_row),
+    ("m347-contraparte", _contraparte_row),
+)
+
+
+def _revision_base(work_unit_id: str) -> _BaseRevisionIdKwargs:
+    return {
+        "work_unit_id": work_unit_id,
+        "input_values_by_casilla_id": {},
+        "binding_overrides": {},
+        "casilla_values": {},
+    }
+
+
+def _all_revision_rows() -> tuple[
+    Modelo184MemberRow | Modelo232VinculadaRow | Modelo349OperadorRow | Modelo347ContraparteRow,
+    ...,
+]:
+    return tuple(factory() for _, factory in _REVISION_ROW_FACTORIES)
 
 
 class TestModelo347ContraparteRow:
@@ -106,74 +159,24 @@ class TestModelo347ContraparteRow:
 
 
 class TestRevisionIdAcrossAllFourRowTypes:
-    @staticmethod
-    def _member_row() -> Modelo184MemberRow:
-        return Modelo184MemberRow(nif="11111111A", porcentaje=Decimal("100"), importe=Decimal("1000"))
-
-    @staticmethod
-    def _vinculada_row() -> Modelo232VinculadaRow:
-        return Modelo232VinculadaRow(nif="22222222B", importe=Decimal("2000"))
-
-    @staticmethod
-    def _operador_row() -> Modelo349OperadorRow:
-        return Modelo349OperadorRow(
-            codigo_pais="DE",
-            nif_comunitario="DE123456789",
-            razon_social="Deutschland GmbH",
-            clave_operacion="E",
-            importe=Decimal("3000"),
-        )
-
-    @staticmethod
-    def _contraparte_row() -> Modelo347ContraparteRow:
-        return Modelo347ContraparteRow(nif="44444444C", importe_Q1=Decimal("4000"))
-
-    def test_each_row_type_derives_without_crash(self) -> None:
-        from .._calculation_revision import derive_calculation_revision_id
-
-        base: _BaseRevisionIdKwargs = {
-            "work_unit_id": "a" * 64,
-            "input_values_by_casilla_id": {},
-            "binding_overrides": {},
-            "casilla_values": {},
-        }
-        for row in (
-            self._member_row(),
-            self._vinculada_row(),
-            self._operador_row(),
-            self._contraparte_row(),
-        ):
-            rev_id = derive_calculation_revision_id(**base, detail_rows=(row,))
-            assert len(rev_id) == 64
-            assert rev_id == rev_id.lower()
+    @pytest.mark.parametrize(
+        "row_factory",
+        [pytest.param(factory, id=case_id) for case_id, factory in _REVISION_ROW_FACTORIES],
+    )
+    def test_each_row_type_derives_without_crash(self, row_factory: _DetailRowFactory) -> None:
+        rev_id = derive_calculation_revision_id(**_revision_base("a" * 64), detail_rows=(row_factory(),))
+        assert len(rev_id) == 64
+        assert rev_id == rev_id.lower()
 
     def test_mixed_union_payload_sorts_without_crash(self) -> None:
-        from .._calculation_revision import derive_calculation_revision_id
-
-        rows = (
-            self._member_row(),
-            self._vinculada_row(),
-            self._operador_row(),
-            self._contraparte_row(),
-        )
         rev_id = derive_calculation_revision_id(
-            work_unit_id="b" * 64,
-            input_values_by_casilla_id={},
-            binding_overrides={},
-            casilla_values={},
-            detail_rows=rows,
+            **_revision_base("b" * 64),
+            detail_rows=_all_revision_rows(),
         )
         assert len(rev_id) == 64
 
     def test_operador_nif_comunitario_change_changes_id(self) -> None:
-        from .._calculation_revision import derive_calculation_revision_id
-
-        base: _BaseRevisionIdKwargs = {
-            "work_unit_id": "c" * 64,
-            "input_values_by_casilla_id": {},
-            "binding_overrides": {},
-            "casilla_values": {},
-        }
+        base = _revision_base("c" * 64)
         id_de = derive_calculation_revision_id(
             **base,
             detail_rows=(
@@ -201,18 +204,8 @@ class TestRevisionIdAcrossAllFourRowTypes:
         assert id_de != id_fr
 
     def test_sort_canonical_across_all_four_types(self) -> None:
-        from .._calculation_revision import derive_calculation_revision_id
-
-        base: _BaseRevisionIdKwargs = {
-            "work_unit_id": "d" * 64,
-            "input_values_by_casilla_id": {},
-            "binding_overrides": {},
-            "casilla_values": {},
-        }
-        member = self._member_row()
-        vinculada = self._vinculada_row()
-        operador = self._operador_row()
-        contraparte = self._contraparte_row()
+        base = _revision_base("d" * 64)
+        member, vinculada, operador, contraparte = _all_revision_rows()
         id_forward = derive_calculation_revision_id(
             **base,
             detail_rows=(member, vinculada, operador, contraparte),
