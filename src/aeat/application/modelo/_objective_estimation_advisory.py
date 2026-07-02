@@ -29,8 +29,8 @@ from ...core import Modelo
 from ...core.decimal import coerce_decimal_strict
 from ...core.resources import resources
 from ...domain.deadlines import IrpfEstimationRegime, TaxpayerProfile
-from ...domain.modelos._errors import ModeloValidationError
-from ...domain.modelos._verification_report import (
+from ...domain.modelos import (
+    ModeloValidationError,
     ModeloVerificationFinding,
     ModeloVerificationFindingKind,
     ModeloVerificationFindingSeverity,
@@ -38,7 +38,7 @@ from ...domain.modelos._verification_report import (
 
 if TYPE_CHECKING:
     from ...domain.calculations.registry import LegalParameter, SourceRefId
-    from ...domain.modelos._work_unit import WorkUnit
+    from ...domain.modelos import WorkUnit
 
 _SETTLED_YEAR_MIN = 2016
 _SETTLED_YEAR_MAX = 2026

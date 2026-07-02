@@ -44,25 +44,26 @@ from typing import TYPE_CHECKING
 from ...core import RefundElection
 from ...core.config import Settings
 from ...core.time import now as _utc_now
-from ...domain.buckets import BucketEventHistoryRepository
-from ...domain.buckets._protocols import BucketEventHistoryRepositoryProtocol
+from ...domain.buckets import BucketEventHistoryRepository, BucketEventHistoryRepositoryProtocol
 from ...domain.calculations.registry import derive_modelo_202_modality
 from ...domain.deadlines import TaxpayerProfile
-from ...domain.modelos._calculation_repository import CalculationRevisionCatalogueRepository
-from ...domain.modelos._calculation_revision import CalculationRevisionState
-from ...domain.modelos._codes import ModeloCode
-from ...domain.modelos._errors import ModeloError
-from ...domain.modelos._filing_record import ModeloRecord, ModeloRecordCatalogue, ModeloRecordStatus
-from ...domain.modelos._filing_repository import ModeloRecordCatalogueRepository
-from ...domain.modelos._protocols import (
+from ...domain.modelos import (
+    CalculationRevisionCatalogueRepository,
     CalculationRevisionCatalogueRepositoryProtocol,
+    CalculationRevisionState,
+    ModeloCode,
+    ModeloError,
+    ModeloRecord,
+    ModeloRecordCatalogue,
+    ModeloRecordCatalogueRepository,
     ModeloRecordCatalogueRepositoryProtocol,
+    ModeloRecordStatus,
+    VerificationReport,
+    VerificationReportCatalogueRepository,
     VerificationReportCatalogueRepositoryProtocol,
+    WorkUnitCatalogueRepository,
     WorkUnitCatalogueRepositoryProtocol,
 )
-from ...domain.modelos._repository import WorkUnitCatalogueRepository
-from ...domain.modelos._verification_report import VerificationReport
-from ...domain.modelos._verification_repository import VerificationReportCatalogueRepository
 from ..calculations import CalculationObservationRepository, CrossPeriodExpectedMemberSet
 from ..workflow import WorkflowEngine, WorkflowRunRepository
 from ._action_errors import (
@@ -90,7 +91,7 @@ from ._workflow_gate import build_revision_workflow_engine as _build_revision_wo
 from ._workflow_gate import run_revision_workflow_gate as _run_revision_workflow_gate
 
 if TYPE_CHECKING:
-    from ..calculations._observations_repository import IvaWalletDecisionRepository
+    from ..calculations import IvaWalletDecisionRepository
 
 
 class ModeloFilingEvidenceMissingError(ModeloError):

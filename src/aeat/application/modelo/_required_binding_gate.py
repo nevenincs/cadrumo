@@ -15,8 +15,7 @@ from decimal import Decimal
 from ...core import Modelo
 from ...core.resources import resources
 from ...domain.calculations.registry import BindingId, ModeloRevision
-from ...domain.modelos._calculation_revision import CalculationRevision
-from ...domain.modelos._work_unit import WorkUnit
+from ...domain.modelos import CalculationRevision, WorkUnit
 from ...domain.user_profile import ProfileNotFoundError, load_user_profile_schema
 from ..user_profile import UserProfileLifecycleRepository
 from ._action_errors import ModeloRequiredBindingsMissingError

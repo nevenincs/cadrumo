@@ -61,8 +61,7 @@ from ...domain.calculations.registry import (
     RegistryModeloObservation,
     validated_casilla_id,
 )
-from ...domain.modelos._calculation_revision import CalculationRevision
-from ...domain.modelos._work_unit import WorkUnit
+from ...domain.modelos import CalculationRevision, WorkUnit
 from ..calculations import (
     CalculationObservationRepository,
     IvaCompensationHistoryRepository,

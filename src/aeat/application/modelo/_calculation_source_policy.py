@@ -32,11 +32,11 @@ See Also:
 from __future__ import annotations
 
 from ...core import BindingSourceKind
-from ..aggregation._source_mesh import DEFERRED_SOURCE_KINDS
-from ..aggregation._source_mesh import BindingSourceDisposition as _BindingSourceDisposition
-from ..aggregation._source_mesh import CallerOverrideDisposition as _CallerOverrideDisposition
-from ..aggregation._source_mesh import build_binding_source_dispositions as _build_binding_source_dispositions
-from ..aggregation._source_mesh import precedence_ladder_sources as _precedence_ladder_sources
+from ..aggregation import DEFERRED_SOURCE_KINDS
+from ..aggregation import BindingSourceDisposition as _BindingSourceDisposition
+from ..aggregation import CallerOverrideDisposition as _CallerOverrideDisposition
+from ..aggregation import build_binding_source_dispositions as _build_binding_source_dispositions
+from ..aggregation import precedence_ladder_sources as _precedence_ladder_sources
 
 # S26 boundary gate: source kinds handled by the live calculate path, either
 # through an enrolled resolver or an explicitly-deferred advisory.

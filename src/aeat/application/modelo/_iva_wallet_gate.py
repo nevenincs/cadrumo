@@ -56,17 +56,18 @@ from ...domain.calculations.registry import (
     previous_filing_observation_requirements,
     validated_casilla_id,
 )
-from ...domain.iva_compensation._reconciliation import IvaCompensationReconciliationDecision
-from ...domain.modelos._calculation_repository import CalculationRevisionCatalogueRepository
-from ...domain.modelos._calculation_revision import CalculationRevision, CalculationRevisionState
-from ...domain.modelos._errors import ModeloError
-from ...domain.modelos._protocols import (
+from ...domain.iva_compensation import IvaCompensationReconciliationDecision
+from ...domain.modelos import (
+    CalculationRevision,
+    CalculationRevisionCatalogueRepository,
     CalculationRevisionCatalogueRepositoryProtocol,
+    CalculationRevisionState,
+    ModeloError,
+    WorkUnit,
+    WorkUnitCatalogueRepository,
     WorkUnitCatalogueRepositoryProtocol,
 )
-from ...domain.modelos._repository import WorkUnitCatalogueRepository
-from ...domain.modelos._work_unit import WorkUnit
-from ..calculations._observations_repository import IvaWalletDecisionRepository
+from ..calculations import IvaWalletDecisionRepository
 
 
 class _IvaWalletBlockedDecision(Protocol):
@@ -355,7 +356,7 @@ def load_persisted_iva_compensation_decision_for_work_unit(
     if taxpayer_nif is None:
         return None
     if repository is None:
-        from ..calculations._observations_repository import IvaWalletDecisionRepository
+        from ..calculations import IvaWalletDecisionRepository
 
         repository = IvaWalletDecisionRepository()
 
@@ -411,8 +412,7 @@ def _supplied_prior_compensation_amounts(
 def _profile_path_values_for_bucket(bucket_id: str) -> dict[str, str] | None:
     """Return canonical user-profile path values for ``bucket_id``."""
     from ...domain.user_profile import ProfileNotFoundError
-    from ..user_profile import UserProfileLifecycleRepository
-    from ..user_profile._projections import record_to_path_values
+    from ..user_profile import UserProfileLifecycleRepository, record_to_path_values
 
     try:
         record = UserProfileLifecycleRepository(bucket_id=bucket_id).load(bucket_id)
@@ -585,7 +585,7 @@ def lazily_reconcile_local_iva_compensation_for_work_unit(
     taxpayer_nif = taxpayer_nif_for_bucket(work_unit.bucket_id)
     if taxpayer_nif is None:
         return None
-    from ..calculations._iva_wallet_reconciliation import reconcile_modelo_303_iva_compensation
+    from ..calculations import reconcile_modelo_303_iva_compensation
 
     report = reconcile_modelo_303_iva_compensation(
         snapshot,
@@ -657,7 +657,7 @@ def _calculated_revision_local_iva_compensation_recurrence(
         key=lambda candidate: candidate.updated_at,
         reverse=True,
     )
-    from ..calculations._binding_prefill import LocalIvaCompensationRecurrence
+    from ..calculations import LocalIvaCompensationRecurrence
 
     for source_work_unit in matching_work_units:
         revision_id = source_work_unit.filed_calculation_revision_id or source_work_unit.current_calculation_revision_id

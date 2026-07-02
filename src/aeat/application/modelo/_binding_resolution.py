@@ -43,8 +43,8 @@ from ...domain.calculations.registry import (
     expression_binding_refs,
     resolve_bound_casilla_binding_value,
 )
-from ...domain.modelos._errors import ModeloError
-from ..aggregation._source_mesh import CalculationSourceResolution
+from ...domain.modelos import ModeloError
+from ..aggregation import CalculationSourceResolution
 from ..live import Borrador100SnapshotRepository
 from ._borrador_binding import Modelo100BorradorSourceResolver
 from ._semantic_role_resolution import (

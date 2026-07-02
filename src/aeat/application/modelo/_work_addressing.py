@@ -33,14 +33,17 @@ from dataclasses import dataclass
 
 from ...core import Period
 from ...core.resources import resources
-from ...domain.calculations.registry._errors import RegistrySnapshotError
-from ...domain.calculations.registry._temporal import select_revision
+from ...domain.calculations.registry import RegistrySnapshotError, select_revision
 from ...domain.contribuyente import CCAA
-from ...domain.modelos._calculation_revision import CalculationRevision, CalculationRevisionState
-from ...domain.modelos._codes import ModeloCode
-from ...domain.modelos._errors import ModeloError
-from ...domain.modelos._ids import CalculationRevisionId, WorkUnitId
-from ...domain.modelos._work_unit import WorkUnit
+from ...domain.modelos import (
+    CalculationRevision,
+    CalculationRevisionId,
+    CalculationRevisionState,
+    ModeloCode,
+    ModeloError,
+    WorkUnit,
+    WorkUnitId,
+)
 from ._calculation_actions import get_calculation_revision
 from ._registry_discovery import declared_modelo_period_tokens
 from ._selectors import (

@@ -40,12 +40,12 @@ from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.errors import AeatError
 from ...core.identity import BucketId
 from ...core.time import now
-from ...domain.modelos._ids import WorkUnitId
+from ...domain.modelos import WorkUnitId
 from ._action_errors import WorkUnitNotFoundError
 
 if TYPE_CHECKING:
     from ...domain.justificante import Justificante
-    from ...domain.modelos._work_unit import WorkUnit
+    from ...domain.modelos import WorkUnit
 
 
 class ModeloReconciliationEvidenceKind(StrEnum):
@@ -356,8 +356,8 @@ def _reconcile_parsed_justificante(
         append_bucket_event,
         derive_bucket_event_id,
     )
-    from ...domain.modelos._repository import WorkUnitCatalogueRepository
-    from ..workflow._persistence import workflow_state_repository
+    from ...domain.modelos import WorkUnitCatalogueRepository
+    from ..workflow import workflow_state_repository
 
     active_bucket_id = workflow_state_repository().load().active_profile_bucket_id()
     if active_bucket_id is None:
@@ -644,7 +644,7 @@ def _computed_result_value(work_unit: WorkUnit, casilla_id: str) -> Decimal | No
     surfaces render (``one-aggregation-path-pull-equals-calculate``). Returns
     ``None`` when no persisted revision carries the casilla.
     """
-    from ...domain.modelos._calculation_repository import CalculationRevisionCatalogueRepository
+    from ...domain.modelos import CalculationRevisionCatalogueRepository
 
     catalogue = CalculationRevisionCatalogueRepository().load()
     revision = _select_filed_revision(catalogue.for_work_unit(str(work_unit.work_unit_id)))
@@ -661,7 +661,7 @@ def _select_filed_revision(revisions: tuple[object, ...]) -> object | None:
     by ``updated_at``; falls back to the most recent revision of any state so a
     receipt can still be value-reconciled before the filing is recorded in-app.
     """
-    from ...domain.modelos._calculation_revision import CalculationRevisionState
+    from ...domain.modelos import CalculationRevisionState
 
     if not revisions:
         return None
@@ -724,8 +724,7 @@ def _decode_diffs(raw: str) -> tuple[ModeloReconciliationDiff, ...]:
 
 
 def _active_profile_tax_id(bucket_id: str) -> str:
-    from ..user_profile import record_to_path_values, record_to_values
-    from ..user_profile._orchestration import build_lifecycle_service
+    from ..user_profile import build_lifecycle_service, record_to_path_values, record_to_values
 
     record = build_lifecycle_service(bucket_id=bucket_id).read(bucket_id)
     path_values = record_to_path_values(record)

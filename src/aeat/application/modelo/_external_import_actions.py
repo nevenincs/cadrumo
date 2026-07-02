@@ -44,34 +44,35 @@ from decimal import Decimal
 
 from ...core import Period
 from ...core.time import now as _utc_now
-from ...domain.buckets import BucketEventHistoryRepository, BucketEventObjectType, BucketEventType
-from ...domain.buckets._protocols import BucketEventHistoryRepositoryProtocol
+from ...domain.buckets import (
+    BucketEventHistoryRepository,
+    BucketEventHistoryRepositoryProtocol,
+    BucketEventObjectType,
+    BucketEventType,
+)
 from ...domain.calculations.registry import BindingId, CasillaId, RelationId
 from ...domain.justificante import Justificante, JustificanteRepository
-from ...domain.modelos._calculation_repository import (
-    CalculationRevisionCatalogueRepository,
-    upsert_calculation_revision,
-)
-from ...domain.modelos._calculation_revision import (
+from ...domain.modelos import (
     CalculationRevision,
+    CalculationRevisionCatalogueRepository,
+    CalculationRevisionCatalogueRepositoryProtocol,
     CalculationRevisionState,
-    derive_calculation_revision_id,
-)
-from ...domain.modelos._filing_record import (
     ExternalEvidence,
     ExternalEvidenceKind,
     ModeloRecord,
-    ModeloRecordStatus,
-    derive_filing_record_id,
-)
-from ...domain.modelos._filing_repository import ModeloRecordCatalogueRepository, upsert_filing_record
-from ...domain.modelos._protocols import (
-    CalculationRevisionCatalogueRepositoryProtocol,
+    ModeloRecordCatalogueRepository,
     ModeloRecordCatalogueRepositoryProtocol,
+    ModeloRecordStatus,
+    WorkUnit,
+    WorkUnitCatalogueRepository,
     WorkUnitCatalogueRepositoryProtocol,
+    WorkUnitState,
+    derive_calculation_revision_id,
+    derive_filing_record_id,
+    upsert_calculation_revision,
+    upsert_filing_record,
+    upsert_work_unit,
 )
-from ...domain.modelos._repository import WorkUnitCatalogueRepository, upsert_work_unit
-from ...domain.modelos._work_unit import WorkUnit, WorkUnitState
 from ._action_errors import ExternalModeloImportError, WorkUnitMutationRefusedError, WorkUnitNotFoundError
 from ._calculation_helpers import external_filing_observations as _external_filing_observations
 from ._registry_helpers import reject_unknown_import_casillas as _reject_unknown_import_casillas

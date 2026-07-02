@@ -17,9 +17,7 @@ from ...domain.iva import (
     derive_flow_for_classification,
     is_deducible_flow,
 )
-from ...domain.modelos._calculation_revision import CalculationRevision
-from ...domain.modelos._errors import ModeloError
-from ...domain.modelos._ledger_filing_snapshot import LedgerEvidenceRow
+from ...domain.modelos import CalculationRevision, LedgerEvidenceRow, ModeloError
 from ...domain.transactions import (
     BusinessClassification,
     TransactionDirection,

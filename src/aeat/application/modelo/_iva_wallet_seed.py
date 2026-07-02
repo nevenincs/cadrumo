@@ -33,10 +33,8 @@ from __future__ import annotations
 from decimal import Decimal
 
 from ...core import Modelo, Period
-from ...domain.iva_compensation import IvaCompensationPeriodState
-from ...domain.iva_compensation._reconciliation import IvaCompensationReconciliationDecision
-from ...domain.modelos._calculation_revision import CalculationRevisionState
-from ...domain.modelos._errors import ModeloError
+from ...domain.iva_compensation import IvaCompensationPeriodState, IvaCompensationReconciliationDecision
+from ...domain.modelos import CalculationRevisionState, ModeloError
 from ..calculations import correct_iva_compensation_period, seed_iva_compensation_period
 from ._iva_wallet_gate import taxpayer_nif_for_bucket
 
@@ -198,8 +196,7 @@ def _sealed_modelo_303_blocker_for_period(
     ``(work_unit_id, calculation_revision_id, filing_year, period)`` of the
     offending revision, or ``None`` when no sealed Modelo 303 consumed the seed.
     """
-    from ...domain.modelos._calculation_repository import CalculationRevisionCatalogueRepository
-    from ...domain.modelos._repository import WorkUnitCatalogueRepository
+    from ...domain.modelos import CalculationRevisionCatalogueRepository, WorkUnitCatalogueRepository
 
     seeded_key = (period.filing_year, _period_order_key(period))
     work_units = WorkUnitCatalogueRepository(bucket_id=bucket_id).load()
