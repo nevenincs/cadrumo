@@ -30,6 +30,7 @@ from __future__ import annotations
 from collections.abc import Mapping
 from decimal import Decimal
 
+from ...adapters.persistence.profile.usage_ratios import load_usage_ratios
 from ...adapters.persistence.storage import (
     ClassificationError,
     DecryptionError,
@@ -64,7 +65,7 @@ from ...domain.invoices import (
 )
 from ...domain.renta import RentaDeductibleExpenseObservation
 from ...domain.transactions import TransactionCatalogueRepositoryProtocol, TransactionPersistenceError
-from ...domain.usage_ratios import UsageRatioPersistenceError, load_usage_ratios
+from ...domain.usage_ratios import UsageRatioPersistenceError
 from ._errors import AggregationValidationError, t
 from ._impatriado_income_ledger import aggregate_impatriado_income_ledger_from_repositories
 from ._iva_ledger import IvaLedgerAggregationIssueReason, aggregate_iva_ledger_observations_from_repositories

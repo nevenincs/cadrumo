@@ -17,6 +17,7 @@ from decimal import Decimal
 
 from pydantic import BaseModel, Field
 
+from ...adapters.persistence.profile.usage_ratios import load_usage_ratios, save_usage_ratios
 from ...core import STRICT_FROZEN_CONFIG
 from ...core.identity import BucketId
 from ...domain.categories import (
@@ -31,8 +32,6 @@ from ...domain.usage_ratios import (
     ELIGIBLE_USAGE_RATIO_CATEGORIES,
     UsageRatioProfile,
     UsageRatioValidationError,
-    load_usage_ratios,
-    save_usage_ratios,
     usage_ratio_bucket_lock,
 )
 
