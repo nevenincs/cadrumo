@@ -382,10 +382,7 @@ class UnderDeclarationVerdict(BaseModel):
     def passed(self) -> bool:
         """True when every assertion dimension held and no failures were recorded."""
         return (
-            self.not_silently_clean
-            and self.advisory_finding_present
-            and self.legal_refs_grounded
-            and not self.failures
+            self.not_silently_clean and self.advisory_finding_present and self.legal_refs_grounded and not self.failures
         )
 
 
@@ -513,3 +510,139 @@ class ProfileConfirmationVerdict(BaseModel):
             and self.confirmed_before_first_mutation
             and not self.failures
         )
+
+
+class ElicitationAction(StrEnum):
+    """The three-action result shape of an MCP elicitation exchange."""
+
+    ACCEPT = "accept"
+    DECLINE = "decline"
+    CANCEL = "cancel"
+
+
+class LiveToolCallRecord(BaseModel):
+    """One observed tool invocation captured from a real MCP client session.
+
+    Captured by the live subagent-persona harness (ADR R7): the harness starts
+    the real ``aeat-mcp`` server as a subprocess, drives a real client session,
+    and records every ``tools/call`` round-trip verbatim. ``command_key`` is the
+    registry command key the tool name maps back to, resolved through a
+    caller-supplied mapping (the caller builds it from the same descriptor
+    source the server serves; this package never imports ``entrypoints.mcp``,
+    preserving the hexagonal direction the runner's docstring documents).
+
+    Attributes:
+        tool_name: The MCP tool name as advertised by ``tools/list``.
+        command_key: The registry command key (``"modelo.work.calculate"``
+            form) the tool maps to; empty when the caller's mapping does not
+            cover the tool (a meta-tool or harness tool).
+        arguments_json: Canonical JSON of the arguments the driver sent.
+        is_error: The MCP ``isError`` flag on the call result.
+        result_text: The concatenated text content of the call result (the JSON
+            envelope for CLI-backed tools).
+        duration_ms: Wall-clock round-trip duration in milliseconds.
+    """
+
+    model_config = _STRICT_FROZEN
+
+    tool_name: str = Field(min_length=1)
+    command_key: str = ""
+    arguments_json: str = "{}"
+    is_error: bool = False
+    result_text: str = ""
+    duration_ms: int = Field(ge=0, default=0)
+
+
+class LiveNarrationRecord(BaseModel):
+    """One operator-facing narration the persona produced during a live session.
+
+    ``step`` is the registry command key of the tool result the narration
+    describes (the faithfulness check runs a narration against the tool result
+    JSON that preceded it); an empty ``step`` marks free narration outside any
+    tool result, which the scorer treats as describing the most recent call.
+    """
+
+    model_config = _STRICT_FROZEN
+
+    step: str = ""
+    text: str = Field(min_length=1)
+
+
+class LiveElicitationRecord(BaseModel):
+    """One server-initiated elicitation exchange observed during a live session.
+
+    The console's CONFIRM tier rides MCP elicitation (ADR R6); the harness's
+    client-side responder decides each exchange and the record preserves what
+    was asked and what was answered, so the scorer can assert confirmation
+    honesty (a state-changing verb was confirmed, a declined confirmation was
+    not retried past).
+    """
+
+    model_config = _STRICT_FROZEN
+
+    message: str = Field(min_length=1)
+    action: ElicitationAction
+    content_json: str = ""
+
+
+class LiveTrajectory(BaseModel):
+    """The full captured record of one live subagent-persona session.
+
+    The unit the scorer consumes and the telemetry layer persists: every tool
+    call, narration, and elicitation exchange in order of occurrence, plus the
+    session identity. ``observed_command_keys`` projects the tool calls onto
+    registry command keys for the golden-scenario dimensions that assert over
+    key sequences (lifecycle order, profile-confirmation prefix, contradiction
+    halt).
+
+    Attributes:
+        scenario: The golden scenario name this session ran, empty for a free
+            exploration session.
+        persona: The harness persona the driver played (e.g.
+            ``"modelo-preparer"``).
+        session_id: Caller-supplied stable identifier for the session (clock-free
+            identity per the project's determinism discipline; the caller decides
+            the scheme).
+        tool_calls: Every observed tool invocation, in order.
+        narrations: Every persona narration, in order of production.
+        elicitations: Every elicitation exchange, in order.
+    """
+
+    model_config = _STRICT_FROZEN
+
+    scenario: str = ""
+    persona: str = Field(min_length=1)
+    session_id: str = Field(min_length=1)
+    tool_calls: tuple[LiveToolCallRecord, ...] = ()
+    narrations: tuple[LiveNarrationRecord, ...] = ()
+    elicitations: tuple[LiveElicitationRecord, ...] = ()
+
+    @property
+    def observed_command_keys(self) -> tuple[str, ...]:
+        """The registry command keys of the session's tool calls, in observed order."""
+        return tuple(call.command_key for call in self.tool_calls if call.command_key)
+
+
+class LiveInvariantVerdict(BaseModel):
+    """The two hard invariants of ADR R7, asserted over one captured trajectory.
+
+    ``live_submit_attempts`` is every observed call whose command key (or raw
+    tool name, for calls outside the caller's mapping) matches the scorer's
+    live-write classification — the count MUST be zero: the console exposes no
+    live-submit tool, so any attempt is a harness-design finding, not merely a
+    refused call. ``handoff_faithfulness_blocks`` is every narration at the
+    export / record-marker boundary whose faithfulness check hard-blocked —
+    also required zero.
+    """
+
+    model_config = _STRICT_FROZEN
+
+    scenario: str = Field(min_length=1)
+    live_submit_attempts: tuple[str, ...] = ()
+    handoff_faithfulness_blocks: tuple[str, ...] = ()
+    failures: tuple[str, ...] = ()
+
+    @property
+    def passed(self) -> bool:
+        """True when zero live-submit attempts and zero handoff faithfulness blocks were observed."""
+        return not self.live_submit_attempts and not self.handoff_faithfulness_blocks and not self.failures
