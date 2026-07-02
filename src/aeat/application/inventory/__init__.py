@@ -1,6 +1,6 @@
 """Inventory noun-group application service.
 
-Wraps the rich :mod:`aeat.domain.contribuyente.inventory` substrate (FIFO /
+Wraps the rich :mod:`domain.contribuyente.inventory` substrate (FIFO /
 PMP valuation per LIS art. 17.1) with a bucket-scoped persistence
 layer and canonical operator verbs:
 
@@ -15,14 +15,14 @@ service carries the documented ``LIFECYCLE_OPERATIONS_ONLY`` exception
 to the canonical add / remove / update / view / list spine.
 
 Persistence is owned by :class:`InventoryService`, which stores the
-:class:`~aeat.domain.contribuyente.inventory.InventoryLedgerDocument`
+:class:`domain.contribuyente.inventory.InventoryLedgerDocument`
 through
-:class:`~aeat.adapters.persistence.profile.inventory.InventoryLedgerRepository`
+:class:`adapters.persistence.profile.inventory.InventoryLedgerRepository`
 and emits bucket-scoped inventory events for audit-significant verbs. Movement
 commands are converted into
-:class:`~aeat.domain.contribuyente.inventory.MovementRecord` rows, while
+:class:`domain.contribuyente.inventory.MovementRecord` rows, while
 valuation previews delegate FIFO/PMP math to
-:func:`~aeat.domain.contribuyente.inventory.compute_inventory_valuation`.
+:func:`domain.contribuyente.inventory.compute_inventory_valuation`.
 
 See Also:
     :class:`InventoryService`
@@ -34,7 +34,7 @@ See Also:
         Application command projected into a domain movement row.
     :class:`InventoryValuationPreviewResult`
         Result contract for report-only valuation previews.
-    :class:`~aeat.domain.contribuyente.inventory.InventoryLedger`
+    :class:`domain.contribuyente.inventory.InventoryLedger`
         Canonical domain ledger valued by the inventory substrate.
 """
 
