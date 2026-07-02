@@ -1546,6 +1546,8 @@ cli:
         unknown_keys: 'Unknown --binding key(s) {keys}; known bindings for {code}@{revision}
           ({period}): {suggestion}.'
         year_help: Tax year of the modelo (e.g. 2026)
+        unscoped_revision_suggestion: 'Before copying ids into work calculate, rerun with --modelo MODELO --year YEAR --period PERIOD for the target work unit.'
+        unscoped_revision_warning: 'The binding list is not scoped by %{missing_filters}; it may include binding ids from a revision that does not match the work unit used by work calculate.'
       casilla:
         casilla_help: Casilla id or printed casilla number to describe (e.g. 0596).
         help: Show the label, legal grounding, input kind, and formula for one casilla

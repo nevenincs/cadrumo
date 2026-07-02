@@ -1637,6 +1637,8 @@ cli:
         unknown_keys: 'Clau(s) de --binding desconeguda(es) {keys}; vinculacions conegudes
           per a {code}@{revision} ({period}): {suggestion}.'
         year_help: Exercici fiscal del model (p. ex. 2026)
+        unscoped_revision_warning: 'La llista de vinculacions no esta acotada per %{missing_filters}; pot incloure ids de vinculacions d una revisio que no coincideix amb la unitat de treball usada per work calculate.'
+        unscoped_revision_suggestion: 'Abans de copiar ids a work calculate, torna a executar amb --modelo MODELO --year YEAR --period PERIOD per a la unitat de treball de destinacio.'
       casilla:
         casilla_help: Id de casella o numero impres de casella que cal descriure (p.
           ex. 0596).
