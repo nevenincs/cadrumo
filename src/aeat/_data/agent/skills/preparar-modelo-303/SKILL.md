@@ -31,11 +31,41 @@ value yourself.
 4. Read the computed revision: `aeat app modelo work revision <work-unit-id>
    --format json`.
 
+## Compensación pendiente (the IVA wallet carry-forward)
+
+When a quarter's IVA deducible exceeds IVA devengado, the excess does not
+vanish: LIVA arts. 99 and 115-116 let it carry forward and offset a future
+quarter's cuota instead of being refunded immediately. The registry models
+this as four casillas per quarter, chained across periods:
+
+- **Casilla 110** (`iva.compensacion-pendiente-periodos-anteriores`) - the
+  balance carried IN from the prior quarter's casilla 87, resolved as a
+  `previous_filing` binding (`modelo-303-compensacion-pendiente-anteriores`).
+  Never enter this by hand; it is bound.
+- **Casilla 78** (`iva.compensacion-aplicada-periodo`) - the portion of
+  casilla 110 actually applied against this quarter's resultado, computed by
+  the registry formula.
+- **Casilla 87** (`iva.compensacion-pendiente-periodos-posteriores`) - the
+  remaining balance carried OUT to the next quarter's casilla 110.
+- **Casilla 69** (`iva.resultado`) - the quarter's resultado
+  (`[66]+[77]+[68]-[78]`), so a nonzero casilla 78 reduces what would
+  otherwise be payable.
+
+Read `aeat app modelo work revision <work-unit-id> --format json` and confirm
+casilla 110 matches the prior quarter's casilla 87 before treating a quarter
+as ready to verify; a mismatch means the prior quarter was recalculated after
+this one was created, and this quarter must be recreated against the current
+chain. The first quarter of a filing_year (or a taxpayer's first-ever 303)
+carries casilla 110 = 0. Never override casilla 110 or 87 to force a balance;
+the chain is registry-computed end to end.
+
 ## Success assertions
 
 - `status` is `success` (or `warning` with every warning surfaced).
 - The IVA result casilla is consistent with the declared IVA devengado less IVA
   deducible; act on any unconsumed-declarable-IVA advisory the CLI surfaces.
+- If casilla 87 (or 110) is nonzero, the next quarter's work unit must reflect
+  it before that quarter is verified.
 - Every reported value is quoted verbatim from the JSON with its grounding.
 
 ## Verify and hand off
