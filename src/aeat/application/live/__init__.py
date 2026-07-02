@@ -116,21 +116,8 @@ from ._filed_observation_persistence import (
     persist_filed_calculation_observation,
     persist_filed_justificante_metadata,
 )
-from ._filed_observation_persistence import (
-    latest_declarations_by_period as _latest_declarations_by_period,
-)
-from ._filed_observation_persistence import (
-    persist_iva_compensation_history_observations_strict as _persist_iva_compensation_history_observations_strict,
-)
-from ._filed_observation_persistence import (
-    persist_latest_filed_calculation_observations as _persist_latest_filed_calculation_observations,
-)
 from ._iva_remote_state import (
     IvaRemoteStateAcquisitionManifestRepository,
-    _aggregate_iva_compensation_history_reports,
-    _await_live_iva_surface,
-    _filed_history_surface_timeout_ms,
-    _suppress_live_iva_playwright_cancellation_noise,
     build_iva_remote_state_acquisition_report,
     capture_iva_compensation_history,
     capture_iva_compensation_wallet,
@@ -588,13 +575,6 @@ __all__ = [
     "VerifyService",
     "VerifySurface",
     "VerifyVerdict",
-    "_aggregate_iva_compensation_history_reports",
-    "_await_live_iva_surface",
-    "_filed_history_surface_timeout_ms",
-    "_latest_declarations_by_period",
-    "_persist_iva_compensation_history_observations_strict",
-    "_persist_latest_filed_calculation_observations",
-    "_suppress_live_iva_playwright_cancellation_noise",
     "borrador_100_snapshot_object_key",
     "build_iva_remote_state_acquisition_report",
     "capture_expedientes_bulk",
