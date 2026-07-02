@@ -481,15 +481,15 @@ def test_modelo_100_reserva_inversiones_split_axes_use_regime_specific_roles() -
     assert not offences, "legacy RIB split semantic roles remain:\n  " + "\n  ".join(offences)
 
 
-@pytest.mark.parametrize("filing_year", range(2023, 2026))
-def test_modelo_100_ev_charging_point_deduction_keeps_da_58_grounding(filing_year: int) -> None:
-    revision = _modelo_100_snapshot(filing_year).revision
-    casilla = next(casilla for casilla in revision.casillas if casilla.id == _casilla_id("1935"))
+def test_modelo_100_ev_charging_point_deduction_keeps_da_58_grounding() -> None:
+    for filing_year in range(2023, 2026):
+        revision = _modelo_100_snapshot(filing_year).revision
+        casilla = next(casilla for casilla in revision.casillas if casilla.id == _casilla_id("1935"))
 
-    assert tuple(casilla.section) == _EV_CHARGING_POINT_RESULTS_SECTION
-    assert casilla.semantic_role == _EV_CHARGING_POINT_DEDUCTION_ROLE
-    assert _EV_CHARGING_POINT_DEDUCTION_DA_58_REF in casilla.legal_refs
-    assert _ENERGY_EFFICIENCY_DEDUCTION_DA_50_REF not in casilla.legal_refs
+        assert tuple(casilla.section) == _EV_CHARGING_POINT_RESULTS_SECTION, filing_year
+        assert casilla.semantic_role == _EV_CHARGING_POINT_DEDUCTION_ROLE, filing_year
+        assert _EV_CHARGING_POINT_DEDUCTION_DA_58_REF in casilla.legal_refs, filing_year
+        assert _ENERGY_EFFICIENCY_DEDUCTION_DA_50_REF not in casilla.legal_refs, filing_year
 
 
 def test_modelo_100_housing_energy_result_role_stays_in_housing_energy_section() -> None:
@@ -511,30 +511,30 @@ def test_modelo_100_housing_energy_result_role_stays_in_housing_energy_section()
     assert not offences, "housing energy result role escaped its legal section:\n  " + "\n  ".join(offences)
 
 
-@pytest.mark.parametrize("filing_year", range(2022, 2026))
-def test_modelo_100_anexo_c_energy_excess_roles_are_spelled_and_grounded(filing_year: int) -> None:
-    revision = _modelo_100_snapshot(filing_year).revision
-    offences: list[str] = []
-    roles_by_casilla: dict[CasillaId, str] = {}
-    for casilla in revision.casillas:
-        semantic_role = casilla.semantic_role
-        if semantic_role is None:
-            continue
-        if "eeficiencia" in semantic_role:
-            offences.append(f"{filing_year}/{casilla.id}: {semantic_role}")
-        if tuple(casilla.section) == _ANEXO_C_ENERGY_EXCESS_SECTION and semantic_role.startswith(
-            _ANEXO_C_ENERGY_EXCESS_ROLE_PREFIX,
-        ):
-            roles_by_casilla[casilla.id] = semantic_role
-    missing_da50 = {
-        casilla.id: casilla.legal_refs
-        for casilla in revision.casillas
-        if casilla.id in roles_by_casilla and _ENERGY_EFFICIENCY_DEDUCTION_DA_50_REF not in casilla.legal_refs
-    }
+def test_modelo_100_anexo_c_energy_excess_roles_are_spelled_and_grounded() -> None:
+    for filing_year in range(2022, 2026):
+        revision = _modelo_100_snapshot(filing_year).revision
+        offences: list[str] = []
+        roles_by_casilla: dict[CasillaId, str] = {}
+        for casilla in revision.casillas:
+            semantic_role = casilla.semantic_role
+            if semantic_role is None:
+                continue
+            if "eeficiencia" in semantic_role:
+                offences.append(f"{filing_year}/{casilla.id}: {semantic_role}")
+            if tuple(casilla.section) == _ANEXO_C_ENERGY_EXCESS_SECTION and semantic_role.startswith(
+                _ANEXO_C_ENERGY_EXCESS_ROLE_PREFIX,
+            ):
+                roles_by_casilla[casilla.id] = semantic_role
+        missing_da50 = {
+            casilla.id: casilla.legal_refs
+            for casilla in revision.casillas
+            if casilla.id in roles_by_casilla and _ENERGY_EFFICIENCY_DEDUCTION_DA_50_REF not in casilla.legal_refs
+        }
 
-    assert not offences, "misspelled Anexo C energy-efficiency roles remain:\n  " + "\n  ".join(offences)
-    assert _ANEXO_C_ENERGY_EXCESS_ROLES.issubset(set(roles_by_casilla.values()))
-    assert not missing_da50
+        assert not offences, "misspelled Anexo C energy-efficiency roles remain:\n  " + "\n  ".join(offences)
+        assert _ANEXO_C_ENERGY_EXCESS_ROLES.issubset(set(roles_by_casilla.values())), filing_year
+        assert not missing_da50, filing_year
 
 
 def test_modelo_100_anexo_c_protected_patrimony_current_year_excess_role_is_grounded() -> None:
