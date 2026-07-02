@@ -1,11 +1,11 @@
 """Auxiliary modelo payload schemas split from the main modelo registry.
 
-These strict :class:`~aeat.entrypoints.cli._schemas.OutputSchema` subclasses
-are registered through :func:`~aeat.entrypoints.cli._schemas.register_schema`
-and re-exported by :mod:`aeat.entrypoints.cli._modelo_payloads` so audit,
+These strict :class:`OutputSchema` subclasses
+are registered through :func:`register_schema`
+and re-exported by :mod:`~aeat.entrypoints.cli._modelo_payloads` so audit,
 work-history, workflow-run, list, and describe emitters keep one payload import
 surface. Validated results enter
-:class:`~aeat.entrypoints.cli._schemas.SchemaEnvelope` through
+:class:`SchemaEnvelope` through
 :func:`~aeat.entrypoints.cli._common._emit_envelope`.
 
 The application/modelo, workflow, and audit services remain authoritative for
@@ -23,12 +23,12 @@ class WithholdingClaveBreakdownPayload(OutputSchema):
     """One per-clave retención row of the Modelo 190 reconciliation breakdown.
 
     JSON projection of
-    :class:`~aeat.domain.calculations.registry.WithholdingClaveBreakdown`: the
-    ``clave`` keeps its typed :class:`~aeat.core.aggregation.RetencionClave`
+    :class:`WithholdingClaveBreakdown`: the
+    ``clave`` keeps its typed :class:`RetencionClave`
     member (the closed AEAT clave-de-percepción axis) and the magnitudes are
     rendered as canonical decimal strings. Re-exported through
-    :mod:`aeat.entrypoints.cli._modelo_payloads` so the
-    :class:`~aeat.entrypoints.cli._modelo_payloads.ModeloAggregateResult`
+    :mod:`~aeat.entrypoints.cli._modelo_payloads` so the
+    :class:`ModeloAggregateResult`
     envelope can carry the breakdown that lets an operator reconcile the annual
     Modelo 190 retención totals against the per-clave figures of the individual
     Modelo 111 quarterly filings.
@@ -137,7 +137,7 @@ class WorkHistoryResult(OutputSchema):
 
 
 class WorkflowRunPayload(OutputSchema):
-    """One :class:`aeat.application.workflow.WorkflowResult` row in the runs listing."""
+    """One :class:`~aeat.application.workflow.WorkflowResult` row in the runs listing."""
 
     run_id: str
     modelo: str | None
@@ -151,8 +151,8 @@ class WorkflowRunPayload(OutputSchema):
 class WorkRunsResult(OutputSchema):
     """Workflow run listing returned by ``aeat app modelo work runs``.
 
-    Rows mirror persisted :class:`aeat.application.workflow.WorkflowResult`
-    records discovered through :func:`aeat.application.workflow.list_runs`.
+    Rows mirror persisted :class:`~aeat.application.workflow.WorkflowResult`
+    records discovered through :func:`~aeat.application.workflow.list_runs`.
     """
 
     operation: str = "modelo.work.runs"
