@@ -4,14 +4,14 @@ This module is the transport boundary for
 ``aeat app modelo work preview-maritime-exemption``. The command body keeps CLI
 responsibilities narrow: parse Decimal options, require an active profile,
 delegate profile fact reading and RETMAR retry policy to
-:func:`~aeat.application.modelo.preview_maritime_exemption_for_active_profile`,
+:func:`preview_maritime_exemption_for_active_profile`,
 then serialise the returned observations into
-:class:`~aeat.entrypoints.cli._modelo_payloads.WorkPreviewMaritimeExemptionResult`.
+:class:`WorkPreviewMaritimeExemptionResult`.
 
 See Also:
-    :mod:`aeat.application.modelo._maritime_preview`:
+    :mod:`_maritime_preview`:
         Active-profile application service consumed by this CLI adapter.
-    :class:`~aeat.entrypoints.cli._modelo_payloads.CasillaObservationPayload`:
+    :class:`CasillaObservationPayload`:
         JSON payload row carrying the legal/source references emitted by the
         maritime resolver.
 """
@@ -48,8 +48,8 @@ def register_maritime_commands(
     The caller supplies the shared modelo-work CLI hooks so this extracted
     module does not import the monolithic modelo command root. The registered
     command emits a
-    :class:`~aeat.entrypoints.cli._modelo_payloads.WorkPreviewMaritimeExemptionResult`
-    envelope through :func:`~aeat.entrypoints.cli._common._emit_envelope`.
+    :class:`WorkPreviewMaritimeExemptionResult`
+    envelope through :func:`_emit_envelope`.
     """
 
     @work_app.command(
@@ -122,7 +122,7 @@ def register_maritime_commands(
         Decimal parsing stays at the CLI boundary. Legal pathway selection,
         profile fact extraction, RETMAR warning handling, and typed observation
         construction stay in
-        :func:`~aeat.application.modelo.preview_maritime_exemption_for_active_profile`.
+        :func:`preview_maritime_exemption_for_active_profile`.
         """
         activate_output_language(ctx, output_language)
         require_active_profile()
