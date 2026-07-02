@@ -3,7 +3,7 @@
 Modelo 720 is an informativa declaration for assets and rights abroad. This
 module groups per-asset observations by ``(source_kind, asset_class)`` and
 returns :class:`ForeignAssetsAggregation` for
-:mod:`aeat.application.aggregation._service`; the repository-free
+:mod:`application.aggregation._service`; the repository-free
 :class:`ForeignAssetsAggregationSourceResolver` adapts the same observations to
 the calculation source-mesh envelope when a caller supplies them.
 
