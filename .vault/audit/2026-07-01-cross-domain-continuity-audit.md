@@ -55,6 +55,9 @@ related:
 - Reviewed W09.P45.S237 as a no-code closure against current ledger classify/list/view/review/status behavior.
 - Checked that current classify validation no longer falls through to the generic `config repair` boundary, status emits concrete `readiness_issue` rows, and the Taller Norte transcript shows same-profile status, list, review, classify, and follow-up ready status.
 - Checked validation evidence from focused ledger classify/review/list/view integration tests, reviewer output, and RAG grounding.
+- Reviewed W09.P45.S238 changes to `src/aeat/entrypoints/cli/_modelo_discovery_cli.py`, focused Modelo bindings CLI tests, the missing-filter fixture test, and locale catalogues.
+- Checked that unscoped `modelo bindings list` output remains available for discovery but now warns through the shared typed `notices` channel and text output before operators copy binding ids into `work calculate`.
+- Checked validation evidence from focused bindings CLI tests, schema conformance tests, placeholder parity, locale scaffold/audit, touched-file ruff, reviewer output, and RAG grounding.
 
 ## Findings
 
@@ -113,6 +116,10 @@ No findings for the work-create registry-revision default regression. The live i
 ### w09-p45-s237 | low | no findings
 
 No findings for the ledger silent-profile-gate row. The current code no longer shows a profile-completeness gate on ledger `list`, `view`, `status`, or `classify`; classify validation is caught at the ledger boundary and status emits a concrete readiness issue instead of a silent block. The Taller Norte transcript now shows the original journey succeeding on one profile: status names the unclassified-row issue, list and review read the row, classify succeeds, and status becomes ready. Residual risk is limited to lack of one single S237-named all-verb fixture; the focused tests and transcript cover the reported behavior.
+
+### w09-p45-s238 | low | no findings
+
+No findings for the Modelo bindings unscoped-list warning. The implementation preserves broad discovery but emits `modelo.bindings.list.unscoped_revision` through the shared `Notice` envelope and mirrors it into text output when `--year` or `--period` is missing. The regression tests cover both missing filters, only `--period` missing, and the fully scoped no-warning path. Residual risk is limited to non-English translation wording quality; locale scaffold, audit, and placeholder parity passed.
 
 ## Recommendations
 
