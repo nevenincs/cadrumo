@@ -6,6 +6,11 @@ description: >-
   full cuota chain, verify, export the fichero-BOE, and hand off for the
   taxpayer to file. Use when the taxpayer files their annual personal income
   tax return.
+applies_when:
+  profile_facts:
+    - fact: entity_type
+      match: equals
+      values: [natural_person]
 ---
 
 # Prepare Modelo 100
