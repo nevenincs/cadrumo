@@ -53,60 +53,45 @@ def test_header_is_frozen() -> None:
         header.archive_schema_version = 2
 
 
-@pytest.mark.parametrize(
-    "missing_field",
-    (
-        pytest.param("bucket_id", id="bucket-id"),
-        pytest.param("manifest_digest", id="manifest-digest"),
-    ),
-)
-def test_rejects_missing_required_header_fields(missing_field: str) -> None:
-    payload = _header_payload()
-    del payload[missing_field]
+def test_rejects_missing_required_header_fields() -> None:
+    for missing_field in ("bucket_id", "manifest_digest"):
+        payload = _header_payload()
+        del payload[missing_field]
 
-    with pytest.raises(ValidationError) as excinfo:
-        ExportArchiveHeader.model_validate(payload)
+        with pytest.raises(ValidationError) as excinfo:
+            ExportArchiveHeader.model_validate(payload)
 
-    assert missing_field in str(excinfo.value)
+        assert missing_field in str(excinfo.value)
 
 
-@pytest.mark.parametrize(
-    "manifest_digest",
-    (
-        pytest.param("z" * 64, id="non-hex"),
-        pytest.param("a" * 63, id="short"),
-        pytest.param(_VALID_DIGEST.upper(), id="uppercase"),
-        pytest.param("+" + ("a" * 63), id="leading-sign"),
-        pytest.param(" " + ("a" * 63), id="leading-space"),
-        pytest.param(("a" * 63) + "\n", id="trailing-newline"),
-    ),
-)
-def test_rejects_invalid_digest_spellings(manifest_digest: str) -> None:
-    with pytest.raises(ValidationError):
-        _header(manifest_digest=manifest_digest)
+def test_rejects_invalid_digest_spellings() -> None:
+    for manifest_digest in (
+        "z" * 64,
+        "a" * 63,
+        _VALID_DIGEST.upper(),
+        "+" + ("a" * 63),
+        " " + ("a" * 63),
+        ("a" * 63) + "\n",
+    ):
+        with pytest.raises(ValidationError):
+            _header(manifest_digest=manifest_digest)
 
 
-@pytest.mark.parametrize(
-    ("field_name", "value"),
-    (
-        pytest.param("bucket_id", "", id="bucket-empty"),
-        pytest.param("archive_schema_version", 0, id="schema-non-positive"),
-        pytest.param("archive_schema_version", "1", id="schema-coerced"),
-        pytest.param("recovery_wrap_present", 1, id="recovery-flag-coerced"),
-    ),
-)
-def test_rejects_invalid_header_scalars(field_name: str, value: object) -> None:
-    with pytest.raises(ValidationError):
-        _header(**{field_name: value})
+def test_rejects_invalid_header_scalars() -> None:
+    for field_name, value in (
+        ("bucket_id", ""),
+        ("archive_schema_version", 0),
+        ("archive_schema_version", "1"),
+        ("recovery_wrap_present", 1),
+    ):
+        with pytest.raises(ValidationError):
+            _header(**{field_name: value})
 
 
-@pytest.mark.parametrize(
-    "created_at",
-    (
-        pytest.param(datetime(2026, 1, 1), id="naive"),
-        pytest.param(datetime(2026, 1, 1, tzinfo=_PLUS_ONE), id="non-utc-offset"),
-    ),
-)
-def test_rejects_non_utc_created_at(created_at: datetime) -> None:
-    with pytest.raises(ValidationError):
-        _header(created_at=created_at)
+def test_rejects_non_utc_created_at() -> None:
+    for created_at in (
+        datetime(2026, 1, 1),
+        datetime(2026, 1, 1, tzinfo=_PLUS_ONE),
+    ):
+        with pytest.raises(ValidationError):
+            _header(created_at=created_at)
