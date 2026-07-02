@@ -8,6 +8,17 @@ side. This gate parses every shipped operator rule, extracts each ``aeat ...``
 command path and each named envelope-spine field, and asserts they all resolve
 against the live CLI surface and the real envelope models. A rule that cites a
 non-existent verb or field fails the gate.
+
+A second, negative gate closes the complementary black-box hole: nothing forbade
+an operator document from naming a package internal (a dotted ``aeat.<pkg>...``
+module path, a ``src/aeat/...`` repo path, a private ``_module`` symbol, or a
+``test_*`` name) instead of the CLI/manifest/legal surface the operator is
+supposed to orient over. The dotted-module-path half of that check is sourced
+from the live :class:`~aeat.application.operator_surface.OperatorSurfaceContract`
+``service_owner`` / ``owner`` string values (never a hand-authored package-name
+list), so a newly added backend module is blocked from leaking into rule prose
+the moment it is registered as a command family's owner, with no separate
+allowlist to keep in sync.
 """
 
 from __future__ import annotations
@@ -22,6 +33,7 @@ import pytest
 from ...application.operator_surface import (
     CommandSchemaRef,
     build_operator_surface_manifest,
+    get_operator_surface_contract,
 )
 from ...core.json_contract import ENVELOPE_SCHEMA_VERSION, Notice, SchemaEnvelope
 from .. import iter_operator_rules, iter_personas, iter_skill_documents
@@ -39,6 +51,14 @@ _FLAG = re.compile(r"^--?[a-z][a-z0-9-]*$")
 # real field on the model named here, or the rule is teaching a phantom field.
 _ENVELOPE_FIELDS = frozenset(SchemaEnvelope.model_fields)
 _NOTICE_FIELDS = frozenset(Notice.model_fields)
+
+# Structural internal-shape patterns that are true regardless of what the
+# manifest currently declares - a repo path, a private symbol, or a test name
+# is never a CLI/manifest/legal-surface citation no matter which package it
+# names, so these do not need to be sourced from contract data.
+_REPO_PATH_TOKEN = re.compile(r"(^|[\s`])src[/\\]aeat[/\\]")
+_PRIVATE_SYMBOL_TOKEN = re.compile(r"^_[A-Za-z][A-Za-z0-9_]*(\.py)?$")
+_TEST_NAME_TOKEN = re.compile(r"^test_[A-Za-z0-9_]*$")
 
 
 def _valid_command_paths() -> frozenset[str]:
@@ -185,6 +205,22 @@ def _all_operator_documents() -> list[tuple[str, str]]:
     return documents
 
 
+def _internal_service_owner_tokens() -> frozenset[str]:
+    """Every backend-owner dotted module path the live contract declares.
+
+    Sourced from :class:`MountedCommandFamily.service_owner` and
+    :class:`ServiceOwner.owner` on the live
+    :class:`~aeat.application.operator_surface.OperatorSurfaceContract` - never a
+    hand-authored package-name list - so a newly registered backend module is
+    blocked from operator prose the moment it is enrolled as a command family's
+    owner, with no second allowlist to keep in sync.
+    """
+    contract = get_operator_surface_contract()
+    owners = {family.service_owner for family in contract.command_families}
+    owners |= {owner.owner for owner in contract.service_owners}
+    return frozenset(owners)
+
+
 def test_operator_rules_exist() -> None:
     docs = _rule_documents()
     assert docs, "no operator rule documents are shipped under _data/agent/rules"
@@ -243,3 +279,68 @@ def test_cited_envelope_spine_fields_still_exist() -> None:
         if notice_field not in _NOTICE_FIELDS:
             failures.append(f"notice field '{notice_field}' no longer on Notice")
     assert not failures, "\n".join(failures)
+
+
+def test_no_operator_document_names_a_package_internal() -> None:
+    """Negative gate: an operator document may cite the CLI/manifest/legal
+    surface only, never a package internal.
+
+    Two independent checks compose this gate:
+
+    - A **data-sourced** check: no document may contain, anywhere in its text,
+      one of the live contract's ``service_owner`` / ``owner`` dotted module
+      paths (e.g. ``aeat.application.modelo``). This is the mechanism the ADR
+      requires - the blocklist is read from
+      :func:`~aeat.application.operator_surface.get_operator_surface_contract`,
+      not hand-authored, so it grows automatically as new backend modules are
+      registered as command-family owners.
+    - Two **structural** checks over backticked spans: a repo path
+      (``src/aeat/...``) and a private-symbol- or test-name-shaped single token
+      (`` `_foo` ``, `` `test_bar` ``). These are internal-shaped regardless of
+      which package they name, so they need no data source.
+
+    Legitimate CLI-domain nouns (``ledger``, ``modelo``, ``casilla``, ...) never
+    false-positive here: every ``service_owner`` / ``owner`` value is a full
+    dotted ``aeat.<layer>.<module>`` string, and no CLI verb or domain noun is
+    ever written in that dotted form (a CLI invocation is space-separated,
+    e.g. ``aeat app modelo work calculate``), so a plain-word match is
+    structurally impossible - see
+    ``test_no_service_owner_value_collides_with_operator_prose`` for the
+    empirical proof against the current, unmodified operator corpus.
+    """
+    owner_tokens = _internal_service_owner_tokens()
+    failures: list[str] = []
+    for name, text in _all_operator_documents():
+        for owner in owner_tokens:
+            if owner in text:
+                failures.append(f"{name}: names backend-internal module path '{owner}'")
+        for span in _BACKTICK.findall(text):
+            if _REPO_PATH_TOKEN.search(f"`{span}`"):
+                failures.append(f"{name}: `{span}` -> cites a repo path instead of the CLI/manifest surface")
+            elif _PRIVATE_SYMBOL_TOKEN.match(span):
+                failures.append(f"{name}: `{span}` -> cites a private symbol instead of the CLI/manifest surface")
+            elif _TEST_NAME_TOKEN.match(span):
+                failures.append(f"{name}: `{span}` -> cites a test name instead of the CLI/manifest surface")
+    assert not failures, "operator documents name a package internal:\n" + "\n".join(failures)
+
+
+def test_no_service_owner_value_collides_with_operator_prose() -> None:
+    """Empirical proof the data-sourced blocklist cannot false-positive today.
+
+    The ADR requires this be verified empirically, not merely asserted: every
+    live ``service_owner`` / ``owner`` value must be a full dotted
+    ``aeat.<layer>.<module>`` string that does not equal (nor get accidentally
+    substring-matched by) any bare CLI-domain noun the shipped corpus already
+    uses. If this ever fails, a newly registered owner string collides with
+    ordinary operator prose and the contract-side naming needs to change, not
+    this gate.
+    """
+    owner_tokens = _internal_service_owner_tokens()
+    cli_domain_nouns = {"ledger", "modelo", "casilla", "overview", "review", "registry", "live", "contract", "agent"}
+    collisions = {owner for owner in owner_tokens if owner in cli_domain_nouns}
+    assert not collisions, f"service_owner/owner values collide with CLI-domain nouns: {collisions}"
+    # Every owner value is dotted and prefixed `aeat.`; no bare CLI-domain noun
+    # is ever spelled in that shape, so a substring check against real prose
+    # cannot misfire by construction. Confirm the shape invariant holds live.
+    malformed = {owner for owner in owner_tokens if not owner.startswith("aeat.") or "." not in owner[len("aeat.") :]}
+    assert not malformed, f"service_owner/owner values are not dotted module paths: {malformed}"

@@ -28,11 +28,9 @@ warning and proceed as if the command fully succeeded.
 
 ## Treat a zero-tax result on positive activity as suspect
 
-If a draft declares positive economic input (resultado contable, rendimiento, ingresos)
-but the dependent base or cuota resolves to zero with no offsetting reduction declared,
-do not present it as a clean return. The verify gate surfaces an advisory for exactly
-this case; relay it and ask the taxpayer to confirm the zero is legitimate (a genuine
-loss, BIN compensation, an exemption) before any export.
+See the honest-declaration rule: never let a clean-looking verify past a zero tax
+result on positive activity without resolving why, and confirm the taxpayer agrees
+the zero is legitimate before any export or file step.
 
 ## Custody and confirmation
 
