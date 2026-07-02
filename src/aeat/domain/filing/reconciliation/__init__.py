@@ -1,4 +1,4 @@
-"""Cross-modelo reconciliation error facade for :mod:`aeat.domain.filing`.
+"""Cross-modelo reconciliation error facade for :mod:`domain.filing`.
 
 This package owns the narrow exception vocabulary used when periodic filings,
 annual summaries, or imported declaración evidence cannot be reconciled. The
