@@ -209,23 +209,3 @@ number = "1730"
 [[revisions."2021".completeness_manifest.casillas]]
 casilla_id = "1731"
 number = "1731"
-
-[[revisions."2021".completeness_manifest.casillas]]
-casilla_id = "1741"
-number = "1741"
-
-[[revisions."2021".completeness_manifest.casillas]]
-casilla_id = "1744"
-number = "1744"
-
-[[revisions."2021".completeness_manifest.casillas]]
-casilla_id = "1749"
-number = "1749"
-
-[[revisions."2021".completeness_manifest.casillas]]
-casilla_id = "1754"
-number = "1754"
-
-[[revisions."2021".completeness_manifest.casillas]]
-casilla_id = "1759"
-number = "1759"
