@@ -126,22 +126,36 @@ whose manifest is absent is excluded from the live inventory as reclaimable
 garbage (same principle as the create-rollback staging directory), not a
 served profile. Test: `test_bucket_crash_windows.py`.
 
-### bundle export - CONFIRMED via read-time detection; tmp+rename is a NON-GOAL
+### bundle export - CONFIRMED (with a tracked residual); tmp+rename is a NON-GOAL
 
 Actual behaviour at HEAD (the matrix's "tmp plus rename" is wrong):
 `write_sealed_archive` writes DIRECTLY to the operator's `output_path` via
 `tarfile.open(output_path, "w:gz")` and refuses to overwrite an existing
 target. There is no tmp-file + `os.replace`; a crash mid-write leaves a
 truncated archive at `output_path`. The torn-artifact guarantee is met by
-READ-TIME DETECTION, not atomic rename: `read_sealed_archive` fast-fails a
-truncated or layout-drifted archive (positional member validation ->
-`SealedArchiveLayoutError` via `tarfile.TarError`, or
-`SealedArchivePayloadError`), and the AEAD tag on the encrypted payload
-authenticates the bytes on decrypt. Refuse-overwrite means a torn export
-never clobbers a prior good archive. tmp+rename is a documented NON-GOAL:
+READ-TIME DETECTION plus an AEAD backstop, not atomic rename:
+`read_sealed_archive` fast-fails a layout-drifted archive
+(`SealedArchiveLayoutError` via `tarfile.TarError`) and a torn write that
+damages the gzip stream (`SealedArchivePayloadError` via `EOFError` /
+`gzip.BadGzipFile`); a near-complete truncation that still decompresses is
+caught downstream by the AEAD tag on the encrypted payload, which the importer
+verifies before it provisions any bucket store. Refuse-overwrite means a torn
+export never clobbers a prior good archive. tmp+rename is a documented NON-GOAL:
 the writer relies on read-side detection plus refuse-overwrite instead.
-Test: `test_bundle_crash_windows.py` (a truncated sealed archive is rejected
-by the reader; the writer refuses to overwrite an existing target).
+
+Reader hardening landed under this campaign: the reader previously caught only
+`tarfile.TarError` / `OSError`, so a torn-write truncation leaked a raw
+`EOFError`; the D11 fix widened the caught set to `gzip.BadGzipFile` / `EOFError`
+and re-raises them as the documented `SealedArchivePayloadError`, and the reader
+docstring now states the truncation-detection reality honestly. TRACKED
+FOLLOW-UP (a real deferral, not closed here): read-time detection of a
+near-complete truncation that decompresses cleanly would require a trailing
+integrity marker in the archive format (a writer + reader change, out of scope
+for this test campaign); today that case is caught by the AEAD backstop before
+provisioning, never as a partial restore. Test:
+`test_bundle_crash_windows.py` (30-80% truncation -> typed payload error at
+read; member corruption -> typed layout error at read; near-complete truncation
+-> AEAD refusal at import before provisioning; writer refuses to overwrite).
 
 ### bundle import - CONFIRMED (aborted archive invisible; staging cleanup NON-GOAL)
 

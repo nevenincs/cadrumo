@@ -50,7 +50,7 @@ related:
 
 ## Description
 
-Authored the bundle-import crash-injection test: feed a damaged archive to the import service and prove it raises before provisioning any bucket store, so an aborted import leaves no manifest pointer and no partial bucket directory.
+Authored the bundle-import crash-injection tests: a corrupted archive is refused at the reader boundary before any bucket store is written; a near-complete truncation (built under the active master key, with an anti-tautology proof that the intact payload authenticates) is refused by the AEAD tag at import before provisioning. Both prove an aborted import leaves no manifest pointer and no partial bucket directory.
 
 ## Outcome
 
