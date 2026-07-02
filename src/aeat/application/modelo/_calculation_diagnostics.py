@@ -36,7 +36,7 @@ from decimal import Decimal
 from ...domain.calculations.registry import CasillaId, ModeloRevision
 from ..aggregation import CalculationSourceDiagnostic
 from ..calculations import CalculationObservationRepository
-from ._minimo_descendientes_advisory import collect_minimo_descendientes_advisory_diagnostics
+from ._minimo_descendientes_advisory import collect_minimo_descendientes_undeclared_diagnostics
 from ._official_box_advisory import collect_official_box_unpopulated_diagnostics
 from ._prior_payment_advisory import (
     collect_prior_payment_minoracion_not_captured_diagnostics,
@@ -61,12 +61,24 @@ def collect_bucket_aggregation_advisory_diagnostics(
     Runs the calculate-path advisory collectors in tuple order:
     official-box transcription, Modelo 130 prior-payment under-deduction, Modelo
     130 prior-payment minoracion capture, settlement-not-computed structure, and
-    the Modelo 100 mínimo-por-descendientes custodia-compartida / blank-entry
-    advisory. These diagnostics are informational and non-blocking; the
-    calculation result already exists, and the caller merely appends these rows
-    to the source mesh's existing
+    the Modelo 100 mínimo-por-descendientes undeclared-facts advisory. These
+    diagnostics are informational and non-blocking; the calculation result already
+    exists, and the caller merely appends these rows to the source mesh's existing
     :class:`~aeat.application.aggregation.CalculationSourceDiagnostic`
     sequence.
+
+    The Modelo 100 mínimo-por-descendientes casillas (0513/0514) are no longer
+    advisory-only for the halving/blank-entry checks the prior interim Option B
+    module raised: the ``modelo-100-minimo-descendientes-engine`` ADR's Option A
+    landed a computed engine (:func:`~aeat.application.modelo.inject_derived_minimo_descendientes_facts`)
+    that derives the Art. 58/61 LIRPF aggregate — including the custodia-compartida
+    halving — directly from the active profile, so those two checks are structurally
+    unreachable and were retired. A new, narrower advisory
+    (:func:`~aeat.application.modelo._minimo_descendientes_advisory.collect_minimo_descendientes_undeclared_diagnostics`)
+    replaces them: because a genuinely childless profile and a profile that simply
+    never declared its descendientes both resolve 0513 to the same zero, this
+    collector flags the ambiguous case (0513 = 0 and no descendiente facts declared
+    at all) and points the operator at ``aeat config profile descendiente add``.
 
     Args:
         revision: The :class:`ModeloRevision` whose predicates, casillas, and
@@ -79,7 +91,7 @@ def collect_bucket_aggregation_advisory_diagnostics(
         filing_year: Filing year whose same-ejercicio prior observations may be
             inspected.
         bucket_id: Bucket identifier used by profile-backed advisory
-            collectors (the Modelo 100 mínimo-por-descendientes check).
+            collectors.
 
     Returns:
         Tuple of
@@ -111,11 +123,10 @@ def collect_bucket_aggregation_advisory_diagnostics(
             observation_repository=observation_repository,
         )
         + collect_settlement_not_computed_diagnostics(revision)
-        + collect_minimo_descendientes_advisory_diagnostics(
+        + collect_minimo_descendientes_undeclared_diagnostics(
             revision,
             casilla_values,
             modelo=modelo,
-            filing_year=filing_year,
             bucket_id=bucket_id,
         )
     )

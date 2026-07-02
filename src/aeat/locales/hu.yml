@@ -895,8 +895,19 @@ application:
       cross_casilla_invariant_violated: 'cross-casilla invariant %{predicate_id} violated:
         %{expression}'
       cross_period_modelo_not_applicable:
-        message: 'Azok a keresztidoszaki fuggosegek, amelyek olyan forras modellekre mutatnak, amelyeket az adozo nem nyujt be, nem alkalmazhatokent ki lettek zarva: {modelos}. Levont adok eseten az igazolas osszeget --binding KULCS=ÉRTÉK formaban add meg, ne --casilla ertekkent. A KULCS=ÉRTÉK azt jelenti, hogy a binding azonositoja az egyetlen egyenlosegjel bal oldalan all, az ertek pedig a jobb oldalan. Kolcsonosen kizaro reszletfizetesi modellek eseten erositsd meg a profil tevekenysegi becslesi rendszeret.'
-        next_action: 'Az `aeat app modelo bindings list --missing` paranccsal azonositsd a retenciones bindinget. Ha alkalmazhato, add meg az igazolas osszeget --binding KULCS=ÉRTÉK formaban: a binding azonositoja az egyetlen egyenlosegjel bal oldalan all, az osszeg pedig a jobb oldalan. Erositsd meg a profil IRPF becslesi rendszeret, ha egy kolcsonosen kizaro reszletfizetesi modell lett kizarva.'
+        message: 'Azok a keresztidoszaki fuggosegek, amelyek olyan forras modellekre
+          mutatnak, amelyeket az adozo nem nyujt be, nem alkalmazhatokent ki lettek
+          zarva: {modelos}. Levont adok eseten az igazolas osszeget --binding KULCS=ÉRTÉK
+          formaban add meg, ne --casilla ertekkent. A KULCS=ÉRTÉK azt jelenti, hogy
+          a binding azonositoja az egyetlen egyenlosegjel bal oldalan all, az ertek
+          pedig a jobb oldalan. Kolcsonosen kizaro reszletfizetesi modellek eseten
+          erositsd meg a profil tevekenysegi becslesi rendszeret.'
+        next_action: 'Az `aeat app modelo bindings list --missing` paranccsal azonositsd
+          a retenciones bindinget. Ha alkalmazhato, add meg az igazolas osszeget --binding
+          KULCS=ÉRTÉK formaban: a binding azonositoja az egyetlen egyenlosegjel bal
+          oldalan all, az osszeg pedig a jobb oldalan. Erositsd meg a profil IRPF
+          becslesi rendszeret, ha egy kolcsonosen kizaro reszletfizetesi modell lett
+          kizarva.'
       cross_period_non_official_local_chain:
         message: 'az idoszakok kozotti atvitel egy ugyanabban az adoevben helyileg
           benyujtott korabbi idoszakot hasznalt kulso AEAT-bizonyitek nelkul: modelo=%{source_modelo}
@@ -2212,6 +2223,11 @@ cli:
         set_not_decimal: 'A --set értékének decimálisnak kell lennie; kapott: {value}.'
         set_override_help: Javított mezőérték CASILLA_ID=DECIMAL szintaxissal (ismételhető;
           legalább egy szükséges).
+        state_label_borrador: Piszkozat
+        state_label_descartado: Eldobva
+        state_label_presentado: Beadva
+        state_label_presentado_supersedido: Felulirt beadas
+        state_label_verificado_completo: Teljesen ellenorizve
         status_help: Egy munkaegység metaadatainak megjelenítése.
         verify_help: Tervezet számítási revízió hitelesítése a hitelesített-teljes
           szerződéssel szemben.
@@ -2221,11 +2237,6 @@ cli:
         year_help: A munkaegység adóéve (pl. 2026).
         year_out_of_range: A(z) %{year} benyújtási év kívül esik a tartományon; adjon
           meg évet %{minimum} és %{maximum} között.
-        state_label_borrador: 'Piszkozat'
-        state_label_verificado_completo: 'Teljesen ellenorizve'
-        state_label_presentado: 'Beadva'
-        state_label_presentado_supersedido: 'Felulirt beadas'
-        state_label_descartado: 'Eldobva'
   common:
     errors:
       draft_id_not_found: A(z) %{draft_id} azonosítójú piszkozat nem található
@@ -2549,6 +2560,15 @@ cli:
       delete_requires_yes: 'A törlés visszafordíthatatlan. Futtassa újra: `aeat config
         profile delete %{name} --yes` a megerősítéshez.'
       delete_yes_help: Törlési művelet explicit megerősítése.
+      descendiente:
+        add_flag_help: 'NACIMIENTO=EEEE-HH-NN[,ADOPCION=EEEE-HH-NN][,DISCAPACIDAD=0|33|65][,CONVIVENCIA=true|false][,CUSTODIA=true|false][,MESES_TRABAJO=0..12][,GASTOS_GUARDERIA=N][,NIF=XXXXXXXXX]. Ismetelheto.'
+        add_help: 'Egy vagy tobb leszarmazott hozzaadasa az aktiv profilhoz.'
+        help: 'Leszarmazottak megadasa a LIRPF 58/61. cikk szerinti leszarmazotti minimumhoz.'
+        index_out_of_range: 'A(z) %{index} index tartomanyon kivul esik; a profilon %{total} leszarmazott van.'
+        invalid_flag: 'A --descendiente jelzo %{flag} ervenytelen: %{detail}'
+        list_help: 'Az aktiv profilon megadott leszarmazottak listazasa.'
+        remove_help: 'Egy leszarmazott eltavolitasa 0-alapu index szerint az aktiv profilrol.'
+        remove_index_help: 'Az eltavolitando leszarmazott 0-alapu indexe.'
       duplicate_display_name_help: 'Az új profil megjelenítési neve (alapértelmezés:
         a célazonosító).'
       duplicate_help: Profil másolása új azonosítóra és megjelenítési névre.
