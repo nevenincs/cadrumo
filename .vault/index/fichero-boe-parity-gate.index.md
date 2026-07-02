@@ -15,6 +15,9 @@ related:
   - '[[2026-07-01-fichero-boe-parity-gate-P02-S07]]'
   - '[[2026-07-01-fichero-boe-parity-gate-P03-S08]]'
   - '[[2026-07-01-fichero-boe-parity-gate-P03-S11]]'
+  - '[[2026-07-01-fichero-boe-parity-gate-P03-S12]]'
+  - '[[2026-07-01-fichero-boe-parity-gate-P03-S13]]'
+  - '[[2026-07-01-fichero-boe-parity-gate-P03-S14]]'
   - '[[2026-07-01-fichero-boe-parity-gate-P04-S15]]'
   - '[[2026-07-01-fichero-boe-parity-gate-P04-S17]]'
   - '[[2026-07-01-fichero-boe-parity-gate-P04-S18]]'
@@ -50,6 +53,9 @@ Auto-generated index of all documents tagged with `#fichero-boe-parity-gate`.
 - `2026-07-01-fichero-boe-parity-gate-P02-S07` - Unit-test the applicable-required restriction drops disposition-suppressed casillas
 - `2026-07-01-fichero-boe-parity-gate-P03-S08` - Insert a pre-write presence assertion in export_draft that required-applicable casillas are a subset of the on-disk rendered set, raising a hard FilingExportError before write_bytes
 - `2026-07-01-fichero-boe-parity-gate-P03-S11` - Make the panic loud and explicit by enumerating every drifted casilla with expected-versus-actual number, segmento, order and presence in the error
+- `2026-07-01-fichero-boe-parity-gate-P03-S12` - Emit a non-blocking loud coverage advisory Notice when the completeness manifest is absent or manual_extraction
+- `2026-07-01-fichero-boe-parity-gate-P03-S13` - Surface the coverage advisory and propagate the hard parity error on the export_modelo_revision envelope
+- `2026-07-01-fichero-boe-parity-gate-P03-S14` - Register locale keys for the parity panic error and the coverage advisory via the locales CLI
 - `2026-07-01-fichero-boe-parity-gate-P04-S15` - Add an offline fichero-BOE parity test asserting required-applicable casillas reach disk across export-capable covered modelos
 - `2026-07-01-fichero-boe-parity-gate-P04-S17` - Add a disposition-suppressed case proving the applicable restriction prevents a false panic on a non-refund draft
 - `2026-07-01-fichero-boe-parity-gate-P04-S18` - Add an anti-tautology drift case mutating a rendered field number or order and asserting the gate panics
