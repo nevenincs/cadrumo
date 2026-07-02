@@ -44,6 +44,8 @@ from ._active_session import (
     has_active_bucket_session,
     suspend_active_session,
 )
+from ._bucket_session import BucketSession
+from ._dek_wrap import WrappedDek, unwrap_dek, wrap_dek
 from ._idle_timeout import evaluate_idle
 from ._kdf_params import KdfParams
 from ._master_key import (
@@ -57,6 +59,12 @@ from ._master_key import (
     get_master_key_provider,
     looks_like_real_tax_id,
     refuse_unsecured_with_real_nif,
+)
+from ._master_key_bucket_dek import (
+    bucket_dek_path,
+    load_or_mint_bucket_dek,
+    read_wrapped_bucket_dek,
+    write_wrapped_bucket_dek,
 )
 from ._master_key_derivation import (
     ARGON2_MEMORY_COST_KIB,
@@ -90,6 +98,7 @@ __all__ = [
     "ARGON2_MEMORY_COST_KIB",
     "ARGON2_PARALLELISM",
     "ARGON2_TIME_COST",
+    "BucketSession",
     "EphemeralMasterKeyProvider",
     "FileFallbackMasterKeyProvider",
     "KdfParams",
@@ -100,10 +109,12 @@ __all__ = [
     "RecoveryKey",
     "RecoveryRecord",
     "UnsecuredMasterKeyProvider",
+    "WrappedDek",
     "WrappedMasterKey",
     "activate_master_key_provider",
     "activate_session",
     "atomic_write_secure_bytes",
+    "bucket_dek_path",
     "current_active_bucket_session",
     "decode_mnemonic",
     "derive_kek_with_params",
@@ -113,17 +124,22 @@ __all__ = [
     "get_active_master_key",
     "get_master_key_provider",
     "has_active_bucket_session",
+    "load_or_mint_bucket_dek",
     "load_recovery_envelope",
     "load_wrapped_master_key",
     "looks_like_real_tax_id",
     "mint_recovery_envelope",
     "open_session_from_recovery",
+    "read_wrapped_bucket_dek",
     "refuse_unsecured_with_real_nif",
     "save_recovery_envelope",
     "save_wrapped_master_key",
     "suspend_active_session",
+    "unwrap_dek",
     "unwrap_master_key",
     "unwrap_recovery_envelope",
     "verify_recovery_mnemonic",
+    "wrap_dek",
     "wrap_master_key",
+    "write_wrapped_bucket_dek",
 ]
