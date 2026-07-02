@@ -5,18 +5,18 @@
 :class:`ActiveProfileHealth` verdict used by every operator status surface.
 
 See Also:
-    :class:`~aeat.application.workflow.ProfileBucketPointer`
+    :class:`~application.workflow.ProfileBucketPointer`
         Manifest-backed active-bucket pointer resolved before secure profile
         records are loaded.
-    :mod:`aeat.application.workflow._profile_bucket_scan`
+    :mod:`application.workflow._profile_bucket_scan`
         Reads plaintext bucket manifests without opening encrypted storage.
-    :class:`~aeat.application.workflow.WorkflowState`
+    :class:`~application.workflow.WorkflowState`
         Supplies the active profile record through the secure workflow-state
         repository when the active bucket is readable.
-    :class:`~aeat.domain.user_profile.UserProfileRecord`
+    :class:`~domain.user_profile.UserProfileRecord`
         Encrypted profile facts whose completeness determines the final health
         status.
-    :class:`~aeat.application.state_projection.ProjectionActiveProfile`
+    :class:`~application.state_projection.ProjectionActiveProfile`
         Operator-state projection that carries this redacted health verdict to
         status and diagnostics surfaces.
 """
