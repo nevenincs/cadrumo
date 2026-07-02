@@ -37,6 +37,7 @@ from ...application.overview import (
 from ...core.external_constants import OutputLanguage
 from ...core.hashing import sha256_hex
 from ...core.i18n import tr
+from ...core.i18n._render import output_language
 from ...core.json_contract import Notice
 from ...core.logging import get_logger
 from ._common import (
@@ -64,6 +65,39 @@ from ._overview_rendering import (
 )
 
 logger = get_logger(__name__)
+
+_CALENDAR_SHIFT_LABELS_BY_LANGUAGE: dict[str, dict[str, str]] = {
+    "business_day": {
+        "ca": "Dia habil",
+        "en": "Business day",
+        "es": "Dia habil",
+        "hu": "Munkanap",
+    },
+    "calendar_unavailable": {
+        "ca": "Calendari no disponible",
+        "en": "Calendar unavailable",
+        "es": "Calendario no disponible",
+        "hu": "Naptar nem elerheto",
+    },
+    "domingo": {
+        "ca": "Diumenge",
+        "en": "Sunday",
+        "es": "Domingo",
+        "hu": "Vasarnap",
+    },
+    "modelo_exception": {
+        "ca": "Excepcio del model",
+        "en": "Modelo exception",
+        "es": "Excepcion del modelo",
+        "hu": "Modelo-kivetel",
+    },
+    "sabado": {
+        "ca": "Dissabte",
+        "en": "Saturday",
+        "es": "Sabado",
+        "hu": "Szombat",
+    },
+}
 
 app = typer.Typer(
     name="overview",
@@ -319,6 +353,17 @@ def _calendar_entry_work_unit_text_fields(entry) -> str:
     if entry.local_work_unit_revision_id:
         fields.append(f"work_revision={entry.local_work_unit_revision_id}")
     return "\t".join(fields)
+
+
+def _calendar_shift_reason_text(shift_reason: str) -> str:
+    """Return the localized operator label for a calendar shift reason."""
+    language = output_language()
+    return " + ".join(
+        _CALENDAR_SHIFT_LABELS_BY_LANGUAGE.get(part, {}).get(language)
+        or _CALENDAR_SHIFT_LABELS_BY_LANGUAGE.get(part, {}).get("en")
+        or part
+        for part in shift_reason.split(" + ")
+    )
 
 
 def _calendar_event_text_line(event: OverviewCalendarEvent) -> str:
@@ -682,7 +727,7 @@ def overview_calendar(
             f"\topens={entry.opens_on.isoformat()}"
             f"\tcloses={entry.closes_on.isoformat()}"
             f"\tadjusted={entry.adjusted_closes_on.isoformat()}"
-            f"\tshift={entry.shift_reason}"
+            f"\tshift={_calendar_shift_reason_text(entry.shift_reason)}"
             f"\tcenso_enrolment={entry.censo_enrolment_state.value}"
             f"\t{_calendar_filing_evidence_text_fields(entry.filing_evidence)}"
             f"\t{_calendar_entry_work_unit_text_fields(entry)}",
@@ -808,7 +853,7 @@ def _overview_calendar_all_profiles(
                 f"\topens={entry.opens_on.isoformat()}"
                 f"\tcloses={entry.closes_on.isoformat()}"
                 f"\tadjusted={entry.adjusted_closes_on.isoformat()}"
-                f"\tshift={entry.shift_reason}"
+                f"\tshift={_calendar_shift_reason_text(entry.shift_reason)}"
                 f"\tcenso_enrolment={entry.censo_enrolment_state.value}"
                 f"\t{_calendar_filing_evidence_text_fields(entry.filing_evidence)}"
                 f"\t{_calendar_entry_work_unit_text_fields(entry)}",

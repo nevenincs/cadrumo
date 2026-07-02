@@ -26,7 +26,9 @@ from ....application.user_profile import (
 from ....application.user_profile._testing import register_minimal_profile
 from ....application.workflow import workflow_state_repository
 from ....core import Period
+from ....core.config import override_settings
 from ....core.external_constants import SUPPORTED_OUTPUT_LANGUAGES
+from ....core.i18n import clear_output_language_cache
 from ....core.time import now
 from ....domain.modelos import (
     ExternalEvidenceKind,
@@ -41,6 +43,7 @@ from ._overview_calendar_support import (
     _stamp_calendar_enrolment_from_censo,
     isolated_calendar_backend,
 )
+from .._overview import _calendar_shift_reason_text
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -176,6 +179,63 @@ def test_calendar_accepts_censo_stamped_enrolment() -> None:
     assert "censo.enrolment_unverified" not in warning_codes
     modelo_303 = next(entry for entry in payload["entries"] if entry["modelo"] == "303")
     assert modelo_303["censo_enrolment_state"] == "verified"
+
+
+def test_calendar_text_localizes_shift_label_but_json_keeps_token() -> None:
+    text_result = _invoke(
+        [
+            "app",
+            "overview",
+            "calendar",
+            "--output-language",
+            "en",
+            "--from",
+            "2026-01-01",
+            "--to",
+            "2026-03-31",
+            "--allow-incomplete",
+        ],
+    )
+
+    assert text_result.exit_code == 0, text_result.output
+    row = next(line for line in text_result.output.splitlines() if line.startswith("303\t2025 4T\t"))
+    assert "\tshift=Business day" in row
+    assert "\tshift=business_day" not in row
+
+    json_result = _invoke(
+        [
+            "--format",
+            "json",
+            "app",
+            "overview",
+            "calendar",
+            "--output-language",
+            "en",
+            "--from",
+            "2026-01-01",
+            "--to",
+            "2026-03-31",
+            "--allow-incomplete",
+        ],
+    )
+
+    assert json_result.exit_code == 0, json_result.output
+    entries = json.loads(json_result.output)["result"]["entries"]
+    modelo_303 = next(entry for entry in entries if entry["modelo"] == "303" and entry["period"] == "2025 4T")
+    assert modelo_303["shift_reason"] == "business_day"
+
+
+def test_calendar_shift_formatter_localizes_weekend_tokens() -> None:
+    with override_settings(aeat_output_language="ca"):
+        clear_output_language_cache()
+        try:
+            rendered = _calendar_shift_reason_text("sabado + Todos los Santos + domingo")
+        finally:
+            clear_output_language_cache()
+
+    assert rendered == "Dissabte + Todos los Santos + Diumenge"
+    assert "sabado" not in rendered
+    assert "domingo" not in rendered
 
 
 def _store_corrupt_local_filing_evidence() -> None:
