@@ -175,6 +175,10 @@ No findings for the historical M210 acceptance-test reconciliation. The current 
 
 No findings for the Convenio Espana-Marruecos follow-up reconciliation. The current cross-cutting treaty authority carries `MA` / `interest` as a `ceiling` row at `0.10`, grounded in `convenio-es-ma-1978:art-11` and `BOE-A-1985-9280`; the old Art 14 drift is absent from the scoped treaty and Modelo 210 surfaces. No stale `MA/general` row remains under Modelo 210, and the current resolver intentionally emits the missing-row blocking path when a treaty country has no matching income-type override. The focused M210 convenio-rate regression file passed before closure. No production or registry data changed.
 
+### w09-p41-s395 | low | no findings
+
+No findings for the Art 25.1.b pension follow-up reconciliation. The current Modelo 210 registry carries `m210-pension-tarifa-2025` as a grounded three-tranche bracket table under `trlirnr-rdleg-5-2004:art-25.1.b`, and the Spain-Argentina `AR` / `pension` treaty row delegates through `allocation_domestic_tariff` instead of a scalar fixed rate. The focused M210 convenio-rate regression file passed before closure. No production, registry data, or test code changed.
+
 ## Recommendations
 
 No open code changes recommended from these reviews. Keep W09.P41.S307 and W09.P41.S324 as separate implementation steps. Keep the full M131 módulos coefficient-table oracle as future work outside S297 and S398; S297 closes the grounded datos-base binding projection, and S398 closes only the advisory regulatory-floor predicate and evidence guard.
