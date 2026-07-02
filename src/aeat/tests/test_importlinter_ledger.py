@@ -18,9 +18,9 @@ _SOURCE_ROOT = REPO_ROOT / "src"
 _CONTRACT_RE = re.compile(r"^\[importlinter:contract:(?P<contract>[^\]]+)\]$")
 _IGNORE_EDGE_RE = re.compile(r"^\s*(?P<source>aeat\.[\w.*]+)\s*->\s*(?P<target>aeat\.[\w.*]+)\s*$")
 
-_APPLICATION_TO_ADAPTERS_BASELINE = 336
+_APPLICATION_TO_ADAPTERS_BASELINE = 340
 _APPLICATION_SOURCE_MODULE_BASELINE = 77
-_DOMAIN_TO_ADAPTERS_BASELINE = 69
+_DOMAIN_TO_ADAPTERS_BASELINE = 68
 
 
 @dataclass(frozen=True)

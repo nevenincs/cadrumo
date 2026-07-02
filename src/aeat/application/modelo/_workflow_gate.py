@@ -46,6 +46,7 @@ from datetime import date, datetime
 from functools import lru_cache
 from pathlib import Path
 
+from ...adapters.persistence.profile.submission import SubmissionRepository
 from ...application.auth import AuthProviderKind, select_provider
 from ...core import Period
 from ...core.config import Settings, load_settings
@@ -288,6 +289,7 @@ def build_revision_workflow_engine(
         auth_provider=select_provider(provider_kind, settings=cfg),
         deadline_checker=_RevisionDeadlineWindowChecker(profile=profile, engine=deadline_engine),
         settings=cfg,
+        repository=SubmissionRepository(),
     )
     return WorkflowEngine(
         deadline_engine=DeadlineEngineAdapter(deadline_engine),

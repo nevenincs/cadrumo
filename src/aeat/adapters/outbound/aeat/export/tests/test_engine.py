@@ -14,6 +14,7 @@ from pathlib import Path
 import pytest
 from pydantic import BaseModel, ConfigDict, Field
 
+from ......adapters.persistence.profile.submission import SubmissionRepository
 from ......application.auth import AuthProviderDescription, AuthProviderKind
 from ......core import Period
 from ......core.config import Settings
@@ -24,7 +25,6 @@ from ......domain.submission import (
     SubmissionAttempt,
     SubmissionEngine,
     SubmissionError,
-    SubmissionRepository,
     SubmissionStatus,
     make_submission_id,
 )
@@ -94,6 +94,7 @@ def _build_engine(tmp_path: Path) -> SubmissionEngine:
     return SubmissionEngine(
         auth_provider=_OkAuthProvider(),
         deadline_checker=_OpenDeadlines(),
+        repository=SubmissionRepository(),
         settings=Settings(
             aeat_submissions_dir=tmp_path / "submissions",
             aeat_submission_browser_trace_dir=tmp_path / "traces",

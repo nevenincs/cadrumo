@@ -10,6 +10,9 @@ import pytest
 from pydantic import ValidationError
 from sqlalchemy import select
 
+from ....adapters.persistence.profile.submission import (
+    SubmissionRepository,
+)
 from ....adapters.persistence.storage import (
     Envelope,
     SensitivityClass,
@@ -25,9 +28,6 @@ from .. import (
     SubmissionAttempt,
     SubmissionStatus,
     make_submission_id,
-)
-from .._repository import (
-    SubmissionRepository,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]

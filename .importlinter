@@ -654,6 +654,13 @@ ignore_imports =
     aeat.application.ledger.tests.test_preflight_home_office -> aeat.adapters.persistence.profile.usage_ratios
     aeat.application.ledger.tests.test_ratios_concurrency -> aeat.adapters.persistence.profile.usage_ratios
     aeat.application.modelo.tests.test_e2e_ledger_m130_quarters_to_m100_annual -> aeat.adapters.persistence.profile.usage_ratios
+    aeat.application.user_profile.tests.test_custody_store_matrix -> aeat.adapters.persistence.profile.usage_ratios
+    # ── arch-remediation-ports-inversion: submission repository relocated to
+    #    adapters.persistence.profile.submission; the workflow gate constructs the
+    #    concrete and injects it into the SubmissionEngine, tests seed via it ──
+    aeat.application.modelo._workflow_gate -> aeat.adapters.persistence.profile.submission
+    aeat.application.modelo.tests._file_flow_support -> aeat.adapters.persistence.profile.submission
+    aeat.application.user_profile.tests.test_custody_store_matrix -> aeat.adapters.persistence.profile.submission
     aeat.application.ledger._review_projection -> aeat.adapters.**
     aeat.application.ledger._rule_repository -> aeat.adapters.**
     aeat.application.ledger._vision_classifier -> aeat.adapters.**
@@ -720,8 +727,9 @@ ignore_imports =
     aeat.domain.modelos._filing_repository -> aeat.adapters.persistence.storage
     aeat.domain.modelos._repository -> aeat.adapters.persistence.storage
     aeat.domain.modelos._verification_repository -> aeat.adapters.persistence.storage
-    aeat.domain.submission._repository -> aeat.adapters.persistence.storage
     aeat.domain.transactions._repository -> aeat.adapters.persistence.storage.crypto
+    aeat.domain.submission.tests.test_repository -> aeat.adapters.persistence.profile.submission
+    aeat.domain.submission.tests.test_secure_storage_roundtrip -> aeat.adapters.persistence.profile.submission
     aeat.domain.usage_ratios.tests.test_censo_refuse_load -> aeat.adapters.persistence.profile.usage_ratios
     aeat.domain.usage_ratios.tests.test_service -> aeat.adapters.persistence.profile.usage_ratios
     aeat.domain.usage_ratios.tests.test_service -> aeat.adapters.persistence.storage
@@ -730,7 +738,6 @@ ignore_imports =
     #    already-sanctioned `...storage.runtime_repository` / `.errors` edges) ──
     aeat.domain.filing._runtime_repository -> aeat.adapters.persistence.storage
     aeat.domain.modelos._runtime_repository -> aeat.adapters.persistence.storage
-    aeat.domain.submission._engine -> aeat.adapters.persistence.storage
     # ── test files pulling application/adapters/entrypoints fixtures (test-topology refactor) ──
     aeat.domain.calculations.registry.tests.test_modelo_100_registry_roles_capital_gains -> aeat.application.modelo._semantic_role_resolution
     aeat.domain.calculations.registry.tests.test_modelo_100_registry_roles_prevision_social -> aeat.application.modelo._semantic_role_resolution
@@ -862,7 +869,6 @@ ignore_imports =
     aeat.domain.filing.tests.test_runtime_repository -> aeat.adapters.persistence.storage.sql.engine
     aeat.domain.submission.tests.test_repository -> aeat.adapters.persistence.storage.sql._orm
     aeat.domain.submission.tests.test_repository -> aeat.adapters.persistence.storage.sql.session
-    aeat.domain.submission._repository -> aeat.adapters.persistence.storage.sql
     aeat.core.tests.test_external_constants -> aeat.domain.portals._hosts
     aeat.core.tests.test_external_constants -> aeat.domain.portals._codes
     aeat.core.tests.test_external_constants -> aeat.domain.portals._entries._common

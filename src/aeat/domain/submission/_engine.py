@@ -32,8 +32,12 @@ from ...core.logging import get_logger
 from ._errors import SubmissionError
 from ._models import ModeloPresentado, SubmissionStatus
 from ._preflight import Preflight
-from ._protocols import AuthProviderProbe, DeadlineWindowChecker, ModeloDraftLike
-from ._repository import SubmissionRepository
+from ._protocols import (
+    AuthProviderProbe,
+    DeadlineWindowChecker,
+    ModeloDraftLike,
+    SubmissionRepositoryProtocol,
+)
 
 _logger = get_logger(__name__)
 
@@ -56,6 +60,7 @@ class SubmissionEngine:
         auth_provider: AuthProviderProbe,
         deadline_checker: DeadlineWindowChecker,
         settings: Settings,
+        repository: SubmissionRepositoryProtocol,
     ) -> None:
         """Construct a read-only :class:`SubmissionEngine`.
 
@@ -64,10 +69,14 @@ class SubmissionEngine:
             deadline_checker: Narrow window checker over
                 :mod:`aeat.domain.deadlines`.
             settings: Resolved :class:`aeat.core.config.Settings`.
+            repository: Injected :class:`SubmissionRepositoryProtocol` over the
+                encrypted submission-records store; the application layer
+                constructs the concrete adapter repository and passes it in.
         """
         self.auth_provider = auth_provider
         self.deadline_checker = deadline_checker
         self.settings = settings
+        self._repository = repository
         self._preflight = Preflight(
             deadline_checker=deadline_checker,
             auth_provider=auth_provider,
@@ -106,21 +115,10 @@ class SubmissionEngine:
             SubmissionError: If ``submission_id`` is malformed or no
                 secure object exists for the supplied id.
         """
-        from ...adapters.persistence.storage import StorageError
-
-        repository = SubmissionRepository()
         try:
-            filing = repository.load(submission_id)
+            filing = self._repository.load(submission_id)
         except ValueError as exc:
             raise SubmissionError(str(exc)) from exc
-        except StorageError as exc:
-            _logger.error(
-                "submission record validation failed: id=%s marker=%s",
-                submission_id,
-                repository.store_dir,
-                exc_info=True,
-            )
-            raise SubmissionError(f"submission record {submission_id!r} failed validation") from exc
         if filing is None:
             _logger.debug("submission not found for id %s", submission_id)
             raise SubmissionError(f"no persisted submission with id {submission_id!r}")
@@ -145,9 +143,8 @@ class SubmissionEngine:
             :class:`ModeloPresentado` records. Returns an empty tuple
             when no submission objects exist.
         """
-        repository = SubmissionRepository()
         results: list[ModeloPresentado] = []
-        for filing in repository.iter_submissions():
+        for filing in self._repository.iter_submissions():
             if modelo is not None and filing.modelo != modelo:
                 continue
             if status is not None and filing.status != status:
