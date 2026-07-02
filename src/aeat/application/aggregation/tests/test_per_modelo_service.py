@@ -10,6 +10,11 @@ from pydantic import ValidationError
 
 from ....core import BindingSourceKind, Period
 from ....core.errors import get_registered_error_code
+from ....core.resources import resources
+from ....domain.calculations.registry import (
+    resolve_counterpart_binding_values,
+    resolve_foreign_asset_binding_row_values,
+)
 from ... import aggregation
 from .. import (
     ACCEPTED_SOURCE_KINDS,
@@ -32,7 +37,21 @@ from .. import (
     declarable_counterparty_nifs_347,
     get_per_modelo_aggregation_contract,
 )
-from .._counterpart import CounterpartSourceKind
+from .._counterpart import (
+    CounterpartAggregationSourceResolver,
+    CounterpartSourceKind,
+    OperationKind347,
+    OperationKind349,
+    _m349_declarante_summary_union,
+    _registry_observations_from_counterpart_aggregation,
+    aggregate_counterpart_349,
+)
+from .._foreign_assets import (
+    ForeignAssetsAggregationSourceResolver,
+    _registry_observations_from_foreign_assets_aggregation,
+    aggregate_foreign_assets_720,
+)
+from .._source_mesh import CalculationSourceContext
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -56,16 +75,18 @@ def _retencion_obs(*, source_kind: str = "ledger_transaction") -> RetencionObser
 def _counterpart_obs(
     *,
     nif: str = "B00000001",
+    name: str = "Cliente Counterpart",
     source_kind: CounterpartSourceKind = BindingSourceKind.LEDGER_TRANSACTION,
-    operation_kind: str = "entregas_y_prestaciones",
+    source_id: str | None = None,
+    operation_kind: str = OperationKind347.DELIVERY.value,
     country: str = "ES",
     invoice_total: str = "2000.00",
 ) -> CounterpartObservation:
     return CounterpartObservation(
         source_kind=source_kind,
-        source_object_id=f"{source_kind}-ctr-1",
+        source_object_id=source_id or f"{source_kind}-ctr-1",
         counterparty_nif=nif,
-        counterparty_name="Cliente Counterpart",
+        counterparty_name=name,
         counterparty_country=country,
         operation_kind=operation_kind,
         operation_period="2025",
@@ -80,16 +101,21 @@ def _counterpart_obs(
 def _asset_obs(
     *,
     source_kind: str = "purchase_invoice_evidence",
+    source_id: str | None = None,
+    asset_class: ForeignAssetClass = ForeignAssetClass.ACCOUNT,
+    asset_external_id: str | None = None,
+    country: str = "AD",
     valuation: str = "50000.01",
+    acquisition_date: str = "2023-01-15",
 ) -> ForeignAssetIngestObservation:
     return ForeignAssetIngestObservation(
         source_kind=source_kind,
-        source_object_id=f"{source_kind}-asset-1",
-        asset_class=ForeignAssetClass.ACCOUNT,
-        asset_external_id=f"{source_kind}-account",
-        country="AD",
+        source_object_id=source_id or f"{source_kind}-asset-1",
+        asset_class=asset_class,
+        asset_external_id=asset_external_id or f"{source_kind}-account",
+        country=country,
         valuation_eur=Decimal(valuation),
-        acquisition_date="2023-01-15",
+        acquisition_date=acquisition_date,
     )
 
 
@@ -218,6 +244,66 @@ def test_service_routes_counterpart_modelos_and_preserves_threshold_semantics() 
     assert declarable_counterparty_nifs_347(result.aggregation) == frozenset({"B00000001"})
 
 
+def test_counterpart_m349_mesh_resolution_matches_prior_aggregate_exactly() -> None:
+    observations = (
+        _counterpart_obs(
+            nif="DE123456789",
+            name="Kunde GmbH",
+            source_kind=BindingSourceKind.COLLECTIBLE_INVOICE,
+            source_id="sale-de",
+            operation_kind=OperationKind349.INTRA_DELIVERY.value,
+            country="DE",
+            invoice_total="1000.00",
+        ),
+        _counterpart_obs(
+            nif="IT12345678901",
+            name="Servizi SRL",
+            source_kind=BindingSourceKind.PAYABLE_INVOICE,
+            source_id="purchase-it",
+            operation_kind=OperationKind349.INTRA_SERVICE_IN.value,
+            country="IT",
+            invoice_total="3000.00",
+        ),
+        _counterpart_obs(
+            source_kind=BindingSourceKind.LEDGER_TRANSACTION,
+            source_id="domestic-347-control",
+            operation_kind=OperationKind347.DELIVERY.value,
+            invoice_total="999.00",
+        ),
+    )
+    expected_aggregation = aggregate_counterpart_349(observations, period=_P_2025_Q1)
+    service_result = aggregate_per_modelo(
+        PerModeloAggregationCommand(
+            modelo="349",
+            period=_P_2025_Q1,
+            counterpart_observations=observations,
+        ),
+    )
+    snapshot = resources().modelos.authority.snapshot("349", filing_year=2025, period="1T")
+    context = CalculationSourceContext(
+        bucket_id="operator",
+        modelo="349",
+        filing_year=2025,
+        period=_P_2025_Q1,
+        revision=snapshot.revision,
+    )
+    expected_values = resolve_counterpart_binding_values(
+        snapshot.revision,
+        _registry_observations_from_counterpart_aggregation(expected_aggregation),
+    )
+    expected_values = _m349_declarante_summary_union(context=context, binding_values=expected_values)
+
+    resolution = CounterpartAggregationSourceResolver(observations=observations).resolve(context)
+
+    assert service_result.aggregation == expected_aggregation
+    assert dict(resolution.binding_values) == expected_values
+    assert {item.source_ref for item in resolution.provenance} == {
+        "collectible_invoice:sale-de",
+        "payable_invoice:purchase-it",
+    }
+    assert resolution.source_transaction_ids == ()
+
+
 def test_service_routes_foreign_asset_modelos_and_preserves_threshold_semantics() -> None:
     observations = (
         _asset_obs(source_kind="purchase_invoice_evidence", valuation="25000.00"),
@@ -238,6 +324,81 @@ def test_service_routes_foreign_asset_modelos_and_preserves_threshold_semantics(
         BindingSourceKind.PURCHASE_INVOICE_EVIDENCE,
     )
     assert declarable_asset_classes_720(result.aggregation) == frozenset({ForeignAssetClass.ACCOUNT})
+
+
+def test_foreign_assets_m720_registry_rows_match_prior_aggregate_exactly() -> None:
+    observations = (
+        _asset_obs(
+            source_kind="ledger_transaction",
+            source_id="tx-account-ad",
+            asset_external_id="AD-ACCOUNT-001",
+            country="AD",
+            valuation="40000.00",
+            acquisition_date="2020-01-15",
+        ),
+        _asset_obs(
+            source_kind="payable_invoice",
+            source_id="payable-account-ch",
+            asset_external_id="CH-ACCOUNT-002",
+            country="CH",
+            valuation="15000.00",
+            acquisition_date="2021-02-20",
+        ),
+        _asset_obs(
+            source_kind="collectible_invoice",
+            source_id="small-security",
+            asset_class=ForeignAssetClass.SECURITY,
+            asset_external_id="LI-SECURITY-001",
+            country="LI",
+            valuation="1000.00",
+            acquisition_date="2022-03-25",
+        ),
+    )
+    expected_aggregation = aggregate_foreign_assets_720(observations, period=_P_2025_ANNUAL)
+    service_result = aggregate_per_modelo(
+        PerModeloAggregationCommand(
+            modelo="720",
+            period=_P_2025_ANNUAL,
+            foreign_asset_observations=observations,
+        ),
+    )
+    snapshot = resources().modelos.authority.snapshot("720", filing_year=2025, period="0A")
+    context = CalculationSourceContext(
+        bucket_id="operator",
+        modelo="720",
+        filing_year=2025,
+        period=_P_2025_ANNUAL,
+        revision=snapshot.revision,
+    )
+    row_observations = _registry_observations_from_foreign_assets_aggregation(
+        expected_aggregation,
+        observations,
+    )
+    expected_row_values = resolve_foreign_asset_binding_row_values(snapshot.revision, row_observations)
+
+    resolution = ForeignAssetsAggregationSourceResolver(observations=observations).resolve(context)
+
+    assert service_result.aggregation == expected_aggregation
+    assert expected_row_values == {
+        ("modelo-720-asset-row-class", 1): "C",
+        ("modelo-720-asset-row-country", 1): "AD",
+        ("modelo-720-asset-row-currency", 1): "EUR",
+        ("modelo-720-asset-row-identifier", 1): "AD-ACCOUNT-001",
+        ("modelo-720-asset-row-valuation", 1): Decimal("40000.00"),
+        ("modelo-720-asset-row-acquisition-date", 1): "2020-01-15",
+        ("modelo-720-asset-row-class", 2): "C",
+        ("modelo-720-asset-row-country", 2): "CH",
+        ("modelo-720-asset-row-currency", 2): "EUR",
+        ("modelo-720-asset-row-identifier", 2): "CH-ACCOUNT-002",
+        ("modelo-720-asset-row-valuation", 2): Decimal("15000.00"),
+        ("modelo-720-asset-row-acquisition-date", 2): "2021-02-20",
+    }
+    assert resolution.binding_values == {}
+    assert resolution.source_transaction_ids == ("tx-account-ad",)
+    assert {item.source_ref for item in resolution.provenance} == {
+        "ledger_transaction:tx-account-ad",
+        "payable_invoice:payable-account-ch",
+    }
 
 
 def test_command_rejects_observations_from_non_selected_provider_family() -> None:

@@ -90,17 +90,92 @@ P03 formally deferred to #36 and `_calculation_actions.py` carrying non-authored
 single-owner WIP, running or checking S18 now would overclaim. The named follow-up is
 #36 completion plus a peer-clean final-gate window for `P05.S18`.
 
+## 2026-07-02 D9 Follow-Up Refresh
+
+The D9 follow-up execution moved the earlier #36 counterpart/foreign-assets
+classification forward. `P03.S10` and `P03.S11` are no longer deferred: they have
+landed exec records and plan checks for the counterpart and foreign-assets resolver
+classes. A targeted `P03.S21` pass then added M349 correctness evidence in
+`src/aeat/application/aggregation/tests/test_per_modelo_service.py`.
+
+The M349 fixture is complete for the step's value-preservation purpose: the
+per-modelo service result equals `aggregate_counterpart_349`, and the counterpart
+mesh resolver's binding values equal the live M349 registry projection of that prior
+aggregate, including the existing payable-summary mirror fold. Verification passed
+for ruff, py-compile, the focused M349 gate, and the full
+counterpart/per-modelo aggregation test surface (`32 passed`).
+
+`P03.S21` remains unchecked because the 347 half is still blocked at HEAD. Modelo 347
+has no declared counterpart-source registry bindings, while
+`CounterpartAggregationSourceResolver` activates from `_counterpart_sources_for_revision`.
+The current M347 snapshot therefore resolves empty before a non-empty
+`aggregate_counterpart_347` output can be compared. Closing that half would require
+committed M347 counterpart-source registry modelling, or a coordinator-approved
+change to the resolver activation contract. Both are outside `P03.S21`'s test-only
+scope, and the program freeze forbids ad hoc resolver-convention changes.
+
+Formal blocker: `DFR-D9-P03-S21-M347-COUNTERPART-SOURCE-MODELLING`. Named follow-up:
+decide and author M347 counterpart-source registry modelling, then rerun `P03.S21`
+against a real 347 fixture and only then check the step.
+
+`P03.S20` also gained partial correctness evidence. The new M720 fixture proves the
+per-modelo service output equals `aggregate_foreign_assets_720`, and the prior
+aggregate projects through the live M720 registry to the exact expected row-indexed
+binding values for two declarable account rows while excluding a sub-threshold
+security control. The resolver selects the same declarable provenance and ledger
+transaction id.
+
+`P03.S20` remains unchecked because the live source-mesh envelope still has no
+row-indexed binding-value channel for the M720 resolver to return that exact
+projection. `ForeignAssetsAggregationSourceResolver` validates the row values against
+the live registry and discards them; it returns only provenance and transaction ids.
+Checking S20 would therefore overclaim that the live mesh resolution carries the prior
+aggregate output exactly. Formal blocker:
+`DFR-D9-P03-S20-M720-ROW-INDEXED-ENVELOPE`. Named follow-up: decide the M720 row
+carrier strategy, then expose the row projection through the mesh and rerun S20.
+
+`P03.S12` remains blocked by ordering: the plan requires S20 and S21 to pass before
+enrolling the counterpart and foreign-assets resolvers. With S20/S21 formally
+blocked, enrollment would deliberately put incomplete shape-C resolvers onto the live
+calculate path. No `_calculation_actions.py` edit was made.
+
+`P03.S13`, `P03.S19`, and `P03.S14` remain blocked by a retenciones contract
+mismatch in the current plan text. `aggregate_per_modelo` is a pure service over
+explicit command observations and returns `RetencionesAggregation`. The live
+`RetencionesAggregationSourceResolver` reads the persisted per-perceptor retención
+store and returns `CalculationSourceResolution` binding values. It also covers the
+registry-backed source family for M111/M115/M180/M193, while `P03.S19` asks for
+111/115/123/180/190/193 parity. Forcing the service branch to delegate to that
+resolver would either change the service from a pure command projection into a store
+reader, or reconstruct a `RetencionesAggregation` from binding values and preserve the
+second aggregation shape the cleanup is supposed to remove.
+
+Formal blockers:
+`DFR-D9-P03-S13-RETENCIONES-SERVICE-MESH-CONTRACT`,
+`DFR-D9-P03-S19-RETENCIONES-SIX-MODELO-PARITY-GATE`, and
+`DFR-D9-P03-S14-CLI-AGGREGATE-PROJECTION-SCOPE`. Named follow-up: adjudicate whether
+the CLI aggregate verb remains a pure preview over explicit observations, becomes a
+store-backed mesh projection, or is retired; only then update the retenciones service
+rows and author the parity gate against the chosen contract.
+
 ## Closure Decision
 
-For Wave 1 D9 purposes, this campaign's remaining tail is honestly drained: every open
-row is formally deferred to #36 or to the peer-clean final-gate window that follows
-#36. The vault plan remains open by design; no missing exec alert remains and no new
-resolver convention was introduced under the freeze.
+The original close-blocker decision above records the pre-follow-up state. Current
+D9 follow-up state: `P03.S10` and `P03.S11` are landed and checked; `P03.S21` has an
+exec record with completed M349 exactness evidence and a formal M347 blocker
+(`DFR-D9-P03-S21-M347-COUNTERPART-SOURCE-MODELLING`); `P03.S20` has an exec record
+with completed M720 aggregate-to-registry-row evidence and a formal row-envelope
+blocker (`DFR-D9-P03-S20-M720-ROW-INDEXED-ENVELOPE`). The vault plan remains open;
+`P03.S12` is ordered behind those blocked gates, and the retenciones/CLI rows
+(`P03.S13`, `P03.S19`, `P03.S14`) require contract adjudication before execution.
+The bindings freeze is not liftable from this campaign.
 
 ## Recommendations
 
-Keep the deferred counterpart/foreign-assets steps unchecked unless the coordinator
-updates the existing plan to match the #36 research. Re-open the retenciones/CLI
-projection work only after #36 makes the intended shape explicit, then run P05.S18.
-Do not lift the bindings freeze from this campaign: `vault plan status` still reports
-open steps, though the missing-exec alert is resolved.
+Do not check `P03.S21` until a real M347 counterpart-source model exists and a 347
+fixture proves exact resolver-vs-aggregate parity. Do not check `P03.S20` until the
+M720 row projection is returned through the live mesh rather than only validated
+internally. Continue executing the remaining open plan rows only from
+`vault plan status` at HEAD, but do not implement S13/S19/S14 until their
+retenciones service-vs-mesh contract is adjudicated. Do not lift the bindings freeze
+from this campaign: `vault plan status` still reports open steps.
