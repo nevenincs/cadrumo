@@ -76,6 +76,9 @@ related:
 - Reviewed W09.P41.S320 retroactive locale-scaffold compliance for `iva_category_help` and `counterparty_eu_member_state_help` in the four locale catalogues.
 - Checked that the target help leaves are structurally present in `en.yml`, `es.yml`, `ca.yml`, and `hu.yml`, and that the authoritative locale scaffold/check/audit commands pass after scaffold canonicalization.
 - Checked validation evidence from RAG grounding, direct locale key search, `aeat.locales scaffold`, `aeat.locales scaffold --check`, and `aeat.locales audit`.
+- Reviewed W09.P45.S234 changes to wizard IVA-regime visibility, profile validation/readiness, taxpayer projection, CLI choice derivation, and focused profile tests.
+- Checked that natural-person profiles without `actividad_economica` do not store or require an invented `iva.regime`, while explicit IVA declarations, legal entities, attribution entities, and economic-activity natural persons preserve the existing regime behavior.
+- Checked validation evidence from focused CLI integration tests, full taxpayer-type CLI integration tests, profile projection/completeness tests, wizard setup/status tests, Modelo applicability tests, setup/taxpayer-model focused tests, IVA choice/exempt tests, touched-file ruff, reviewer output, and RAG grounding.
 
 ## Findings
 
@@ -134,6 +137,10 @@ No findings for the work-create registry-revision default regression. The live i
 ### w09-p45-s235 | medium | resolved review findings
 
 The first S235 patch expanded the no-console `profile create NAME` recovery text but still advertised an unusable one-shot command because the natural-person filing baseline also requires `--name` and `--surnames`. The accepted patch adds those identity flags to the resident IRPF natural-person command in all locale catalogues and strengthens the real CLI regression to execute the advertised flag set with concrete values. The separate `profile create NAME --quiet` missing-flags refusal remains distinct, and the final code-review pass found no blocking issues.
+
+### w09-p45-s234 | medium | resolved review findings
+
+The first S234 review found that storage/readiness no longer invented `iva.regime`, but runtime taxpayer projection still defaulted a pure-landlord profile with no IVA fact to `GENERAL`. The accepted patch resolves that by projecting natural-person non-activity profiles as `IVARegime.NO_APLICA`, keeping explicit `EXENTO` and other operator-provided IVA regimes intact, and deriving CLI `--iva-regime` choices from the real wizard question so the internal sentinel is not exposed. No remaining S234 blocker was found after focused validation and local review.
 
 ### w09-p45-s237 | low | no findings
 

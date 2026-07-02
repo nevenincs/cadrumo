@@ -6,11 +6,11 @@ subpackage must import only from this module so private underscore-prefixed
 implementation modules can evolve freely.
 
 The calculation-facing export is :class:`InvoiceCatalogueSourceResolver`. It
-projects both rich :class:`domain.invoices.InvoiceCatalogue` entries and
-slim :class:`application.ledger.BusinessOperationInvoice` records into
-:class:`application.aggregation.CalculationSourceResolution` values for
-the :attr:`core.BindingSourceKind.COLLECTIBLE_INVOICE` and
-:attr:`core.BindingSourceKind.PAYABLE_INVOICE` source kinds. The helper
+projects both rich :class:`~aeat.domain.invoices.InvoiceCatalogue` entries and
+slim :class:`~aeat.application.ledger.BusinessOperationInvoice` records into
+:class:`~aeat.application.aggregation.CalculationSourceResolution` values for
+the :attr:`~aeat.core.BindingSourceKind.COLLECTIBLE_INVOICE` and
+:attr:`~aeat.core.BindingSourceKind.PAYABLE_INVOICE` source kinds. The helper
 :func:`invoice_direction_to_source_kind` is the single direction-to-settlement
 mapping shared with the operator ``aeat app ledger invoice`` surface.
 
@@ -29,19 +29,19 @@ Key exports:
   invoice-source bindings and Modelo 349 detail rows.
 
 See Also:
-    :mod:`domain.invoices`
+    :mod:`aeat.domain.invoices`
         Rich invoice catalogue, line arithmetic, payment state, and
         reconciliation/link authority adapted by this application facade.
-    :mod:`application.ledger`
+    :mod:`aeat.application.ledger`
         Slim payable/collectible invoice CRUD and ledger transaction evidence
         links that converge with invoice catalogue data at source resolution.
-    :mod:`domain.transactions`
+    :mod:`aeat.domain.transactions`
         Transaction catalogue whose ids are linked from invoices and reported
         as calculation source provenance.
-    :mod:`application.aggregation`
+    :mod:`aeat.application.aggregation`
         Source-mesh envelope receiving invoice binding values, diagnostics,
         detail rows, and provenance.
-    :mod:`domain.calculations.registry`
+    :mod:`aeat.domain.calculations.registry`
         Pure binding declarations and invoice observation contracts consumed by
         modelo calculation.
 """

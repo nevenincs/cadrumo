@@ -270,6 +270,7 @@ _DISABILITY_GRADE_CHOICES: tuple[WizardChoice, ...] = (
 
 
 _ENTITY_LEGAL = WizardCondition(question_id="entity-type", equals=EntityType.LEGAL_ENTITY.value)
+_ENTITY_ATTRIBUTION = WizardCondition(question_id="entity-type", equals=EntityType.ATTRIBUTION_ENTITY.value)
 _LEY_49_2002_FORM = WizardCondition(
     question_id="legal-entity-form",
     equals=LegalEntityForm.SIN_FINES_LUCRATIVOS.value,
@@ -289,6 +290,13 @@ _LEY_49_2002_RENUNCIATION_DECLARED = WizardCondition(
 _HAS_ACTIVITY = WizardVisibility(
     any_of=(
         _ENTITY_LEGAL,
+        WizardCondition(question_id="irpf-income-categories", contains=IrpfIncomeCategory.ACTIVIDAD_ECONOMICA.value),
+    ),
+)
+_IVA_REGIME_VISIBLE = WizardVisibility(
+    any_of=(
+        _ENTITY_LEGAL,
+        _ENTITY_ATTRIBUTION,
         WizardCondition(question_id="irpf-income-categories", contains=IrpfIncomeCategory.ACTIVIDAD_ECONOMICA.value),
     ),
 )
@@ -722,6 +730,7 @@ _IVA_SECTION = WizardSection(
             choices=_IVA_CHOICES,
             default=_DEFAULT_IVA_REGIME,
             required=False,
+            visible_when=_IVA_REGIME_VISIBLE,
             answer_type=str,
         ),
         _confirm("iva-roi-enrolled", "iva.roi_enrolled", suffix="iva"),

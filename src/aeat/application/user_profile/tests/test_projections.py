@@ -48,6 +48,41 @@ def test_projection_for_taxpayer_round_trips_iva_regime_through_descriptor() -> 
     assert profile.iva_regime is IVARegime.GENERAL
 
 
+def test_projection_for_taxpayer_uses_no_aplica_for_natural_person_without_activity_or_iva_fact() -> None:
+    record = UserProfileRecord(
+        profile_id="11111111-1111-4111-8111-111111111111",
+        display_name="Landlord",
+        facts=(
+            UserProfileFact(path="identity.tax_id", value="12345678Z"),
+            UserProfileFact(path="taxpayer_type.entity_type", value="natural_person"),
+            UserProfileFact(path="taxpayer_type.irpf_income_categories", value="capital_inmobiliario"),
+        ),
+    )
+
+    profile = projection_for_taxpayer(record)
+
+    assert profile.tax_id == "12345678Z"
+    assert profile.iva_regime is IVARegime.NO_APLICA
+
+
+def test_projection_for_taxpayer_preserves_explicit_iva_regime_for_natural_person_without_activity() -> None:
+    record = UserProfileRecord(
+        profile_id="11111111-1111-4111-8111-111111111111",
+        display_name="Landlord",
+        facts=(
+            UserProfileFact(path="identity.tax_id", value="12345678Z"),
+            UserProfileFact(path="taxpayer_type.entity_type", value="natural_person"),
+            UserProfileFact(path="taxpayer_type.irpf_income_categories", value="capital_inmobiliario"),
+            UserProfileFact(path="iva.regime", value="EXENTO"),
+        ),
+    )
+
+    profile = projection_for_taxpayer(record)
+
+    assert profile.tax_id == "12345678Z"
+    assert profile.iva_regime is IVARegime.EXENTO
+
+
 def test_projection_for_taxpayer_accepts_a_flat_mapping_directly() -> None:
     profile = projection_for_taxpayer({"tax.id": "X9876543A", "iva.regime": "GENERAL"})
     assert profile.tax_id == "X9876543A"
