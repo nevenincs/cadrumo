@@ -18,7 +18,16 @@ _MODULE_LINE_LIMIT_OVERRIDES = {
     # SPLIT-CANDIDATE
     "src/aeat/domain/calculations/registry/tests/test_loader_directory_mode.py": 1380,
     "src/aeat/domain/calculations/registry/_workbook_parity.py": 1279,  # SPLIT-CANDIDATE
+    # Extracted the IRNR/M210 formula-op evaluator family to the sibling
+    # `_formula_runtime_irnr.py` module and the shared error types + numeric
+    # accessor to `_formula_runtime_ops.py` (registry-resolver-family-extraction),
+    # bringing the module from 2069 down to its present size to hold the ceiling.
+    # SPLIT-CANDIDATE: further formula-op families can still be extracted.
     "src/aeat/domain/calculations/registry/_formula_runtime.py": 1835,  # SPLIT-CANDIDATE
+    # M131 EO-modulos engine test carries per-activity coefficient-dataset
+    # tables verified against the AEAT manual worked examples (#516); data-shaped
+    # growth. SPLIT-CANDIDATE: split the per-activity dataset fixtures out.
+    "src/aeat/domain/calculations/registry/tests/test_modelo_131_modulos_engine.py": 1517,  # SPLIT-CANDIDATE
     "src/aeat/application/filing/tests/test_export.py": 1270,  # SPLIT-CANDIDATE
     "src/aeat/entrypoints/cli/_modelo.py": 1320,  # SPLIT-CANDIDATE (recovered growth)
     # Oversize modules pinned to their present size so future work must split
@@ -47,15 +56,26 @@ _MODULE_LINE_LIMIT_OVERRIDES = {
     "src/aeat/domain/calculations/registry/_schema.py": 1490,  # SPLIT-CANDIDATE
     "src/aeat/entrypoints/cli/tests/test_registry_cli.py": 1360,  # SPLIT-CANDIDATE (Period construction verbosity)
     "src/aeat/entrypoints/cli/_app_live.py": 1265,
-    "src/aeat/entrypoints/cli/_ledger_payloads.py": 1303,
-    "src/aeat/entrypoints/cli/_modelo_payloads.py": 1420,  # SPLIT-CANDIDATE
+    # _ledger_payloads.py: extracted the invoice/inventory/evidence sub-app
+    # payload families to the sibling `_ledger_business_payloads.py` module
+    # (registry-resolver-family-extraction, following the module's own
+    # documented split pattern); back under the default budget, override
+    # removed.
+    # _modelo_payloads.py: extracted the `bindings list`/`bindings resolve`
+    # payload family to the sibling `_modelo_bindings_payloads.py` module,
+    # following the split pattern already established by
+    # `_modelo_aux_payloads.py` / `_modelo_revision_payload_parts.py`;
+    # re-pinned to the smaller post-split size.
+    "src/aeat/entrypoints/cli/_modelo_payloads.py": 1341,  # SPLIT-CANDIDATE
     # New peer-introduced modules discovered by the size-budget gate;
     # pinned at present size pending an owner split pass.
     "src/aeat/adapters/outbound/google/_calc_sheets_apply.py": 1259,  # SPLIT-CANDIDATE
     "src/aeat/adapters/outbound/google/_calc_sheets_pull.py": 1280,  # SPLIT-CANDIDATE
     "src/aeat/application/modelo/_calculation_actions.py": 1400,  # SPLIT-CANDIDATE
     "src/aeat/application/wizard/_commands.py": 1305,  # SPLIT-CANDIDATE
-    "src/aeat/domain/calculations/registry/_loader.py": 1420,  # SPLIT-CANDIDATE
+    # _loader.py: extracted the locale-translation load/merge/inject pipeline
+    # to the sibling `_loader_locales.py` module (registry-resolver-family-
+    # extraction); back under the default budget, override removed.
     "src/aeat/domain/calculations/registry/_queries.py": 1331,  # SPLIT-CANDIDATE
     "src/aeat/domain/calculations/registry/_ledger_bindings.py": 1400,  # SPLIT-CANDIDATE
     "src/aeat/domain/calculations/registry/tests/test_modelo_100_registry_roles.py": 1373,  # SPLIT-CANDIDATE
@@ -94,6 +114,17 @@ _CALLABLE_LINE_LIMIT_OVERRIDES = {
     ("src/aeat/core/observability/_context.py", "run_context"): 195,  # SPLIT-CANDIDATE
     ("src/aeat/entrypoints/cli/_ledger.py", "ledger_add"): 198,  # SPLIT-CANDIDATE
     ("src/aeat/application/modelo/_calculation_actions.py", "_resolve_bucket_source_mesh"): 200,  # SPLIT-CANDIDATE
+    # +1 line from a Drive-folder-help docstring wording tweak; re-pinned to
+    # the present size.
+    ("src/aeat/entrypoints/cli/_ledger_lifecycle_cli.py", "ledger_pull_folder"): 181,
+    # MCP SDK handler-registration factory: every `@server.list_tools()` /
+    # `@server.call_tool()` / etc. handler must close over `server`, `window`,
+    # and the persona/telemetry gates built earlier in the function, so the
+    # handlers cannot be hoisted to module level without threading that state
+    # through explicit parameters on every handler. SPLIT-CANDIDATE: extract
+    # the per-capability handler-builder closures (tools/prompts/resources)
+    # into factory helpers that take the shared state as arguments.
+    ("src/aeat/entrypoints/mcp/_server.py", "build_server"): 341,  # SPLIT-CANDIDATE
 }
 
 

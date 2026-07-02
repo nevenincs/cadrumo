@@ -10,11 +10,9 @@ import pytest
 from .....core.resources import bundled_path
 from .._convenio import load_convenio_authority
 from .._errors import RegistryValidationError
-from .._formula_runtime import (
-    RegistryUnresolvedOutcomeReason,
-    _irnr_resolve_tipo_gravamen_args,
-    calculate_registry_snapshot,
-)
+from .._formula_runtime import calculate_registry_snapshot
+from .._formula_runtime_irnr import _irnr_resolve_tipo_gravamen_args
+from .._formula_runtime_ops import RegistryUnresolvedOutcomeReason
 from .._loader import load_registry_tree
 from .._schema import FormulaExpression, RegistrySnapshot
 from .._snapshot import build_snapshot

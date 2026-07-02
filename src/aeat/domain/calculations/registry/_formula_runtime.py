@@ -29,18 +29,29 @@ from collections.abc import Mapping
 from dataclasses import dataclass, field
 from datetime import date
 from decimal import Decimal, localcontext
-from enum import StrEnum
 
 from pydantic import BaseModel, Field, model_validator
 
-from ....core import STRICT_FROZEN_CONFIG, ConvenioOverrideKind, TipoRentaIrnr
-from ...contribuyente import UE_EEA_COUNTRY_CODES
+from ....core import STRICT_FROZEN_CONFIG
 from . import _formula_initial_values as _formula_inputs
+from . import _formula_runtime_irnr as _irnr
 from . import _formula_runtime_ops as _ops
 from ._bindings import CasillaObservation
 from ._casilla_membership import casillas_by_id as _casillas_by_id
-from ._convenio import ConvenioAuthority, ConvenioOverride
-from ._errors import CasillaConstraintViolationError, RegistrySnapshotError, RegistryValidationError
+from ._convenio import ConvenioAuthority
+from ._errors import CasillaConstraintViolationError, RegistryValidationError
+from ._formula_runtime_ops import (
+    RegistryUnresolvedOutcomeReason,
+)
+from ._formula_runtime_ops import (
+    UnresolvedFormulaDependencyError as _UnresolvedFormulaDependencyError,
+)
+from ._formula_runtime_ops import (
+    UnresolvedFormulaOutcomeError as _UnresolvedFormulaOutcomeError,
+)
+from ._formula_runtime_ops import (
+    numeric_casilla_value as _m210_numeric_casilla_value,
+)
 from ._formula_text_inputs import validate_text_input_targets as _validate_text_input_targets
 from ._formula_text_inputs import validated_text_input_casilla_ids as _validated_text_input_casilla_ids
 from ._ids import (
@@ -59,64 +70,6 @@ from ._schema import FormulaExpression, ParameterDefinition, RegistrySnapshot
 _ZERO = Decimal("0")
 _ONE = Decimal("1")
 read_parameter, _resolve_bracket = _ops.read_parameter, _ops.resolve_bracket
-
-
-class _UnresolvedFormulaDependencyError(RegistrySnapshotError):
-    """Raised internally when a non-blocking source gap makes a formula unresolved."""
-
-    def __init__(self, dependency_ids: tuple[str, ...]) -> None:
-        super().__init__(", ".join(dependency_ids))
-        self.dependency_ids = dependency_ids
-
-
-class RegistryUnresolvedOutcomeReason(StrEnum):
-    """Closed reason catalogue for typed formula outcomes with no Decimal value."""
-
-    M210_BASELINE_TIPO_DEFERRED = "m210-baseline-tipo-deferred"
-    M210_CONVENIO_RATE_MISSING = "m210-convenio-rate-missing"
-
-
-class _UnresolvedFormulaOutcomeError(RegistrySnapshotError):
-    """Raised internally when a formula emits a typed unresolved outcome."""
-
-    def __init__(
-        self,
-        reason: RegistryUnresolvedOutcomeReason,
-        *,
-        context: Mapping[str, str],
-    ) -> None:
-        super().__init__(reason.value)
-        self.reason = reason
-        self.context = dict(context)
-
-
-@dataclass(frozen=True, slots=True)
-class _IrnrResolveTipoGravamenArgs:
-    """Resolved registry ids for the M210 IRNR rate dispatcher."""
-
-    tipo_casilla_id: CasillaId
-    baseline_parameter: ParameterId
-    country_binding: BindingId
-    base_casilla_id: CasillaId
-    pension_tariff_parameter: ParameterId
-
-
-@dataclass(frozen=True, slots=True)
-class _M210ResolveBaseArgs:
-    """Resolved registry ids for the M210 base-imponible dispatcher."""
-
-    tipo_casilla_id: CasillaId
-    gross_casilla_id: CasillaId
-    deductible_expenses_casilla_id: CasillaId
-    country_binding: BindingId
-    catastral_value_casilla_id: CasillaId
-    imputation_coefficient_casilla_id: CasillaId
-    imputation_days_casilla_id: CasillaId
-    acquisition_value_casilla_id: CasillaId
-    administrative_value_casilla_id: CasillaId
-    recent_rate_parameter: ParameterId
-    old_rate_parameter: ParameterId
-    no_catastral_fraction_parameter: ParameterId
 
 
 @dataclass(frozen=True, slots=True)
@@ -616,9 +569,9 @@ def _evaluate_expression(
     if op == "m100_resolve_renta_inmobiliaria_imputada":
         return _evaluate_m100_resolve_renta_inmobiliaria_imputada(expression, ctx)
     if op == "irnr_resolve_tipo_gravamen":
-        return _evaluate_irnr_resolve_tipo_gravamen(expression, ctx)
+        return _irnr.evaluate_irnr_resolve_tipo_gravamen(expression, ctx)
     if op == "m210_resolve_base_imponible":
-        return _evaluate_m210_resolve_base_imponible(expression, ctx)
+        return _irnr.evaluate_m210_resolve_base_imponible(expression, ctx)
     if op == "lookup_parameter_by_entity_type":
         return _evaluate_lookup_parameter_by_entity_type(expression, ctx)
     if op == "lookup_bracket_by_entity_type":
@@ -629,6 +582,10 @@ def _evaluate_expression(
         return _evaluate_age_at_year_end(expression, ctx)
     if op == "m131_resolve_modulos_previo":
         return _evaluate_m131_resolve_modulos_previo(expression, ctx)
+    if op == "m131_resolve_modulos_minoracion_empleo":
+        return _evaluate_m131_resolve_modulos_minoracion_empleo(expression, ctx)
+    if op == "m131_resolve_modulos_indice_exceso":
+        return _evaluate_m131_resolve_modulos_indice_exceso(expression, ctx)
     if op == "m303_resolve_modulos_iva_cuota_devengada":
         return _evaluate_m303_resolve_modulos_iva_cuota_devengada(expression, ctx)
     if op == "m303_resolve_modulos_iva_cuota_minima_pct":
@@ -968,451 +925,6 @@ def _m100_scalar_parameter_value(parameter_id: ParameterId, ctx: _EvalContext, *
     return value
 
 
-def _evaluate_irnr_resolve_tipo_gravamen(expression: FormulaExpression, ctx: _EvalContext) -> Decimal:
-    """Resolve the IRNR tipo de gravamen rate, applying any treaty override.
-
-    The single tipo-de-gravamen resolution path for every IRNR consumer
-    (Modelo 210 today, the retenciones-a-no-residentes modelos when they
-    land). It resolves the TRLIRNR domestic baseline and, when the profile
-    declares a fiscal-residence country, consults the cross-cutting
-    :class:`~._convenio.ConvenioAuthority` projected onto the snapshot. On a
-    matched override it branches on the typed
-    :class:`~aeat.core.ConvenioOverrideKind`:
-
-    * ``flat`` replaces the domestic rate outright,
-    * ``ceiling`` applies ``min(domestic, treaty)`` so "más favorable" is
-      computed rather than assumed,
-    * ``allocation_domestic_tariff`` delegates the amount to the domestic
-      tariff (the Art. 25.1.b progressive pension tariff for ``pension``, the
-      baseline rate otherwise),
-    * ``exempt`` drives the source-state rate to zero.
-
-    A declared treaty country with no override row yields a typed unresolved
-    outcome (``no-silent-under-declaration``); the application verification
-    layer converts it into a finding post-engine.
-    """
-    args = _irnr_resolve_tipo_gravamen_args(expression)
-    tipo_renta = ctx.text_values.get(args.tipo_casilla_id, "")
-    ctx.operand_refs.append(args.tipo_casilla_id)
-    ctx.operand_casilla_refs.append(args.tipo_casilla_id)
-    if not tipo_renta:
-        _raise_m210_unresolved_outcome(
-            RegistryUnresolvedOutcomeReason.M210_BASELINE_TIPO_DEFERRED,
-            ctx=ctx,
-            args=args,
-            tipo_renta=tipo_renta,
-            country="",
-        )
-
-    baseline_param = ctx.parameters.get(args.baseline_parameter)
-    ctx.operand_refs.extend((args.baseline_parameter, args.country_binding))
-    baseline_rate = _m210_baseline_rate(baseline_param, tipo_renta=tipo_renta, year=ctx.filing_year)
-    country = ctx.enum_binding_values.get(args.country_binding) or ""
-    override = _resolve_convenio_override(ctx, country=country, tipo_renta=tipo_renta)
-
-    if tipo_renta == TipoRentaIrnr.PENSION.value:
-        rate = _irnr_pension_effective_rate(args, ctx, override=override, country=country)
-        if rate is None:
-            _raise_m210_unresolved_outcome(
-                RegistryUnresolvedOutcomeReason.M210_CONVENIO_RATE_MISSING,
-                ctx=ctx,
-                args=args,
-                tipo_renta=tipo_renta,
-                country=country,
-            )
-        ctx.operand_values.append(rate)
-        return rate
-
-    if not country:
-        if baseline_rate is None:
-            _raise_m210_unresolved_outcome(
-                RegistryUnresolvedOutcomeReason.M210_BASELINE_TIPO_DEFERRED,
-                ctx=ctx,
-                args=args,
-                tipo_renta=tipo_renta,
-                country=country,
-            )
-        ctx.operand_values.append(baseline_rate)
-        return baseline_rate
-
-    if override is None:
-        _raise_m210_unresolved_outcome(
-            RegistryUnresolvedOutcomeReason.M210_CONVENIO_RATE_MISSING,
-            ctx=ctx,
-            args=args,
-            tipo_renta=tipo_renta,
-            country=country,
-        )
-    rate = _apply_convenio_override(override, baseline_rate=baseline_rate)
-    if rate is None:
-        _raise_m210_unresolved_outcome(
-            RegistryUnresolvedOutcomeReason.M210_CONVENIO_RATE_MISSING,
-            ctx=ctx,
-            args=args,
-            tipo_renta=tipo_renta,
-            country=country,
-        )
-    ctx.operand_values.append(rate)
-    return rate
-
-
-def _raise_m210_unresolved_outcome(
-    reason: RegistryUnresolvedOutcomeReason,
-    *,
-    ctx: _EvalContext,
-    args: _IrnrResolveTipoGravamenArgs,
-    tipo_renta: str,
-    country: str,
-) -> None:
-    raise _UnresolvedFormulaOutcomeError(
-        reason,
-        context={
-            "tipo_renta": tipo_renta,
-            "country": country,
-            "filing_year": str(ctx.filing_year),
-            "baseline_parameter": args.baseline_parameter,
-            "country_binding": args.country_binding,
-        },
-    )
-
-
-def _irnr_resolve_tipo_gravamen_args(expression: FormulaExpression) -> _IrnrResolveTipoGravamenArgs:
-    op = "irnr_resolve_tipo_gravamen"
-    if len(expression.args) != 5:
-        raise RegistryValidationError(f"formula op {op!r} expects 5 args, got {len(expression.args)}")
-    tipo_arg, base_arg, baseline_arg, pension_tariff_arg, country_arg = expression.args
-    if tipo_arg.casilla_id is None:
-        raise RegistryValidationError(f"formula op {op!r} requires args[0] to be a casilla leaf")
-    if base_arg.casilla_id is None:
-        raise RegistryValidationError(f"formula op {op!r} requires args[1] to be a casilla leaf")
-    if baseline_arg.parameter is None:
-        raise RegistryValidationError(f"formula op {op!r} requires args[2] to be a parameter leaf")
-    if pension_tariff_arg.parameter is None:
-        raise RegistryValidationError(f"formula op {op!r} requires args[3] to be a parameter leaf")
-    if country_arg.binding is None:
-        raise RegistryValidationError(f"formula op {op!r} requires args[4] to be a binding leaf")
-    return _IrnrResolveTipoGravamenArgs(
-        tipo_casilla_id=tipo_arg.casilla_id,
-        baseline_parameter=baseline_arg.parameter,
-        country_binding=country_arg.binding,
-        base_casilla_id=base_arg.casilla_id,
-        pension_tariff_parameter=pension_tariff_arg.parameter,
-    )
-
-
-def _m210_baseline_rate(
-    parameter: ParameterDefinition | None,
-    *,
-    tipo_renta: str,
-    year: int,
-) -> Decimal | None:
-    if parameter is None:
-        return None
-    for entry in parameter.keyed_brackets:
-        if (
-            entry.key == tipo_renta
-            and entry.valid_from.year <= year
-            and (entry.valid_to is None or entry.valid_to.year >= year)
-        ):
-            try:
-                return Decimal(entry.value)
-            except (ArithmeticError, ValueError):
-                return None
-    return None
-
-
-def _resolve_convenio_override(
-    ctx: _EvalContext,
-    *,
-    country: str,
-    tipo_renta: str,
-) -> ConvenioOverride | None:
-    """Resolve the treaty override for the declared country + income type, or None.
-
-    Hydrates the free-text ``tipo_renta`` casilla value to the closed
-    :class:`~aeat.core.TipoRentaIrnr` enum at this boundary; an unrecognised
-    value carries no treaty override (the domestic baseline stands).
-    """
-    if not country:
-        return None
-    try:
-        tipo_enum = TipoRentaIrnr(tipo_renta)
-    except ValueError:
-        return None
-    return ctx.convenio.resolve(country.upper(), tipo_enum, ctx.filing_year)
-
-
-def _apply_convenio_override(override: ConvenioOverride, *, baseline_rate: Decimal | None) -> Decimal | None:
-    """Apply a non-pension treaty override to the domestic baseline rate."""
-    kind = override.kind
-    if kind is ConvenioOverrideKind.EXEMPT:
-        return _ZERO
-    if kind is ConvenioOverrideKind.ALLOCATION_DOMESTIC_TARIFF:
-        return baseline_rate
-    if override.rate is None:
-        return None
-    if kind is ConvenioOverrideKind.FLAT:
-        return override.rate
-    # CEILING: min(domestic, treaty) — "más favorable" computed, not assumed.
-    if baseline_rate is None:
-        return None
-    return min(baseline_rate, override.rate)
-
-
-def _irnr_pension_effective_rate(
-    args: _IrnrResolveTipoGravamenArgs,
-    ctx: _EvalContext,
-    *,
-    override: ConvenioOverride | None,
-    country: str,
-) -> Decimal | None:
-    if country:
-        if override is None:
-            return None
-        if override.kind is ConvenioOverrideKind.EXEMPT:
-            return _ZERO
-        if override.kind is ConvenioOverrideKind.FLAT and override.rate is not None:
-            return override.rate
-        if override.kind is ConvenioOverrideKind.CEILING and override.rate is not None:
-            effective = _m210_effective_rate_from_tariff(args.base_casilla_id, args.pension_tariff_parameter, ctx)
-            return min(effective, override.rate)
-        # ALLOCATION_DOMESTIC_TARIFF delegates the amount to the domestic tariff.
-    return _m210_effective_rate_from_tariff(args.base_casilla_id, args.pension_tariff_parameter, ctx)
-
-
-def _m210_effective_rate_from_tariff(
-    base_casilla_id: CasillaId,
-    tariff_parameter_id: ParameterId,
-    ctx: _EvalContext,
-) -> Decimal:
-    base = _m210_numeric_casilla_value(base_casilla_id, ctx)
-    tariff_parameter = ctx.parameters.get(tariff_parameter_id)
-    if tariff_parameter is None:
-        raise RegistryValidationError(
-            f"parameter {tariff_parameter_id!r} not registered",
-            translated_message="errors.calc.parameter_unknown",
-            context={"parameter_id": tariff_parameter_id},
-        )
-    if tariff_parameter.data_type != "bracket_table":
-        raise RegistryValidationError(
-            f"parameter {tariff_parameter_id!r} must declare data_type='bracket_table' "
-            "to be used by M210 pension tariff resolution",
-            translated_message="errors.calc.dispatch_parameter_kind",
-            context={"parameter_id": tariff_parameter_id, "op": "irnr_resolve_tipo_gravamen"},
-        )
-    ctx.operand_refs.append(tariff_parameter_id)
-    cuota = _ops.resolve_bracket(tariff_parameter, base, ctx.date_context)
-    ctx.operand_values.append(cuota)
-    if base == _ZERO:
-        return _ZERO
-    return cuota / base
-
-
-def _evaluate_m210_resolve_base_imponible(expression: FormulaExpression, ctx: _EvalContext) -> Decimal:
-    """Resolve M210 base imponible, including Art. 24.6 and Art. 13.1.h branches.
-
-    Non-imputed Art. 24.1 tipos start from ``rendimientos_integros``. Art.
-    24.6 permits deducting linked expenses when the filer is in the EU/EEA
-    path, represented by ``tipo_renta='ue_residente'`` or an EU/EEA
-    ``country_of_fiscal_residence`` binding. For ``inmobiliaria``, the
-    operator applies the LIRPF Art. 85 imputation mechanics reached through
-    TRLIRNR Arts. 13.1.h and 24.5; own-use imputation admits no expenses.
-    """
-    args = _m210_resolve_base_args(expression)
-    tipo_renta = ctx.text_values.get(args.tipo_casilla_id, "")
-    ctx.operand_refs.append(args.tipo_casilla_id)
-    ctx.operand_casilla_refs.append(args.tipo_casilla_id)
-    country = (ctx.enum_binding_values.get(args.country_binding) or "").upper()
-    ctx.operand_refs.append(args.country_binding)
-    deductible_expenses = _m210_numeric_casilla_value(args.deductible_expenses_casilla_id, ctx)
-    if deductible_expenses < _ZERO:
-        raise RegistryValidationError(
-            "M210 gastos_deducibles must be non-negative",
-            translated_message="errors.calc.m210_gastos_deducibles_negative",
-            context={"casilla_id": args.deductible_expenses_casilla_id, "value": str(deductible_expenses)},
-        )
-    if tipo_renta != "inmobiliaria":
-        gross = _m210_numeric_casilla_value(args.gross_casilla_id, ctx)
-        if deductible_expenses == _ZERO:
-            return gross
-        if not _m210_allows_art_24_6_expenses(tipo_renta=tipo_renta, country_code=country):
-            raise RegistryValidationError(
-                "M210 gastos_deducibles require the EU/EEA Art. 24.6 path",
-                translated_message="errors.calc.m210_gastos_deducibles_not_allowed",
-                context={
-                    "casilla_id": args.deductible_expenses_casilla_id,
-                    "tipo_renta": tipo_renta,
-                    "country_of_fiscal_residence": country,
-                },
-            )
-        return gross - deductible_expenses
-    if deductible_expenses != _ZERO:
-        raise RegistryValidationError(
-            "M210 imputed real-estate own-use base cannot deduct gastos_deducibles",
-            translated_message="errors.calc.m210_gastos_deducibles_not_allowed",
-            context={
-                "casilla_id": args.deductible_expenses_casilla_id,
-                "tipo_renta": tipo_renta,
-                "country_of_fiscal_residence": country,
-            },
-        )
-
-    days = _m210_imputation_days(args.imputation_days_casilla_id, ctx)
-    days_fraction = days / Decimal(_m210_days_in_filing_year(ctx.filing_year))
-    catastral_value = _m210_numeric_casilla_value(args.catastral_value_casilla_id, ctx)
-    if catastral_value > _ZERO:
-        recent_rate = _m210_scalar_parameter_value(args.recent_rate_parameter, ctx)
-        old_rate = _m210_scalar_parameter_value(args.old_rate_parameter, ctx)
-        coefficient = _m210_numeric_casilla_value(args.imputation_coefficient_casilla_id, ctx)
-        if coefficient not in {recent_rate, old_rate}:
-            raise RegistryValidationError(
-                "M210 inmobiliaria coefficient must be one of the registry-authored "
-                f"LIRPF art.85 rates ({recent_rate} or {old_rate}); got {coefficient}",
-                translated_message="errors.calc.m210_imputation_coefficient_invalid",
-                context={
-                    "casilla_id": args.imputation_coefficient_casilla_id,
-                    "value": str(coefficient),
-                    "allowed_values": f"{recent_rate},{old_rate}",
-                },
-            )
-        return catastral_value * coefficient * days_fraction
-
-    acquisition_value = _m210_numeric_casilla_value(args.acquisition_value_casilla_id, ctx)
-    administrative_value = _m210_numeric_casilla_value(args.administrative_value_casilla_id, ctx)
-    substitute_value = max(acquisition_value, administrative_value)
-    if substitute_value <= _ZERO:
-        raise RegistryValidationError(
-            "M210 inmobiliaria without cadastral value requires a positive acquisition or administrative checked value",
-            translated_message="errors.calc.m210_imputation_no_catastral_value_missing",
-            context={
-                "acquisition_casilla_id": args.acquisition_value_casilla_id,
-                "administrative_casilla_id": args.administrative_value_casilla_id,
-            },
-        )
-    no_catastral_fraction = _m210_scalar_parameter_value(args.no_catastral_fraction_parameter, ctx)
-    recent_rate = _m210_scalar_parameter_value(args.recent_rate_parameter, ctx)
-    return substitute_value * no_catastral_fraction * recent_rate * days_fraction
-
-
-def _m210_resolve_base_args(expression: FormulaExpression) -> _M210ResolveBaseArgs:
-    op = "m210_resolve_base_imponible"
-    if len(expression.args) != 12:
-        raise RegistryValidationError(f"formula op {op!r} expects 12 args, got {len(expression.args)}")
-    (
-        tipo_arg,
-        gross_arg,
-        deductible_expenses_arg,
-        country_arg,
-        catastral_value_arg,
-        imputation_coefficient_arg,
-        imputation_days_arg,
-        acquisition_value_arg,
-        administrative_value_arg,
-        recent_rate_arg,
-        old_rate_arg,
-        no_catastral_fraction_arg,
-    ) = expression.args
-    if tipo_arg.casilla_id is None:
-        raise RegistryValidationError(f"formula op {op!r} requires args[0] to be a casilla leaf")
-    if gross_arg.casilla_id is None:
-        raise RegistryValidationError(f"formula op {op!r} requires args[1] to be a casilla leaf")
-    if deductible_expenses_arg.casilla_id is None:
-        raise RegistryValidationError(f"formula op {op!r} requires args[2] to be a casilla leaf")
-    if country_arg.binding is None:
-        raise RegistryValidationError(f"formula op {op!r} requires args[3] to be a binding leaf")
-    if catastral_value_arg.casilla_id is None:
-        raise RegistryValidationError(f"formula op {op!r} requires args[4] to be a casilla leaf")
-    if imputation_coefficient_arg.casilla_id is None:
-        raise RegistryValidationError(f"formula op {op!r} requires args[5] to be a casilla leaf")
-    if imputation_days_arg.casilla_id is None:
-        raise RegistryValidationError(f"formula op {op!r} requires args[6] to be a casilla leaf")
-    if acquisition_value_arg.casilla_id is None:
-        raise RegistryValidationError(f"formula op {op!r} requires args[7] to be a casilla leaf")
-    if administrative_value_arg.casilla_id is None:
-        raise RegistryValidationError(f"formula op {op!r} requires args[8] to be a casilla leaf")
-    if recent_rate_arg.parameter is None:
-        raise RegistryValidationError(f"formula op {op!r} requires args[9] to be a parameter leaf")
-    if old_rate_arg.parameter is None:
-        raise RegistryValidationError(f"formula op {op!r} requires args[10] to be a parameter leaf")
-    if no_catastral_fraction_arg.parameter is None:
-        raise RegistryValidationError(f"formula op {op!r} requires args[11] to be a parameter leaf")
-    return _M210ResolveBaseArgs(
-        tipo_casilla_id=tipo_arg.casilla_id,
-        gross_casilla_id=gross_arg.casilla_id,
-        deductible_expenses_casilla_id=deductible_expenses_arg.casilla_id,
-        country_binding=country_arg.binding,
-        catastral_value_casilla_id=catastral_value_arg.casilla_id,
-        imputation_coefficient_casilla_id=imputation_coefficient_arg.casilla_id,
-        imputation_days_casilla_id=imputation_days_arg.casilla_id,
-        acquisition_value_casilla_id=acquisition_value_arg.casilla_id,
-        administrative_value_casilla_id=administrative_value_arg.casilla_id,
-        recent_rate_parameter=recent_rate_arg.parameter,
-        old_rate_parameter=old_rate_arg.parameter,
-        no_catastral_fraction_parameter=no_catastral_fraction_arg.parameter,
-    )
-
-
-def _m210_allows_art_24_6_expenses(*, tipo_renta: str, country_code: str) -> bool:
-    return tipo_renta == "ue_residente" or country_code in UE_EEA_COUNTRY_CODES
-
-
-def _m210_numeric_casilla_value(casilla_id: CasillaId, ctx: _EvalContext) -> Decimal:
-    if casilla_id not in ctx.values:
-        if casilla_id in ctx.unresolved_casilla_ids:
-            raise _UnresolvedFormulaDependencyError((casilla_id,))
-        raise RegistryValidationError(
-            f"casilla {casilla_id!r} referenced before evaluation",
-            translated_message="errors.calc.casilla_referenced_before_evaluation",
-            context={"casilla_id": casilla_id},
-        )
-    value = ctx.values[casilla_id]
-    ctx.operand_refs.append(casilla_id)
-    ctx.operand_casilla_refs.append(casilla_id)
-    ctx.operand_values.append(value)
-    return value
-
-
-def _m210_scalar_parameter_value(parameter_id: ParameterId, ctx: _EvalContext) -> Decimal:
-    parameter = ctx.parameters.get(parameter_id)
-    if parameter is None:
-        raise RegistryValidationError(
-            f"parameter {parameter_id!r} not registered",
-            translated_message="errors.calc.parameter_unknown",
-            context={"parameter_id": parameter_id},
-        )
-    if parameter.data_type not in {"decimal", "money", "integer", "ratio"}:
-        raise RegistryValidationError(
-            f"parameter {parameter_id!r} must be scalar to be used by m210_resolve_base_imponible",
-            translated_message="errors.calc.dispatch_parameter_kind",
-            context={"parameter_id": parameter_id, "op": "m210_resolve_base_imponible"},
-        )
-    value = _ops.resolve_parameter(parameter, ctx.date_context)
-    ctx.operand_refs.append(parameter_id)
-    ctx.operand_values.append(value)
-    return value
-
-
-def _m210_imputation_days(casilla_id: CasillaId, ctx: _EvalContext) -> Decimal:
-    days = _m210_numeric_casilla_value(casilla_id, ctx)
-    year_days = Decimal(_m210_days_in_filing_year(ctx.filing_year))
-    if days != days.to_integral_value() or days <= _ZERO or days > year_days:
-        raise RegistryValidationError(
-            f"M210 inmobiliaria imputation days must be an integer in [1, {year_days}]",
-            translated_message="errors.calc.m210_imputation_days_invalid",
-            context={"casilla_id": casilla_id, "value": str(days), "max_days": str(year_days)},
-        )
-    return days
-
-
-def _m210_days_in_filing_year(year: int) -> int:
-    if year <= 0:
-        raise RegistryValidationError(
-            "m210_resolve_base_imponible requires a non-zero filing_year in evaluation context",
-            translated_message="errors.calc.m210_imputation_no_filing_year",
-        )
-    return (date(year, 12, 31) - date(year, 1, 1)).days + 1
-
-
 @dataclass(frozen=True, slots=True)
 class _M131ResolveModulosPrevioArgs:
     """Resolved registry ids for the M131 estimación-objetiva módulos Fase 1ª dispatcher."""
@@ -1567,6 +1079,260 @@ def _evaluate_m131_resolve_modulos_previo(expression: FormulaExpression, ctx: _E
         ctx.operand_values.append(coefficient)
         total += units * coefficient
     return total
+
+
+@dataclass(frozen=True, slots=True)
+class _M131ResolveModulosMinoracionEmpleoArgs:
+    """Resolved registry ids for the M131 Fase 2ª minoración por incentivos al empleo dispatcher."""
+
+    epigrafe_casilla_id: CasillaId
+    modulo_1_actual_casilla_id: CasillaId
+    modulo_1_anterior_casilla_id: CasillaId
+    coefficient_parameter: ParameterId
+    tramos_parameter: ParameterId
+    incremento_rate_parameter: ParameterId
+
+
+def _m131_resolve_modulos_minoracion_empleo_args(
+    expression: FormulaExpression,
+) -> _M131ResolveModulosMinoracionEmpleoArgs:
+    op = "m131_resolve_modulos_minoracion_empleo"
+    if len(expression.args) != 6:
+        raise RegistryValidationError(
+            f"formula op {op!r} expects 6 args, got {len(expression.args)}",
+            translated_message="errors.calc.lookup_dispatch_arg_count",
+            context={"op": op, "expected": "6"},
+        )
+    epigrafe_arg, actual_arg, anterior_arg, coefficient_arg, tramos_arg, incremento_arg = expression.args
+    if epigrafe_arg.casilla_id is None:
+        raise RegistryValidationError(
+            f"formula op {op!r} requires args[0] to be a casilla leaf",
+            translated_message="errors.calc.lookup_dispatch_arg_kind",
+            context={"op": op, "position": "args[0]", "expected_kind": "casilla"},
+        )
+    if actual_arg.casilla_id is None:
+        raise RegistryValidationError(
+            f"formula op {op!r} requires args[1] to be a casilla leaf",
+            translated_message="errors.calc.lookup_dispatch_arg_kind",
+            context={"op": op, "position": "args[1]", "expected_kind": "casilla"},
+        )
+    if anterior_arg.casilla_id is None:
+        raise RegistryValidationError(
+            f"formula op {op!r} requires args[2] to be a casilla leaf",
+            translated_message="errors.calc.lookup_dispatch_arg_kind",
+            context={"op": op, "position": "args[2]", "expected_kind": "casilla"},
+        )
+    if coefficient_arg.parameter is None:
+        raise RegistryValidationError(
+            f"formula op {op!r} requires args[3] to be a parameter leaf",
+            translated_message="errors.calc.lookup_dispatch_arg_kind",
+            context={"op": op, "position": "args[3]", "expected_kind": "parameter"},
+        )
+    if tramos_arg.parameter is None:
+        raise RegistryValidationError(
+            f"formula op {op!r} requires args[4] to be a parameter leaf",
+            translated_message="errors.calc.lookup_dispatch_arg_kind",
+            context={"op": op, "position": "args[4]", "expected_kind": "parameter"},
+        )
+    if incremento_arg.parameter is None:
+        raise RegistryValidationError(
+            f"formula op {op!r} requires args[5] to be a parameter leaf",
+            translated_message="errors.calc.lookup_dispatch_arg_kind",
+            context={"op": op, "position": "args[5]", "expected_kind": "parameter"},
+        )
+    return _M131ResolveModulosMinoracionEmpleoArgs(
+        epigrafe_casilla_id=epigrafe_arg.casilla_id,
+        modulo_1_actual_casilla_id=actual_arg.casilla_id,
+        modulo_1_anterior_casilla_id=anterior_arg.casilla_id,
+        coefficient_parameter=coefficient_arg.parameter,
+        tramos_parameter=tramos_arg.parameter,
+        incremento_rate_parameter=incremento_arg.parameter,
+    )
+
+
+def _evaluate_m131_resolve_modulos_minoracion_empleo(expression: FormulaExpression, ctx: _EvalContext) -> Decimal:
+    """Resolve the M131/M100 estimación-objetiva Fase 2ª minoración por incentivos al empleo.
+
+    Orden HAC/1347/2024 Anexo II, instrucción 2.2.a) fixes the mechanism
+    (AEAT Manual práctico de Renta 2025, Parte 1, Capítulo 8, worked example
+    epígrafe 673.1): the minoración is the módulo «personal asalariado»
+    coefficient (rendimiento anual por unidad antes de amortización) times a
+    coeficiente de minoración, itself the sum of two sub-coefficients:
+
+    * ``coeficiente por incremento`` — when the current year's módulo 1 unit
+      count exceeds the prior year's, the positive difference times 0,40
+      (a scalar ``ratio`` registry parameter, not hardcoded per
+      ``aeat-schema-central-config``);
+    * ``coeficiente por tramos`` — a progressive bracket lookup (the Orden's
+      tramo table) applied to the módulo 1 units net of the increment already
+      credited above (``resolve_bracket`` reused verbatim; the tramo table is
+      structurally the same cumulative-progressive-scale shape as an IRPF
+      escala).
+
+    Both a blank epígrafe and an untabled epígrafe (no módulo 1 coefficient
+    row) resolve to ``Decimal('0')`` — this op feeds the same internal-only
+    advisory-support casilla chain as Fase 1ª
+    (:func:`_evaluate_m131_resolve_modulos_previo`), so a zero here means "no
+    minoración computed", never a filed figure standing in for the operator's
+    manual casilla 01.
+    """
+    args = _m131_resolve_modulos_minoracion_empleo_args(expression)
+    epigrafe = ctx.text_values.get(args.epigrafe_casilla_id, "").strip()
+    ctx.operand_refs.append(args.epigrafe_casilla_id)
+    ctx.operand_casilla_refs.append(args.epigrafe_casilla_id)
+    coefficient_parameter = ctx.parameters.get(args.coefficient_parameter)
+    ctx.operand_refs.append(args.coefficient_parameter)
+    if not epigrafe or coefficient_parameter is None:
+        return _ZERO
+    modulo_1_coefficient = _m131_modulos_coefficient(
+        coefficient_parameter,
+        epigrafe=epigrafe,
+        modulo_index=1,
+        year=ctx.filing_year,
+    )
+    if modulo_1_coefficient is None:
+        return _ZERO
+    ctx.operand_values.append(modulo_1_coefficient)
+    actual = _m210_numeric_casilla_value(args.modulo_1_actual_casilla_id, ctx)
+    anterior = _m210_numeric_casilla_value(args.modulo_1_anterior_casilla_id, ctx)
+    incremento = actual - anterior if actual > anterior else _ZERO
+    incremento_rate = _m100_scalar_parameter_value(
+        args.incremento_rate_parameter,
+        ctx,
+        op="m131_resolve_modulos_minoracion_empleo",
+    )
+    coeficiente_incremento = incremento * incremento_rate
+    base_tramos = actual - incremento
+    tramos_parameter = ctx.parameters.get(args.tramos_parameter)
+    ctx.operand_refs.append(args.tramos_parameter)
+    if tramos_parameter is None or base_tramos <= _ZERO:
+        coeficiente_tramos = _ZERO
+    else:
+        coeficiente_tramos = _ops.resolve_bracket(tramos_parameter, base_tramos, ctx.date_context)
+        ctx.operand_values.append(coeficiente_tramos)
+    coeficiente_minoracion = coeficiente_incremento + coeficiente_tramos
+    return coeficiente_minoracion * modulo_1_coefficient
+
+
+@dataclass(frozen=True, slots=True)
+class _M131ResolveModulosIndiceExcesoArgs:
+    """Resolved registry ids for the M131 Fase 3ª índice corrector de exceso dispatcher."""
+
+    epigrafe_casilla_id: CasillaId
+    minorado_casilla_id: CasillaId
+    cuantia_parameter: ParameterId
+    indice_exceso_parameter: ParameterId
+
+
+def _m131_resolve_modulos_indice_exceso_args(expression: FormulaExpression) -> _M131ResolveModulosIndiceExcesoArgs:
+    op = "m131_resolve_modulos_indice_exceso"
+    if len(expression.args) != 4:
+        raise RegistryValidationError(
+            f"formula op {op!r} expects 4 args, got {len(expression.args)}",
+            translated_message="errors.calc.lookup_dispatch_arg_count",
+            context={"op": op, "expected": "4"},
+        )
+    epigrafe_arg, minorado_arg, cuantia_arg, indice_arg = expression.args
+    if epigrafe_arg.casilla_id is None:
+        raise RegistryValidationError(
+            f"formula op {op!r} requires args[0] to be a casilla leaf",
+            translated_message="errors.calc.lookup_dispatch_arg_kind",
+            context={"op": op, "position": "args[0]", "expected_kind": "casilla"},
+        )
+    if minorado_arg.casilla_id is None:
+        raise RegistryValidationError(
+            f"formula op {op!r} requires args[1] to be a casilla leaf",
+            translated_message="errors.calc.lookup_dispatch_arg_kind",
+            context={"op": op, "position": "args[1]", "expected_kind": "casilla"},
+        )
+    if cuantia_arg.parameter is None:
+        raise RegistryValidationError(
+            f"formula op {op!r} requires args[2] to be a parameter leaf",
+            translated_message="errors.calc.lookup_dispatch_arg_kind",
+            context={"op": op, "position": "args[2]", "expected_kind": "parameter"},
+        )
+    if indice_arg.parameter is None:
+        raise RegistryValidationError(
+            f"formula op {op!r} requires args[3] to be a parameter leaf",
+            translated_message="errors.calc.lookup_dispatch_arg_kind",
+            context={"op": op, "position": "args[3]", "expected_kind": "parameter"},
+        )
+    return _M131ResolveModulosIndiceExcesoArgs(
+        epigrafe_casilla_id=epigrafe_arg.casilla_id,
+        minorado_casilla_id=minorado_arg.casilla_id,
+        cuantia_parameter=cuantia_arg.parameter,
+        indice_exceso_parameter=indice_arg.parameter,
+    )
+
+
+def _m131_modulos_cuantia_exceso(
+    parameter: ParameterDefinition | None,
+    *,
+    epigrafe: str,
+    year: int,
+) -> Decimal | None:
+    """Look up the índice-de-exceso cuantía threshold for an epígrafe (keyed-bracket table).
+
+    Mirrors :func:`_m131_modulos_coefficient` — exact-match lookup on the
+    epígrafe key, no interval-overlap semantics, because the domain is a
+    discrete per-activity catalogue (Orden HAC/1347/2024 Anexo II,
+    instrucción 2.3.b.3). Returns ``None`` when the epígrafe has no
+    índice-de-exceso row tabled yet.
+    """
+    if parameter is None:
+        return None
+    for entry in parameter.keyed_brackets:
+        in_window = entry.valid_from.year <= year and (entry.valid_to is None or entry.valid_to.year >= year)
+        if entry.key == epigrafe and in_window:
+            try:
+                return Decimal(entry.value)
+            except (ArithmeticError, ValueError):
+                return None
+    return None
+
+
+def _evaluate_m131_resolve_modulos_indice_exceso(expression: FormulaExpression, ctx: _EvalContext) -> Decimal:
+    """Resolve the M131/M100 estimación-objetiva Fase 3ª índice corrector de exceso.
+
+    Orden HAC/1347/2024 Anexo II, instrucción 2.3.b.3) fixes the mechanism
+    (AEAT Manual práctico de Renta 2025, Parte 1, Capítulo 8, worked example
+    epígrafe 673.1): when the rendimiento neto minorado (Fase 2ª) exceeds a
+    per-activity cuantía threshold, the excess above that threshold is
+    multiplied by the índice 1,30 (a scalar ``ratio`` registry parameter):
+
+        rendimiento_neto_modulos = cuantia + indice x (minorado - cuantia)
+
+    when ``minorado > cuantia``; otherwise the módulos figure equals the
+    minorado figure unchanged (no other índice corrector is modelled in this
+    first slice — a legitimately-zero-index case, per the manual: "si el
+    rendimiento neto minorado ... es una cantidad negativa, no se aplicarán
+    los índices correctores"). A blank epígrafe, an untabled epígrafe (no
+    cuantía row), or a non-positive minorado all resolve to the minorado
+    figure unchanged — this op feeds the same internal-only advisory-support
+    casilla chain as Fases 1ª/2ª, never a filed figure standing in for the
+    operator's manual casilla 01.
+    """
+    args = _m131_resolve_modulos_indice_exceso_args(expression)
+    minorado = _m210_numeric_casilla_value(args.minorado_casilla_id, ctx)
+    ctx.operand_refs.append(args.minorado_casilla_id)
+    ctx.operand_casilla_refs.append(args.minorado_casilla_id)
+    epigrafe = ctx.text_values.get(args.epigrafe_casilla_id, "").strip()
+    ctx.operand_refs.append(args.epigrafe_casilla_id)
+    ctx.operand_casilla_refs.append(args.epigrafe_casilla_id)
+    cuantia_parameter = ctx.parameters.get(args.cuantia_parameter)
+    ctx.operand_refs.append(args.cuantia_parameter)
+    if not epigrafe or cuantia_parameter is None or minorado <= _ZERO:
+        return minorado
+    cuantia = _m131_modulos_cuantia_exceso(cuantia_parameter, epigrafe=epigrafe, year=ctx.filing_year)
+    if cuantia is None or minorado <= cuantia:
+        return minorado
+    ctx.operand_values.append(cuantia)
+    indice = _m100_scalar_parameter_value(
+        args.indice_exceso_parameter,
+        ctx,
+        op="m131_resolve_modulos_indice_exceso",
+    )
+    return cuantia + indice * (minorado - cuantia)
 
 
 @dataclass(frozen=True, slots=True)

@@ -191,7 +191,7 @@ def resolve_m210_rate(
     the actual base amount and are computed by the formula runtime.
 
     See Also:
-        :func:`aeat.domain.calculations.registry._formula_runtime._evaluate_irnr_resolve_tipo_gravamen`
+        :func:`aeat.domain.calculations.registry._formula_runtime_irnr.evaluate_irnr_resolve_tipo_gravamen`
         :class:`aeat.domain.calculations.registry.ConvenioAuthority`
         :class:`aeat.domain.deadlines.TaxpayerProfile`
     """
