@@ -27,7 +27,9 @@ related:
 
 ## Outcome
 
-The skill loader now validates the `applies_when` predicate at load time and refuses to yield metadata for a malformed skill. Existing consumers keep the stable `iter_skill_documents` surface (28 skill documents still enumerate). Ruff check/format clean; pyright reports 0 errors (two pre-existing lazy `__getattr__` `reportUnsupportedDunderAll` warnings are unchanged from HEAD). `iter_skill_metadata` currently raises for `alta-contribuyente` because no skill declares `applies_when` yet; that is expected and clears once the P10 lifts land.
+The skill loader validates the `applies_when` predicate at load time and refuses to yield metadata for a malformed skill. Existing consumers keep the stable `iter_skill_documents` surface (28 skill documents still enumerate). Ruff check/format clean; pyright reports 0 errors (two pre-existing lazy `__getattr__` `reportUnsupportedDunderAll` warnings are unchanged from HEAD).
+
+SCOPE-CUT REVISION (operator directive, 2026-07-02): the loader was redesigned so `applies_when` is OPTIONAL at the load path - a skill whose predicate has not yet been lifted from prose still loads with `applies_when` `None`, and a predicate that IS present is fully validated (a malformed predicate still raises `SkillMetadataError`). Strict presence enforcement was moved to the S36 coverage gate, so the tree stays loadable while the coordinator authors the P10 lifts.
 
 ## Notes
 
