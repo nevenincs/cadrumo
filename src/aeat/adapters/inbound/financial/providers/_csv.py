@@ -523,7 +523,12 @@ def _parse_tabular_transaction_row(
         decimal_separator=layout.decimal_separator,
     )
     direction = _direction_from_aliases(raw_fields, lookup, layout.columns.direction)
-    currency = _value_from_aliases(raw_fields, lookup, layout.columns.currency) or default_currency()
+    currency = _currency_from_aliases(
+        raw_fields,
+        lookup,
+        layout.columns.currency,
+        required_field_context,
+    )
     description = _required_value(raw_fields, lookup, layout.columns.description, "description")
     counterparty = _value_from_aliases(raw_fields, lookup, layout.columns.counterparty)
     return ParsedTabularTransactionRow(
@@ -550,6 +555,27 @@ def _value_from_aliases(
     value = raw_fields.get(header, "")
     normalized = coerce_cell_text(value)
     return normalized or None
+
+
+def _currency_from_aliases(
+    raw_fields: Mapping[str, str],
+    lookup: Mapping[str, str],
+    aliases: tuple[str, ...],
+    context: str,
+) -> str:
+    """Resolve, default, and validate the optional currency column."""
+    header = _find_column(lookup, aliases)
+    if header is None:
+        return default_currency()
+    raw = coerce_cell_text(raw_fields.get(header, ""))
+    if not raw:
+        return default_currency()
+    normalized = raw.upper()
+    if len(normalized) != 3 or not normalized.isalpha():
+        raise FinancialValidationError(
+            f"{context} currency column {header!r} must be a three-letter ISO 4217 code; got {raw!r}",
+        )
+    return normalized
 
 
 def _typed_value_from_aliases(

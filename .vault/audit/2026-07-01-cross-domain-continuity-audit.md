@@ -67,6 +67,9 @@ related:
 - Reviewed W09.P45.S229 changes to `src/aeat/entrypoints/cli/_overview.py` and `src/aeat/entrypoints/cli/tests/test_overview_calendar_verb.py`.
 - Checked that `overview calendar` now registers `--output-language` and `--language` using the real `OutputLanguage` authority and activates the override before date parsing, active-profile lookup, and all-profiles dispatch.
 - Checked validation evidence from focused overview calendar CLI integration tests, touched-file ruff, reviewer output, and RAG grounding.
+- Reviewed W09.P45.S224 changes to `src/aeat/adapters/inbound/financial/providers/_csv.py`, provider CSV tests, and focused ledger import UX tests.
+- Checked that missing and blank CSV currency still default to the configured default currency, while malformed nonblank currency is refused at import with row and column context before `RawTransaction` or `LedgerTransactionPayload` validation can leak.
+- Checked validation evidence from focused CSV provider tests, focused ledger import UX integration tests, touched-file ruff, reviewer output, and RAG grounding.
 
 ## Findings
 
@@ -141,6 +144,10 @@ No findings for the `--retencion-observation` input-validation closure. Producti
 ### w09-p45-s229 | low | no findings
 
 No findings for the overview calendar output-language parity fix. The CLI verb now takes `--output-language` and `--language`, activates the override before any refusal path renders, and leaves application overview calendar internals untouched. Residual risk is limited to the alias not having a separate dedicated assertion; the help assertion and code review confirmed the alias is registered from the same Typer option declaration.
+
+### w09-p45-s224 | low | no findings
+
+No findings for the CSV currency/list-view validation closure. The fix keeps defaulting for absent or blank currency cells, rejects malformed nonblank currency at the CSV provider boundary with row and column context, and leaves strict ledger read-payload currency validation intact. Residual risk is limited to mixed-language provider detail inside the localized import wrapper, which matches existing provider diagnostic practice but remains a possible future localization-hardening domain.
 
 ## Recommendations
 
