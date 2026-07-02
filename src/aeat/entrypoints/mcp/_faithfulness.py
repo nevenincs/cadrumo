@@ -76,3 +76,69 @@ def faithfulness_check(*, agent_text: str, tool_result_json: str, blocking: bool
         blocking=blocking,
         flagged_values=tuple(dict.fromkeys(flagged)),
     )
+
+
+class SessionGroundingWindow:
+    """A bounded, in-memory record of the session's tool-result JSON.
+
+    The serving-path integration surface (ADR R6): the model's free narration
+    lives client-side where the server cannot see it, so the ENFORCEABLE
+    faithfulness boundary is the tool-call arguments — every amount-shaped
+    number an agent sends INTO a call must be grounded in a tool result this
+    same session produced. The window accumulates each call's result JSON
+    (memory only, never persisted — results carry taxpayer figures and
+    ``sensitive-financial-data-secure-storage-only`` forbids writing them
+    outside secure storage) and serves as the grounding corpus for
+    :func:`arguments_faithfulness`.
+
+    Bounded FIFO so a long session cannot grow without limit; the bound is
+    generous because a grounding figure is almost always from the immediately
+    preceding calculate/revision reads.
+    """
+
+    def __init__(self, *, max_results: int = 32) -> None:
+        self._max_results = max_results
+        self._results: list[str] = []
+
+    def record(self, tool_result_json: str) -> None:
+        """Append one call's result JSON to the window, evicting the oldest past the bound."""
+        if not tool_result_json:
+            return
+        self._results.append(tool_result_json)
+        if len(self._results) > self._max_results:
+            del self._results[0]
+
+    def corpus(self) -> str:
+        """The concatenated grounding corpus the checks run against."""
+        return "\n".join(self._results)
+
+
+def arguments_faithfulness(
+    *,
+    arguments_json: str,
+    window: SessionGroundingWindow,
+    blocking: bool,
+) -> FaithfulnessResult:
+    """Check a tool call's ARGUMENTS against the session's grounding window.
+
+    The serving-path enforcement point: advisory on ordinary mutating calls, a
+    hard block at the export / record-marker handoff (an amount the session
+    never produced must not enter the irreversible artefact call). An empty
+    window with amount-shaped arguments on the handoff path blocks — figures
+    from nowhere are exactly the fabrication this gate exists to stop.
+    """
+    return faithfulness_check(
+        agent_text=arguments_json,
+        tool_result_json=window.corpus(),
+        blocking=blocking,
+    )
+
+
+def advisory_line(result: FaithfulnessResult) -> str:
+    """The warning line the server prepends to a result for an advisory mismatch."""
+    values = ", ".join(result.flagged_values)
+    return (
+        "FAITHFULNESS ADVISORY: the call's arguments cite amount(s) "
+        f"[{values}] that no tool result in this session produced. Verify the "
+        "figure against a calculate/revision read before relying on it."
+    )
