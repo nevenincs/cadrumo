@@ -71,16 +71,10 @@ def test_disposition_codes_match_the_official_diseno_letters() -> None:
         assert disposition.value == expected_code, case_id
 
 
-def test_m303_credit_is_compensacion_not_ingreso() -> None:
-    """The headline regression: an IVA credit must map to C, never silently I."""
-    disp = derive_result_disposition("303", _values(_M303_RESULT_CASILLA, "-210.00"))
-    assert disp is ResultDisposition.COMPENSACION
-    assert disp is not ResultDisposition.INGRESO
-
-
 def test_codified_result_disposition_cases() -> None:
     """Codified modelo cases pin the official disposition letter semantics."""
     for case_id, modelo, values, expected in (
+        ("m303-credit", "303", _values(_M303_RESULT_CASILLA, "-210.00"), ResultDisposition.COMPENSACION),
         ("m303-positive", "303", _values(_M303_RESULT_CASILLA, "357.00"), ResultDisposition.INGRESO),
         ("m303-zero", "303", _values(_M303_RESULT_CASILLA, "0"), ResultDisposition.NEGATIVA),
         (
@@ -145,15 +139,3 @@ def test_uncodified_modelo_returns_none_not_a_guess() -> None:
     assert modelo_has_codified_disposition("200") is True
     assert modelo_has_codified_disposition("202") is True
     assert modelo_has_codified_disposition("390") is False
-
-
-def test_credit_and_debit_diverge_per_modelo() -> None:
-    """Anti-regression: a debit and a credit of equal magnitude never share a code."""
-    for case_id, modelo, casilla_id, amount in (
-        ("m303-compensation-vs-ingreso", "303", _M303_RESULT_CASILLA, "210"),
-        ("m130-deducir-vs-ingreso", "130", _M130_RESULT_CASILLA, "50"),
-    ):
-        assert derive_result_disposition(modelo, _values(casilla_id, amount)) is not derive_result_disposition(
-            modelo,
-            _values(casilla_id, f"-{amount}"),
-        ), case_id
