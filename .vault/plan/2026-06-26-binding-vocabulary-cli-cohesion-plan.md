@@ -3,12 +3,13 @@ tags:
   - '#plan'
   - '#binding-vocabulary-cli-cohesion'
 date: '2026-06-26'
-modified: '2026-06-30'
+modified: '2026-07-02'
 tier: L3
 related:
   - '[[2026-06-26-binding-vocabulary-cli-cohesion-adr]]'
   - '[[2026-06-26-binding-vocabulary-cli-cohesion-reference]]'
 ---
+
 
 # `binding-vocabulary-cli-cohesion` plan
 
@@ -111,8 +112,8 @@ DEFERRED CARVE per the ADR and reference recommendation: typing DataBindingDefin
 
 DEFERRED carve: replace the free-form DataBindingDefinition.selector Mapping with a discriminated union keyed by BindingSourceKind and narrow typed_enum to a typed enum-class reference. Not a blocking dependency of W01-W04; lands only if the rename pass is light or as a separate follow-up phase.
 
-- [ ] `W05.P08.S25` - DEFERRED FOLLOW-UP (do NOT execute as part of W01-W04; `lands only if the rename pass is light or as a separate phase): replace the free-form DataBindingDefinition.selector BindingSelectorMap Mapping with a discriminated union keyed by BindingSourceKind so the per-family selector models in _bindings.py BECOME the schema rather than a validate-time overlay, updating the _schema.py field and alias, the _schema_scalars.py alias, and the _validate_binding_selector_shapes snapshot gate; atomic commit with docs-scaffold + API-stub + docstring-core-struct regen; collect-only clean before commit; apply-cached own-only, abort-on-WIP. NOTE: H3 source_revision_selector on the relation surface is NOT the binding selector and is out of scope; `src/aeat/domain/calculations/registry/_schema.py, src/aeat/domain/calculations/registry/_schema_scalars.py, src/aeat/domain/calculations/registry/_bindings.py`.
-- [ ] `W05.P08.S26` - DEFERRED FOLLOW-UP (paired with the selector union): narrow the typed_enum stringly-typed pointer (str-or-None enum class name) on DataBindingDefinition to a typed enum-class reference, sweeping the bindings list CLI table, the ModeloBindingQueryRow projection, the borrador resolver, and the Sheets-pull router; `gated by test_schema_hygiene.py; atomic commit with docs-scaffold + API-stub + docstring-core-struct regen; collect-only clean before commit; apply-cached own-only, abort-on-WIP; `src/aeat/domain/calculations/registry/_schema.py, src/aeat/domain/calculations/registry/_queries.py`.
+- [x] `W05.P08.S25` - DEFERRED FOLLOW-UP (do NOT execute as part of W01-W04; `lands only if the rename pass is light or as a separate phase): replace the free-form DataBindingDefinition.selector BindingSelectorMap Mapping with a discriminated union keyed by BindingSourceKind so the per-family selector models in _bindings.py BECOME the schema rather than a validate-time overlay, updating the _schema.py field and alias, the _schema_scalars.py alias, and the _validate_binding_selector_shapes snapshot gate; atomic commit with docs-scaffold + API-stub + docstring-core-struct regen; collect-only clean before commit; apply-cached own-only, abort-on-WIP. NOTE: H3 source_revision_selector on the relation surface is NOT the binding selector and is out of scope; `src/aeat/domain/calculations/registry/_schema.py, src/aeat/domain/calculations/registry/_schema_scalars.py, src/aeat/domain/calculations/registry/_bindings.py`.
+- [x] `W05.P08.S26` - DEFERRED FOLLOW-UP (paired with the selector union): narrow the typed_enum stringly-typed pointer (str-or-None enum class name) on DataBindingDefinition to a typed enum-class reference, sweeping the bindings list CLI table, the ModeloBindingQueryRow projection, the borrador resolver, and the Sheets-pull router; `gated by test_schema_hygiene.py; atomic commit with docs-scaffold + API-stub + docstring-core-struct regen; collect-only clean before commit; apply-cached own-only, abort-on-WIP; `src/aeat/domain/calculations/registry/_schema.py, src/aeat/domain/calculations/registry/_queries.py`.
 - [ ] `W05.P08.S27` - DEFERRED FOLLOW-UP verification: when F8 lands, run pytest --collect-only -q clean, test_schema_hygiene.py and the bindings-framework gate suite green, and assert the selector union is behaviour-preserving over the prior validate-time selector models; `if F8 is deferred to a separate phase, leave this Wave open and record the carve in the close note; `src/aeat/domain/calculations/registry/tests/test_schema_hygiene.py, src/aeat/domain/calculations/registry/tests`.
 
 ## Parallelization
