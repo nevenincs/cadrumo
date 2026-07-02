@@ -31,7 +31,7 @@ _REPOSITORY_SOURCES: tuple[tuple[str, Path], ...] = (
     ),
     (
         "WorkUnitCatalogueRepository",
-        PROJECT_ROOT / "src" / "aeat" / "domain" / "modelos" / "_repository.py",
+        PROJECT_ROOT / "src" / "aeat" / "adapters" / "persistence" / "profile" / "modelos_work_units.py",
     ),
     (
         "VerificationReportCatalogueRepository",

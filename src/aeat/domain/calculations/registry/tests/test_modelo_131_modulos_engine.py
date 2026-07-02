@@ -39,7 +39,7 @@ _MERCANCIAS_722 = {
     3: Decimal("126.21"),  # carga vehículos (tonelada)
 }
 
-# Phase 2 next-priority activities (café-bar / restaurante), independently
+# Next-priority activities (café-bar / restaurante), independently
 # transcribed from the bundled Orden HAC/1347/2024 Anexo II
 # (corpus/normatives/html/orden-hac-1347-2024.html, lines ~1772-1943) and
 # cross-checked byte-identical against the AEAT Manual práctico de Renta 2025,
@@ -69,7 +69,7 @@ _CAFETERIAS_672_1 = {
     6: Decimal("3747.67"),  # máquinas tipo «B»
 }
 
-# Phase 2 next-priority activities (comercio al por menor de alimentación),
+# Next-priority activities (comercio al por menor de alimentación),
 # independently transcribed from the same bundled Orden Anexo II (lines
 # ~837-1148) and cross-checked byte-identical against the AEAT manual
 # (source.pdf.extracted.md lines ~22413-22607).
@@ -97,8 +97,8 @@ _ALIMENTACION_647_1 = {
     5: Decimal("8.81"),  # consumo de energía eléctrica (100 kWh)
 }
 
-# Phase 2 activities not previously covered by a dedicated test (backfilled
-# per the Phase 2 review's LOW finding), independently transcribed from the
+# Activities not previously covered by a dedicated test (backfilled
+# per a review's low-severity finding), independently transcribed from the
 # same bundled Orden Anexo II and cross-checked against the AEAT manual.
 _CAFES_ESPECIAL_673_1 = {
     1: Decimal("4056.30"),  # personal asalariado (persona)
@@ -172,7 +172,7 @@ _AUTOSERVICIO_647_2 = {
     4: Decimal("32.75"),  # consumo de energía eléctrica (100 kWh)
 }
 
-# Phase 3 next-priority activities (comercio al por menor de textil/calzado/
+# Next-priority activities (comercio al por menor de textil/calzado/
 # mueble/electrodoméstico, hospedaje, reparaciones, transporte urbano),
 # independently transcribed from the bundled Orden HAC/1347/2024 Anexo II and
 # cross-checked byte-identical against the AEAT Manual práctico de Renta 2025.
@@ -230,11 +230,11 @@ _TRANSPORTE_URBANO_721_1 = {
     3: Decimal("121.40"),  # número de asientos (asiento)
 }
 
-# Phase 4 next-priority activities (#516): remaining reparaciones,
+# Remaining next-priority activities (#516): reparaciones,
 # engrase/lavado, mudanzas, mensajería, enseñanza, servicios personales, and
 # the 659.4/691.9 epígrafe-collision pairs (resolved via the "a"/"b"
-# key-namespace suffix convention — see the registry parameter file's Phase 4
-# note), independently transcribed from the bundled Orden HAC/1347/2024
+# key-namespace suffix convention — see the registry parameter file's note),
+# independently transcribed from the bundled Orden HAC/1347/2024
 # Anexo II and cross-checked byte-identical against the AEAT Manual práctico
 # de Renta 2025, Parte 1, Capítulo 8 apéndice.
 _PAPELERIA_659_4A = {
@@ -566,7 +566,8 @@ class TestPanPasteleria6441EstimacionObjetiva:
         # fabricación, 2 (100 dm2) superficie del horno. This activity has 7
         # signos; a 4-slot engine would silently drop módulo 7 (superficie
         # del horno, 629,86 €/unit) — the exact over-truncation risk the
-        # 2026-07-01-modelo-131-eo-modulos-engine-adr Option D rejected.
+        # modelo-131-eo-modulos-engine decision record rejected (the option
+        # that capped the engine at 4 slots).
         previo, _actividad = _run_modulos_engine(
             "644.1",
             modulo_1=Decimal("1"),

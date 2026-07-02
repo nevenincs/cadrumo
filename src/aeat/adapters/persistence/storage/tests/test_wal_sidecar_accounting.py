@@ -5,14 +5,14 @@ just-committed row lives in the ``<db>-wal`` sidecar until a checkpoint folds it
 into the main ``.db`` file. Two surfaces must account for the sidecar or they
 silently miss committed-but-uncheckpointed rows:
 
-P03.S15 - every at-rest plaintext-scan surface. The shared ``read_db_at_rest_bytes``
+Every at-rest plaintext-scan surface. The shared ``read_db_at_rest_bytes``
 helper concatenates the main file with its ``-wal`` sidecar; a scan that read
 only the main file would pass *tautologically* (no plaintext leaked because the
 data is not in the file being scanned). This test writes a REAL committed row,
 leaves it uncheckpointed, and proves the helper's combined view carries bytes a
 main-file-only read misses.
 
-P03.S16 - the sealed-archive export. The export payload is built by
+The sealed-archive export. The export payload is built by
 ``serialize_profile_bundle``, which reads every secure object through the SQL
 query layer (not a raw file copy), so a committed-but-uncheckpointed WAL row is
 inherently included. This test proves the query layer returns a row that the raw

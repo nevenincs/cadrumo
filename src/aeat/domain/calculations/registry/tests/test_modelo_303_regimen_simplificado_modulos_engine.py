@@ -1,4 +1,4 @@
-"""Modelo 303 régimen simplificado de IVA módulos engine (Phase 2, phased dataset).
+"""Modelo 303 régimen simplificado de IVA módulos engine (phased dataset).
 
 Non-tautological: expected values are transcribed independently from the
 bundled Orden HAC/1347/2024 Anexo I IVA module tables

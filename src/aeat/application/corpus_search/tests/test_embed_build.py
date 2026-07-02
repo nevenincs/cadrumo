@@ -1,4 +1,4 @@
-"""Real-behavior tests for the build-time embedding precompute (W06.P12.S79).
+"""Real-behavior tests for the build-time embedding precompute.
 
 model2vec rides the capability-gated ``aeat[search]`` extra. These tests
 branch on its real presence — never skip: when the extra is absent (the

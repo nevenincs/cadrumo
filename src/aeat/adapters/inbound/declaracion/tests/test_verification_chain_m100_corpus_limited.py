@@ -59,7 +59,7 @@ def test_verification_chain_m100_engine_corpus_limited() -> None:
         "renta-2021-modelo-111-retenciones-periodicas": Decimal("0"),
         "renta-2021-modelo-123-retenciones-periodicas": Decimal("0"),
         # Childless corpus fixture: Art. 58/61 LIRPF mínimo por descendientes
-        # aggregate is zero (modelo-100-minimo-descendientes-engine ADR, Option A).
+        # aggregate is zero (modelo-100-minimo-descendientes-engine decision record, Option A).
         "renta-2021-profile-minimo-descendientes-estatal": Decimal("0"),
     }
     enum_binding_values = {

@@ -1,7 +1,7 @@
 """Import-hygiene ratchet gate: the authoritative cross-package import boundary.
 
 Wires ``dev/import_hygiene_scan.py`` into the pytest/CI surface as the single
-gate enforcing the ``import-centralization`` ADR's Ruling 1 (one canonical
+gate enforcing the ``import-centralization`` decision record's Ruling 1 (one canonical
 top-level export per symbol; cross-package consumers import only from the
 owning package's ``__all__`` facade). Supersedes the two narrower pre-existing
 gates it now subsumes:
@@ -21,27 +21,27 @@ Three ratcheting/pinned checks, backed by the checked-in
   violation fails even if an old one was fixed in the same pass, keeping the
   baseline honest as a named allowlist rather than a bare counter). A closing
   commit that fixes a violation shrinks ``sites`` in the same commit
-  (``aeat-architecture-boundaries`` relocation-atomicity discipline). Wave W06
-  flips ``sites`` to ``[]`` once production reaches hard zero.
+  (``aeat-architecture-boundaries`` relocation-atomicity discipline). A future
+  remediation pass flips ``sites`` to ``[]`` once production reaches hard zero.
 - **Family 2 (shim / pure-reexport modules).** The gate asserts the current
   shim set is EXACTLY the 6 documented bridges named in the baseline -- not a
   ceiling, an equality. A new undocumented shim fails; a bridge that stops
   being a shim (a real implementation lands in it) also fails, forcing the
   baseline to be updated deliberately rather than silently drifting.
 - **Family 3 (genuine multi-sourced/duplicate symbols).** The gate asserts (a)
-  none of the 7 symbols retired from the app-layer umbrella facades in Wave
-  W03.P88 have reappeared as multi-facade symbols, and (b) every OTHER
+  none of the 7 symbols retired from the app-layer umbrella facades have
+  reappeared as multi-facade symbols, and (b) every OTHER
   ``confidence="high"`` symbol declared in more than one facade's ``__all__``
-  (a Case-A structural duplicate -- the genuine-duplicate class the ADR
-  targets) is a member of the named tolerated set. Family-3 Case-B hits (a
-  symbol facaded AND separately reached from a private submodule by an
-  outside consumer -- overwhelmingly test-only debt tracked by Family 1's
-  Wave W05 test sweep, not a structural duplicate) are out of scope for this
-  pin; they are not asserted here because they shrink as Wave W05 lands, not
-  as a Family-3 fix.
+  (a Case-A structural duplicate -- the genuine-duplicate class the governing
+  decision record targets) is a member of the named tolerated set. Family-3
+  Case-B hits (a symbol facaded AND separately reached from a private
+  submodule by an outside consumer -- overwhelmingly test-only debt tracked by
+  Family 1's remaining test sweep, not a structural duplicate) are out of
+  scope for this pin; they are not asserted here because they shrink as that
+  sweep lands, not as a Family-3 fix.
 
 A fourth, TEST-ONLY pair of checks backed by the checked-in
-``dev/import_hygiene_test_debt.json`` governs the Wave W05 remainder that
+``dev/import_hygiene_test_debt.json`` governs the remainder that
 survives after every mechanically-facadable test-only site has been rewritten
 onto its owning package's public export: a private evaluator, repository
 factory, module-level cache, or constant with no sensible public-facade
@@ -321,13 +321,13 @@ _RETIRED_UMBRELLA_SYMBOL_OWNERS: Final[dict[str, str]] = {
 
 
 def test_family3_retired_umbrella_symbols_have_not_reappeared() -> None:
-    """The 7 app-layer umbrella re-exports retired in Wave W03.P88 must stay retired.
+    """The 7 app-layer umbrella re-exports retired from the umbrella facades must stay retired.
 
     Checked directly against the retired symbol's OWN facade ``__all__`` (not
     the noisy multi-sourced Case-B signal, which still flags these names
     while any test-only consumer reaches the sole domain-layer private
-    submodule directly -- that is Family-1 test debt tracked by Wave W05, not
-    a Family-3 umbrella-retirement regression).
+    submodule directly -- that is Family-1 test debt tracked by the remaining
+    test sweep, not a Family-3 umbrella-retirement regression).
     """
     baseline = _load_baseline()
     retired = baseline["family3_pinned_duplicate_symbols"]["retired_symbols_must_not_reappear"]
@@ -345,7 +345,7 @@ def test_family3_retired_umbrella_symbols_have_not_reappeared() -> None:
     )
 
     assert reappeared == [], (
-        "symbol(s) retired from the application-layer umbrella facades in Wave W03.P88 have "
+        "symbol(s) retired from the application-layer umbrella facades have "
         f"reappeared in their retired owning facade's __all__: {reappeared}. The domain package "
         "is the sole canonical source; do not re-add these to an application-layer __all__."
     )
@@ -355,12 +355,12 @@ def test_family3_genuine_duplicate_symbols_are_exactly_the_pinned_set() -> None:
     """Every Case-A (multi-facade `__all__`) Family-3 'high' confidence symbol is pinned.
 
     Case-A here means the symbol is declared in more than one facade's
-    ``__all__`` -- the structural-duplication shape the ADR's Family-3
-    'genuine duplicate' finding targets. Case-B hits (a facade-declared symbol
-    ALSO reached from a private submodule by an outside consumer, usually a
-    test file) are excluded from this pin: they are Family-1 test-only debt
-    surfaced through the Family-3 lens and are tracked by Wave W05's test
-    sweep, not by this Family-3 structural pin.
+    ``__all__`` -- the structural-duplication shape the governing decision
+    record's Family-3 'genuine duplicate' finding targets. Case-B hits (a
+    facade-declared symbol ALSO reached from a private submodule by an
+    outside consumer, usually a test file) are excluded from this pin: they
+    are Family-1 test-only debt surfaced through the Family-3 lens and are
+    tracked by the remaining test sweep, not by this Family-3 structural pin.
     """
     baseline = _load_baseline()
     tolerated_entries = baseline["family3_pinned_duplicate_symbols"]["tolerated_multi_sourced_symbols"]

@@ -27,7 +27,7 @@ from .....tests.aeat_literal_fixtures import justificante_wlpl_cotejo_url
 from .....tests.secure_sql import isolated_runtime_profile
 from ..justificante import JustificanteRepository
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 
 _PRESENTED_AT = datetime(2026, 5, 27, 11, 15, 0, tzinfo=UTC)
 

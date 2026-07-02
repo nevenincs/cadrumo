@@ -1,6 +1,6 @@
 """Guided-workflow prompts embed the shipped skills and orient the session.
 
-Proves W02.P04's prompt channel (ADR R4): the catalogue is exactly the shipped
+Proves the guided-workflow prompt channel (decision record R4): the catalogue is exactly the shipped
 skills plus the orientation entry, every skill prompt embeds its ``SKILL.md``
 verbatim as a resource, the orientation prompt embeds the operator rules, and an
 unknown prompt name maps to a clean protocol error. The SDK-independent

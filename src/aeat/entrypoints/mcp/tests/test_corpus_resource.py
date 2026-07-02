@@ -1,4 +1,4 @@
-"""Real-behavior tests for the aeat://corpus/{ref} resource (W06.P13.S82)."""
+"""Real-behavior tests for the aeat://corpus/{ref} resource."""
 
 from __future__ import annotations
 

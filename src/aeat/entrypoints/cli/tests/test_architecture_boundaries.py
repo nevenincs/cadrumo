@@ -9,7 +9,7 @@ the latter's ``_PRIVATE_DOMAIN_IMPORT_EXCEPTIONS`` allowlist covering
 project-wide ratcheting import-hygiene gate,
 ``src/aeat/tests/test_import_hygiene_gate.py`` (backed by
 ``dev/import_hygiene_scan.py`` and ``dev/import_hygiene_baseline.json``), per
-the ``import-centralization`` ADR Ruling 8. Both former allowlist entries are
+the ``import-centralization`` decision record's Ruling 8. Both former allowlist entries are
 empty in practice at supersession time: neither modelo CLI module still
 imports its domain package's private submodule (both now import the public
 facade), and the general gate enforces the boundary for every production file

@@ -3381,19 +3381,19 @@ cli:
         a PATH-en.
     pull_folder:
       errors:
-        folder_id_unrecognised: cli.ledger.pull_folder.errors.folder_id_unrecognised
-        folder_refused: cli.ledger.pull_folder.errors.folder_refused
-      folder_help: cli.ledger.pull_folder.folder_help
-      help: cli.ledger.pull_folder.help
+        folder_id_unrecognised: 'A(z) %{reference} Google Drive mappahivatkozás nem tartalmaz felismerhető mappaazonosítót. Adj meg egy Drive mappa-URL-t vagy a puszta mappaazonosítót.'
+        folder_refused: 'A(z) %{folder_id}%{scope_hint} Drive mappa nem listázható: a mappának elérhetőnek kell lennie a drive.file hatókörben (az alkalmazás hozta létre, vagy az operátor kifejezetten kiválasztotta), vagy add meg a szükséges Google hatókört, és próbáld újra.'
+      folder_help: 'Drive mappa-URL vagy puszta mappaazonosító a PDF-/kép-számlák tömeges letöltéséhez.'
+      help: 'Egy Drive mappa minden PDF-/kép-számláját tömegesen letölti, és mindegyiket titkosított bizonyítékként tárolja (tranzakcióhoz nem kapcsolva; kapcsold az ''aeat app ledger attach'' vagy ''link'' paranccsal).'
       labels:
-        fetched: cli.ledger.pull_folder.labels.fetched
-        folder_id: cli.ledger.pull_folder.labels.folder_id
-        refused: cli.ledger.pull_folder.labels.refused
-        skipped: cli.ledger.pull_folder.labels.skipped
-        total: cli.ledger.pull_folder.labels.total
-      note_help: cli.ledger.pull_folder.note_help
+        fetched: 'letoltott_db'
+        folder_id: 'mappa_azonosito'
+        refused: 'elutasitott_db'
+        skipped: 'kihagyott_nem_dokumentum_db'
+        total: 'osszes_dokumentum'
+      note_help: 'Minden letöltött mellékleten rögzített opcionális megjegyzés.'
       notices:
-        files_refused: cli.ledger.pull_folder.notices.files_refused
+        files_refused: 'Ebben a mappában %{refused_count} fájlt nem sikerült letölteni a drive.file hatókörben; töltsd le őket kézzel, és csatold az ''aeat app ledger attach --attachment-id ...'' paranccsal.'
     remove:
       actor_help: Az üzemeltető neve, amelyet a bucket-eseményen rögzítenek.
       dry_run_help: Az eltávolítás hatásainak jelentése a főkönyvi tranzakció törlése
