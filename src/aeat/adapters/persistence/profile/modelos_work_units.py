@@ -23,8 +23,7 @@ from typing import TYPE_CHECKING
 from ....core.external_constants import UTF_8_ENCODING
 from ....core.logging import get_logger
 from ....core.time import now
-from ....domain.modelos import WorkUnitCatalogue
-from ....domain.modelos._errors import raise_catalogue_integrity_error
+from ....domain.modelos import WorkUnitCatalogue, raise_catalogue_integrity_error
 from ....domain.modelos._repository import WorkUnitPersistenceError
 from ....domain.modelos._runtime_repository import (
     resolve_modelo_repository_bucket_id,
