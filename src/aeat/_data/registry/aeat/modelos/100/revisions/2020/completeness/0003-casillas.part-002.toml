@@ -211,6 +211,10 @@ casilla_id = "0524"
 number = "0524"
 
 [[revisions."2020".completeness_manifest.casillas]]
+casilla_id = "0527"
+number = "0527"
+
+[[revisions."2020".completeness_manifest.casillas]]
 casilla_id = "0528"
 number = "0528"
 
