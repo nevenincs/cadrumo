@@ -5,11 +5,11 @@
 :class:`EvidenceBundleVerificationReport`.
 
 The repository is a
-:class:`~aeat.adapters.persistence.storage.SecureBoundRepository` namespace for
-encrypted :class:`~aeat.adapters.persistence.storage.Envelope`-wrapped
+:class:`~adapters.persistence.storage.SecureBoundRepository` namespace for
+encrypted :class:`~adapters.persistence.storage.Envelope`-wrapped
 bucket-local manifests, with the namespace, schema version, object-key grammar,
 and custody disposition declared by
-:data:`aeat.adapters.persistence.storage.APPLICATION_EVIDENCE_BUNDLE_NAMESPACE`.
+:data:`adapters.persistence.storage.APPLICATION_EVIDENCE_BUNDLE_NAMESPACE`.
 :meth:`EvidenceBundleService.export` is the narrow operator-directed plaintext
 exception: it verifies first, writes record bytes to the requested archive path before
 ``manifest.json``, and does not mutate the secure catalogue.
@@ -61,17 +61,17 @@ class EvidenceBundleRepository(SecureBoundRepository[EvidenceBundle]):
 
     The namespace, sensitivity, schema version, and payload type come
     from
-    :data:`aeat.adapters.persistence.storage.APPLICATION_EVIDENCE_BUNDLE_NAMESPACE`
+    :data:`adapters.persistence.storage.APPLICATION_EVIDENCE_BUNDLE_NAMESPACE`
     so evidence bundles use the same secure-object envelope contract as other
     sensitive bucket-local application state.
-    The :class:`~aeat.adapters.persistence.storage.SecureBoundRepository` base
+    The :class:`~adapters.persistence.storage.SecureBoundRepository` base
     wraps each :class:`EvidenceBundle` in a
-    :class:`~aeat.adapters.persistence.storage.Envelope` before writing it.
+    :class:`~adapters.persistence.storage.Envelope` before writing it.
 
     See Also:
         :class:`EvidenceBundleService`
             Service layer that builds, verifies, exports, and replays bundles.
-        :class:`~aeat.adapters.persistence.storage.SecureBoundRepository`
+        :class:`~adapters.persistence.storage.SecureBoundRepository`
             Generic encrypted-envelope repository base used by this store.
     """
 
