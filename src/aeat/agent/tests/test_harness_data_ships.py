@@ -24,6 +24,9 @@ _EXPECTED_RULES = frozenset(
         "operator-safety-handoff.md",
         "operator-envelope-reading.md",
         "operator-grounding.md",
+        "operator-orientation-routing.md",
+        "operator-lifecycle-ordering.md",
+        "operator-honest-declaration.md",
     },
 )
 
