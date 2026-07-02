@@ -112,7 +112,7 @@ def build_terminology_search_tool() -> object:
             "properties": {
                 "query": {
                     "type": "string",
-                    "description": "A tax term or concept in plain language (e.g. 'prorrata', 'recargo de equivalencia').",
+                    "description": "A tax term or concept in plain language (e.g. 'prorrata', 'recargo').",
                 },
                 "limit": {
                     "type": "integer",
