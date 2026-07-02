@@ -10,6 +10,7 @@ related:
   - '[[2026-07-02-arch-remediation-registry-format-P01-S02]]'
   - '[[2026-07-02-arch-remediation-registry-format-P01-S09]]'
   - '[[2026-07-02-arch-remediation-registry-format-P01-S10]]'
+  - '[[2026-07-02-arch-remediation-registry-format-P02-S11]]'
   - '[[2026-07-02-arch-remediation-registry-format-adr]]'
   - '[[2026-07-02-arch-remediation-registry-format-plan]]'
 ---
@@ -30,6 +31,7 @@ Auto-generated index of all documents tagged with `#arch-remediation-registry-fo
 - `2026-07-02-arch-remediation-registry-format-P01-S02` - Enumerate the actual inline revision set at HEAD by grep for inline binding and formula tables in revision.toml, confirming it against the ADR list before migrating
 - `2026-07-02-arch-remediation-registry-format-P01-S09` - Migrate modelo 231 inline revision to the fragmented layout in one atomic commit gated by the equality test and a green registry validator
 - `2026-07-02-arch-remediation-registry-format-P01-S10` - Migrate modelo 361 inline revision to the fragmented layout in one atomic commit gated by the equality test and a green registry validator
+- `2026-07-02-arch-remediation-registry-format-P02-S11` - Migrate the M369 inline schemas to the fragmented layout in one atomic commit gated by the equality test plus the M369 filing-grade suites
 
 ### plan
 
