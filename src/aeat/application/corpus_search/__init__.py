@@ -21,6 +21,14 @@ they refuse with an install hint when it is absent.
 
 from __future__ import annotations
 
+from ._citation_lookup import CitationLookup, bundled_citation_lookup
+from ._embed_build import (
+    POTION_MODEL_ID,
+    POTION_MODEL_REVISION,
+    embed_corpus,
+    load_embeddings,
+    more_like_this,
+)
 from ._errors import (
     CorpusSearchDependencyError,
     CorpusSearchError,
@@ -43,6 +51,9 @@ from ._models import (
 )
 
 __all__ = [
+    "POTION_MODEL_ID",
+    "POTION_MODEL_REVISION",
+    "CitationLookup",
     "CitationResolution",
     "CorpusChunk",
     "CorpusDocument",
@@ -54,7 +65,11 @@ __all__ = [
     "LexicalSearchHit",
     "SimilarChunk",
     "build_lexical_index",
+    "bundled_citation_lookup",
     "bundled_corpus_html_root",
+    "embed_corpus",
     "iter_corpus_chunks",
+    "load_embeddings",
+    "more_like_this",
     "search_lexical",
 ]
