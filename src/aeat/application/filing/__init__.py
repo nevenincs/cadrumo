@@ -2,14 +2,14 @@
 
 This package builds, reviews, approves, exports, verifies, imports, and
 summarises local filing artefacts. All draft creation and validation consume
-a :class:`~aeat.domain.calculations.registry.RegistrySnapshot` to resolve the
-active :class:`~aeat.domain.calculations.registry.ModeloRevision`, its casilla
+a :class:`RegistrySnapshot` to resolve the
+active :class:`ModeloRevision`, its casilla
 schema, relation inputs, and formula graph.
 
 Major entry points:
 
 * :func:`build_draft` constructs a validated
-  :class:`~aeat.domain.filing.ModeloDraft` from registry-backed inputs.
+  :class:`ModeloDraft` from registry-backed inputs.
 * :func:`approve_draft`, :func:`unapprove_draft`, and
   :func:`refresh_review_status` manage local review state and approval basis.
 * :func:`export_draft` writes a local fichero-BOE artefact, and
@@ -218,7 +218,7 @@ def build_draft(
 
     Returns:
         A fully constructed and validated
-        :class:`~aeat.domain.filing.ModeloDraft`.
+        :class:`ModeloDraft`.
 
     Raises:
         :class:`~aeat.domain.filing.ModeloBuilderError`: If the registry has no
@@ -783,7 +783,7 @@ def validate_draft(
     excludes findings, status, ``updated_at`` and ``notes``.
 
     Args:
-        draft: The :class:`~aeat.domain.filing.ModeloDraft` to re-validate.
+        draft: The :class:`ModeloDraft` to re-validate.
         bucket_id: Stable bucket identifier; forwarded to
             :func:`refresh_review_status` after validation.
         schema_provider: :class:`~aeat.domain.filing.CasillaSchemaProvider`
@@ -792,7 +792,7 @@ def validate_draft(
             Protocol implementation.
 
     Returns:
-        A new :class:`~aeat.domain.filing.ModeloDraft` with refreshed findings,
+        A new :class:`ModeloDraft` with refreshed findings,
         status and ``updated_at``.
     """
     validator = ModeloValidator(
@@ -826,7 +826,7 @@ def iter_findings(
     """Yield findings filtered by minimum severity.
 
     Args:
-        draft: The :class:`~aeat.domain.filing.ModeloDraft` to scan for
+        draft: The :class:`ModeloDraft` to scan for
             validation findings.
         severity_at_least: Minimum severity to yield, one of
             ``"INFO"``, ``"WARNING"``, ``"ERROR"``. Defaults to
