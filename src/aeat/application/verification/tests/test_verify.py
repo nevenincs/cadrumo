@@ -503,6 +503,9 @@ def test_m100_2025_registry_policy_reports_independently_grounded_fraction() -> 
         "renta-2025-modelo-123-retenciones-periodicas": Decimal("5.00"),
         "renta-2025-profile-unidad-familiar-otros-miembros-base": Decimal("0"),
         "renta-2025-profile-madrid-nacimiento-adopcion-eligible-count": Decimal("0"),
+        # Childless profile: Art. 58/61 LIRPF mínimo por descendientes aggregate
+        # is zero (modelo-100-minimo-descendientes-engine ADR, Option A).
+        "renta-2025-profile-minimo-descendientes-estatal": Decimal("0"),
     }
 
     result = calculate_registry_snapshot(
