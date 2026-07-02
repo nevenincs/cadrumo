@@ -5,7 +5,7 @@ configuration: operators and tests override fields here, and downstream code
 obtains the effective model through :func:`load_settings` or
 :func:`override_settings`. Runtime-tunable settings stay in this schema, while
 AEAT/Sede route and selector defaults come from
-:mod:`aeat.core.external_constants` through the default factories below.
+:mod:`core.external_constants` through the default factories below.
 
 The storage boundary exposed here is also deliberate. Database URL derivation,
 active-profile bucket routing, and route classification are surfaced through
@@ -1067,7 +1067,7 @@ class Settings(AeatRuntimeSettings):
     def external_constants() -> ExternalConstants:
         """Return the parsed external-constants registry.
 
-        Bridges :mod:`aeat.core.external_constants` to the settings facade
+        Bridges :mod:`core.external_constants` to the settings facade
         so callers reach third-party hostnames, AEAT service paths, OAuth
         scopes, and LLM endpoints through a single accessor.
 
