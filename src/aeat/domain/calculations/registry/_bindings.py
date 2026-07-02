@@ -63,6 +63,12 @@ from ._detail_record_bindings import (
     validate_refund_binding,
     validate_related_party_binding,
 )
+from ._donativo_bindings import (
+    DonativoDonorObservation,
+    _DonativoSelector,
+    resolve_donativo_binding_row_values,
+    validate_donativo_binding,
+)
 from ._errors import RegistryValidationError
 from ._ids import BindingId, CasillaId, FormulaId, LegalRefId, ModeloId, OracleId, SourceRefId
 from ._invoice_bindings import (
@@ -143,6 +149,7 @@ __all__ = [
     "CounterpartObservationRequirement",
     "CounterpartSourceKind",
     "DataBindingDefinition",
+    "DonativoDonorObservation",
     "ImpatriadoIncomeObservationProtocol",
     "InvoiceObservation",
     "InvoiceObservationRequirement",
@@ -176,6 +183,7 @@ __all__ = [
     "resolve_bound_inputs_by_casilla_id",
     "resolve_counterpart_binding_row_values",
     "resolve_counterpart_binding_values",
+    "resolve_donativo_binding_row_values",
     "resolve_foreign_asset_binding_row_values",
     "resolve_invoice_binding_row_values",
     "resolve_invoice_binding_values",
@@ -789,6 +797,7 @@ _BINDING_SELECTOR_REGISTRY: dict[BindingSourceKind, type[BaseModel]] = {
     BindingSourceKind.FOREIGN_ASSET: _ForeignAssetSelector,
     BindingSourceKind.ATRIBUCION_MEMBER: _AtributionSelector,
     BindingSourceKind.REFUND_OPERATION: _RefundSelector,
+    BindingSourceKind.DONATIVO_DONOR: _DonativoSelector,
     BindingSourceKind.MANUAL_INPUT: _ManualInputSelector,
     BindingSourceKind.PROFILE: _ProfileSelector,
 }
@@ -870,6 +879,7 @@ _BINDING_VALIDATOR_REGISTRY: dict[BindingSourceKind, _BindingFamilyValidator] = 
     BindingSourceKind.FOREIGN_ASSET: validate_foreign_asset_binding,
     BindingSourceKind.ATRIBUCION_MEMBER: validate_atribucion_binding,
     BindingSourceKind.REFUND_OPERATION: validate_refund_binding,
+    BindingSourceKind.DONATIVO_DONOR: validate_donativo_binding,
     BindingSourceKind.WITHHOLDING: validate_withholding_binding_selector_shape,
     BindingSourceKind.MANUAL_INPUT: _validate_selector_only(_ManualInputSelector),
     BindingSourceKind.PROFILE: _validate_selector_only(_ProfileSelector),
@@ -890,12 +900,12 @@ def validate_binding_selector_shape(binding: DataBindingDefinition) -> list[str]
     underlying pydantic field error, so the snapshot-build gate can collect every
     failure across a revision in one pass.
 
-    For every family — including the four detail-record families
+    For every family — including the five detail-record families
     (``related_party_operation``, ``foreign_asset``, ``atribucion_member``,
-    ``refund_operation``) and ``previous_filing`` whose op/fact invariants
-    previously ran only at resolve time — a malformed binding is now rejected at
-    snapshot build rather than only when a taxpayer calculation invokes the
-    resolver.
+    ``refund_operation``, ``donativo_donor``) and ``previous_filing`` whose
+    op/fact invariants previously ran only at resolve time — a malformed
+    binding is now rejected at snapshot build rather than only when a
+    taxpayer calculation invokes the resolver.
 
     Sources not in the dispatch table are mesh-only and should not appear on a
     registry binding; construction rejects them before this build-time validator
