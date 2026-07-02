@@ -51,6 +51,7 @@ from ...core import STRICT_FROZEN_CONFIG
 from ...core.hashing import content_hash_hex
 from .._identifiers import canonical_decimal_string as _canonical_decimal
 from ..calculations.registry._bindings import CasillaObservation
+from ..calculations.registry._formula_runtime import RegistryCalculationUnresolvedOutcome
 from ..calculations.registry._ids import BindingId, CasillaId, RelationId, validated_casilla_id
 from ._errors import ModeloError, ModeloValidationError
 from ._ids import CalculationRevisionId, WorkUnitId
@@ -330,6 +331,15 @@ class CalculationRevision(BaseModel):
     # engine's typed entries so operand_refs, operand_values, legal_refs,
     # and source_refs survive the domain boundary.
     observations: tuple[CasillaObservation, ...] = Field(default_factory=tuple)
+    # Typed unresolved-outcome envelope carrying the casillas the engine could
+    # NOT resolve to a Decimal value (an unresolvable IRNR rate omits its
+    # casilla rather than emitting an in-band sentinel magnitude). Populated
+    # from the engine result's ``unresolved_outcomes`` so the verification layer
+    # can convert each into a BLOCKING finding post-persistence. Rides beside
+    # ``observations`` and, like it, is deliberately NOT threaded into
+    # ``derive_calculation_revision_id`` (it is derived from the same inputs, not
+    # an independent identity axis).
+    unresolved_outcomes: tuple[RegistryCalculationUnresolvedOutcome, ...] = Field(default_factory=tuple)
     # Immutable content-addressed snapshot of the ledger state this revision was
     # computed from (per the modelo-filing-ledger-snapshot ADR). Captured at
     # verify/file time over ``source_transaction_ids``; ``None`` for unsnapshotted
