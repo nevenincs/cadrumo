@@ -5168,8 +5168,11 @@ wizard:
       1. Futtassa újra a parancsot interaktív terminálból az irányított beállítás
       használatához: aeat config profile create NAME
 
-      2. Vagy hozza létre egyetlen lépéssel, a szükséges adatokat kapcsolókként megadva:
-      aeat config profile create NAME --quiet --tax-id NIF/CIF/DNI/NIE'
+      2. Vagy hozzon létre resident IRPF természetes személy profilt egyetlen lépéssel,
+      a szükséges adatokat kapcsolókként megadva: aeat config profile create NAME
+      --quiet --tax-id NIF/CIF/DNI/NIE --entity-type natural_person --irpf-income-categories
+      actividad_economica --tax-residence-ccaa madrid --name KERESZTNÉV --surnames
+      VEZETÉKNÉV'
     unsupported_console_edit: 'Az irányított beállítás nem tudott interaktív promptot
       megnyitni ebben a futtatásban. Még semmi nem lett mentve.
 

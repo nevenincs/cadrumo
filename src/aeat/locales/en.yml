@@ -4979,8 +4979,11 @@ wizard:
       \ run does not have one.\nNothing has been saved yet.\n\nYou can finish creating\
       \ this profile in one of two ways:\n\n1. Run the command again from an interactive\
       \ terminal to use the guided setup:\n     aeat config profile create NAME\n\n\
-      2. Or create it in one step by supplying the required details as flags:\n  \
-      \   aeat config profile create NAME --quiet --tax-id NIF/CIF/DNI/NIE"
+      2. Or create a resident IRPF natural-person profile in one step by supplying
+      the required details as flags:\n     aeat config profile create NAME --quiet
+      --tax-id NIF/CIF/DNI/NIE --entity-type natural_person --irpf-income-categories
+      actividad_economica --tax-residence-ccaa madrid --name GIVEN_NAME --surnames
+      FAMILY_NAMES"
     unsupported_console_edit: "The guided setup could not open an interactive prompt\
       \ in this run.\nNothing has been saved yet.\n\nEdit this profile non-interactively\
       \ by naming the field to change:\n  aeat config profile edit %{profile_name}\
