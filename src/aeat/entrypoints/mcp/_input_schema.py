@@ -224,7 +224,15 @@ def _resolve_command(
         getter = getattr(command, "get_command", None)
         if getter is None:
             return None, tuple(resolved)
-        child = getter(context, token) or getter(context, token.replace("_", "-"))
+        try:
+            child = getter(context, token) or getter(context, token.replace("_", "-"))
+        except Exception:  # noqa: BLE001
+            # Materialising a lazily-loaded subtree can raise when a command in it
+            # declares a parameter type Typer cannot convert to click. Degrade to an
+            # unresolved command so only that subtree's keys fall back to an
+            # argument-free schema, rather than letting one hostile parameter brick
+            # the entire tool surface.
+            return None, tuple(resolved)
         if child is None:
             return None, tuple(resolved)
         resolved.append(str(child.name))
@@ -237,9 +245,11 @@ def build_verb_input_schema(root: ClickCommand, command_key: str) -> VerbInputSc
     """Build the :class:`VerbInputSchema` for one command key.
 
     Resolves the leaf command in the tree rooted at ``root`` and reads its click
-    parameters. A key that does not resolve to a live command falls back to an
-    empty parameter set over the naive path, so a stale registry key still yields
-    a valid (argument-free) descriptor rather than crashing the build.
+    parameters. A key that does not resolve to a live command - a stale registry
+    key, or one whose subtree cannot be introspected because a command in it
+    declares a Typer-unconvertible parameter type - falls back to an empty
+    parameter set over the naive path, yielding a valid (argument-free) descriptor
+    rather than crashing the whole tool-surface build.
 
     Returns:
         The strict :class:`VerbInputSchema` for the command.
