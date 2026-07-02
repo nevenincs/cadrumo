@@ -6,6 +6,11 @@ description: >-
   pagos fraccionados: create the work unit, calculate the full IS cuota chain,
   verify, export the fichero-BOE, and hand off for the taxpayer to file. Use
   when a `legal_entity` taxpayer files its annual corporate income tax return.
+applies_when:
+  profile_facts:
+    - fact: entity_type
+      match: equals
+      values: [legal_entity]
 ---
 
 # Prepare Modelo 200

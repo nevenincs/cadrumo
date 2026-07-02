@@ -11,20 +11,24 @@ provided ``bucket_id`` or a resolved work target; CLI modules may derive that
 value from the active profile, but the application surface itself does not read
 implicit workflow state.
 
-The facade carries :class:`CalculationRevision` and :class:`WorkUnit` through
+The facade carries :class:`domain.modelos.CalculationRevision` and
+:class:`domain.modelos.WorkUnit` through
 the operator lifecycle: work-unit creation and addressing, calculation-revision
 creation, verification, filing, export, history, reconciliation, registry
 discovery, M036 declaration records, IVA-wallet decisions, projections, and
 advisory helpers. It also re-exports the status and finding vocabulary used by
 those services, including :class:`CalculationRevisionState`,
 :class:`ModeloRecordStatus`, :class:`ModeloVerificationFindingKind`, and
-:class:`VerificationCompletenessStatus`.
+:class:`VerificationCompletenessStatus`. ``CalculationRevision``, ``WorkUnit``,
+``CalculationRevisionAmendmentKind``, and ``ExternalEvidenceKind`` are
+NOT re-exported here; :mod:`domain.modelos` is their sole canonical source
+(import-centralization ADR ruling 5).
 
 Verification, filing, and export remain owned by their focused service modules.
 :func:`verify_modelo_revision` persists a verification
 report for one
-:class:`CalculationRevision`; filing and export then consume the same persisted
-revision rather than rebuilding parallel workflow state.
+:class:`domain.modelos.CalculationRevision`; filing and export then consume the
+same persisted revision rather than rebuilding parallel workflow state.
 
 Local filing and external evidence are deliberately separate.
 :func:`file_modelo_revision` creates an internal
@@ -33,7 +37,7 @@ current :class:`domain.modelos.ModeloRecord` without
 :func:`import_external_filing_evidence` creates the
 AEAT-attested evidence baseline, and
 :func:`amend_modelo_revision` requires that baseline
-before recording a :class:`CalculationRevisionAmendmentKind`.
+before recording a :class:`domain.modelos.CalculationRevisionAmendmentKind`.
 
 See Also:
     :mod:`application.modelo._work_lifecycle`:
@@ -60,10 +64,7 @@ See Also:
 from __future__ import annotations
 
 from ...domain.modelos import (
-    CalculationRevision,
-    CalculationRevisionAmendmentKind,
     CalculationRevisionState,
-    ExternalEvidenceKind,
     Modelo184MemberRow,
     Modelo232VinculadaRow,
     Modelo347ContraparteRow,
@@ -76,7 +77,6 @@ from ...domain.modelos import (
     ModeloVerificationFindingKind,
     ModeloVerificationFindingSeverity,
     VerificationCompletenessStatus,
-    WorkUnit,
     validate_m349_country_prefix_context,
     validate_m349_nif_format,
 )
@@ -397,13 +397,10 @@ __all__ = [
     "BucketAggregationCalculationResult",
     "CalculationRegistryUnavailableError",
     "CalculationResultSummary",
-    "CalculationRevision",
-    "CalculationRevisionAmendmentKind",
     "CalculationRevisionNotFoundError",
     "CalculationRevisionState",
     "CalculationRevisionStateError",
     "CasillaProvenanceMissingError",
-    "ExternalEvidenceKind",
     "ExternalModeloImportError",
     "M036DeclarationCommand",
     "M036DeclarationResult",
@@ -525,7 +522,6 @@ __all__ = [
     "VerificationCompletenessStatus",
     "VerificationReportNotFoundError",
     "WorkCalculateInputBundle",
-    "WorkUnit",
     "WorkUnitAlreadyDiscardedError",
     "WorkUnitHistory",
     "WorkUnitHistoryEvent",

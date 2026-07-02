@@ -4,6 +4,8 @@ description: >-
   Build and clean the ledger for a period: import bank statements, review, correct,
   split combined rows, merge duplicates, and confirm the ledger is clean. Use after
   onboarding and before classification.
+applies_when:
+  workflow_phase: ledger_upkeep
 ---
 
 # Build the ledger

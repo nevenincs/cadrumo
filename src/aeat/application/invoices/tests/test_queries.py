@@ -15,6 +15,7 @@ from ....domain.invoices import (
     InvoiceLine,
     IvaRate,
     PaymentStatus,
+    verify_link_consistency,
 )
 from ....domain.iva import InvoiceKind
 from ....domain.transactions import (
@@ -33,7 +34,6 @@ from .. import (
     list_invoice_rows,
     list_unmatched_invoice_rows,
     verify_invoice_repository_links,
-    verify_link_consistency,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]

@@ -18,8 +18,9 @@ from typing import Annotated
 
 import typer
 
-from ...application.modelo import ModeloReconciliationReport, WorkUnit
+from ...application.modelo import ModeloReconciliationReport
 from ...core.i18n import tr
+from ...domain.modelos import WorkUnit
 from ._common import _emit_envelope
 
 _require_active_profile: Callable[[], None] | None = None
@@ -112,7 +113,7 @@ def _render_reconciliation_report(
     folded into the same text lines so JSON and text cannot drift.
     """
     from ...core.json_contract import Notice, NoticeSeverity
-    from ._modelo_payloads import (
+    from ._payloads_modelo_reconcile import (
         ModeloReconcileResult,
         ModeloReconciliationAdvisoryPayload,
         ModeloReconciliationDiffPayload,

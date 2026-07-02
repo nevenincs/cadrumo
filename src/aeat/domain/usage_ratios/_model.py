@@ -4,9 +4,9 @@ Defines :class:`UsageRatioProfile` — the strict, frozen pydantic v2 record
 that captures the operator's persisted business / personal split coefficients
 — plus :func:`resolve_user_ratio`, the pure helper consumed by
 ``aeat.domain.deductibility`` to look up an override before falling back to
-the statutory :attr:`aeat.domain.categories.ProportionalityRule.default_ratio`.
+the statutory :attr:`domain.categories.ProportionalityRule.default_ratio`.
 The eligibility set :data:`ELIGIBLE_USAGE_RATIO_CATEGORIES` is derived once at
-import time from :data:`aeat.domain.categories.CATEGORY_PROFILES_2025`.
+import time from :data:`domain.categories.CATEGORY_PROFILES_2025`.
 """
 
 from __future__ import annotations
@@ -51,11 +51,11 @@ def _eligible_categories() -> frozenset[SpendingCategory]:
 ELIGIBLE_USAGE_RATIO_CATEGORIES: frozenset[SpendingCategory] = _eligible_categories()
 """Categories for which a :class:`UsageRatioProfile` may carry an override.
 
-Derived from :data:`aeat.domain.categories.CATEGORY_PROFILES_2025` at import
+Derived from :data:`domain.categories.CATEGORY_PROFILES_2025` at import
 time: a category is eligible iff its
-:attr:`aeat.domain.categories.ProportionalityRule.kind` is
-:attr:`aeat.domain.categories.ProportionalityKind.USAGE_RATIO_HOME_AREA` or
-:attr:`aeat.domain.categories.ProportionalityKind.USAGE_RATIO_PERSONAL`.
+:attr:`domain.categories.ProportionalityRule.kind` is
+:attr:`domain.categories.ProportionalityKind.USAGE_RATIO_HOME_AREA` or
+:attr:`domain.categories.ProportionalityKind.USAGE_RATIO_PERSONAL`.
 """
 
 
@@ -74,7 +74,7 @@ class UsageRatioProfile(BaseModel):
     :meth:`with_ratio` / :meth:`without_ratio` to derive new profiles.
 
     Attributes:
-        ratios: Frozen mapping from :class:`aeat.domain.categories.SpendingCategory`
+        ratios: Frozen mapping from :class:`domain.categories.SpendingCategory`
             to a :class:`~decimal.Decimal` in ``[0, 1]``.
     """
 
@@ -143,7 +143,7 @@ def resolve_user_ratio(profile: UsageRatioProfile, category: SpendingCategory) -
 
     Pure helper consumed by ``aeat.domain.deductibility``. When the return
     value is ``None`` the caller falls back to
-    :attr:`aeat.domain.categories.ProportionalityRule.default_ratio` and
+    :attr:`domain.categories.ProportionalityRule.default_ratio` and
     records the resolution source in the transaction trace fields.
 
     Args:

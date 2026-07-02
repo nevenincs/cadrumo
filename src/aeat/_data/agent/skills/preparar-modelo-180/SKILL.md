@@ -8,6 +8,10 @@ description: >-
   review the per-perceptor (landlord) detail rows, export the fichero-BOE,
   and hand off for the taxpayer to file. Use when the taxpayer files their
   annual urban-rental retenciones informativa summary.
+applies_when:
+  profile_facts:
+    - fact: pays_rent_with_retencion
+      match: is_true
 ---
 
 # Prepare Modelo 180

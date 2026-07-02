@@ -1,8 +1,10 @@
-# M131 estimación-objetiva módulos engine formulas (Phase 1 / first slice).
+# M131 estimación-objetiva módulos engine formulas (Phase 1/Phase 2 tabled
+# activities).
 #
 # Fase 1ª — rendimiento neto previo: dispatches the units×coefficient product
 # through the m131_resolve_modulos_previo op, which reads the epígrafe (text)
-# plus up to four módulo unit-count casillas and the registry-declared
+# plus up to seven módulo unit-count casillas (the highest signo count among
+# the tabled activities, 644.1/644.2/644.3) and the registry-declared
 # keyed-bracket coefficient table (m131-modulos-coeficientes-2025). An
 # untabled epígrafe or a blank epígrafe resolves to zero (see the op's
 # docstring in _formula_runtime.py).
@@ -15,6 +17,9 @@ expression = { op = "m131_resolve_modulos_previo", args = [
     { casilla_id = "modulos-2-unidades" },
     { casilla_id = "modulos-3-unidades" },
     { casilla_id = "modulos-4-unidades" },
+    { casilla_id = "modulos-5-unidades" },
+    { casilla_id = "modulos-6-unidades" },
+    { casilla_id = "modulos-7-unidades" },
     { parameter = "m131-modulos-coeficientes-2025" },
 ] }
 rounding = "money-2"

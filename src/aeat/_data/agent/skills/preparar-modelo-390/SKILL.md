@@ -6,6 +6,11 @@ description: >-
   verify it reconciles against the four trimestrales, export the fichero-BOE, and
   hand off for the taxpayer to file. Use when the taxpayer files their annual IVA
   summary declaration.
+applies_when:
+  profile_facts:
+    - fact: iva_regime
+      match: equals
+      values: [GENERAL, SIMPLIFICADO]
 ---
 
 # Prepare Modelo 390

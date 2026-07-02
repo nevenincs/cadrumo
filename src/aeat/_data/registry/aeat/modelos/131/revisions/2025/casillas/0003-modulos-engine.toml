@@ -1,8 +1,10 @@
-# M131 estimación-objetiva módulos engine (Phase 1: fase 1ª "rendimiento neto
-# previo" + fase 4ª "reducción general", first-slice IAE activities). The five
-# operator-declared inputs (epígrafe + up to four módulo unit counts) are
-# calculation-support casillas absent from the AEAT-published Diseño de
-# Registros (no export_refs); the two computed casillas
+# M131 estimación-objetiva módulos engine (Phase 1/Phase 2: fase 1ª
+# "rendimiento neto previo" + fase 4ª "reducción general", tabled IAE
+# activities). The eight operator-declared inputs (epígrafe + up to seven
+# módulo unit counts — the highest signo count among the tabled activities,
+# 644.1/644.2/644.3 comercio menor de pan/pastelería) are calculation-support
+# casillas absent from the AEAT-published Diseño de Registros (no
+# export_refs); the two computed casillas
 # (modulos-rendimiento-neto-previo / -actividad) are internal_only. Together
 # they feed a computed reference figure that the
 # "modelo-131-2025-modulos-computed-diverges-de-c01" advisory compares
@@ -84,6 +86,51 @@ data_type = "decimal"
 semantic_role = "irpf_pf_modulos_4_unidades"
 semantic_role_cardinality = "intentional_singleton"
 semantic_role_cardinality_reason = "First-slice módulos engine: módulo 4 (activity-specific unit — consumo de energía eléctrica) unit-count support casilla, distinct per módulo slot; not a typo of a sibling role."
+constraints = { sign = "non_negative", legal_refs = ["orden-hac-1347-2024:art-4"], source_refs = ["aeat-renta-2025-manual-parte1"] }
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-31", "orden-hac-1347-2024:art-4"]
+source_refs = ["aeat-renta-2025-manual-parte1"]
+
+[[revisions."2025".casillas]]
+id = "modulos-5-unidades"
+number = "modulos-5-unidades"
+label = "Módulo 5 (unidad activity-específica, p.ej. resto de superficie del local independiente o mesas): número de unidades"
+section = ["actividades_economicas_estimacion_objetiva"]
+data_type = "decimal"
+semantic_role = "irpf_pf_modulos_5_unidades"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "Phase-2 módulos engine: módulo 5 (activity-specific unit — e.g. resto superficie local independiente) unit-count support casilla, distinct per módulo slot; not a typo of a sibling role."
+constraints = { sign = "non_negative", legal_refs = ["orden-hac-1347-2024:art-4"], source_refs = ["aeat-renta-2025-manual-parte1"] }
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-31", "orden-hac-1347-2024:art-4"]
+source_refs = ["aeat-renta-2025-manual-parte1"]
+
+[[revisions."2025".casillas]]
+id = "modulos-6-unidades"
+number = "modulos-6-unidades"
+label = "Módulo 6 (unidad activity-específica, p.ej. resto de superficie del local no independiente o máquinas tipo A): número de unidades"
+section = ["actividades_economicas_estimacion_objetiva"]
+data_type = "decimal"
+semantic_role = "irpf_pf_modulos_6_unidades"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "Phase-2 módulos engine: módulo 6 (activity-specific unit — e.g. resto superficie local no independiente) unit-count support casilla, distinct per módulo slot; not a typo of a sibling role."
+constraints = { sign = "non_negative", legal_refs = ["orden-hac-1347-2024:art-4"], source_refs = ["aeat-renta-2025-manual-parte1"] }
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-31", "orden-hac-1347-2024:art-4"]
+source_refs = ["aeat-renta-2025-manual-parte1"]
+
+[[revisions."2025".casillas]]
+id = "modulos-7-unidades"
+number = "modulos-7-unidades"
+label = "Módulo 7 (unidad activity-específica, p.ej. superficie del horno o máquinas tipo B): número de unidades"
+section = ["actividades_economicas_estimacion_objetiva"]
+data_type = "decimal"
+semantic_role = "irpf_pf_modulos_7_unidades"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "Phase-2 módulos engine: módulo 7 (activity-specific unit — e.g. superficie del horno) unit-count support casilla, distinct per módulo slot; not a typo of a sibling role."
 constraints = { sign = "non_negative", legal_refs = ["orden-hac-1347-2024:art-4"], source_refs = ["aeat-renta-2025-manual-parte1"] }
 required = false
 input_kind = "manual"

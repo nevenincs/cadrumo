@@ -89,14 +89,16 @@ figures (`no-silent-under-declaration`).
 
 ## Revision-year note: the 2025 módulos cross-check engine
 
-The 2025 revision (only) additionally carries a first-slice, Phase-1
-units-times-coefficient reference engine for a small set of tabled IAE
-activities (peluquería, autotaxis, transporte de mercancías): five
-calculation-support casillas (`modulos-epigrafe`, `modulos-1-unidades` through
-`modulos-4-unidades`) feed two internal computed casillas
-(`modulos-rendimiento-neto-previo`, `modulos-rendimiento-neto-actividad`). These
-are absent from the AEAT fichero-BOE layout (no `export_refs`) — they exist
-purely to produce a reference figure that a further ADVISORY
+The 2025 revision (only) additionally carries a units-times-coefficient
+reference engine for a phased, incrementally-authored set of tabled IAE
+activities (currently: peluquería 972.1, autotaxis 721.2, transporte de
+mercancías 722, café-bar / restaurante 671.4/671.5/672.1-3/673.1/673.2, and
+comercio al por menor de alimentación 642.1-4/642.5/642.6/643.1-2/644.1-3/
+644.6/647.1/647.2-3): eight calculation-support casillas (`modulos-epigrafe`,
+`modulos-1-unidades` through `modulos-7-unidades`) feed two internal computed
+casillas (`modulos-rendimiento-neto-previo`, `modulos-rendimiento-neto-actividad`).
+These are absent from the AEAT fichero-BOE layout (no `export_refs`) — they
+exist purely to produce a reference figure that a further ADVISORY
 (`modelo-131-2025-modulos-computed-diverges-de-c01`) compares against the
 operator-declared `01`, prompting a review when they diverge by more than one
 cent. This engine does NOT replace `01` as the filed value, and it is not

@@ -15,8 +15,10 @@ from __future__ import annotations
 
 from collections.abc import Iterator
 from importlib.resources.abc import Traversable
+from typing import TYPE_CHECKING
 
-from ..core.resources import packaged_data
+from ..core.external_constants import UTF_8_ENCODING as _UTF_8
+from ..core.resources import packaged_data as _packaged_data
 
 _AGENT_SUBTREE = "agent"
 _RULES = "rules"
@@ -24,10 +26,13 @@ _PERSONAS = "personas"
 _SKILLS = "skills"
 _MARKDOWN_SUFFIX = ".md"
 
+if TYPE_CHECKING:
+    from ._skill_metadata import SkillMetadata
+
 
 def harness_root() -> Traversable:
     """Return the bundled ``aeat/_data/agent`` harness data root."""
-    return packaged_data(_AGENT_SUBTREE)
+    return _packaged_data(_AGENT_SUBTREE)
 
 
 def _iter_markdown(*parts: str) -> Iterator[Traversable]:
@@ -53,7 +58,7 @@ def operator_rules_text() -> str:
     The rules are joined in file-name order with a blank line between them, ready
     to load into an agent's always-on operating context.
     """
-    return "\n\n".join(rule.read_text(encoding="utf-8").rstrip() for rule in iter_operator_rules())
+    return "\n\n".join(rule.read_text(encoding=_UTF_8).rstrip() for rule in iter_operator_rules())
 
 
 def iter_personas() -> Iterator[Traversable]:
@@ -61,8 +66,8 @@ def iter_personas() -> Iterator[Traversable]:
     yield from _iter_markdown(_PERSONAS)
 
 
-def iter_skill_documents() -> Iterator[Traversable]:
-    """Yield each workflow skill's ``SKILL.md`` document, ordered by skill name."""
+def _iter_skill_dirs() -> Iterator[tuple[str, Traversable]]:
+    """Yield each skill's ``(directory name, SKILL.md)`` pair, ordered by name."""
     skills_root = harness_root().joinpath(_SKILLS)
     if not skills_root.is_dir():
         return
@@ -71,7 +76,37 @@ def iter_skill_documents() -> Iterator[Traversable]:
             continue
         skill_md = skill_dir.joinpath("SKILL.md")
         if skill_md.is_file():
-            yield skill_md
+            yield skill_dir.name, skill_md
+
+
+def iter_skill_documents() -> Iterator[Traversable]:
+    """Yield each workflow skill's ``SKILL.md`` document, ordered by skill name."""
+    for _name, skill_md in _iter_skill_dirs():
+        yield skill_md
+
+
+def iter_skill_metadata() -> Iterator[SkillMetadata]:
+    """Yield every shipped skill's validated ``applies_when`` metadata.
+
+    Each skill's ``SKILL.md`` frontmatter is parsed and validated through the
+    structured predicate schema. This raises ``SkillMetadataError`` on the first
+    skill whose frontmatter is missing or malformed, whose ``applies_when``
+    predicate is invalid, or whose declared name does not match its directory,
+    so a skill can never ship with an unvalidated selection predicate.
+    """
+    from ._skill_metadata import SkillMetadataError, parse_skill_metadata
+
+    for name, skill_md in _iter_skill_dirs():
+        text = skill_md.read_text(encoding="utf-8")
+        try:
+            metadata = parse_skill_metadata(text)
+        except SkillMetadataError as exc:
+            raise SkillMetadataError(f"skill '{name}': {exc}") from exc
+        if metadata.name != name:
+            raise SkillMetadataError(
+                f"skill '{name}': frontmatter name '{metadata.name}' does not match its directory name",
+            )
+        yield metadata
 
 
 __all__ = [
@@ -80,6 +115,7 @@ __all__ = [
     "iter_operator_rules",
     "iter_personas",
     "iter_skill_documents",
+    "iter_skill_metadata",
     "materialise_workspace",
     "operator_rules_text",
 ]

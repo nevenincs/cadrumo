@@ -9,6 +9,10 @@ description: >-
   for the taxpayer to file. Use when the taxpayer withholds retención on
   rendimientos del capital mobiliario (interest, dividends, and certain other
   capital-income payments) and must summarise the year's Modelo 123 filings.
+applies_when:
+  profile_facts:
+    - fact: pays_capital_income_with_retencion
+      match: is_true
 ---
 
 # Prepare Modelo 193

@@ -65,7 +65,8 @@ from ._models import WorkflowAbortReason, WorkflowResult, WorkflowStage
 from ._persistence import list_runs, load_run
 
 if TYPE_CHECKING:
-    from ..modelo import ModeloResolvedRevisionProjection, ModeloWorkTarget, WorkUnit
+    from ...domain.modelos import WorkUnit
+    from ..modelo import ModeloResolvedRevisionProjection, ModeloWorkTarget
 
 
 class WorkflowResumeRefusedError(WorkflowError):

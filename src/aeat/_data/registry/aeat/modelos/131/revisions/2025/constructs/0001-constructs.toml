@@ -10,7 +10,7 @@ source_refs = [
     "aeat-renta-2025-manual-parte1",
     "boe-modelo-131-2007-form",
 ]
-casilla_ids = ["01", "02", "03", "04", "05", "06", "07", "08", "09", "10", "11", "12", "13", "14", "15", "saldo-negativo-fin-periodo", "modulos-epigrafe", "modulos-1-unidades", "modulos-2-unidades", "modulos-3-unidades", "modulos-4-unidades", "modulos-rendimiento-neto-previo", "modulos-rendimiento-neto-actividad"]
+casilla_ids = ["01", "02", "03", "04", "05", "06", "07", "08", "09", "10", "11", "12", "13", "14", "15", "saldo-negativo-fin-periodo", "modulos-epigrafe", "modulos-1-unidades", "modulos-2-unidades", "modulos-3-unidades", "modulos-4-unidades", "modulos-5-unidades", "modulos-6-unidades", "modulos-7-unidades", "modulos-rendimiento-neto-previo", "modulos-rendimiento-neto-actividad"]
 formulas = [
     "modelo-131-2025-pago-fraccionado-sin-datos-base",
     "modelo-131-2025-pago-fraccionado-agrario",

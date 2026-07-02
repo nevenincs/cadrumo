@@ -8,6 +8,10 @@ description: >-
   taxpayer to file. Use when the taxpayer's intra-community operations
   (entregas, adquisiciones, servicios, triangulares) require the periodic
   recapitulative declaration.
+applies_when:
+  profile_facts:
+    - fact: does_intracomunitario
+      match: is_true
 ---
 
 # Prepare Modelo 349

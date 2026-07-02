@@ -4,6 +4,8 @@ description: >-
   Verify a prepared modelo revision, export the local fichero-BOE artefact, and hand
   off for the taxpayer to file in the AEAT portal. Use after a modelo is calculated
   and before the human files. Never submits to AEAT.
+applies_when:
+  workflow_phase: export
 ---
 
 # Export and hand off a declaration

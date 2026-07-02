@@ -3,9 +3,9 @@
 :func:`build_overview_explain` is the application service backing
 ``aeat app overview explain MODELO [--year YYYY]``. The ``applicable``
 verdict is DERIVED from the three-axis
-:class:`~aeat.domain.deadlines.TaxpayerProfile` taxpayer model through
+:class:`~domain.deadlines.TaxpayerProfile` taxpayer model through
 the registry-grounded
-:func:`~aeat.domain.calculations.registry.applicability.derive_modelo_applicability`
+:func:`~domain.calculations.registry.applicability.derive_modelo_applicability`
 rule table, never assumed from an autónomo default. An undeclared taxpayer
 model yields an explicit ``incomplete`` verdict: the service
 reports "declare your taxpayer type first" rather than a confident
@@ -56,7 +56,7 @@ remains a typed surface rather than a ``dict[str, Any]`` escape hatch.
 _UNMODELED_MODELO_DESCRIPTIONS: dict[str, str] = {str(code): desc for code, desc in _UNMODELED_OBLIGATIONS.items()}
 """Recognized-but-unmodeled obligations keyed by bare modelo code.
 
-Derived once from :data:`~aeat.core.UNMODELED_OBLIGATIONS` so ``explain`` can
+Derived once from :data:`~core.UNMODELED_OBLIGATIONS` so ``explain`` can
 tell an operator that a code like ``"216"`` is a real AEAT obligation the app
 does not model yet — distinct from an unknown-identifier typo.
 """
@@ -99,7 +99,7 @@ class OverviewExplain(BaseModel):
             data exists (registry-track gap R1) — the applicability
             ``verdict`` is independent of it.
         profile_facts: Subset of the operator's
-            :class:`~aeat.domain.deadlines.TaxpayerProfile` fields the answer
+            :class:`~domain.deadlines.TaxpayerProfile` fields the answer
             depends on. Keys are stable field names; values are
             JSON-serialisable scalars.
         generated_at: UTC timestamp of when the aggregator ran.
@@ -199,7 +199,7 @@ def build_overview_explain(
 
     The ``applicable`` flag and the ``verdict`` are DERIVED from the
     three-axis taxpayer model through
-    :func:`~aeat.domain.calculations.registry.applicability.derive_modelo_applicability`
+    :func:`~domain.calculations.registry.applicability.derive_modelo_applicability`
     — never from an autónomo default. An undeclared taxpayer
     model yields an ``INCOMPLETE`` verdict: the service
     reports "declare your taxpayer type first" instead of a confident
@@ -214,7 +214,7 @@ def build_overview_explain(
     :class:`OverviewExplainError`.
 
     Args:
-        profile: The :class:`~aeat.domain.deadlines.TaxpayerProfile` whose
+        profile: The :class:`~domain.deadlines.TaxpayerProfile` whose
             attributes determine applicability.
         modelo: Modelo identifier to explain (e.g. ``"130"``).
         year: Optional calendar year. Defaults to the current year.
@@ -294,7 +294,7 @@ def _scheduling_rationale(
     the modelo/year (registry-track gap R1) — a data gap the CLI
     degrades gracefully around. A genuinely unknown modelo identifier
     is left for :func:`build_overview_explain` to refuse. Other
-    :class:`~aeat.domain.deadlines.DeadlineValidationError` failures remain
+    :class:`~domain.deadlines.DeadlineValidationError` failures remain
     typed :class:`OverviewExplainError` refusals.
     """
     deadline_engine = engine or DeadlineEngine()

@@ -7,6 +7,17 @@ description: >-
   `does_intracomunitario` true, or `iva.roi_enrolled` / `iva.oss_enrolled` /
   `iva.intracommunity_operations_exceed_50000_eur` true. Never hard-codes the
   obligation set; derives it from the overview surface.
+applies_when:
+  profile_match: any
+  profile_facts:
+    - fact: does_intracomunitario
+      match: is_true
+    - fact: iva.roi_enrolled
+      match: is_true
+    - fact: iva.oss_enrolled
+      match: is_true
+    - fact: iva.intracommunity_operations_exceed_50000_eur
+      match: is_true
 ---
 
 # Intra-community operator

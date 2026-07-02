@@ -7,6 +7,11 @@ description: >-
   with retenciones. Use when the taxpayer profile declares
   `irpf_income_categories` including capital_inmobiliario. Never hard-codes the
   obligation set; derives it from the overview surface.
+applies_when:
+  profile_facts:
+    - fact: irpf_income_categories
+      match: contains
+      values: [capital_inmobiliario]
 ---
 
 # Arrendador (rental income)

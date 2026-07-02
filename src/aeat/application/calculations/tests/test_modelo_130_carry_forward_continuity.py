@@ -47,6 +47,7 @@ from ....domain.calculations.registry import (
     validated_casilla_id,
 )
 from ....domain.deadlines import IVARegime, TaxpayerProfile
+from ....domain.modelos import ExternalEvidenceKind
 from ....domain.modelos._calculation_repository import CalculationRevisionCatalogueRepository
 from ....domain.modelos._calculation_revision import CalculationRevision
 from ....domain.modelos._filing_repository import ModeloRecordCatalogueRepository
@@ -57,7 +58,6 @@ from ....domain.user_profile import UserProfileFact, UserProfileRecord
 from ....tests.registry_observations import registry_grounded_modelo_observation
 from ....tests.secure_sql import isolated_runtime_profile
 from ...modelo import (
-    ExternalEvidenceKind,
     calculate_modelo_revision,
     create_work_unit,
     import_external_filing_evidence,

@@ -1,23 +1,23 @@
 """Encrypted persistence for workflow state and workflow runs.
 
 Workflow state is stored as an
-:class:`~aeat.adapters.persistence.storage.Envelope`-wrapped record in the
+:class:`~adapters.persistence.storage.Envelope`-wrapped record in the
 secure-object backend. The load path deserialises the envelope and validates
 it; callers receive a typed :class:`WorkflowState` or a diagnostic error class
 rather than a raw payload.
 
 See Also:
-    :class:`~aeat.application.workflow.WorkflowState`
+    :class:`~application.workflow.WorkflowState`
         Typed encrypted state payload persisted by
         :class:`WorkflowStateRepository`.
-    :class:`~aeat.application.workflow.WorkflowStateResetFingerprint`
+    :class:`~application.workflow.WorkflowStateResetFingerprint`
         Row-level, plaintext-free reset audit summary emitted before deletion.
-    :func:`aeat.application.workflow._events.emit_workflow_state_reset`
+    :func:`application.workflow._events.emit_workflow_state_reset`
         Writes the append-only ``workflow_state.reset`` bucket event before the
         state row is removed.
-    :class:`~aeat.domain.buckets.BucketEventHistoryRepository`
+    :class:`~domain.buckets.BucketEventHistoryRepository`
         Stores the emitted reset event in the bucket event history.
-    :class:`~aeat.application.workflow.WorkflowResult`
+    :class:`~application.workflow.WorkflowResult`
         Terminal workflow run record persisted separately by
         :class:`WorkflowRunRepository`.
 """
@@ -152,7 +152,7 @@ class WorkflowStateRepository:
         Lets callers co-transactionally persist the workflow state and a
         sibling secure-object payload (typically an updated
         bucket-event-history catalogue) via a single
-        :meth:`~aeat.adapters.persistence.storage.SecureObjectRepository.save_many`
+        :meth:`~adapters.persistence.storage.SecureObjectRepository.save_many`
         call.
         """
         try:
@@ -375,12 +375,12 @@ def workflow_state_repository() -> WorkflowStateRepository:
 
     When an active profile bucket is present, the repository is backed by
     the bucket's own encrypted database resolved through
-    :func:`~aeat.adapters.persistence.storage.secure_object_repository_for_active_bucket`
+    :func:`~adapters.persistence.storage.secure_object_repository_for_active_bucket`
     so the URL is derived from the live bucket path rather than the
     settings-override snapshot captured at test-fixture construction
     time. A cold root with no active bucket pointer is the bootstrap
     exception: it receives an explicit bare
-    :class:`~aeat.adapters.persistence.storage.SecureObjectRepository` so
+    :class:`~adapters.persistence.storage.SecureObjectRepository` so
     bootstrap-exempt recovery reads can still observe an absent state.
     """
     from ...core import resolve_active_bucket_id

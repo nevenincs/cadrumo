@@ -7,6 +7,10 @@ description: >-
   off for the taxpayer to file. Use when the taxpayer is the entidad
   dominante of an IVA grupo de entidades filing the group's monthly
   aggregate self-assessment.
+applies_when:
+  profile_facts:
+    - fact: iva.group_dominant_entity_enrolled
+      match: is_true
 ---
 
 # Prepare Modelo 353
