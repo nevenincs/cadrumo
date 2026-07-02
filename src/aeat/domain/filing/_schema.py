@@ -1,4 +1,4 @@
-"""Pydantic v2 schema for the :mod:`aeat.domain.filing` subpackage.
+"""Pydantic v2 schema for the :mod:`domain.filing` subpackage.
 
 Every type in this module is a strict, frozen pydantic v2 model
 or a closed :class:`enum.StrEnum`. These are the boundary-crossing
@@ -74,7 +74,7 @@ class ModeloBindingValue(BaseModel):
     Carries the same regulatory grounding the casilla half exposes via
     :class:`ModeloCasillaProvenance`: ``legal_refs`` and ``source_refs``
     populated from the binding definition, plus a typed
-    :class:`~aeat.core.BindingSourceKind` ``source`` (replacing the former
+    :class:`~core.BindingSourceKind` ``source`` (replacing the former
     free-text provenance string) so a bound value is operator-traceable at
     parity with a computed casilla.
 
@@ -83,8 +83,8 @@ class ModeloBindingValue(BaseModel):
         value: The scalar value carried for this binding.
         kind: Provenance kind — literal input, computed, inherited, etc.
         source: Typed registry binding source kind (e.g.
-            :attr:`~aeat.core.BindingSourceKind.MANUAL_INPUT`,
-            :attr:`~aeat.core.BindingSourceKind.LEDGER_IVA_AGGREGATION`).
+            :attr:`~core.BindingSourceKind.MANUAL_INPUT`,
+            :attr:`~core.BindingSourceKind.LEDGER_IVA_AGGREGATION`).
         legal_refs: Legal references carried from the binding definition.
         source_refs: Source references carried from the binding definition.
         row_index: 1-based row index for multi-row (detail-record) bindings.
@@ -130,7 +130,7 @@ class ModeloValidationFinding(BaseModel):
             ``"casilla-required-missing"``).
         message: A strictly-typed :class:`Translatable` key.
         references_rules: Tuple of Manual práctico Rule IDs that
-            justify the finding (see :class:`aeat.domain.manuals.Rule`).
+            justify the finding (see :class:`domain.manuals.Rule`).
     """
 
     model_config = STRICT_FROZEN_CONFIG
@@ -213,7 +213,7 @@ def compute_modelo_draft_id(
 
     Args:
         modelo: Modelo string ID.
-        period: Typed :class:`~aeat.core.Period` for the filing period.
+        period: Typed :class:`~core.Period` for the filing period.
         profile_tax_id: Validated taxpayer tax ID.
         snapshot_ref: Typed registry snapshot coordinate this draft was
             built against.
