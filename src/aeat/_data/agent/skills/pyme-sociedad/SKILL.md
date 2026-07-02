@@ -5,6 +5,11 @@ description: >-
   quarterly IVA, IS pagos fraccionados, and the annual IS return. Use when the
   taxpayer profile declares `entity_type` legal_entity. Never hard-codes the
   obligation set; derives it from the overview surface.
+applies_when:
+  profile_facts:
+    - fact: entity_type
+      match: equals
+      values: [legal_entity]
 ---
 
 # Sociedad (pyme)
