@@ -14,7 +14,6 @@ from typing import TYPE_CHECKING, Literal
 
 from pydantic import BaseModel, Field
 
-from ..calculations.registry import CasillaFieldKind
 from ._schema import ProfileSchemaDefinition
 
 if TYPE_CHECKING:
@@ -261,6 +260,11 @@ def _export_issues(
     revision: ModeloRevision,
     index: UserProfileSelectorIndex,
 ) -> tuple[UserProfileRegistryContractIssue, ...]:
+    # Function-local import keeps ``aeat.domain.user_profile`` free of an
+    # eager calculation-registry load at package import (the lazy-boundary
+    # contract); this validator is the only runtime consumer of the enum.
+    from ..calculations.registry import CasillaFieldKind
+
     issues: list[UserProfileRegistryContractIssue] = []
     for layout in revision.export_layouts:
         for record in layout.records:
