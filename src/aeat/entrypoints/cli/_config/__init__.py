@@ -24,7 +24,7 @@ from ....application.workflow import resolve_profile_bucket as _resolve_profile_
 from ....core import Period as _Period
 from ....core import resolve_active_bucket_id as _resolve_active_bucket_id
 from ....core.errors import AeatError as _AeatError
-from ....core.external_constants import OutputLanguage
+from ....core.external_constants import OutputLanguage as _OutputLanguage
 from ....core.i18n import SUPPORTED_OUTPUT_LANGUAGES as _SUPPORTED_OUTPUT_LANGUAGES
 from ....core.i18n import tr
 from ....core.logging import get_logger as _get_logger
@@ -197,7 +197,7 @@ def _atomic_create_profile(*, display_name, facts, profile_id: str | None = None
 @profile_app.command("list", help=tr("cli.config.list.help"))
 def config_list(
     ctx: typer.Context,
-    output_language: OutputLanguage | None = typer.Option(
+    output_language: _OutputLanguage | None = typer.Option(
         None,
         "--output-language",
         "--language",
@@ -246,7 +246,7 @@ def config_list(
 def config_profile_show(
     ctx: typer.Context,
     name: str | None = typer.Argument(None, help=tr("cli.config.profile.show_name_help")),
-    output_language: OutputLanguage | None = typer.Option(
+    output_language: _OutputLanguage | None = typer.Option(
         None,
         "--output-language",
         "--language",
@@ -449,7 +449,7 @@ def config_profile_preflight(
         "--revision-id",
         help=tr("cli.config.profile.preflight_revision_id_help"),
     ),
-    output_language: OutputLanguage | None = typer.Option(
+    output_language: _OutputLanguage | None = typer.Option(
         None,
         "--output-language",
         "--language",
@@ -556,7 +556,7 @@ def config_profile_preflight(
 def config_profile_validate(
     ctx: typer.Context,
     name: str | None = typer.Argument(None, help=tr("cli.config.profile.validate_name_help")),
-    output_language: OutputLanguage | None = typer.Option(
+    output_language: _OutputLanguage | None = typer.Option(
         None,
         "--output-language",
         "--language",
@@ -656,7 +656,7 @@ def config_profile_delete(
     ctx: typer.Context,
     name: str = typer.Argument(..., help=tr("cli.config.profile.delete_name_help")),
     confirmed: bool = typer.Option(False, "--yes", help=tr("cli.config.profile.delete_yes_help")),
-    output_language: OutputLanguage | None = typer.Option(
+    output_language: _OutputLanguage | None = typer.Option(
         None,
         "--output-language",
         "--language",
@@ -721,7 +721,7 @@ def config_profile_duplicate(
         "--display-name",
         help=tr("cli.config.profile.duplicate_display_name_help"),
     ),
-    output_language: OutputLanguage | None = typer.Option(
+    output_language: _OutputLanguage | None = typer.Option(
         None,
         "--output-language",
         "--language",
@@ -836,7 +836,7 @@ def config_profile_rename(
         help=tr("cli.config.profile.rename_source_help", default="Existing profile name."),
     ),
     target: str = typer.Argument(..., help=tr("cli.config.profile.rename_target_help", default="New profile name.")),
-    output_language: OutputLanguage | None = typer.Option(
+    output_language: _OutputLanguage | None = typer.Option(
         None,
         "--output-language",
         "--language",
@@ -917,7 +917,7 @@ def config_profile_rename(
 )
 def config_profile_logout(
     ctx: typer.Context,
-    output_language: OutputLanguage | None = typer.Option(
+    output_language: _OutputLanguage | None = typer.Option(
         None,
         "--output-language",
         "--language",
@@ -950,7 +950,7 @@ def config_profile_logout(
 @profile_app.command("status", help=tr("cli.config.status.help"))
 def config_status(
     ctx: typer.Context,
-    output_language: OutputLanguage | None = typer.Option(
+    output_language: _OutputLanguage | None = typer.Option(
         None,
         "--output-language",
         "--language",

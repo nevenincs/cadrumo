@@ -67,6 +67,8 @@ legal_refs = ["test-ley-001:art-1"]
 source_refs = ["test-source-001"]
 """
 
+# Scalar revision metadata only; per-section array-of-tables live in fragment
+# subdirectories (the loader rejects inline sections in revision.toml).
 _MINIMAL_REVISION_TOML_TEMPLATE = """\
 [revisions."{revision_id}"]
 label = "{label}"
@@ -75,7 +77,9 @@ period_selector = {{ years = [2025], periods = ["{period}"] }}
 legal_refs = ["test-ley-001:art-1"]
 source_refs = ["test-source-001"]
 orden_aplicabilidad = ["test-ley-001:art-1"]
+"""
 
+_APPLICATION_LINKS_FRAGMENT_TEMPLATE = """\
 [[revisions."{revision_id}".application_links]]
 id = "test-filing-link"
 surface = "filing"
@@ -83,7 +87,9 @@ consumer = "cli.app"
 requires_snapshot = true
 legal_refs = ["test-ley-001:art-1"]
 source_refs = ["test-source-002"]
+"""
 
+_CASILLAS_FRAGMENT_TEMPLATE = """\
 [[revisions."{revision_id}".casillas]]
 id = "01"
 number = "01"
@@ -92,7 +98,9 @@ section = ["test"]
 data_type = "integer"
 legal_refs = ["test-ley-001:art-1"]
 source_refs = ["test-source-001"]
+"""
 
+_WORKBOOK_PARITY_FRAGMENT_TEMPLATE = """\
 [[revisions."{revision_id}".workbook_parity_refs]]
 id = "test-workbook-001"
 workbook_source = "test-source-001"
@@ -130,6 +138,17 @@ def _write_year_ambiguous_registry(tmp_path: Path) -> Path:
             _MINIMAL_REVISION_TOML_TEMPLATE.format(revision_id=revision_id, label=label, period=period),
             encoding="utf-8",
         )
+        for section, template in (
+            ("application_links", _APPLICATION_LINKS_FRAGMENT_TEMPLATE),
+            ("casillas", _CASILLAS_FRAGMENT_TEMPLATE),
+            ("workbook_parity_refs", _WORKBOOK_PARITY_FRAGMENT_TEMPLATE),
+        ):
+            section_dir = revision_dir / section
+            section_dir.mkdir()
+            (section_dir / f"0001-{section}.toml").write_text(
+                template.format(revision_id=revision_id),
+                encoding="utf-8",
+            )
 
     return registry_root
 

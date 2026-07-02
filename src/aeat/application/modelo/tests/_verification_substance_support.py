@@ -5,13 +5,13 @@ from __future__ import annotations
 from datetime import UTC, datetime
 from decimal import Decimal
 
+from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ....domain.buckets import BucketEventHistoryRepository
 from ....domain.calculations.registry import CasillaId, validated_casilla_id
 from ....domain.deadlines import IVARegime, TaxpayerProfile
 from ....domain.modelos import (
     CalculationRevisionCatalogueRepository,
     VerificationReportCatalogueRepository,
-    WorkUnitCatalogueRepository,
 )
 from ....domain.user_profile import UserProfileFact, UserProfileRecord
 from ...user_profile import UserProfileLifecycleRepository

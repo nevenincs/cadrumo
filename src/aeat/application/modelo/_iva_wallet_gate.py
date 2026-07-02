@@ -44,6 +44,7 @@ from datetime import date
 from decimal import Decimal
 from typing import Final, Protocol
 
+from ...adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ...core import Modelo
 from ...core import Period as _Period
 from ...core.i18n import tr
@@ -64,7 +65,6 @@ from ...domain.modelos import (
     CalculationRevisionState,
     ModeloError,
     WorkUnit,
-    WorkUnitCatalogueRepository,
     WorkUnitCatalogueRepositoryProtocol,
 )
 from ..calculations import IvaWalletDecisionRepository

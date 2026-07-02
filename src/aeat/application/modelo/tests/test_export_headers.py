@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 from collections.abc import Iterator
-from datetime import UTC, datetime
 from decimal import Decimal
 from pathlib import Path
 
@@ -28,7 +27,6 @@ from ._export_test_support import (
     _profile,
     _seed_profile,
     _seed_revision,
-    _snapshot_ref,
     isolated_backend_context,
 )
 
@@ -120,8 +118,14 @@ def test_modelo_202_legal_entity_exports_company_name_in_razon_social_slot(
     isolated_backend: None,
     tmp_path: Path,
 ) -> None:
-    from ....application.filing import build_runtime_schema_provider, export_draft
-    from ....domain.filing import ModeloDraft
+    from decimal import Decimal as _Decimal
+
+    from ....application.filing import (
+        ModeloOperatorProfile,
+        build_draft,
+        build_runtime_schema_provider,
+        export_draft,
+    )
     from ....domain.submission import ModeloDraftStatus
 
     company_name = "Rocio Ferrer Administracion Sociedad Limitada"
@@ -167,20 +171,71 @@ def test_modelo_202_legal_entity_exports_company_name_in_razon_social_slot(
     assert headers["name"] == ""
 
     provider = build_runtime_schema_provider(filing_year=2026, period=period, modelos=("202",))
-    subview = provider.get_subview("202")
-    draft = ModeloDraft(
-        draft_id="d" + "2" * 63,
+
+    # Build a real draft through the calculation engine so the fichero-BOE
+    # completeness gate has the full M202 result set (claves 01/03/13/16/18/22/
+    # 25/26/32/34/38/39/63/66) on disk rather than blank byte slots. A nil-activity
+    # instalment (every manual lane input zero, INCN <= 6M so both LIS art. 40.2
+    # and 40.3 modalities are reachable) drives every computed casilla to a real
+    # 0.00, which is the grounded state for a company filing an empty 1P instalment.
+    def _c(value: str) -> object:
+        return validated_casilla_id(value, surface="modelo 202 export completeness test")
+
+    inputs: dict[object, object] = {
+        # Casilla 01 base (art. 40.2 lane) is a relation_prefill from the prior
+        # Modelo 200 cuota liquida; supply it directly as a nil prior cuota.
+        "modelo-202-2025-y-siguientes-cuota-base-ejercicio-anterior": _Decimal("0"),
+        # INCN modality gate (<= 6M keeps art. 40.2 default, art. 40.3 reachable).
+        "modelo-202-2025-y-siguientes-incn-prior-12-months": _Decimal("500000"),
+        "modelo-202-2025-y-siguientes-pagos-fraccionados-anteriores": _Decimal("0"),
+    }
+    for raw in (
+        "02",
+        "04",
+        "05",
+        "06",
+        "07",
+        "08",
+        "14",
+        "17",
+        "20",
+        "21",
+        "23",
+        "24",
+        "27",
+        "28",
+        "29",
+        "30",
+        "31",
+        "33",
+        "37",
+        "40",
+        "42",
+        "44",
+        "45",
+        "46",
+        "47",
+        "48",
+        "49",
+        "50",
+        "51",
+        "52",
+        "61",
+        "62",
+        "64",
+        "65",
+        "67",
+    ):
+        inputs[_c(raw)] = _Decimal("0")
+
+    built = build_draft(
         modelo="202",
         period=period,
-        profile_tax_id=tax_id,
-        subject_tax_id=tax_id,
-        snapshot_ref=_snapshot_ref(modelo="202", period=period, revision_id=work_unit.revision_id),
-        status=ModeloDraftStatus.APROBADO,
-        values=(),
-        created_at=datetime(2026, 6, 28, 10, 0, tzinfo=UTC),
-        updated_at=datetime(2026, 6, 28, 10, 0, tzinfo=UTC),
-        schema_version=subview.schema_version,
+        profile=ModeloOperatorProfile(tax_id=tax_id, display_name=company_name),
+        inputs=inputs,
+        schema_provider=provider,
     )
+    draft = built.model_copy(update={"status": ModeloDraftStatus.APROBADO})
 
     output_path = tmp_path / "modelo-202-legal-entity.txt"
     receipt = export_draft(draft, output_path=output_path, headers=headers, schema_provider=provider)

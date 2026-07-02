@@ -19,6 +19,7 @@ from ....adapters.outbound.aeat.sede import (
     ObservedCasillaValue,
     observed_casillas_from_submitted_file,
 )
+from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ....core import Period
 from ....core.external_constants import load_external_constants
 from ....core.resources import resources
@@ -30,7 +31,6 @@ from ....domain.modelos import (
     ModeloRecordCatalogueRepository,
     ModeloRecordStatus,
     WorkUnit,
-    WorkUnitCatalogueRepository,
     derive_filing_record_id,
     derive_work_unit_id,
     upsert_filing_record,

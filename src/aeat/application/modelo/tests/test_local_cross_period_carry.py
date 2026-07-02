@@ -37,6 +37,7 @@ from pathlib import Path
 
 import pytest
 
+from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ....core import Period
 from ....domain.buckets import BucketEventHistoryRepository
 from ....domain.calculations.registry import (
@@ -50,7 +51,6 @@ from ....domain.modelos import (
     CalculationRevisionCatalogueRepository,
     ModeloRecordCatalogueRepository,
     VerificationReportCatalogueRepository,
-    WorkUnitCatalogueRepository,
 )
 from ....domain.user_profile import UserProfileFact, UserProfileRecord
 from ....tests.registry_observations import registry_grounded_observations

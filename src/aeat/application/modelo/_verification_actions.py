@@ -41,6 +41,7 @@ from pathlib import Path
 from types import MappingProxyType
 from typing import TYPE_CHECKING
 
+from ...adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ...adapters.persistence.profile.participation_index import TransactionParticipationIndexRepository
 from ...core import Modelo
 from ...core.config import Settings
@@ -88,7 +89,6 @@ from ...domain.modelos import (
     VerificationReportCatalogueRepository,
     VerificationReportCatalogueRepositoryProtocol,
     WorkUnit,
-    WorkUnitCatalogueRepository,
     WorkUnitCatalogueRepositoryProtocol,
     derive_verification_report_id,
     upsert_calculation_revision,

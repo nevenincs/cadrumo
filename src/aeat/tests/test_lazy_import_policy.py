@@ -1,15 +1,16 @@
 """Lazy-import policy gate: sanctioned classes, allowlist, and count ratchet.
 
-Discharges register item D7 of the architecture-remediation program (ADR
-``2026-07-02-arch-remediation-lazy-import-policy``). The architecture review
-measured ~815 function-local relative imports in production. The idiom spans
-very different intents: ADR-sanctioned lazy resource loaders and CLI cold-start
-deferrals at one end, and first-party module-cycle breaks plus cross-layer
-softening at the other, where a cycle "fixed" by deferring an import is hidden
-from the import-TIME graph the layered-contract linter audits rather than
-removed. This gate draws the policy line the ADR mandates.
+Discharges register item D7 of the architecture-remediation program (decision
+record ``2026-07-02-arch-remediation-lazy-import-policy``). The architecture
+review measured ~815 function-local relative imports in production. The idiom
+spans very different intents: decision-record-sanctioned lazy resource loaders
+and CLI cold-start deferrals at one end, and first-party module-cycle breaks
+plus cross-layer softening at the other, where a cycle "fixed" by deferring an
+import is hidden from the import-TIME graph the layered-contract linter audits
+rather than removed. This gate draws the policy line the governing decision
+record mandates.
 
-Five sanctioned classes are inherited from four accepted ADRs plus the
+Five sanctioned classes are inherited from four accepted decision records plus the
 core-authority protect list, recognised STRUCTURALLY here, and never need an
 allowlist entry:
 
@@ -19,8 +20,8 @@ allowlist entry:
 2. CLI cold-start / PEP 562 package-boundary deferrals -- a function-local
    import anywhere under ``entrypoints/cli/`` (the cold-start budget enforced by
    ``test_lazy_command_tree.py``) or an import inside a package ``__getattr__``
-   body (the PEP 562 boundary of the user-profile lazy-import ADR and its
-   application-boundary-lazy-by-default successor).
+   body (the PEP 562 boundary of the user-profile lazy-import decision record
+   and its application-boundary-lazy-by-default successor).
 3. ``TYPE_CHECKING`` blocks -- type-only, never executed at runtime.
 4. Optional third-party dependency guards -- an import inside a
    ``try: ... except ImportError`` (or ``ModuleNotFoundError``) handler.
@@ -68,9 +69,10 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 class SanctionedClass(StrEnum):
     """The five inherited import-deferral classes recognised structurally.
 
-    Members are ordered as the ADR lists them. The value is the operator-facing
-    label surfaced in a gate failure so an author who trips an unsanctioned site
-    sees the full sanctioned taxonomy to classify against.
+    Members are ordered as the governing decision record lists them. The value
+    is the operator-facing label surfaced in a gate failure so an author who
+    trips an unsanctioned site sees the full sanctioned taxonomy to classify
+    against.
     """
 
     CORE_RESOURCE_LOADER = "core resource-repository deferred loader (core/resources/)"
@@ -111,7 +113,7 @@ class UnsanctionedClass(StrEnum):
 
 # Reason + disposition metadata for each unsanctioned class. The reason names the
 # origin; the disposition is the standing worklist verdict. The two named
-# bootstrap/cycle classes carry their existing ADR citations.
+# bootstrap/cycle classes carry their existing decision-record citations.
 _CLASS_METADATA: dict[UnsanctionedClass, tuple[str, Disposition]] = {
     UnsanctionedClass.ERROR_REGISTRY_BOOTSTRAP: (
         "core/errors deferred-bind queue resolves error classes inside a "
@@ -244,6 +246,7 @@ _ALLOWLIST: dict[UnsanctionedClass, frozenset[ImportEdge]] = {
             ImportEdge("domain.transactions._repository", "core.hashing"),
             ImportEdge("domain.usage_ratios._service", "core.config"),
             ImportEdge("domain.usage_ratios._service", "core.locks"),
+            ImportEdge("domain.user_profile._registry_contract", "domain.calculations.registry"),
         }
     ),
     UnsanctionedClass.ADAPTER_INTERNAL_DEFERRAL: frozenset(
@@ -300,6 +303,8 @@ _ALLOWLIST: dict[UnsanctionedClass, frozenset[ImportEdge]] = {
             ImportEdge("adapters.outbound.storage._factory", "adapters.persistence.storage.bucket"),
             ImportEdge("adapters.persistence.profile.fincas", "adapters.persistence.storage"),
             ImportEdge("adapters.persistence.profile.fincas", "adapters.persistence.storage.sql"),
+            ImportEdge("adapters.persistence.profile.modelos_work_units", "adapters.persistence.storage"),
+            ImportEdge("adapters.persistence.profile.participation_index", "adapters.persistence.storage"),
             ImportEdge("adapters.persistence.profile.submission", "adapters.persistence.storage.errors"),
             ImportEdge("adapters.persistence.profile.submission", "adapters.persistence.storage.sql"),
             ImportEdge("adapters.persistence.profile.usage_ratios", "adapters.persistence.storage"),
@@ -365,7 +370,9 @@ _ALLOWLIST: dict[UnsanctionedClass, frozenset[ImportEdge]] = {
                 "adapters.persistence.storage.master_key._recovery_facade",
                 "adapters.persistence.storage.master_key._master_key",
             ),
+            ImportEdge("adapters.persistence.storage.runtime", "adapters.persistence.storage.bucket"),
             ImportEdge("adapters.persistence.storage.runtime", "adapters.persistence.storage.sql.secure_objects"),
+            ImportEdge("adapters.persistence.storage.runtime", "core"),
             ImportEdge("adapters.persistence.storage.runtime", "core.i18n"),
             ImportEdge("adapters.persistence.storage.runtime_repository", "adapters.persistence.storage.sql.engine"),
             ImportEdge("adapters.persistence.storage.runtime_repository", "core"),
@@ -409,6 +416,7 @@ _ALLOWLIST: dict[UnsanctionedClass, frozenset[ImportEdge]] = {
     ),
     UnsanctionedClass.APPLICATION_DEFERRAL: frozenset(
         {
+            ImportEdge("agent", "agent._skill_metadata"),
             ImportEdge("application.aggregation._source_profile", "application.modelo"),
             ImportEdge("application.aggregation._source_profile", "core.resources"),
             ImportEdge("application.auth", "adapters.outbound.aeat.auth"),
@@ -475,6 +483,8 @@ _ALLOWLIST: dict[UnsanctionedClass, frozenset[ImportEdge]] = {
             ImportEdge("application.config_reset", "application.diagnostics"),
             ImportEdge("application.config_reset", "application.user_profile"),
             ImportEdge("application.config_reset", "application.workflow"),
+            ImportEdge("application.corpus_search._embed_build", "application.corpus_search._errors"),
+            ImportEdge("application.corpus_search._lexical_index", "application.corpus_search._errors"),
             ImportEdge("application.diagnostics", "adapters.outbound.aeat.browser"),
             ImportEdge("application.diagnostics", "adapters.persistence.storage"),
             ImportEdge("application.diagnostics", "adapters.persistence.storage.master_key"),
@@ -524,6 +534,7 @@ _ALLOWLIST: dict[UnsanctionedClass, frozenset[ImportEdge]] = {
             ImportEdge("application.live._filed_observation_persistence", "application.live._justificante"),
             ImportEdge("application.live._iva_remote_state", "adapters.persistence.storage"),
             ImportEdge("application.live._justificante", "adapters.inbound.justificante"),
+            ImportEdge("application.live._justificante", "adapters.persistence.profile.justificante"),
             ImportEdge("application.live._justificante", "application.modelo"),
             ImportEdge("application.live._justificante", "application.user_profile"),
             ImportEdge("application.live._justificante", "core.errors"),
@@ -561,6 +572,7 @@ _ALLOWLIST: dict[UnsanctionedClass, frozenset[ImportEdge]] = {
             ImportEdge("application.modelo._iva_wallet_gate", "core.parsing"),
             ImportEdge("application.modelo._iva_wallet_gate", "core.resources"),
             ImportEdge("application.modelo._iva_wallet_gate", "domain.user_profile"),
+            ImportEdge("application.modelo._iva_wallet_seed", "adapters.persistence.profile.modelos_work_units"),
             ImportEdge("application.modelo._iva_wallet_seed", "application.calculations"),
             ImportEdge("application.modelo._iva_wallet_seed", "core.resources"),
             ImportEdge("application.modelo._iva_wallet_seed", "core.time"),
@@ -573,16 +585,20 @@ _ALLOWLIST: dict[UnsanctionedClass, frozenset[ImportEdge]] = {
             ImportEdge("application.modelo._profile_binding", "application.user_profile"),
             ImportEdge("application.modelo._projection", "core"),
             ImportEdge("application.modelo._quickfile", "application.state_projection"),
+            ImportEdge("application.modelo._reconcile", "adapters.inbound.declaracion"),
             ImportEdge("application.modelo._reconcile", "adapters.inbound.justificante"),
+            ImportEdge("application.modelo._reconcile", "adapters.persistence.profile.modelos_work_units"),
             ImportEdge("application.modelo._reconcile", "application.modelo._calculation_helpers"),
             ImportEdge("application.modelo._reconcile", "application.user_profile"),
             ImportEdge("application.modelo._reconcile", "application.workflow"),
             ImportEdge("application.modelo._reconcile", "domain.buckets"),
+            ImportEdge("application.modelo._reconcile", "domain.calculations.registry"),
             ImportEdge("application.modelo._reconcile", "domain.justificante"),
             ImportEdge("application.modelo._reconcile", "domain.modelos"),
             ImportEdge("application.modelo._registry_helpers", "domain.calculations.registry"),
             ImportEdge("application.modelo._registry_resources", "core.resources"),
             ImportEdge("application.modelo._registry_resources", "domain.calculations.registry"),
+            ImportEdge("application.modelo._taxation_comparison", "adapters.persistence.profile.modelos_work_units"),
             ImportEdge("application.modelo._taxation_comparison", "application.aggregation"),
             ImportEdge("application.modelo._taxation_comparison", "application.modelo._action_errors"),
             ImportEdge("application.modelo._taxation_comparison", "application.modelo._binding_resolution"),
@@ -629,6 +645,7 @@ _ALLOWLIST: dict[UnsanctionedClass, frozenset[ImportEdge]] = {
             ImportEdge("application.storage.calc_sheets._parity_harness", "adapters.outbound.google"),
             ImportEdge("application.storage_write_policy", "application.modelo"),
             ImportEdge("application.transactions._diagnostics", "core.i18n"),
+            ImportEdge("application.user_profile._bundle", "adapters.persistence.profile.modelos_work_units"),
             ImportEdge("application.user_profile._bundle", "adapters.persistence.storage"),
             ImportEdge("application.user_profile._bundle", "application.modelo"),
             ImportEdge("application.user_profile._bundle", "application.user_profile._custody_carry"),
@@ -648,6 +665,7 @@ _ALLOWLIST: dict[UnsanctionedClass, frozenset[ImportEdge]] = {
             ImportEdge("application.user_profile._custody", "adapters.persistence.storage.bucket"),
             ImportEdge("application.user_profile._custody", "core"),
             ImportEdge("application.user_profile._custody_carry", "adapters.outbound.aeat.sede"),
+            ImportEdge("application.user_profile._custody_carry", "adapters.persistence.profile.justificante"),
             ImportEdge("application.user_profile._custody_carry", "adapters.persistence.profile.submission"),
             ImportEdge("application.user_profile._custody_carry", "adapters.persistence.storage"),
             ImportEdge("application.user_profile._custody_carry", "adapters.persistence.storage.attachment"),
@@ -664,8 +682,12 @@ _ALLOWLIST: dict[UnsanctionedClass, frozenset[ImportEdge]] = {
             ImportEdge("application.user_profile._custody_carry", "domain.justificante"),
             ImportEdge("application.user_profile._custody_carry", "domain.user_profile"),
             ImportEdge("application.user_profile._language_resolver", "adapters.persistence.storage"),
+            ImportEdge("application.user_profile._language_resolver", "adapters.persistence.storage.bucket"),
+            ImportEdge("application.user_profile._language_resolver", "adapters.persistence.storage.master_key"),
             ImportEdge("application.user_profile._language_resolver", "application.user_profile._orchestration"),
             ImportEdge("application.user_profile._language_resolver", "application.workflow"),
+            ImportEdge("application.user_profile._language_resolver", "core"),
+            ImportEdge("application.user_profile._language_resolver", "core.config"),
             ImportEdge("application.user_profile._orchestration", "adapters.persistence.storage.errors"),
             ImportEdge("application.user_profile._orchestration", "adapters.persistence.storage.master_key"),
             ImportEdge("application.user_profile._orchestration", "adapters.persistence.storage.sql.engine"),
@@ -681,6 +703,7 @@ _ALLOWLIST: dict[UnsanctionedClass, frozenset[ImportEdge]] = {
             ImportEdge("application.user_profile._profile_repository", "domain.user_profile"),
             ImportEdge("application.user_profile._projections", "application.wizard"),
             ImportEdge("application.user_profile._repository", "adapters.persistence.storage"),
+            ImportEdge("application.user_profile._repository", "adapters.persistence.storage.bucket"),
             ImportEdge("application.user_profile._repository", "core.config"),
             ImportEdge("application.verification._verify", "core.resources"),
             ImportEdge("application.wizard._commands", "application.user_profile"),
@@ -710,6 +733,12 @@ _ALLOWLIST: dict[UnsanctionedClass, frozenset[ImportEdge]] = {
             ImportEdge("application.workflow._profile_bucket_scan", "core.config"),
             ImportEdge("application.workflow._resume", "application.modelo"),
             ImportEdge("entrypoints.mcp", "entrypoints.mcp._server"),
+            ImportEdge("entrypoints.mcp._faithfulness", "core.i18n"),
+            ImportEdge("entrypoints.mcp._input_schema", "entrypoints.cli"),
+            ImportEdge("entrypoints.mcp._persona_scope", "core.i18n"),
+            ImportEdge("entrypoints.mcp._resources", "application.corpus_search"),
+            ImportEdge("entrypoints.mcp._server", "core.i18n"),
+            ImportEdge("entrypoints.mcp._toolsets", "entrypoints.cli"),
             ImportEdge("entrypoints.mcp._tools", "entrypoints.cli"),
             ImportEdge("locales._fstring_registry", "application.wizard"),
             ImportEdge("locales._fstring_registry", "core.i18n"),
@@ -731,15 +760,20 @@ _SITE_CEILINGS: dict[UnsanctionedClass, int] = {
     UnsanctionedClass.ERROR_REGISTRY_BOOTSTRAP: 4,
     UnsanctionedClass.NAMED_CYCLE_BREAK: 1,
     UnsanctionedClass.PORTS_INVERSION_PENDING: 36,
-    UnsanctionedClass.DOMAIN_CYCLE_BREAK: 50,
-    UnsanctionedClass.ADAPTER_INTERNAL_DEFERRAL: 139,
+    UnsanctionedClass.DOMAIN_CYCLE_BREAK: 51,
+    UnsanctionedClass.ADAPTER_INTERNAL_DEFERRAL: 144,
     UnsanctionedClass.CORE_INTERNAL_DEFERRAL: 35,
-    UnsanctionedClass.APPLICATION_DEFERRAL: 462,
+    UnsanctionedClass.APPLICATION_DEFERRAL: 486,
 }
 
 # Ceiling on the total number of allowlisted edges. Editing the allowlist to add
 # an edge must raise this in the same commit; removing edges may lower it freely.
-_ALLOWLIST_EDGE_CEILING: int = 451
+# Re-baselined to 478 (register-item-D7 ledger reconciliation): 27 new
+# function-local first-party import edges accumulated since the prior 451-edge
+# baseline (the modelos_work_units/participation_index catalogue-repository
+# consolidation, the corpus_search/mcp/user_profile deferrals introduced by
+# intervening commits) were swept into their classified buckets in one pass.
+_ALLOWLIST_EDGE_CEILING: int = 478
 
 
 def _aeat_relative(dotted: str) -> str:

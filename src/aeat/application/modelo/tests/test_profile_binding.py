@@ -19,6 +19,7 @@ from pathlib import Path
 
 import pytest
 
+from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ....core import BindingSourceKind, Period
 from ....core.resources import resources
 from ....domain.buckets import BucketEventHistoryRepository
@@ -30,7 +31,7 @@ from ....domain.calculations.registry import (
     RegistrySnapshot,
     RelationId,
 )
-from ....domain.modelos import CalculationRevisionCatalogueRepository, WorkUnitCatalogueRepository
+from ....domain.modelos import CalculationRevisionCatalogueRepository
 from ....domain.user_profile import UserProfileFact, UserProfileRecord
 from ....tests.secure_sql import isolated_runtime_profile
 from ...aggregation import CalculationSourceResolution

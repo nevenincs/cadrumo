@@ -8,6 +8,7 @@ from pathlib import Path
 
 import pytest
 
+from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ....core import Modelo, Period
 from ....domain.modelos import (
     CalculationRevision,
@@ -15,7 +16,6 @@ from ....domain.modelos import (
     CalculationRevisionState,
     ModeloCode,
     WorkUnit,
-    WorkUnitCatalogueRepository,
     derive_calculation_revision_id,
     derive_work_unit_id,
     upsert_calculation_revision,

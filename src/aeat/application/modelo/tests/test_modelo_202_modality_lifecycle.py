@@ -14,6 +14,7 @@ from pathlib import Path
 
 import pytest
 
+from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ....core import Period
 from ....core.resources import resources
 from ....domain.calculations.registry import RegistryModeloObservation
@@ -26,7 +27,6 @@ from ....domain.modelos import (
     ModeloRecordCatalogueRepository,
     VerificationReportCatalogueRepository,
     WorkUnit,
-    WorkUnitCatalogueRepository,
     derive_calculation_revision_id,
     upsert_calculation_revision,
 )

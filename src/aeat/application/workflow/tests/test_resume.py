@@ -9,6 +9,7 @@ from pathlib import Path
 
 import pytest
 
+from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ....core import Period
 from ....core.errors import resolve_error_message
 from ....domain.calculations.registry import CasillaId, CasillaObservation, validated_casilla_id
@@ -17,7 +18,6 @@ from ....domain.modelos import (
     CalculationRevision,
     CalculationRevisionCatalogueRepository,
     CalculationRevisionState,
-    WorkUnitCatalogueRepository,
     derive_calculation_revision_id,
     upsert_calculation_revision,
     upsert_work_unit,

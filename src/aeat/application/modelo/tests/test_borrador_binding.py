@@ -11,6 +11,7 @@ from pathlib import Path
 import pytest
 from pydantic import ValidationError
 
+from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ....adapters.persistence.storage.sql import SecureObjectRepository
 from ....core import BindingSourceKind, Period
 from ....core.errors import ErrorCategory, get_registered_error_code
@@ -26,7 +27,6 @@ from ....domain.calculations.registry import (
 )
 from ....domain.modelos import (
     CalculationRevisionCatalogueRepository,
-    WorkUnitCatalogueRepository,
     derive_calculation_revision_id,
 )
 from ....domain.user_profile import UserProfileFact, UserProfileRecord

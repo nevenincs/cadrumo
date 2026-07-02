@@ -39,6 +39,7 @@ from datetime import datetime
 
 from pydantic import BaseModel, Field
 
+from ...adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ...core import STRICT_FROZEN_CONFIG
 from ...core.identity import BucketId
 from ...domain.buckets import (
@@ -54,7 +55,6 @@ from ...domain.modelos import (
     ModeloRecordCatalogueRepositoryProtocol,
     VerificationReportCatalogueRepository,
     VerificationReportCatalogueRepositoryProtocol,
-    WorkUnitCatalogueRepository,
     WorkUnitId,
 )
 from ._action_errors import WorkUnitNotFoundError

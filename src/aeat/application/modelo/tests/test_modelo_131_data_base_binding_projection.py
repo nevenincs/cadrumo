@@ -9,10 +9,11 @@ from pathlib import Path
 
 import pytest
 
+from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ....adapters.persistence.storage.sql import SecureObjectRepository
 from ....core import Period
 from ....domain.buckets import BucketEventHistoryRepository
-from ....domain.modelos import CalculationRevisionCatalogueRepository, WorkUnitCatalogueRepository
+from ....domain.modelos import CalculationRevisionCatalogueRepository
 from ....domain.user_profile import UserProfileFact, UserProfileRecord
 from ....tests.secure_sql import isolated_runtime_profile
 from ...user_profile import UserProfileLifecycleRepository

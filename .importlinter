@@ -86,17 +86,20 @@ ignore_imports =
     # core; the repositories are deliberately co-located with their domain.
     aeat.domain.transactions._repository -> aeat.adapters.persistence.storage
     aeat.domain.calculations.registry.tests.test_cross_boundary_roundtrip -> aeat.application.workflow
-    aeat.domain.calculations.registry.tests.test_cross_boundary_roundtrip -> aeat.application.workflow._models
     aeat.domain.calculations.registry.tests.test_detail_record_modelo_coverage -> aeat.application.storage.calc_sheets
     aeat.domain.invoices.tests.test_reconciliation -> aeat.application.invoices
     aeat.domain.modelos.tests.test_work_unit -> aeat.application.modelo
     # ── registry/modelo test files pulling application fixtures (test-topology refactor) ──
-    aeat.domain.calculations.registry.tests.test_modelo_100_registry_roles_capital_gains -> aeat.application.modelo._semantic_role_resolution
-    aeat.domain.calculations.registry.tests.test_modelo_100_registry_roles_prevision_social -> aeat.application.modelo._semantic_role_resolution
+    # W10: import-centralization refactor moved these test files onto the
+    # top-level application.modelo / application.aggregation re-exports
+    # (service-imports-via-top-level-reexports), so the prior private-submodule
+    # ignores (._semantic_role_resolution, ._renta_income_ledger) went stale.
+    aeat.domain.calculations.registry.tests.test_modelo_100_registry_roles_capital_gains -> aeat.application.modelo
+    aeat.domain.calculations.registry.tests.test_modelo_100_registry_roles_prevision_social -> aeat.application.modelo
     aeat.domain.calculations.registry.tests._ledger_iva_aggregation_support -> aeat.application.calculations
     aeat.domain.calculations.registry.tests.test_binding_coverage_breadth -> aeat.application.aggregation
     aeat.domain.calculations.registry.tests.test_binding_coverage_breadth -> aeat.application.modelo._calculation_actions
-    aeat.domain.calculations.registry.tests.test_ledger_renta_income_binding -> aeat.application.aggregation._renta_income_ledger
+    aeat.domain.calculations.registry.tests.test_ledger_renta_income_binding -> aeat.application.aggregation
     aeat.domain.calculations.registry.tests.test_referential_integrity_part4 -> aeat.application.diagnostics
     aeat.domain.modelos.tests.test_work_unit -> aeat.application.user_profile
 
@@ -145,18 +148,30 @@ ignore_imports =
     aeat.core.tests.test_modelo -> aeat.domain.modelos
     aeat.core.tests.test_service_capability -> aeat.domain.user_profile
     aeat.core.tests.test_logging -> aeat.adapters.inbound.pdf._pdfplumber
-    aeat.core.tests.test_setup_answers -> aeat.application.wizard._catalogue
+    # test_setup_answers's wizard._catalogue import went stale (test-topology
+    # refactor); its domain.deadlines import is a real function-local edge
+    # (see below), re-pinned at module granularity.
+    aeat.core.tests.test_wizard_catalogue -> aeat.application.wizard._catalogue
     aeat.core.tests.test_setup_answers -> aeat.domain.deadlines
     aeat.core.tests.test_setup_answers -> aeat.domain.deadlines._profiles
-    aeat.core.tests.test_wizard_catalogue -> aeat.application.wizard._catalogue
+    # test_external_constants_centralisation_part2 imports aeat.tests.leaf_name
+    # (module-level, not previously pinned - new edge from the test-topology
+    # refactor's shared test-helper consolidation).
+    aeat.core.tests.test_external_constants_centralisation_part2 -> aeat.tests
+    # test_external_constants imports domain.portals via function-local
+    # imports (not top-of-file), confirmed live by lint-imports transitive
+    # trace; re-pinned at module granularity (the ._entries._common
+    # deep-submodule ignore was stale).
+    aeat.core.tests.test_external_constants -> aeat.domain.portals
     # ── core test files importing application/domain/adapters for fixtures ──
     # test_clock verifies the calc-sheets ``_utc_now`` alias follows the core
     # clock seam (it IS ``core.time.now``); a deliberate cross-layer seam check.
     aeat.core.time.tests.test_clock -> aeat.application.storage.calc_sheets._records
     # test_golden (observability replay) pulls a domain user_profile fixture.
     aeat.core.observability.tests.test_golden -> aeat.domain.user_profile
-    aeat.core.tests.test_external_constants -> aeat.domain.portals
-    aeat.core.tests.test_external_constants -> aeat.domain.portals._entries._common
+    # test_external_constants now uses ast/tomllib static analysis only; it no
+    # longer imports domain.portals at runtime (import-centralization
+    # refactor). Prior ignores went stale.
     aeat.core.tests.test_external_constants_centralisation_part1 -> aeat.adapters.persistence.storage.blob_store
     aeat.core.tests.test_external_constants_centralisation_part1 -> aeat.application.ledger
     aeat.core.tests.test_paths -> aeat.adapters.outbound.storage._local
@@ -403,8 +418,6 @@ ignore_imports =
     aeat.core.tests.test_modelo -> aeat.domain.modelos
     aeat.core.tests.test_service_capability -> aeat.domain.user_profile
     aeat.core.tests.test_logging -> aeat.adapters.inbound.pdf._pdfplumber
-    aeat.core.tests.test_setup_answers -> aeat.application.wizard._catalogue
-    aeat.core.tests.test_setup_answers -> aeat.domain.deadlines._profiles
     aeat.core.tests.test_wizard_catalogue -> aeat.application.wizard._catalogue
     aeat.domain.attachments.tests.test_service -> aeat.tests.secure_sql
     aeat.domain.calculations.registry.tests.test_inss_maternidad_paternidad_art7h -> aeat.tests.cli_runner
@@ -439,12 +452,17 @@ ignore_imports =
     aeat.application.auth.tests.test_operator_storage_session -> aeat.adapters.persistence.storage
     aeat.application.bucket_maintenance.tests.test_custody_completeness -> aeat.adapters.persistence.storage.attachment
     aeat.application.bucket_maintenance.tests.test_service_browse -> aeat.adapters.persistence.storage
-    aeat.application.bucket_maintenance.tests.test_service_import_export -> aeat.adapters.persistence.storage.bucket._sealed_archive_errors
+    # (test_service_import_export -> aeat.adapters.persistence.storage.bucket
+    # module-level edge is pinned below; the prior ._sealed_archive_errors
+    # private-submodule ignore went stale under import-centralization)
     aeat.application.calculations.tests._iva_compensation_history_support -> aeat.adapters.outbound.aeat.sede
-    aeat.application.calculations.tests.test_detail_record_round_trip -> aeat.adapters.outbound.google._calc_sheets_pull
+    # W10: import-centralization moved these Sheets test files onto the
+    # top-level aeat.adapters.outbound.google re-export; the prior
+    # ._calc_sheets_pull private-submodule ignores went stale.
+    aeat.application.calculations.tests.test_detail_record_round_trip -> aeat.adapters.outbound.google
     aeat.application.calculations.tests.test_revision_stamp_roundtrip -> aeat.adapters.persistence.storage.sql.engine
     aeat.application.calculations.tests.test_revision_stamp_roundtrip -> aeat.adapters.persistence.storage.sql.session
-    aeat.application.calculations.tests.test_row_set_assembly -> aeat.adapters.outbound.google._calc_sheets_pull
+    aeat.application.calculations.tests.test_row_set_assembly -> aeat.adapters.outbound.google
     aeat.application.filing.tests.test_review_runtime_storage -> aeat.adapters.persistence.storage.errors
     aeat.application.filing.tests.test_review_runtime_storage -> aeat.adapters.persistence.storage.sql.engine
     aeat.application.filing.tests.test_runtime_repository -> aeat.adapters.persistence.storage.errors
@@ -527,7 +545,10 @@ ignore_imports =
     aeat.application.overview.tests.test_calendar_post_filing_events -> aeat.adapters.outbound.aeat.sede
     aeat.application.overview.tests.test_calendar_taxpayer_model -> aeat.adapters.outbound.aeat.sede
     aeat.application.review.tests.test_adapters -> aeat.adapters.persistence.storage.runtime_repository
-    aeat.application.tests.test_diagnostics -> aeat.adapters.persistence.storage.master_key._bucket_session
+    # W10: test_diagnostics now imports BucketSession via the top-level
+    # master_key re-export; the prior ._bucket_session private-submodule
+    # ignore went stale.
+    aeat.application.tests.test_diagnostics -> aeat.adapters.persistence.storage.master_key
     aeat.application.tests.test_error_envelope_enrollment -> aeat.adapters.persistence.storage.errors
     aeat.application.tests.test_namespace_registry_adoption -> aeat.adapters.persistence.storage
     aeat.application.user_profile.tests.test_custody_roundtrip -> aeat.adapters.persistence.storage.attachment
@@ -675,9 +696,16 @@ ignore_imports =
     aeat.domain.filing._complementaria_repository -> aeat.adapters.persistence.storage
     aeat.domain.filing._repository -> aeat.adapters.persistence.storage
     aeat.domain.invoices._repository -> aeat.adapters.persistence.storage
+    # modelos_work_units consolidation: domain.modelos._repository (the
+    # work-unit catalogue repository) no longer imports adapters directly -
+    # persistence now routes through
+    # aeat.adapters.persistence.profile.modelos_work_units at the
+    # application/adapter wiring layer. Its three sibling repository modules
+    # (calculation/filing/verification) still hold real lazy function-local
+    # adapters.persistence.storage imports (SecureObjectRepository, Envelope,
+    # SecureObjectWrite), confirmed by lint-imports trace - re-pinned below.
     aeat.domain.modelos._calculation_repository -> aeat.adapters.persistence.storage
     aeat.domain.modelos._filing_repository -> aeat.adapters.persistence.storage
-    aeat.domain.modelos._repository -> aeat.adapters.persistence.storage
     aeat.domain.modelos._verification_repository -> aeat.adapters.persistence.storage
     aeat.domain.transactions._repository -> aeat.adapters.persistence.storage.crypto
     aeat.domain.submission.tests.test_repository -> aeat.adapters.persistence.profile.submission
@@ -691,15 +719,22 @@ ignore_imports =
     aeat.domain.filing._runtime_repository -> aeat.adapters.persistence.storage
     aeat.domain.modelos._runtime_repository -> aeat.adapters.persistence.storage
     # ── test files pulling application/adapters/entrypoints fixtures (test-topology refactor) ──
-    aeat.domain.calculations.registry.tests.test_modelo_100_registry_roles_capital_gains -> aeat.application.modelo._semantic_role_resolution
-    aeat.domain.calculations.registry.tests.test_modelo_100_registry_roles_prevision_social -> aeat.application.modelo._semantic_role_resolution
-    aeat.application.modelo.tests.test_m349_calculation_display_export -> aeat.entrypoints.cli._modelo_rendering
+    # W10: import-centralization refactor moved these test files onto the
+    # top-level application.modelo / application.aggregation re-exports
+    # (service-imports-via-top-level-reexports); prior private-submodule
+    # ignores went stale.
+    aeat.domain.calculations.registry.tests.test_modelo_100_registry_roles_capital_gains -> aeat.application.modelo
+    aeat.domain.calculations.registry.tests.test_modelo_100_registry_roles_prevision_social -> aeat.application.modelo
+    # W10: test_m349_calculation_display_export now imports via the top-level
+    # entrypoints.cli re-export; the prior ._modelo_rendering private-submodule
+    # ignore went stale.
+    aeat.application.modelo.tests.test_m349_calculation_display_export -> aeat.entrypoints.cli
     aeat.core.observability.tests.test_golden -> aeat.domain.user_profile
     aeat.core.time.tests.test_clock -> aeat.application.storage.calc_sheets._records
     aeat.domain.calculations.registry.tests._ledger_iva_aggregation_support -> aeat.application.calculations
     aeat.domain.calculations.registry.tests.test_binding_coverage_breadth -> aeat.application.aggregation
     aeat.domain.calculations.registry.tests.test_binding_coverage_breadth -> aeat.application.modelo._calculation_actions
-    aeat.domain.calculations.registry.tests.test_ledger_renta_income_binding -> aeat.application.aggregation._renta_income_ledger
+    aeat.domain.calculations.registry.tests.test_ledger_renta_income_binding -> aeat.application.aggregation
     aeat.domain.calculations.registry.tests.test_referential_integrity_part4 -> aeat.application.diagnostics
     aeat.domain.calculations.registry.tests.test_referential_integrity_part4 -> aeat.tests.secure_sql
     aeat.domain.currency.tests.test_service -> aeat.adapters.outbound.fx
@@ -717,6 +752,10 @@ ignore_imports =
     aeat.domain.modelos.tests.test_ledger_filing_evidence_roundtrip -> aeat.adapters.persistence.storage.sql
     aeat.domain.modelos.tests.test_ledger_filing_evidence_roundtrip -> aeat.tests.secure_sql
     aeat.domain.modelos.tests.test_secure_storage_roundtrip -> aeat.adapters.persistence.storage
+    # modelos_work_units consolidation: domain roundtrip/fixture tests seed
+    # rows through the consolidated work-unit catalogue repository adapter.
+    aeat.domain.modelos.tests.test_secure_storage_roundtrip -> aeat.adapters.persistence.profile.modelos_work_units
+    aeat.domain.modelos.tests.test_work_unit -> aeat.adapters.persistence.profile.modelos_work_units
     aeat.domain.modelos.tests.test_verification_report_roundtrip -> aeat.adapters.persistence.storage
     aeat.domain.submission.tests.test_repository -> aeat.adapters.persistence.storage
     aeat.domain.submission.tests.test_repository -> aeat.adapters.persistence.storage.errors
@@ -777,12 +816,22 @@ ignore_imports =
     aeat.application.modelo.tests.test_source_boundary_and_enrollment -> aeat.tests.secure_sql
     # ── domain production cross-layer edges (lazy imports deferred for cleanup) ──
     # ── domain test cross-layer edges ──
-    aeat.domain.calculations.registry.tests.test_cross_boundary_roundtrip -> aeat.application.workflow._models
+    # (test_cross_boundary_roundtrip -> aeat.application.workflow module-level
+    # edge is pinned below; the prior ._models private-submodule ignore went
+    # stale under the import-centralization top-level re-export move)
     aeat.domain.calculations.registry.tests.test_detail_record_modelo_coverage -> aeat.application.storage.calc_sheets
     aeat.domain.invoices.tests.test_reconciliation -> aeat.application.invoices
     aeat.domain.modelos.tests.test_work_unit -> aeat.application.modelo
     # ── core test files ──
     aeat.core.tests.test_paths -> aeat.adapters.outbound.storage._local
+    # test_external_constants / test_setup_answers: real function-local
+    # (in-function) imports confirmed by lint-imports transitive trace, not
+    # top-of-file imports; re-pinned at module granularity in this contract
+    # too (each import-linter contract holds its own independent ignore list).
+    aeat.core.tests.test_external_constants -> aeat.domain.portals
+    aeat.core.tests.test_setup_answers -> aeat.domain.deadlines
+    aeat.core.tests.test_setup_answers -> aeat.domain.deadlines._profiles
+    aeat.core.tests.test_external_constants_centralisation_part2 -> aeat.tests
     # ── core/resources/_repos deferred loader imports ──
     # Function-local imports inside Repository._load / _resolve_authority
     # methods. The resource-management-api ADR (2026-05-16) places the
@@ -809,7 +858,6 @@ ignore_imports =
     aeat.domain.filing.tests.test_runtime_repository -> aeat.adapters.persistence.storage.errors
     aeat.domain.filing.tests.test_runtime_repository -> aeat.adapters.persistence.storage.sql.engine
     aeat.domain.submission.tests.test_repository -> aeat.adapters.persistence.storage.sql.session
-    aeat.core.tests.test_external_constants -> aeat.domain.portals._entries._common
     aeat.application.live.tests.test_expedientes -> aeat.adapters.outbound.aeat.sede
     aeat.application.calculations.tests.test_cross_period_clean_state -> aeat.tests.secure_sql
     aeat.application.invoices.tests.test_linking -> aeat.tests.secure_sql
@@ -882,6 +930,111 @@ ignore_imports =
     aeat.application.modelo._verification_actions -> aeat.adapters.persistence.profile.participation_index
     aeat.application.modelo.tests.test_participation_rebuild -> aeat.adapters.persistence.profile.participation_index
     aeat.application.modelo.tests.test_participation_co_emission -> aeat.adapters.persistence.profile.participation_index
+    # ── application production edges: modelos_work_units catalogue repository
+    #    consolidation (import-centralization refactor; module-granularity) ──
+    aeat.application.modelo._amendment_actions -> aeat.adapters.persistence.profile.modelos_work_units
+    aeat.application.modelo._calculate_input -> aeat.adapters.persistence.profile.modelos_work_units
+    aeat.application.modelo._calculation_actions -> aeat.adapters.persistence.profile.modelos_work_units
+    aeat.application.modelo._export -> aeat.adapters.persistence.profile.modelos_work_units
+    aeat.application.modelo._external_import_actions -> aeat.adapters.persistence.profile.modelos_work_units
+    aeat.application.modelo._filing_actions -> aeat.adapters.persistence.profile.modelos_work_units
+    aeat.application.modelo._history -> aeat.adapters.persistence.profile.modelos_work_units
+    aeat.application.modelo._iva_wallet_gate -> aeat.adapters.persistence.profile.modelos_work_units
+    aeat.application.modelo._iva_wallet_seed -> aeat.adapters.persistence.profile.modelos_work_units
+    aeat.application.modelo._participation_index_rebuild -> aeat.adapters.persistence.profile.modelos_work_units
+    aeat.application.modelo._selectors -> aeat.adapters.persistence.profile.modelos_work_units
+    aeat.application.modelo._taxation_comparison -> aeat.adapters.persistence.profile.modelos_work_units
+    aeat.application.modelo._verification_actions -> aeat.adapters.persistence.profile.modelos_work_units
+    aeat.application.modelo._work_lifecycle -> aeat.adapters.persistence.profile.modelos_work_units
+    # ── application test-fixture edges: modelos_work_units catalogue repository
+    #    (roundtrip-discipline fixtures seeding work-unit rows) ──
+    aeat.application.calculations.tests.test_modelo_100_base_negativa_general_compensation -> aeat.adapters.persistence.profile.modelos_work_units
+    aeat.application.calculations.tests.test_modelo_100_multiyear_renta_enrollment -> aeat.adapters.persistence.profile.modelos_work_units
+    aeat.application.calculations.tests.test_modelo_130_carry_forward_continuity -> aeat.adapters.persistence.profile.modelos_work_units
+    aeat.application.calculations.tests.test_modelo_130_multiyear_renta_enrollment -> aeat.adapters.persistence.profile.modelos_work_units
+    aeat.application.calculations.tests.test_pull_path_calculate_path_casilla_parity -> aeat.adapters.persistence.profile.modelos_work_units
+    aeat.application.ledger.tests._action_test_support -> aeat.adapters.persistence.profile.modelos_work_units
+    aeat.application.ledger.tests._remove_draft_revision_support -> aeat.adapters.persistence.profile.modelos_work_units
+    aeat.application.ledger.tests.test_remove_draft_revision_advisory -> aeat.adapters.persistence.profile.modelos_work_units
+    aeat.application.ledger.tests.test_remove_finalized_revision_block -> aeat.adapters.persistence.profile.modelos_work_units
+    aeat.application.live.tests._filed_capture_history_support -> aeat.adapters.persistence.profile.modelos_work_units
+    aeat.application.live.tests._justificante_reconcile_support -> aeat.adapters.persistence.profile.modelos_work_units
+    aeat.application.modelo.tests._export_modelo_303_support -> aeat.adapters.persistence.profile.modelos_work_units
+    aeat.application.modelo.tests._export_test_support -> aeat.adapters.persistence.profile.modelos_work_units
+    aeat.application.modelo.tests._file_flow_support -> aeat.adapters.persistence.profile.modelos_work_units
+    aeat.application.modelo.tests._import_flow_support -> aeat.adapters.persistence.profile.modelos_work_units
+    aeat.application.modelo.tests._iva_wallet_engine_support -> aeat.adapters.persistence.profile.modelos_work_units
+    aeat.application.modelo.tests._verification_substance_support -> aeat.adapters.persistence.profile.modelos_work_units
+    aeat.application.modelo.tests.test_amend_flow -> aeat.adapters.persistence.profile.modelos_work_units
+    aeat.application.modelo.tests.test_art109_activity_income_period_evidence -> aeat.adapters.persistence.profile.modelos_work_units
+    aeat.application.modelo.tests.test_borrador_binding -> aeat.adapters.persistence.profile.modelos_work_units
+    aeat.application.modelo.tests.test_bucket_aggregation_flow -> aeat.adapters.persistence.profile.modelos_work_units
+    aeat.application.modelo.tests.test_cross_period_clean_state_gates -> aeat.adapters.persistence.profile.modelos_work_units
+    aeat.application.modelo.tests.test_declaration_period_binding -> aeat.adapters.persistence.profile.modelos_work_units
+    aeat.application.modelo.tests.test_dormant_ledger_resolvers_fire_live -> aeat.adapters.persistence.profile.modelos_work_units
+    aeat.application.modelo.tests.test_dormant_m349_invoice_resolver_live -> aeat.adapters.persistence.profile.modelos_work_units
+    aeat.application.modelo.tests.test_dormant_m369_oss_resolver_live -> aeat.adapters.persistence.profile.modelos_work_units
+    aeat.application.modelo.tests.test_e2e_ledger_m130_quarters_to_m100_annual -> aeat.adapters.persistence.profile.modelos_work_units
+    aeat.application.modelo.tests.test_e2e_ledger_m303_quarters_to_m390_annual -> aeat.adapters.persistence.profile.modelos_work_units
+    aeat.application.modelo.tests.test_e2e_ledger_m303_recargo_cross_period -> aeat.adapters.persistence.profile.modelos_work_units
+    aeat.application.modelo.tests.test_export_iva_wallet -> aeat.adapters.persistence.profile.modelos_work_units
+    aeat.application.modelo.tests.test_export_selector -> aeat.adapters.persistence.profile.modelos_work_units
+    aeat.application.modelo.tests.test_history -> aeat.adapters.persistence.profile.modelos_work_units
+    aeat.application.modelo.tests.test_iva_wallet_correction -> aeat.adapters.persistence.profile.modelos_work_units
+    aeat.application.modelo.tests.test_iva_wallet_engine_overrides -> aeat.adapters.persistence.profile.modelos_work_units
+    aeat.application.modelo.tests.test_local_cross_period_carry -> aeat.adapters.persistence.profile.modelos_work_units
+    aeat.application.modelo.tests.test_m111_retenciones_observation_live -> aeat.adapters.persistence.profile.modelos_work_units
+    aeat.application.modelo.tests.test_m303_m349_intracom_reconcile -> aeat.adapters.persistence.profile.modelos_work_units
+    aeat.application.modelo.tests.test_modelo_100_2025_expense_inspection_live -> aeat.adapters.persistence.profile.modelos_work_units
+    aeat.application.modelo.tests.test_modelo_100_2025_retenciones_credit_fold_in_live -> aeat.adapters.persistence.profile.modelos_work_units
+    aeat.application.modelo.tests.test_modelo_100_negative_general_base_carry_live -> aeat.adapters.persistence.profile.modelos_work_units
+    aeat.application.modelo.tests.test_modelo_100_pagos_fraccionados_fold_in_live -> aeat.adapters.persistence.profile.modelos_work_units
+    aeat.application.modelo.tests.test_modelo_100_retenciones_credit_fold_in_live -> aeat.adapters.persistence.profile.modelos_work_units
+    aeat.application.modelo.tests.test_modelo_130_prior_payment_advisory -> aeat.adapters.persistence.profile.modelos_work_units
+    aeat.application.modelo.tests.test_modelo_131_data_base_binding_projection -> aeat.adapters.persistence.profile.modelos_work_units
+    aeat.application.modelo.tests.test_modelo_200_2024_ejemplo1_tributacion_minima_manual_worked_example -> aeat.adapters.persistence.profile.modelos_work_units
+    aeat.application.modelo.tests.test_modelo_200_accounting_input_guard -> aeat.adapters.persistence.profile.modelos_work_units
+    aeat.application.modelo.tests.test_modelo_200_first_year_cuota_e2e -> aeat.adapters.persistence.profile.modelos_work_units
+    aeat.application.modelo.tests.test_modelo_200_fold_in_live -> aeat.adapters.persistence.profile.modelos_work_units
+    aeat.application.modelo.tests.test_modelo_202_2025_pago_fraccionado_manual_worked_example -> aeat.adapters.persistence.profile.modelos_work_units
+    aeat.application.modelo.tests.test_modelo_202_modality_lifecycle -> aeat.adapters.persistence.profile.modelos_work_units
+    aeat.application.modelo.tests.test_modelo_202_sociedades_fold_in_live -> aeat.adapters.persistence.profile.modelos_work_units
+    aeat.application.modelo.tests.test_modelo_210_inmobiliaria_e2e -> aeat.adapters.persistence.profile.modelos_work_units
+    aeat.application.modelo.tests.test_modelo_303_deductible_evidence_gate -> aeat.adapters.persistence.profile.modelos_work_units
+    aeat.application.modelo.tests.test_modelo_303_official_box_under_declaration -> aeat.adapters.persistence.profile.modelos_work_units
+    aeat.application.modelo.tests.test_modelo_303_refund_account_missing_e2e -> aeat.adapters.persistence.profile.modelos_work_units
+    aeat.application.modelo.tests.test_modelo_303_refund_auto_carry_e2e -> aeat.adapters.persistence.profile.modelos_work_units
+    aeat.application.modelo.tests.test_modelo_303_refund_election_e2e -> aeat.adapters.persistence.profile.modelos_work_units
+    aeat.application.modelo.tests.test_modelo_390_303_fold_in_live -> aeat.adapters.persistence.profile.modelos_work_units
+    aeat.application.modelo.tests.test_modelo_390_303_simplificado_fold_in_live -> aeat.adapters.persistence.profile.modelos_work_units
+    aeat.application.modelo.tests.test_modelo_390_fifo_carried_pending -> aeat.adapters.persistence.profile.modelos_work_units
+    aeat.application.modelo.tests.test_participation_co_emission -> aeat.adapters.persistence.profile.modelos_work_units
+    aeat.application.modelo.tests.test_participation_rebuild -> aeat.adapters.persistence.profile.modelos_work_units
+    aeat.application.modelo.tests.test_previous_filing_casilla_override -> aeat.adapters.persistence.profile.modelos_work_units
+    aeat.application.modelo.tests.test_profile_binding -> aeat.adapters.persistence.profile.modelos_work_units
+    aeat.application.modelo.tests.test_profile_readiness_gate -> aeat.adapters.persistence.profile.modelos_work_units
+    aeat.application.modelo.tests.test_projection_compare -> aeat.adapters.persistence.profile.modelos_work_units
+    aeat.application.modelo.tests.test_reconcile -> aeat.adapters.persistence.profile.modelos_work_units
+    aeat.application.modelo.tests.test_reconcile_declaracion_casillas -> aeat.adapters.persistence.profile.modelos_work_units
+    aeat.application.modelo.tests.test_reconcile_declaracion_casillas_multi_modelo -> aeat.adapters.persistence.profile.modelos_work_units
+    aeat.application.modelo.tests.test_reconcile_value_comparison -> aeat.adapters.persistence.profile.modelos_work_units
+    aeat.application.modelo.tests.test_reconciliation_history -> aeat.adapters.persistence.profile.modelos_work_units
+    aeat.application.modelo.tests.test_relation_fold_in_live -> aeat.adapters.persistence.profile.modelos_work_units
+    aeat.application.modelo.tests.test_renta_annual_reconciliations_fold_in_live -> aeat.adapters.persistence.profile.modelos_work_units
+    aeat.application.modelo.tests.test_revision_id_d1_contract -> aeat.adapters.persistence.profile.modelos_work_units
+    aeat.application.modelo.tests.test_selectors -> aeat.adapters.persistence.profile.modelos_work_units
+    aeat.application.modelo.tests.test_source_boundary_and_enrollment -> aeat.adapters.persistence.profile.modelos_work_units
+    aeat.application.modelo.tests.test_source_mesh_calculation -> aeat.adapters.persistence.profile.modelos_work_units
+    aeat.application.modelo.tests.test_verificado_completo_regression -> aeat.adapters.persistence.profile.modelos_work_units
+    aeat.application.modelo.tests.test_verification_substance_workflow -> aeat.adapters.persistence.profile.modelos_work_units
+    aeat.application.modelo.tests.test_work_addressing -> aeat.adapters.persistence.profile.modelos_work_units
+    aeat.application.workflow.tests.test_resume -> aeat.adapters.persistence.profile.modelos_work_units
+    # ── application test-fixture edges: reconcile-against-declaracion test files
+    #    (declaracion/pdf adapter fixtures; import-centralization refactor) ──
+    aeat.application.modelo.tests.test_reconcile_declaracion_casillas -> aeat.adapters.inbound.declaracion
+    aeat.application.modelo.tests.test_reconcile_declaracion_casillas -> aeat.adapters.inbound.pdf
+    aeat.application.modelo.tests.test_reconcile_declaracion_casillas_multi_modelo -> aeat.adapters.inbound.declaracion
+    aeat.application.modelo.tests.test_reconcile_declaracion_casillas_multi_modelo -> aeat.adapters.inbound.pdf
     # ── application test-fixture edges (module-granularity) ──
     aeat.application.setup.tests.test_atomic_create_rollback -> aeat.adapters.persistence.storage.bucket
     aeat.application.bucket_maintenance.tests.test_service_rename -> aeat.adapters.persistence.storage.bucket
@@ -925,8 +1078,6 @@ ignore_imports =
     aeat.core.tests.test_external_constants_centralisation_part1 -> aeat.adapters.persistence.storage.blob_store
     aeat.core.tests.test_paths -> aeat.adapters.persistence.storage
     aeat.core.tests.test_external_constants_centralisation_part1 -> aeat.application.ledger
-    aeat.core.tests.test_setup_answers -> aeat.domain.deadlines
-    aeat.core.tests.test_external_constants -> aeat.domain.portals
     aeat.core.resources._repos.tests.test_singletons -> aeat.domain.user_profile
     aeat.core.resources._repos.tests.test_manuals -> aeat.domain.manuals
     aeat.core.resources._repos.tests.test_singletons -> aeat.domain.auth.apoderamientos

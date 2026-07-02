@@ -50,7 +50,6 @@ from ._export_test_support import (
     _profile,
     _seed_profile,
     _seed_revision,
-    _snapshot_ref,
     isolated_backend,  # noqa: F401 — pytest fixture
 )
 
@@ -244,8 +243,13 @@ def test_rectificativa_indicator_renders_in_fichero_page_3(isolated_backend: Non
     """Export boundary: the rectificativa indicator renders as a single ``1``
     byte at its declared page-3 position in the real fichero-BOE, proving the
     length-1 field does not overflow."""
-    from ....application.filing import build_runtime_schema_provider, export_draft
-    from ....domain.filing import ModeloDraft
+    from ....application.filing import (
+        ModeloOperatorProfile,
+        build_draft,
+        build_runtime_schema_provider,
+        export_draft,
+    )
+    from ....domain.calculations.registry import validated_casilla_id
     from ....domain.submission import ModeloDraftStatus
 
     tax_id = "B12345674"
@@ -268,20 +272,26 @@ def test_rectificativa_indicator_renders_in_fichero_page_3(isolated_backend: Non
     assert headers["autoliq_rectificativa"] == "1"
 
     provider = build_runtime_schema_provider(filing_year=2026, period=period, modelos=("303",))
-    subview = provider.get_subview("303")
-    draft = ModeloDraft(
-        draft_id="d" + "3" * 63,
+
+    # Build a real draft through the calculation engine so the fichero-BOE
+    # completeness gate has the full M303 result set on disk (the rectificativa
+    # indicator wiring under test lives in the page-3 headers, not the value
+    # records). A single grounded IVA repercutido general line drives the cuota
+    # devengada / resultado chain, populating every computed result casilla.
+    built = build_draft(
         modelo="303",
         period=period,
-        profile_tax_id=tax_id,
-        subject_tax_id=tax_id,
-        snapshot_ref=_snapshot_ref(modelo="303", period=period, revision_id=work_unit.revision_id),
-        status=ModeloDraftStatus.APROBADO,
-        values=(),
-        created_at=datetime(2026, 6, 30, 10, 0, tzinfo=UTC),
-        updated_at=datetime(2026, 6, 30, 10, 0, tzinfo=UTC),
-        schema_version=subview.schema_version,
+        profile=ModeloOperatorProfile(tax_id=tax_id, display_name="Rectificativa Export SL"),
+        inputs={
+            validated_casilla_id("07", surface="modelo 303 rectificativa export test"): Decimal("10000.00"),
+            validated_casilla_id("iva.repercutido.general", surface="modelo 303 rectificativa export test"): Decimal(
+                "2100.00"
+            ),
+            "modelo-303-compensacion-pendiente-anteriores": Decimal("0"),
+        },
+        schema_provider=provider,
     )
+    draft = built.model_copy(update={"status": ModeloDraftStatus.APROBADO})
 
     output_path = tmp_path / "modelo-303-rectificativa.boe"
     export_draft(draft, output_path=output_path, headers=headers, schema_provider=provider)

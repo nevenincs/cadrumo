@@ -34,6 +34,7 @@ from dataclasses import dataclass
 from decimal import Decimal, InvalidOperation
 from typing import Literal
 
+from ...adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ...core import Modelo, RescateType
 from ...core.errors import AeatError
 from ...core.external_constants import M347_THRESHOLD_EUR
@@ -62,7 +63,6 @@ from ...domain.modelos import (
     ModeloDetailRow,
     ModeloError,
     WorkUnit,
-    WorkUnitCatalogueRepository,
     compute_dt12_reduccion_plan_pensiones,
     compute_sal_reserva_especial_dotacion,
     dt12_regime_window_eligibility,

@@ -40,6 +40,7 @@ from collections.abc import Mapping
 from datetime import datetime
 from decimal import Decimal
 
+from ...adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ...core.time import now as _utc_now
 from ...domain.buckets import (
     BucketEventHistoryRepository,
@@ -62,7 +63,6 @@ from ...domain.modelos import (
     ModeloRecordStatus,
     WorkUnit,
     WorkUnitCatalogue,
-    WorkUnitCatalogueRepository,
     WorkUnitCatalogueRepositoryProtocol,
     derive_calculation_revision_id,
     derive_filing_record_id,

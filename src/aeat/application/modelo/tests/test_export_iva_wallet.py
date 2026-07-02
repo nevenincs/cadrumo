@@ -7,6 +7,7 @@ from pathlib import Path
 
 import pytest
 
+from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ....adapters.persistence.storage import (
     STORAGE_NAMESPACE_REGISTRY,
     SecureObjectRepository,
@@ -20,7 +21,6 @@ from ....domain.modelos import (
     CalculationRevisionState,
     ModeloRecordCatalogueRepository,
     VerificationReportCatalogueRepository,
-    WorkUnitCatalogueRepository,
 )
 from ...calculations import IvaWalletDecisionRepository
 from .. import (

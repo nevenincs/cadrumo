@@ -39,6 +39,7 @@ You MUST respect these rules at all times:
 @.codex/rules/composition-service-no-parallel-write-path.md
 @.codex/rules/core-struct-docstring-links.md
 @.codex/rules/cross-period-suppression-grounded-in-registry-classification.md
+@.codex/rules/dynamic-import-targets-the-public-facade.md
 @.codex/rules/firmware-reference-parity.builtin.md
 @.codex/rules/fixture-provenance-declared-in-sidecar.md
 @.codex/rules/full-tree-gate-must-distinguish-owner.md

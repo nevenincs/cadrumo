@@ -14,6 +14,7 @@ from .._authority import ValidatedRegistryAuthority
 from .._errors import AmbiguousRevisionSelectionError, RegistryValidationError
 from .._queries import BindingSelectorQueryProjection, ModeloFormulaRow, RegistryQueryService
 from .._schema import InputKind
+from ._loader_directory_mode_support import write_fragmented_revision
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -133,9 +134,9 @@ def _write_year_ambiguous_registry(tmp_path) -> Path:
     ):
         revision_dir = modelos_dir / "revisions" / revision_id
         revision_dir.mkdir(parents=True)
-        (revision_dir / "revision.toml").write_text(
+        write_fragmented_revision(
+            revision_dir,
             _MINIMAL_REVISION_TOML_TEMPLATE.format(revision_id=revision_id, label=label, period=period),
-            encoding="utf-8",
         )
 
     return registry_root

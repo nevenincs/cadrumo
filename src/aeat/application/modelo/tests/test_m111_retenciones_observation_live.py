@@ -8,11 +8,12 @@ from pathlib import Path
 
 import pytest
 
+from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ....adapters.persistence.storage.sql import SecureObjectRepository
 from ....core import Period
 from ....core.resources import resources
 from ....domain.invoices import InvoiceCatalogueRepository
-from ....domain.modelos import CalculationRevisionCatalogueRepository, WorkUnitCatalogueRepository
+from ....domain.modelos import CalculationRevisionCatalogueRepository
 from ....domain.transactions import TransactionCatalogueRepository
 from ....domain.user_profile import UserProfileFact, UserProfileRecord
 from ....tests.secure_sql import isolated_runtime_profile

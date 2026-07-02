@@ -21,10 +21,10 @@ from datetime import UTC, datetime
 
 import pytest
 
+from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ....domain.modelos import (
     CalculationRevisionCatalogueRepository,
     CalculationRevisionState,
-    WorkUnitCatalogueRepository,
 )
 from ._action_test_support import (
     _BUCKET_ID,

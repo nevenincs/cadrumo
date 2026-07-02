@@ -9,12 +9,12 @@ from pathlib import Path
 import pytest
 
 from ....adapters.inbound.justificante import parse_justificante
+from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ....core import Period
 from ....domain.buckets import BucketEventHistoryRepository, BucketEventType
 from ....domain.modelos import (
     ModeloCode,
     WorkUnit,
-    WorkUnitCatalogueRepository,
     derive_work_unit_id,
     upsert_work_unit,
 )
@@ -193,11 +193,12 @@ def test_modelo_reconcile_emits_modelo_reconciled_event() -> None:
 def test_modelo_reconcile_refuses_declaration_source_for_unenrolled_modelo() -> None:
     """Casilla-level declaración reconcile is enrolled one modelo at a time.
 
-    A modelo outside :data:`_DECLARATION_CASILLA_RECONCILE_MODELOS` (303 here)
-    refuses cleanly with a typed error rather than silently degrading to a
-    header-only compare."""
+    A modelo outside :data:`_DECLARATION_CASILLA_RECONCILE_MODELOS` (200 here —
+    Modelo 200 declares no ``declaracion_pdf`` extraction profile at all) refuses
+    cleanly with a typed error rather than silently degrading to a header-only
+    compare."""
 
-    work_unit_id = _seed_work_unit(modelo="303", filing_year=2026, period="1T")
+    work_unit_id = _seed_work_unit(modelo="200", filing_year=2026, period="0A")
 
     with pytest.raises(ReconciliationDeclaracionSourceUnsupportedError) as excinfo:
         modelo_reconcile(

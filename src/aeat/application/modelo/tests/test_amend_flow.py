@@ -18,6 +18,7 @@ from pathlib import Path
 
 import pytest
 
+from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ....core import Period
 from ....domain.buckets import (
     BucketEventHistoryRepository,
@@ -36,7 +37,6 @@ from ....domain.modelos import (
     ModeloRecordStatus,
     VerificationReportCatalogueRepository,
     WorkUnit,
-    WorkUnitCatalogueRepository,
     derive_calculation_revision_id,
     derive_filing_record_id,
     upsert_calculation_revision,

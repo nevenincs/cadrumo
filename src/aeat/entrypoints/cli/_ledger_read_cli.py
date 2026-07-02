@@ -928,8 +928,9 @@ def _register_ledger_status_command(app: typer.Typer) -> None:
                 lines.append(
                     _ledger_status_readiness_issue_line(transaction, reason=issue.reason.value, detail=issue.detail),
                 )
+        from ...adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
         from ...application.aggregation import stale_filed_revisions
-        from ...domain.modelos import CalculationRevisionCatalogueRepository, WorkUnitCatalogueRepository
+        from ...domain.modelos import CalculationRevisionCatalogueRepository
 
         revisions = CalculationRevisionCatalogueRepository().load().revisions
         work_units = WorkUnitCatalogueRepository().load()

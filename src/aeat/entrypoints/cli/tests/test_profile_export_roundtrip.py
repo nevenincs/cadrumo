@@ -125,6 +125,7 @@ def _seed_and_export(tmp_path: Path, bundle_path: Path) -> str:
     Returns the source ``bucket_id`` (== ``profile_id``) for D5 checks.
     """
 
+    from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
     from ....adapters.persistence.storage.master_key import (
         activate_master_key_provider,
         get_master_key_provider,
@@ -139,7 +140,6 @@ def _seed_and_export(tmp_path: Path, bundle_path: Path) -> str:
         ModeloRecord,
         ModeloRecordCatalogueRepository,
         ModeloRecordStatus,
-        WorkUnitCatalogueRepository,
         derive_calculation_revision_id,
         derive_filing_record_id,
         upsert_calculation_revision,
@@ -273,6 +273,7 @@ def _seed_and_export(tmp_path: Path, bundle_path: Path) -> str:
 def test_v3_bundle_export_import_roundtrip(tmp_path: Path) -> None:
     """All four financial-history categories survive export/import with strict equality."""
 
+    from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
     from ....adapters.persistence.storage.master_key import (
         activate_master_key_provider,
         get_master_key_provider,
@@ -282,7 +283,6 @@ def test_v3_bundle_export_import_roundtrip(tmp_path: Path) -> None:
     from ....domain.modelos import (
         CalculationRevisionCatalogueRepository,
         ModeloRecordCatalogueRepository,
-        WorkUnitCatalogueRepository,
     )
     from ....domain.transactions import TransactionCatalogueRepository
 

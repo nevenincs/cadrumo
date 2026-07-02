@@ -6,12 +6,12 @@ from pathlib import Path
 
 import pytest
 
+from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ....application.user_profile import profile_storage_session
 from ....core import Period, resolve_active_bucket_id
 from ....core.time import now
 from ....domain.modelos import (
     WorkUnit,
-    WorkUnitCatalogueRepository,
     derive_work_unit_id,
     upsert_work_unit,
 )
