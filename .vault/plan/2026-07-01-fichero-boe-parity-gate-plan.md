@@ -64,7 +64,7 @@ Lock the runtime assertion with an offline fichero-BOE parity test mirroring the
 
 Extend the modelo-export-mirrors-official-structure rule to bind the fichero-BOE transport, gated on a green parity gate.
 
-- [ ] `P05.S19` - Extend the modelo-export-mirrors-official-structure rule source to bind the fichero-BOE transport and mandate full-structure mirror-or-panic, then run vaultspec-core sync; `.vaultspec/rules/rules/modelo-export-mirrors-official-structure.md`.
+- [x] `P05.S19` - Extend the modelo-export-mirrors-official-structure rule source to bind the fichero-BOE transport and mandate full-structure mirror-or-panic, then run vaultspec-core sync; `.vaultspec/rules/rules/modelo-export-mirrors-official-structure.md`.
 - [ ] `P05.S20` - Run the filing and modelo export test suites plus src/aeat collect-only and capture a green owner-scoped gate; `src/aeat/application/filing/tests`.
 
 ## Description
