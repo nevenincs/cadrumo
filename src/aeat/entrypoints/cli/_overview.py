@@ -37,7 +37,6 @@ from ...application.overview import (
 from ...core.external_constants import OutputLanguage
 from ...core.hashing import sha256_hex
 from ...core.i18n import tr
-from ...core.i18n._render import output_language
 from ...core.json_contract import Notice
 from ...core.logging import get_logger
 from ._common import (
@@ -65,39 +64,6 @@ from ._overview_rendering import (
 )
 
 logger = get_logger(__name__)
-
-_CALENDAR_SHIFT_LABELS_BY_LANGUAGE: dict[str, dict[str, str]] = {
-    "business_day": {
-        "ca": "Dia habil",
-        "en": "Business day",
-        "es": "Dia habil",
-        "hu": "Munkanap",
-    },
-    "calendar_unavailable": {
-        "ca": "Calendari no disponible",
-        "en": "Calendar unavailable",
-        "es": "Calendario no disponible",
-        "hu": "Naptar nem elerheto",
-    },
-    "domingo": {
-        "ca": "Diumenge",
-        "en": "Sunday",
-        "es": "Domingo",
-        "hu": "Vasarnap",
-    },
-    "modelo_exception": {
-        "ca": "Excepcio del model",
-        "en": "Modelo exception",
-        "es": "Excepcion del modelo",
-        "hu": "Modelo-kivetel",
-    },
-    "sabado": {
-        "ca": "Dissabte",
-        "en": "Saturday",
-        "es": "Sabado",
-        "hu": "Szombat",
-    },
-}
 
 app = typer.Typer(
     name="overview",
@@ -355,15 +321,24 @@ def _calendar_entry_work_unit_text_fields(entry) -> str:
     return "\t".join(fields)
 
 
+def _calendar_shift_reason_part_text(part: str) -> str:
+    """Return the localized text label for one shift-reason token."""
+    if part == "business_day":
+        return tr("cli.overview.calendar.shift.business_day", default="Business day")
+    if part == "calendar_unavailable":
+        return tr("cli.overview.calendar.shift.calendar_unavailable", default="Calendar unavailable")
+    if part == "domingo":
+        return tr("cli.overview.calendar.shift.domingo", default="Sunday")
+    if part == "modelo_exception":
+        return tr("cli.overview.calendar.shift.modelo_exception", default="Modelo exception")
+    if part == "sabado":
+        return tr("cli.overview.calendar.shift.sabado", default="Saturday")
+    return part
+
+
 def _calendar_shift_reason_text(shift_reason: str) -> str:
     """Return the localized operator label for a calendar shift reason."""
-    language = output_language()
-    return " + ".join(
-        _CALENDAR_SHIFT_LABELS_BY_LANGUAGE.get(part, {}).get(language)
-        or _CALENDAR_SHIFT_LABELS_BY_LANGUAGE.get(part, {}).get("en")
-        or part
-        for part in shift_reason.split(" + ")
-    )
+    return " + ".join(_calendar_shift_reason_part_text(part) for part in shift_reason.split(" + "))
 
 
 def _calendar_event_text_line(event: OverviewCalendarEvent) -> str:

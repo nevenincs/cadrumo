@@ -12,7 +12,7 @@ related:
 
 ## Scope
 
-Reviewed the W09.P45 operator-surface fixes for S356, S358, S219, S331, S330, and S226.
+Reviewed the W09.P45 operator-surface fixes for S356, S358, S219, S331, S330, S226, and S328.
 
 - S356 adds operator-visible `iva_category` rendering to human `ledger list` output while preserving the existing typed JSON row contract. The audit covered the projection code, the real CLI regression test, the S356 plan row close, and the S356 execution record.
 - S358 adds royalty/SGAE guidance to the existing `ledger classify --irpf-category` help text without adding automatic classification heuristics. The audit covered the locale leaves, the real CLI help regression, the S358 plan row close, and the S358 execution record.
@@ -20,6 +20,7 @@ Reviewed the W09.P45 operator-surface fixes for S356, S358, S219, S331, S330, an
 - S331 localizes malformed modelo work `KEY=VALUE` guidance and the cross-period not-applicable verify advisory. The audit covered the shared parser, localized finding text, real CLI malformed-binding regression, existing row-parser coverage, locale leaves, the S331 plan row close, and the S331 execution record.
 - S330 localizes modelo lifecycle state labels in text renderers while preserving raw enum tokens in JSON payloads. The audit covered the shared modelo renderer, locale leaves, real object-based renderer tests, the S330 plan row close, and the S330 execution record.
 - S226 localizes calculation result-summary casilla labels through registry-provided `localized_labels` while preserving official Spanish fallbacks and raw machine ids. The audit covered result-summary row construction, text and JSON payload rendering, focused isolated-storage regression coverage, the S226 plan row close, and the S226 execution record.
+- S328 localizes overview calendar text-mode shift labels for known deadline-shift tokens while preserving raw `shift_reason` tokens in JSON payloads. The audit covered the overview text renderer, locale leaves, focused CLI/formatter regressions, the S328 plan row close, and the S328 execution record.
 
 ## Findings
 
@@ -53,6 +54,12 @@ No scoped findings for the result-summary label localization fix. The applicatio
 
 Residual edge noted by review: the focused regression covers real Modelo 130 Catalan rendering and the typed payload row, but not a full JSON envelope parse or a separate missing-locale fallback assertion. Risk is low because the fallback is a direct `localized_labels.get(language, label)` projection.
 
+### w09-p45-s328 | low | no scoped findings
+
+No scoped findings for the overview-calendar shift-label localization fix. Text output now maps known shift tokens through locale-backed `tr()` calls, leaves official holiday names untouched, and preserves raw `shift_reason` values in JSON payloads for machine consumers.
+
+Residual edge noted by review: the focused coverage exercises English text rows, Catalan weekend-token formatting, accented Spanish locale output, and JSON token preservation. It does not enumerate every supported language across every shift token, but locale scaffold and audit cover the key set.
+
 ## Recommendations
 
-No follow-up required for S356, S358, S219, S331, the scoped S330 renderer fix, or the scoped S226 result-summary localization fix.
+No follow-up required for S356, S358, S219, S331, the scoped S330 renderer fix, the scoped S226 result-summary localization fix, or the scoped S328 overview-calendar shift-label fix.
