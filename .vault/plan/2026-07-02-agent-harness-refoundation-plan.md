@@ -31,7 +31,7 @@ Replace the shared args bag with per-verb input schemas and group the manifest-d
 
 - [x] `W01.P01.S01` - Derive a per-verb input schema from the CLI command registry click parameters, replacing the shared args bag; `src/aeat/entrypoints/mcp/_input_schema.py`.
 - [x] `W01.P01.S02` - Consume per-verb input schemas in build_tool_descriptors and retire the _ARGS_INPUT_SCHEMA bag; `src/aeat/entrypoints/mcp/_tools.py`.
-- [ ] `W01.P01.S03` - Add a domain-toolset grouping derived from the operator-surface manifest for renta, iva, ledger, censo, and modelo-lifecycle; `src/aeat/entrypoints/mcp/_toolsets.py`.
+- [x] `W01.P01.S03` - Add a domain-toolset grouping derived from the operator-surface manifest for renta, iva, ledger, censo, and modelo-lifecycle; `src/aeat/entrypoints/mcp/_toolsets.py`.
 - [ ] `W01.P01.S04` - Assert readOnlyHint and destructiveHint annotation coverage on every descriptor and close any gap; `src/aeat/entrypoints/mcp/_annotations.py`.
 - [ ] `W01.P01.S05` - Extend the tool-descriptor tests for per-verb schemas, toolsets, and annotation coverage; `src/aeat/entrypoints/mcp/tests/test_tools_and_dispatch.py`.
 
