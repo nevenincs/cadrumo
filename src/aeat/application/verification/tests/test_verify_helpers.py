@@ -41,11 +41,11 @@ from typing import Any
 
 import pytest
 
-from ....adapters.inbound.declaracion._schema import (
+from ....adapters.inbound.declaracion import (
     InboundDeclaracionObservation,
     TemplateRevision,
 )
-from ....adapters.inbound.pdf._shared import ExtractedCasilla
+from ....adapters.inbound.pdf import ExtractedCasilla
 from ....core import Period
 from ....domain.calculations.registry import CasillaId, RegistrySnapshotRef, validated_casilla_id
 from .._schema import DiscrepancyCause, VerificationStatus

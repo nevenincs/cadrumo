@@ -33,20 +33,22 @@ from ....domain.calculations.registry import (
     validated_casilla_id,
 )
 from ....domain.deadlines import DeadlineEngine, IVARegime, TaxpayerProfile
-from ....domain.modelos._calculation_repository import CalculationRevisionCatalogueRepository
-from ....domain.modelos._calculation_revision import CalculationRevision, CalculationRevisionState
-from ....domain.modelos._filing_record import ExternalEvidenceKind, ModeloRecord, ModeloRecordStatus
-from ....domain.modelos._filing_repository import ModeloRecordCatalogueRepository
-from ....domain.modelos._repository import WorkUnitCatalogueRepository, upsert_work_unit
-from ....domain.modelos._verification_report import (
+from ....domain.modelos import (
+    CalculationRevision,
+    CalculationRevisionCatalogueRepository,
+    CalculationRevisionState,
+    ExternalEvidenceKind,
+    ModeloRecord,
+    ModeloRecordCatalogueRepository,
+    ModeloRecordStatus,
     ModeloVerificationFindingKind,
     ModeloVerificationFindingSeverity,
     VerificationCompletenessStatus,
-)
-from ....domain.modelos._verification_repository import (
     VerificationReportCatalogueRepository,
+    WorkUnit,
+    WorkUnitCatalogueRepository,
+    upsert_work_unit,
 )
-from ....domain.modelos._work_unit import WorkUnit
 from ....domain.submission import SubmissionEngine
 from ....domain.transactions import TransactionCatalogue
 from ....domain.user_profile import UserProfileFact, UserProfileRecord

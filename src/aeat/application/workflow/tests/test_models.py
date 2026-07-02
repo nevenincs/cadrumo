@@ -15,12 +15,12 @@ from typing import Any, cast
 import pytest
 from pydantic import ValidationError
 
-from ....adapters.outbound.aeat.browser._site_health import (
-    _URL_ADAPTER,
+from ....adapters.outbound.aeat.browser import (
     SiteHealthEvidence,
     SiteHealthState,
     SiteHealthStatus,
 )
+from ....adapters.outbound.aeat.browser._site_health import _URL_ADAPTER
 from ....core import Period
 from ....tests.aeat_literal_fixtures import aeat_url
 from .. import (

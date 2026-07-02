@@ -33,8 +33,7 @@ from typing import Any
 
 import pytest
 
-from ....application.user_profile._orchestration import profile_storage_session
-from ....application.user_profile._repository import UserProfileLifecycleRepository
+from ....application.user_profile import UserProfileLifecycleRepository, profile_storage_session
 from ....core import resolve_active_bucket_id
 from ....domain.transactions import (
     BusinessClassification,

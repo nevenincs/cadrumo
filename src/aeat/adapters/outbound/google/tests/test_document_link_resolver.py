@@ -16,7 +16,10 @@ from __future__ import annotations
 import pytest
 
 from .....domain.attachments import AttachmentSource
-from ....outbound.storage._errors import OutboundStoragePermissionError, OutboundStorageValidationError
+from ...storage import (
+    OutboundStoragePermissionError,
+    OutboundStorageValidationError,
+)
 from .._document_link_resolver import _download_drive_file_from_service, parse_drive_file_id, resolve_document_link
 from ._drive_media_server import drive_media_endpoint
 

@@ -2,16 +2,16 @@
 
 This is the annual first-slice expense projection behind the
 ``ledger_renta_expense_aggregation`` source. It loads both a
-:class:`~aeat.domain.transactions.TransactionCatalogue` and a
-:class:`~aeat.domain.invoices.InvoiceCatalogue` from the active bucket through
-:class:`~aeat.domain.transactions.TransactionCatalogueRepository` and
-:class:`~aeat.domain.invoices.InvoiceCatalogueRepository`, uses
+:class:`~domain.transactions.TransactionCatalogue` and a
+:class:`~domain.invoices.InvoiceCatalogue` from the active bucket through
+:class:`~domain.transactions.TransactionCatalogueRepository` and
+:class:`~domain.invoices.InvoiceCatalogueRepository`, uses
 purchase-invoice evidence to validate deductible-expense facts, and returns
-binding-ready :class:`~aeat.domain.renta.RentaDeductibleExpenseObservation`
+binding-ready :class:`~domain.renta.RentaDeductibleExpenseObservation`
 records.
 
 The source-mesh resolver in :mod:`~._modelo_bindings` applies the target
-:class:`~aeat.domain.calculations.registry.ModeloRevision`, resolves registry
+:class:`~domain.calculations.registry.ModeloRevision`, resolves registry
 bindings, and reports source issues or unrouted expenses on its
 :class:`~._source_mesh.CalculationSourceResolution`. The M130 quarterly gasto
 projection is intentionally separate in :mod:`~._renta_gasto_ledger`.
@@ -86,7 +86,7 @@ class RentaLedgerAggregationIssueReason(StrEnum):
     The five upstream filter rejections (``UNSUPPORTED_DIRECTION``,
     ``UNSUPPORTED_CURRENCY``, ``UNCLASSIFIED_BUSINESS_STATE``,
     ``PERSONAL_TRANSACTION``, ``OUTSIDE_PERIOD``) are shared with
-    :class:`aeat.application.aggregation._iva_ledger.IvaLedgerAggregationIssueReason`
+    :class:`~application.aggregation._iva_ledger.IvaLedgerAggregationIssueReason`
     through :mod:`._shared_issue_reasons`. ``UNSUPPORTED_PERIOD`` is a
     Renta-only refusal raised against quarter-level requests; the
     remaining values describe Renta-specific deductibility checks.

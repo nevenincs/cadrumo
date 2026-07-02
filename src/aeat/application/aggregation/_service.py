@@ -9,8 +9,8 @@ logic.
 The service is distinct from the live calculate source mesh. Retenciones,
 counterpart, and foreign-assets providers return per-modelo aggregation
 payloads for operator-facing aggregation/reporting flows; source-derived
-values that feed calculation use :class:`~aeat.application.aggregation.CalculationSourceResolution`
-from :mod:`aeat.application.aggregation._source_mesh`.
+values that feed calculation use :class:`~application.aggregation.CalculationSourceResolution`
+from :mod:`application.aggregation._source_mesh`.
 
 Providers: ``retenciones`` (111/115/123/180/190/193), ``counterpart``
 (347/349), and ``foreign_assets`` (720).

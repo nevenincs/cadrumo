@@ -9,8 +9,12 @@ from pathlib import Path
 import pytest
 
 from ....domain.calculations.registry import CasillaId, LegalRefId, SourceRefId, validated_casilla_id
-from ....domain.modelos._errors import ModeloValidationError
-from ....domain.modelos._ledger_filing_snapshot import LedgerFilingEvidence, LedgerFilingSnapshot, ManualFactBasisEntry
+from ....domain.modelos import (
+    LedgerFilingEvidence,
+    LedgerFilingSnapshot,
+    ManualFactBasisEntry,
+    ModeloValidationError,
+)
 from ....domain.transactions import (
     BusinessClassification,
     RawProvenance,

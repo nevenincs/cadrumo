@@ -33,7 +33,7 @@ from collections.abc import Callable
 import pytest
 
 from ....core.resources import bundled_path, resources
-from ....domain.calculations.registry._legal import verify_legal_catalogue
+from ....domain.calculations.registry import verify_legal_catalogue
 from ....domain.calculations.registry.applicability import (
     ApplicabilityVerdict,
     TaxRoute,
@@ -42,13 +42,13 @@ from ....domain.calculations.registry.applicability import (
     iter_modelo_applicability_rules,
     taxpayer_model_is_declared,
 )
-from ....domain.deadlines import TaxpayerProfile
-from ....domain.deadlines._models import (
+from ....domain.deadlines import (
     EntityType,
     IrpfEstimationRegime,
     IrpfIncomeCategory,
     IVARegime,
     LegalEntityForm,
+    TaxpayerProfile,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]

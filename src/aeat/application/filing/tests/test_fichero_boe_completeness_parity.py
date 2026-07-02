@@ -15,10 +15,13 @@ The disposition-suppression case is covered by ``test_export_completeness_sets``
 
 from __future__ import annotations
 
+from datetime import date
 from pathlib import Path
 
 import pytest
 
+from ....core.resources import resources
+from ....domain.calculations._export_field_kind import CasillaFieldKind
 from .._export import boe_representable_casilla_ids, export_draft, rendered_casilla_ids
 from ._export_support import (
     _approved_modelo_111_registry_draft,
@@ -34,13 +37,30 @@ from ._export_support import (
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
+
 # (modelo, draft builder, headers builder) — fixed-width covered modelos that
 # declare a completeness manifest and have a reusable complete approved draft.
+# Modelo 131 (binding-derived, period-sensitive layout) is deferred: its required
+# result casillas are materialised from binding rows, and the value-presence
+# rendered set does not yet observe binding-materialised casillas (tracked as a
+# follow-up alongside the row_field dormancy lock below).
 _COVERED = [
     ("130", _approved_registry_draft, _modelo_130_export_headers),
     ("111", _approved_modelo_111_registry_draft, _modelo_111_export_headers),
     ("115", _approved_modelo_115_registry_draft, _modelo_115_export_headers),
     ("123", _approved_modelo_123_registry_draft, _modelo_123_export_headers),
+]
+
+# Broader fixed-width, manifest-bearing set for the structural dormancy lock
+# below (no complete draft needed — the check is layout-vs-manifest only).
+_DORMANCY_MODELOS = [
+    ("130", 2025, "1T"),
+    ("111", 2025, "1T"),
+    ("115", 2025, "1T"),
+    ("123", 2025, "1T"),
+    ("131", 2025, "1T"),
+    ("303", 2025, "1T"),
+    ("200", 2025, "0A"),
 ]
 
 
@@ -77,3 +97,39 @@ def test_complete_draft_exports_without_panic(modelo: str, build_draft_fn, heade
 
     assert output.exists()
     assert receipt.file_sha256
+
+
+@pytest.mark.parametrize(("modelo", "year", "period"), _DORMANCY_MODELOS)
+def test_no_manifest_casilla_is_representable_only_via_binding_rows(modelo: str, year: int, period: str) -> None:
+    # Dormancy lock for the row_field_casilla_ids false-panic vector: the rendered
+    # set is derived from draft.values, so a manifest-required casilla whose only
+    # representable route is a binding-row (row_field_casilla_ids) mapping -- never
+    # a direct CASILLA field -- would show permanently missing and false-panic on
+    # every export. No shipped registry revision does this today; this test fails
+    # the moment a future TOML author introduces the collision, which is the signal
+    # to teach rendered_casilla_ids about binding-materialised row casillas (or add
+    # a registry-build validator forbidding a manifest-required row_field-only
+    # casilla).
+    snapshot = resources().modelos.authority.snapshot(modelo, filing_year=year, period=period, on=date(year, 6, 1))
+    revision = snapshot.revision
+    manifest = revision.completeness_manifest
+    assert manifest is not None
+    layout = sorted(revision.export_layouts, key=lambda item: item.id)[0]
+    assert layout.format == "fixed_width"
+
+    casilla_field_ids = {
+        field.casilla_id
+        for record in layout.records
+        for field in record.fields
+        if field.kind == CasillaFieldKind.CASILLA and field.casilla_id is not None
+    }
+    row_field_ids: set = set()
+    for record in layout.records:
+        row_field_ids.update(record.row_field_casilla_ids.values())
+
+    manifest_ids = {casilla.casilla_id for casilla in manifest.casillas}
+    row_field_only_required = (manifest_ids & row_field_ids) - casilla_field_ids
+    assert not row_field_only_required, (
+        f"modelo {modelo}: manifest-required casillas representable only via binding rows "
+        f"(would false-panic): {sorted(row_field_only_required)}"
+    )

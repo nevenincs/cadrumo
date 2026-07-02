@@ -13,9 +13,8 @@ import pytest
 from pydantic import ValidationError
 
 from ....core.setup_answers import SetupAnswers
-from ....domain.contribuyente._ccaa import CCAA
-from ....domain.contribuyente._renta_codes import SituacionFamiliar
-from ....domain.deadlines._models import IVARegime
+from ....domain.contribuyente import CCAA, SituacionFamiliar
+from ....domain.deadlines import IVARegime
 from .._verifier import (
     WizardCheckFinding,
     WizardCheckSeverity,

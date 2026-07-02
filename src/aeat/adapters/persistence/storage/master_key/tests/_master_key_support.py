@@ -5,14 +5,14 @@ from datetime import UTC, datetime
 from pathlib import Path
 
 from ......core.config import SecretStoreBackend, Settings
-from ...bucket._layout import provision_bucket_directory
-from ...bucket._manifest import (
+from ...bucket import (
     BucketKeySchedule,
     BucketLifecycleStatus,
     BucketManifest,
     ManifestKdfParams,
+    provision_bucket_directory,
+    write_manifest,
 )
-from ...bucket._manifest_io import write_manifest
 
 
 class _InMemoryKeyringClient:

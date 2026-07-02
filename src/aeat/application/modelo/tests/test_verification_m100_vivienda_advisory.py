@@ -21,9 +21,12 @@ from decimal import Decimal
 import pytest
 
 from ....core.resources import resources
-from ....domain.calculations.registry._ids import CasillaId, validated_casilla_id
-from ....domain.calculations.registry._schema import VerificationPredicateDefinition
-from ....domain.modelos._verification_report import (
+from ....domain.calculations.registry import (
+    CasillaId,
+    VerificationPredicateDefinition,
+    validated_casilla_id,
+)
+from ....domain.modelos import (
     ModeloVerificationFindingKind,
     ModeloVerificationFindingSeverity,
 )

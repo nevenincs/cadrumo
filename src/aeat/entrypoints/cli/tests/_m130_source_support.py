@@ -6,7 +6,7 @@ from datetime import UTC, date, datetime
 from decimal import Decimal
 from pathlib import Path
 
-from ....application.user_profile._orchestration import profile_storage_session
+from ....application.user_profile import profile_storage_session
 from ....core import resolve_active_bucket_id
 from ....domain.transactions import (
     BusinessClassification,

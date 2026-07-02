@@ -257,13 +257,21 @@ class SkillAppliesWhen(BaseModel):
 
 
 class SkillMetadata(BaseModel):
-    """The validated frontmatter of a shipped ``SKILL.md``."""
+    """The validated frontmatter of a shipped ``SKILL.md``.
+
+    ``applies_when`` is optional at the load boundary: a skill whose predicate has
+    not yet been lifted from prose still loads (with ``applies_when`` ``None``),
+    and a predicate that IS present is fully validated. Strict presence - the
+    requirement that every shipped skill declare the field - is enforced by the
+    coverage gate, not the load path, so the tree stays loadable while the lifts
+    land.
+    """
 
     model_config = ConfigDict(extra="forbid", frozen=True)
 
     name: str
     description: str
-    applies_when: SkillAppliesWhen
+    applies_when: SkillAppliesWhen | None = None
 
 
 _FRONTMATTER = re.compile(r"\A---\r?\n(?P<body>.*?)\r?\n---\r?\n", re.DOTALL)

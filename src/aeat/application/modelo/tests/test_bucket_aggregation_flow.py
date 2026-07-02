@@ -14,10 +14,8 @@ from ....core import Period
 from ....core.errors import resolve_error_message
 from ....domain.buckets import BucketEventHistoryRepository, BucketEventType
 from ....domain.calculations.registry import CasillaId, validated_casilla_id
-from ....domain.iva_compensation._reconciliation import IvaCompensationReconciliationDecision
-from ....domain.modelos._calculation_repository import CalculationRevisionCatalogueRepository
-from ....domain.modelos._calculation_revision import CalculationRevision
-from ....domain.modelos._repository import WorkUnitCatalogueRepository
+from ....domain.iva_compensation import IvaCompensationReconciliationDecision
+from ....domain.modelos import CalculationRevision, CalculationRevisionCatalogueRepository, WorkUnitCatalogueRepository
 from ....domain.transactions import (
     BusinessClassification,
     RawProvenance,

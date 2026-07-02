@@ -17,10 +17,10 @@ def test_filing_record_payload_renders_external_evidence_and_amends() -> None:
 
     from datetime import UTC, datetime
 
-    from ....domain.modelos._codes import ModeloCode
-    from ....domain.modelos._filing_record import (
+    from ....domain.modelos import (
         ExternalEvidence,
         ExternalEvidenceKind,
+        ModeloCode,
         ModeloRecord,
         ModeloRecordStatus,
         derive_filing_record_id,
@@ -94,8 +94,8 @@ def test_filing_record_payload_omits_evidence_fields_when_absent() -> None:
 
     from datetime import UTC, datetime
 
-    from ....domain.modelos._codes import ModeloCode
-    from ....domain.modelos._filing_record import (
+    from ....domain.modelos import (
+        ModeloCode,
         ModeloRecord,
         ModeloRecordStatus,
         derive_filing_record_id,
@@ -146,10 +146,10 @@ def test_filing_record_lines_renders_external_evidence_and_amends_in_text_mode()
 
     from datetime import UTC, datetime
 
-    from ....domain.modelos._codes import ModeloCode
-    from ....domain.modelos._filing_record import (
+    from ....domain.modelos import (
         ExternalEvidence,
         ExternalEvidenceKind,
+        ModeloCode,
         ModeloRecord,
         ModeloRecordStatus,
         derive_filing_record_id,

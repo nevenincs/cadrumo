@@ -30,7 +30,7 @@ from click.testing import Result
 from ....adapters.persistence.storage.sql.engine import dispose_engine
 from ....core import Period
 from ....core.config import override_settings
-from ....domain.iva_compensation._reconciliation import IvaCompensationReconciliationDecision
+from ....domain.iva_compensation import IvaCompensationReconciliationDecision
 from ....domain.transactions import (
     BusinessClassification,
     RawProvenance,
@@ -140,8 +140,7 @@ def _seed_m115_retencion_observation() -> None:
 
 
 def _seed_m303_profile_facts() -> str:
-    from ....application.user_profile import UserProfileLifecycleRepository
-    from ....application.user_profile._orchestration import profile_storage_session
+    from ....application.user_profile import UserProfileLifecycleRepository, profile_storage_session
     from ....core import resolve_active_bucket_id
 
     bucket_id = resolve_active_bucket_id()
@@ -224,9 +223,9 @@ def _m303_transaction(
 
 
 def _seed_m303_ledger_and_wallet(bucket_id: str) -> None:
-    from ....application.calculations._observations_repository import IvaWalletDecisionRepository
+    from ....application.calculations import IvaWalletDecisionRepository
     from ....application.invoices import build_catalogue_invoice
-    from ....application.user_profile._orchestration import profile_storage_session
+    from ....application.user_profile import profile_storage_session
     from ....domain.invoices import InvoiceCatalogue, InvoiceCatalogueRepository
     from ....domain.iva import InvoiceKind
 

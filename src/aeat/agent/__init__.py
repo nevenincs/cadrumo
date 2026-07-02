@@ -86,13 +86,15 @@ def iter_skill_documents() -> Iterator[Traversable]:
 
 
 def iter_skill_metadata() -> Iterator[SkillMetadata]:
-    """Yield every shipped skill's validated ``applies_when`` metadata.
+    """Yield every shipped skill's parsed ``SKILL.md`` metadata.
 
-    Each skill's ``SKILL.md`` frontmatter is parsed and validated through the
-    structured predicate schema. This raises ``SkillMetadataError`` on the first
-    skill whose frontmatter is missing or malformed, whose ``applies_when``
-    predicate is invalid, or whose declared name does not match its directory,
-    so a skill can never ship with an unvalidated selection predicate.
+    Each frontmatter is parsed through the structured schema. A predicate that is
+    present is fully validated: this raises ``SkillMetadataError`` on the first
+    skill whose frontmatter is malformed, whose ``applies_when`` predicate is
+    invalid, or whose declared name does not match its directory. A skill whose
+    predicate has not yet been lifted from prose still loads, with
+    ``applies_when`` set to ``None`` - strict presence is enforced by the coverage
+    gate, not this load path, so the tree stays loadable while the lifts land.
     """
     from ._skill_metadata import SkillMetadataError, parse_skill_metadata
 

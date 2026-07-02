@@ -17,7 +17,7 @@ from ....domain.deadlines import (
     Schedule,
     TaxpayerProfile,
 )
-from ...live._expedientes import PersistedExpedientesSnapshot
+from ...live import PersistedExpedientesSnapshot
 from .. import (
     OverviewCalendar,
     OverviewCalendarRange,
@@ -487,7 +487,7 @@ def test_undeclared_profile_message_resolves_to_real_localised_text() -> None:
 def _legal_entity() -> TaxpayerProfile:
     """A sociedad limitada — an Impuesto sobre Sociedades contribuyente."""
 
-    from ....domain.deadlines._models import LegalEntityForm
+    from ....domain.deadlines import LegalEntityForm
 
     return TaxpayerProfile(
         tax_id="B12345674",
@@ -608,7 +608,7 @@ class _NoWindowsEngine:
         *,
         today: date | None = None,
     ) -> Schedule:
-        from ....domain.deadlines._errors import NoDeadlineWindowsError
+        from ....domain.deadlines import NoDeadlineWindowsError
 
         raise NoDeadlineWindowsError(f"No registry deadline windows registered for year {year}")
 
@@ -630,7 +630,7 @@ class _CorruptRegistryEngine:
         *,
         today: date | None = None,
     ) -> Schedule:
-        from ....domain.deadlines._errors import ScheduleComputationError
+        from ....domain.deadlines import ScheduleComputationError
 
         raise ScheduleComputationError(f"deadline registry validation failed for year {year}")
 
@@ -671,7 +671,7 @@ def test_calendar_propagates_genuine_registry_fault() -> None:
     lets the genuine fault surface so a corrupt registry is never
     hidden from the operator (round-4 #40)."""
 
-    from ....domain.deadlines._errors import (
+    from ....domain.deadlines import (
         NoDeadlineWindowsError,
         ScheduleComputationError,
     )

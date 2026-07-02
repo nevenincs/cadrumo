@@ -20,7 +20,7 @@ from pathlib import Path
 import pytest
 import typer
 
-from ....domain.modelos._row_models import (
+from ....domain.modelos import (
     Modelo184MemberRow,
     Modelo184ShareSumError,
     Modelo232VinculadaRow,

@@ -24,15 +24,15 @@ from typer.core import TyperGroup
 
 from ....adapters.outbound.aeat.auth.certificate import AeatSessionExpiredError
 from ....adapters.outbound.aeat.browser.session import BrowserError
-from ....application.review._errors import ReviewKindReservedError
+from ....application.review import ReviewKindReservedError
 from ....core.access_gate import LiveSubmitForbiddenError
 from ....core.errors import (
     ERROR_REGISTRY,
     ErrorCategory,
     render_error_text,
 )
-from ....core.observability._errors import RunContextMissingError
-from ....domain.portals._errors import PortalIntegrityError
+from ....core.observability import RunContextMissingError
+from ....domain.portals import PortalIntegrityError
 from ....tests.cli_runner import aeat_click_command
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]

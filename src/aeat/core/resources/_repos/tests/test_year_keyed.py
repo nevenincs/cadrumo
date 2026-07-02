@@ -55,4 +55,3 @@ def test_iva_catalogue_unknown_year_raises_resource_not_found() -> None:
 
     with pytest.raises(ResourceNotFoundError):
         repo.get(1801)
-

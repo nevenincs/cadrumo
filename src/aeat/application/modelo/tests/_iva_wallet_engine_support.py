@@ -22,16 +22,17 @@ from ....domain.calculations.registry import (
     validated_casilla_id,
 )
 from ....domain.deadlines import IVARegime, TaxpayerProfile
-from ....domain.iva_compensation._reconciliation import IvaCompensationReconciliationDecision
-from ....domain.modelos._calculation_repository import CalculationRevisionCatalogueRepository
-from ....domain.modelos._calculation_revision import (
+from ....domain.iva_compensation import IvaCompensationReconciliationDecision
+from ....domain.modelos import (
     CalculationRevision,
+    CalculationRevisionCatalogueRepository,
     CalculationRevisionState,
+    ModeloCode,
+    WorkUnit,
+    WorkUnitCatalogueRepository,
     derive_calculation_revision_id,
+    derive_work_unit_id,
 )
-from ....domain.modelos._codes import ModeloCode
-from ....domain.modelos._repository import WorkUnitCatalogueRepository
-from ....domain.modelos._work_unit import WorkUnit, derive_work_unit_id
 from ....domain.user_profile import UserProfileFact, UserProfileRecord
 from ....tests.registry_observations import registry_grounded_observations
 from ....tests.secure_sql import isolated_runtime_profile

@@ -13,8 +13,7 @@ from .....adapters.persistence.storage import (
     get_master_key_provider,
 )
 from .....adapters.persistence.storage.runtime_repository import secure_object_repository_for_active_bucket
-from .....application.workflow._models import WorkflowState
-from .....application.workflow._persistence import workflow_state_repository
+from .....application.workflow import WorkflowState, workflow_state_repository
 from .....core.config import override_settings
 from .....domain.buckets import BucketEventHistoryRepository, BucketEventType
 from .....tests.cli_runner import invoke_cached_cli

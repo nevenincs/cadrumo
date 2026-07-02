@@ -12,25 +12,19 @@ from typing import Any
 from ....core import Period
 from ....domain.buckets import BucketEventHistoryRepository
 from ....domain.calculations.registry import CasillaId, validated_casilla_id
-from ....domain.modelos._calculation_repository import (
+from ....domain.modelos import (
     CalculationRevisionCatalogueRepository,
-    upsert_calculation_revision,
-)
-from ....domain.modelos._calculation_revision import CalculationRevisionState
-from ....domain.modelos._filing_record import (
+    CalculationRevisionState,
     ExternalEvidenceKind,
     ModeloRecord,
-    derive_filing_record_id,
-)
-from ....domain.modelos._filing_repository import (
     ModeloRecordCatalogueRepository,
+    VerificationReportCatalogueRepository,
+    WorkUnit,
+    WorkUnitCatalogueRepository,
+    derive_filing_record_id,
+    upsert_calculation_revision,
     upsert_filing_record,
 )
-from ....domain.modelos._repository import WorkUnitCatalogueRepository
-from ....domain.modelos._verification_repository import (
-    VerificationReportCatalogueRepository,
-)
-from ....domain.modelos._work_unit import WorkUnit
 from ....domain.user_profile import UserProfileFact, UserProfileRecord
 from ....tests.secure_sql import isolated_runtime_profile
 from ...user_profile import UserProfileLifecycleRepository

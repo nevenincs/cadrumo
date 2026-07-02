@@ -28,18 +28,16 @@ from pathlib import Path
 
 import pytest
 
-from ....adapters.persistence.storage.bucket._layout import bucket_paths
-from ....adapters.persistence.storage.bucket._manifest_io import manifest_path
+from ....adapters.persistence.storage.bucket import bucket_paths, manifest_path
 from ....core import read_pointer
 from ....core.config import load_settings
 from ....domain.user_profile import ProfileSchemaValidationError, UserProfileFact
 from ....tests.secure_sql import isolated_profile_storage_root
-from ...user_profile._orchestration import (
+from ...user_profile import (
     profile_create_storage_span,
     register_active_profile,
 )
-from ...workflow._persistence import workflow_state_repository
-from ...workflow._profile_bucket_scan import read_profile_bucket
+from ...workflow import read_profile_bucket, workflow_state_repository
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

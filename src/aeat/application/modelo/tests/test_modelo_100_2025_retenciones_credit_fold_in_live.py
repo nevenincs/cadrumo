@@ -65,15 +65,17 @@ from ....domain.calculations.registry import (
     validated_casilla_id,
 )
 from ....domain.invoices import InvoiceCatalogueRepository
-from ....domain.modelos._calculation_repository import CalculationRevisionCatalogueRepository
-from ....domain.modelos._repository import WorkUnitCatalogueRepository
+from ....domain.modelos import CalculationRevisionCatalogueRepository, WorkUnitCatalogueRepository
 from ....domain.transactions import TransactionCatalogueRepository
 from ....domain.user_profile import UserProfileFact, UserProfileRecord
 from ....tests.registry_observations import registry_grounded_observations
 from ....tests.secure_sql import isolated_runtime_profile
-from ...aggregation._retencion_observations_repository import RetencionObservationRepository
-from ...aggregation._retenciones import RetencionObservation, RetencionScheme
-from ...calculations._observations_repository import CalculationObservationRepository
+from ...aggregation import (
+    RetencionObservation,
+    RetencionObservationRepository,
+    RetencionScheme,
+)
+from ...calculations import CalculationObservationRepository
 from ...user_profile import UserProfileLifecycleRepository
 from .. import (
     BucketAggregationCalculationResult,

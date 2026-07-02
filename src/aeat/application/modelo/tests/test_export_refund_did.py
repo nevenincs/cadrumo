@@ -10,9 +10,13 @@ from pathlib import Path
 import pytest
 
 from ....core import Period
-from ....domain.deadlines import TaxpayerProfile
-from ....domain.deadlines._models import IVARegime, ModeloIVAProfile, RefundAccount
-from ....domain.modelos._calculation_revision import CalculationRevisionState
+from ....domain.deadlines import (
+    IVARegime,
+    ModeloIVAProfile,
+    RefundAccount,
+    TaxpayerProfile,
+)
+from ....domain.modelos import CalculationRevisionState
 from .._export import compose_export_headers
 from ._export_test_support import (
     _M303_RESULT_CASILLA,
@@ -87,9 +91,12 @@ def _render_modelo_303_fichero(
 ) -> str:
     """Compose real headers and render the real M303 layout as latin-1 text."""
     from ....application.filing import build_runtime_schema_provider, render_layout
-    from ....domain.filing import ModeloDraft
-    from ....domain.filing._schema import ModeloValue, ModeloValueKind
-    from ....domain.submission._protocols import ModeloDraftStatus
+    from ....domain.filing import (
+        ModeloDraft,
+        ModeloValue,
+        ModeloValueKind,
+    )
+    from ....domain.submission import ModeloDraftStatus
 
     bucket_id = _seed_profile(profile_overrides={"identity.surnames": "Redeme", "identity.name": "Company"})
     work_unit_id, revision_id = _seed_revision(

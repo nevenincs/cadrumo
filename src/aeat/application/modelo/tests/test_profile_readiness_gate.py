@@ -9,18 +9,18 @@ from pathlib import Path
 import pytest
 
 from ....core import Modelo, Period
-from ....domain.modelos._calculation_repository import (
-    CalculationRevisionCatalogueRepository,
-    upsert_calculation_revision,
-)
-from ....domain.modelos._calculation_revision import (
+from ....domain.modelos import (
     CalculationRevision,
+    CalculationRevisionCatalogueRepository,
     CalculationRevisionState,
+    ModeloCode,
+    WorkUnit,
+    WorkUnitCatalogueRepository,
     derive_calculation_revision_id,
+    derive_work_unit_id,
+    upsert_calculation_revision,
+    upsert_work_unit,
 )
-from ....domain.modelos._codes import ModeloCode
-from ....domain.modelos._repository import WorkUnitCatalogueRepository, upsert_work_unit
-from ....domain.modelos._work_unit import WorkUnit, derive_work_unit_id
 from ....domain.user_profile import UserProfileFact, UserProfileRecord
 from ....tests.secure_sql import isolated_runtime_profile
 from ...calculations import IvaWalletDecisionRepository

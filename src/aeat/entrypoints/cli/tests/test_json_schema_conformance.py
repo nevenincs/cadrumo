@@ -23,7 +23,7 @@ import pytest
 import typer
 from typer.main import get_command as _typer_get_command
 
-from ....application.ledger._models import (
+from ....application.ledger import (
     LedgerCatalogueResetReport,
     LedgerRemovalBlocker,
     LedgerTransactionRemovalReport,

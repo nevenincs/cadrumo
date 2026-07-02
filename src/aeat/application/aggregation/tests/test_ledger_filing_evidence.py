@@ -21,15 +21,17 @@ import pytest
 from ....adapters.persistence.storage.sql import SecureObjectRepository
 from ....core import Period
 from ....domain.calculations.registry import CasillaId, validated_casilla_id
-from ....domain.modelos._calculation_repository import CalculationRevisionCatalogueRepository
-from ....domain.modelos._calculation_revision import (
+from ....domain.modelos import (
     CalculationRevision,
     CalculationRevisionCatalogue,
+    CalculationRevisionCatalogueRepository,
     CalculationRevisionState,
+    LedgerEvidenceRow,
+    LedgerFilingEvidence,
+    ManualFactBasisEntry,
     derive_calculation_revision_id,
+    derive_work_unit_id,
 )
-from ....domain.modelos._ledger_filing_snapshot import LedgerEvidenceRow, LedgerFilingEvidence, ManualFactBasisEntry
-from ....domain.modelos._work_unit import derive_work_unit_id
 from ....domain.transactions import (
     BusinessClassification,
     RawProvenance,

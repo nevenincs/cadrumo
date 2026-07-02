@@ -28,11 +28,12 @@ from ....application.live import (
     LiveIvaReadStatus,
     LiveIvaReadSurface,
     LiveIvaSurfaceTimeoutError,
+    VerifyService,
+    VerifySurface,
 )
-from ....application.live._verify import VerifyService, VerifySurface
-from ....application.user_profile._orchestration import profile_create_storage_span
+from ....application.user_profile import profile_create_storage_span
 from ....application.user_profile._testing import register_minimal_profile
-from ....application.workflow._persistence import workflow_state_repository
+from ....application.workflow import workflow_state_repository
 from ....core import Period
 from ....core.config import override_settings
 from ....tests.aeat_literal_fixtures import aeat_url, configured_path

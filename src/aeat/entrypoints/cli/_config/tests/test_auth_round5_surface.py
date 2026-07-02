@@ -19,17 +19,17 @@ from pathlib import Path
 import pytest
 
 from .....adapters.persistence.storage.sql.engine import dispose_engine
-from .....application.auth._operator import (
+from .....application.auth import (
     AuthLoginNotEnabledError,
     AuthLoginPreconditionError,
     configure_operator_auth,
     inspect_operator_auth,
     login_operator_auth,
 )
-from .....application.auth._operator import test_operator_auth as probe_operator_auth
+from .....application.auth import test_operator_auth as probe_operator_auth
 from .....application.user_profile import profile_create_storage_span
 from .....application.user_profile._testing import register_minimal_profile
-from .....application.workflow._persistence import workflow_state_repository
+from .....application.workflow import workflow_state_repository
 from .....core.config import load_settings, override_settings
 from .....tests.cli_runner import invoke_typer_app
 from .. import app as config_app
@@ -331,7 +331,7 @@ def test_clave_movil_mismatch_next_action_is_localised_in_catalan(
         aeat_clave_movil_dni_nie="00000001R",
         aeat_output_language="ca",
     ):
-        from .....core.i18n._render import clear_output_language_cache
+        from .....core.i18n import clear_output_language_cache
 
         clear_output_language_cache()
         result = configure_operator_auth("clave_movil")

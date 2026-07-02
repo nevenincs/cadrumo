@@ -94,7 +94,7 @@ def test_questionary_prompter_translates_no_console_error() -> None:
     from prompt_toolkit.input import create_pipe_input
     from prompt_toolkit.output.plain_text import PlainTextOutput
 
-    from ....core.errors._registry import resolve_error_message
+    from ....core.errors import resolve_error_message
     from .._prompter import (
         QuestionaryPrompter,
         WizardUnsupportedConsoleError,

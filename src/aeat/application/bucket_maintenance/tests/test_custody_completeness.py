@@ -20,21 +20,18 @@ import pytest
 from ....adapters.persistence.storage.attachment import AttachmentStore
 from ....core.resources import resources
 from ....domain.attachments import AttachmentValidationError
-from ....domain.buckets._event import (
+from ....domain.buckets import (
     BucketEvent,
     BucketEventHistoryCatalogue,
+    BucketEventHistoryRepository,
     BucketEventObjectType,
     BucketEventType,
     derive_bucket_event_id,
 )
-from ....domain.buckets._event_repository import BucketEventHistoryRepository
-from ....domain.user_profile._errors import ProfileExportError
-from ....domain.user_profile._schema import ProfileSchemaDefinition
-from ....domain.user_profile._values import UserProfileFact
+from ....domain.user_profile import ProfileExportError, ProfileSchemaDefinition, UserProfileFact
 from ....tests.secure_sql import TestRuntimeProfile, isolated_profile_storage_root, isolated_runtime_profile
-from ...user_profile._commands import RegisterProfileCommand
-from ...user_profile._orchestration import profile_storage_session
-from ...workflow._profile_bucket_scan import read_profile_bucket_by_id
+from ...user_profile import RegisterProfileCommand, profile_storage_session
+from ...workflow import read_profile_bucket_by_id
 from .._contracts import ExportBucketCommand, ImportBucketCommand
 from .._service import BucketMaintenanceService
 
@@ -76,9 +73,7 @@ def _required_facts(schema: ProfileSchemaDefinition) -> tuple[UserProfileFact, .
 @pytest.fixture
 def seeded_bucket(runtime: TestRuntimeProfile) -> str:
     """Register a profile and seed the previously-dropped stores."""
-    from ...user_profile._lifecycle import ProfileLifecycleService
-    from ...user_profile._repository import UserProfileLifecycleRepository
-    from ...user_profile._validation import ProfileValidationService
+    from ...user_profile import ProfileLifecycleService, ProfileValidationService, UserProfileLifecycleRepository
 
     schema = resources().user_profile_schema.singleton
     assert isinstance(schema, ProfileSchemaDefinition)
@@ -160,7 +155,7 @@ def test_carried_evidence_carry_is_not_tautological(tmp_path: Path) -> None:
     """Tampering a carried evidence payload must not silently restore clean bytes."""
     import base64
 
-    from ....adapters.persistence.storage._namespace_registry import StorageCustodyProfile
+    from ....adapters.persistence.storage import StorageCustodyProfile
     from ....tests.secure_sql import isolated_two_bucket_runtime
     from ...user_profile._custody_carry import restore_carried_objects, serialize_carried_objects
 
@@ -207,7 +202,7 @@ def test_full_export_tolerates_populated_process_local_namespace(tmp_path: Path)
     """
     from datetime import UTC, datetime
 
-    from ....adapters.persistence.storage._namespace_registry import StorageCustodyProfile
+    from ....adapters.persistence.storage import StorageCustodyProfile
     from ....core.classification import SensitivityClass
     from ....tests.secure_sql import isolated_runtime_profile
     from ...user_profile._bundle import _build_secure_object_custody_payload
@@ -244,7 +239,7 @@ def test_every_carried_namespace_has_a_natural_key_resolver() -> None:
     registered resolver nor a fixed default object key raises. This gate makes that
     a build-time failure instead of an export-time surprise.
     """
-    from ....adapters.persistence.storage._namespace_registry import StorageCustodyProfile
+    from ....adapters.persistence.storage import StorageCustodyProfile
     from ...user_profile._custody_carry import (
         _natural_key_resolvers,
         carried_namespace_definitions,

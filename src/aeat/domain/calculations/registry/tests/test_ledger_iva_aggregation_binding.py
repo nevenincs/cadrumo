@@ -11,10 +11,10 @@ from pydantic import ValidationError
 from .....core.aggregation import BindingAggregationOp, BindingSourceKind
 from ....iva import (
     IvaCategory,
+    IvaExemptionArticle,
     IvaFlowDirection,
     IvaRateKind,
 )
-from ....iva._schema import IvaExemptionArticle
 from .. import (
     DataBindingDefinition,
     IvaLedgerObservation,

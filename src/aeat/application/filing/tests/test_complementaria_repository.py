@@ -19,17 +19,16 @@ from ....adapters.persistence.storage.errors import ClassificationError
 from ....adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
 from ....core import Period
 from ....domain.calculations.registry import CasillaId, RegistrySnapshotRef, validated_casilla_id
-from ....domain.filing._amendment import CasillaChange, ModeloComplementaria
-from ....domain.filing._complementaria_repository import (
+from ....domain.filing import (
+    CasillaChange,
     ModeloAmendmentRepository,
-)
-from ....domain.filing._schema import (
+    ModeloComplementaria,
     ModeloDraft,
-    ModeloDraftStatus,
     ModeloValue,
     ModeloValueKind,
     compute_modelo_draft_id,
 )
+from ....domain.filing._schema import ModeloDraftStatus
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 _AMENDMENT_CASILLA: CasillaId = validated_casilla_id("01", surface="_AMENDMENT_CASILLA")

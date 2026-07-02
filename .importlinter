@@ -406,8 +406,6 @@ ignore_imports =
     aeat.domain.invoices.tests.test_reconciliation -> aeat.tests.secure_sql
     aeat.domain.invoices.tests.test_repository -> aeat.tests.secure_sql
     aeat.domain.invoices.tests.test_secure_storage_roundtrip -> aeat.tests.secure_sql
-    aeat.domain.justificante.tests.test_repository -> aeat.tests.secure_sql
-    aeat.domain.justificante.tests.test_secure_storage_roundtrip -> aeat.tests.secure_sql
     aeat.domain.modelos.tests.test_calculation_repository_roundtrip -> aeat.tests.secure_sql
     aeat.domain.modelos.tests.test_filing_record_repository_roundtrip -> aeat.tests.secure_sql
     aeat.domain.modelos.tests.test_secure_storage_roundtrip -> aeat.tests.secure_sql
@@ -661,6 +659,20 @@ ignore_imports =
     aeat.application.modelo._workflow_gate -> aeat.adapters.persistence.profile.submission
     aeat.application.modelo.tests._file_flow_support -> aeat.adapters.persistence.profile.submission
     aeat.application.user_profile.tests.test_custody_store_matrix -> aeat.adapters.persistence.profile.submission
+    # ── arch-remediation-ports-inversion: justificante repository relocated to
+    #    adapters.persistence.profile.justificante (no domain port; no domain
+    #    caller); application/entrypoint callers import the adapter directly ──
+    aeat.application.calculations._cross_period_clean_state -> aeat.adapters.persistence.profile.justificante
+    aeat.application.modelo._external_import_actions -> aeat.adapters.persistence.profile.justificante
+    aeat.application.calculations.tests.test_cross_period_external_evidence -> aeat.adapters.persistence.profile.justificante
+    aeat.application.calculations.tests._cross_period_clean_state_support -> aeat.adapters.persistence.profile.justificante
+    aeat.application.live.tests.test_filed_capture_calculation_history -> aeat.adapters.persistence.profile.justificante
+    aeat.application.live.tests.test_justificante_capture_orchestrator -> aeat.adapters.persistence.profile.justificante
+    aeat.application.live.tests.test_justificante_capture_stamp -> aeat.adapters.persistence.profile.justificante
+    aeat.application.modelo.tests.justificante_metadata -> aeat.adapters.persistence.profile.justificante
+    aeat.application.modelo.tests.test_cross_period_clean_state_gates -> aeat.adapters.persistence.profile.justificante
+    aeat.application.modelo.tests.test_verificado_completo_regression -> aeat.adapters.persistence.profile.justificante
+    aeat.application.user_profile.tests.test_custody_roundtrip -> aeat.adapters.persistence.profile.justificante
     aeat.application.ledger._review_projection -> aeat.adapters.**
     aeat.application.ledger._rule_repository -> aeat.adapters.**
     aeat.application.ledger._vision_classifier -> aeat.adapters.**
@@ -720,9 +732,6 @@ ignore_imports =
     aeat.domain.filing._complementaria_repository -> aeat.adapters.persistence.storage
     aeat.domain.filing._repository -> aeat.adapters.persistence.storage
     aeat.domain.invoices._repository -> aeat.adapters.persistence.storage
-    aeat.domain.justificante._repository -> aeat.adapters.persistence.storage
-    aeat.domain.justificante.tests.test_repository -> aeat.adapters.persistence.storage
-    aeat.domain.justificante.tests.test_repository -> aeat.adapters.persistence.storage.errors
     aeat.domain.modelos._calculation_repository -> aeat.adapters.persistence.storage
     aeat.domain.modelos._filing_repository -> aeat.adapters.persistence.storage
     aeat.domain.modelos._repository -> aeat.adapters.persistence.storage

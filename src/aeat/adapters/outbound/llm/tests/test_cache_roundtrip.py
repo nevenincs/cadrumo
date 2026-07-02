@@ -114,12 +114,12 @@ def test_llm_cache_entry_with_dropped_text_field_surfaces_at_read(
 
     from sqlalchemy import select
 
-    from ....persistence.storage.crypto._encrypted_columns import (
+    from ....persistence.storage.crypto import (
         decrypt_secure_object_payload,
         encrypt_secure_object_payload,
         secure_object_payload_aad,
     )
-    from ....persistence.storage.sql._orm import SecureObjectRow
+    from ....persistence.storage.sql import SecureObjectRow
     from ....persistence.storage.sql.session import session_scope
     from .._cache import _CACHE_NAMESPACE
     from .._errors import LLMCacheError

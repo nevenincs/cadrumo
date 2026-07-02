@@ -14,8 +14,7 @@ from ....adapters.persistence.storage.sql import SecureObjectRepository
 from ....core import Period
 from ....core.resources import resources
 from ....domain.calculations.registry import ModeloRevision, resolve_ledger_iva_aggregation_binding_values
-from ....domain.iva import IvaCategory, IvaFlowDirection, IvaRateKind, ProrrataKind, ProrrataRegime
-from ....domain.iva._schema import IvaExemptionArticle
+from ....domain.iva import IvaCategory, IvaExemptionArticle, IvaFlowDirection, IvaRateKind, ProrrataKind, ProrrataRegime
 from ....domain.transactions import (
     BusinessClassification,
     RawProvenance,

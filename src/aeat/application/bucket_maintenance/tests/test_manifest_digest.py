@@ -13,7 +13,7 @@ from datetime import UTC, datetime
 
 import pytest
 
-from ....adapters.persistence.storage.bucket._manifest import (
+from ....adapters.persistence.storage.bucket import (
     BucketKeySchedule,
     BucketLifecycleStatus,
     BucketManifest,

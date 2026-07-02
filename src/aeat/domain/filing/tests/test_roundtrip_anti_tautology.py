@@ -31,17 +31,16 @@ import pytest
 from pydantic import ValidationError
 from sqlalchemy import select
 
-from ....adapters.persistence.storage.crypto._encrypted_columns import (
+from ....adapters.persistence.storage.crypto import (
     decrypt_secure_object_payload,
     encrypt_secure_object_payload,
     secure_object_payload_aad,
 )
-from ....adapters.persistence.storage.sql._orm import SecureObjectRow
+from ....adapters.persistence.storage.sql import SecureObjectRow
 from ....adapters.persistence.storage.sql.session import session_scope
 from ....core import Period
 from ....tests.secure_sql import isolated_runtime_profile
-from ...calculations.registry import CasillaId, validated_casilla_id
-from ...calculations.registry._schema import RegistrySnapshotRef
+from ...calculations.registry import CasillaId, RegistrySnapshotRef, validated_casilla_id
 from .._repository import ModeloDraftRepository
 from .._schema import (
     ModeloApprovalBasis,

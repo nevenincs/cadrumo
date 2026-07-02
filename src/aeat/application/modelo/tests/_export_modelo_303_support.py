@@ -12,18 +12,19 @@ from ....core.config import Settings
 from ....core.resources import resources
 from ....domain.buckets import BucketEventHistoryRepository
 from ....domain.calculations.registry import BindingId, RegistryModeloObservation
-from ....domain.deadlines import TaxpayerProfile
-from ....domain.deadlines._models import IVARegime
-from ....domain.iva_compensation._reconciliation import (
+from ....domain.deadlines import IVARegime, TaxpayerProfile
+from ....domain.iva_compensation import (
     IvaCompensationAuthoritySource,
     IvaCompensationReconciliationDecision,
 )
-from ....domain.modelos._calculation_repository import CalculationRevisionCatalogueRepository
-from ....domain.modelos._calculation_revision import CalculationRevision
-from ....domain.modelos._filing_record import ExternalEvidenceKind
-from ....domain.modelos._filing_repository import ModeloRecordCatalogueRepository
-from ....domain.modelos._repository import WorkUnitCatalogueRepository
-from ....domain.modelos._verification_repository import VerificationReportCatalogueRepository
+from ....domain.modelos import (
+    CalculationRevision,
+    CalculationRevisionCatalogueRepository,
+    ExternalEvidenceKind,
+    ModeloRecordCatalogueRepository,
+    VerificationReportCatalogueRepository,
+    WorkUnitCatalogueRepository,
+)
 from ....tests.registry_observations import registry_grounded_observations
 from ...calculations import (
     CalculationObservationRepository,
@@ -124,6 +125,28 @@ def _modelo_303_engine_inputs() -> dict[BindingId, Decimal]:
         "modelo-303-iva-autorepercutido-intracomunitaria-cuota": Decimal("0.00"),
         "modelo-303-profile-state-attribution-ratio": Decimal("100"),
     }
+
+
+#: Manual, formula-operand "resultado" casillas the fichero-BOE completeness
+#: manifest requires but that the engine never auto-zero-fills (unlike a
+#: ledger-bound or computed casilla, an unset manual input is simply absent
+#: from ``casilla_values``, not defaulted). Each feeds the casilla-71
+#: ``modelo-303-iva-resultado-final`` formula (or a sibling "resultado"
+#: identity) as an optional operand; the standard first-filing case is
+#: "[70]=0 and [109]=0" per the registry formula comment, so a synthetic
+#: fixture supplies explicit zeros to keep the draft representable-and-
+#: rendered per the fichero-BOE parity gate
+#: (``modelo-export-mirrors-official-structure``) rather than silently
+#: omitting them.
+_MODELO_303_MANUAL_RESULTADO_CASILLA_ZEROS: dict[str, Decimal] = {
+    "18": Decimal("0.00"),
+    "58": Decimal("0.00"),
+    "68": Decimal("0.00"),
+    "70": Decimal("0.00"),
+    "76": Decimal("0.00"),
+    "77": Decimal("0.00"),
+    "109": Decimal("0.00"),
+}
 
 
 def _seed_modelo_303_1t_clean_state(
@@ -245,6 +268,7 @@ def _build_verified_modelo_303_revision() -> tuple[
         casilla_inputs={
             "iva.prorrata-volumen-con-derecho": Decimal("100.00"),
             "iva.prorrata-volumen-total": Decimal("100.00"),
+            **_MODELO_303_MANUAL_RESULTADO_CASILLA_ZEROS,
         },
         binding_values=_modelo_303_engine_inputs(),
         iva_compensation_decision=decision,

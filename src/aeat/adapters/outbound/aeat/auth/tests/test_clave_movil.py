@@ -22,13 +22,12 @@ from pathlib import Path
 import pytest
 from pydantic import SecretStr
 
-from ......application.user_profile._orchestration import profile_create_storage_span
+from ......application.user_profile import profile_create_storage_span
 from ......application.user_profile._testing import register_minimal_profile
-from ......application.workflow._persistence import workflow_state_repository
+from ......application.workflow import workflow_state_repository
 from ......core.classification import SensitivityClass
 from ......core.config import Settings
-from ......domain.calculations.registry import RemoteOperation, assert_remote_operation_allowed
-from ......domain.calculations.registry._errors import RegistryValidationError
+from ......domain.calculations.registry import RegistryValidationError, RemoteOperation, assert_remote_operation_allowed
 from ......tests.aeat_literal_fixtures import CLAVE_MOVIL_BROWSER_GLOBAL_EXPECTED
 from ......tests.secure_sql import isolated_runtime_profile
 from .....persistence.storage.runtime_repository import secure_object_repository_for_active_bucket

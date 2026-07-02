@@ -12,17 +12,15 @@ from pydantic import ValidationError
 from ....core import Period
 from ....core.resources import resources
 from ....domain.calculations.registry import CasillaId, validated_casilla_id
-from ....domain.modelos._calculation_repository import (
+from ....domain.modelos import (
+    CalculationRevision,
     CalculationRevisionCatalogueRepository,
+    CalculationRevisionState,
+    WorkUnit,
+    WorkUnitCatalogueRepository,
+    derive_calculation_revision_id,
     upsert_calculation_revision,
 )
-from ....domain.modelos._calculation_revision import (
-    CalculationRevision,
-    CalculationRevisionState,
-    derive_calculation_revision_id,
-)
-from ....domain.modelos._repository import WorkUnitCatalogueRepository
-from ....domain.modelos._work_unit import WorkUnit
 from ....domain.user_profile import UserProfileFact, UserProfileRecord
 from ....tests.registry_observations import registry_grounded_observations
 from ....tests.secure_sql import isolated_runtime_profile

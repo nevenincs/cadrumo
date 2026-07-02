@@ -20,24 +20,26 @@ from pathlib import Path
 import pytest
 
 from ..adapters.persistence.storage.sql import SecureObjectRepository
-from ..application.aggregation._ledger_filing_snapshot import (
+from ..application.aggregation import (
     compute_ledger_filing_snapshot,
-    evaluate_ledger_filing_staleness,
     stale_filed_revisions,
 )
+from ..application.aggregation._ledger_filing_snapshot import evaluate_ledger_filing_staleness
 from ..application.ledger import ManualLedgerTransactionPatch, update_manual_transaction_fields
 from ..core import Period
 from ..domain.calculations.registry import CasillaId, validated_casilla_id
-from ..domain.modelos._calculation_repository import CalculationRevisionCatalogueRepository
-from ..domain.modelos._calculation_revision import (
+from ..domain.modelos import (
     CalculationRevision,
     CalculationRevisionCatalogue,
+    CalculationRevisionCatalogueRepository,
     CalculationRevisionState,
+    ModeloCode,
+    WorkUnit,
+    WorkUnitCatalogue,
+    WorkUnitCatalogueRepository,
     derive_calculation_revision_id,
+    derive_work_unit_id,
 )
-from ..domain.modelos._codes import ModeloCode
-from ..domain.modelos._repository import WorkUnitCatalogueRepository
-from ..domain.modelos._work_unit import WorkUnit, WorkUnitCatalogue, derive_work_unit_id
 from ..domain.transactions import (
     BusinessClassification,
     RawProvenance,

@@ -14,7 +14,7 @@ from pathlib import Path
 import pytest
 
 from .....core import Period
-from .....domain.submission._models import (
+from .....domain.submission import (
     ModeloPresentado,
     SubmissionAttempt,
     SubmissionStatus,

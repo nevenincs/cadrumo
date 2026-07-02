@@ -29,6 +29,7 @@ from pathlib import Path
 import pytest
 from pydantic import AnyHttpUrl, TypeAdapter
 
+from ....adapters.persistence.profile.justificante import JustificanteRepository
 from ....core import Period
 from ....core.resources import resources
 from ....domain.buckets import BucketEventHistoryRepository
@@ -39,17 +40,17 @@ from ....domain.calculations.registry import (
     validated_casilla_id,
 )
 from ....domain.deadlines import IVARegime, TaxpayerProfile
-from ....domain.justificante import Justificante, JustificanteRepository
-from ....domain.modelos import ExternalEvidenceKind
-from ....domain.modelos._calculation_repository import CalculationRevisionCatalogueRepository
-from ....domain.modelos._filing_repository import ModeloRecordCatalogueRepository
-from ....domain.modelos._repository import WorkUnitCatalogueRepository
-from ....domain.modelos._verification_report import (
+from ....domain.justificante import Justificante
+from ....domain.modelos import (
+    CalculationRevisionCatalogueRepository,
+    ExternalEvidenceKind,
+    ModeloRecordCatalogueRepository,
     ModeloVerificationFindingKind,
     VerificationCompletenessStatus,
+    VerificationReportCatalogueRepository,
+    WorkUnit,
+    WorkUnitCatalogueRepository,
 )
-from ....domain.modelos._verification_repository import VerificationReportCatalogueRepository
-from ....domain.modelos._work_unit import WorkUnit
 from ....domain.user_profile import UserProfileFact, UserProfileRecord
 from ....tests.aeat_literal_fixtures import justificante_cotejo_url
 from ....tests.registry_observations import registry_grounded_observations

@@ -13,7 +13,7 @@ from ....domain.calculations.registry import (
     VerificationPredicateDefinition,
     validated_casilla_id,
 )
-from ....domain.modelos._verification_report import (
+from ....domain.modelos import (
     ModeloVerificationFindingKind,
     ModeloVerificationFindingSeverity,
 )

@@ -37,7 +37,7 @@ from pathlib import Path
 
 import pytest
 
-from ....application.user_profile._repository import UserProfileLifecycleRepository
+from ....application.user_profile import UserProfileLifecycleRepository
 from ....core.resources import resources
 from ....domain.calculations.registry import (
     CasillaId,

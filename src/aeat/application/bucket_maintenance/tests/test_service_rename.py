@@ -21,7 +21,7 @@ from pathlib import Path
 
 import pytest
 
-from ....adapters.persistence.storage.bucket._manifest_io import read_manifest
+from ....adapters.persistence.storage.bucket import read_manifest
 from ....core.resources import resources
 from ....domain.buckets import (
     BucketEventHistoryRepository,

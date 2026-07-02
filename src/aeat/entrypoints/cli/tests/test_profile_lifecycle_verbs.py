@@ -15,7 +15,10 @@ from pathlib import Path
 import pytest
 from click.testing import Result
 
-from ....adapters.persistence.storage._namespace_registry import BUCKETS_DIRNAME, KEYSTORE_DIRNAME
+from ....adapters.persistence.storage import (
+    BUCKETS_DIRNAME,
+    KEYSTORE_DIRNAME,
+)
 from ....core.i18n import tr
 from ....core.redaction import CLI_PROFILE_ID_PLACEHOLDER
 from ....tests.cli_runner import invoke_cached_cli
@@ -131,7 +134,7 @@ def test_config_profile_create_second_profile_uses_requested_identity_while_firs
     assert f"{_PROFILE_LABEL}\talpha" not in beta.output
     assert f"{_ACTIVE_PROFILE_LABEL}\talpha" not in beta.output
 
-    from ....application.workflow._profile_bucket_scan import read_profile_bucket
+    from ....application.workflow import read_profile_bucket
 
     alpha_pointer = read_profile_bucket("alpha")
     beta_pointer = read_profile_bucket("beta")
@@ -294,9 +297,7 @@ def test_config_profile_create_bare_name_refusal_names_both_recovery_paths() -> 
     output = result.output
     # Both concrete recovery paths are named in the message body.
     assert "aeat config profile create NAME" in output
-    advertised_command = "aeat config profile create NAME " + " ".join(
-        _ADVERTISED_RESIDENT_IRPF_NATURAL_PERSON_FLAGS
-    )
+    advertised_command = "aeat config profile create NAME " + " ".join(_ADVERTISED_RESIDENT_IRPF_NATURAL_PERSON_FLAGS)
     assert advertised_command in output
     # No internal tokens leak into the operator-facing refusal.
     assert "flow_id" not in output
@@ -342,7 +343,7 @@ def test_config_profile_create_quiet_without_flags_names_the_missing_flags() -> 
 
 
 def test_config_profile_edit_refuses_missing_profile_without_creating_bucket() -> None:
-    from ....application.workflow._profile_bucket_scan import read_profile_bucket
+    from ....application.workflow import read_profile_bucket
 
     result = _invoke_profile_app(
         (
@@ -373,8 +374,8 @@ def test_config_switch_emits_profile_activated_event() -> None:
     captures workflow-state-level selection).
     """
 
-    from ....application.user_profile._orchestration import profile_storage_session
-    from ....application.workflow._profile_bucket_scan import read_profile_bucket
+    from ....application.user_profile import profile_storage_session
+    from ....application.workflow import read_profile_bucket
     from ....domain.buckets import BucketEventHistoryRepository, BucketEventType
 
     seed("operator")
@@ -493,7 +494,7 @@ def test_config_profile_show_reports_a_tombstoned_profile_as_tombstoned() -> Non
 def test_config_profile_show_inspects_a_tombstoned_profile_by_label_and_uuid() -> None:
     """``show`` preserves tombstoned inspect behavior for label and UUID targets."""
 
-    from ....application.workflow._profile_bucket_scan import read_profile_bucket
+    from ....application.workflow import read_profile_bucket
 
     seed("operator")
     pointer = read_profile_bucket("operator")
@@ -525,7 +526,7 @@ def test_config_profile_duplicate_copies_to_new_id() -> None:
     assert f"source_profile_id\t{CLI_PROFILE_ID_PLACEHOLDER}" in result.output
     assert f"target_profile_id\t{CLI_PROFILE_ID_PLACEHOLDER}" in result.output
     assert "display_name\tSpouse" in result.output
-    from ....application.workflow._profile_bucket_scan import read_profile_bucket
+    from ....application.workflow import read_profile_bucket
 
     assert read_profile_bucket("Spouse") is not None
 
@@ -557,7 +558,7 @@ def test_config_profile_duplicate_target_token_is_the_addressable_label() -> Non
     assert duplicated.exit_code == 0, duplicated.output
     assert "display_name\toperator-copy" in duplicated.output
 
-    from ....application.workflow._profile_bucket_scan import read_profile_bucket
+    from ....application.workflow import read_profile_bucket
 
     assert read_profile_bucket("operator-copy") is not None
 

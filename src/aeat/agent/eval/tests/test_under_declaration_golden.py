@@ -44,7 +44,7 @@ from typing import Any
 
 import pytest
 
-from ....application.user_profile._repository import UserProfileLifecycleRepository
+from ....application.user_profile import UserProfileLifecycleRepository
 from ....domain.user_profile import UserProfileFact, UserProfileRecord, UserProfileStatus
 from ....entrypoints.cli.tests.envelope_helpers import unwrap_schema_envelope
 from ....tests.cli_runner import invoke_cached_cli

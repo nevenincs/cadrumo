@@ -158,7 +158,7 @@ class TestCifKindCatalogue:
 
 class TestErrorCodeBinding:
     def test_class_binds_to_registered_code(self) -> None:
-        from ....core.errors._registry import bind_error_code
+        from ...errors import bind_error_code
 
         bound = bind_error_code(IdentityError)
         assert bound is not None

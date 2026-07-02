@@ -48,7 +48,6 @@ import pytest
 from ....adapters.inbound.financial.providers import ParsedLedgerRow
 from ....adapters.outbound.fx import EcbReferenceRateProvider
 from ....adapters.persistence.storage.sql import SecureObjectRepository
-from ....application.ledger._actions_import import import_ledger_transactions
 from ....domain.currency import (
     CurrencyNormalizationService,
 )
@@ -56,10 +55,11 @@ from ....domain.transactions import (
     RawProvenance,
     RawTransaction,
     SourceFormat,
+    TransactionCatalogueRepository,
     TransactionDirection,
 )
-from ....domain.transactions._repository import TransactionCatalogueRepository
 from ....tests.secure_sql import isolated_runtime_profile
+from ...ledger import import_ledger_transactions
 from .._currency_predicates import is_non_eur_without_conversion
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]

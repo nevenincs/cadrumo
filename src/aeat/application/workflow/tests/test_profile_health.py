@@ -7,8 +7,7 @@ from pathlib import Path
 import pytest
 
 from ....adapters.persistence.storage import SecureObjectRepository
-from ....adapters.persistence.storage.bucket._layout import bucket_paths
-from ....adapters.persistence.storage.bucket._manifest_io import manifest_path
+from ....adapters.persistence.storage.bucket import bucket_paths, manifest_path
 from ....application.user_profile import UserProfileLifecycleRepository
 from ....core import BucketPointer, read_pointer, write_pointer
 from ....core.config import override_settings

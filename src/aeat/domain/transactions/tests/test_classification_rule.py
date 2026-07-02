@@ -5,8 +5,7 @@ from __future__ import annotations
 import pytest
 from pydantic import ValidationError
 
-from ....core.errors import ERROR_REGISTRY, build_error_envelope
-from ....core.errors._registry import get_registered_error_code
+from ....core.errors import ERROR_REGISTRY, build_error_envelope, get_registered_error_code
 from .._classification_rule import LedgerClassificationRule
 from .._enums import BusinessClassification
 from .._errors import ClassificationRuleError

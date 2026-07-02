@@ -15,25 +15,22 @@ from ....core.resources import resources
 from ....domain.buckets import BucketEventHistoryRepository
 from ....domain.calculations.registry import CasillaId, validated_casilla_id
 from ....domain.deadlines import IVARegime, TaxpayerProfile
-from ....domain.iva_compensation._reconciliation import IvaCompensationReconciliationDecision
-from ....domain.modelos._calculation_repository import (
-    CalculationRevisionCatalogueRepository,
-    upsert_calculation_revision,
-)
-from ....domain.modelos._calculation_revision import (
+from ....domain.iva_compensation import IvaCompensationReconciliationDecision
+from ....domain.modelos import (
     CalculationRevision,
+    CalculationRevisionCatalogueRepository,
     CalculationRevisionState,
-    derive_calculation_revision_id,
-)
-from ....domain.modelos._filing_repository import ModeloRecordCatalogueRepository
-from ....domain.modelos._repository import WorkUnitCatalogueRepository
-from ....domain.modelos._verification_report import (
+    ModeloRecordCatalogueRepository,
     ModeloVerificationFindingKind,
     ModeloVerificationFindingSeverity,
     VerificationCompletenessStatus,
+    VerificationReportCatalogueRepository,
+    WorkUnit,
+    WorkUnitCatalogueRepository,
+    derive_calculation_revision_id,
+    derive_work_unit_id,
+    upsert_calculation_revision,
 )
-from ....domain.modelos._verification_repository import VerificationReportCatalogueRepository
-from ....domain.modelos._work_unit import WorkUnit, derive_work_unit_id
 from ....domain.transactions import (
     BusinessClassification,
     RawProvenance,
@@ -46,7 +43,7 @@ from ....domain.transactions import (
 )
 from ....domain.user_profile import UserProfileFact, UserProfileRecord
 from ....tests.secure_sql import isolated_runtime_profile
-from ...aggregation._ledger_filing_snapshot import (
+from ...aggregation import (
     compute_ledger_filing_evidence,
     compute_ledger_filing_snapshot,
 )

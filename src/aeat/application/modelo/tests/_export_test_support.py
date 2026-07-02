@@ -14,25 +14,24 @@ from ....core import Period
 from ....core.identity import nif_check_letter
 from ....core.resources import resources
 from ....domain.calculations.registry import BindingId, CasillaId, RegistrySnapshotRef, validated_casilla_id
-from ....domain.deadlines import TaxpayerProfile
-from ....domain.deadlines._models import IVARegime
-from ....domain.modelos._calculation_repository import (
-    CalculationRevisionCatalogueRepository,
-    upsert_calculation_revision,
-)
-from ....domain.modelos._calculation_revision import (
+from ....domain.deadlines import IVARegime, TaxpayerProfile
+from ....domain.modelos import (
     CalculationRevision,
+    CalculationRevisionCatalogueRepository,
     CalculationRevisionState,
+    ModeloCode,
+    WorkUnit,
+    WorkUnitCatalogueRepository,
     derive_calculation_revision_id,
+    derive_work_unit_id,
+    upsert_calculation_revision,
+    upsert_work_unit,
 )
-from ....domain.modelos._codes import ModeloCode
-from ....domain.modelos._repository import WorkUnitCatalogueRepository, upsert_work_unit
-from ....domain.modelos._work_unit import WorkUnit, derive_work_unit_id
 from ....tests.registry_observations import registry_grounded_observations
 from ....tests.secure_sql import isolated_profile_storage_root
-from ...user_profile._orchestration import profile_create_storage_span
+from ...user_profile import profile_create_storage_span
 from ...user_profile._testing import register_minimal_profile
-from ...workflow._persistence import workflow_state_repository
+from ...workflow import workflow_state_repository
 
 _ACTIVE_STORAGE_STACK: ExitStack | None = None
 _PROFILE_SPAN_OPEN = False

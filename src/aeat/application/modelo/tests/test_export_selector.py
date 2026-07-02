@@ -10,16 +10,15 @@ from pathlib import Path
 import pytest
 
 from ....core import Period
-from ....domain.modelos._calculation_repository import (
-    CalculationRevisionCatalogueRepository,
-    upsert_calculation_revision,
-)
-from ....domain.modelos._calculation_revision import (
+from ....domain.modelos import (
     CalculationRevision,
+    CalculationRevisionCatalogueRepository,
     CalculationRevisionState,
+    WorkUnitCatalogueRepository,
     derive_calculation_revision_id,
+    upsert_calculation_revision,
+    upsert_work_unit,
 )
-from ....domain.modelos._repository import WorkUnitCatalogueRepository, upsert_work_unit
 from ....tests.registry_observations import registry_grounded_observations
 from .. import create_work_unit
 from .._selectors import ModeloCalculationRevisionSelectorStateError, select_exportable_revision

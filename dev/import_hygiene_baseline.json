@@ -1,0 +1,78 @@
+{
+  "$schema_note": "Checked-in ratchet baseline for the import-hygiene CI gate (dev/import_hygiene_scan.py). Read by src/aeat/tests/test_import_hygiene_gate.py. Every entry below is a NAMED, documented exception -- never a bulk allowlist. A closing commit that fixes a violation MUST shrink the matching list in the SAME commit (aeat-architecture-boundaries relocation-atomicity discipline). See ADR 2026-07-01-import-centralization-adr Ruling 8.",
+  "production_family1_cross_package_private_imports": {
+    "_note": "Every production (non-test) cross-package private-import site the scanner currently finds. This is the CYCLE-BREAK exception set documented inline at each site (CYCLE-BREAK-RATIONALE-WORKFLOW-REVIEW): application.review and application.workflow import each other's private submodules directly to avoid re-entering a partially-initialised package during Python's import machinery. The gate FAILS if the current scan finds MORE sites than are listed here (regression); it does not fail if the count is lower, and Wave W06 flips this list to an empty list once the exception is structurally removed (hard-zero mode).",
+    "sites": [
+      {
+        "importer_path": "src/aeat/application/review/_actions.py",
+        "lineno": 18,
+        "target_mod": "aeat.application.workflow._models",
+        "imported_names": ["WorkflowEvent", "WorkflowState"],
+        "reason": "CYCLE-BREAK-RATIONALE-WORKFLOW-REVIEW: application.workflow imports application.review from inside its own _models module, so importing the application.workflow facade from application.review re-enters the partially-initialised workflow package and raises ImportError."
+      },
+      {
+        "importer_path": "src/aeat/application/review/_actions.py",
+        "lineno": 19,
+        "target_mod": "aeat.application.workflow._utils",
+        "imported_names": ["utc_now"],
+        "reason": "CYCLE-BREAK-RATIONALE-WORKFLOW-REVIEW: same cycle-break as the adjacent WorkflowEvent/WorkflowState import in this file; import the submodule directly to avoid triggering application.workflow.__init__ during the chain."
+      },
+      {
+        "importer_path": "src/aeat/application/review/_models.py",
+        "lineno": 37,
+        "target_mod": "aeat.application.workflow._models",
+        "imported_names": ["WorkflowEvent"],
+        "reason": "CYCLE-BREAK-RATIONALE-WORKFLOW-REVIEW: matching rationale to _actions.py; application.review._models is itself imported by application.workflow._models, so it cannot import the application.workflow facade without re-entering the partially-initialised package."
+      },
+      {
+        "importer_path": "src/aeat/application/review/_models.py",
+        "lineno": 38,
+        "target_mod": "aeat.application.workflow._utils",
+        "imported_names": ["utc_now"],
+        "reason": "CYCLE-BREAK-RATIONALE-WORKFLOW-REVIEW: same cycle-break as the adjacent WorkflowEvent import in this file."
+      },
+      {
+        "importer_path": "src/aeat/application/workflow/_models.py",
+        "lineno": 389,
+        "target_mod": "aeat.application.review._models",
+        "imported_names": ["InvoiceReviewRecord", "LedgerReviewRecord"],
+        "reason": "CYCLE-BREAK-RATIONALE-WORKFLOW-REVIEW: application.workflow._models imports application.review._models directly (not through the application.review facade) to avoid the same import-cycle re-entry in the opposite direction."
+      }
+    ]
+  },
+  "family2_shim_modules": {
+    "_note": "Every module the scanner classifies as a Family-2 shim / pure-reexport surface. Each is a DOCUMENTED bridge (ADR Ruling 4): a single non-__init__ public re-export module is an acceptable canonical source when it carries a docstring explaining why. The gate fails if a NEW undocumented shim appears that is not in this list.",
+    "paths": [
+      "src/aeat/adapters/outbound/aeat/_playwright.py",
+      "src/aeat/application/workflow/_utils.py",
+      "src/aeat/domain/calculations/registry/applicability.py",
+      "src/aeat/domain/deadlines/taxpayer_model.py",
+      "src/aeat/domain/transactions/_ids.py",
+      "src/aeat/entrypoints/cli/_schemas.py"
+    ]
+  },
+  "family3_pinned_duplicate_symbols": {
+    "_note": "Named Family-3 'genuine duplicate' symbols the ADR investigated and pinned a disposition for (Ruling 5). The 7 umbrella app-layer re-exports (CalculationRevision, CalculationRevisionAmendmentKind, ExternalEvidenceKind, WorkUnit, link_transaction, suggest_reconciliations, verify_link_consistency) were RETIRED in Wave W03.P88 and must never reappear as multi-facade symbols. save_envelope and DEFAULT_IVA_GENERAL_RATE_PCT were investigated and require no action (two unrelated same-named functions; a benign zero-consumer duplicate declaration respectively) -- they are pinned here as the exact tolerated set so a NEW genuine cross-facade duplicate fails the gate.",
+    "retired_symbols_must_not_reappear": [
+      "CalculationRevision",
+      "CalculationRevisionAmendmentKind",
+      "ExternalEvidenceKind",
+      "WorkUnit",
+      "link_transaction",
+      "suggest_reconciliations",
+      "verify_link_consistency"
+    ],
+    "tolerated_multi_sourced_symbols": [
+      {
+        "symbol": "save_envelope",
+        "confidence": "name_collision",
+        "reason": "Two unrelated same-named functions (aeat.adapters.persistence.storage.envelope._envelope.save_envelope and aeat.core.observability._store.save_envelope). Investigated per the ADR; no consolidation needed. A cosmetic rename is deferred, out of scope."
+      },
+      {
+        "symbol": "DEFAULT_IVA_GENERAL_RATE_PCT",
+        "confidence": "high",
+        "reason": "Declared in both aeat.domain.contribuyente.assets and aeat.domain.contribuyente.inventory facades, zero private sources, zero cross-package consumers recorded by the scanner. Benign single-origin duplicate declaration; investigated per the ADR, no action required."
+      }
+    ]
+  }
+}

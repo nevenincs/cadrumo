@@ -127,21 +127,19 @@ class TestModelo347ContraparteRow:
         )
         assert row.importe_total == Decimal("4005.06")
 
-    @pytest.mark.parametrize(
-        ("pais_codigo", "expected"),
-        [
-            (None, None),
-            ("de", "DE"),
-        ],
-        ids=("domestic", "foreign"),
-    )
-    def test_pais_codigo_normalized(self, pais_codigo: str | None, expected: str | None) -> None:
-        row = Modelo347ContraparteRow(nif="12345678A", pais_codigo=pais_codigo)
-        assert row.pais_codigo == expected
+    def test_pais_codigo_normalized(self) -> None:
+        cases = (
+            ("domestic", None, None),
+            ("foreign", "de", "DE"),
+        )
 
-    @pytest.mark.parametrize("case", _M347_INVALID_CASES, ids=lambda case: case.case_id)
-    def test_invalid_contraparte_rows_rejected(self, case: _ValidationErrorCase) -> None:
-        _assert_validation_error(case)
+        for case_id, pais_codigo, expected in cases:
+            row = Modelo347ContraparteRow(nif="12345678A", pais_codigo=pais_codigo)
+            assert row.pais_codigo == expected, case_id
+
+    def test_invalid_contraparte_rows_rejected(self) -> None:
+        for case in _M347_INVALID_CASES:
+            _assert_validation_error(case)
 
     def test_frozen_model_immutable(self) -> None:
         row = Modelo347ContraparteRow(nif="12345678A")
@@ -159,14 +157,11 @@ class TestModelo347ContraparteRow:
 
 
 class TestRevisionIdAcrossAllFourRowTypes:
-    @pytest.mark.parametrize(
-        "row_factory",
-        [pytest.param(factory, id=case_id) for case_id, factory in _REVISION_ROW_FACTORIES],
-    )
-    def test_each_row_type_derives_without_crash(self, row_factory: _DetailRowFactory) -> None:
-        rev_id = derive_calculation_revision_id(**_revision_base("a" * 64), detail_rows=(row_factory(),))
-        assert len(rev_id) == 64
-        assert rev_id == rev_id.lower()
+    def test_each_row_type_derives_without_crash(self) -> None:
+        for case_id, row_factory in _REVISION_ROW_FACTORIES:
+            rev_id = derive_calculation_revision_id(**_revision_base("a" * 64), detail_rows=(row_factory(),))
+            assert len(rev_id) == 64, case_id
+            assert rev_id == rev_id.lower(), case_id
 
     def test_mixed_union_payload_sorts_without_crash(self) -> None:
         rev_id = derive_calculation_revision_id(

@@ -14,9 +14,10 @@ from ..adapters.persistence.storage.bucket import (
     BucketKeySchedule,
     BucketLifecycleStatus,
     BucketManifest,
+    BucketPaths,
+    provision_bucket_directory,
     write_manifest,
 )
-from ..adapters.persistence.storage.bucket._layout import BucketPaths, provision_bucket_directory
 from ..adapters.persistence.storage.master_key import (
     KdfParams,
     activate_session,

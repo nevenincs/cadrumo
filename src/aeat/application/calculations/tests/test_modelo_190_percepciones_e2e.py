@@ -17,7 +17,6 @@ from pathlib import Path
 import pytest
 
 from ....application.aggregation import WithholdingSourceResolver, persist_percepcion_observations
-from ....application.aggregation._source_mesh import CalculationSourceContext
 from ....core import Period
 from ....core.resources import resources
 from ....domain.calculations.registry import (
@@ -26,6 +25,7 @@ from ....domain.calculations.registry import (
     validated_casilla_id,
 )
 from ....tests.secure_sql import isolated_runtime_profile
+from ...aggregation import CalculationSourceContext
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

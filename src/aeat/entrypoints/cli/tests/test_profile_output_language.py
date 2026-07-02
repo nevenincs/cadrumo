@@ -84,7 +84,7 @@ def _profile_facts(profile_name: str) -> dict[str, str]:
 
 def test_config_profile_create_writes_profile_output_language() -> None:
     from ....adapters.persistence.storage import activate_master_key_provider, get_master_key_provider
-    from ....application.workflow._persistence import workflow_state_repository
+    from ....application.workflow import workflow_state_repository
     from ....core import resolve_active_bucket_id
     from ....core.config import override_settings
 
@@ -110,7 +110,7 @@ def test_config_profile_create_writes_profile_output_language() -> None:
         state = workflow_state_repository().load()
         record = state.active_profile_record()
         assert record is not None
-        from ....application.user_profile._orchestration import fact_value
+        from ....application.user_profile import fact_value
 
         assert fact_value(record, "preferences.output_language") == "en"
         profile_id = record.profile_id
@@ -128,7 +128,7 @@ def test_config_profile_create_writes_profile_output_language() -> None:
 
 def test_config_profile_create_validates_profile_output_language() -> None:
     from ....adapters.persistence.storage import activate_master_key_provider, get_master_key_provider
-    from ....application.workflow._persistence import workflow_state_repository
+    from ....application.workflow import workflow_state_repository
 
     valid_result = _create_profile(
         "default",
@@ -156,7 +156,7 @@ def test_config_profile_create_validates_profile_output_language() -> None:
         state = workflow_state_repository().load()
         record = state.active_profile_record()
         assert record is not None
-        from ....application.user_profile._orchestration import fact_value
+        from ....application.user_profile import fact_value
 
         assert fact_value(record, "preferences.output_language") == "ca"
         assert invalid_result.exit_code != 0
@@ -179,8 +179,8 @@ def test_config_profile_edit_quiet_is_a_patch_not_a_full_rewrite() -> None:
     """
 
     from ....adapters.persistence.storage import activate_master_key_provider, get_master_key_provider
-    from ....application.user_profile._orchestration import fact_value
-    from ....application.workflow._persistence import workflow_state_repository
+    from ....application.user_profile import fact_value
+    from ....application.workflow import workflow_state_repository
 
     create_result = _create_profile(
         "default",
@@ -305,8 +305,8 @@ def test_env_output_language_honored_when_creating_profile_with_accept_defaults(
     """
 
     from ....adapters.persistence.storage import activate_master_key_provider, get_master_key_provider
-    from ....application.user_profile._orchestration import fact_value
-    from ....application.workflow._persistence import workflow_state_repository
+    from ....application.user_profile import fact_value
+    from ....application.workflow import workflow_state_repository
 
     result = _create_profile(
         "marta",

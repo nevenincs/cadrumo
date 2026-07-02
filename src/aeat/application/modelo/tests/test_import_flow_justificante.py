@@ -7,7 +7,7 @@ from pathlib import Path
 
 import pytest
 
-from ....domain.modelos._filing_record import ExternalEvidenceKind
+from ....domain.modelos import ExternalEvidenceKind
 from .. import ExternalModeloImportError
 from ._import_flow_support import (
     _T1,

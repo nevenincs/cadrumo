@@ -22,8 +22,7 @@ from ....domain.invoices import (
     derive_invoice_id,
 )
 from ....domain.iva import InvoiceKind, IvaCategory
-from ....domain.modelos._calculation_repository import CalculationRevisionCatalogueRepository
-from ....domain.modelos._repository import WorkUnitCatalogueRepository
+from ....domain.modelos import CalculationRevisionCatalogueRepository, WorkUnitCatalogueRepository
 from ....domain.transactions import TransactionCatalogueRepository
 from ....tests.secure_sql import isolated_runtime_profile
 from .. import (

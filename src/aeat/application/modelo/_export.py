@@ -151,6 +151,11 @@ _LOCAL_EXPORT_OFFICIAL_EVIDENCE_NEXT_ACTION = (
     "`aeat app modelo filing-record import WORK_UNIT_ID --evidence-kind aeat_justificante_pdf "
     "--evidence-id CSV --set CASILLA=VALUE`."
 )
+_COMPLETENESS_UNVERIFIED_MESSAGE = (
+    "This fichero-BOE was NOT completeness-verified: its modelo revision declares no calculation-completeness "
+    "manifest, so the structural-parity gate could not confirm every required casilla reached disk. The file may "
+    "be structurally thin. Review the exported casillas against the official Diseño de Registros before filing."
+)
 type _Sha256Ref = Annotated[str, Field(min_length=71, max_length=71, pattern=r"^sha256:[0-9a-f]{64}$")]
 
 
@@ -300,6 +305,20 @@ class ModeloExportResult(BaseModel):
         ),
         min_length=1,
     )
+    completeness_unverified: bool = Field(
+        default=False,
+        description=(
+            "True when a fixed-width fichero-BOE export could not be completeness-verified because the modelo "
+            "revision declares no calculation-completeness manifest, so the structural-parity gate did not run. "
+            "The CLI surfaces a non-blocking coverage advisory when set. False when the gate ran (manifest present) "
+            "or the transport is not the fixed-width fichero-BOE."
+        ),
+    )
+
+    @property
+    def completeness_advisory_message(self) -> str:
+        """Operator-facing coverage advisory text for a completeness-unverified export."""
+        return _COMPLETENESS_UNVERIFIED_MESSAGE
 
 
 def _sha256_ref(value: str) -> str:
@@ -810,6 +829,18 @@ def _persist_exported_draft(
             context={"output_path": str(command.output_path), "reason": str(exc)},
         ) from exc
 
+    # Coverage honesty: a fixed-width fichero-BOE whose revision declares no
+    # completeness manifest cannot be structural-parity-verified (the pre-write
+    # gate in export_draft only runs when a manifest is present), so surface a
+    # non-blocking advisory rather than implying the export was verified.
+    _export_subview = schema_provider.get_subview(str(work_unit.modelo))
+    _export_layout = _export_subview.export_layouts[0] if _export_subview.export_layouts else None
+    completeness_unverified = (
+        _export_layout is not None
+        and _export_layout.format == "fixed_width"
+        and _export_subview.completeness_manifest is None
+    )
+
     return ModeloExportResult(
         calculation_revision_id=command.calculation_revision_id,
         work_unit_id=work_unit.work_unit_id,
@@ -831,6 +862,7 @@ def _persist_exported_draft(
             filing_year=work_unit.filing_year,
             period=period,
         ),
+        completeness_unverified=completeness_unverified,
     )
 
 

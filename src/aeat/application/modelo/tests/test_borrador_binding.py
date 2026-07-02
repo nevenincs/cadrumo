@@ -24,9 +24,11 @@ from ....domain.calculations.registry import (
     RelationId,
     validated_casilla_id,
 )
-from ....domain.modelos._calculation_repository import CalculationRevisionCatalogueRepository
-from ....domain.modelos._calculation_revision import derive_calculation_revision_id
-from ....domain.modelos._repository import WorkUnitCatalogueRepository
+from ....domain.modelos import (
+    CalculationRevisionCatalogueRepository,
+    WorkUnitCatalogueRepository,
+    derive_calculation_revision_id,
+)
 from ....domain.user_profile import UserProfileFact, UserProfileRecord
 from ....tests.aeat_literal_fixtures import aeat_url, configured_path
 from ....tests.secure_sql import isolated_runtime_profile

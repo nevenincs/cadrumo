@@ -12,7 +12,7 @@ import pytest
 from ......core.config import SecretStoreBackend, override_settings
 from ......core.errors import build_error_envelope
 from ......core.external_constants import UTF_8_ENCODING
-from ...bucket._manifest import BucketKeySchedule
+from ...bucket import BucketKeySchedule
 from ...crypto import KEY_SIZE
 from ...errors import (
     DecryptionError,

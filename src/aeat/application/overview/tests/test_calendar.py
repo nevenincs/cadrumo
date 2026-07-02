@@ -9,8 +9,7 @@ from decimal import Decimal
 import pytest
 from pydantic import AnyHttpUrl, ValidationError
 
-from ....adapters.outbound.aeat.sede import Declaracion
-from ....adapters.outbound.aeat.sede._notifications import RemoteNotification
+from ....adapters.outbound.aeat.sede import Declaracion, RemoteNotification
 from ....core import Period
 from ....domain.deadlines import (
     EntityType,
@@ -19,8 +18,7 @@ from ....domain.deadlines import (
     ObligationStatus,
     TaxpayerProfile,
 )
-from ...live._expedientes import PersistedExpedientesSnapshot
-from ...live._notifications import PersistedNotificationsSnapshot
+from ...live import PersistedExpedientesSnapshot, PersistedNotificationsSnapshot
 from .. import (
     OverviewCalendar,
     OverviewCalendarEntry,
@@ -287,7 +285,7 @@ def test_multi_payer_total_undeclared_surfaces_conservatively() -> None:
 def test_obligation_advisory_key_resolves_to_a_translation() -> None:
     # The surfaced key must resolve to a real (non-humanised-fallback) locale
     # string in every shipped locale — the half-shipped gap this closes.
-    from ....core.i18n._render import tr
+    from ....core.i18n import tr
 
     rendered = tr(_MULTIPLE_PAGADORES_OBLIGATION_KEY)
     # Cites the binding provision and names the form; not the humanised fallback.

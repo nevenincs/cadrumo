@@ -14,8 +14,7 @@ from pathlib import Path
 
 import pytest
 
-from ....domain.filing._errors import FilingExportError
-from ....domain.filing._schema import ModeloValueKind
+from ....domain.filing import FilingExportError, ModeloValueKind
 from .._export import boe_representable_casilla_ids, export_draft
 from ._export_support import (
     _approved_registry_draft,
@@ -39,9 +38,7 @@ def test_complete_fixed_width_draft_exports_without_panic(tmp_path: Path) -> Non
     draft = _approved_registry_draft()
     output = tmp_path / "modelo-130.txt"
 
-    receipt = export_draft(
-        draft, output_path=output, headers=_modelo_130_export_headers(), schema_provider=provider
-    )
+    receipt = export_draft(draft, output_path=output, headers=_modelo_130_export_headers(), schema_provider=provider)
 
     assert output.exists()
     assert receipt.file_sha256

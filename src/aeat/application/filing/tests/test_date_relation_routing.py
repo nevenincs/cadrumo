@@ -32,7 +32,7 @@ import pytest
 from ....core import Period
 from ....core.resources import resources
 from ....domain.calculations.registry import RegistrySnapshot, enum_consumed_binding_ids
-from ....domain.submission._protocols import ModeloDraftStatus
+from ....domain.submission import ModeloDraftStatus
 from .. import (
     _bound_casilla_binding_ids,
     _date_binding_ids,
@@ -95,7 +95,7 @@ def test_date_inputs_for_ids_parses_iso_date_strings() -> None:
 
 def test_date_inputs_for_ids_rejects_non_iso_value() -> None:
     """A corrupt (non-ISO) date value is refused, not silently dropped."""
-    from ....domain.filing._errors import ModeloBuilderError
+    from ....domain.filing import ModeloBuilderError
 
     with pytest.raises(ModeloBuilderError):
         _date_inputs_for_ids({_M100_BIRTH_DATE_BINDING: "not-a-date"}, {_M100_BIRTH_DATE_BINDING})

@@ -29,7 +29,7 @@ from ..core.wizard_catalogue import (
     WizardCatalogueAlreadyRegisteredError,
     WizardCatalogueNotRegisteredError,
 )
-from ..domain.modelos._calculation_revision import (
+from ..domain.modelos import (
     CalculationRevision,
     CalculationRevisionState,
     derive_calculation_revision_id,
@@ -172,7 +172,7 @@ class TestResultSummaryNarrowing:
 
     def test_aeat_error_from_get_work_unit_returns_none(self) -> None:
         """An AeatError from get_work_unit is caught and returns None."""
-        from ..application.modelo._result_summary import calculation_result_summary
+        from ..application.modelo import calculation_result_summary
 
         def _raising(work_unit_id: str) -> NoReturn:
             del work_unit_id
@@ -184,7 +184,7 @@ class TestResultSummaryNarrowing:
 
     def test_lookup_error_from_get_work_unit_returns_none(self) -> None:
         """A LookupError from get_work_unit returns None."""
-        from ..application.modelo._result_summary import calculation_result_summary
+        from ..application.modelo import calculation_result_summary
 
         def _raising(work_unit_id: str) -> NoReturn:
             del work_unit_id
@@ -196,7 +196,7 @@ class TestResultSummaryNarrowing:
 
     def test_runtime_error_from_get_work_unit_propagates(self) -> None:
         """A RuntimeError from get_work_unit propagates — not swallowed."""
-        from ..application.modelo._result_summary import calculation_result_summary
+        from ..application.modelo import calculation_result_summary
 
         def _raising(work_unit_id: str) -> NoReturn:
             del work_unit_id

@@ -20,7 +20,7 @@ import pytest
 import typer
 
 from ....core.config import override_settings
-from ....core.i18n._render import clear_output_language_cache
+from ....core.i18n import clear_output_language_cache
 from .._common import parse_decimal_amount, parse_optional_decimal_amount
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]

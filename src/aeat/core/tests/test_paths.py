@@ -204,11 +204,11 @@ def test_windows_worst_case_suffix_covers_the_real_bucket_layout_shape() -> None
     of silently under-counting the margin.
     """
     from ...adapters.outbound.storage._local import _HMAC_PREFIX_LEN, _SIDECAR_EXTENSION, _validate_label
-    from ...adapters.persistence.storage._namespace_registry import (
+    from ...adapters.persistence.storage import (
         BUCKET_BLOBS_DIRNAME,
         BUCKETS_DIRNAME,
     )
-    from ...domain.user_profile._values import new_profile_id
+    from ...domain.user_profile import new_profile_id
 
     worst_label = _validate_label("x" * 200)  # clamps to 64 chars
     recomputed = (

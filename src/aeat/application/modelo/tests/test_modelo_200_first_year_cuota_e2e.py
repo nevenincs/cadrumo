@@ -54,12 +54,11 @@ from ....core.resources import resources
 from ....domain.calculations.registry import CasillaId, validated_casilla_id
 from ....domain.deadlines import IVARegime, TaxpayerProfile
 from ....domain.invoices import InvoiceCatalogueRepository
-from ....domain.modelos._calculation_repository import CalculationRevisionCatalogueRepository
-from ....domain.modelos._repository import WorkUnitCatalogueRepository
+from ....domain.modelos import CalculationRevisionCatalogueRepository, WorkUnitCatalogueRepository
 from ....domain.transactions import TransactionCatalogueRepository
 from ....domain.user_profile import UserProfileFact, UserProfileRecord
 from ....tests.secure_sql import isolated_runtime_profile
-from ...calculations._observations_repository import CalculationObservationRepository
+from ...calculations import CalculationObservationRepository
 from ...user_profile import UserProfileLifecycleRepository
 from .. import (
     BucketAggregationCalculationResult,

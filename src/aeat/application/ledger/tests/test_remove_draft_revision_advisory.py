@@ -21,9 +21,11 @@ from datetime import UTC, datetime
 
 import pytest
 
-from ....domain.modelos._calculation_repository import CalculationRevisionCatalogueRepository
-from ....domain.modelos._calculation_revision import CalculationRevisionState
-from ....domain.modelos._repository import WorkUnitCatalogueRepository
+from ....domain.modelos import (
+    CalculationRevisionCatalogueRepository,
+    CalculationRevisionState,
+    WorkUnitCatalogueRepository,
+)
 from ._action_test_support import (
     _BUCKET_ID,
     SecureObjectRepository,

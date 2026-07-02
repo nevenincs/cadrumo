@@ -103,11 +103,11 @@ class WorkflowEngine:
         """Construct a :class:`WorkflowEngine`.
 
         Args:
-            deadline_engine: Protocol over :class:`aeat.domain.deadlines.DeadlineEngine`.
-            filing_draft_builder: Protocol over :func:`aeat.application.filing.build_draft`.
-            submission_engine: Protocol over :class:`~aeat.domain.submission.SubmissionEngine`.
-            session: Optional authenticated :class:`aeat.adapters.outbound.aeat.auth.AeatSession`
-                used to drive the live :mod:`aeat.adapters.outbound.aeat.sede` reader. ``None``
+            deadline_engine: Protocol over :class:`domain.deadlines.DeadlineEngine`.
+            filing_draft_builder: Protocol over :func:`application.filing.build_draft`.
+            submission_engine: Protocol over :class:`~domain.submission.SubmissionEngine`.
+            session: Optional authenticated :class:`adapters.outbound.aeat.auth.AeatSession`
+                used to drive the live :mod:`adapters.outbound.aeat.sede` reader. ``None``
                 skips both the inbox probe and the already-filed probe.
             certificate_bundle: Optional Protocol over the certificate
                 backend. ``None`` skips the cert load probe.
@@ -115,10 +115,10 @@ class WorkflowEngine:
                 the draft stage.
             settings: Application :class:`Settings` instance.
             expedientes_source: Test seam over
-                :func:`aeat.adapters.outbound.aeat.sede.walk_expedientes_tree`. Defaults to the
+                :func:`adapters.outbound.aeat.sede.walk_expedientes_tree`. Defaults to the
                 live walker.
             notifications_source: Test seam over
-                :func:`aeat.adapters.outbound.aeat.sede.fetch_notifications_query`. Defaults to
+                :func:`adapters.outbound.aeat.sede.fetch_notifications_query`. Defaults to
                 the live fetcher.
         """
         self._deadline_engine = deadline_engine
@@ -996,7 +996,7 @@ class WorkflowEngine:
 
         Aborts with ``CERT_INVALID`` if the auth-provider Protocol
         raises, and with ``PREFLIGHT_FAILED`` on any
-        :class:`~aeat.domain.submission.SubmissionPreflightError`.
+        :class:`~domain.submission.SubmissionPreflightError`.
 
         For local :attr:`WorkflowPurpose.VERIFY` and
         :attr:`WorkflowPurpose.FILE`, the AEAT filing-window preflight

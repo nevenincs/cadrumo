@@ -17,7 +17,7 @@ import pytest
 
 from ....adapters.outbound.google._calc_sheets_pull import RowSetCellEdit
 from ....core.resources import resources
-from ....domain.calculations.registry._errors import RegistryValidationError
+from ....domain.calculations.registry import RegistryValidationError
 from .._row_set_assembly import (
     assemble_atribucion_observations,
     assemble_foreign_asset_observations,

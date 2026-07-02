@@ -20,9 +20,7 @@ import pytest
 import sqlalchemy.exc as sa_exc
 import typer
 
-from ....adapters.persistence.storage.master_key._active_session import (
-    NoActiveBucketSessionError,
-)
+from ....adapters.persistence.storage.master_key import NoActiveBucketSessionError
 from ....core.errors import AeatError
 from .._errors import (
     CliUnexpectedBoundaryError,

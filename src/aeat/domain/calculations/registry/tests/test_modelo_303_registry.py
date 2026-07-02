@@ -625,7 +625,12 @@ def test_modelo_303_monthly_snapshot_resolves_for_each_period() -> None:
 
 def test_modelo_303_monthly_filing_schedule_matches_monthly_liquidation_profiles() -> None:
     """The monthly schedule fires for monthly IVA-liquidation triggers only."""
-    from ....deadlines._models import IVARegime, ModeloEnrollment, ModeloIVAProfile, TaxpayerProfile
+    from ....deadlines import (
+        IVARegime,
+        ModeloEnrollment,
+        ModeloIVAProfile,
+        TaxpayerProfile,
+    )
     from .. import applicable_filing_schedules
 
     modelo, _catalogues = _load_modelo_303()

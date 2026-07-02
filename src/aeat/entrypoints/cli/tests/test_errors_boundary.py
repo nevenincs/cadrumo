@@ -26,7 +26,7 @@ from pathlib import Path
 import pytest
 
 from ....adapters.persistence.storage import SensitivityClass
-from ....application.user_profile._repository import (
+from ....application.user_profile import (
     USER_PROFILE_VALUE_NAMESPACE,
     UserProfileLifecycleRepository,
     user_profile_value_object_key,

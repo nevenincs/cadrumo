@@ -14,9 +14,7 @@ from pathlib import Path
 import pytest
 
 from ....adapters.persistence.storage.runtime_repository import secure_object_repository_for_active_bucket
-from ....application.user_profile._orchestration import profile_create_storage_span
 from ....application.user_profile._testing import register_minimal_profile
-from ....application.workflow._persistence import workflow_state_repository
 from ....core import Period
 from ....core.classification import SensitivityClass
 from ....core.config import Settings
@@ -26,6 +24,7 @@ from ....domain.calculations.registry import CasillaId, RegistrySnapshotRef, val
 from ....domain.invoices import (
     Invoice,
     InvoiceCatalogue,
+    InvoiceCatalogueRepository,
     InvoiceLine,
     IvaRate,
     PaymentStatus,
@@ -34,7 +33,6 @@ from ....domain.invoices._repository import (
     _INVOICE_CATALOGUE_VERSION,
     _INVOICE_NAMESPACE,
     _INVOICE_OBJECT_KEY,
-    InvoiceCatalogueRepository,
 )
 from ....domain.iva import InvoiceKind
 from ....domain.transactions import (
@@ -44,9 +42,9 @@ from ....domain.transactions import (
     SourceFormat,
     Transaction,
     TransactionCatalogue,
+    TransactionCatalogueRepository,
     TransactionDirection,
 )
-from ....domain.transactions._repository import TransactionCatalogueRepository
 from ...filing import (
     ModeloDraft,
     ModeloDraftStatus,
@@ -54,6 +52,8 @@ from ...filing import (
     ModeloValue,
     ModeloValueKind,
 )
+from ...user_profile import profile_create_storage_span
+from ...workflow import workflow_state_repository
 from .. import (
     FindingReviewItem,
     InvoiceReviewItem,

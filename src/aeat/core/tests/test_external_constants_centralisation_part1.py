@@ -107,7 +107,7 @@ def test_binary_mime_consumers_alias_core_constant() -> None:
 
     import inspect
 
-    from ...adapters.persistence.storage.blob_store._blob_store import EncryptedBlobStore
+    from ...adapters.persistence.storage.blob_store import EncryptedBlobStore
     from ..external_constants import BINARY_MIME_TYPE
 
     _assert_module_constant_identity(
@@ -137,7 +137,7 @@ def test_binary_mime_consumers_alias_core_constant() -> None:
 def test_default_currency_consumers_alias_core_constant() -> None:
     """Default-currency consumers import ``DEFAULT_CURRENCY`` from core."""
 
-    from ...application.ledger._models import ManualLedgerTransactionCommand
+    from ...application.ledger import ManualLedgerTransactionCommand
     from ..external_constants import DEFAULT_CURRENCY
 
     for module_name, attr_name, message in (
@@ -314,8 +314,8 @@ def test_no_bare_json_or_csv_mime_literals_in_exporters() -> None:
     ):
         offenders.extend(_string_literal_offenders(repo_root / relative_path, literal=literal, replacement=replacement))
 
-    assert offenders == [], (
-        "Bare JSON/CSV MIME literals found; import the core MIME constants instead:\n" + "\n".join(offenders)
+    assert offenders == [], "Bare JSON/CSV MIME literals found; import the core MIME constants instead:\n" + "\n".join(
+        offenders
     )
 
 

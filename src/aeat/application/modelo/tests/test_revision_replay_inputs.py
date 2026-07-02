@@ -9,14 +9,17 @@ from ....core import Period
 from ....core.resources import resources
 from ....domain.calculations.registry import CasillaId, InputKind, validated_casilla_id
 from ....domain.deadlines import EntityType, IrpfEstimationRegime, IrpfIncomeCategory, IVARegime, TaxpayerProfile
-from ....domain.modelos._calculation_revision import (
+from ....domain.modelos import (
     CalculationRevision,
     CalculationRevisionState,
+    Modelo349OperadorRow,
+    Modelo349RectificacionRow,
+    ModeloCode,
+    ModeloDetailRow,
+    WorkUnit,
     derive_calculation_revision_id,
+    derive_work_unit_id,
 )
-from ....domain.modelos._codes import ModeloCode
-from ....domain.modelos._row_models import Modelo349OperadorRow, Modelo349RectificacionRow, ModeloDetailRow
-from ....domain.modelos._work_unit import WorkUnit, derive_work_unit_id
 from ....tests.registry_observations import registry_grounded_observations
 from .._revision_replay_inputs import revision_filing_replay_inputs
 

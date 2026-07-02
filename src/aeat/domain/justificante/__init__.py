@@ -2,10 +2,11 @@
 
 Callers outside :mod:`domain.justificante` must import receipt-domain
 types from this module. The facade re-exports the strict :class:`Justificante`
-record, :class:`JustificanteParserBackend` parser contract,
-:class:`JustificanteRepository` encrypted AUDIT store, and the
+record, :class:`JustificanteParserBackend` parser contract, and the
 :class:`PdfModeloImportError` / :class:`JustificanteError` hierarchy used by
-PDF filing-import flows.
+PDF filing-import flows. The encrypted AUDIT store lives in the persistence
+adapter as
+:class:`~aeat.adapters.persistence.profile.justificante.JustificanteRepository`.
 
 This package is scoped to the AEAT *justificante de presentación* receipt:
 CSV, modelo, period, presentation timestamp, taxpayer id, totals, source path,
@@ -36,8 +37,8 @@ See Also:
         evidence.
     :func:`application.modelo.import_external_filing_evidence`
         Modelo work-unit import path that requires matching
-        :class:`JustificanteRepository` metadata for receipt-bound evidence
-        kinds.
+        :class:`~aeat.adapters.persistence.profile.justificante.JustificanteRepository`
+        metadata for receipt-bound evidence kinds.
     :mod:`domain.submission`
         Local-only :class:`domain.submission.ModeloPresentado` audit trail
         populated by imported or historical receipt evidence.
@@ -57,9 +58,6 @@ from ._errors import (
     JustificanteVerificationError,
     PdfModeloImportError,
 )
-from ._repository import (
-    JustificanteRepository,
-)
 from ._schema import Justificante, JustificanteParserBackend
 
 __all__ = [
@@ -68,7 +66,6 @@ __all__ = [
     "JustificanteError",
     "JustificanteParseError",
     "JustificanteParserBackend",
-    "JustificanteRepository",
     "JustificanteVerificationError",
     "PdfModeloImportError",
 ]

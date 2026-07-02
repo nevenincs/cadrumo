@@ -19,7 +19,7 @@ def _isolated_workflow(tmp_path: Path) -> Iterator[None]:
     """Isolate workflow state behind a real active profile custody span."""
 
     from ...tests.secure_sql import isolated_profile_storage_root
-    from ..user_profile._orchestration import profile_create_storage_span
+    from ..user_profile import profile_create_storage_span
 
     with (
         isolated_profile_storage_root(tmp_path=tmp_path),
@@ -45,8 +45,8 @@ def _profile_facts(overrides: Mapping[str, object] | None = None):
 
 
 def _register_profile(label: str, *, overrides: Mapping[str, object] | None = None) -> None:
-    from ..user_profile._orchestration import register_active_profile
-    from ..workflow._persistence import workflow_state_repository
+    from ..user_profile import register_active_profile
+    from ..workflow import workflow_state_repository
 
     workflow_state_repository().update(
         lambda current: register_active_profile(
@@ -65,7 +65,7 @@ def _profile_exists(profile_id: str, *, bucket_id: str | None = None) -> bool:
 
 
 def _registered_profile_names() -> tuple[str, ...]:
-    from ..workflow._profile_bucket_scan import list_profile_buckets
+    from ..workflow import list_profile_buckets
 
     return tuple(sorted(pointer.label for pointer in list_profile_buckets().values()))
 
@@ -100,8 +100,7 @@ def test_reset_profile_only_clears_active_profile_record(
 ) -> None:
     """PROFILE scope removes all profile entries but leaves auth state in place."""
     from ..config_reset import ConfigResetReport, ConfigResetScope, reset_config
-    from ..workflow._models import AuthState
-    from ..workflow._persistence import workflow_state_repository
+    from ..workflow import AuthState, workflow_state_repository
 
     with _isolated_workflow(tmp_path):
         repository = workflow_state_repository()
@@ -123,8 +122,7 @@ def test_reset_auth_only_clears_session(
 ) -> None:
     """AUTH scope clears the session but leaves profile entries intact."""
     from ..config_reset import ConfigResetScope, reset_config
-    from ..workflow._models import AuthState
-    from ..workflow._persistence import workflow_state_repository
+    from ..workflow import AuthState, workflow_state_repository
 
     with _isolated_workflow(tmp_path):
         repository = workflow_state_repository()
@@ -184,8 +182,7 @@ def test_reset_all_combines_all_scopes(
 ) -> None:
     """ALL scope clears profile + auth + invokes quarantine."""
     from ..config_reset import ConfigResetScope, reset_config
-    from ..workflow._models import AuthState
-    from ..workflow._persistence import workflow_state_repository
+    from ..workflow import AuthState, workflow_state_repository
 
     with _isolated_workflow(tmp_path):
         repository = workflow_state_repository()

@@ -14,7 +14,7 @@ from collections import deque
 import pytest
 
 from ....core.setup_answers import SetupAnswers
-from ....domain.deadlines._models import LegalEntityForm
+from ....domain.deadlines import LegalEntityForm
 from .._catalogue import SETUP_FLOW
 from .._errors import WizardScriptOverflowError
 from .._models import WizardWidget

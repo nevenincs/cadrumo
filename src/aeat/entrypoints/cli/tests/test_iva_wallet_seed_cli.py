@@ -9,17 +9,17 @@ from pathlib import Path
 import pytest
 from pydantic import ValidationError
 
-from ....application.calculations._iva_compensation_history import (
+from ....application.calculations import (
     IvaCompensationHistoryRepository,
+    query_iva_wallet_balance,
     seed_iva_compensation_period,
 )
-from ....application.calculations._iva_wallet_balance import query_iva_wallet_balance
 from ....core import Period
-from ....domain.iva_compensation._carry_forward import (
+from ....domain.iva_compensation import (
     IvaCompensationCarryForwardLot,
     IvaCompensationExpiryReviewState,
+    IvaCompensationSeedConflictError,
 )
-from ....domain.iva_compensation._errors import IvaCompensationSeedConflictError
 from ....tests.cli_runner import invoke_cached_cli
 from ....tests.secure_sql import isolated_runtime_profile
 from ._iva_wallet_inspector_support import _NIF, _store_profile_with_nif, _unwrap_envelope

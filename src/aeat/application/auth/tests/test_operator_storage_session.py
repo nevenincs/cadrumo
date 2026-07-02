@@ -7,12 +7,15 @@ from pathlib import Path
 import pytest
 
 from ....adapters.persistence.storage import has_active_bucket_session
-from ....application.user_profile._orchestration import profile_create_storage_span, profile_storage_session
 from ....application.user_profile._testing import register_minimal_profile
 from ....application.wizard import WIZARD_FLOWS
-from ....application.workflow._persistence import workflow_state_repository
-from ....domain.contribuyente._keys import required_profile_keys
+from ....domain.contribuyente import required_profile_keys
 from ....tests.secure_sql import isolated_profile_storage_root
+from ...user_profile import (
+    profile_create_storage_span,
+    profile_storage_session,
+)
+from ...workflow import workflow_state_repository
 from .._operator import clear_operator_auth, configure_operator_auth
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]

@@ -218,7 +218,7 @@ def test_browser_adapter_type_error_round_trips_build_error_envelope() -> None:
     without raising — confirming the registry binding covers the full envelope pipeline.
     """
     from ......core.errors import build_error_envelope
-    from ...sede._errors import BrowserAdapterTypeError
+    from ...sede import BrowserAdapterTypeError
 
     exc = BrowserAdapterTypeError("default_browser_session_factory returned an incompatible type: <class 'object'>")
     envelope = build_error_envelope(exc)

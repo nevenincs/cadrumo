@@ -21,7 +21,7 @@ from googleapiclient.errors import HttpError
 from googleapiclient.http import HttpRequest
 from googleapiclient.model import JsonModel
 
-from .....adapters.outbound.storage._errors import (
+from ...storage import (
     OutboundStorageNetworkError,
     OutboundStorageNotFoundError,
     OutboundStoragePermissionError,

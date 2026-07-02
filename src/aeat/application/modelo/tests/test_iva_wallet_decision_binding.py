@@ -10,7 +10,7 @@ import pytest
 from ....core import Period
 from ....core.resources import resources
 from ....domain.calculations.registry import BindingId, CasillaId, validated_casilla_id
-from ....domain.iva_compensation._reconciliation import IvaCompensationReconciliationDecision
+from ....domain.iva_compensation import IvaCompensationReconciliationDecision
 from .._iva_wallet_gate import (
     ModeloIvaWalletReconciliationBlocked,
 )

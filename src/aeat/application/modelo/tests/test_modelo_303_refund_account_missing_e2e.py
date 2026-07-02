@@ -45,9 +45,11 @@ from ....core import Period, ResultDisposition
 from ....domain.buckets import BucketEventHistoryRepository
 from ....domain.calculations.registry import CasillaId, validated_casilla_id
 from ....domain.deadlines import IVARegime, ModeloIVAProfile, TaxpayerProfile
-from ....domain.modelos._calculation_repository import CalculationRevisionCatalogueRepository
-from ....domain.modelos._filing_repository import ModeloRecordCatalogueRepository
-from ....domain.modelos._repository import WorkUnitCatalogueRepository
+from ....domain.modelos import (
+    CalculationRevisionCatalogueRepository,
+    ModeloRecordCatalogueRepository,
+    WorkUnitCatalogueRepository,
+)
 from ....domain.user_profile import UserProfileFact, UserProfileRecord
 from ....tests.secure_sql import isolated_runtime_profile
 from ...calculations import CalculationObservationRepository, reconcile_modelo_303_iva_compensation

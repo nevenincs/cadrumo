@@ -46,7 +46,7 @@ from ....domain.calculations.registry import (
     resolve_bound_inputs_by_casilla_id,
     validated_casilla_id,
 )
-from ....domain.iva._schema import IvaCategory
+from ....domain.iva import IvaCategory
 from ....domain.transactions import (
     BusinessClassification,
     RawProvenance,
@@ -57,7 +57,10 @@ from ....domain.transactions import (
     TransactionDirection,
 )
 from ....tests.secure_sql import isolated_runtime_profile
-from ...aggregation._iva_ledger import IvaLedgerAggregationIssueReason, aggregate_iva_ledger_observations
+from ...aggregation import (
+    IvaLedgerAggregationIssueReason,
+    aggregate_iva_ledger_observations,
+)
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -179,7 +182,7 @@ def test_intracom_cuota_is_not_silently_dropped_from_deducible(tmp_path: Path) -
 
 def _recargo_purchase() -> Transaction:
     """A recargo-equivalencia retailer purchase: input IVA + RE surcharge, non-deductible."""
-    from ....domain.transactions._models import derive_transaction_id
+    from ....domain.transactions import derive_transaction_id
 
     raw = RawTransaction(
         provider_transaction_id="recargo-purchase-001",

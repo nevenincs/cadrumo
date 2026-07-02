@@ -22,14 +22,13 @@ from decimal import Decimal
 import pytest
 
 from .....application.storage.calc_sheets import (
+    OperatorInput,
     OperatorInputs,
     RelationValues,
     build_export_plan,
     registry_sha,
 )
-from .....application.storage.calc_sheets._records import OperatorInput
-from .....domain.calculations.registry import CasillaId, validated_casilla_id
-from .....domain.calculations.registry._schema import InputKind
+from .....domain.calculations.registry import CasillaId, InputKind, validated_casilla_id
 from .._calc_sheets_pull import (
     BindingEdit,
     MetadataMatchState,

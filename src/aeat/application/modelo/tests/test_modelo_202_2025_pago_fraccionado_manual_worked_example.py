@@ -85,13 +85,16 @@ from ....core import Period
 from ....core.resources import bundled_path, resources
 from ....domain.calculations.registry import BindingId, CasillaId, ValidatedRegistryAuthority, validated_casilla_id
 from ....domain.invoices import InvoiceCatalogueRepository
-from ....domain.modelos._calculation_repository import CalculationRevisionCatalogueRepository
-from ....domain.modelos._repository import WorkUnitCatalogueRepository
+from ....domain.modelos import CalculationRevisionCatalogueRepository, WorkUnitCatalogueRepository
 from ....domain.transactions import TransactionCatalogueRepository
 from ....domain.user_profile import UserProfileFact, UserProfileRecord
 from ....tests.secure_sql import isolated_runtime_profile
 from ...user_profile import UserProfileLifecycleRepository
-from .. import BucketAggregationCalculationResult, calculate_modelo_revision_from_bucket_aggregation_with_diagnostics, create_work_unit
+from .. import (
+    BucketAggregationCalculationResult,
+    calculate_modelo_revision_from_bucket_aggregation_with_diagnostics,
+    create_work_unit,
+)
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -257,7 +260,9 @@ def test_casilla_01_anti_tautology_delta_changes_casilla_03_proportionally(
     produce a result delta of exactly 18% x 7.500,00 = 1.350,00, matching the
     manual's own 1.800,00 - 450,00 = 1.350,00.
     """
-    primer_pago = _calculate_m202(secure_objects, period_code="1P", cuota_base_ejercicio_anterior=_BASE_PRIMER_PAGO_EXPECTED)
+    primer_pago = _calculate_m202(
+        secure_objects, period_code="1P", cuota_base_ejercicio_anterior=_BASE_PRIMER_PAGO_EXPECTED
+    )
     segundo_pago = _calculate_m202(
         secure_objects,
         period_code="2P",

@@ -27,23 +27,30 @@ pytestmark = [pytest.mark.integration, pytest.mark.hex_core]
 
 
 def test_every_shipped_skill_declares_a_valid_applies_when() -> None:
-    # ``iter_skill_metadata`` validates each skill's frontmatter through the
-    # structured predicate schema and raises on the first invalid one, so
-    # collecting the full set proves every shipped skill declares a predicate
-    # the loader accepts.
+    # ``iter_skill_metadata`` validates a predicate that is present and raises on
+    # a malformed one, but it deliberately TOLERATES a missing predicate so the
+    # tree stays loadable while the lifts land. This gate - not the loader - is
+    # the strict presence enforcer: every shipped skill must declare the field.
     metadata = list(iter_skill_metadata())
     assert metadata, "no skills shipped under _data/agent/skills"
 
-    # One validated metadata per shipped SKILL.md - no skill silently skipped.
+    # One metadata per shipped SKILL.md - no skill silently skipped.
     document_count = sum(1 for _ in iter_skill_documents())
     assert len(metadata) == document_count
+
+    missing = [entry.name for entry in metadata if entry.applies_when is None]
+    assert not missing, "skills ship without a structured applies_when predicate (lift them from prose):\n" + "\n".join(
+        missing,
+    )
 
 
 def test_every_predicate_declares_at_least_one_axis() -> None:
     # The schema forbids an empty predicate, but assert it at the corpus level so
     # a skill cannot ship an inert ``applies_when: {}`` that selects nothing.
     for entry in iter_skill_metadata():
-        applies_when: SkillAppliesWhen = entry.applies_when
+        applies_when: SkillAppliesWhen | None = entry.applies_when
+        if applies_when is None:
+            continue  # presence is enforced by the gate above
         gated = (
             bool(applies_when.profile_facts)
             or applies_when.workflow_phase is not None
@@ -57,6 +64,8 @@ def test_every_profile_fact_predicate_names_a_real_taxpayer_fact() -> None:
     valid_facts = profile_fact_names()
     offenders: list[str] = []
     for entry in iter_skill_metadata():
+        if entry.applies_when is None:
+            continue
         for predicate in entry.applies_when.profile_facts:
             if predicate.fact not in valid_facts:
                 offenders.append(f"{entry.name}: '{predicate.fact}'")

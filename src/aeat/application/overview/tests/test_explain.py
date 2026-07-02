@@ -13,12 +13,12 @@ import pytest
 from pydantic import ValidationError
 
 from ....domain.calculations.registry.applicability import ApplicabilityVerdict
-from ....domain.deadlines import TaxpayerProfile
-from ....domain.deadlines._models import (
+from ....domain.deadlines import (
     EntityType,
     IrpfEstimationRegime,
     IrpfIncomeCategory,
     IVARegime,
+    TaxpayerProfile,
 )
 from .._errors import OverviewExplainError
 from .._explain import OverviewExplain, build_overview_explain
@@ -204,7 +204,7 @@ def test_scheduling_rationale_propagates_genuine_registry_fault() -> None:
     scheduling rationale. The narrowed catch lets the genuine fault
     surface (round-4 #40)."""
 
-    from ....domain.deadlines._errors import (
+    from ....domain.deadlines import (
         NoDeadlineWindowsError,
         ScheduleComputationError,
     )
@@ -239,7 +239,7 @@ def test_scheduling_rationale_degrades_on_benign_no_windows() -> None:
     """The benign no-windows fault still degrades to ``None`` through
     the public explain builder after the catch narrowing."""
 
-    from ....domain.deadlines._errors import NoDeadlineWindowsError
+    from ....domain.deadlines import NoDeadlineWindowsError
 
     class _NoWindowsEngine:
         """Raises the benign no-windows fault on explain."""

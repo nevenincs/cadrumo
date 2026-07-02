@@ -8,9 +8,9 @@ The models separate legal obligation rows
 :class:`OverviewAeatSubmissionState` so local readiness, AEAT submission,
 and justificante verification remain auditable independent axes.
 
-These DTOs are consumed by :func:`aeat.application.overview.build_overview_calendar`
+These DTOs are consumed by :func:`application.overview.build_overview_calendar`
 and serialized by the overview CLI payload layer. Period-bearing models hydrate
-serialized :class:`~aeat.core.Period` values back into typed periods so merge
+serialized :class:`~core.Period` values back into typed periods so merge
 keys stay aligned with the registry-token authority.
 """
 
@@ -33,7 +33,7 @@ from ._coverage import ObligationCoverageReport
 
 
 def _period_from_serialized(value: object) -> object:
-    """Hydrate overview JSON period strings into :class:`~aeat.core.Period`."""
+    """Hydrate overview JSON period strings into :class:`~core.Period`."""
     if isinstance(value, str):
         return _Period.from_string(value)
     return value
@@ -112,7 +112,7 @@ def user_state_for(obligation_status: _ObligationStatus) -> OverviewPeriodState:
 class OverviewCalendarRange(BaseModel):
     """Inclusive date window for the ``overview calendar`` query.
 
-    :func:`aeat.application.overview.build_overview_calendar` expands the
+    :func:`application.overview.build_overview_calendar` expands the
     window to the covered filing years and filters legal obligation rows back to
     this inclusive range.
     """
@@ -200,7 +200,7 @@ class OverviewCalendarFilingEvidence(BaseModel):
 class OverviewCalendarEntry(BaseModel):
     """One legal ``(modelo, period)`` row in the calendar view.
 
-    The deadline fields mirror :class:`~aeat.domain.deadlines.ModeloDeadline`.
+    The deadline fields mirror :class:`~domain.deadlines.ModeloDeadline`.
     The optional :class:`OverviewCalendarFilingEvidence` row attaches local and
     AEAT evidence without changing the legal deadline status from the deadline
     engine.
@@ -281,7 +281,7 @@ class OverviewCalendarEvent(BaseModel):
     :class:`OverviewCalendarFilingEvidence` or receipt verification.
 
     ``post_filing_kind`` carries the fine-grained
-    :class:`~aeat.core.PostFilingEventKind` procedural category (requerimiento,
+    :class:`~core.PostFilingEventKind` procedural category (requerimiento,
     propuesta de liquidación, diligencia de embargo, …) classified from the
     pulled notification / expediente, so the coarse ``event_type`` axis does not
     collapse a demand for documents and an informational comunicación onto the
@@ -416,8 +416,8 @@ class OverviewCalendar(BaseModel):
 class OverviewStatusReport(BaseModel):
     """Current active-profile readiness counters for ``overview status``.
 
-    Produced from :class:`~aeat.application.state_projection.OperatorStateProjection`
-    by :func:`aeat.application.overview.overview_status_report_from_projection`.
+    Produced from :class:`~application.state_projection.OperatorStateProjection`
+    by :func:`application.overview.overview_status_report_from_projection`.
     """
 
     model_config = _STRICT_FROZEN

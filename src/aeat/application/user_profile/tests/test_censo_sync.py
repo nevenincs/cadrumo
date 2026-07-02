@@ -20,7 +20,10 @@ from ....domain.buckets import BucketEventHistoryRepository, BucketEventType
 from ....domain.user_profile import UserProfileFact, UserProfileRecord
 from ....tests.aeat_literal_fixtures import aeat_url, configured_path
 from ....tests.secure_sql import isolated_runtime_profile
-from ...live._censo import CensoSnapshotService, SnapshotLifecycleState
+from ...live import (
+    CensoSnapshotService,
+    SnapshotLifecycleState,
+)
 from ...overview import OverviewCalendarRange, build_overview_calendar
 from ...wizard import _catalogue as _wizard_catalogue
 from .. import (

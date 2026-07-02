@@ -19,12 +19,15 @@ from pathlib import Path
 
 import pytest
 
-from ....adapters.persistence.storage.bucket._layout import bucket_paths
-from ....adapters.persistence.storage.bucket._manifest_io import manifest_path, read_manifest
+from ....adapters.persistence.storage.bucket import (
+    bucket_paths,
+    manifest_path,
+    read_manifest,
+)
 from ....core.config import load_settings
 from ....domain.deadlines import IVARegime
 from ....tests.secure_sql import isolated_profile_storage_root
-from ...user_profile._orchestration import ProfileAlreadyRegisteredError
+from ...user_profile import ProfileAlreadyRegisteredError
 from .._contracts import InitializeWorkspaceCommand
 from .._service import initialize_workspace
 

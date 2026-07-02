@@ -24,7 +24,11 @@ from ....application.storage.calc_sheets import (
 from ....application.storage.calc_sheets._errors import CalcSheetsEngineError
 from ....core import Period
 from ....domain.calculations.registry import CasillaId, validated_casilla_id
-from ....domain.modelos._ledger_filing_snapshot import LedgerEvidenceRow, LedgerFilingEvidence, ManualFactBasisEntry
+from ....domain.modelos import (
+    LedgerEvidenceRow,
+    LedgerFilingEvidence,
+    ManualFactBasisEntry,
+)
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 

@@ -12,7 +12,7 @@ from decimal import Decimal
 
 import pytest
 
-from .....domain._identifiers import canonical_decimal_string as canonical_decimal
+from .....domain import canonical_decimal_string as canonical_decimal
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_inbound_adapter]
 

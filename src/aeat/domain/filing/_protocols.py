@@ -1,4 +1,4 @@
-"""Cross-module Protocols consumed by :mod:`aeat.application.filing`.
+"""Cross-module Protocols consumed by :mod:`application.filing`.
 
 Every upstream collaborator (modelo identity, casilla schemas, deadline
 engine) is represented by a :class:`typing.Protocol` so the filing
@@ -6,7 +6,7 @@ application package does not take a hard import on any sibling subpackage.
 Concrete implementations are wired at runtime by the entrypoint.
 
 These Protocols are intentionally minimal: they describe only the
-attributes :mod:`aeat.application.filing` actually consumes. They do not
+attributes :mod:`application.filing` actually consumes. They do not
 attempt to model the full surface of the upstream subpackages.
 """
 
@@ -164,7 +164,7 @@ class DeadlineChecker(Protocol):
 class ModeloProfile(Protocol):
     """The taxpayer profile a draft is built for.
 
-    Only the attributes :mod:`aeat.application.filing` actually consumes are
+    Only the attributes :mod:`application.filing` actually consumes are
     declared here; downstream callers may use richer profile
     objects as long as they expose these attributes.
     """
@@ -218,7 +218,7 @@ rather than defining a narrower divergent alias.
 class ModeloDraftRepositoryProtocol(Protocol):
     """Narrow domain-facing contract for the filing-draft repository.
 
-    :class:`aeat.domain.filing.ModeloDraftRepository` structurally conforms
+    :class:`domain.filing.ModeloDraftRepository` structurally conforms
     to this Protocol; domain service code that only needs to load or save
     drafts should depend inward on this port.
     """

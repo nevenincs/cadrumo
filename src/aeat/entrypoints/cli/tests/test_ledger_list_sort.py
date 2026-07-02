@@ -27,9 +27,9 @@ from ....domain.transactions import (
     SourceFormat,
     Transaction,
     TransactionCatalogue,
+    TransactionCatalogueRepository,
     TransactionDirection,
 )
-from ....domain.transactions._repository import TransactionCatalogueRepository
 from ....tests.secure_sql import isolated_runtime_profile
 from .._ledger_list import _sort_results, parse_ledger_list_filter_spec, project_ledger_list
 

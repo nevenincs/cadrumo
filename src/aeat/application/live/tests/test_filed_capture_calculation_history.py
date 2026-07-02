@@ -12,14 +12,14 @@ import pytest
 from ....adapters.outbound.aeat.sede import (
     FiledDeclaracionObservationStore,
 )
+from ....adapters.persistence.profile.justificante import JustificanteRepository
 from ....core import Period
 from ....domain.buckets import BucketEventHistoryRepository, BucketEventType
 from ....domain.calculations.registry import (
     RegistryModeloObservation,
     RegistryValidationError,
 )
-from ....domain.iva_compensation._carry_forward import IvaCompensationPeriodState
-from ....domain.justificante import JustificanteRepository
+from ....domain.iva_compensation import IvaCompensationPeriodState
 from ....domain.modelos import (
     ExternalEvidence,
     ExternalEvidenceKind,

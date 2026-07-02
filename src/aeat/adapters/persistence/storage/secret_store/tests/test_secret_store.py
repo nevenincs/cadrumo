@@ -206,6 +206,7 @@ class TestRetentionPolicy:
             with pytest.raises(RetentionPolicyError):
                 store.put(rec)
 
+
 class TestOverwrite:
     def test_collision_without_overwrite_raises(self, store: SecretStore) -> None:
         first = _make_record(key="aeat:test:dup", value=b"first")
@@ -285,6 +286,7 @@ class TestRotate:
         store.put(original)
         store.rotate(original.key, b"v2", expires_at=_SECRET_EXPIRES_AT)
         assert store.get(original.key).value == b"v2"
+
 
 class TestListDigests:
     def test_list_yields_one_digest_per_record(self, store: SecretStore) -> None:

@@ -9,8 +9,8 @@ from typing import Literal
 
 from pydantic import AnyHttpUrl
 
-from ....adapters.outbound.aeat.sede import IVA_COMPENSATION_WALLET_URL
-from ....adapters.outbound.aeat.sede._schema import (
+from ....adapters.outbound.aeat.sede import (
+    IVA_COMPENSATION_WALLET_URL,
     FiledDeclaracionArtefact,
     FiledDeclaracionObservation,
     IvaCompensationWalletObservation,
@@ -20,7 +20,7 @@ from ....adapters.outbound.aeat.sede._schema import (
 from ....core import Period
 from ....core.resources import resources
 from ....domain.calculations.registry import CasillaId, RegistrySnapshot, validated_casilla_id
-from ....domain.iva_compensation._carry_forward import IvaCompensationPeriodState
+from ....domain.iva_compensation import IvaCompensationPeriodState
 
 _TAXPAYER_REF = "taxpayeralpha"
 

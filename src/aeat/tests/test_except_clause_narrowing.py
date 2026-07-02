@@ -42,7 +42,7 @@ class TestSiteHealthValidatorUsesValueError:
         from pydantic import AnyHttpUrl as _AnyHttpUrl
         from pydantic import ValidationError
 
-        from ..adapters.outbound.aeat.browser._site_health import SiteHealthEvidence
+        from ..adapters.outbound.aeat.browser import SiteHealthEvidence
 
         with pytest.raises(ValidationError) as exc_info:
             SiteHealthEvidence(
@@ -63,7 +63,7 @@ class TestSiteHealthValidatorUsesValueError:
         from pydantic import AnyHttpUrl as _AnyHttpUrl
         from pydantic import ValidationError
 
-        from ..adapters.outbound.aeat.browser._site_health import SiteHealthEvidence
+        from ..adapters.outbound.aeat.browser import SiteHealthEvidence
 
         try:
             SiteHealthEvidence(
@@ -92,7 +92,7 @@ class TestWorkbookParityScanNarrowing:
     def test_corrupt_xlsx_returns_failed_report(self, tmp_path) -> None:
         """openpyxl raises BadZipFile on corrupt .xlsx — absorbed into a failed report."""
 
-        from ..domain.calculations.registry._workbook_parity import scan_workbook
+        from ..domain.calculations.registry import scan_workbook
 
         # Create a file with .xlsx extension but not a valid ZIP/OOXML
         bad_xlsx = tmp_path / "bad.xlsx"
@@ -138,7 +138,7 @@ class TestSiteHealthValidatorHappyPath:
     def test_valid_str_markers_accepted(self) -> None:
         from pydantic import AnyHttpUrl as _AnyHttpUrl
 
-        from ..adapters.outbound.aeat.browser._site_health import SiteHealthEvidence
+        from ..adapters.outbound.aeat.browser import SiteHealthEvidence
 
         ev = SiteHealthEvidence(
             url=_AnyHttpUrl(_SEDE_ROOT_URL),
@@ -253,7 +253,7 @@ class TestPersistDeadlineNarrowing:
 
     def test_os_error_is_caught_by_narrowed_handler(self) -> None:
         """OSError from a persist call must be absorbed, not propagate."""
-        from ..adapters.outbound.aeat.auth._errors import AuthError
+        from ..adapters.outbound.aeat.auth import AuthError
 
         # The narrowed handler is: except (OSError, AuthError): log.warning(...)
         # Verify both are in the tuple and that unexpected types are not
@@ -263,7 +263,7 @@ class TestPersistDeadlineNarrowing:
 
     def test_unexpected_exception_would_propagate_from_narrowed_handler(self) -> None:
         """MemoryError is not OSError or AuthError, so it must NOT be caught."""
-        from ..adapters.outbound.aeat.auth._errors import AuthError
+        from ..adapters.outbound.aeat.auth import AuthError
 
         handled = (OSError, AuthError)
         assert not issubclass(MemoryError, handled)
@@ -292,9 +292,8 @@ class TestAuthenticatorDescribeNarrowing:
 
         from pydantic import SecretStr
 
-        from ..adapters.outbound.aeat.auth._authenticator import AeatAuthenticator
+        from ..adapters.outbound.aeat.auth import AeatAuthenticator, AuthValidationError
         from ..adapters.outbound.aeat.auth._authenticator_types import CertificateHealthCheck
-        from ..adapters.outbound.aeat.auth._errors import AuthValidationError
         from ..adapters.outbound.aeat.auth.certificate import CertificateBackend
         from ..core.config import Settings
 
@@ -339,7 +338,7 @@ class TestAuthenticatorDescribeNarrowing:
 
         from pydantic import SecretStr
 
-        from ..adapters.outbound.aeat.auth._authenticator import AeatAuthenticator
+        from ..adapters.outbound.aeat.auth import AeatAuthenticator
         from ..adapters.outbound.aeat.auth._authenticator_types import CertificateHealthCheck
         from ..adapters.outbound.aeat.auth.certificate import CertificateBackend, CertificateError
         from ..core.config import Settings
@@ -386,7 +385,7 @@ class TestDiagnosticContextNarrowing:
     """_active_profile_diagnostic_context catches (ImportError, KeyError, AttributeError, UserProfileError)."""
 
     def test_narrows_correctly_to_expected_types(self) -> None:
-        from ..domain.user_profile._errors import UserProfileError
+        from ..domain.user_profile import UserProfileError
 
         handled = (ImportError, KeyError, AttributeError, UserProfileError)
         assert issubclass(ImportError, handled)
@@ -395,7 +394,7 @@ class TestDiagnosticContextNarrowing:
         assert issubclass(UserProfileError, handled)
 
     def test_memory_error_not_handled(self) -> None:
-        from ..domain.user_profile._errors import UserProfileError
+        from ..domain.user_profile import UserProfileError
 
         handled = (ImportError, KeyError, AttributeError, UserProfileError)
         assert not issubclass(MemoryError, handled)

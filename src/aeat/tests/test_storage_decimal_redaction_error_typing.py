@@ -25,9 +25,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
 def test_financial_validation_error_typing_and_registry() -> None:
     """FinancialValidationError is an AeatError, not a ValueError, and is registered."""
-    from ..adapters.inbound.financial.providers._base import (
-        FinancialValidationError,
-    )
+    from ..adapters.inbound.financial.providers import FinancialValidationError
     from ..core.errors import ERROR_REGISTRY, AeatError, get_registered_error_code
 
     assert not issubclass(FinancialValidationError, ValueError), (
@@ -50,7 +48,7 @@ def test_encrypted_column_type_guards_raise_storage_validation_error() -> None:
     The type-guard fires before key resolution so no master-key provider is needed.
     Dialect argument is irrelevant at this error path.
     """
-    from ..adapters.persistence.storage.crypto._encrypted_columns import (
+    from ..adapters.persistence.storage.crypto import (
         EncryptedBytes,
         EncryptedString,
         HashedLookup,
@@ -86,7 +84,7 @@ def test_encrypted_column_type_guards_raise_storage_validation_error() -> None:
 
 def test_decimal_format_error_typing_registry_and_raise_site() -> None:
     """DecimalFormatError is registered, not a ValueError, and raised by format_decimal."""
-    from ..core.decimal._format import format_decimal
+    from ..core.decimal import format_decimal
     from ..core.errors import ERROR_REGISTRY, DecimalFormatError, get_registered_error_code
 
     assert not issubclass(DecimalFormatError, ValueError)
@@ -133,10 +131,11 @@ def test_overview_agenda_error_raised_for_non_positive_horizon() -> None:
     """build_overview_agenda raises OverviewAgendaError for horizon_days <= 0."""
     from datetime import date
 
+    from ..application.overview import OverviewAgendaError, build_overview_agenda
+
     # Import _agenda lazily; OverviewAgendaError is raised before any
     # network or profile access so no fixture setup is needed.
-    from ..application.overview._agenda import DeadlineEngine, build_overview_agenda
-    from ..application.overview._errors import OverviewAgendaError
+    from ..application.overview._agenda import DeadlineEngine
     from ..domain.deadlines.taxpayer_model import TaxpayerProfile
 
     with pytest.raises(OverviewAgendaError):
@@ -225,9 +224,7 @@ def test_portal_validation_error_for_invalid_entry_shapes() -> None:
 def test_profile_answer_type_error_raise_sites() -> None:
     """Profile parsing helpers raise ProfileAnswerTypeError for invalid typed answers."""
     from ..core.errors import ProfileAnswerTypeError
-    from ..domain.contribuyente._ccaa import CCAA
-    from ..domain.contribuyente._descendant_facts import parse_descendiente_flag
-    from ..domain.contribuyente._marriage_facts import parse_marriage_date_flag
+    from ..domain.contribuyente import CCAA, parse_descendiente_flag, parse_marriage_date_flag
 
     cases = (
         ("descendant-discapacidad", lambda: parse_descendiente_flag("NACIMIENTO=2010-01-01,DISCAPACIDAD=50")),
@@ -249,12 +246,11 @@ def test_m232_binding_error_too_many_rows() -> None:
     """materialize_m232_related_party_rows raises RegistryValidationError for >5 rows."""
     from decimal import Decimal as _Decimal
 
-    from ..domain.calculations.registry import ModeloRevision
-    from ..domain.calculations.registry._errors import RegistryValidationError
+    from ..domain.calculations.registry import ModeloRevision, RegistryValidationError
+    from ..domain.modelos import Modelo232VinculadaRow
     from ..domain.modelos._m232_row_materialisation import (
         materialize_m232_related_party_rows,
     )
-    from ..domain.modelos._row_models import Modelo232VinculadaRow
 
     sample_row = Modelo232VinculadaRow(
         nif="12345678A",

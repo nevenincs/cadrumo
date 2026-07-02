@@ -7,7 +7,7 @@ from decimal import Decimal
 
 import pytest
 
-from .....core._casilla_id import CasillaId
+from .....core import CasillaId
 from .....core.resources import bundled_path
 from .._formula_runtime import _evaluate_expression
 from .._legal import verify_legal_catalogue

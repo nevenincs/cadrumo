@@ -94,8 +94,8 @@ def _local_live_calendar_events(
     :func:`build_overview_calendar_events` builder performs the projection
     without contacting AEAT.
     """
+    from ...adapters.persistence.profile.justificante import JustificanteRepository
     from ...application.live import ExpedientesService, JustificanteCaptureSnapshotService, NotificationsService
-    from ...domain.justificante import JustificanteRepository
 
     try:
         expedientes = ExpedientesService().list_snapshots(bucket_id=bucket_id)
@@ -140,7 +140,7 @@ def _local_modelo_record_calendar_events(
     filing records and justificante metadata.
     """
     try:
-        from ...domain.justificante import JustificanteRepository
+        from ...adapters.persistence.profile.justificante import JustificanteRepository
         from ...domain.modelos import ModeloRecordCatalogueRepository
 
         filing_records = tuple(ModeloRecordCatalogueRepository(bucket_id=bucket_id).load().values())
@@ -242,9 +242,9 @@ def _local_calendar_filing_evidence(
     """
     try:
         from ...adapters.outbound.aeat.sede import FiledDeclaracionObservationStore
+        from ...adapters.persistence.profile.justificante import JustificanteRepository
         from ...application.calculations import CalculationObservationRepository
         from ...application.live import JustificanteCaptureSnapshotService
-        from ...domain.justificante import JustificanteRepository
         from ...domain.modelos import ModeloRecordCatalogueRepository
 
         filing_records = tuple(ModeloRecordCatalogueRepository(bucket_id=bucket_id).load().values())

@@ -133,9 +133,9 @@ def _seed_profile(
     matches the operator's state after a quiet profile-create run.
     """
 
-    from ....application.user_profile._orchestration import profile_create_storage_span
+    from ....application.user_profile import profile_create_storage_span
     from ....application.user_profile._testing import register_minimal_profile
-    from ....application.workflow._persistence import workflow_state_repository
+    from ....application.workflow import workflow_state_repository
 
     repo = workflow_state_repository()
     values = {
@@ -163,8 +163,7 @@ def test_profile_create_set_deadlines_and_filing_runtime_share_profile_bucket(
     """Profile setup, config reads, deadlines, and filing runtime use one profile bucket."""
 
     from ....application.filing import load_default_filing_profile
-    from ....application.user_profile import UserProfileLifecycleRepository
-    from ....application.user_profile._orchestration import fact_value
+    from ....application.user_profile import UserProfileLifecycleRepository, fact_value
     from ....application.workflow import workflow_state_repository
 
     create_result = _invoke(_profile_create_args("--iva-regime", "GENERAL", "--tax-residence-ccaa", "madrid"))
@@ -190,8 +189,8 @@ def test_profile_create_set_deadlines_and_filing_runtime_share_profile_bucket(
     assert declare_result.exit_code == 0, declare_result.output
 
     from ....adapters.persistence.storage import activate_master_key_provider, get_master_key_provider
-    from ....application.user_profile._orchestration import set_active_field
-    from ....application.workflow._profile_bucket_scan import read_profile_bucket
+    from ....application.user_profile import set_active_field
+    from ....application.workflow import read_profile_bucket
     from ....domain.user_profile import UserProfileFact
 
     # Profile identity is an immutable UUIDv4 minted at creation; the
@@ -811,7 +810,7 @@ def test_config_profile_create_iva_regime_round_trips_to_deadline_engine(
     encrypted_user_cli: Path,
 ) -> None:
     """Profile creation normalizes lowercase ``iva.regime`` for the deadline engine."""
-    from ....application.user_profile._projections import projection_for_taxpayer
+    from ....application.user_profile import projection_for_taxpayer
     from ....application.workflow import workflow_state_repository
     from ....domain.deadlines import IVARegime
 
@@ -852,7 +851,7 @@ def test_config_profile_create_does_intracomunitario_round_trips_to_deadline_eng
     encrypted_user_cli: Path,
 ) -> None:
     """Boolean profile flags must survive creation and reach the engine."""
-    from ....application.user_profile._projections import projection_for_taxpayer
+    from ....application.user_profile import projection_for_taxpayer
     from ....application.workflow import workflow_state_repository
 
     created = _invoke(_profile_create_args("--does-intracomunitario"))

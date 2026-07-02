@@ -15,17 +15,17 @@ clave-bearing :class:`WithholdingObservation` keyed by ``(modelo, filing_year,
 period)`` plus the per-perceptor-clave identity, so the pull and calculate
 surfaces read ONE store (``one-aggregation-path-pull-equals-calculate``).
 
-Sensitivity is :class:`~aeat.adapters.persistence.storage.SensitivityClass`
+Sensitivity is :class:`~adapters.persistence.storage.SensitivityClass`
 ``FINANCIAL`` — perceptor NIFs are identity-bearing financial data, stored
 encrypted at rest through a
-:class:`~aeat.adapters.persistence.storage.SecureBoundRepository` that writes
-:class:`~aeat.adapters.persistence.storage.Envelope` records. The plaintext NIF
+:class:`~adapters.persistence.storage.SecureBoundRepository` that writes
+:class:`~adapters.persistence.storage.Envelope` records. The plaintext NIF
 lives only inside the encrypted payload; the object key carries the sha256 of
 the NIF (the iva-wallet-decision key convention), never the cleartext value
 (``sensitive-financial-data-secure-storage-only``).
 The namespace, schema version, object-key grammar, and custody disposition are
 declared by
-:data:`aeat.adapters.persistence.storage.WITHHOLDING_OBSERVATIONS_NAMESPACE`.
+:data:`adapters.persistence.storage.WITHHOLDING_OBSERVATIONS_NAMESPACE`.
 
 ADR ``2026-06-25-modelo-190-percepciones-count-adr``. Producers (the
 pull/aggregate entrypoints) write here through one shared helper; the P03
@@ -39,7 +39,7 @@ This module was renamed from ``_withholding_observations_repository.py`` per the
 project's Spanish-stem naming convention (``retencion`` already names the
 sibling Modelo 180/193 store), so this module — and the repository symbols it
 owns locally — follow the ``percepciones`` stem instead. The
-:class:`~aeat.domain.calculations.registry.WithholdingObservation` domain
+:class:`~domain.calculations.registry.WithholdingObservation` domain
 type it wraps is an unrelated, widely shared registry taxonomy type and is
 out of scope for this rename.
 """
@@ -130,15 +130,15 @@ def percepcion_observation_key(
 class PercepcionObservationRepository(SecureBoundRepository[_PercepcionObservationEnvelopePayload]):
     """Encrypted repository for per-perceptor-clave :class:`WithholdingObservation` payloads.
 
-    The :class:`~aeat.adapters.persistence.storage.SecureBoundRepository` base
+    The :class:`~adapters.persistence.storage.SecureBoundRepository` base
     wraps each payload in a
-    :class:`~aeat.adapters.persistence.storage.Envelope` under
-    :data:`aeat.adapters.persistence.storage.WITHHOLDING_OBSERVATIONS_NAMESPACE`
+    :class:`~adapters.persistence.storage.Envelope` under
+    :data:`adapters.persistence.storage.WITHHOLDING_OBSERVATIONS_NAMESPACE`
     and enforces the namespace's FINANCIAL
-    :class:`~aeat.adapters.persistence.storage.SensitivityClass`.
+    :class:`~adapters.persistence.storage.SensitivityClass`.
 
     See Also:
-        :data:`aeat.adapters.persistence.storage.WITHHOLDING_OBSERVATIONS_NAMESPACE`
+        :data:`adapters.persistence.storage.WITHHOLDING_OBSERVATIONS_NAMESPACE`
             Secure-object namespace and hashed object-key contract.
         :func:`percepcion_observation_key`
             Deterministic key builder that hashes the NIF and preserves

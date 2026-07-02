@@ -2,11 +2,11 @@
 
 Filing amendments carry corrected casilla deltas and original
 submission references. They are stored as encrypted byte objects via
-:class:`~aeat.adapters.persistence.storage.SecureObjectRepository` at
-``AUDIT`` :class:`~aeat.adapters.persistence.storage.SensitivityClass`
+:class:`~adapters.persistence.storage.SecureObjectRepository` at
+``AUDIT`` :class:`~adapters.persistence.storage.SensitivityClass`
 sensitivity; no plaintext amendment JSON or envelope file lands on disk. Each
 record is wrapped in an
-:class:`~aeat.adapters.persistence.storage.Envelope` before serialisation.
+:class:`~adapters.persistence.storage.Envelope` before serialisation.
 
 See Also:
     :class:`BaseAmendment`
@@ -15,10 +15,10 @@ See Also:
         LGT Art. 122.2 amendment variant for additional self-assessment.
     :class:`ModeloSustitutiva`
         LGT Art. 122.1 amendment variant for full replacement.
-    :data:`aeat.adapters.persistence.storage.FILING_AMENDMENTS_NAMESPACE`
+    :data:`adapters.persistence.storage.FILING_AMENDMENTS_NAMESPACE`
         Namespace, sensitivity, schema-version, object-key, and custody
         contract for amendment secure objects.
-    :func:`aeat.application.filing.build_complementaria`
+    :func:`application.filing.build_complementaria`
         Application orchestration entry point that can produce and persist an
         amendment.
 """
@@ -54,13 +54,13 @@ class ModeloAmendmentRepository:
 
     Persists :class:`ModeloComplementaria` and :class:`ModeloSustitutiva`
     payloads under
-    :data:`aeat.adapters.persistence.storage.FILING_AMENDMENTS_NAMESPACE`. The
+    :data:`adapters.persistence.storage.FILING_AMENDMENTS_NAMESPACE`. The
     repository wraps the amendment union in an
-    :class:`~aeat.adapters.persistence.storage.Envelope` before writing through
-    :class:`~aeat.adapters.persistence.storage.SecureObjectRepository`; the
+    :class:`~adapters.persistence.storage.Envelope` before writing through
+    :class:`~adapters.persistence.storage.SecureObjectRepository`; the
     amendment id is the natural key used for load, delete, and ordered
     iteration. The namespace definition supplies the ``AUDIT``
-    :class:`~aeat.adapters.persistence.storage.SensitivityClass`, schema
+    :class:`~adapters.persistence.storage.SensitivityClass`, schema
     version, object-key grammar, and custody contract.
     """
 
@@ -132,7 +132,7 @@ class ModeloAmendmentRepository:
         """Persist ``amendment`` in the encrypted database object store.
 
         The row is stored under
-        :data:`aeat.adapters.persistence.storage.FILING_AMENDMENTS_NAMESPACE`.
+        :data:`adapters.persistence.storage.FILING_AMENDMENTS_NAMESPACE`.
         """
         from ...adapters.persistence.storage import Envelope, SensitivityClass, safe_repository_id
 

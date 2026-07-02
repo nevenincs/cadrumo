@@ -15,11 +15,13 @@ from ....adapters.persistence.storage import (
 )
 from ....core import Period
 from ....core.config import Settings
-from ....domain.modelos._calculation_repository import CalculationRevisionCatalogueRepository
-from ....domain.modelos._calculation_revision import CalculationRevisionState
-from ....domain.modelos._filing_repository import ModeloRecordCatalogueRepository
-from ....domain.modelos._repository import WorkUnitCatalogueRepository
-from ....domain.modelos._verification_repository import VerificationReportCatalogueRepository
+from ....domain.modelos import (
+    CalculationRevisionCatalogueRepository,
+    CalculationRevisionState,
+    ModeloRecordCatalogueRepository,
+    VerificationReportCatalogueRepository,
+    WorkUnitCatalogueRepository,
+)
 from ...calculations import IvaWalletDecisionRepository
 from .. import (
     ModeloIvaWalletReconciliationBlocked,

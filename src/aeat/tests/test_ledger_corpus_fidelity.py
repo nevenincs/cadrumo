@@ -24,7 +24,7 @@ from typing import Any
 
 import pytest
 
-from ..adapters.inbound.financial.providers._csv import CsvProvider
+from ..adapters.inbound.financial.providers import CsvProvider
 from ..adapters.outbound.fx import EcbReferenceRateProvider
 from ..application.aggregation import aggregate_iva_ledger_observations
 from ..application.aggregation._renta_income_ledger import aggregate_renta_income_ledger

@@ -9,8 +9,7 @@ from pathlib import Path
 
 import pytest
 
-from ....application.calculations._iva_compensation_history import IvaCompensationHistoryRepository
-from ....application.calculations._iva_wallet_balance import query_iva_wallet_balance
+from ....application.calculations import IvaCompensationHistoryRepository, query_iva_wallet_balance
 from ....tests.cli_runner import invoke_cached_cli
 from ....tests.secure_sql import isolated_runtime_profile
 from ._iva_wallet_inspector_support import _state, _unwrap_envelope

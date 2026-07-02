@@ -17,16 +17,14 @@ from ....adapters.outbound.aeat.sede import (
 from ....core import BindingSourceKind, Period
 from ....core.errors import ERROR_REGISTRY, build_error_envelope
 from ....core.resources import resources
-from ....domain.iva_compensation._carry_forward import IvaCompensationPeriodState
-from ....domain.iva_compensation._errors import (
-    IvaCompensationReconciliationInputError,
-    IvaWalletReconciliationError,
-)
-from ....domain.iva_compensation._reconciliation import (
+from ....domain.iva_compensation import (
     IvaCompensationAuthoritySource,
     IvaCompensationOverride,
+    IvaCompensationPeriodState,
+    IvaCompensationReconciliationInputError,
     IvaCompensationWalletObservationProtocol,
 )
+from ....domain.iva_compensation._errors import IvaWalletReconciliationError
 from ....tests.secure_sql import isolated_runtime_profile
 from ...aggregation import CalculationSourceContext
 from .._iva_compensation_history import IvaCompensationHistoryRepository

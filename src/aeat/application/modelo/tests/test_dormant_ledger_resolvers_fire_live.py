@@ -13,8 +13,7 @@ from ....adapters.persistence.storage.sql import SecureObjectRepository
 from ....core import Period
 from ....domain.calculations.registry import CasillaId, RegistryModeloObservation
 from ....domain.invoices import InvoiceCatalogueRepository
-from ....domain.modelos._calculation_repository import CalculationRevisionCatalogueRepository
-from ....domain.modelos._repository import WorkUnitCatalogueRepository
+from ....domain.modelos import CalculationRevisionCatalogueRepository, WorkUnitCatalogueRepository
 from ....domain.transactions import (
     BusinessClassification,
     RawProvenance,
@@ -28,7 +27,7 @@ from ....domain.transactions import (
 )
 from ....tests.registry_observations import registry_grounded_observations
 from ....tests.secure_sql import isolated_runtime_profile
-from ...calculations._observations_repository import CalculationObservationRepository
+from ...calculations import CalculationObservationRepository
 from .. import (
     BucketAggregationCalculationResult,
     calculate_modelo_revision_from_bucket_aggregation_with_diagnostics,

@@ -31,9 +31,9 @@ import pytest
 from ....core import Period, RescateType
 from ....core.resources import resources
 from ....tests.secure_sql import isolated_profile_storage_root
-from ...user_profile._orchestration import profile_create_storage_span
+from ...user_profile import profile_create_storage_span
 from ...user_profile._testing import register_minimal_profile
-from ...workflow._persistence import workflow_state_repository
+from ...workflow import workflow_state_repository
 from .. import create_work_unit
 from .._calculate_input import WorkCalculateInputBundle, build_work_calculate_input_bundle
 from .._semantic_role_resolution import casilla_id_for_unique_semantic_role

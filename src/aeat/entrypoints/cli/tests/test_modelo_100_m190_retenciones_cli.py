@@ -11,7 +11,7 @@ import pytest
 
 from ....application.calculations import CalculationObservationRepository
 from ....application.modelo import APP_FILING_SOURCE_KIND
-from ....application.user_profile._repository import UserProfileLifecycleRepository
+from ....application.user_profile import UserProfileLifecycleRepository
 from ....domain.calculations.registry import RegistryModeloObservation
 from ....domain.user_profile import UserProfileFact, UserProfileRecord, UserProfileStatus
 from ....tests.cli_runner import invoke_cached_cli

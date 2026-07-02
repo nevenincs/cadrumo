@@ -22,7 +22,10 @@ import pytest
 from .....application.storage.calc_sheets import registry_sha
 from .....core.decimal import coerce_decimal as _coerce_decimal
 from .....core.i18n import tr
-from ....outbound.storage._errors import OutboundStorageConflictError, OutboundStorageValidationError
+from ...storage import (
+    OutboundStorageConflictError,
+    OutboundStorageValidationError,
+)
 from .._calc_sheets_pull import (
     MetadataMatchState,
     _classify_metadata_match,

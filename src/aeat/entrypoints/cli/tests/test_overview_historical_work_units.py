@@ -6,12 +6,15 @@ from pathlib import Path
 
 import pytest
 
-from ....application.user_profile._orchestration import profile_storage_session
-from ....core._bucket_pointer_io import resolve_active_bucket_id
-from ....core._period import Period
+from ....application.user_profile import profile_storage_session
+from ....core import Period, resolve_active_bucket_id
 from ....core.time import now
-from ....domain.modelos._repository import WorkUnitCatalogueRepository, upsert_work_unit
-from ....domain.modelos._work_unit import WorkUnit, derive_work_unit_id
+from ....domain.modelos import (
+    WorkUnit,
+    WorkUnitCatalogueRepository,
+    derive_work_unit_id,
+    upsert_work_unit,
+)
 from ._modelo_work_ux_support import _create_profile, _invoke
 from ._modelo_work_ux_support import _isolated_cli_backend as _isolated_cli_backend
 from .envelope_helpers import unwrap_schema_envelope as _payload

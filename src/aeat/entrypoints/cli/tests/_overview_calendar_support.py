@@ -15,10 +15,10 @@ from ....application.user_profile import (
     CENSO_DERIVED_SOURCE_TAG,
     CENSO_SOURCE_TAG,
     UserProfileLifecycleRepository,
+    profile_create_storage_span,
 )
-from ....application.user_profile._orchestration import profile_create_storage_span
 from ....application.user_profile._testing import register_minimal_profile
-from ....application.workflow._persistence import workflow_state_repository
+from ....application.workflow import workflow_state_repository
 from ....core import Period
 from ....domain.calculations.registry import CasillaId, validated_casilla_id
 from ....domain.justificante import Justificante

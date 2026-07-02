@@ -15,12 +15,12 @@ from ....domain.buckets import (
     BucketEventObjectType,
     BucketEventType,
 )
-from ....domain.modelos._calculation_repository import CalculationRevisionCatalogueRepository
-from ....domain.modelos._errors import ModeloError
-from ....domain.modelos._filing_repository import ModeloRecordCatalogueRepository
-from ....domain.modelos._repository import WorkUnitCatalogueRepository
-from ....domain.modelos._verification_repository import (
+from ....domain.modelos import (
+    CalculationRevisionCatalogueRepository,
+    ModeloError,
+    ModeloRecordCatalogueRepository,
     VerificationReportCatalogueRepository,
+    WorkUnitCatalogueRepository,
 )
 from ....domain.user_profile import UserProfileFact, UserProfileRecord
 from ....tests.secure_sql import isolated_runtime_profile

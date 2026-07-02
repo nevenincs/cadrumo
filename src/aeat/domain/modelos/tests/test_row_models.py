@@ -296,6 +296,7 @@ class TestRevisionIdWithDetailRows:
 
     def test_changing_one_row_importe_changes_id(self) -> None:
         """Anti-tautology: mutating one row's importe changes the revision id."""
+
         def _id(importe_1: str, importe_2: str) -> str:
             return derive_calculation_revision_id(
                 work_unit_id="d" * 64,

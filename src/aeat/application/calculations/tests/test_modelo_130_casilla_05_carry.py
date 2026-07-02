@@ -43,10 +43,8 @@ from ....core.resources import resources
 from ....domain.calculations.registry import (
     CasillaId,
     RegistryModeloObservation,
-    validated_casilla_id,
-)
-from ....domain.calculations.registry._bindings_previous_filing import (
     resolve_previous_filing_binding_values,
+    validated_casilla_id,
 )
 from ....domain.modelos import (
     CalculationRevisionCatalogueRepository,

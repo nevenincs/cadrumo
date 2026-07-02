@@ -20,8 +20,7 @@ from ...modelo import ModeloIvaWalletReconciliationBlocked
 from ...modelo._iva_wallet_gate import (
     apply_iva_compensation_decision_binding as _apply_iva_compensation_decision_binding,
 )
-from ...user_profile import UserProfileLifecycleRepository
-from ...user_profile._projections import record_to_path_values
+from ...user_profile import UserProfileLifecycleRepository, record_to_path_values
 from .. import capture_iva_compensation_wallet
 
 pytestmark = [pytest.mark.aeat_live, pytest.mark.hex_application]

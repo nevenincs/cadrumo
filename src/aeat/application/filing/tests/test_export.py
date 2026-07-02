@@ -12,22 +12,27 @@ import pytest
 from defusedxml import ElementTree as DefusedElementTree
 from pydantic import ValidationError
 
-from ....core._period import Period
+from ....core import Period
 from ....core.resources import bundled_path
 from ....domain.calculations._export_field_kind import CasillaFieldKind
-from ....domain.calculations.registry._errors import RegistryValidationError
-from ....domain.calculations.registry._export_parse import parse_export_payload, xml_dictionary_entries
-from ....domain.calculations.registry._ids import CasillaId, validated_casilla_id
-from ....domain.calculations.registry._schema_references import RegistrySnapshotRef
-from ....domain.calculations.registry._schema_surfaces import ExportLayoutDefinition
-from ....domain.filing._errors import FilingExportError, FilingExportValidationError
-from ....domain.filing._schema import (
+from ....domain.calculations.registry import (
+    CasillaId,
+    ExportLayoutDefinition,
+    RegistrySnapshotRef,
+    RegistryValidationError,
+    parse_export_payload,
+    validated_casilla_id,
+    xml_dictionary_entries,
+)
+from ....domain.filing import (
+    FilingExportError,
+    FilingExportValidationError,
     ModeloCasillaProvenance,
     ModeloDraft,
     ModeloValue,
     ModeloValueKind,
 )
-from ....domain.submission._protocols import ModeloDraftStatus
+from ....domain.submission import ModeloDraftStatus
 from .. import build_draft
 from .._export import (
     DeclaracionExportFormat,

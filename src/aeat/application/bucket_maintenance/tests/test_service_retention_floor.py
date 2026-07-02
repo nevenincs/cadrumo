@@ -23,11 +23,14 @@ import pytest
 from ....core import Period
 from ....core.resources import resources
 from ....domain.buckets import BucketEventHistoryRepository
-from ....domain.modelos._codes import ModeloCode
-from ....domain.modelos._filing_record import ModeloRecord, ModeloRecordCatalogue, derive_filing_record_id
-from ....domain.modelos._filing_repository import ModeloRecordCatalogueRepository
-from ....domain.retention import RetentionFloorAssessment, RetentionFloorError
-from ....domain.retention._floor import RetentionBlockingRecord
+from ....domain.modelos import (
+    ModeloCode,
+    ModeloRecord,
+    ModeloRecordCatalogue,
+    ModeloRecordCatalogueRepository,
+    derive_filing_record_id,
+)
+from ....domain.retention import RetentionBlockingRecord, RetentionFloorAssessment, RetentionFloorError
 from ....domain.user_profile import ProfileSchemaDefinition, UserProfileFact
 from ....tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
 from ...user_profile import RegisterProfileCommand

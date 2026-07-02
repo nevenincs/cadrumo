@@ -145,7 +145,7 @@ def test_dt12_computation_error_locale_key_interpolates_message() -> None:
     from decimal import Decimal
 
     from ....core.i18n import tr
-    from ....domain.modelos._dt12_reduccion import compute_dt12_reduccion_plan_pensiones
+    from ....domain.modelos import compute_dt12_reduccion_plan_pensiones
 
     with pytest.raises(ValueError) as exc_info:
         compute_dt12_reduccion_plan_pensiones(
@@ -174,7 +174,7 @@ def test_sal_computation_error_locale_key_interpolates_message() -> None:
     from decimal import Decimal
 
     from ....core.i18n import tr
-    from ....domain.modelos._sal_reserva_especial import compute_sal_reserva_especial_dotacion
+    from ....domain.modelos import compute_sal_reserva_especial_dotacion
 
     with pytest.raises(ValueError) as exc_info:
         compute_sal_reserva_especial_dotacion(

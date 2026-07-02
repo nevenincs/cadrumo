@@ -9,8 +9,7 @@ from pathlib import Path
 import pytest
 
 from ....core import Period
-from ....domain.modelos._calculation_revision import CalculationRevisionAmendmentKind
-from ....domain.modelos._filing_record import ExternalEvidenceKind
+from ....domain.modelos import CalculationRevisionAmendmentKind, ExternalEvidenceKind
 from .. import (
     AmendmentEvidenceMissingError,
     WorkUnitMutationRefusedError,

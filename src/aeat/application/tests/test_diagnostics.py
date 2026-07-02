@@ -207,7 +207,7 @@ def test_render_browser_connectivity_text_resolves_row_label_keys() -> None:
     After fix: each key resolves to a real translated label.
     """
 
-    from ...adapters.outbound.aeat.browser._site_health import (
+    from ...adapters.outbound.aeat.browser import (
         SiteHealthEvidence,
         SiteHealthState,
         SiteHealthStatus,
@@ -382,7 +382,7 @@ def test_repair_auth_session_predicate_agrees_with_wizard_status(tmp_path: Path)
     authenticated) and asserting the report shape across each.
     """
     from ..auth import update_auth
-    from ..user_profile._orchestration import profile_create_storage_span
+    from ..user_profile import profile_create_storage_span
     from ..user_profile._testing import register_minimal_profile
     from ..workflow import WorkflowState
 
@@ -404,7 +404,7 @@ def test_repair_auth_session_predicate_agrees_with_wizard_status(tmp_path: Path)
         provider_only = update_auth(no_provider, provider="clave_movil")
         fully_authenticated = update_auth(provider_only, authenticated=True, subject="00000000T")
 
-        from ..wizard._status import build_wizard_status
+        from ..wizard import build_wizard_status
 
         for state in (no_provider, provider_only, fully_authenticated):
             setup_report = build_wizard_status(state)
@@ -679,7 +679,7 @@ def test_profile_check_warn_row_names_every_missing_required_key() -> None:
     with the exact ``aeat config profile edit NAME`` command.
     """
 
-    from ..wizard._status import WizardStatusReport
+    from ..wizard import WizardStatusReport
 
     report = WizardStatusReport(
         active_profile="demo",
@@ -711,7 +711,7 @@ def test_profile_check_warn_row_names_every_missing_required_key() -> None:
 def test_render_config_repair_text_lists_specific_findings() -> None:
     """The renderer prints each finding line, not just the check summary."""
 
-    from ..wizard._status import WizardStatusReport
+    from ..wizard import WizardStatusReport
 
     ensure_models_rebuilt()
 

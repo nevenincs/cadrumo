@@ -11,7 +11,10 @@ from typing import Literal
 
 from pydantic import AnyHttpUrl, TypeAdapter
 
-from ....adapters.outbound.aeat.sede._schema import FiledDeclaracionArtefact, FiledDeclaracionObservation
+from ....adapters.outbound.aeat.sede import (
+    FiledDeclaracionArtefact,
+    FiledDeclaracionObservation,
+)
 from ....core import Period
 from ....core.resources import resources
 from ....domain.calculations.registry import CasillaId, RegistryModeloObservation, validated_casilla_id

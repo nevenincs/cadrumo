@@ -17,8 +17,8 @@ from pathlib import Path
 import pytest
 from click.testing import Result
 
-from ....application.live._censo import CensoSnapshotService
-from ....application.user_profile._orchestration import profile_create_storage_span
+from ....application.live import CensoSnapshotService
+from ....application.user_profile import profile_create_storage_span
 from ....core.config import Settings
 from ....tests.cli_runner import invoke_cached_cli
 from ....tests.secure_sql import isolated_profile_storage_root
@@ -46,7 +46,7 @@ def _isolated_backend(tmp_path: Path) -> Iterator[None]:
 
 def _seed_active_profile(*, without_taxpayer_axes: bool = False) -> None:
     from ....application.user_profile._testing import register_minimal_profile
-    from ....application.workflow._persistence import workflow_state_repository
+    from ....application.workflow import workflow_state_repository
 
     repo = workflow_state_repository()
     overrides = {"identity.tax_id": "12345678Z", "activities.description": "software"}
@@ -235,7 +235,7 @@ def test_apply_emits_censo_applied_bucket_event() -> None:
     catalogue before this assertion landed — the emission was
     implemented but not witnessed end-to-end."""
 
-    from ....application.workflow._persistence import workflow_state_repository
+    from ....application.workflow import workflow_state_repository
     from ....core import resolve_active_bucket_id
     from ....domain.buckets import BucketEventHistoryRepository, BucketEventType
 

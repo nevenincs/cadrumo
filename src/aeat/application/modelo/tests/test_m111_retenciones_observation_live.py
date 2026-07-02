@@ -12,13 +12,15 @@ from ....adapters.persistence.storage.sql import SecureObjectRepository
 from ....core import Period
 from ....core.resources import resources
 from ....domain.invoices import InvoiceCatalogueRepository
-from ....domain.modelos._calculation_repository import CalculationRevisionCatalogueRepository
-from ....domain.modelos._repository import WorkUnitCatalogueRepository
+from ....domain.modelos import CalculationRevisionCatalogueRepository, WorkUnitCatalogueRepository
 from ....domain.transactions import TransactionCatalogueRepository
 from ....domain.user_profile import UserProfileFact, UserProfileRecord
 from ....tests.secure_sql import isolated_runtime_profile
-from ...aggregation._retencion_observations_repository import RetencionObservationRepository
-from ...aggregation._retenciones import RetencionObservation, RetencionScheme
+from ...aggregation import (
+    RetencionObservation,
+    RetencionObservationRepository,
+    RetencionScheme,
+)
 from ...user_profile import UserProfileLifecycleRepository
 from .. import calculate_modelo_revision_from_bucket_aggregation_with_diagnostics, create_work_unit
 

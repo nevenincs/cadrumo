@@ -7,14 +7,15 @@ import pytest
 
 from ....core import Period
 from ....domain.deadlines import IrpfEstimationRegime, IVARegime, TaxpayerProfile
-from ....domain.modelos import ModeloVerificationFindingKind
-from ....domain.modelos._calculation_revision import (
+from ....domain.modelos import (
     CalculationRevision,
     CalculationRevisionState,
+    ModeloVerificationFindingKind,
+    ModeloVerificationFindingSeverity,
+    WorkUnit,
     derive_calculation_revision_id,
+    derive_work_unit_id,
 )
-from ....domain.modelos._verification_report import ModeloVerificationFindingSeverity
-from ....domain.modelos._work_unit import WorkUnit, derive_work_unit_id
 from .._objective_estimation_advisory import _objective_estimation_exclusion_advisory_findings
 from .._verification_actions import _collect_revision_verification_findings
 

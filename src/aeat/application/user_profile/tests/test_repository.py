@@ -18,7 +18,7 @@ from ....adapters.persistence.storage import (
     SensitivityClass,
     StorageValidationError,
 )
-from ....adapters.persistence.storage.bucket._errors import BucketValidationError
+from ....adapters.persistence.storage.bucket import BucketValidationError
 from ....adapters.persistence.storage.errors import ClassificationError, EnvelopeVersionError
 from ....adapters.persistence.storage.sql import SecureObjectRepository
 from ....core.config import override_settings

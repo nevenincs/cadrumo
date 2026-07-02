@@ -10,6 +10,7 @@ from pathlib import Path
 import pytest
 from pydantic import AnyHttpUrl, TypeAdapter
 
+from ....adapters.persistence.profile.justificante import JustificanteRepository
 from ....core import Period
 from ....core.resources import resources
 from ....domain.buckets import BucketEventHistoryRepository
@@ -19,7 +20,7 @@ from ....domain.calculations.registry import (
     validated_casilla_id,
 )
 from ....domain.deadlines import IVARegime, TaxpayerProfile
-from ....domain.justificante import Justificante, JustificanteRepository
+from ....domain.justificante import Justificante
 from ....domain.modelos import (
     CalculationRevision,
     CalculationRevisionCatalogueRepository,

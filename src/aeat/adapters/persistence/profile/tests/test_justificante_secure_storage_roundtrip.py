@@ -21,11 +21,11 @@ from pathlib import Path
 import pytest
 from pydantic import AnyHttpUrl
 
-from ....core import Period
-from ....tests.aeat_literal_fixtures import justificante_wlpl_cotejo_url
-from ....tests.secure_sql import isolated_runtime_profile
-from .._repository import JustificanteRepository
-from .._schema import Justificante
+from .....core import Period
+from .....domain.justificante import Justificante
+from .....tests.aeat_literal_fixtures import justificante_wlpl_cotejo_url
+from .....tests.secure_sql import isolated_runtime_profile
+from ..justificante import JustificanteRepository
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

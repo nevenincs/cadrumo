@@ -257,7 +257,7 @@ def _natural_key_resolvers() -> dict[str, NaturalKeyResolver]:
 
     # --- Justificante metadata (SecureBoundRepository) -----------------------
     def _justificante_metadata_repo() -> object:
-        from ...domain.justificante import JustificanteRepository
+        from ...adapters.persistence.profile.justificante import JustificanteRepository
 
         return JustificanteRepository()
 

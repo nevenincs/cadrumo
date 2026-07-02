@@ -42,6 +42,7 @@ from collections.abc import Mapping
 from datetime import datetime
 from decimal import Decimal
 
+from ...adapters.persistence.profile.justificante import JustificanteRepository
 from ...core import Period
 from ...core.time import now as _utc_now
 from ...domain.buckets import (
@@ -51,7 +52,7 @@ from ...domain.buckets import (
     BucketEventType,
 )
 from ...domain.calculations.registry import BindingId, CasillaId, RelationId
-from ...domain.justificante import Justificante, JustificanteRepository
+from ...domain.justificante import Justificante
 from ...domain.modelos import (
     CalculationRevision,
     CalculationRevisionCatalogueRepository,

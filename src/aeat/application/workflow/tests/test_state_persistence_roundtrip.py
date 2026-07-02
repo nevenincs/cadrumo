@@ -14,8 +14,11 @@ import pytest
 
 from ....core import Period
 from ....tests.secure_sql import isolated_runtime_profile
-from ...auth._models import AuthState
-from ...review._models import InvoiceReviewRecord, LedgerReviewRecord
+from ...auth import AuthState
+from ...review import (
+    InvoiceReviewRecord,
+    LedgerReviewRecord,
+)
 from .._models import (
     DeclaracionPointer,
     WorkflowEvent,

@@ -10,21 +10,27 @@ from pathlib import Path
 import pytest
 
 from ....adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
-from ....core._period import Period
-from ....domain.buckets._event_repository import BucketEventHistoryRepository
-from ....domain.modelos._calculation_repository import CalculationRevisionCatalogueRepository
-from ....domain.modelos._calculation_revision import CalculationRevision
-from ....domain.modelos._repository import WorkUnitCatalogueRepository
-from ....domain.modelos._verification_report import ModeloVerificationFinding, ModeloVerificationFindingKind
-from ....domain.modelos._verification_repository import VerificationReportCatalogueRepository
-from ....domain.transactions._enums import (
+from ....core import Period
+from ....domain.buckets import BucketEventHistoryRepository
+from ....domain.modelos import (
+    CalculationRevision,
+    CalculationRevisionCatalogueRepository,
+    ModeloVerificationFinding,
+    ModeloVerificationFindingKind,
+    VerificationReportCatalogueRepository,
+    WorkUnitCatalogueRepository,
+)
+from ....domain.transactions import (
     BusinessClassification,
+    RawProvenance,
+    RawTransaction,
+    SourceFormat,
+    Transaction,
+    TransactionCatalogue,
+    TransactionCatalogueRepository,
     TransactionDirection,
     TransactionLifecycleState,
 )
-from ....domain.transactions._models import Transaction, TransactionCatalogue
-from ....domain.transactions._raw_transaction import RawProvenance, RawTransaction, SourceFormat
-from ....domain.transactions._repository import TransactionCatalogueRepository
 from ....tests.secure_sql import isolated_runtime_profile
 from ...user_profile import UserProfileLifecycleRepository
 from .._art109_activity_income import (

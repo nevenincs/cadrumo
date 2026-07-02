@@ -12,7 +12,7 @@ from __future__ import annotations
 import pytest
 
 from ......core.errors import ERROR_REGISTRY, build_error_envelope
-from ...bucket._manifest import ManifestKdfParams
+from ...bucket import ManifestKdfParams
 from ...errors import KeyDerivationError
 from .._kdf import derive_kek
 

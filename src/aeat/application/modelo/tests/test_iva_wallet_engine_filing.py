@@ -10,9 +10,7 @@ import pytest
 from pydantic import SecretStr
 
 from ....core.config import AuthProviderKindSetting, Settings
-from ....domain.modelos._calculation_revision import CalculationRevisionState
-from ....domain.modelos._filing_record import ModeloRecordStatus
-from ....domain.modelos._filing_repository import ModeloRecordCatalogueRepository
+from ....domain.modelos import CalculationRevisionState, ModeloRecordCatalogueRepository, ModeloRecordStatus
 from ...calculations import (
     CalculationObservationRepository,
     IvaCompensationHistoryRepository,

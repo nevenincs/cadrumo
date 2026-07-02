@@ -512,7 +512,8 @@ def register_capture_justificante_metadata(
     Returns the persisted :class:`Justificante`, or ``None`` when the captured
     snapshot cannot be parsed into one.
     """
-    from ...domain.justificante import JustificanteParseError, JustificanteRepository
+    from ...adapters.persistence.profile.justificante import JustificanteRepository
+    from ...domain.justificante import JustificanteParseError
 
     if snapshot.state is not SnapshotLifecycleState.ACTIVE:
         raise LiveApplicationInputError(
@@ -608,6 +609,7 @@ def register_capture_as_filing_evidence(
             captured ``(modelo, filing_year, period)`` — the operator must file
             the period before attaching live-capture evidence to it.
     """
+    from ...adapters.persistence.profile.justificante import JustificanteRepository
     from ...core.time import now
     from ...domain.buckets import (
         BucketEvent,
@@ -617,7 +619,6 @@ def register_capture_as_filing_evidence(
         append_bucket_event,
         derive_bucket_event_id,
     )
-    from ...domain.justificante import JustificanteRepository
     from ...domain.modelos import (
         ExternalEvidence,
         ExternalEvidenceKind,

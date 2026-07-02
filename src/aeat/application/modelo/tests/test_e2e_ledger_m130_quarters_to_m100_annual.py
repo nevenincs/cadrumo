@@ -66,11 +66,13 @@ from ....domain.calculations.registry import (
 from ....domain.categories import SpendingCategory
 from ....domain.deadlines import EntityType, IrpfEstimationRegime, IrpfIncomeCategory, IVARegime, TaxpayerProfile
 from ....domain.invoices import InvoiceCatalogue, InvoiceCatalogueRepository
-from ....domain.modelos._calculation_repository import CalculationRevisionCatalogueRepository
-from ....domain.modelos._calculation_revision import CalculationRevision
-from ....domain.modelos._filing_record import ExternalEvidenceKind
-from ....domain.modelos._filing_repository import ModeloRecordCatalogueRepository
-from ....domain.modelos._repository import WorkUnitCatalogueRepository
+from ....domain.modelos import (
+    CalculationRevision,
+    CalculationRevisionCatalogueRepository,
+    ExternalEvidenceKind,
+    ModeloRecordCatalogueRepository,
+    WorkUnitCatalogueRepository,
+)
 from ....domain.transactions import (
     BusinessClassification,
     RawProvenance,
@@ -86,7 +88,7 @@ from ....domain.usage_ratios import UsageRatioProfile
 from ....domain.user_profile import UserProfileFact, UserProfileRecord
 from ....tests.registry_observations import registry_grounded_observations
 from ....tests.secure_sql import isolated_runtime_profile
-from ...calculations._observations_repository import CalculationObservationRepository
+from ...calculations import CalculationObservationRepository
 from ...user_profile import UserProfileLifecycleRepository
 from .. import (
     ModeloAggregationBindingError,

@@ -31,11 +31,11 @@ from .....adapters.persistence.storage.attachment import AttachmentStore
 from .....domain.attachments import (
     AttachmentKind,
     AttachmentSource,
+    AttachmentValidationError,
     add_attachment_bytes,
 )
-from .....domain.attachments._errors import AttachmentValidationError
 from .....tests.secure_sql import isolated_runtime_profile
-from ....outbound.storage._errors import OutboundStoragePermissionError
+from ...storage import OutboundStoragePermissionError
 from .._document_link_resolver import resolve_document_link
 from ._drive_media_server import drive_media_endpoint
 
@@ -100,14 +100,14 @@ def test_blob_mutation_after_store_surfaces_on_reverify(tmp_path: Path) -> None:
     """
     from sqlalchemy import select
 
-    from .....adapters.persistence.storage.crypto._encrypted_columns import (
+    from .....adapters.persistence.storage.sql.engine import get_engine
+    from .....adapters.persistence.storage.sql.session import session_scope
+    from ....persistence.storage.crypto import (
         decrypt_secure_object_payload,
         encrypt_secure_object_payload,
         secure_object_payload_aad,
     )
-    from .....adapters.persistence.storage.sql._orm import SecureObjectRow
-    from .....adapters.persistence.storage.sql.engine import get_engine
-    from .....adapters.persistence.storage.sql.session import session_scope
+    from ....persistence.storage.sql import SecureObjectRow
 
     payload = b"%PDF-1.4 anti-tautology blob mutation proof payload"
     with isolated_runtime_profile(tmp_path=tmp_path) as profile:

@@ -29,8 +29,7 @@ import pytest
 from pydantic import BaseModel
 
 from ....core.i18n import Translatable as tr
-from ...workflow._errors import WorkflowInputMismatchError
-from ...workflow._models import WorkflowState
+from ...workflow import WorkflowInputMismatchError, WorkflowState
 from .._models import WizardChoice, WizardFlow, WizardQuestion, WizardSection, WizardWidget
 from .._persistence import _canonicalise, _parse_canonical, _resolve_canonical, persist_patch
 

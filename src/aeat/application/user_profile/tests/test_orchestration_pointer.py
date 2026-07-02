@@ -21,7 +21,7 @@ import pytest
 from ....core import pointer_path, read_pointer
 from ....core.config import load_settings
 from ....tests.secure_sql import isolated_profile_storage_root
-from ...workflow._models import WorkflowState
+from ...workflow import WorkflowState
 from .._orchestration import (
     profile_create_storage_span,
     profile_storage_session,

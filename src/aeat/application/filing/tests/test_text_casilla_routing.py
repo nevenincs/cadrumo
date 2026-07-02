@@ -6,9 +6,12 @@ from decimal import Decimal
 
 import pytest
 
-from ....core._casilla_id import CasillaId, validated_casilla_id
-from ....core._period import Period
-from ....domain.filing._schema import ModeloValueKind
+from ....core import (
+    CasillaId,
+    Period,
+    validated_casilla_id,
+)
+from ....domain.filing import ModeloValueKind
 from .. import build_draft
 from ..runtime import ModeloOperatorProfile, build_runtime_schema_provider
 

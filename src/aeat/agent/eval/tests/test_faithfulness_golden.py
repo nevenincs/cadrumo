@@ -38,8 +38,7 @@ from pathlib import Path
 
 import pytest
 
-from ....application.user_profile._orchestration import profile_storage_session
-from ....application.user_profile._repository import UserProfileLifecycleRepository
+from ....application.user_profile import UserProfileLifecycleRepository, profile_storage_session
 from ....core import resolve_active_bucket_id
 from ....domain.transactions import (
     BusinessClassification,
@@ -54,7 +53,7 @@ from ....domain.transactions import (
 from ....domain.user_profile import UserProfileFact, UserProfileRecord, UserProfileStatus
 from ....entrypoints.cli import command_schema_refs
 from ....entrypoints.cli.tests.envelope_helpers import unwrap_schema_envelope
-from ....entrypoints.mcp._faithfulness import faithfulness_check
+from ....entrypoints.mcp import faithfulness_check
 from ....tests.cli_runner import invoke_cached_cli
 from ....tests.secure_sql import TestRuntimeProfile, isolated_cli_runtime_profile
 from .. import NarrationFaithfulness, load_scenario, run_golden_scenario

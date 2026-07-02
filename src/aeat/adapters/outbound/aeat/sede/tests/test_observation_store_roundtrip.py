@@ -142,12 +142,12 @@ def test_filed_declaration_observation_dropped_artefacts_surfaces_at_load(
 
     from sqlalchemy import select
 
-    from .....persistence.storage.crypto._encrypted_columns import (
+    from .....persistence.storage.crypto import (
         decrypt_secure_object_payload,
         encrypt_secure_object_payload,
         secure_object_payload_aad,
     )
-    from .....persistence.storage.sql._orm import SecureObjectRow
+    from .....persistence.storage.sql import SecureObjectRow
     from .....persistence.storage.sql.session import session_scope
     from .._observation_store import _OBSERVATION_NAMESPACE
 

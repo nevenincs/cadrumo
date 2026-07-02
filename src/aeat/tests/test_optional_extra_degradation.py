@@ -96,9 +96,7 @@ def test_playwright_error_aliases_import_as_plain_fallbacks_without_the_extra() 
 
 def test_anthropic_boundary_refuses_instructively_without_the_extra() -> None:
     """Building the Anthropic adapter without the extra raises LLMConfigError, not ModuleNotFoundError."""
-    from ..adapters.outbound.llm._client import LLMClient
-    from ..adapters.outbound.llm._errors import LLMConfigError
-    from ..adapters.outbound.llm._models import LLMProvider
+    from ..adapters.outbound.llm import LLMClient, LLMConfigError, LLMProvider
     from ..core.config import load_settings
 
     client = LLMClient(settings=load_settings())
@@ -110,7 +108,7 @@ def test_anthropic_boundary_refuses_instructively_without_the_extra() -> None:
 @pytest.mark.asyncio
 async def test_browser_boundary_refuses_instructively_without_the_extra() -> None:
     """Starting the Playwright runtime without the extra raises BrowserError with the install hint."""
-    from ..adapters.outbound.aeat.browser._errors import BrowserError
+    from ..adapters.outbound.aeat.browser import BrowserError
 
     with _block_imports("playwright", "playwright_stealth"):
         from ..adapters.outbound.aeat.browser import _factory

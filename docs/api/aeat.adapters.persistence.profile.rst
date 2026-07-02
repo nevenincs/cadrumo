@@ -17,5 +17,6 @@ Submodules
    aeat.adapters.persistence.profile.bienes_inversion
    aeat.adapters.persistence.profile.fincas
    aeat.adapters.persistence.profile.inventory
+   aeat.adapters.persistence.profile.justificante
    aeat.adapters.persistence.profile.submission
    aeat.adapters.persistence.profile.usage_ratios

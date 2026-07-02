@@ -3,7 +3,7 @@
 This module groups typed :class:`RetencionObservation` rows into stable
 per-perceptor rollups and totals for Modelos 111, 115, 123, 180, 190, and 193.
 Observations must carry canonical source kinds from
-:class:`~aeat.core.aggregation.BindingSourceKind`; bare ``invoice`` provenance
+:class:`~core.BindingSourceKind`; bare ``invoice`` provenance
 is rejected in favour of ``payable_invoice`` or ``collectible_invoice``.
 
 The live calculation mesh uses these primitives through

@@ -21,7 +21,10 @@ from ......domain.submission import (
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 
 if TYPE_CHECKING:
-    from ......domain.submission._preflight import AuthProviderProbe, DeadlineWindowChecker
+    from ......domain.submission import (
+        AuthProviderProbe,
+        DeadlineWindowChecker,
+    )
 
 
 class _Draft(BaseModel):

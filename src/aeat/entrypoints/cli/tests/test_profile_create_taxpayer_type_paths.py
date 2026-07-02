@@ -45,7 +45,7 @@ def _isolated_backend(tmp_path: Path) -> Iterator[None]:
 
 
 def _registered_profile_exists(name: str) -> bool:
-    from ....application.workflow._profile_bucket_scan import read_profile_bucket
+    from ....application.workflow import read_profile_bucket
 
     return read_profile_bucket(name) is not None
 

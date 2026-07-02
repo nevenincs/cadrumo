@@ -25,8 +25,12 @@ import pytest
 
 from ....core import Period
 from ....core.resources import resources
-from ....domain.modelos._codes import ModeloCode
-from ....domain.modelos._work_unit import WorkUnit, WorkUnitState, derive_work_unit_id
+from ....domain.modelos import (
+    ModeloCode,
+    WorkUnit,
+    WorkUnitState,
+    derive_work_unit_id,
+)
 from ....domain.transactions import (
     BusinessClassification,
     RawProvenance,
