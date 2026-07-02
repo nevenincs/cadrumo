@@ -5,14 +5,12 @@ Every declared payload is an
 :func:`register_schema` for the ledger rule
 command JSON-contract surface carried by
 :class:`SchemaEnvelope` through
-:func:`~aeat.entrypoints.cli._common._emit_envelope`. These schemas are the
-CLI projection of the secure, profile-local rule engine: persisted
-:class:`LedgerClassificationRule` records are listed
-and added through :mod:`~aeat.entrypoints.cli._ledger_rules_cli`, while
-:func:`~aeat.application.ledger.apply_classification_rules` owns live mutation
-semantics. The parent :mod:`~aeat.entrypoints.cli._ledger_payloads` module
-re-exports these split schemas so existing ledger command emitters keep one
-payload import surface.
+:func:`_emit_envelope`. These schemas are the CLI projection of the secure,
+profile-local rule engine: persisted :class:`LedgerClassificationRule` records
+are listed and added through :mod:`_ledger_rules_cli`, while
+:func:`apply_classification_rules` owns live mutation semantics. The parent
+:mod:`_ledger_payloads` module re-exports these split schemas so existing ledger
+command emitters keep one payload import surface.
 """
 
 from __future__ import annotations
@@ -59,8 +57,8 @@ class RuleListResult(OutputSchema):
     """JSON envelope for ``aeat app ledger rule list``.
 
     Rows are returned in the application evaluation order exposed by
-    :meth:`~aeat.application.ledger.LedgerClassificationRuleRepository.list_rules`:
-    priority ascending, then creation time ascending for ties.
+    :meth:`LedgerClassificationRuleRepository.list_rules`: priority ascending,
+    then creation time ascending for ties.
     """
 
     rules: list[ClassificationRulePayload]
@@ -72,9 +70,9 @@ class RuleApplyMatchPayload(OutputSchema):
     The row reports the first rule that would classify the transaction if the
     operator re-ran without ``--dry-run``. It previews the same priority-ordered
     :class:`LedgerClassificationRule` match selection
-    as :func:`~aeat.application.ledger.apply_classification_rules`, but remains
-    evidence only: no transaction state or bucket event is written for these
-    :class:`RuleApplyResult` rows.
+    as :func:`apply_classification_rules`, but remains evidence only: no
+    transaction state or bucket event is written for these :class:`RuleApplyResult`
+    rows.
     """
 
     transaction_id: str
@@ -134,9 +132,8 @@ class LLMProviderAvailabilityPayload(OutputSchema):
     :class:`LedgerProvidersResult`
     and mirrors
     :class:`LLMProviderAvailability` from
-    :func:`~aeat.application.ledger.available_llm_providers`.  The probe uses
-    PATH lookup only; it does not spawn the provider CLI or send transaction
-    data to a cloud service.
+    :func:`available_llm_providers`. The probe uses PATH lookup only; it does
+    not spawn the provider CLI or send transaction data to a cloud service.
     """
 
     provider: str
@@ -167,11 +164,10 @@ class LedgerProvidersResult(OutputSchema):
     """JSON envelope for ``aeat app ledger providers``.
 
     Reports subprocess cloud-provider CLIs from
-    :func:`~aeat.application.ledger.available_llm_providers` and the on-host
-    Ollama vision model probed by
-    :func:`~aeat.application.provisioning.probe_ollama_vision`, so the operator
-    sees every classification backend - cloud and local - in one place before
-    running LLM-assisted classification.
+    :func:`available_llm_providers` and the on-host Ollama vision model probed
+    by :func:`probe_ollama_vision`, so the operator sees every classification
+    backend - cloud and local - in one place before running LLM-assisted
+    classification.
     """
 
     providers: list[LLMProviderAvailabilityPayload]
@@ -225,8 +221,8 @@ class LedgerLlmDiagnosticsResult(OutputSchema):
     classification-confidence distribution over LLM-classified ledger
     transactions (:class:`LlmConfidenceProviderMetrics`),
     both sourced from
-    :func:`~aeat.application.ledger.build_llm_diagnostics_report`. It reports
-    only accounting metadata, never response text or financial content.
+    :func:`build_llm_diagnostics_report`. It reports only accounting metadata,
+    never response text or financial content.
     """
 
     since: str | None = None
