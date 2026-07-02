@@ -49,6 +49,7 @@ def _calculate(
             "renta-2024-profile-guarderia-gastos-reales": Decimal("0"),
             "renta-2024-profile-cotizaciones-ss-madre": Decimal("0"),
             "renta-2024-profile-descendientes-menores-3": Decimal("0"),
+            "renta-2024-profile-minimo-descendientes-estatal": Decimal("0"),
             "renta-2024-profile-declaration-type": Decimal("1"),
             "renta-2024-profile-family-minor-children-in-unit": Decimal("0"),
             "renta-2024-profile-marriage-full-year": Decimal("0"),
