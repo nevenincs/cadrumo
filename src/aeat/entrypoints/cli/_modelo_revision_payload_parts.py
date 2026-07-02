@@ -2,15 +2,15 @@
 
 The rows in this module are nested JSON-envelope fragments reused by modelo
 work-revision result schemas. They project
-:class:`~aeat.domain.calculations.registry.CasillaObservation` rows emitted by
-:class:`~aeat.domain.calculations.registry.RegistryCalculationResult` and
+:class:`CasillaObservation` rows emitted by
+:class:`RegistryCalculationResult` and
 :class:`~aeat.application.modelo.ResultSummaryRow` headline-result rows into
-strict :class:`~aeat.entrypoints.cli._schemas.OutputSchema` fragments.
+strict :class:`OutputSchema` fragments.
 They are not registered command results on their own; registered
 :class:`~aeat.entrypoints.cli._modelo_work_revision_payloads.WorkRevisionResult`,
 :class:`~aeat.entrypoints.cli._modelo_work_revision_payloads.WorkObservationsResult`,
 and :class:`~aeat.entrypoints.cli._modelo_payloads.WorkCalculateResult` models
-carry them into :class:`~aeat.entrypoints.cli._schemas.SchemaEnvelope` through
+carry them into :class:`SchemaEnvelope` through
 :func:`~aeat.entrypoints.cli._common._emit_envelope`.
 """
 
@@ -38,12 +38,12 @@ class DetailRowPayload(OutputSchema):
 class ObservationPayload(OutputSchema):
     """One JSON-safe casilla observation with registry provenance.
 
-    Mirrors :class:`~aeat.domain.calculations.registry.CasillaObservation` after
+    Mirrors :class:`CasillaObservation` after
     :func:`~aeat.entrypoints.cli._modelo_rendering.calculation_revision_payload`
     converts Decimal values to strings. Formula observations carry
-    :class:`~aeat.domain.calculations.registry.FormulaId`, operand lineage,
-    :class:`~aeat.domain.calculations.registry.LegalRefId`, and
-    :class:`~aeat.domain.calculations.registry.SourceRefId`; non-formula
+    :obj:`FormulaId`, operand lineage,
+    :obj:`LegalRefId`, and
+    :obj:`SourceRefId`; non-formula
     observations still require legal and source refs so the CLI cannot emit an
     ungrounded casilla row.
     """
@@ -52,7 +52,7 @@ class ObservationPayload(OutputSchema):
     value: str  # serialised Decimal
     formula_id: FormulaId | None = None
     # Top-level formula operator label (``subtract``, ``add``, ``percent`` …)
-    # carried from :class:`~aeat.domain.calculations.registry.CasillaObservation`
+    # carried from :class:`CasillaObservation`
     # so the operand trace can be rendered inline as ``op(refs) = op(values) =
     # value`` at the draft-review surface. ``None`` for input / bound casillas.
     op: str | None = None
