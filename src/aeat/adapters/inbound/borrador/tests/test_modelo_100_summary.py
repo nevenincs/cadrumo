@@ -16,7 +16,7 @@ from .....domain.calculations.registry import (
     validated_casilla_id,
 )
 from ...pdf._utils import source_pdf_reference_path
-from .. import ArtefactKind, BorradorObservation, BorradorParseError, BorradorParseMode, parse_borrador
+from .. import ArtefactKind, BorradorParseError, BorradorParseMode, InboundBorradorObservation, parse_borrador
 
 pytestmark = [
     pytest.mark.unit,
@@ -184,7 +184,7 @@ class TestObservedValues:
 
     def test_extracts_observed_casilla_rows(self, tmp_path: Path) -> None:
         pdf = _generate_pdf(tmp_path)
-        filing: BorradorObservation = parse_borrador(pdf)
+        filing: InboundBorradorObservation = parse_borrador(pdf)
         assert filing.modelo == "100"
         assert filing.ejercicio == "2025"
         assert filing.tax_id == "00000000T"

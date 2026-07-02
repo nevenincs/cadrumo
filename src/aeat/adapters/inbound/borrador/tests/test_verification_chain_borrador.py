@@ -8,7 +8,7 @@ values are derived directly from the registry engine.  This makes the
 end-to-end chain verifiable:
 
     parse_borrador(borrador_pdf)
-        → BorradorObservation.values (ExtractedCasilla)
+        → InboundBorradorObservation.values (ExtractedCasilla)
         → inputs = {0505: extracted_0505}
         → calculate_registry_snapshot(snapshot, inputs, binding_values, ...)
         → engine_result.values[closure_casilla_id]
@@ -178,7 +178,7 @@ def test_verification_chain_m100_borrador_engine_recomputes_cuota_integra(year: 
     general autonómica).
 
     Chain:
-      1. parse_borrador(corpus_pdf) → BorradorObservation with 5 casillas.
+      1. parse_borrador(corpus_pdf) → InboundBorradorObservation with 5 casillas.
       2. Supply 0505 (base liquidable general) as engine leaf input.
       3. calculate_registry_snapshot with CCAA=cataluna binding.
       4. Assert engine.values["0545"] == extracted["0545"]  (cuota íntegra estatal).
