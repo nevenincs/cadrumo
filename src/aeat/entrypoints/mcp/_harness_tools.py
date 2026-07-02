@@ -18,8 +18,8 @@ surface onto the MCP SDK's ``Tool`` type so the module still imports (and the
 server still refuses gracefully) when the ``aeat[agent]`` extra is absent.
 
 The operating-layer text is read through the ``aeat.agent`` package facade
-(:func:`~aeat.agent.operator_rules_text` and
-:func:`~aeat.agent.iter_personas`), never a private submodule, per the
+(:func:`~agent.operator_rules_text` and
+:func:`~agent.iter_personas`), never a private submodule, per the
 ``service-imports-via-top-level-reexports`` discipline.
 """
 
