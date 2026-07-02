@@ -28,12 +28,12 @@ class FilingWindowState(StrEnum):
 
 
 def registry_period_token(period: Period) -> tuple[int, str]:
-    """Resolve a :class:`~aeat.core.Period` to ``(filing_year, registry_period)``."""
+    """Resolve a :class:`~core.Period` to ``(filing_year, registry_period)``."""
     return period.year, period.registry_token
 
 
 def registry_filing_year(period: Period) -> int:
-    """Return the filing year from a typed :class:`~aeat.core.Period`."""
+    """Return the filing year from a typed :class:`~core.Period`."""
     return period.year
 
 
