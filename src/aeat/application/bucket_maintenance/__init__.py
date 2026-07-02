@@ -1,40 +1,40 @@
 """Application-layer bucket-maintenance lifecycle facade.
 
-This package exposes :class:`~aeat.application.bucket_maintenance.BucketMaintenanceService`
+This package exposes :class:`BucketMaintenanceService`
 and its Pydantic command/result contracts for profile-scoped storage
 maintenance. The service composes the existing single-writer primitives
 that own bucket lifecycle operations: label rename, soft tombstone plus
 hard removal, sealed portable-bundle export/import, and namespace-level
 browse. It contributes bucket-maintenance audit events through
-:class:`~aeat.domain.buckets.BucketEventHistoryRepository` while the
+:class:`domain.buckets.BucketEventHistoryRepository` while the
 inner profile primitives keep emitting their lifecycle events.
 
 Authority: ``2026-06-03-cli-workflow-redesign-adr`` (composition
 pattern). The service does not re-implement a cross-store write; it
 delegates to the existing top-level user-profile re-exports:
-:func:`~aeat.application.user_profile.rename_profile`,
-:func:`~aeat.application.user_profile.delete_profile_with_lifecycle_span`,
-:func:`~aeat.application.user_profile.remove_profile_bucket_directory`,
-:func:`~aeat.application.user_profile.serialize_profile_bundle`, and
-:func:`~aeat.application.user_profile.deserialize_profile_bundle`.
+:func:`application.user_profile.rename_profile`,
+:func:`application.user_profile.delete_profile_with_lifecycle_span`,
+:func:`application.user_profile.remove_profile_bucket_directory`,
+:func:`application.user_profile.serialize_profile_bundle`, and
+:func:`application.user_profile.deserialize_profile_bundle`.
 
 Export/import composition is deliberately typed at the facade boundary:
 commands such as
-:class:`~aeat.application.bucket_maintenance.ExportBucketCommand` and
-:class:`~aeat.application.bucket_maintenance.ImportBucketCommand` produce
+:class:`ExportBucketCommand` and
+:class:`ImportBucketCommand` produce
 sealed archives with
-:class:`~aeat.adapters.persistence.storage.bucket.ExportArchiveHeader`,
+:class:`adapters.persistence.storage.bucket.ExportArchiveHeader`,
 payloads based on
-:class:`~aeat.domain.user_profile.UserProfilePortableExport`, and a
+:class:`domain.user_profile.UserProfilePortableExport`, and a
 manifest digest from
-:func:`~aeat.application.bucket_maintenance.compute_manifest_digest`.
+:func:`compute_manifest_digest`.
 Sealed exports use
-:class:`~aeat.adapters.persistence.storage.StorageCustodyProfile.FULL`:
+:class:`adapters.persistence.storage.StorageCustodyProfile.FULL`:
 the portable payload carries the typed profile/work/ledger/calculation/filing
 categories plus the registry-derived carried secure-object namespaces. Carried
 rows are addressed by their natural object keys, not the stored HMAC lookup
 digests, so import re-saves them through the recipient bucket's
-:class:`~aeat.adapters.persistence.storage.SecureObjectRepository` and
+:class:`adapters.persistence.storage.SecureObjectRepository` and
 re-encrypts under that bucket's DEK.
 This package exposes the lifecycle composition verbs ``browse``,
 ``delete``, ``export``, ``import``, ``inspect``, and ``rename``. The
@@ -43,14 +43,14 @@ through domain repositories instead of decrypting secure-object storage
 directly.
 
 See Also:
-    :mod:`aeat.application.user_profile`
+    :mod:`application.user_profile`
         Lifecycle and portable-bundle single-writer primitives composed by this
         facade.
-    :mod:`aeat.domain.buckets`
+    :mod:`domain.buckets`
         Bucket-event records and
-        :class:`~aeat.domain.buckets.BucketEventHistoryRepository` used for the
+        :class:`domain.buckets.BucketEventHistoryRepository` used for the
         maintenance audit trail.
-    :mod:`aeat.adapters.persistence.storage.bucket`
+    :mod:`adapters.persistence.storage.bucket`
         Bucket manifest, sealed-archive header, and archive reader/writer
         contracts used by export and import.
     :class:`BucketMaintenanceService`
