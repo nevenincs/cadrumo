@@ -50,11 +50,9 @@ _UNKNOWN_TOKENS: tuple[str | None, ...] = (
 )
 
 
-def test_parse_bool_recognized_tokens() -> None:
+def test_parse_bool_recognized_and_unknown_tokens() -> None:
     for raw, expected in _RECOGNIZED_TOKENS:
         assert _parse_bool(raw) is expected
 
-
-def test_parse_bool_unknown_tokens_return_none() -> None:
     for raw in _UNKNOWN_TOKENS:
         assert _parse_bool(raw) is None
