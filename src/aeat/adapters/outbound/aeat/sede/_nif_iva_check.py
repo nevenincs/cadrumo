@@ -134,7 +134,7 @@ _SUBMIT_SELECTORS: tuple[str, ...] = (
 )
 
 
-class NifIvaCheckObservation(_SedeCheckerModel):
+class SedeNifIvaCheckObservation(_SedeCheckerModel):
     """One observation emitted per declared NIF after live navigation.
 
     ``verdict`` is the AEAT/VIES-rendered validity for that NIF:
@@ -155,7 +155,7 @@ class NifIvaCheckResult(_SedeCheckerModel):
     queried (caller-side guard: ``expected`` was empty before the driver ran).
     """
 
-    observations: tuple[NifIvaCheckObservation, ...] = ()
+    observations: tuple[SedeNifIvaCheckObservation, ...] = ()
 
 
 class NifIvaCheckSedeDriver:
@@ -418,10 +418,10 @@ async def collect_nif_iva_check_observations(
 
         await _open_nif_iva_form(page, timeout_ms=timeout_ms)
 
-        observations: list[NifIvaCheckObservation] = []
+        observations: list[SedeNifIvaCheckObservation] = []
         for nif in nifs:
             verdict = await _check_single_nif(page, nif=nif, timeout_ms=timeout_ms)
-            observations.append(NifIvaCheckObservation(nif=nif, verdict=verdict, raw_evidence_locator=page.url))
+            observations.append(SedeNifIvaCheckObservation(nif=nif, verdict=verdict, raw_evidence_locator=page.url))
 
         return NifIvaCheckResult(observations=tuple(observations))
     except (BrowserAdapterTypeError, SedeError, SiteHealthError, BrowserError):
@@ -626,9 +626,9 @@ def _split_vies_nif(nif: str) -> tuple[str, str]:
 
 __all__ = [
     "DEFAULT_NIF_IVA_TIMEOUT_MS",
-    "NifIvaCheckObservation",
     "NifIvaCheckResult",
     "NifIvaCheckSedeDriver",
+    "SedeNifIvaCheckObservation",
     "collect_nif_iva_check_observations",
     "extract_verdict_from_response_text",
     "is_aeat_auth_gate_redirect",
