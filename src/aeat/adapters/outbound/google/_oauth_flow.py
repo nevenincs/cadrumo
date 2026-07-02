@@ -1,6 +1,6 @@
 """Google OAuth Desktop login flow for per-profile Google sessions.
 
-Runs an operator-supplied :class:`~aeat.adapters.outbound.google.OAuthClient`
+Runs an operator-supplied :class:`adapters.outbound.google.OAuthClient`
 through Google's loopback IP + PKCE Desktop flow using
 ``google_auth_oauthlib.flow.InstalledAppFlow.run_local_server(port=0)``.
 The operating system picks an ephemeral loopback port and opens the
@@ -9,19 +9,19 @@ consent screen in the operator's default browser.
 Two policy gates fire before any network IO happens:
 
 1. The caller must pass a profile identity resolved by
-   :func:`~aeat.adapters.outbound.google.resolve_active_profile`.
-2. When :class:`~aeat.core.config.SecretStoreBackend` is configured as
+   :func:`adapters.outbound.google.resolve_active_profile`.
+2. When :class:`core.config.SecretStoreBackend` is configured as
    ``UNSECURED`` and that profile carries a real Spanish NIF / NIE / CIF,
-   :func:`~aeat.adapters.outbound.google._oauth_flow.check_unsecured_mode_safety`
+   :func:`adapters.outbound.google._oauth_flow.check_unsecured_mode_safety`
    refuses with
-   :exc:`~aeat.adapters.outbound.google.GoogleAuthUnsecuredModeRefusedError`.
+   :exc:`adapters.outbound.google.GoogleAuthUnsecuredModeRefusedError`.
 
 See Also:
-    :func:`~aeat.adapters.outbound.google.run_login_flow` executes the login
-    path, :func:`~aeat.adapters.outbound.google._oauth_flow.credentials_to_records`
-    produces :class:`~aeat.adapters.outbound.google.OAuthToken` and
-    :class:`~aeat.adapters.outbound.google.OAuthMetadata`, and
-    :data:`~aeat.adapters.outbound.google.REQUIRED_SCOPES` defines the consent
+    :func:`adapters.outbound.google.run_login_flow` executes the login
+    path, :func:`adapters.outbound.google._oauth_flow.credentials_to_records`
+    produces :class:`adapters.outbound.google.OAuthToken` and
+    :class:`adapters.outbound.google.OAuthMetadata`, and
+    :data:`adapters.outbound.google.REQUIRED_SCOPES` defines the consent
     surface the Google account must grant.
 """
 
@@ -63,10 +63,10 @@ def require_interactive_terminal() -> None:
     or another agent) ``stdin`` is not a TTY, no operator can complete the
     flow, and the receiver would block forever. This guard eliminates that
     silent-hang failure mode before
-    :func:`~aeat.adapters.outbound.google.run_login_flow` calls the local server.
+    :func:`adapters.outbound.google.run_login_flow` calls the local server.
 
     Raises:
-        :exc:`~aeat.adapters.outbound.google.GoogleAuthNonInteractiveError`:
+        :exc:`adapters.outbound.google.GoogleAuthNonInteractiveError`:
             When ``sys.stdin`` is not attached to a terminal. The exception
             carries the interactive-terminal prerequisite as a suggestion.
     """
@@ -86,20 +86,20 @@ def check_unsecured_mode_safety(profile: str, tax_id: str) -> None:
 
     The guard mirrors the storage substrate's NIF-canary rule: real taxpayer
     identifiers must not enter OAuth token setup while
-    :class:`~aeat.core.config.SecretStoreBackend` is running in unsecured mode.
+    :class:`core.config.SecretStoreBackend` is running in unsecured mode.
 
     Args:
         profile: Active profile UUID resolved by
-            :func:`~aeat.adapters.outbound.google.resolve_active_profile`.
+            :func:`adapters.outbound.google.resolve_active_profile`.
         tax_id: The active profile's ``identity.tax_id`` value. Empty string
             when the profile has no stored tax identifier.
 
     Raises:
-        :exc:`~aeat.adapters.outbound.google.GoogleAuthUnsecuredModeRefusedError`:
+        :exc:`adapters.outbound.google.GoogleAuthUnsecuredModeRefusedError`:
             When
             ``aeat_secret_store_backend=unsecured`` and ``tax_id`` parses as a
             real Spanish tax identifier per
-            :func:`~aeat.adapters.persistence.storage.master_key.looks_like_real_tax_id`.
+            :func:`adapters.persistence.storage.master_key.looks_like_real_tax_id`.
     """
     settings = load_settings()
     if settings.aeat_secret_store_backend is not SecretStoreBackend.UNSECURED:
@@ -118,18 +118,18 @@ def resolve_active_tax_id(profile_id: str) -> str:
     """Return the ``identity.tax_id`` value for the profile UUID.
 
     ``profile_id`` is the immutable profile identity returned by
-    :func:`~aeat.adapters.outbound.google.resolve_active_profile`.
+    :func:`adapters.outbound.google.resolve_active_profile`.
     The resolver loads the profile bucket pointer through
-    :func:`~aeat.application.workflow.read_profile_bucket_by_id`, opens the
+    :func:`application.workflow.read_profile_bucket_by_id`, opens the
     canonical user-profile lifecycle service, and reads the tax-id fact used by
-    :func:`~aeat.adapters.outbound.google._oauth_flow.check_unsecured_mode_safety`.
+    :func:`adapters.outbound.google._oauth_flow.check_unsecured_mode_safety`.
 
     Returns:
         The stored ``identity.tax_id`` value, or an empty string when the
         profile record has no tax identifier.
 
     Raises:
-        :exc:`~aeat.adapters.outbound.google.GoogleAuthProfileUnboundError`:
+        :exc:`adapters.outbound.google.GoogleAuthProfileUnboundError`:
             When the profile bucket manifest or canonical profile record cannot
             be resolved.
     """
@@ -168,32 +168,32 @@ def credentials_to_records(
     """Map OAuth credential fields into persisted Google session records.
 
     The consent screen must grant every scope in
-    :data:`~aeat.adapters.outbound.google.REQUIRED_SCOPES`. The returned
-    :class:`~aeat.adapters.outbound.google.OAuthToken` carries the refresh
+    :data:`adapters.outbound.google.REQUIRED_SCOPES`. The returned
+    :class:`adapters.outbound.google.OAuthToken` carries the refresh
     credential and the returned
-    :class:`~aeat.adapters.outbound.google.OAuthMetadata` carries the linked
+    :class:`adapters.outbound.google.OAuthMetadata` carries the linked
     Google account, granted scope tuple, and issuance timestamps used by the
     session store.
 
     Args:
         refresh_token: The refresh token returned by the consent screen.
         token_uri: The token endpoint URL mirrored from
-            :class:`~aeat.adapters.outbound.google.OAuthClient`.
+            :class:`adapters.outbound.google.OAuthClient`.
         account_email: The Google account that completed the consent.
         granted_scopes: Scopes the consent screen actually granted.
         issued_at: Timestamp the credential was first issued.
 
     Returns:
-        A 2-tuple of (:class:`~aeat.adapters.outbound.google.OAuthToken`,
-        :class:`~aeat.adapters.outbound.google.OAuthMetadata`) ready for
-        :class:`~aeat.adapters.persistence.storage.SecureObjectRepository`
-        persistence through :mod:`aeat.adapters.outbound.google._session_store`.
+        A 2-tuple of (:class:`adapters.outbound.google.OAuthToken`,
+        :class:`adapters.outbound.google.OAuthMetadata`) ready for
+        :class:`adapters.persistence.storage.SecureObjectRepository`
+        persistence through :mod:`adapters.outbound.google._session_store`.
         Both records validate strict pydantic invariants; metadata refuses
         granted-scope tuples missing any
-        :data:`~aeat.adapters.outbound.google.REQUIRED_SCOPES` member.
+        :data:`adapters.outbound.google.REQUIRED_SCOPES` member.
 
     Raises:
-        :exc:`~aeat.adapters.outbound.google.GoogleAuthScopeInsufficientError`:
+        :exc:`adapters.outbound.google.GoogleAuthScopeInsufficientError`:
             When ``granted_scopes`` omits any required scope. Re-raised
             separately from the pydantic ``ValidationError`` so the CLI can
             surface a concrete remediation hint.
@@ -222,27 +222,27 @@ def run_login_flow(client: OAuthClient, profile: str) -> tuple[OAuthToken, OAuth
     Always runs the real
     ``google_auth_oauthlib.flow.InstalledAppFlow.run_local_server(port=0)``
     against ``accounts.google.com``. The flow checks profile state with
-    :func:`~aeat.adapters.outbound.google._oauth_flow.resolve_active_tax_id`,
+    :func:`adapters.outbound.google._oauth_flow.resolve_active_tax_id`,
     applies
-    :func:`~aeat.adapters.outbound.google._oauth_flow.check_unsecured_mode_safety`,
+    :func:`adapters.outbound.google._oauth_flow.check_unsecured_mode_safety`,
     requires
-    :func:`~aeat.adapters.outbound.google._oauth_flow.require_interactive_terminal`,
+    :func:`adapters.outbound.google._oauth_flow.require_interactive_terminal`,
     then maps the resulting credential fields through
-    :func:`~aeat.adapters.outbound.google._oauth_flow.credentials_to_records`.
+    :func:`adapters.outbound.google._oauth_flow.credentials_to_records`.
 
     Args:
         client: Operator-imported
-            :class:`~aeat.adapters.outbound.google.OAuthClient` metadata.
+            :class:`adapters.outbound.google.OAuthClient` metadata.
         profile: Active profile UUID resolved by
-            :func:`~aeat.adapters.outbound.google.resolve_active_profile`.
+            :func:`adapters.outbound.google.resolve_active_profile`.
 
     Returns:
-        A 2-tuple of (:class:`~aeat.adapters.outbound.google.OAuthToken`,
-        :class:`~aeat.adapters.outbound.google.OAuthMetadata`) ready for
+        A 2-tuple of (:class:`adapters.outbound.google.OAuthToken`,
+        :class:`adapters.outbound.google.OAuthMetadata`) ready for
         persistence.
 
     Raises:
-        :exc:`~aeat.adapters.outbound.google.GoogleAuthError`: Any
+        :exc:`adapters.outbound.google.GoogleAuthError`: Any
             typed OAuth refusal with concrete remediation context.
     """
     check_unsecured_mode_safety(profile, resolve_active_tax_id(profile))
@@ -267,7 +267,7 @@ def _run_local_server(client: OAuthClient) -> tuple[str, str, str, tuple[str, ..
 
     Imports ``google_auth_oauthlib`` lazily so the failure mode of a
     missing transitive dependency surfaces as a typed
-    :exc:`~aeat.adapters.outbound.google.GoogleAuthNetworkError` rather than
+    :exc:`adapters.outbound.google.GoogleAuthNetworkError` rather than
     an opaque ``ImportError``.
     """
     try:
@@ -351,7 +351,7 @@ def _decode_email_from_id_token(credentials: object, *, audience: str) -> str:
 
     Verification requires the audience (our OAuth client_id) to match
     the token's ``aud`` claim.
-    :data:`~aeat.adapters.outbound.google.REQUIRED_SCOPES` must include the
+    :data:`adapters.outbound.google.REQUIRED_SCOPES` must include the
     ``openid`` + ``userinfo.email`` pair for Google to include the ``email``
     claim in the ID token.
 
@@ -363,10 +363,10 @@ def _decode_email_from_id_token(credentials: object, *, audience: str) -> str:
         The verified email address extracted from the ID token payload.
 
     Raises:
-        :exc:`~aeat.adapters.outbound.google.GoogleAuthScopeInsufficientError`:
+        :exc:`adapters.outbound.google.GoogleAuthScopeInsufficientError`:
             When the credential carries no ``id_token`` or the verified payload
             has no ``email`` claim.
-        :exc:`~aeat.adapters.outbound.google.GoogleAuthNetworkError`: When
+        :exc:`adapters.outbound.google.GoogleAuthNetworkError`: When
             ``google.oauth2.id_token`` is not importable or the verification
             HTTP fetch fails.
     """
