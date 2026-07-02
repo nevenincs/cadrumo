@@ -83,6 +83,15 @@ class TemporalTrigger(enum.StrEnum):
     ACTIVITY_END = "activity_end"
 
 
+class MatchMode(enum.StrEnum):
+    """How the ``profile_facts`` conjuncts combine into one profile predicate."""
+
+    ALL = "all"
+    """Every ``profile_facts`` predicate must hold (logical AND)."""
+    ANY = "any"
+    """At least one ``profile_facts`` predicate must hold (logical OR)."""
+
+
 class _FactKind(enum.Enum):
     """The structural shape of a :class:`TaxpayerProfile` fact for match validation."""
 
@@ -128,11 +137,24 @@ def _classify_fact(annotation: object) -> tuple[_FactKind, frozenset[str] | None
 def _build_fact_registry() -> tuple[dict[str, _FactKind], dict[str, frozenset[str]]]:
     kinds: dict[str, _FactKind] = {}
     enum_values: dict[str, frozenset[str]] = {}
-    for name, field in TaxpayerProfile.model_fields.items():
-        kind, values = _classify_fact(field.annotation)
-        kinds[name] = kind
-        if values is not None:
-            enum_values[name] = values
+
+    def register(prefix: str, model: type[BaseModel]) -> None:
+        for name, field in model.model_fields.items():
+            resolved = _strip_optional(field.annotation)
+            full = f"{prefix}{name}"
+            # Descend exactly one level into a nested profile sub-model
+            # (``iva`` -> ``ModeloIVAProfile``, ``enrollment`` -> ``ModeloEnrollment``)
+            # so a predicate can name ``iva.oss_enrolled`` and the sub-field is
+            # still validated against the live model rather than a literal list.
+            if not prefix and isinstance(resolved, type) and issubclass(resolved, BaseModel):
+                register(f"{full}.", resolved)
+                continue
+            kind, values = _classify_fact(field.annotation)
+            kinds[full] = kind
+            if values is not None:
+                enum_values[full] = values
+
+    register("", TaxpayerProfile)
     return kinds, enum_values
 
 
@@ -210,12 +232,15 @@ class SkillAppliesWhen(BaseModel):
     model_config = ConfigDict(extra="forbid", frozen=True)
 
     profile_facts: tuple[ProfileFactPredicate, ...] = ()
+    profile_match: MatchMode = MatchMode.ALL
     workflow_phase: WorkflowPhase | None = None
     temporal_trigger: TemporalTrigger | None = None
     always: bool = False
 
     @model_validator(mode="after")
     def _validate_axes(self) -> SkillAppliesWhen:
+        if self.profile_match is MatchMode.ANY and not self.profile_facts:
+            raise ValueError("profile_match 'any' requires at least one profile_facts predicate")
         gated = bool(self.profile_facts) or self.workflow_phase is not None or self.temporal_trigger is not None
         if self.always:
             if gated:
@@ -265,6 +290,7 @@ def parse_skill_metadata(text: str) -> SkillMetadata:
 
 
 __all__ = [
+    "MatchMode",
     "ProfileFactMatch",
     "ProfileFactPredicate",
     "SkillAppliesWhen",
