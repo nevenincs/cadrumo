@@ -1,15 +1,15 @@
 """Encrypted persistence for past-filing casilla observations.
 
-Stores :class:`~aeat.domain.calculations.registry.RegistryModeloObservation`
+Stores :class:`~domain.calculations.registry.RegistryModeloObservation`
 records — ``(modelo, filing_year, period, casilla_values)`` — as encrypted audit
 envelopes in the
-:class:`~aeat.adapters.persistence.storage.SecureObjectRepository`.
+:class:`~adapters.persistence.storage.SecureObjectRepository`.
 Past-filing value rows are bound to
-:data:`~aeat.adapters.persistence.storage.CALCULATION_OBSERVATIONS_NAMESPACE`;
+:data:`~adapters.persistence.storage.CALCULATION_OBSERVATIONS_NAMESPACE`;
 IVA wallet decisions are split between the latest-state
-:data:`~aeat.adapters.persistence.storage.IVA_WALLET_RECONCILIATION_DECISIONS_NAMESPACE`
+:data:`~adapters.persistence.storage.IVA_WALLET_RECONCILIATION_DECISIONS_NAMESPACE`
 and immutable
-:data:`~aeat.adapters.persistence.storage.IVA_WALLET_RECONCILIATION_DECISION_EVENTS_NAMESPACE`
+:data:`~adapters.persistence.storage.IVA_WALLET_RECONCILIATION_DECISION_EVENTS_NAMESPACE`
 namespaces.
 The records are the substrate read by
 :class:`~._multi_year.PreviousFilingSourceResolver` and
@@ -23,10 +23,10 @@ will write here when an operator successfully files via the app,
 and the live-AEAT capture path will write here when justificantes
 are parsed. This module exposes only the typed read/write surface.
 
-Sensitivity is :class:`~aeat.adapters.persistence.storage.SensitivityClass`
+Sensitivity is :class:`~adapters.persistence.storage.SensitivityClass`
 ``AUDIT`` — these records reconstruct exactly what was filed and so are
 identity-bearing tax substrate. They are stored encrypted at rest through an
-:class:`~aeat.adapters.persistence.storage.Envelope`-wrapped repository.
+:class:`~adapters.persistence.storage.Envelope`-wrapped repository.
 
 The store is value-centric. Clean-state proof still has to join these rows with
 filing records, verification reports, and justificante evidence through
@@ -152,9 +152,9 @@ def observation_key_for_token(modelo: str, filing_year: int, period_token: str) 
 def observation_key(modelo: str, period: Period) -> str:
     """Stable repository key for a ``(modelo, Period)`` pair.
 
-    Validated through :func:`~aeat.adapters.persistence.storage.safe_repository_id`
+    Validated through :func:`~adapters.persistence.storage.safe_repository_id`
     so each component is constrained to the
-    :class:`~aeat.adapters.persistence.storage.SecureObjectRepository`
+    :class:`~adapters.persistence.storage.SecureObjectRepository`
     id contract before composition.
     """
     filing_period = _require_observation_period(period)
@@ -287,10 +287,10 @@ class CalculationObservationRepository(SecureBoundRepository[_ObservationEnvelop
     and justificante repositories.
 
     The repository binds each
-    :class:`~aeat.adapters.persistence.storage.Envelope` payload to
-    :data:`~aeat.adapters.persistence.storage.CALCULATION_OBSERVATIONS_NAMESPACE`
+    :class:`~adapters.persistence.storage.Envelope` payload to
+    :data:`~adapters.persistence.storage.CALCULATION_OBSERVATIONS_NAMESPACE`
     through
-    :class:`~aeat.adapters.persistence.storage.SecureBoundRepository`.
+    :class:`~adapters.persistence.storage.SecureBoundRepository`.
     """
 
     namespace: ClassVar[str] = CALCULATION_OBSERVATIONS_NAMESPACE.namespace
@@ -345,7 +345,7 @@ class CalculationObservationRepository(SecureBoundRepository[_ObservationEnvelop
 
         ``stamped_revision_id`` is the registry revision id the source filing
         resolved to at capture time. Producers that hold a
-        :class:`~aeat.domain.calculations.registry.RegistrySnapshot` MUST pass
+        :class:`~domain.calculations.registry.RegistrySnapshot` MUST pass
         ``snapshot.revision.id`` here. If omitted, the repository resolves the
         law-determined revision from the observation's ``(modelo, filing_year,
         period)`` before persisting.
@@ -391,12 +391,12 @@ class IvaWalletDecisionRepository(SecureBoundRepository[IvaWalletDecisionEnvelop
     :class:`~._iva_wallet_reconciliation.IvaWalletDecisionSourceResolver`.
 
     Latest-state rows use
-    :data:`~aeat.adapters.persistence.storage.IVA_WALLET_RECONCILIATION_DECISIONS_NAMESPACE`;
+    :data:`~adapters.persistence.storage.IVA_WALLET_RECONCILIATION_DECISIONS_NAMESPACE`;
     immutable audit events use
-    :data:`~aeat.adapters.persistence.storage.IVA_WALLET_RECONCILIATION_DECISION_EVENTS_NAMESPACE`.
+    :data:`~adapters.persistence.storage.IVA_WALLET_RECONCILIATION_DECISION_EVENTS_NAMESPACE`.
     Both store :class:`IvaCompensationReconciliationDecision` payloads in
-    :class:`~aeat.adapters.persistence.storage.Envelope` records through
-    :class:`~aeat.adapters.persistence.storage.SecureBoundRepository`.
+    :class:`~adapters.persistence.storage.Envelope` records through
+    :class:`~adapters.persistence.storage.SecureBoundRepository`.
     """
 
     namespace: ClassVar[str] = IVA_WALLET_RECONCILIATION_DECISIONS_NAMESPACE.namespace
