@@ -82,7 +82,7 @@ def _resolve_id(transaction_repository: _TransactionRepo, prefix: str) -> str:
     """Resolve a CLI-supplied id or unambiguous prefix to a live transaction id.
 
     The single shared CLI-boundary wrapper over the canonical
-    :func:`aeat.application.ledger.resolve_transaction_id`. Used by the *mutation*
+    :func:`resolve_transaction_id`. Used by the *mutation*
     verbs (update, classify, allocate, link, attach, doclink, archive, stash,
     restore, remove, split, merge). It matches only ids of rows still in the
     catalogue, because a mutation always targets a live row. Read verbs use the
