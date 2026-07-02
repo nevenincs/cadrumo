@@ -4,7 +4,7 @@ tags:
   - '#import-centralization'
 date: '2026-07-02'
 modified: '2026-07-02'
-step_id: 'S309'
+step_id: 'S337'
 related:
   - "[[2026-07-01-import-centralization-plan]]"
 ---
@@ -18,7 +18,7 @@ related:
      refreshed by mutating CLI verbs and vault check fix; never hand-edit.
 
      step_id is the originating Step's canonical identifier, e.g. S01.
-     The S309 and 2026-07-01-import-centralization-plan placeholders are machine-filled by
+     The S337 and 2026-07-01-import-centralization-plan placeholders are machine-filled by
      `vaultspec-core vault add exec`; do not fill them by hand.
 
      Related: use wiki-links as '[[yyyy-mm-dd-foo-bar-plan]]' and link the
@@ -36,27 +36,27 @@ related:
 <!-- STEP RECORD:
      This file represents one Step from the originating plan. Identified
      by its canonical leaf identifier (S##) and ancestor display path.
-     The Rewire the 6 test-only cross-package private import site(s) across 6 test file(s) reaching into `aeat.domain` onto its promoted top-level facade and ## Scope
+     The Rewire the 2 test-only cross-package private import site(s) across 1 test file(s) reaching into `aeat.application.overview` onto its promoted top-level facade and ## Scope
 
-- `src/aeat/domain (test consumers)` placeholders below are machine-filled
+- `src/aeat/application/overview (test consumers)` placeholders below are machine-filled
      by `vaultspec-core vault add exec` from the originating Step row;
      do not fill them by hand. -->
 
-# Rewire the 6 test-only cross-package private import site(s) across 6 test file(s) reaching into `aeat.domain` onto its promoted top-level facade
+# Rewire the 2 test-only cross-package private import site(s) across 1 test file(s) reaching into `aeat.application.overview` onto its promoted top-level facade
 
 ## Scope
 
-- `src/aeat/domain (test consumers)`
+- `src/aeat/application/overview (test consumers)`
 
 ## Description
 
-- Run `dev/import_centralization_codemod.py --apply --tests-only` (extended in this Wave with `--include-tests` / `--tests-only` flags reusing the Wave W02 mixed-import, `TYPE_CHECKING`, relative-import, and alias-handling logic) restricted to test modules reaching into `aeat.domain`.
+- Run `dev/import_centralization_codemod.py --apply --tests-only` (extended in this Wave with `--include-tests` / `--tests-only` flags reusing the Wave W02 mixed-import, `TYPE_CHECKING`, relative-import, and alias-handling logic) restricted to test modules reaching into `aeat.application.overview`.
 - Format and lint every touched test file with `ruff check --fix` and `ruff format`.
 - Isolate hunks entangled with concurrent peer working-tree edits via a HEAD-anchored `git apply --cached` drive rather than overwriting peer content.
 
 ## Outcome
 
-Rewrote all 6 originally-scanned test-only sites across 6 file(s) onto `aeat.domain`'s promoted top-level facade; `dev/import_hygiene_scan.py` now reports zero test-only cross-package private imports reaching `aeat.domain`. `pytest --collect-only -q` stayed clean immediately after landing.
+Rewrote the resolvable subset of the 2 originally-scanned sites across 1 file(s) onto `aeat.application.overview`'s promoted top-level facade. A residual 1 site(s) remain because they import symbols not yet promoted to the package's `__all__` facade (a Wave W01 facade-promotion precondition, out of this Step's mechanical-rewrite scope). `pytest --collect-only -q` stayed clean immediately after landing.
 
 ## Notes
 
