@@ -107,19 +107,15 @@ class TestInvoiceCatalogueRoundTrip:
     def test_exists_is_false_when_nothing_persisted(self) -> None:
         assert InvoiceCatalogueRepository().exists() is False
 
-    @pytest.mark.parametrize(
-        "invoice_numbers",
-        [("INV-001",), ("INV-001", "INV-002", "INV-003")],
-        ids=("single", "multiple"),
-    )
-    def test_invoice_round_trip_preserves_model_order_and_values(self, invoice_numbers: tuple[str, ...]) -> None:
-        invoices = [_invoice(invoice_number=invoice_number) for invoice_number in invoice_numbers]
-        original = InvoiceCatalogue.from_invoices(invoices)
-        InvoiceCatalogueRepository().save(original)
+    def test_invoice_round_trip_preserves_model_order_and_values(self) -> None:
+        for invoice_numbers in (("INV-001",), ("INV-001", "INV-002", "INV-003")):
+            invoices = [_invoice(invoice_number=invoice_number) for invoice_number in invoice_numbers]
+            original = InvoiceCatalogue.from_invoices(invoices)
+            InvoiceCatalogueRepository().save(original)
 
-        reloaded = InvoiceCatalogueRepository().load()
-        assert reloaded == original
-        assert tuple(reloaded.values()) == tuple(original.values())
+            reloaded = InvoiceCatalogueRepository().load()
+            assert reloaded == original
+            assert tuple(reloaded.values()) == tuple(original.values())
 
     def test_resave_overwrites_atomically(self) -> None:
         first = InvoiceCatalogue.from_invoices([_invoice("INV-A")])
@@ -140,15 +136,11 @@ class TestTransactionCatalogueRoundTrip:
         catalogue = TransactionCatalogueRepository(bucket_id=_BUCKET_ID).load()
         assert len(catalogue) == 0
 
-    @pytest.mark.parametrize(
-        "provider_ids",
-        [("row-1",), ("row-0", "row-1", "row-2")],
-        ids=("single", "multiple"),
-    )
-    def test_transaction_round_trip_preserves_model(self, provider_ids: tuple[str, ...]) -> None:
-        transactions = [_transaction(provider_id=provider_id) for provider_id in provider_ids]
-        original = TransactionCatalogue.from_transactions(transactions)
-        TransactionCatalogueRepository(bucket_id=_BUCKET_ID).save(original)
+    def test_transaction_round_trip_preserves_model(self) -> None:
+        for provider_ids in (("row-1",), ("row-0", "row-1", "row-2")):
+            transactions = [_transaction(provider_id=provider_id) for provider_id in provider_ids]
+            original = TransactionCatalogue.from_transactions(transactions)
+            TransactionCatalogueRepository(bucket_id=_BUCKET_ID).save(original)
 
-        reloaded = TransactionCatalogueRepository(bucket_id=_BUCKET_ID).load()
-        assert reloaded == original
+            reloaded = TransactionCatalogueRepository(bucket_id=_BUCKET_ID).load()
+            assert reloaded == original
