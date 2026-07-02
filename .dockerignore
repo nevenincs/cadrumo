@@ -1,0 +1,25 @@
+# Keep the devcontainer/Dockerfile build context small and avoid baking
+# host-local state (venvs, caches, secrets) into the image layer.
+
+.git/
+.venv/
+venv/
+__pycache__/
+*.py[codz]
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+.coverage
+.coverage.*
+htmlcov/
+var/
+docs/_build/
+docs/_inventories/
+docs/api/
+docs/cli/
+.tokens/
+env/.env
+node_modules/
+.vscode/
+.idea/
+*.log
