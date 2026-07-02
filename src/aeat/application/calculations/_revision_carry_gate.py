@@ -10,7 +10,7 @@ filed under the wrong revision injects that revision's norms into every later
 filing that folds it in. The carry read therefore re-confirms each carried
 observation's ``stamped_revision_id`` against the law-determined revision
 for its source context
-(:meth:`~aeat.domain.calculations.registry.ValidatedRegistryAuthority.snapshot`,
+(:meth:`~domain.calculations.registry.ValidatedRegistryAuthority.snapshot`,
 which delegates to law-determined revision selection) before trusting the value.
 
 This module is the single implementation of that gate. Before this extraction
@@ -20,11 +20,11 @@ revision`` and ``revision-resolution-is-law-determined`` require one
 law-determined re-confirmation, not three parallel copies that can drift.
 
 See Also:
-    :func:`~aeat.application.calculations._binding_prefill.resolve_bindings_from_local_store`
+    :func:`~application.calculations._binding_prefill.resolve_bindings_from_local_store`
         Previous-filing binding reader that drops unreconfirmable carries.
-    :func:`~aeat.application.calculations._relation_prefill.resolve_relations_from_local_store`
+    :func:`~application.calculations._relation_prefill.resolve_relations_from_local_store`
         Relation-prefill reader that applies the same revision-stamp gate.
-    :func:`~aeat.application.calculations._cross_period_clean_state.evaluate_cross_period_clean_state`
+    :func:`~application.calculations._cross_period_clean_state.evaluate_cross_period_clean_state`
         Filing-grade dependency proof that maps the shared outcome to blockers.
 """
 
@@ -43,7 +43,7 @@ def revision_carry_outcome(
     """Return whether a carried observation's revision stamp must be refused.
 
     Uses
-    :meth:`~aeat.domain.calculations.registry.ValidatedRegistryAuthority.snapshot`
+    :meth:`~domain.calculations.registry.ValidatedRegistryAuthority.snapshot`
     to resolve the current law-determined revision for the source context.
 
     ADR 2026-06-10-period-revision-resolution-adr, Ruling 3 / R2:
