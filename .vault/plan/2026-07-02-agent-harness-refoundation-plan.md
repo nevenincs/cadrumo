@@ -67,7 +67,7 @@ Turn the two nominal safety gates real: an elicitation-backed CONFIRM tier with 
 Enforce the CONFIRM tier through MCP elicitation with the decided capability-degradation matrix.
 
 - [x] `W03.P05.S19` - Add the elicitation module with the capability-degradation matrix over accept, decline, and cancel, a destructiveHint fallback, and a default handoff refusal when elicitation is absent; `src/aeat/entrypoints/mcp/_elicitation.py`.
-- [ ] `W03.P05.S20` - Enforce the CONFIRM tier through elicitation in the call-tool path; `src/aeat/entrypoints/mcp/_server.py`.
+- [x] `W03.P05.S20` - Enforce the CONFIRM tier through elicitation in the call-tool path; `src/aeat/entrypoints/mcp/_server.py`.
 - [ ] `W03.P05.S21` - Add tests for elicitation enforcement and the degradation matrix; `src/aeat/entrypoints/mcp/tests/test_elicitation.py`.
 
 ### Phase `W03.P06` - Faithfulness serving path, handoff deny, and telemetry
@@ -75,7 +75,7 @@ Enforce the CONFIRM tier through MCP elicitation with the decided capability-deg
 Wire faithfulness into the serving path with a handoff hard block, add per-verb handoff deny rules, and persist local session telemetry.
 
 - [x] `W03.P06.S22` - Extend the faithfulness check with the serving-path advisory-plus-handoff-block integration surface; `src/aeat/entrypoints/mcp/_faithfulness.py`.
-- [ ] `W03.P06.S23` - Wire faithfulness into the serving path as an advisory notice with a hard block at the export and record-marker boundary; `src/aeat/entrypoints/mcp/_server.py`.
+- [x] `W03.P06.S23` - Wire faithfulness into the serving path as an advisory notice with a hard block at the export and record-marker boundary; `src/aeat/entrypoints/mcp/_server.py`.
 - [x] `W03.P06.S24` - Add per-verb handoff deny rules over the family-granular persona scope; `src/aeat/entrypoints/mcp/_persona_scope.py`.
 - [x] `W03.P06.S25` - Add local session telemetry recording per-call trajectory records with session ids; `src/aeat/entrypoints/mcp/_telemetry.py`.
 - [ ] `W03.P06.S26` - Add tests for the faithfulness serving path, the handoff deny rules, and telemetry; `src/aeat/entrypoints/mcp/tests/test_serving_gates.py`.
