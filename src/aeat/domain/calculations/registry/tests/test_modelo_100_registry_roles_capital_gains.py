@@ -88,9 +88,7 @@ def test_modelo_100_other_element_imputation_years_are_positional_years() -> Non
     for filing_year in _LIVE_M100_YEARS:
         revision = _revision_for(filing_year)
         casillas_by_id = {
-            casilla.id: casilla
-            for casilla in revision.casillas
-            if casilla.id in _OTHER_ELEMENT_IMPUTATION_ROLES
+            casilla.id: casilla for casilla in revision.casillas if casilla.id in _OTHER_ELEMENT_IMPUTATION_ROLES
         }
 
         assert set(casillas_by_id) == set(_OTHER_ELEMENT_IMPUTATION_ROLES)

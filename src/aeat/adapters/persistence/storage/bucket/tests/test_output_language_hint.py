@@ -25,9 +25,12 @@ def test_output_language_hint_round_trips_supported_language(tmp_path: Path) -> 
 
     assert written is True
     assert read_bucket_output_language_hint(storage_root=tmp_path, bucket_id=bucket_id) == "ca"
-    assert bucket_output_language_hint_path(storage_root=tmp_path, bucket_id=bucket_id).read_text(
-        encoding="utf-8",
-    ) == "ca\n"
+    assert (
+        bucket_output_language_hint_path(storage_root=tmp_path, bucket_id=bucket_id).read_text(
+            encoding="utf-8",
+        )
+        == "ca\n"
+    )
 
 
 def test_output_language_hint_rejects_invalid_language_without_overwriting(tmp_path: Path) -> None:

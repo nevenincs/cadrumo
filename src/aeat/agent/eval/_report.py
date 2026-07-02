@@ -84,9 +84,7 @@ def build_measurement_report(
         scenarios_run=len(scores),
         scenarios_passed=sum(1 for score in scores if score.passed),
         live_submit_attempts_total=sum(len(score.invariants.live_submit_attempts) for score in scores),
-        handoff_faithfulness_blocks_total=sum(
-            len(score.invariants.handoff_faithfulness_blocks) for score in scores
-        ),
+        handoff_faithfulness_blocks_total=sum(len(score.invariants.handoff_faithfulness_blocks) for score in scores),
         tool_errors_total=sum(len(score.tool_errors) for score in scores),
         unfaithful_narrations_total=sum(
             sum(1 for check in score.narration_checks if not check.faithful) for score in scores

@@ -160,9 +160,7 @@ def test_modelo_100_new_company_investment_deduction_cites_art_68_1() -> None:
     for filing_year in range(2020, 2026):
         revision = _modelo_100_snapshot(filing_year).revision
         state_casilla = next(
-            casilla
-            for casilla in revision.casillas
-            if casilla.semantic_role == "irpf_deduccion_empresa_nueva_creacion"
+            casilla for casilla in revision.casillas if casilla.semantic_role == "irpf_deduccion_empresa_nueva_creacion"
         )
         detail_casillas = [casilla for casilla in revision.casillas if tuple(casilla.section[:3]) == anexo_section]
         entity_nif_casillas = [
@@ -208,8 +206,7 @@ def test_modelo_100_business_investment_deductions_cite_art_68_2() -> None:
         offenders = {
             casilla.id: casilla.legal_refs
             for casilla in checked
-            if _BUSINESS_INVESTMENT_ART_68_2_REF not in casilla.legal_refs
-            or "ley-35-2006:art-68" in casilla.legal_refs
+            if _BUSINESS_INVESTMENT_ART_68_2_REF not in casilla.legal_refs or "ley-35-2006:art-68" in casilla.legal_refs
         }
         assert not offenders, filing_year
 

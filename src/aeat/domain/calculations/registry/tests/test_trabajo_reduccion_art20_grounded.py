@@ -118,8 +118,7 @@ _TRABAJO_SECTION_GROUNDING: dict[CasillaId, str] = {
 }
 
 
-def test_trabajo_section_casillas_cite_binding_article(
-) -> None:
+def test_trabajo_section_casillas_cite_binding_article() -> None:
     """Each trabajo-section casilla cites its binding article (art. 18 / art. 19),
     not the art. 17 rendimientos-íntegros chapter it had drifted to."""
     for year in _ALL_LIVE_YEARS:
@@ -128,8 +127,7 @@ def test_trabajo_section_casillas_cite_binding_article(
             casilla = casillas_by_id.get(casilla_id)
             assert casilla is not None, f"M100 {year} must declare casilla {casilla_id}"
             assert expected_ref in casilla.legal_refs, (
-                f"casilla {casilla_id} ({year}) must cite {expected_ref}; "
-                f"found {list(casilla.legal_refs)}"
+                f"casilla {casilla_id} ({year}) must cite {expected_ref}; found {list(casilla.legal_refs)}"
             )
 
 
@@ -140,6 +138,4 @@ def test_casilla_0025_neto_reducido_cites_full_reduction_chain() -> None:
         casilla = _m100_casillas_by_id(year).get(_TRABAJO_NETO_REDUCIDO_CASILLA)
         assert casilla is not None, f"M100 {year} must declare casilla 0025"
         for ref in ("ley-35-2006:art-18", "ley-35-2006:art-19", "ley-35-2006:art-20"):
-            assert ref in casilla.legal_refs, (
-                f"casilla 0025 ({year}) must cite {ref}; found {list(casilla.legal_refs)}"
-            )
+            assert ref in casilla.legal_refs, f"casilla 0025 ({year}) must cite {ref}; found {list(casilla.legal_refs)}"

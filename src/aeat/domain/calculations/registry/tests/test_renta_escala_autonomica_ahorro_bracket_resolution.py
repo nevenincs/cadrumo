@@ -215,9 +215,7 @@ def test_escala_autonomica_formulas_target_savings_casillas() -> None:
     for year in _ALL_YEARS:
         revision = _revision(year)
         base_formula = next(
-            f
-            for f in revision.formulas
-            if f.id == f"renta-{year}-cuota-escala-autonomica-sobre-base-liquidable-ahorro"
+            f for f in revision.formulas if f.id == f"renta-{year}-cuota-escala-autonomica-sobre-base-liquidable-ahorro"
         )
         minimo_formula = next(
             f

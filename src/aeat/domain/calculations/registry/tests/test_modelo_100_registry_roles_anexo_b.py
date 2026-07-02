@@ -130,9 +130,7 @@ def test_modelo_100_anexo_b_baleares_birth_roles_are_spanish_and_label_grounded(
     for filing_year in (2023, 2024, 2025):
         revision = _modelo_100_snapshot(filing_year).revision
         casillas_by_id = {
-            casilla.id: casilla
-            for casilla in revision.casillas
-            if casilla.id in _ANEXO_B_BALEARES_NACIMIENTO_ROWS
+            casilla.id: casilla for casilla in revision.casillas if casilla.id in _ANEXO_B_BALEARES_NACIMIENTO_ROWS
         }
 
         assert set(casillas_by_id) == set(_ANEXO_B_BALEARES_NACIMIENTO_ROWS), filing_year

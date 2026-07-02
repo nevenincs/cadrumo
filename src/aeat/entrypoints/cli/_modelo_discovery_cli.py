@@ -12,7 +12,9 @@ import typer
 import typer._click.types as typer_click_types
 
 from ...application.modelo import (
+    DataInventoryCasilla,
     ceded_autonomic_modelo_locale_key,
+    data_inventory_checklist,
     modelo_work_create_refusal_locale_key,
     profile_resolvable_binding_ids,
     registry_bindings,
@@ -29,7 +31,7 @@ from ...application.modelo import (
     registry_list_modelos,
     registry_modelo_codes,
 )
-from ...core import NON_REGISTRY_MODELOS, Modelo, Period, TaxDomain
+from ...core import NON_REGISTRY_MODELOS, Modelo, Period, TaxDomain, resolve_active_bucket_id
 from ...core.i18n import output_language, tr
 from ...core.json_contract import Notice, NoticeSeverity
 from ...domain.calculations.registry import (
@@ -44,6 +46,7 @@ from ._modelo_payloads import (
     BindingListRowPayload,
     BindingPreviewRowPayload,
     CasillaRowPayload,
+    DataInventoryCasillaPayload,
     FormulaPayload,
     FormulasResult,
     ModeloBindingsListResult,
@@ -52,6 +55,7 @@ from ._modelo_payloads import (
     ModeloCasillasResult,
     ModeloDescribeResult,
     ModeloListResult,
+    ModeloRequiresResult,
     ModeloRowPayload,
 )
 from ._modelo_rendering import binding_encoded_option_lines, binding_encoded_option_payloads
@@ -97,6 +101,7 @@ def register_discovery_commands(
     _register_describe_command(app, deps)
     _register_casillas_command(app, deps)
     _register_casilla_command(app, deps)
+    _register_requires_command(app, deps)
     _register_bindings_list_command(bindings_app, deps)
     _register_bindings_resolve_command(bindings_app, deps)
     _register_formulas_command(app, deps)
@@ -500,6 +505,145 @@ def _register_casilla_command(app: typer.Typer, deps: _DiscoveryDeps) -> None:
         if report.formula_expression is not None:
             lines.append(f"formula_expression\t{report.formula_expression}")
         _emit_envelope(ctx, command="modelo.casilla", result=result, lines=lines)
+
+
+def _data_inventory_casilla_payload(entry: DataInventoryCasilla, *, lang: str) -> DataInventoryCasillaPayload:
+    return DataInventoryCasillaPayload(
+        casilla_id=entry.casilla_id,
+        number=entry.number,
+        label=entry.localized_labels.get(lang, entry.label),
+        localized_labels=dict(entry.localized_labels),
+        legal_refs=entry.legal_refs,
+        source_refs=entry.source_refs,
+        binding_id=entry.binding_id,
+        binding_source=entry.binding_source,
+    )
+
+
+def _data_inventory_section_lines(title: str, rows: tuple[DataInventoryCasilla, ...], *, lang: str) -> list[str]:
+    if not rows:
+        return [f"{title}\t(none)"]
+    lines = [f"{title}\t{len(rows)}"]
+    for entry in rows:
+        label = entry.localized_labels.get(lang, entry.label)
+        suffix = f"\t({entry.binding_source})" if entry.binding_source else ""
+        lines.append(f"  {entry.number}\t{label}{suffix}")
+    return lines
+
+
+def _register_requires_command(app: typer.Typer, deps: _DiscoveryDeps) -> None:
+    @app.command(
+        "requires",
+        help=tr(
+            "cli.app.modelo.requires.help",
+            default=(
+                "Show the data-inventory checklist for one modelo and period: which "
+                "casillas must be hand-entered, which are optional, which are populated "
+                "automatically from the ledger, and which come from the active profile."
+            ),
+        ),
+    )
+    def requires(
+        ctx: typer.Context,
+        modelo: Annotated[str, typer.Argument(help=tr("cli.app.modelo.requires.modelo_help"))],
+        year: Annotated[int, typer.Option("--year", help=tr("cli.app.modelo.list.year_help"))],
+        period: Annotated[str, typer.Option("--period", help=tr("cli.app.modelo.requires.period_help"))],
+    ) -> None:
+        guard_ceded_autonomic_modelo(modelo)
+        typed_period = deps.resolve_year_period(year, period, modelo=modelo)
+
+        def _query():
+            return data_inventory_checklist(
+                modelo=modelo,
+                filing_year=typed_period.year,
+                period=typed_period,
+                bucket_id=resolve_active_bucket_id(),
+            )
+
+        checklist = _run_query(_query, bad_parameter_from_error=deps.bad_parameter_from_error)
+        lang = output_language()
+        result = ModeloRequiresResult(
+            modelo=checklist.modelo,
+            revision=checklist.revision_id,
+            filing_year=checklist.filing_year,
+            period=checklist.period,
+            required_manual=[_data_inventory_casilla_payload(entry, lang=lang) for entry in checklist.required_manual],
+            optional_manual=[_data_inventory_casilla_payload(entry, lang=lang) for entry in checklist.optional_manual],
+            ledger_derivable=[
+                _data_inventory_casilla_payload(entry, lang=lang) for entry in checklist.ledger_derivable
+            ],
+            profile_derivable=[
+                _data_inventory_casilla_payload(entry, lang=lang) for entry in checklist.profile_derivable
+            ],
+            unresolved_profile_bindings=list(checklist.unresolved_profile_bindings),
+            profile_checked=checklist.profile_checked,
+        )
+        lines = [
+            f"modelo\t{checklist.modelo}",
+            f"revision\t{checklist.revision_id}",
+            f"filing_year\t{checklist.filing_year}",
+            f"period\t{checklist.period}",
+            *_data_inventory_section_lines(
+                tr("cli.app.modelo.requires.section_required", default="required_manual"),
+                checklist.required_manual,
+                lang=lang,
+            ),
+            *_data_inventory_section_lines(
+                tr("cli.app.modelo.requires.section_optional", default="optional_manual"),
+                checklist.optional_manual,
+                lang=lang,
+            ),
+            *_data_inventory_section_lines(
+                tr("cli.app.modelo.requires.section_ledger", default="ledger_derivable"),
+                checklist.ledger_derivable,
+                lang=lang,
+            ),
+            *_data_inventory_section_lines(
+                tr("cli.app.modelo.requires.section_profile", default="profile_derivable"),
+                checklist.profile_derivable,
+                lang=lang,
+            ),
+        ]
+        notices = _requires_notices(checklist)
+        lines.extend(_notice_text_lines(notices))
+        _emit_envelope(ctx, command="modelo.requires", result=result, lines=lines, notices=notices)
+
+
+def _requires_notices(checklist) -> tuple[Notice, ...]:
+    if not checklist.profile_checked:
+        return (
+            Notice(
+                severity=NoticeSeverity.INFO,
+                code="modelo.requires.no_active_profile",
+                message=tr(
+                    "cli.app.modelo.requires.no_active_profile",
+                    default=(
+                        "No active profile is set, so profile-dependent coefficients "
+                        "(e.g. home-office usage ratio) could not be checked for gaps."
+                    ),
+                ),
+                suggestion="aeat config profile create",
+                context={"modelo": str(checklist.modelo)},
+            ),
+        )
+    if checklist.unresolved_profile_bindings:
+        missing = ", ".join(sorted(str(binding_id) for binding_id in checklist.unresolved_profile_bindings))
+        return (
+            Notice(
+                severity=NoticeSeverity.WARNING,
+                code="modelo.requires.missing_profile_coefficient",
+                message=tr(
+                    "cli.app.modelo.requires.missing_profile_coefficient",
+                    default=(
+                        "The active profile has not set the following coefficient(s) needed for this modelo: {missing}."
+                    ),
+                    missing=missing,
+                ),
+                suggestion="aeat config profile ratios",
+                context={"modelo": str(checklist.modelo), "missing_bindings": missing},
+            ),
+        )
+    return ()
 
 
 _BINDING_SOURCE_TO_READINESS: dict[str, str] = {

@@ -51,10 +51,7 @@ _SUBMITTED_FILE_PROFILE_YEARS = (2023, 2024, 2025, 2026)
 
 @lru_cache
 def _record_design_sheets_by_name(workbook_name: str):
-    return {
-        sheet.name: sheet
-        for sheet in _official_record_design_sheets(_MODELO_131_WORKBOOK_ROOT / workbook_name)
-    }
+    return {sheet.name: sheet for sheet in _official_record_design_sheets(_MODELO_131_WORKBOOK_ROOT / workbook_name)}
 
 
 @lru_cache
@@ -150,9 +147,7 @@ def test_modelo_131_registry_bindings_cover_official_structured_records() -> Non
 
         assert registry_fields == official_fields, filing_year
         assert all(source_ref in binding.source_refs for binding, _selector in registry_bindings)
-        assert all(
-            "rd-439-2007:art-110" in binding.legal_refs for binding, _selector in registry_bindings
-        )
+        assert all("rd-439-2007:art-110" in binding.legal_refs for binding, _selector in registry_bindings)
 
 
 def test_modelo_131_2024_dpa_territorial_reduction_fields_carry_specific_legal_basis() -> None:

@@ -159,7 +159,13 @@ if TYPE_CHECKING:
         rekey_secret_store,
         verify_recovery_code,
     )
+    from ._custody_carry import (
+        carried_namespace_definitions,
+        restore_carried_objects,
+        serialize_carried_objects,
+    )
     from ._filing_baseline import missing_filing_baseline_flags
+    from ._integrity import ProfileIntegrityError
     from ._keys_validation import list_profile_key_records, validate_profile_values
     from ._lifecycle import ProfileLifecycleService
     from ._orchestration import (
@@ -182,12 +188,6 @@ if TYPE_CHECKING:
         set_active_field,
         set_active_fields,
     )
-    from ._custody_carry import (
-        carried_namespace_definitions,
-        restore_carried_objects,
-        serialize_carried_objects,
-    )
-    from ._integrity import ProfileIntegrityError
     from ._preflight import ProfilePreflightService
     from ._profile_repository import ProfileRepository
     from ._projections import (
