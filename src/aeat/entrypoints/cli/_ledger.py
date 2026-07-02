@@ -2,14 +2,14 @@
 
 Provides the ``aeat app ledger`` command group for importing, reviewing, and
 exporting financial transaction data. Transaction records are accessed through
-:class:`~aeat.domain.transactions.TransactionCatalogueRepository` and invoice
-records through :class:`~aeat.domain.invoices.InvoiceCatalogueRepository`.
+:class:`TransactionCatalogueRepository` and invoice
+records through :class:`InvoiceCatalogueRepository`.
 Lifecycle events are appended to the profile audit trail via
-:class:`~aeat.domain.buckets.BucketEventHistoryRepository`. Mutation and read
+:class:`BucketEventHistoryRepository`. Mutation and read
 verbs validate registered
-:class:`~aeat.entrypoints.cli._schemas.OutputSchema` payloads and emit
-:class:`~aeat.entrypoints.cli._schemas.SchemaEnvelope` documents through
-:func:`~aeat.entrypoints.cli._common._emit_envelope` so CLI JSON stays aligned
+:class:`OutputSchema` payloads and emit
+:class:`SchemaEnvelope` documents through
+:func:`_emit_envelope` so CLI JSON stays aligned
 with the registered ledger payload contracts.
 """
 
@@ -136,7 +136,7 @@ def _resolve_read_id(transaction_repository: _TransactionRepo, prefix: str) -> s
     live row matches, it walks the edit-lineage chain so a superseded
     (pre-``update``) id written down by the operator still resolves to the
     current row — see
-    :func:`aeat.application.ledger.resolve_lineage_transaction_id`. The
+    :func:`resolve_lineage_transaction_id`. The
     content-addressed id stays authoritative; this is a read-side lookup
     convenience, never a change to how ids are minted.
     """
