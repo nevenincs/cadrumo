@@ -30,6 +30,7 @@ from enum import StrEnum
 
 from pydantic import BaseModel, ConfigDict, Field
 
+from ...core.i18n import tr
 from ._hitl import ConfirmationPolicy, is_handoff_command
 
 _STRICT_FROZEN = ConfigDict(frozen=True, strict=True, validate_assignment=True, extra="forbid")
@@ -97,22 +98,43 @@ def resolve_confirm_route(
 
 
 def confirmation_request(*, command_key: str) -> ConfirmationRequest:
-    """Build the elicitation request for one confirm-tier command."""
+    """Build the elicitation request for one confirm-tier command.
+
+    The ``message`` and field ``description`` are rendered by the client TO THE
+    HUMAN taxpayer, so both are localized through :func:`tr` (the configured
+    output language), unlike the model-facing refusal/advisory strings in this
+    layer, which the model re-narrates in the user's language itself.
+    """
     if is_handoff_command(command_key):
-        consequence = (
-            "This produces the filing-grade artefact the taxpayer will file with "
-            "AEAT themselves. Nothing is submitted anywhere by confirming."
+        consequence = tr(
+            "mcp.elicitation.confirm.consequence_handoff",
+            default=(
+                "This produces the filing-grade artefact the taxpayer will file "
+                "with AEAT themselves. Nothing is submitted anywhere by confirming."
+            ),
         )
     else:
-        consequence = "This changes local data for the active taxpayer profile."
+        consequence = tr(
+            "mcp.elicitation.confirm.consequence_local",
+            default="This changes local data for the active taxpayer profile.",
+        )
     return ConfirmationRequest(
-        message=(f"Confirm running '{command_key}'. {consequence} Answer yes to proceed or no to stop."),
+        message=tr(
+            "mcp.elicitation.confirm.message",
+            command=command_key,
+            consequence=consequence,
+            default="Confirm running '{command}'. {consequence} Answer yes to proceed or no to stop.",
+        ),
         requested_schema={
             "type": "object",
             "properties": {
                 _CONFIRM_FIELD: {
                     "type": "boolean",
-                    "description": f"Run '{command_key}' now?",
+                    "description": tr(
+                        "mcp.elicitation.confirm.field_description",
+                        command=command_key,
+                        default="Run '{command}' now?",
+                    ),
                 },
             },
             "required": [_CONFIRM_FIELD],
@@ -138,16 +160,24 @@ def decision_from_elicitation(*, action: str, content: dict[str, object] | None)
 
 
 def refusal_message(route: ConfirmRoute, *, command_key: str) -> str:
-    """The instructive refusal text for the two refusing routes."""
+    """The instructive refusal text for the two refusing routes (client-relayed, localized)."""
     if route is ConfirmRoute.REFUSE_BLOCKED:
-        return (
-            f"'{command_key}' is permanently blocked: live submission to AEAT is "
-            "forbidden by design. Export locally; the taxpayer files themselves."
+        return tr(
+            "mcp.elicitation.refusal.blocked",
+            command=command_key,
+            default=(
+                "'{command}' is permanently blocked: live submission to AEAT is "
+                "forbidden by design. Export locally; the taxpayer files themselves."
+            ),
         )
-    return (
-        f"'{command_key}' needs a human confirmation, and this client does not "
-        "support elicitation. Run it from a client that can ask you questions, "
-        "or run the equivalent aeat CLI command directly in a terminal."
+    return tr(
+        "mcp.elicitation.refusal.no_channel",
+        command=command_key,
+        default=(
+            "'{command}' needs a human confirmation, and this client does not "
+            "support elicitation. Run it from a client that can ask you questions, "
+            "or run the equivalent aeat CLI command directly in a terminal."
+        ),
     )
 
 

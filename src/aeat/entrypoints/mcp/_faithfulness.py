@@ -135,10 +135,15 @@ def arguments_faithfulness(
 
 
 def advisory_line(result: FaithfulnessResult) -> str:
-    """The warning line the server prepends to a result for an advisory mismatch."""
-    values = ", ".join(result.flagged_values)
-    return (
-        "FAITHFULNESS ADVISORY: the call's arguments cite amount(s) "
-        f"[{values}] that no tool result in this session produced. Verify the "
-        "figure against a calculate/revision read before relying on it."
+    """The warning line the server prepends to a result for an advisory mismatch (client-relayed, localized)."""
+    from ...core.i18n import tr
+
+    return tr(
+        "mcp.faithfulness.advisory",
+        values=", ".join(result.flagged_values),
+        default=(
+            "FAITHFULNESS ADVISORY: the call's arguments cite amount(s) "
+            "[{values}] that no tool result in this session produced. Verify the "
+            "figure against a calculate/revision read before relying on it."
+        ),
     )

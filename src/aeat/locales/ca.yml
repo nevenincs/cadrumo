@@ -1940,6 +1940,34 @@ cli:
           de l'AEAT
         amend_missing_options: 'Una esmena requereix totes aquestes opcions: %{missing}.'
         amend_set_required: --set és obligatori almenys una vegada per a una complementària.
+        amend_wizard_export_next_action: Rectificació presentada com a registre intern
+          en esborrany. Exporta el fitxer BOE compatible amb l'AEAT amb `aeat app
+          modelo export %{work_unit_id} --output PATH`.
+        amend_wizard_help: 'Guia la correcció d''una declaració ja presentada en llenguatge
+          senzill: quines caselles van canviar, els valors corregits i el tipus de
+          rectificació, i la presenta'
+        amend_wizard_kind_help: complementaria afegeix a la quota prèviament declarada;
+          sustitutiva substitueix completament la declaració anterior; rectificativa
+          és el mecanisme unificat de correcció per als models l'ordre dels quals
+          ho implementa (p. ex. Model 303 des de 2023-y-siguientes).
+        amend_wizard_kind_prompt: Tipus de rectificació (%{choices})
+        amend_wizard_no_corrections: No s'ha corregit cap casella; l'assistent de
+          rectificació necessita almenys un valor modificat.
+        amend_wizard_no_current_filing: La unitat de treball %{work_unit_id} no té
+          cap registre de presentació vigent per corregir. Importa primer l'evidència
+          acreditada de l'AEAT amb `aeat app modelo filing-record import`, o presenta-la
+          localment.
+        amend_wizard_reason_prompt: Motiu d'aquesta rectificació (es conserva al registre
+          d'auditoria)
+        amend_wizard_reason_required: Cal un motiu per al registre d'auditoria de
+          la rectificació.
+        amend_wizard_select_prompt: Presentat %{modelo} %{year} %{period} -- valors
+          actuals:\n%{summary}\nQuins números de casella van canviar? (separats per
+          comes o espais, en blanc per a cap)
+        amend_wizard_unknown_casilla: La casella %{token} no forma part de la declaració
+          %{modelo} %{year} %{period} presentada; tria una de les caselles llistades.
+        amend_wizard_value_prompt: Valor corregit per a la casella %{number} (%{label}),
+          actualment %{previous_value}
         amendment_kind_help: Tipus legal de l'amendació (complementaria o sustitutiva)
         amendment_reason_help: Motiu lliure de l'amendació (traça d'auditoria de l'operador)
         app_help: Gestionar el cicle de vida de les unitats de treball d'un model
@@ -2292,7 +2320,10 @@ cli:
         wizard_prompt: Casella %{number} (%{label})
         wizard_relation_help: Alimentat per la relacio de registre %{binding_id};
           introdueix el valor entre periodes o entre models que aporta aquesta relacio.
-        wizard_retry_exhausted: 'L''assistent no ha pogut resoldre totes les entrades de calcul despres de %{limit} preguntes de seguiment. Executa `aeat app modelo work calculate` directament i aporta els valors --binding / --relation restants a ma.'
+        wizard_retry_exhausted: L'assistent no ha pogut resoldre totes les entrades
+          de calcul despres de %{limit} preguntes de seguiment. Executa `aeat app
+          modelo work calculate` directament i aporta els valors --binding / --relation
+          restants a ma.
         wizard_saved: 'Desat com a revisio de calcul en esborrany %{revision_id} (estat:
           %{state}). Esta persistit i es pot represendre mes tard; llista les revisions
           amb `aeat app modelo work revisions --modelo %{modelo} --year %{year} --period
@@ -5151,6 +5182,20 @@ locales:
     scaffold_updated: locale scaffold updated
     set:
       updated: updated %{locale_file}:%{key}
+mcp:
+  elicitation:
+    confirm:
+      consequence_handoff: 'Això genera el document de presentació que el contribuent presentarà davant l''AEAT pel seu compte. Confirmar no envia res enlloc.'
+      consequence_local: 'Això modifica dades locals del perfil de contribuent actiu.'
+      field_description: 'Executar ''{command}'' ara?'
+      message: 'Confirma l''execució de ''{command}''. {consequence} Respon sí per continuar o no per aturar.'
+    refusal:
+      blocked: '''{command}'' està bloquejat permanentment: la presentació en línia davant l''AEAT està prohibida per disseny. Exporta localment; el contribuent presenta pel seu compte.'
+      no_channel: '''{command}'' requereix confirmació humana i aquest client no admet la funció de preguntes (elicitation). Executa''l des d''un client que pugui fer-te preguntes, o executa l''ordre aeat equivalent directament en un terminal.'
+  faithfulness:
+    advisory: 'AVÍS DE FIDELITAT: els arguments de la crida citen imports [{values}] que cap resultat d''eina d''aquesta sessió ha produït. Verifica la xifra amb una lectura de calculate/revision abans de confiar-hi.'
+  persona:
+    handoff_denied: '''{command}'' és la frontera irreversible de lliurament de la presentació, propietat de la persona ''{owner}''; la persona ''{persona}'' la té denegada estructuralment. Lliura la unitat de treball verificada a la sessió del verificador per produir l''exportació o el marcador de registre.'
 profile:
   descendiente:
     custodia_compartida_prorrata_applied: S'ha aplicat prorrata 50 %% (Art. 61 LIRPF)
