@@ -1,7 +1,7 @@
 """Remote ciphertext mirror manifest construction, persistence, and inspection.
 
 This module converts
-:class:`~aeat.adapters.persistence.storage.sql._secure_object_records.SecureObjectRawRow`
+:class:`adapters.persistence.storage.sql.secure_objects.SecureObjectRawRow`
 records into :class:`RemoteMirrorNamespaceManifest` payloads, stores those
 payloads through :class:`StorageProvider` under
 :data:`REMOTE_MIRROR_MANIFEST_NAMESPACE`, and reports mirror drift as
@@ -42,7 +42,7 @@ def build_remote_mirror_namespace_manifest(
     """Build a :class:`RemoteMirrorNamespaceManifest` for one ciphertext namespace.
 
     Only rows whose
-    :class:`~aeat.adapters.persistence.storage.sql._secure_object_records.SecureObjectRawRow`
+    :class:`adapters.persistence.storage.sql.secure_objects.SecureObjectRawRow`
     namespace matches ``namespace`` are included. Each row becomes a
     :class:`RemoteMirrorObjectManifest`, and the latest revision watermark is
     derived from the newest ``revision_written_at`` among those entries.
@@ -73,7 +73,7 @@ def put_remote_mirror_namespace_manifest(
 
     The manifest JSON is written as an object in
     :data:`REMOTE_MIRROR_MANIFEST_NAMESPACE` with a
-    :func:`~aeat.core.hashing.sha256_hex` content hash.
+    :func:`core.hashing.sha256_hex` content hash.
 
     Returns:
         The provider's :class:`ProviderObjectMetadata` for the manifest object.
@@ -96,7 +96,7 @@ def get_remote_mirror_namespace_manifest(
 
     Missing manifest objects return ``None``. Malformed manifest payloads are
     translated to :class:`OutboundStorageIntegrityError` so callers can handle
-    them through the :class:`~aeat.adapters.outbound.storage.OutboundStorageError`
+    them through the :class:`adapters.outbound.storage.OutboundStorageError`
     hierarchy.
     """
     try:
