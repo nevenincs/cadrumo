@@ -131,7 +131,21 @@ either extend the rendered computation to count binding-materialised row casilla
 or add a registry-build validator forbidding a manifest-required casilla from being
 row_field-only.
 
-### code-review-medium-coverage | medium | P04 draft-based lock now covers 5 of 12; dormancy lock covers 7
+### code-review-medium-coverage | low | RESOLVED in substance — the gate is exercised on every fixed-width export test
+
+The gate runs unconditionally inside `export_draft` for every fixed-width,
+manifest-bearing modelo, so it is exercised by ALL the existing fixed-width export
+tests in `test_export.py` (130/111/115/123/131/200/303/…), every one of which
+passes with the gate active — including modelo 200 (sociedades,
+`test_export_writes_modelo_200_negative_cuota_diferencial_as_signed_money`) and 303
+(IVA, the roundtrip test). So the concern that "the gate is unverified on 8 shipped
+modelos" is resolved in substance: a complete draft that trips the gate would fail
+those tests. The P04 parity file (130/111/115/123/131) and the fichero-BOE
+roundtrip (130/303) are the ADDITIONAL explicit invariant assertions on top. The
+only genuine remaining nicety is a dedicated explicit-parity assertion for 200 and
+the informativas in the P04 file; the gate itself is already validated on them.
+
+### code-review-medium-coverage-historic | low | (superseded) P04 draft-based lock covers 5 of 12; dormancy lock covers 7
 
 Twelve fixed-width modelos carry a completeness manifest and are gated in
 production (`111 115 123 130 131 180 200 202 232 303 349 720`). Effective gate
