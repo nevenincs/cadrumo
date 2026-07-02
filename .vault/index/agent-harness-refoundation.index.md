@@ -11,6 +11,7 @@ related:
   - '[[2026-07-02-agent-harness-refoundation-W01-P01-S03]]'
   - '[[2026-07-02-agent-harness-refoundation-W01-P01-S04]]'
   - '[[2026-07-02-agent-harness-refoundation-W01-P01-S05]]'
+  - '[[2026-07-02-agent-harness-refoundation-W01-P02-S06]]'
   - '[[2026-07-02-agent-harness-refoundation-W05-P09-S34]]'
   - '[[2026-07-02-agent-harness-refoundation-W05-P09-S35]]'
   - '[[2026-07-02-agent-harness-refoundation-W05-P09-S36]]'
@@ -43,6 +44,7 @@ related:
   - '[[2026-07-02-agent-harness-refoundation-W05-P10-S63]]'
   - '[[2026-07-02-agent-harness-refoundation-W05-P10-S64]]'
   - '[[2026-07-02-agent-harness-refoundation-W05-P11-S65]]'
+  - '[[2026-07-02-agent-harness-refoundation-W05-P11-S66]]'
   - '[[2026-07-02-agent-harness-refoundation-adr]]'
   - '[[2026-07-02-agent-harness-refoundation-plan]]'
   - '[[2026-07-02-agent-harness-refoundation-research]]'
@@ -65,6 +67,7 @@ Auto-generated index of all documents tagged with `#agent-harness-refoundation`.
 - `2026-07-02-agent-harness-refoundation-W01-P01-S03` - Add a domain-toolset grouping derived from the operator-surface manifest for renta, iva, ledger, censo, and modelo-lifecycle
 - `2026-07-02-agent-harness-refoundation-W01-P01-S04` - Assert readOnlyHint and destructiveHint annotation coverage on every descriptor and close any gap
 - `2026-07-02-agent-harness-refoundation-W01-P01-S05` - Extend the tool-descriptor tests for per-verb schemas, toolsets, and annotation coverage
+- `2026-07-02-agent-harness-refoundation-W01-P02-S06` - Add the search-plus-execute meta-tool pair for verbs outside the curated toolsets
 - `2026-07-02-agent-harness-refoundation-W05-P09-S34` - Define the structured applies_when frontmatter schema and its parser over TaxpayerProfile facts and lifecycle state
 - `2026-07-02-agent-harness-refoundation-W05-P09-S35` - Validate the applies_when field at skill load
 - `2026-07-02-agent-harness-refoundation-W05-P09-S36` - Add the applies_when coverage gate asserting every skill declares a structured predicate
@@ -97,6 +100,7 @@ Auto-generated index of all documents tagged with `#agent-harness-refoundation`.
 - `2026-07-02-agent-harness-refoundation-W05-P10-S63` - Lift the reconciliar selection predicate from prose into the applies_when frontmatter field
 - `2026-07-02-agent-harness-refoundation-W05-P10-S64` - Lift the retenedor-empleador selection predicate from prose into the applies_when frontmatter field
 - `2026-07-02-agent-harness-refoundation-W05-P11-S65` - Author the regularizar-atrasos skill sequencing the overview backlog past-due and recargo extemporaneo surface
+- `2026-07-02-agent-harness-refoundation-W05-P11-S66` - Add the regularizar-atrasos golden scenario
 
 ### plan
 
