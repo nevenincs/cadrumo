@@ -4,6 +4,8 @@ description: >-
   After the taxpayer files, pull the official AEAT justificante (or reconcile against
   a local artefact), compare it to the prepared declaration, and record the outcome.
   Use only after the human has filed in the AEAT portal.
+applies_when:
+  workflow_phase: reconciliation
 ---
 
 # Reconcile a filed declaration
