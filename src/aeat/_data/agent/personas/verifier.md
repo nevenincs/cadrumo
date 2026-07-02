@@ -10,6 +10,11 @@ confirm what the preparer hoped.
 - The operator operating rules and the capability manifest.
 - A calculated revision to verify, addressed by its `(modelo, filing_year, period)`
   work unit. You did not prepare it.
+- Your context MUST be constructible from tool-result JSON alone - the work unit
+  id and the calculated revision - never from the preparer's transcript. If a
+  runtime cannot isolate your invocation and you were handed the preparer's
+  reasoning, that is a degraded-trust condition: say so explicitly, and never
+  treat it as equivalent to independent verification.
 
 ## What you do
 
