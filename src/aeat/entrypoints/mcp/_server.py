@@ -21,7 +21,7 @@ Per D1 of ``2026-07-01-agent-harness-adr``, the server also enforces the
 persona-scoped tool boundary declared in ``_persona_scope.py``:
 :func:`serve` resolves the active persona once, at startup, from the
 ``AEAT_MCP_PERSONA`` environment variable via
-:func:`~aeat.entrypoints.mcp._persona_scope.active_persona`. When a persona is
+:func:`~entrypoints.mcp._persona_scope.active_persona`. When a persona is
 active, ``_list_tools`` advertises only that persona's in-scope tools
 (:func:`filter_descriptors_for_persona`) and ``_call_tool`` refuses an
 out-of-scope call (:func:`persona_scope_refusal`) before the global HITL
@@ -102,7 +102,7 @@ def serve() -> None:
 
     Resolves the active persona from ``AEAT_MCP_PERSONA`` before touching the
     SDK, so an invalid persona value fails with the instructive
-    :func:`~aeat.entrypoints.mcp._persona_scope.active_persona` error
+    :func:`~entrypoints.mcp._persona_scope.active_persona` error
     regardless of whether the optional SDK is installed.
     """
     persona = active_persona()
@@ -144,7 +144,7 @@ def persona_scope_refusal(*, persona: AgentPersona | None, command_key: str) -> 
     Returns ``None`` when the call may proceed to the global HITL gate: either
     no persona is active, or the command is in the active persona's declared
     scope. This is the ``_call_tool``-side half of D1; it runs BEFORE
-    :func:`~aeat.entrypoints.mcp._hitl.confirmation_for_tool` so an
+    :func:`~entrypoints.mcp._hitl.confirmation_for_tool` so an
     out-of-scope call is refused before HITL policy is even consulted.
     """
     if persona is None:
