@@ -18,6 +18,10 @@ The pass used semantic search first, then targeted `rg`, plan-status JSON, scope
 `git diff -- <path>` WIP checks, and focused tests. This audit is not a closure
 honesty review because the campaign is not structurally complete.
 
+2026-07-02 refresh: `uv run --no-sync vaultspec-core vault plan status
+2026-06-26-binding-vocabulary-cli-cohesion-plan --json` reports 18 of 27 steps
+complete, `next_open_step` = `W03.P05.S15`, and `exec_missing_ids` = `[]`.
+
 ## Findings
 
 ### f8-implementation-reconciled | low | S25 and S26 were implemented but unchecked
@@ -38,7 +42,8 @@ but live code still exposes unprefixed carriers such as `RetencionObservation`,
 `DeclaracionObservation`, `BorradorObservation`, and `GroiObservation`. The first
 phase target includes `src/aeat/domain/calculations/registry/_ledger_bindings.py`,
 which already has non-authored WIP, so this pass did not start the relocation series.
-S15-S18 are formally deferred to the next owner after the dirty target files are
+S15-S18 are formally deferred to the named W03.P05 observation-prefix relocation
+follow-up in this same approved plan, resuming at S15 after the dirty target files are
 peer-clean.
 
 ### operator-verb-tail-blocked | medium | S21-S24 are blocked by active locale/operator-surface WIP
@@ -50,10 +55,13 @@ checks found active non-authored edits in `src/aeat/locales/ca.yml`,
 `src/aeat/locales/en.yml`, `src/aeat/locales/es.yml`, and `src/aeat/locales/hu.yml`.
 Because these are operator-visible locale-bound changes, S21-S24 are deferred until
 the locale/operator-surface WIP is clear and the locale CLI can own the full sweep.
+The named follow-up is this plan's W04.P07 CLI source-pull verb reconciliation
+sequence, resuming at S21.
 
 ## Recommendations
 
 Resume at `W03.P05.S15` once `_ledger_bindings.py` and the affected observation
-carrier files are clean, then run `W03.P05.S18` before starting W04. Keep S27 open
+carrier files are clean, then run `W03.P05.S18` before starting W04. Resume W04 at
+`W04.P07.S21` only after the locale/operator-surface WIP is clear. Keep S27 open
 until the selector coverage test is green. Do not lift the bindings freeze from this
 campaign: `vault plan status` still reports open steps.

@@ -18,6 +18,10 @@ shape-C research, then checked the remaining P03/P05 targets against live code a
 the shared-worktree WIP boundary. This audit is not a closure honesty review because
 the campaign is not structurally complete.
 
+2026-07-02 refresh: `uv run --no-sync vaultspec-core vault plan status
+2026-06-26-binding-resolver-contract-unification-plan --json` reports 12 of 21
+steps complete, `next_open_step` = `P03.S10`, and `exec_missing_ids` = `[]`.
+
 ## Findings
 
 ### exec-alert-reconciled | low | S04 now has a dedicated exec record
@@ -44,7 +48,9 @@ written. The latest research recommends retiring the shape-C rollup and deriving
 CLI preview from canonical mesh outputs, while the plan still describes collapsing
 retenciones inside the existing per-modelo service. Landing the older step text would
 risk preserving the second aggregation mechanism the research says to retire. These
-steps are deferred pending coordinator adjudication of the exact execution shape.
+steps are formally deferred to the existing #36 shape-C adjudication follow-up, which
+must either amend S13/S19/S14 to the canonical mesh-preview retirement shape or replace
+them with a successor plan before any checkbox or exec record is claimed.
 
 ### hub-file-wip-blocks-enrollment-work | medium | `_calculation_actions.py` is dirty and single-owner
 
@@ -57,6 +63,6 @@ and the gate surface is peer-clean.
 
 Keep the deferred counterpart/foreign-assets steps unchecked unless the coordinator
 updates the existing plan to match the #36 research. Re-open the retenciones/CLI
-projection work only after the intended shape is made explicit, then run P05.S18.
+projection work only after #36 makes the intended shape explicit, then run P05.S18.
 Do not lift the bindings freeze from this campaign: `vault plan status` still reports
 open steps, though the missing-exec alert is resolved.
