@@ -6,6 +6,10 @@ description: >-
   applicable esquema, verify, export the fichero-BOE, and hand off for the
   taxpayer to file. Use when the taxpayer is OSS/IOSS-enrolled and sells
   cross-border B2C goods or services to consumers in other EU member states.
+applies_when:
+  profile_facts:
+    - fact: iva.oss_enrolled
+      match: is_true
 ---
 
 # Prepare Modelo 369
