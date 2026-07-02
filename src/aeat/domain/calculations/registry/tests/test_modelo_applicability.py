@@ -30,6 +30,16 @@ from ..applicability import (
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
+_PERIODIC_IVA_MODELOS = ("303", "390")
+_NON_PERIODIC_IVA_REGIMES = (IVARegime.EXENTO, IVARegime.RECARGO_EQUIVALENCIA)
+_FACT_GATED_MODELO_CASES = (
+    ("115", {"pays_rent_with_retencion": True}),
+    ("180", {"pays_rent_with_retencion": True}),
+    ("349", {"does_intracomunitario": True}),
+    ("347", {"third_party_transactions_above_347_threshold": True}),
+)
+_NON_IMPATRIADO_SPECIAL_REGIMES = (None, IrpfSpecialRegime.GENERAL)
+
 
 def test_seed_modelo_applicability_rules_are_registry_owned() -> None:
     """The seed rules are exposed by the registry package."""
@@ -179,32 +189,26 @@ def _attribution_entity_profile(
     )
 
 
-@pytest.mark.parametrize("modelo", ("303", "390"))
-def test_attribution_entity_with_general_iva_is_applicable_for_iva_modelos(modelo: str) -> None:
+def test_attribution_entity_with_general_iva_is_applicable_for_iva_modelos() -> None:
     """An attribution entity can be IVA-taxable even though income passes through."""
 
-    result = derive_modelo_applicability(_attribution_entity_profile(), modelo)
+    for modelo in _PERIODIC_IVA_MODELOS:
+        result = derive_modelo_applicability(_attribution_entity_profile(), modelo)
 
-    assert result.verdict is ApplicabilityVerdict.APPLICABLE
-    assert result.applicable is True
+        assert result.verdict is ApplicabilityVerdict.APPLICABLE, modelo
+        assert result.applicable is True, modelo
 
 
-@pytest.mark.parametrize(
-    "iva_regime",
-    (IVARegime.EXENTO, IVARegime.RECARGO_EQUIVALENCIA),
-    ids=("exempt", "recargo-equivalencia"),
-)
-def test_attribution_entity_without_periodic_iva_regime_owes_no_m303_or_m390(
-    iva_regime: IVARegime,
-) -> None:
+def test_attribution_entity_without_periodic_iva_regime_owes_no_m303_or_m390() -> None:
     """A non-periodic IVA regime must not make M303/M390 applicable."""
 
-    profile = _attribution_entity_profile(iva_regime=iva_regime)
+    for iva_regime in _NON_PERIODIC_IVA_REGIMES:
+        profile = _attribution_entity_profile(iva_regime=iva_regime)
 
-    for modelo in ("303", "390"):
-        result = derive_modelo_applicability(profile, modelo)
-        assert result.verdict is ApplicabilityVerdict.NOT_APPLICABLE, modelo
-        assert result.applicable is False, modelo
+        for modelo in _PERIODIC_IVA_MODELOS:
+            result = derive_modelo_applicability(profile, modelo)
+            assert result.verdict is ApplicabilityVerdict.NOT_APPLICABLE, (iva_regime, modelo)
+            assert result.applicable is False, (iva_regime, modelo)
 
 
 def test_attribution_entity_with_employees_is_applicable_for_modelo_111_and_190() -> None:
@@ -227,40 +231,24 @@ def test_attribution_entity_without_withheld_income_fact_is_incomplete_for_model
     assert result.applicable is False
 
 
-@pytest.mark.parametrize(
-    ("modelo", "payer_fact_update"),
-    (
-        ("115", {"pays_rent_with_retencion": True}),
-        ("180", {"pays_rent_with_retencion": True}),
-        ("349", {"does_intracomunitario": True}),
-        ("347", {"third_party_transactions_above_347_threshold": True}),
-    ),
-    ids=("rent-retention", "rent-summary", "intracommunity", "third-party-threshold"),
-)
-def test_attribution_entity_with_required_fact_is_applicable_for_fact_gated_modelos(
-    modelo: str,
-    payer_fact_update: dict[str, bool],
-) -> None:
+def test_attribution_entity_with_required_fact_is_applicable_for_fact_gated_modelos() -> None:
     """Attribution entities can owe non-cuota payer/informative modelos."""
 
-    result = derive_modelo_applicability(_attribution_entity_profile(**payer_fact_update), modelo)
+    for modelo, payer_fact_update in _FACT_GATED_MODELO_CASES:
+        result = derive_modelo_applicability(_attribution_entity_profile(**payer_fact_update), modelo)
 
-    assert result.verdict is ApplicabilityVerdict.APPLICABLE
-    assert result.applicable is True
+        assert result.verdict is ApplicabilityVerdict.APPLICABLE, modelo
+        assert result.applicable is True, modelo
 
 
-@pytest.mark.parametrize(
-    "modelo",
-    ("115", "180", "349", "347"),
-    ids=("rent-retention", "rent-summary", "intracommunity", "third-party-threshold"),
-)
-def test_attribution_entity_without_required_fact_is_incomplete_for_fact_gated_modelos(modelo: str) -> None:
+def test_attribution_entity_without_required_fact_is_incomplete_for_fact_gated_modelos() -> None:
     """Missing payer/trade facts stay undecided instead of entity-excluded."""
 
-    result = derive_modelo_applicability(_attribution_entity_profile(), modelo)
+    for modelo, _payer_fact_update in _FACT_GATED_MODELO_CASES:
+        result = derive_modelo_applicability(_attribution_entity_profile(), modelo)
 
-    assert result.verdict is ApplicabilityVerdict.INCOMPLETE
-    assert result.applicable is False
+        assert result.verdict is ApplicabilityVerdict.INCOMPLETE, modelo
+        assert result.applicable is False, modelo
 
 
 def test_actividad_economica_without_declared_regime_defaults_to_directa_m130() -> None:
@@ -522,22 +510,20 @@ def test_impatriado_year_seven_restores_m100_m720_and_suppresses_m151() -> None:
     )
 
 
-@pytest.mark.parametrize("special_regime", (None, IrpfSpecialRegime.GENERAL))
-def test_non_impatriado_profile_does_not_route_to_modelo_151(
-    special_regime: IrpfSpecialRegime | None,
-) -> None:
+def test_non_impatriado_profile_does_not_route_to_modelo_151() -> None:
     """A general-regime natural person stays outside the M151 route."""
 
-    general_profile = TaxpayerProfile(
-        tax_id="X1234567L",
-        entity_type=EntityType.NATURAL_PERSON,
-        irpf_income_categories=frozenset({IrpfIncomeCategory.TRABAJO}),
-        iva_regime=IVARegime.GENERAL,
-        irpf_special_regime=special_regime,
-    )
+    for special_regime in _NON_IMPATRIADO_SPECIAL_REGIMES:
+        general_profile = TaxpayerProfile(
+            tax_id="X1234567L",
+            entity_type=EntityType.NATURAL_PERSON,
+            irpf_income_categories=frozenset({IrpfIncomeCategory.TRABAJO}),
+            iva_regime=IVARegime.GENERAL,
+            irpf_special_regime=special_regime,
+        )
 
-    result = derive_modelo_applicability(general_profile, "151", today=date(2026, 5, 27))
+        result = derive_modelo_applicability(general_profile, "151", today=date(2026, 5, 27))
 
-    assert result.verdict is ApplicabilityVerdict.NOT_APPLICABLE
-    assert result.applicable is False
-    assert "Art. 93" in result.reason
+        assert result.verdict is ApplicabilityVerdict.NOT_APPLICABLE, special_regime
+        assert result.applicable is False, special_regime
+        assert "Art. 93" in result.reason
