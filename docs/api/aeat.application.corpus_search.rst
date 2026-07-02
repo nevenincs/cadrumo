@@ -20,3 +20,6 @@ Submodules
    aeat.application.corpus_search._model_loader
    aeat.application.corpus_search._models
    aeat.application.corpus_search._query_embed
+   aeat.application.corpus_search._retrieval
+   aeat.application.corpus_search._runtime
+   aeat.application.corpus_search._terminology
