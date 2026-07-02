@@ -7,7 +7,7 @@ from pathlib import Path
 import pytest
 
 from ....core._bucket_pointer_io import pointer_path
-from ....core.i18n._render import clear_output_language_cache, tr
+from ....core.i18n import clear_output_language_cache, tr
 from ....tests.cli_runner import invoke_cached_cli
 from ....tests.secure_sql import dev_test_database_password
 
