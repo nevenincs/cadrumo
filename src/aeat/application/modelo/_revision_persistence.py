@@ -46,7 +46,13 @@ from ...domain.buckets import (
     derive_bucket_event_id,
 )
 from ...domain.buckets._protocols import BucketEventHistoryRepositoryProtocol
-from ...domain.calculations.registry import BindingId, CasillaId, CasillaObservation, RelationId
+from ...domain.calculations.registry import (
+    BindingId,
+    CasillaId,
+    CasillaObservation,
+    RegistryCalculationUnresolvedOutcome,
+    RelationId,
+)
 from ...domain.modelos._calculation_repository import upsert_calculation_revision
 from ...domain.modelos._calculation_revision import (
     CalculationRevision,
@@ -134,6 +140,7 @@ def persist_calculation_revision(
     borrador_snapshot_id: str | None,
     bindings_sourced_from_borrador: tuple[BindingId, ...],
     observations: tuple[CasillaObservation, ...],
+    unresolved_outcomes: tuple[RegistryCalculationUnresolvedOutcome, ...] = (),
     detail_rows: tuple[ModeloDetailRow, ...],
     formula_count: int,
     actor: str,
@@ -200,6 +207,7 @@ def persist_calculation_revision(
         bindings_sourced_from_borrador=bindings_sourced_from_borrador,
         casilla_values=casilla_values,
         observations=observations,
+        unresolved_outcomes=unresolved_outcomes,
         detail_rows=detail_rows,
         created_at=now,
         updated_at=now,

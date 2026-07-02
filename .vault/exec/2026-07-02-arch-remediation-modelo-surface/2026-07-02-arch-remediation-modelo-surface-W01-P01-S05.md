@@ -61,3 +61,18 @@ The calculation-result consumer sweep found no remaining reserved-negative-Decim
 ## Notes
 
 `rg` for `M210_CONVENIO_MISSING_SENTINEL`, `M210_DEFERRED_TIPO_SENTINEL`, `M210_RATE_SENTINELS`, and `_rewrite_m210_sentinels` returned no `src` matches.
+
+## Follow-on completion (persistence of the typed outcome)
+
+The initial W01 landing wired the verify consumer (S04) to read
+`target.unresolved_outcomes` from the persisted `CalculationRevision`, but the
+persistence channel that carries the engine's `unresolved_outcomes` onto the
+revision was not part of that change, leaving the committed verify path reading a
+field the persisted record did not yet declare. This follow-on completes the
+calculation-result consumer sweep: `CalculationRevision` gains a typed
+`unresolved_outcomes` tuple (parallel to `observations`, deliberately NOT threaded
+into `derive_calculation_revision_id`), `persist_calculation_revision` accepts and
+stores it, and `calculate_modelo_revision` passes `engine_result.unresolved_outcomes`
+through. The encrypted-boundary roundtrip fixture now populates the field
+non-default so a save-drops-field regression surfaces. With this in place the S04
+verify consumer reads a genuinely persisted channel end to end.
