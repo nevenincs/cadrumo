@@ -24,8 +24,7 @@ from ....domain.calculations.registry import (
     validated_casilla_id,
 )
 from ....domain.iva import IvaCategory, IvaFlowDirection, IvaRateKind
-from ....domain.iva_compensation._carry_forward import IvaCompensationPeriodState
-from ....domain.iva_compensation._errors import IvaCompensationCasillaReferenceError
+from ....domain.iva_compensation import IvaCompensationCasillaReferenceError, IvaCompensationPeriodState
 from ....tests.secure_sql import isolated_runtime_profile
 from ...aggregation import CalculationSourceContext
 from .._binding_prefill import (
