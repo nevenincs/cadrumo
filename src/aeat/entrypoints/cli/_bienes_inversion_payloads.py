@@ -1,7 +1,7 @@
 """Typed JSON payloads for the capital-goods IVA regularización register CLI.
 
 Each result model is a strict
-:class:`~aeat.entrypoints.cli._schemas.OutputSchema` subclass registered under a
+:class:`OutputSchema` subclass registered under a
 stable ``command`` key so the ``_emit_envelope`` spine and the JSON-schema
 conformance gate bind the ``aeat app ledger bienes-inversion`` leaves to a schema.
 """
@@ -21,7 +21,7 @@ class BienInversionDisposalPayload(OutputSchema):
 class BienInversionRecordPayload(OutputSchema):
     """One capital-good register record.
 
-    Mirrors :class:`~aeat.domain.bienes_inversion.BienInversionIvaRecord`'s
+    Mirrors :class:`BienInversionIvaRecord`'s
     ``model_dump(mode='json')`` plus the derived ``deduccion_efectuada`` the CLI
     appends at the emit site.
     """
