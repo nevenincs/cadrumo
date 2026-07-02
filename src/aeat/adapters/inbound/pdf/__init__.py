@@ -1,38 +1,33 @@
 """Shared primitives for the project's PDF-import families.
 
-The :mod:`aeat.adapters.inbound.pdf` package is the small coordination layer
-behind the concrete PDF parser packages. Declaracion and borrador parsers use
-its casilla-bearing records and label-regex helpers; justificante parsers use
-the shared error root and text/provenance helpers while remaining receipt-only
+The :mod:`adapters.inbound.pdf` package is the small coordination layer behind
+the concrete PDF parser packages. Declaracion and borrador parsers use its
+casilla-bearing records and label-regex helpers; justificante parsers use the
+shared error root and text/provenance helpers while remaining receipt-only
 metadata parsers. Callers should still import from the concrete
-:mod:`aeat.adapters.inbound.declaracion`,
-:mod:`aeat.adapters.inbound.borrador`, or
-:mod:`aeat.adapters.inbound.justificante` packages.
+:mod:`adapters.inbound.declaracion`, :mod:`adapters.inbound.borrador`, or
+:mod:`adapters.inbound.justificante` packages.
 
 Public symbols:
 
-- :class:`~aeat.adapters.inbound.pdf.ExtractedCasilla` -- one casilla ID plus
-  the printed value and extraction provenance from a casilla-complete PDF.
-- :class:`~aeat.adapters.inbound.pdf.PdfModeloImportError` -- base exception
-  for PDF-import parsing errors.
-- :class:`~aeat.adapters.inbound.pdf.LabelHit`,
-  :func:`~aeat.adapters.inbound.pdf.apply_label_regex`, and
-  :func:`~aeat.adapters.inbound.pdf.parse_spanish_decimal` -- label-anchored
-  extraction helpers used by declaracion and borrador parsers.
-- :func:`~aeat.adapters.inbound.pdf.extract_pages_text_from_path`,
-  :func:`~aeat.adapters.inbound.pdf.extract_pages_text_from_bytes`,
-  :func:`~aeat.adapters.inbound.pdf.extract_pages_text_concatenated`, and
-  :func:`~aeat.adapters.inbound.pdf.extract_pages_text_with_fast_path` --
-  shared pdfplumber-backed page-text extraction primitives.
-- :func:`~aeat.adapters.inbound.pdf.sha256_file` and
-  :func:`~aeat.adapters.inbound.pdf.source_pdf_reference_path` -- shared
+- :class:`ExtractedCasilla` -- one casilla ID plus the printed value and
+  extraction provenance from a casilla-complete PDF.
+- :class:`PdfModeloImportError` -- base exception for PDF-import parsing errors.
+- :class:`LabelHit`, :func:`apply_label_regex`, and
+  :func:`parse_spanish_decimal` -- label-anchored extraction helpers used by
+  declaracion and borrador parsers.
+- :func:`extract_pages_text_from_path`, :func:`extract_pages_text_from_bytes`,
+  :func:`extract_pages_text_concatenated`, and
+  :func:`extract_pages_text_with_fast_path` -- shared pdfplumber-backed
+  page-text extraction primitives.
+- :func:`sha256_file` and :func:`source_pdf_reference_path` -- shared
   source-provenance helpers (digest and redacted reference path).
 
 See Also:
-    - :mod:`aeat.adapters.inbound.declaracion` for registry-grounded filed
+    - :mod:`adapters.inbound.declaracion` for registry-grounded filed
       declaration parsing.
-    - :mod:`aeat.adapters.inbound.borrador` for borrador/Renta artefact parsing.
-    - :mod:`aeat.adapters.inbound.justificante` for AEAT filing-receipt parsing.
+    - :mod:`adapters.inbound.borrador` for borrador/Renta artefact parsing.
+    - :mod:`adapters.inbound.justificante` for AEAT filing-receipt parsing.
 """
 
 from __future__ import annotations
