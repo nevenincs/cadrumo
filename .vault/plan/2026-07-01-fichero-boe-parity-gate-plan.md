@@ -10,6 +10,16 @@ related:
   - '[[2026-07-01-fichero-boe-parity-gate-research]]'
 ---
 
+<!-- LINK RULES:
+     - [[wiki-links]] are ONLY for .vault/ documents in the
+       related: field above.
+     - The related: field carries the AUTHORISING documents
+       (ADR, research, reference, prior plan) for every Step in
+       this plan. Steps inherit this chain; per-row reference
+       footers do not exist.
+     - NEVER use [[wiki-links]] or markdown links in the
+       document body. -->
+
 # `fichero-boe-parity-gate` plan
 
 ### Phase `P01` - Registry manifest projection
@@ -37,9 +47,9 @@ Assert required-applicable subset of rendered before any bytes are written, hard
 - [ ] `P03.S09` - Add a pre-write structural-fidelity assertion that every rendered casilla number and segmento matches the registry-declared metadata with zero drift; `src/aeat/application/filing/_export.py`.
 - [ ] `P03.S10` - Add a pre-write record and section-order assertion that the rendered record order follows the registry declaration order; `src/aeat/application/filing/_export.py`.
 - [x] `P03.S11` - Make the panic loud and explicit by enumerating every drifted casilla with expected-versus-actual number, segmento, order and presence in the error; `src/aeat/application/filing/_export.py`.
-- [ ] `P03.S12` - Emit a non-blocking loud coverage advisory Notice when the completeness manifest is absent or manual_extraction; `src/aeat/application/filing/_export.py`.
-- [ ] `P03.S13` - Surface the coverage advisory and propagate the hard parity error on the export_modelo_revision envelope; `src/aeat/application/modelo/_export.py`.
-- [ ] `P03.S14` - Register locale keys for the parity panic error and the coverage advisory via the locales CLI; `src/aeat/locales/en.yml`.
+- [x] `P03.S12` - Emit a non-blocking loud coverage advisory Notice when the completeness manifest is absent or manual_extraction; `src/aeat/application/filing/_export.py`.
+- [x] `P03.S13` - Surface the coverage advisory and propagate the hard parity error on the export_modelo_revision envelope; `src/aeat/application/modelo/_export.py`.
+- [x] `P03.S14` - Register locale keys for the parity panic error and the coverage advisory via the locales CLI; `src/aeat/locales/en.yml`.
 
 ### Phase `P04` - CI parity regression test
 
