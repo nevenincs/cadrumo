@@ -97,7 +97,7 @@ Prove the console functions by driving it with live subagent personas. A real-cl
 
 Prove a real MCP client can initialize, list tools, and round-trip a call over stdio.
 
-- [ ] `W04.P07.S27` - Add a real-client handshake conformance test exercising initialize, tools-list, and a call round-trip over stdio; `src/aeat/entrypoints/mcp/tests/test_client_handshake.py`.
+- [x] `W04.P07.S27` - Add a real-client handshake conformance test exercising initialize, tools-list, and a call round-trip over stdio; `src/aeat/entrypoints/mcp/tests/test_client_handshake.py`.
 
 ### Phase `W04.P08` - Live subagent-persona harness
 
