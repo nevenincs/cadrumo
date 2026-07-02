@@ -25,9 +25,9 @@ Public surface:
   event in storage, with bucket / object / type queries.
 * :class:`BucketEventHistoryRepository` — encrypted SQL repository
   over
-  :class:`~aeat.adapters.persistence.storage.SecureObjectRepository`,
+  :class:`adapters.persistence.storage.SecureObjectRepository`,
   storing a ``FINANCIAL``
-  :class:`~aeat.adapters.persistence.storage.Envelope` singleton.
+  :class:`adapters.persistence.storage.Envelope` singleton.
 * :func:`derive_bucket_event_id` — deterministic SHA-256 event id.
 * :func:`append_bucket_event` — pure helper to insert one event
   into a catalogue (idempotent on identical content).
@@ -36,7 +36,7 @@ The repository also exposes
 :meth:`BucketEventHistoryRepository.to_secure_object_write` so sibling
 catalogue updates can co-emit the same encrypted event-history write. Ordinary
 operators consume this history through profile and application services such as
-:mod:`~aeat.application.bucket_maintenance`; this domain facade does not create
+:mod:`application.bucket_maintenance`; this domain facade does not create
 an operator-facing bucket command root.
 
 See Also:
@@ -45,23 +45,23 @@ See Also:
         and bucket-maintenance transitions.
     :class:`BucketEventHistoryRepository`
         Encrypted per-bucket repository for the append-only history.
-    :class:`~aeat.domain.buckets.BucketEventHistoryPersistenceError`
+    :class:`BucketEventHistoryPersistenceError`
         Storage-boundary error raised when the encrypted catalogue cannot be
         loaded or persisted safely.
-    :mod:`~aeat.application.bucket_maintenance`
+    :mod:`application.bucket_maintenance`
         Application facade that composes profile lifecycle operations and emits
         bucket-maintenance events through this domain history.
-    :mod:`~aeat.application.workflow`
+    :mod:`application.workflow`
         Active-profile state and bucket-pointer workflows that provide the
         current storage slice observed by bucket event consumers.
-    :mod:`aeat.application.modelo`
+    :mod:`application.modelo`
         Work-unit calculation, verification, filing, import, export, and
         reconciliation services that emit modelo events while persisting
         modelo catalogues separately.
-    :mod:`aeat.application.ledger`
+    :mod:`application.ledger`
         Ledger transaction lifecycle that emits bucket events for imports,
         edits, classifications, evidence attachment, and removal.
-    :mod:`aeat.application.invoices`
+    :mod:`application.invoices`
         Invoice import, reconciliation, and ledger-link workflows whose events
         reference invoice and transaction objects without replacing catalogues.
 """
