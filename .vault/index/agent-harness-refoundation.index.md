@@ -97,6 +97,7 @@ related:
   - '[[2026-07-02-agent-harness-refoundation-W06-P14-S89]]'
   - '[[2026-07-02-agent-harness-refoundation-W06-P14-S90]]'
   - '[[2026-07-02-agent-harness-refoundation-adr]]'
+  - '[[2026-07-02-agent-harness-refoundation-audit]]'
   - '[[2026-07-02-agent-harness-refoundation-plan]]'
   - '[[2026-07-02-agent-harness-refoundation-research]]'
 ---
@@ -110,6 +111,10 @@ Auto-generated index of all documents tagged with `#agent-harness-refoundation`.
 ### adr
 
 - `2026-07-02-agent-harness-refoundation-adr` - `agent-harness-refoundation` adr: `black-box tool universe, situation-keyed skills, and the MCP operating console` | (**status:** `proposed`)
+
+### audit
+
+- `2026-07-02-agent-harness-refoundation-audit` - `agent-harness-refoundation` audit: `campaign close honesty review and code review`
 
 ### exec
 
