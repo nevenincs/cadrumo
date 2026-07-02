@@ -59,7 +59,7 @@ Auto-generated index of all documents tagged with `#agent-harness`.
 ### adr
 
 - `2026-06-30-agent-harness-adr` - `agent-harness` adr: `AEAT CLI agent-harness framework` | (**status:** `accepted`)
-- `2026-07-01-agent-harness-adr` - `agent-harness` adr: `harness content: rules, personas, skills` | (**status:** `proposed`)
+- `2026-07-01-agent-harness-adr` - `agent-harness` adr: `harness content: rules, personas, skills` | (**status:** `accepted`)
 
 ### audit
 
