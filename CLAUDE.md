@@ -74,6 +74,7 @@ You MUST respect these rules at all times:
 @.claude/rules/service-imports-via-top-level-reexports.md
 @.claude/rules/shipped-search-licence-clean.md
 @.claude/rules/single-subject-mutation-is-idempotent-guarded.md
+@.claude/rules/subagent-commits-require-explicit-pathspec.md
 @.claude/rules/terminology-scaffold-preserve-contract.md
 @.claude/rules/terminology-single-declaration.md
 @.claude/rules/tests-live-under-domain-tests-folders.md
@@ -81,6 +82,7 @@ You MUST respect these rules at all times:
 @.claude/rules/vaultspec-archive-discipline.builtin.md
 @.claude/rules/vaultspec-cli.builtin.md
 @.claude/rules/vaultspec-codify.builtin.md
+@.claude/rules/vaultspec-discovery.builtin.md
 @.claude/rules/vaultspec-dry-run-discipline.builtin.md
 @.claude/rules/vaultspec-plan-editing-discipline.builtin.md
 @.claude/rules/vaultspec-rag.builtin.md
