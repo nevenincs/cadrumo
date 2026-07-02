@@ -1,42 +1,42 @@
 {
   "$schema_note": "Checked-in ratchet baseline for the import-hygiene CI gate (dev/import_hygiene_scan.py). Read by src/aeat/tests/test_import_hygiene_gate.py. Every entry below is a NAMED, documented exception -- never a bulk allowlist. A closing commit that fixes a violation MUST shrink the matching list in the SAME commit (aeat-architecture-boundaries relocation-atomicity discipline). See ADR 2026-07-01-import-centralization-adr Ruling 8.",
   "production_family1_cross_package_private_imports": {
-    "_note": "Every production (non-test) cross-package private-import site the scanner currently finds. This is the CYCLE-BREAK exception set documented inline at each site (CYCLE-BREAK-RATIONALE-WORKFLOW-REVIEW): application.review and application.workflow import each other's private submodules directly to avoid re-entering a partially-initialised package during Python's import machinery. The gate FAILS if the current scan finds MORE sites than are listed here (regression); it does not fail if the count is lower, and Wave W06 flips this list to an empty list once the exception is structurally removed (hard-zero mode).",
+    "_note": "Every production (non-test) cross-package private-import site the scanner currently finds. This is the CYCLE-BREAK exception set documented inline at each site (CYCLE-BREAK-RATIONALE-WORKFLOW-REVIEW): application.review and application.workflow import each other's private submodules directly to avoid re-entering a partially-initialised package during Python's import machinery. The gate FAILS if the current scan finds MORE sites than are listed here (regression); it does not fail if the count is lower, and Wave W06 flips this list to an empty list once the exception is structurally removed (hard-zero mode). INVESTIGATED 2026-07 (residual TYPE_CHECKING-deferral pass): all 5 sites were individually re-examined for annotation-only usage that could move under `if TYPE_CHECKING:` plus a facade import per aeat-architecture-boundaries. Each imported name is confirmed RUNTIME-BOUND by AST walk (ast.Name Load-context occurrences outside annotation position) -- none is deferrable without restructuring the review/workflow module boundary, which is out of scope for a TYPE_CHECKING-only pass. The production Family-1 count could not be reduced by this investigation; it remains a genuine, documented cycle-break exception pending a future structural decomposition (tracked separately, not by this ratchet).",
     "sites": [
       {
         "importer_path": "src/aeat/application/review/_actions.py",
         "lineno": 18,
         "target_mod": "aeat.application.workflow._models",
         "imported_names": ["WorkflowEvent", "WorkflowState"],
-        "reason": "CYCLE-BREAK-RATIONALE-WORKFLOW-REVIEW: application.workflow imports application.review from inside its own _models module, so importing the application.workflow facade from application.review re-enters the partially-initialised workflow package and raises ImportError."
+        "reason": "CYCLE-BREAK-RATIONALE-WORKFLOW-REVIEW: application.workflow imports application.review from inside its own _models module, so importing the application.workflow facade from application.review re-enters the partially-initialised workflow package and raises ImportError. RUNTIME-BOUND (confirmed 2026-07): WorkflowEvent is INSTANTIATED at runtime (`WorkflowEvent(action=action, reason=reason)`, lines 48 and 68); WorkflowState is used only as a function parameter/return annotation (deferrable under `from __future__ import annotations`, already present) but cannot be split from the co-imported WorkflowEvent runtime construction on the same import line without gaining a second import statement for zero net violation reduction (the target_mod:lineno pair is still a private cross-package import either way). Not TYPE_CHECKING-deferrable."
       },
       {
         "importer_path": "src/aeat/application/review/_actions.py",
         "lineno": 19,
         "target_mod": "aeat.application.workflow._utils",
         "imported_names": ["utc_now"],
-        "reason": "CYCLE-BREAK-RATIONALE-WORKFLOW-REVIEW: same cycle-break as the adjacent WorkflowEvent/WorkflowState import in this file; import the submodule directly to avoid triggering application.workflow.__init__ during the chain."
+        "reason": "CYCLE-BREAK-RATIONALE-WORKFLOW-REVIEW: same cycle-break as the adjacent WorkflowEvent/WorkflowState import in this file; import the submodule directly to avoid triggering application.workflow.__init__ during the chain. RUNTIME-BOUND (confirmed 2026-07): utc_now is CALLED at runtime (lines 49, 51, 73, 76) to compute `updated_at` timestamps. Not an annotation; not TYPE_CHECKING-deferrable."
       },
       {
         "importer_path": "src/aeat/application/review/_models.py",
         "lineno": 37,
         "target_mod": "aeat.application.workflow._models",
         "imported_names": ["WorkflowEvent"],
-        "reason": "CYCLE-BREAK-RATIONALE-WORKFLOW-REVIEW: matching rationale to _actions.py; application.review._models is itself imported by application.workflow._models, so it cannot import the application.workflow facade without re-entering the partially-initialised package."
+        "reason": "CYCLE-BREAK-RATIONALE-WORKFLOW-REVIEW: matching rationale to _actions.py; application.review._models is itself imported by application.workflow._models, so it cannot import the application.workflow facade without re-entering the partially-initialised package. RUNTIME-BOUND (confirmed 2026-07): WorkflowEvent is used as a pydantic BaseModel field type (`history: tuple[WorkflowEvent, ...] = ()` on LedgerReviewRecord and InvoiceReviewRecord, lines 151 and 162). Pydantic v2 resolves field-type annotations eagerly at class-definition time to build the validator schema, so `from __future__ import annotations` (already present) does NOT defer this -- the name must be a real symbol in the module namespace when the class body executes. Not TYPE_CHECKING-deferrable."
       },
       {
         "importer_path": "src/aeat/application/review/_models.py",
         "lineno": 38,
         "target_mod": "aeat.application.workflow._utils",
         "imported_names": ["utc_now"],
-        "reason": "CYCLE-BREAK-RATIONALE-WORKFLOW-REVIEW: same cycle-break as the adjacent WorkflowEvent import in this file."
+        "reason": "CYCLE-BREAK-RATIONALE-WORKFLOW-REVIEW: same cycle-break as the adjacent WorkflowEvent import in this file. RUNTIME-BOUND (confirmed 2026-07): utc_now is passed as a live `Field(default_factory=utc_now)` callable on both LedgerReviewRecord and InvoiceReviewRecord (lines 152, 163) -- pydantic stores and later calls this reference at instantiation time, so it must be a real bound function object, not a deferred annotation. Not TYPE_CHECKING-deferrable."
       },
       {
         "importer_path": "src/aeat/application/workflow/_models.py",
         "lineno": 389,
         "target_mod": "aeat.application.review._models",
         "imported_names": ["InvoiceReviewRecord", "LedgerReviewRecord"],
-        "reason": "CYCLE-BREAK-RATIONALE-WORKFLOW-REVIEW: application.workflow._models imports application.review._models directly (not through the application.review facade) to avoid the same import-cycle re-entry in the opposite direction."
+        "reason": "CYCLE-BREAK-RATIONALE-WORKFLOW-REVIEW: application.workflow._models imports application.review._models directly (not through the application.review facade) to avoid the same import-cycle re-entry in the opposite direction. RUNTIME-BOUND (confirmed 2026-07): both names are pydantic BaseModel field types on WorkflowState (`invoice_reviews: dict[str, InvoiceReviewRecord]`, `ledger_reviews: dict[str, LedgerReviewRecord]`, lines 263-264), and the module already carries a SEPARATE `if TYPE_CHECKING:` facade import of the same two names (lines 73-76, `from ..review import (InvoiceReviewRecord, LedgerReviewRecord)`) purely for static-analysis purposes -- this runtime import at line 389 is the one that resolves the names for the explicit `WorkflowState.model_rebuild()` call immediately following it (line 394), which pydantic requires to materialise the deferred schema built from the postponed (`from __future__ import annotations`) field annotations. The TYPE_CHECKING half of this split is already the maximum annotation-only deferral available; the runtime half cannot be removed without restructuring the review/workflow module boundary. Not further TYPE_CHECKING-deferrable."
       }
     ]
   },
