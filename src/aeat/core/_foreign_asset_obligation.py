@@ -14,7 +14,7 @@ declaration thresholds: the 50.000 EUR initial declaration floor and the
 It is a surfacing layer only. It does not aggregate observations, compute a
 casilla value, apply the declarability gate, or resolve a binding; the M720
 aggregation and its per-class threshold gate live in
-:mod:`aeat.application.aggregation._foreign_assets`. The obligation group is
+:mod:`application.aggregation._foreign_assets`. The obligation group is
 the legally load-bearing axis: the 50.000 EUR floor is a per-bloque umbral
 (art. 42 bis/ter/54 bis/quater), so the ``valor``/``seguro`` classes both
 belong to the single art. 42 ter valores bloque rather than two independent
@@ -22,7 +22,7 @@ thresholds.
 
 The :class:`ForeignAssetObligationGroup` enum is declared here (a closed value
 set, per the core-authority architecture contract); it is the obligation-group
-sibling of the per-clave :class:`~aeat.core.aggregation.ForeignAssetClass`.
+sibling of the per-clave :class:`~core.aggregation.ForeignAssetClass`.
 """
 
 from __future__ import annotations
@@ -50,7 +50,7 @@ from .external_constants import MODELO_720_REPORTING_THRESHOLD_EUR
 #: ``rd-1065-2007:art-42-quater`` records the same structure verbatim: "inicial
 #: 50.000 EUR, re-declaracion si variacion > 20.000 EUR". The gate is STRICT
 #: (> 20.000), mirroring the strict initial-floor gate
-#: (:data:`~aeat.core.external_constants.MODELO_720_REPORTING_THRESHOLD_EUR`).
+#: (:data:`~core.external_constants.MODELO_720_REPORTING_THRESHOLD_EUR`).
 MODELO_720_REDECLARATION_INCREASE_THRESHOLD_EUR: Final[Decimal] = Decimal("20000.00")
 
 
@@ -61,7 +61,7 @@ class ForeignAssetObligationGroup(StrEnum):
     the Modelo 720 (and its monedas-virtuales sibling Modelo 721) partitions
     declared assets into. The 50.000 EUR declaration floor and the 20.000 EUR
     re-declaration delta apply INDEPENDENTLY per bloque, so this — not the
-    per-clave :class:`~aeat.core.aggregation.ForeignAssetClass` — is the axis
+    per-clave :class:`~core.aggregation.ForeignAssetClass` — is the axis
     the declaration thresholds are keyed on.
 
     Members:
@@ -114,7 +114,7 @@ class ForeignAssetDeclarationThreshold(BaseModel):
     the 50.000 EUR initial declaration floor and the 20.000 EUR re-declaration
     increase delta — plus the ``legal_refs`` provenance that establishes them.
     Strict and frozen, matching the registry schema's
-    :data:`~aeat.core.STRICT_FROZEN_CONFIG` convention, so an unknown group or a
+    :data:`~core.STRICT_FROZEN_CONFIG` convention, so an unknown group or a
     stray key is rejected at construction.
 
     Both umbral gates are STRICT in the law and in the aggregation gate: a bloque
