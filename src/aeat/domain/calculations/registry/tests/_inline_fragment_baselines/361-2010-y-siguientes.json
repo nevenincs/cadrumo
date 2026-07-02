@@ -1,0 +1,367 @@
+{
+  "modelo_id": "361",
+  "revision": {
+    "algorithm_bindings": [],
+    "algorithm_providers": [],
+    "application_links": [
+      {
+        "consumer": "aeat.application.filing",
+        "id": "modelo-361-filing",
+        "legal_refs": [
+          "orden-eha-789-2010:art-8",
+          "orden-eha-789-2010:art-9"
+        ],
+        "requires_snapshot": true,
+        "source_refs": [
+          "aeat-modelo-361-procedure",
+          "aeat-modelo-361-devolucion-solicitada",
+          "aeat-modelo-361-lista-operaciones",
+          "boe-modelo-361-form"
+        ],
+        "surface": "filing"
+      },
+      {
+        "consumer": "aeat.domain.deadlines",
+        "id": "modelo-361-deadline",
+        "legal_refs": [
+          "orden-eha-789-2010:art-10"
+        ],
+        "requires_snapshot": true,
+        "source_refs": [
+          "aeat-modelo-361-procedure",
+          "boe-modelo-361-form"
+        ],
+        "surface": "deadline"
+      }
+    ],
+    "bindings": [],
+    "casilla_continuidad_evolutions": [],
+    "casillas": [
+      {
+        "aliases": [],
+        "alternate_bindings": [],
+        "binding": null,
+        "constraints": null,
+        "continuidad_id": null,
+        "data_type": "period_code",
+        "export_refs": [],
+        "form_number": null,
+        "formula": null,
+        "id": "periodo-solicitud",
+        "input_kind": "manual",
+        "internal_only": false,
+        "label": "Periodo de la solicitud",
+        "legal_refs": [
+          "orden-eha-789-2010:art-8",
+          "orden-eha-789-2010:art-10"
+        ],
+        "localized_help": {},
+        "localized_labels": {},
+        "number": "devolucion.periodo",
+        "required": false,
+        "section": [
+          "devolucion_solicitada"
+        ],
+        "segmento": null,
+        "semantic_role": "m361_periodo_solicitud",
+        "semantic_role_cardinality": "shared",
+        "semantic_role_cardinality_reason": null,
+        "source_refs": [
+          "aeat-modelo-361-devolucion-solicitada",
+          "boe-modelo-361-form"
+        ]
+      },
+      {
+        "aliases": [],
+        "alternate_bindings": [],
+        "binding": null,
+        "constraints": null,
+        "continuidad_id": null,
+        "data_type": "year",
+        "export_refs": [],
+        "form_number": null,
+        "formula": null,
+        "id": "ejercicio",
+        "input_kind": "manual",
+        "internal_only": false,
+        "label": "Ano al que se refiere la solicitud",
+        "legal_refs": [
+          "orden-eha-789-2010:art-8",
+          "orden-eha-789-2010:art-10"
+        ],
+        "localized_help": {},
+        "localized_labels": {},
+        "number": "devolucion.ano",
+        "required": false,
+        "section": [
+          "devolucion_solicitada"
+        ],
+        "segmento": null,
+        "semantic_role": "m361_ejercicio",
+        "semantic_role_cardinality": "shared",
+        "semantic_role_cardinality_reason": null,
+        "source_refs": [
+          "aeat-modelo-361-devolucion-solicitada",
+          "boe-modelo-361-form"
+        ]
+      },
+      {
+        "aliases": [],
+        "alternate_bindings": [],
+        "binding": null,
+        "constraints": null,
+        "continuidad_id": null,
+        "data_type": "money",
+        "export_refs": [],
+        "form_number": null,
+        "formula": null,
+        "id": "operacion-base-imponible",
+        "input_kind": "manual",
+        "internal_only": false,
+        "label": "Base imponible de cada factura o documento de importacion",
+        "legal_refs": [
+          "orden-eha-789-2010:art-8",
+          "orden-eha-789-2010:art-9"
+        ],
+        "localized_help": {},
+        "localized_labels": {},
+        "number": "operacion.base-imponible",
+        "required": false,
+        "section": [
+          "lista_operaciones"
+        ],
+        "segmento": null,
+        "semantic_role": "m361_operacion_base_imponible",
+        "semantic_role_cardinality": "shared",
+        "semantic_role_cardinality_reason": null,
+        "source_refs": [
+          "aeat-modelo-361-lista-operaciones",
+          "boe-modelo-361-form"
+        ]
+      },
+      {
+        "aliases": [],
+        "alternate_bindings": [],
+        "binding": null,
+        "constraints": null,
+        "continuidad_id": null,
+        "data_type": "money",
+        "export_refs": [],
+        "form_number": null,
+        "formula": null,
+        "id": "operacion-cuota-iva",
+        "input_kind": "manual",
+        "internal_only": false,
+        "label": "Cuota IVA de cada factura o documento de importacion",
+        "legal_refs": [
+          "orden-eha-789-2010:art-8",
+          "orden-eha-789-2010:art-9"
+        ],
+        "localized_help": {},
+        "localized_labels": {},
+        "number": "operacion.cuota-iva",
+        "required": false,
+        "section": [
+          "lista_operaciones"
+        ],
+        "segmento": null,
+        "semantic_role": "m361_operacion_cuota_iva",
+        "semantic_role_cardinality": "shared",
+        "semantic_role_cardinality_reason": null,
+        "source_refs": [
+          "aeat-modelo-361-lista-operaciones",
+          "boe-modelo-361-form"
+        ]
+      },
+      {
+        "aliases": [],
+        "alternate_bindings": [],
+        "binding": null,
+        "constraints": null,
+        "continuidad_id": null,
+        "data_type": "ratio",
+        "export_refs": [],
+        "form_number": null,
+        "formula": null,
+        "id": "operacion-prorrata-iva",
+        "input_kind": "manual",
+        "internal_only": false,
+        "label": "Prorrata IVA deducible aplicable a cada operacion",
+        "legal_refs": [
+          "orden-eha-789-2010:art-8",
+          "orden-eha-789-2010:art-9"
+        ],
+        "localized_help": {},
+        "localized_labels": {},
+        "number": "operacion.prorrata-iva",
+        "required": false,
+        "section": [
+          "lista_operaciones"
+        ],
+        "segmento": null,
+        "semantic_role": "m361_operacion_prorrata_iva",
+        "semantic_role_cardinality": "shared",
+        "semantic_role_cardinality_reason": null,
+        "source_refs": [
+          "aeat-modelo-361-lista-operaciones",
+          "boe-modelo-361-form"
+        ]
+      },
+      {
+        "aliases": [],
+        "alternate_bindings": [],
+        "binding": null,
+        "constraints": null,
+        "continuidad_id": null,
+        "data_type": "money",
+        "export_refs": [],
+        "form_number": null,
+        "formula": null,
+        "id": "operacion-importe-solicitado-devolver",
+        "input_kind": "manual",
+        "internal_only": false,
+        "label": "Importe solicitado a devolver por operacion",
+        "legal_refs": [
+          "orden-eha-789-2010:art-8",
+          "orden-eha-789-2010:art-9"
+        ],
+        "localized_help": {},
+        "localized_labels": {},
+        "number": "operacion.importe-solicitado-devolver",
+        "required": false,
+        "section": [
+          "lista_operaciones"
+        ],
+        "segmento": null,
+        "semantic_role": "m361_operacion_importe_solicitado_devolver",
+        "semantic_role_cardinality": "shared",
+        "semantic_role_cardinality_reason": null,
+        "source_refs": [
+          "aeat-modelo-361-lista-operaciones",
+          "boe-modelo-361-form"
+        ]
+      }
+    ],
+    "completeness_manifest": null,
+    "constructs": [],
+    "continuidad_validation": "advisory",
+    "deadline_windows": [
+      {
+        "applicability_condition_mode": "all",
+        "applicability_conditions": [],
+        "closes_on": "2025-09-30",
+        "filing_year": 2024,
+        "id": "modelo-361-2024-ad-hoc",
+        "legal_refs": [
+          "orden-eha-789-2010:art-10"
+        ],
+        "opens_on": "2025-01-01",
+        "payment_cutoff_on": null,
+        "period": {
+          "code": "AD-HOC",
+          "filing_year": 2024
+        },
+        "period_kind": "ad_hoc",
+        "source_refs": [
+          "aeat-modelo-361-procedure",
+          "boe-modelo-361-form"
+        ]
+      },
+      {
+        "applicability_condition_mode": "all",
+        "applicability_conditions": [],
+        "closes_on": "2026-09-30",
+        "filing_year": 2025,
+        "id": "modelo-361-2025-ad-hoc",
+        "legal_refs": [
+          "orden-eha-789-2010:art-10"
+        ],
+        "opens_on": "2026-01-01",
+        "payment_cutoff_on": null,
+        "period": {
+          "code": "AD-HOC",
+          "filing_year": 2025
+        },
+        "period_kind": "ad_hoc",
+        "source_refs": [
+          "aeat-modelo-361-procedure",
+          "boe-modelo-361-form"
+        ]
+      }
+    ],
+    "dependency_classifications": [],
+    "export_layouts": [],
+    "extraction_profiles": [],
+    "filing_schedules": [
+      {
+        "id": "modelo-361-ad-hoc",
+        "legal_refs": [
+          "orden-eha-789-2010:art-10"
+        ],
+        "period_kind": "ad_hoc",
+        "periods": [
+          "AD-HOC"
+        ],
+        "profile_condition_mode": "all",
+        "profile_conditions": [],
+        "source_refs": [
+          "aeat-modelo-361-procedure",
+          "boe-modelo-361-form"
+        ]
+      }
+    ],
+    "formulas": [],
+    "id": "2010-y-siguientes",
+    "label": "Modelo 361 ejercicios 2010 y siguientes (Orden EHA/789/2010)",
+    "legal_refs": [
+      "orden-eha-789-2010:art-7",
+      "orden-eha-789-2010:art-8",
+      "orden-eha-789-2010:art-9",
+      "orden-eha-789-2010:art-10"
+    ],
+    "live_cross_references": [],
+    "orden_aplicabilidad": [
+      "orden-eha-789-2010:art-7"
+    ],
+    "parameters": [],
+    "period_selector": {
+      "periods": [
+        "AD-HOC"
+      ],
+      "year_from": 2010,
+      "year_to": null,
+      "years": []
+    },
+    "relations": [],
+    "source_refs": [
+      "aeat-modelo-361-procedure",
+      "aeat-modelo-361-devolucion-solicitada",
+      "aeat-modelo-361-lista-operaciones",
+      "boe-modelo-361-form"
+    ],
+    "support_removal_decisions": [],
+    "valid_from": "2010-04-01",
+    "valid_to": null,
+    "verification_expectations": [],
+    "verification_predicates": [],
+    "workbook_parity_refs": [
+      {
+        "fixture_id": "modelo-361-static-layout",
+        "formula_coverage": "static_layout",
+        "id": "modelo-361-static-form-layout",
+        "legal_refs": [
+          "orden-eha-789-2010:art-7",
+          "orden-eha-789-2010:art-8"
+        ],
+        "output_cells": {},
+        "runner_required": false,
+        "source_refs": [
+          "boe-modelo-361-form"
+        ],
+        "tolerance": "0.00",
+        "workbook_source": "boe-modelo-361-form"
+      }
+    ]
+  },
+  "revision_id": "2010-y-siguientes"
+}
