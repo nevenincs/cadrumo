@@ -365,6 +365,43 @@ class LedgerAttachResult(_LedgerMutationResult):
     """JSON envelope for ``aeat app ledger attach`` and ``ledger doclink``."""
 
 
+class LedgerDocLinkPullFolderFilePayload(OutputSchema):
+    """One Drive folder child's fetch outcome from ``ledger pull-folder``.
+
+    ``fetched`` is ``True`` when the file's bytes were fetched and encrypted
+    into the attachment store (``attachment_id`` set); ``False`` when the
+    fetch was refused (``refusal_reason`` set) — a Drive file outside the
+    ``drive.file`` scope never becomes a link-only evidence row.
+    """
+
+    file_id: str
+    name: str
+    mime_type: str
+    fetched: bool
+    attachment_id: str | None = None
+    refusal_reason: str | None = None
+
+
+@register_schema("ledger.pull_folder")
+class LedgerDocLinkPullFolderResult(OutputSchema):
+    """JSON envelope for ``aeat app ledger pull-folder``.
+
+    Bulk-fetches every PDF/image child of a ``drive.file``-reachable Drive
+    folder into encrypted attachment evidence (never a link-only pointer),
+    reporting one :class:`LedgerDocLinkPullFolderFilePayload` row per child.
+    Gmail bulk fetch is out of scope pending a separate ``gmail.readonly``
+    scope-upgrade decision.
+    """
+
+    bucket_id: str
+    folder_id: str
+    total_documents: int
+    fetched_count: int
+    refused_count: int
+    skipped_non_document_count: int
+    files: list[LedgerDocLinkPullFolderFilePayload] = []
+
+
 @register_schema("ledger.archive")
 class LedgerArchiveResult(_LedgerMutationResult):
     """JSON envelope for ``aeat app ledger archive``."""
