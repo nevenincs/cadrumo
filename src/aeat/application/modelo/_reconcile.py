@@ -48,6 +48,7 @@ from typing import TYPE_CHECKING
 from pydantic import BaseModel, Field
 
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ...core import Modelo
 from ...core.errors import AeatError
 from ...core.identity import BucketId
 from ...core.time import now
@@ -62,7 +63,9 @@ if TYPE_CHECKING:
     from ...domain.justificante import Justificante
     from ...domain.modelos import CalculationRevision, WorkUnit
 
-_DECLARATION_CASILLA_RECONCILE_MODELOS: frozenset[str] = frozenset({"111", "130", "190", "303", "390"})
+_DECLARATION_CASILLA_RECONCILE_MODELOS: frozenset[Modelo] = frozenset(
+    {Modelo.M111, Modelo.M130, Modelo.M190, Modelo.M303, Modelo.M390}
+)
 """Modelos enrolled in casilla-level filed-declaration reconciliation.
 
 A modelo not in this set still accepts
