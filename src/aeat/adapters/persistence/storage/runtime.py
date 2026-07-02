@@ -23,7 +23,7 @@ from ....core.config import (
     load_settings,
     settings_for_active_profile_bucket,
 )
-from ....core.external_constants import DEFAULT_OUTPUT_LANGUAGE
+from ....core.external_constants import DEFAULT_OUTPUT_LANGUAGE, SUPPORTED_OUTPUT_LANGUAGES
 from ....core.logging import get_logger
 from ....core.storage_route_guidance import EXPLICIT_DATABASE_URL_PROFILE_RECOVERY
 from ....core.time import now as _utc_now
@@ -34,12 +34,12 @@ from .errors import (
 from .errors import (
     storage_validation_error as _storage_validation_error,
 )
-from .master_key import current_active_bucket_session
+from .master_key._active_session import current_active_bucket_session
 
 if TYPE_CHECKING:
     from .sql.secure_objects import SecureObjectRepository
 
-from ....core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ....core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 
 _SYNTHETIC_SESSION_BUCKET_IDS = frozenset({"ephemeral"})
 _log = get_logger(__name__)
@@ -182,7 +182,7 @@ class StorageRuntime(BaseModel):
 
 def runtime_not_ready_error(message: str, *, message_key: str) -> StorageValidationError:
     """Build a localized storage-runtime readiness failure returning a :class:`StorageValidationError`."""
-    from ....core.i18n import tr
+    from ....core.i18n._render import tr
 
     return StorageValidationError(
         message,
@@ -210,7 +210,7 @@ def _readiness_issue(
 
 
 def _render_readiness_details(issues: tuple[StorageRuntimeReadinessIssue, ...]) -> str:
-    from ....core.i18n import tr
+    from ....core.i18n._render import tr
 
     locale = _settings_output_language()
     rendered = tuple(tr(issue.message_key, locale=locale) for issue in issues)
@@ -225,13 +225,48 @@ def _render_recovery_hints(issues: tuple[StorageRuntimeReadinessIssue, ...]) -> 
 
 
 def _settings_output_language() -> str:
-    """Resolve locale without consulting active-profile storage."""
+    """Resolve locale without consulting encrypted active-profile storage."""
     try:
-        language = load_settings().aeat_output_language or DEFAULT_OUTPUT_LANGUAGE
+        settings = load_settings()
     except (AttributeError, KeyError, ValueError):
         _log.debug("storage runtime could not resolve output language; using default", exc_info=True)
         return DEFAULT_OUTPUT_LANGUAGE.value
-    return getattr(language, "value", str(language))
+    if "aeat_output_language" in settings.model_fields_set:
+        explicit = _normalise_supported_language(settings.aeat_output_language)
+        if explicit is not None:
+            return explicit
+    hinted = _active_bucket_output_language_hint(settings)
+    if hinted is not None:
+        return hinted
+    return _normalise_supported_language(settings.aeat_output_language) or DEFAULT_OUTPUT_LANGUAGE.value
+
+
+def _normalise_supported_language(value: object) -> str | None:
+    raw = str(getattr(value, "value", value)).strip().lower()
+    if raw in SUPPORTED_OUTPUT_LANGUAGES:
+        return raw
+    return None
+
+
+def _active_bucket_output_language_hint(settings: Settings) -> str | None:
+    try:
+        from ....core._bucket_pointer_io import resolve_active_bucket_id
+        from .bucket._output_language_hint import read_bucket_output_language_hint
+
+        bucket_id = resolve_active_bucket_id()
+        if bucket_id is None:
+            return None
+        return read_bucket_output_language_hint(
+            storage_root=settings.aeat_local_storage_root,
+            bucket_id=bucket_id,
+        )
+    except Exception as exc:
+        _log.debug(
+            "storage runtime could not resolve bucket output-language hint; using settings/default (%s)",
+            type(exc).__name__,
+            exc_info=True,
+        )
+        return None
 
 
 def inspect_storage_runtime(
