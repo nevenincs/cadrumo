@@ -1,7 +1,7 @@
 """Public facade for immutable ledger transactions.
 
 This package re-exports the transaction domain boundary used by
-:mod:`aeat.application.ledger`: :class:`Transaction` wraps an upstream
+:mod:`~aeat.application.ledger`: :class:`Transaction` wraps an upstream
 :class:`RawTransaction` and its :class:`RawProvenance`, while
 :class:`TransactionCatalogue` keeps the immutable mapping keyed by the
 content-derived transaction id. Import helpers such as
@@ -24,9 +24,9 @@ Persistence is exposed lazily as :class:`TransactionCatalogueRepository` so
 importing the facade does not eagerly load the SQL storage stack. The
 repository stores each transaction under the bucket-scoped transaction
 namespace as ``FINANCIAL``
-:class:`~aeat.adapters.persistence.storage.SensitivityClass` rows wrapped in
-:class:`~aeat.adapters.persistence.storage.Envelope` through
-:class:`~aeat.adapters.persistence.storage.SecureObjectRepository`; callers
+:class:`SensitivityClass` rows wrapped in
+:class:`Envelope` through
+:class:`SecureObjectRepository`; callers
 should not write plaintext catalogues or reach into private modules.
 
 LLM-facing :class:`LLMClassifier`, :class:`LLMSplitProposer`,
@@ -38,27 +38,27 @@ tax numbers are derived by application services, not originated by this
 package.
 
 Downstream modelo calculation records keep only forward transaction ids on
-:class:`~aeat.domain.modelos.CalculationRevision`. Aggregation services consume
+:class:`CalculationRevision`. Aggregation services consume
 this catalogue to produce registry binding values and ledger filing snapshots,
 while :class:`~aeat.domain.modelos.TransactionRevisionParticipationIndex`
 provides the rebuildable inverse audit lookup from one ledger transaction to
 finalized revisions and filing records.
 
 See Also:
-    :mod:`aeat.application.ledger`
+    :mod:`~aeat.application.ledger`
         Operator-facing lifecycle that creates, edits, classifies, splits,
         attaches evidence, and preflights bucket-scoped transactions.
-    :mod:`aeat.application.aggregation`
+    :mod:`~aeat.application.aggregation`
         Source resolvers that turn transaction catalogues into
         :class:`~aeat.application.aggregation.CalculationSourceResolution`
         payloads for modelo calculation.
-    :func:`aeat.application.aggregation._ledger_filing_snapshot.compute_ledger_filing_snapshot`
+    :func:`~aeat.application.aggregation._ledger_filing_snapshot.compute_ledger_filing_snapshot`
         Captures tax-relevant transaction fields for finalized calculation
         revisions.
-    :mod:`aeat.domain.invoices`
+    :mod:`~aeat.domain.invoices`
         Invoice catalogue and reconciliation records referenced by
         ``invoice_id`` and ``purchase_invoice_evidence_id``.
-    :mod:`aeat.domain.usage_ratios`
+    :mod:`~aeat.domain.usage_ratios`
         Proportionality profiles referenced by ledger rows before aggregation.
 """
 
