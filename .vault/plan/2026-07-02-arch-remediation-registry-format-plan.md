@@ -35,7 +35,7 @@ Migrate the eight small inline informativa and retencion revisions to the fragme
 - [ ] `P01.S06` - Migrate modelo 187 inline revision to the fragmented layout in one atomic commit gated by the equality test and a green registry validator; `src/aeat/_data/registry/aeat/modelos/187`.
 - [ ] `P01.S07` - Migrate modelo 188 inline revision to the fragmented layout in one atomic commit gated by the equality test and a green registry validator; `src/aeat/_data/registry/aeat/modelos/188`.
 - [ ] `P01.S08` - Migrate modelo 194 inline revision to the fragmented layout in one atomic commit gated by the equality test and a green registry validator; `src/aeat/_data/registry/aeat/modelos/194`.
-- [ ] `P01.S09` - Migrate modelo 231 inline revision to the fragmented layout in one atomic commit gated by the equality test and a green registry validator; `src/aeat/_data/registry/aeat/modelos/231`.
+- [x] `P01.S09` - Migrate modelo 231 inline revision to the fragmented layout in one atomic commit gated by the equality test and a green registry validator; `src/aeat/_data/registry/aeat/modelos/231`.
 - [ ] `P01.S10` - Migrate modelo 361 inline revision to the fragmented layout in one atomic commit gated by the equality test and a green registry validator; `src/aeat/_data/registry/aeat/modelos/361`.
 
 ### Phase `P02` - calc-grade surface migration
