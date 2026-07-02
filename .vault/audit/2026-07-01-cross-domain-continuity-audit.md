@@ -49,6 +49,9 @@ related:
 - Checked that retired `aeat.diagnostics` secure-object code is not restored, locale CLI audit/scaffold output was already localized, and root `--version` remains the intentional machine-format semver path.
 - Checked that wizard success text rows now localize `profile`, `status`, `active_profile`, and `next` labels while JSON payload keys and notice shape remain unchanged.
 - Checked validation evidence from focused wizard tests, focused profile-create/edit CLI integration tests, touched-file ruff, reviewer output, and RAG grounding.
+- Reviewed W09.P45.S236 changes to `src/aeat/entrypoints/cli/tests/test_modelo_work_ux.py`.
+- Checked that fresh `modelo work create` without `--revision` binds through the live registry authority for the supplied Modelo 131 year and period, while adjacent coverage preserves visible-target reuse and explicit revision mismatch refusal.
+- Checked validation evidence from focused modelo work UX integration tests, touched-file ruff, reviewer output, and RAG grounding.
 
 ## Findings
 
@@ -99,6 +102,10 @@ No findings for the no-code diagnostics-profile closure. The targeted file and p
 ### w09-p45-s284 | low | no findings
 
 No findings for the mixed hardcoded-string follow-up. The accepted patch is scoped to the live wizard success text surface: text labels are now drawn from `application.wizard.output_labels.*`, while JSON keys remain stable and next-step guidance still rides the `notices` channel. The stale row fragments were handled by verification rather than code churn: retired `aeat.diagnostics` targets remain absent, locale CLI labels were already localized, and bare `aeat --version` remains a documented machine-format exception.
+
+### w09-p45-s236 | low | no findings
+
+No findings for the work-create registry-revision default regression. The live implementation already routes creation through `resolve_registry_revision_for_work_target`; the added CLI test pins the fresh-create no-`--revision` path against Modelo 131 and the registry authority's selected revision for the supplied year/period. The test uses the live registry authority as the expected-value source, so it proves CLI binding to the central resolver rather than acting as an independent legal oracle.
 
 ## Recommendations
 
