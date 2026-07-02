@@ -14,6 +14,28 @@ related:
   - '[[2026-07-02-agent-harness-refoundation-W01-P02-S06]]'
   - '[[2026-07-02-agent-harness-refoundation-W01-P02-S07]]'
   - '[[2026-07-02-agent-harness-refoundation-W01-P02-S08]]'
+  - '[[2026-07-02-agent-harness-refoundation-W02-P03-S09]]'
+  - '[[2026-07-02-agent-harness-refoundation-W02-P03-S10]]'
+  - '[[2026-07-02-agent-harness-refoundation-W02-P03-S11]]'
+  - '[[2026-07-02-agent-harness-refoundation-W02-P03-S12]]'
+  - '[[2026-07-02-agent-harness-refoundation-W02-P04-S13]]'
+  - '[[2026-07-02-agent-harness-refoundation-W02-P04-S14]]'
+  - '[[2026-07-02-agent-harness-refoundation-W02-P04-S15]]'
+  - '[[2026-07-02-agent-harness-refoundation-W02-P04-S16]]'
+  - '[[2026-07-02-agent-harness-refoundation-W02-P04-S17]]'
+  - '[[2026-07-02-agent-harness-refoundation-W02-P04-S18]]'
+  - '[[2026-07-02-agent-harness-refoundation-W03-P05-S19]]'
+  - '[[2026-07-02-agent-harness-refoundation-W03-P05-S20]]'
+  - '[[2026-07-02-agent-harness-refoundation-W03-P05-S21]]'
+  - '[[2026-07-02-agent-harness-refoundation-W03-P06-S22]]'
+  - '[[2026-07-02-agent-harness-refoundation-W03-P06-S23]]'
+  - '[[2026-07-02-agent-harness-refoundation-W03-P06-S24]]'
+  - '[[2026-07-02-agent-harness-refoundation-W03-P06-S25]]'
+  - '[[2026-07-02-agent-harness-refoundation-W04-P08-S28]]'
+  - '[[2026-07-02-agent-harness-refoundation-W04-P08-S29]]'
+  - '[[2026-07-02-agent-harness-refoundation-W04-P08-S30]]'
+  - '[[2026-07-02-agent-harness-refoundation-W04-P08-S31]]'
+  - '[[2026-07-02-agent-harness-refoundation-W04-P08-S32]]'
   - '[[2026-07-02-agent-harness-refoundation-W05-P09-S34]]'
   - '[[2026-07-02-agent-harness-refoundation-W05-P09-S35]]'
   - '[[2026-07-02-agent-harness-refoundation-W05-P09-S36]]'
@@ -57,6 +79,12 @@ related:
   - '[[2026-07-02-agent-harness-refoundation-W05-P11-S74]]'
   - '[[2026-07-02-agent-harness-refoundation-W05-P11-S75]]'
   - '[[2026-07-02-agent-harness-refoundation-W05-P11-S76]]'
+  - '[[2026-07-02-agent-harness-refoundation-W06-P12-S77]]'
+  - '[[2026-07-02-agent-harness-refoundation-W06-P12-S78]]'
+  - '[[2026-07-02-agent-harness-refoundation-W06-P12-S79]]'
+  - '[[2026-07-02-agent-harness-refoundation-W06-P12-S87]]'
+  - '[[2026-07-02-agent-harness-refoundation-W06-P14-S89]]'
+  - '[[2026-07-02-agent-harness-refoundation-W06-P14-S90]]'
   - '[[2026-07-02-agent-harness-refoundation-adr]]'
   - '[[2026-07-02-agent-harness-refoundation-plan]]'
   - '[[2026-07-02-agent-harness-refoundation-research]]'
@@ -82,6 +110,28 @@ Auto-generated index of all documents tagged with `#agent-harness-refoundation`.
 - `2026-07-02-agent-harness-refoundation-W01-P02-S06` - Add the search-plus-execute meta-tool pair for verbs outside the curated toolsets
 - `2026-07-02-agent-harness-refoundation-W01-P02-S07` - Register the prompts and resources server capabilities on the stdio server
 - `2026-07-02-agent-harness-refoundation-W01-P02-S08` - Add tests for the meta-tool fallback and capability registration
+- `2026-07-02-agent-harness-refoundation-W02-P03-S09` - Add the harness.load floor tool returning operator rules and the active persona via aeat.agent
+- `2026-07-02-agent-harness-refoundation-W02-P03-S10` - Add aeat skill, rule, and persona resource templates with a read handler
+- `2026-07-02-agent-harness-refoundation-W02-P03-S11` - Wire the resource list and read handlers into the server
+- `2026-07-02-agent-harness-refoundation-W02-P03-S12` - Add tests for the floor tool and resource templates
+- `2026-07-02-agent-harness-refoundation-W02-P04-S13` - Add guided-workflow prompts that embed the matching skill plus its grounding excerpt
+- `2026-07-02-agent-harness-refoundation-W02-P04-S14` - Wire the prompt list and get handlers into the server
+- `2026-07-02-agent-harness-refoundation-W02-P04-S15` - Demote the workspace materialiser to an optional Claude-native .claude/skills mirror layout
+- `2026-07-02-agent-harness-refoundation-W02-P04-S16` - Update the app-agent workspace CLI to emit the Claude-native mirror
+- `2026-07-02-agent-harness-refoundation-W02-P04-S17` - Add tests for the guided-workflow prompts
+- `2026-07-02-agent-harness-refoundation-W02-P04-S18` - Update the workspace materialiser tests for the mirror layout
+- `2026-07-02-agent-harness-refoundation-W03-P05-S19` - Add the elicitation module with the capability-degradation matrix over accept, decline, and cancel, a destructiveHint fallback, and a default handoff refusal when elicitation is absent
+- `2026-07-02-agent-harness-refoundation-W03-P05-S20` - Enforce the CONFIRM tier through elicitation in the call-tool path
+- `2026-07-02-agent-harness-refoundation-W03-P05-S21` - Add tests for elicitation enforcement and the degradation matrix
+- `2026-07-02-agent-harness-refoundation-W03-P06-S22` - Extend the faithfulness check with the serving-path advisory-plus-handoff-block integration surface
+- `2026-07-02-agent-harness-refoundation-W03-P06-S23` - Wire faithfulness into the serving path as an advisory notice with a hard block at the export and record-marker boundary
+- `2026-07-02-agent-harness-refoundation-W03-P06-S24` - Add per-verb handoff deny rules over the family-granular persona scope
+- `2026-07-02-agent-harness-refoundation-W03-P06-S25` - Add local session telemetry recording per-call trajectory records with session ids
+- `2026-07-02-agent-harness-refoundation-W04-P08-S28` - Build the live subagent-persona harness substrate that starts the real server, drives a real client session, and captures the trajectory
+- `2026-07-02-agent-harness-refoundation-W04-P08-S29` - Score observed calls against golden scenarios plus faithfulness and confirmation with the zero-live-submit and zero-handoff-faithfulness invariants
+- `2026-07-02-agent-harness-refoundation-W04-P08-S30` - Extend the golden-scenario models for live-persona trajectory capture and scoring
+- `2026-07-02-agent-harness-refoundation-W04-P08-S31` - Add the flywheel that promotes live failures into new golden scenarios
+- `2026-07-02-agent-harness-refoundation-W04-P08-S32` - Add the local measurement report artefact
 - `2026-07-02-agent-harness-refoundation-W05-P09-S34` - Define the structured applies_when frontmatter schema and its parser over TaxpayerProfile facts and lifecycle state
 - `2026-07-02-agent-harness-refoundation-W05-P09-S35` - Validate the applies_when field at skill load
 - `2026-07-02-agent-harness-refoundation-W05-P09-S36` - Add the applies_when coverage gate asserting every skill declares a structured predicate
@@ -125,6 +175,12 @@ Auto-generated index of all documents tagged with `#agent-harness-refoundation`.
 - `2026-07-02-agent-harness-refoundation-W05-P11-S74` - Add the inicio-actividad golden scenario
 - `2026-07-02-agent-harness-refoundation-W05-P11-S75` - Author the cese-actividad skill over the activity-end-date and 036 baja path
 - `2026-07-02-agent-harness-refoundation-W05-P11-S76` - Add the cese-actividad golden scenario
+- `2026-07-02-agent-harness-refoundation-W06-P12-S77` - Build the FTS5 lexical index with unicode61 remove_diacritics 2 plus a snowballstemmer Spanish stemmed column from the bundled extracted corpus triples
+- `2026-07-02-agent-harness-refoundation-W06-P12-S78` - Build the structured citation lookup keyed on citation id over the registry typed legal_refs, corpus_ref, and BOE permalink data
+- `2026-07-02-agent-harness-refoundation-W06-P12-S79` - Precompute the corpus embeddings at build time with model2vec potion-multilingual-128M and ship the numpy matrix as bundled data
+- `2026-07-02-agent-harness-refoundation-W06-P12-S87` - Confirm the potion-multilingual-128M packaged footprint and that the wheel ships the precomputed vectors but no model weights, onnxruntime, or caches
+- `2026-07-02-agent-harness-refoundation-W06-P14-S89` - Pin the search-stack dependencies snowballstemmer, model2vec, and numpy in the capability-gated search extra with a lexical-only degraded default
+- `2026-07-02-agent-harness-refoundation-W06-P14-S90` - Author the third-party notices attribution for the potion-multilingual-128M lineage distilled from BGE-m3 on the C4 ODC-BY corpus
 
 ### plan
 
