@@ -4,7 +4,7 @@ Defines the boundary records that flow through the transaction
 pipeline:
 
 - :class:`Transaction` -- the immutable wrapper that preserves the
-  upstream :class:`aeat.domain.transactions._raw_transaction.RawTransaction`
+  upstream :class:`domain.transactions._raw_transaction.RawTransaction`
   verbatim and adds classification metadata.
 - :class:`ClassificationHistoryEntry` -- one frozen record in the
   per-transaction classification chain.
@@ -72,7 +72,7 @@ def derive_transaction_id(raw: RawTransaction) -> str:
     *lineage* convenience that lets an old, written-down handle still
     resolve to the current row through ``ledger history`` / ``view`` /
     ``track`` (see
-    :func:`aeat.application.ledger.resolve_lineage_transaction_id`) is a
+    :func:`application.ledger.resolve_lineage_transaction_id`) is a
     **read-side lookup layer over this authoritative id**; it never
     freezes or re-mints the id, so the content-addressing invariant import
     dedup relies on is untouched.
@@ -485,7 +485,7 @@ class ClassificationHistoryEntry(BaseModel):
             ``auto`` / ``manual`` / ``rule:<id>`` / ``llm:<model>`` /
             ``derived:<basis>`` shape.
         reason: Free-text justification (may be empty).
-        category_id: Optional :class:`aeat.domain.categories.SpendingCategory`
+        category_id: Optional :class:`domain.categories.SpendingCategory`
             foreign key.
         notes: Free-text notes (may be empty).
         confidence: Optional decision confidence in ``[0, 1]``.
@@ -792,7 +792,7 @@ class Transaction(BaseModel):
             from the wrapped raw record by :func:`derive_transaction_id`.
             Re-validated on every parse to detect tampering.
         raw: The verbatim
-            :class:`aeat.domain.transactions._raw_transaction.RawTransaction`.
+            :class:`domain.transactions._raw_transaction.RawTransaction`.
         direction: Closed :class:`TransactionDirection`.
         business_classification: Current :class:`BusinessClassification`
             decision; defaults to
@@ -800,7 +800,7 @@ class Transaction(BaseModel):
         business_pct: Required when ``business_classification`` is
             :attr:`BusinessClassification.MIXED`; ``None`` otherwise.
         invoice_id: Optional invoice foreign key.
-        category_id: Optional :class:`aeat.domain.categories.SpendingCategory`
+        category_id: Optional :class:`domain.categories.SpendingCategory`
             foreign key.
         taxable_base: Optional IVA-exclusive base amount.
         iva_rate: Optional IVA rate expressed as a decimal fraction.
