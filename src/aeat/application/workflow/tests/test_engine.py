@@ -25,8 +25,11 @@ from pathlib import Path
 
 import pytest
 
-from ....core.errors import build_error_envelope
-from ....core.errors._registry import ErrorCategory, ErrorEnvelope
+from ....core.errors import (
+    ErrorCategory,
+    ErrorEnvelope,
+    build_error_envelope,
+)
 from .. import WorkflowAbortReason, WorkflowEngine, WorkflowStage
 from .._errors import UnhandledWorkflowError, WorkflowInputMismatchError
 from ._engine_support import (

@@ -42,8 +42,9 @@ from ....domain.transactions import (
     Transaction,
     TransactionCatalogue,
     TransactionDirection,
+    derive_import_fingerprint,
+    derive_transaction_id,
 )
-from ....domain.transactions._models import derive_import_fingerprint, derive_transaction_id
 from .._diagnostics import (
     LedgerImportDiagnosticKind,
 )

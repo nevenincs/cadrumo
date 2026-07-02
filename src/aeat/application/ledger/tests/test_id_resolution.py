@@ -9,14 +9,15 @@ from pathlib import Path
 import pytest
 
 from ....domain.transactions import (
+    RawProvenance,
     RawTransaction,
+    SourceFormat,
     Transaction,
     TransactionCatalogue,
     TransactionDirection,
     TransactionEditLineageEntry,
     TransactionIdPrefixError,
 )
-from ....domain.transactions._raw_transaction import RawProvenance, SourceFormat
 from .._id_resolution import (
     MINIMUM_DISPLAY_ID_WIDTH,
     compute_display_id_width,

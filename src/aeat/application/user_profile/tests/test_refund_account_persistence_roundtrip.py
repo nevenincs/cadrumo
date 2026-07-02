@@ -41,8 +41,7 @@ import pytest
 from pydantic import ValidationError
 
 from ....adapters.persistence.storage import SensitivityClass
-from ....domain.deadlines import RefundAccount
-from ....domain.deadlines._errors import DeadlineValidationError
+from ....domain.deadlines import DeadlineValidationError, RefundAccount
 from ....domain.user_profile import (
     UserProfileFact,
     UserProfileRecord,

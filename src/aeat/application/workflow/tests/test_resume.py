@@ -13,16 +13,15 @@ from ....core import Period
 from ....core.errors import resolve_error_message
 from ....domain.calculations.registry import CasillaId, CasillaObservation, validated_casilla_id
 from ....domain.deadlines import ModeloDeadline, ObligationStatus
-from ....domain.modelos._calculation_repository import (
-    CalculationRevisionCatalogueRepository,
-    upsert_calculation_revision,
-)
-from ....domain.modelos._calculation_revision import (
+from ....domain.modelos import (
     CalculationRevision,
+    CalculationRevisionCatalogueRepository,
     CalculationRevisionState,
+    WorkUnitCatalogueRepository,
     derive_calculation_revision_id,
+    upsert_calculation_revision,
+    upsert_work_unit,
 )
-from ....domain.modelos._repository import WorkUnitCatalogueRepository, upsert_work_unit
 from ....domain.user_profile import UserProfileFact, UserProfileRecord
 from ....tests.secure_sql import isolated_runtime_profile
 from ...modelo import (

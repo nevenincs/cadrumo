@@ -25,7 +25,7 @@ from ....domain.transactions import (
 )
 from ....domain.user_profile import UserProfileRecord
 from ....tests.secure_sql import isolated_runtime_profile
-from ...live._censo import CensoSnapshotService
+from ...live import CensoSnapshotService
 from ...user_profile import CensoSyncService, UserProfileLifecycleRepository
 
 _SEDE_ORIGIN = Settings.external_constants().aeat.domains.sede

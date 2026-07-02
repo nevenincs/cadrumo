@@ -6,8 +6,11 @@ from datetime import UTC, datetime
 
 import pytest
 
-from ....domain.user_profile._portable_export import UserProfilePortableExport
-from ....domain.user_profile._values import UserProfileFact, UserProfileRecord
+from ....domain.user_profile import (
+    UserProfileFact,
+    UserProfilePortableExport,
+    UserProfileRecord,
+)
 from .._bundle import (
     SUPPORTED_BUNDLE_SCHEMA_VERSIONS,
     UnsupportedBundleSchemaVersionError,

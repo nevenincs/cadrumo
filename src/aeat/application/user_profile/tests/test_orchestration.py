@@ -16,8 +16,11 @@ from ....domain.user_profile import (
     UserProfileStatus,
 )
 from ....tests.secure_sql import isolated_profile_storage_root
-from ...workflow._models import WorkflowState
-from ...workflow._profile_bucket_scan import read_profile_bucket, read_profile_bucket_by_id
+from ...workflow import (
+    WorkflowState,
+    read_profile_bucket,
+    read_profile_bucket_by_id,
+)
 from .._orchestration import (
     profile_create_storage_span,
     read_active_profile,

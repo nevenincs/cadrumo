@@ -7,9 +7,9 @@ from datetime import UTC, datetime
 import pytest
 from pydantic import ValidationError
 
-from ....application.user_profile._orchestration import profile_create_storage_span
 from ....core.config import Settings, override_settings
 from ....core.errors import resolve_error_message
+from ...user_profile import profile_create_storage_span
 from .._errors import ReviewError, ReviewKindReservedError
 from .._operator import ACCEPTED_KINDS, ReviewQueueRow, _resolve_internal_kinds, project_review_item
 
