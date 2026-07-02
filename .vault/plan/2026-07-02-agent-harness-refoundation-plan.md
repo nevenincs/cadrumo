@@ -65,7 +65,7 @@ Add guided-workflow prompts embedding skill plus grounding and demote the worksp
 - [x] `W02.P04.S15` - Demote the workspace materialiser to an optional Claude-native .claude/skills mirror layout; `src/aeat/agent/_workspace.py`.
 - [ ] `W02.P04.S16` - Update the app-agent workspace CLI to emit the Claude-native mirror; `src/aeat/entrypoints/cli/_app_agent_workspace.py`.
 - [x] `W02.P04.S17` - Add tests for the guided-workflow prompts; `src/aeat/entrypoints/mcp/tests/test_prompts.py`.
-- [ ] `W02.P04.S18` - Update the workspace materialiser tests for the mirror layout; `src/aeat/agent/tests/test_workspace.py`.
+- [x] `W02.P04.S18` - Update the workspace materialiser tests for the mirror layout; `src/aeat/agent/tests/test_workspace.py`.
 
 ## Wave `W03` - Gates and telemetry
 
