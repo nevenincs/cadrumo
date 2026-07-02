@@ -18,11 +18,23 @@ from pydantic import BaseModel, ConfigDict, Field
 
 _STRICT_FROZEN = ConfigDict(frozen=True, strict=True, validate_assignment=True, extra="forbid")
 
-# Amount-shaped tokens: a currency-prefixed number, or a number carrying two
-# decimal places (the euro-amount / casilla-value shape). Bare integers (casilla
-# numbers like ``01``, years like ``2024``) are intentionally NOT matched, to keep
-# the check focused on stated monetary values.
-_AMOUNT = re.compile(r"€\s?\d[\d.,]*|\b\d{1,3}(?:[.,]\d{3})*[.,]\d{2}\b")
+# Amount-shaped tokens, three alternatives:
+#   1. a currency-prefixed number (``€1234``);
+#   2. a thousands-grouped decimal (``1.234,56`` / ``12.345,67``);
+#   3. an UNGROUPED decimal of any integer length (``1234.56`` / ``15000.00`` /
+#      ``999999.99``) — the machine/en-locale amount shape.
+# Bare integers (casilla numbers like ``01``, years like ``2024``) are
+# intentionally NOT matched (they carry no 2-decimal fraction), to keep the
+# check focused on stated monetary values. Alternative 3 closes a real
+# faithfulness blind spot: without it a fabricated amount ≥1000 written without
+# a thousands separator (the common machine output shape) matched neither the
+# advisory nor the handoff hard-block, defeating the gate the whole surface
+# exists to enforce.
+_AMOUNT = re.compile(
+    r"€\s?\d[\d.,]*"
+    r"|\b\d{1,3}(?:[.,]\d{3})+[.,]\d{2}\b"
+    r"|\b\d+[.,]\d{2}\b",
+)
 _ANY_NUMBER = re.compile(r"\d[\d.,]*\d|\d")
 
 

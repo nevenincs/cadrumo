@@ -59,6 +59,15 @@ def has_private_component(mod: str) -> bool:
     return any(part.startswith("_") and not (part.startswith("__") and part.endswith("__")) for part in mod.split("."))
 
 
+def is_underscore_named(name: str) -> bool:
+    """True if ``name`` is a private-convention identifier (leading '_', not a dunder).
+
+    Mirrors the private-component test above but for a single bare identifier
+    (an ``__all__`` entry), not a dotted module path.
+    """
+    return name.startswith("_") and not (name.startswith("__") and name.endswith("__"))
+
+
 def owning_package(mod: str) -> str:
     """Return the package that owns a private module.
 
@@ -161,6 +170,47 @@ def discover_facades() -> dict[str, FacadeInfo]:
                 has_real_all = True
         facades[mod] = FacadeInfo(package=mod, path=init_path, all_names=all_names, has_real_all=has_real_all)
     return facades
+
+
+# ---------------------------------------------------------------------------
+# Violation family 4: underscore-named entries in a public ``__all__``
+# ---------------------------------------------------------------------------
+
+
+@dataclass
+class UnderscoreInAllViolation:
+    """A private-named symbol (leading '_', not a dunder) exported in a facade's ``__all__``.
+
+    A public facade exporting a private-named symbol contradicts the
+    single-canonical-source policy: the leading underscore signals "not part
+    of the public contract" everywhere else in the codebase, but listing the
+    name in ``__all__`` advertises it as exactly that. Every hit needs a
+    per-symbol disposition -- promote to a public name (rename + sweep every
+    consumer) or drop it from the facade (it stays importable intra-package,
+    just not on the public surface).
+    """
+
+    package: str
+    path: str
+    name: str
+
+
+def find_underscore_in_all_violations(facades: dict[str, FacadeInfo]) -> list[UnderscoreInAllViolation]:
+    """Return every ``__all__`` entry across all facades that is underscore-named."""
+    violations: list[UnderscoreInAllViolation] = []
+    for pkg, info in facades.items():
+        if not info.has_real_all:
+            continue
+        for name in info.all_names:
+            if is_underscore_named(name):
+                violations.append(
+                    UnderscoreInAllViolation(
+                        package=pkg,
+                        path=str(info.path.relative_to(REPO_ROOT)).replace("\\", "/"),
+                        name=name,
+                    )
+                )
+    return violations
 
 
 # ---------------------------------------------------------------------------
@@ -657,6 +707,7 @@ def main() -> int:
     shims = find_shim_modules(py_files, facades)
     multi_sourced = find_multi_sourced_symbols(facades, all_sites)
     fix_classes = classify_fix_strategy(priv_violations, facades)
+    underscore_in_all = find_underscore_in_all_violations(facades)
 
     # ---- Reporting ----
     print(f"Scanned {len(py_files)} .py files under {PKG_ROOT}")
@@ -713,6 +764,17 @@ def main() -> int:
         )
     print()
 
+    print(f"=== FAMILY 4: underscore-named entries in __all__: {len(underscore_in_all)} total ===")
+    print("  (a public facade exporting a private-named symbol; every hit needs a per-symbol disposition:")
+    print("   rename to a public name and sweep consumers, or drop it from __all__)")
+    by_underscore_owner = Counter(v.package for v in underscore_in_all)
+    for owner, cnt in by_underscore_owner.most_common():
+        print(f"    {cnt:4d}  {owner}")
+    print()
+    for v in sorted(underscore_in_all, key=lambda x: (x.package, x.name)):
+        print(f"  [{v.package}] {v.name}  ({v.path})")
+    print()
+
     print(f"=== FIX STRATEGY: precondition promotions vs. simple consumer rewrites ({len(fix_classes)} pairs) ===")
     needs_promotion = [f for f in fix_classes if not f.already_in_facade]
     simple_rewrite = [f for f in fix_classes if f.already_in_facade]
@@ -754,6 +816,7 @@ def main() -> int:
     print(f"  distinct symbol names touched: {len(distinct_symbols_all)}")
     print(f"  distinct symbols needing facade promotion: {len({f.symbol for f in needs_promotion})}")
     print(f"  distinct owning packages needing >=1 promotion: {len(promo_by_owner)}")
+    print(f"  underscore-named __all__ entries (Family 4): {len(underscore_in_all)}")
     print()
 
     if args.json:
@@ -796,6 +859,9 @@ def main() -> int:
                     "consumer_modules": f.consumer_modules,
                 }
                 for f in fix_classes
+            ],
+            "underscore_in_all_violations": [
+                {"package": v.package, "path": v.path, "name": v.name} for v in underscore_in_all
             ],
         }
         args.json.write_text(json.dumps(payload, indent=2), encoding=_UTF_8)

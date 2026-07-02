@@ -33,9 +33,6 @@ from ...calculations import (
     resolve_bindings_from_local_store,
 )
 from .. import (
-    _latest_declarations_by_period,
-    _persist_iva_compensation_history_observations_strict,
-    _persist_latest_filed_calculation_observations,
     enroll_filed_justificante_evidence,
     list_iva_compensation_history,
     load_iva_remote_state,
@@ -44,6 +41,11 @@ from .. import (
 )
 from .._errors import LiveApplicationInputError
 from .._filed_data_capture import _persist_latest_filed_calculation_observations_with_failures
+from .._filed_observation_persistence import (
+    latest_declarations_by_period,
+    persist_iva_compensation_history_observations_strict,
+    persist_latest_filed_calculation_observations,
+)
 from ._filed_capture_history_support import (
     _CAPTURED_AT,
     _M303_DISPONIBLE_CASILLA,
@@ -124,7 +126,7 @@ def test_latest_filed_observation_capture_threads_justificante_csv_metadata(tmp_
     with _secure_backend(tmp_path):
         observation = _prior_303_observation(pending_compensation=Decimal("1200.00"))
 
-        keys = _persist_latest_filed_calculation_observations(
+        keys = persist_latest_filed_calculation_observations(
             (observation,),
             justificante_csvs_by_observation={
                 ("303", 2026, "1T", _SYNTHETIC_EXPEDIENTE_ID): ("CSV30320261T",),
@@ -224,7 +226,7 @@ def test_binding_prefill_uses_profile_secure_iva_compensation_history(tmp_path: 
 
 def test_iva_compensation_history_strict_persist_stores_latest_and_reloads(tmp_path: Path) -> None:
     with _secure_backend(tmp_path):
-        keys = _persist_iva_compensation_history_observations_strict(
+        keys = persist_iva_compensation_history_observations_strict(
             (
                 _prior_303_observation(
                     pending_compensation=Decimal("1.00"),
@@ -515,7 +517,7 @@ def test_filed_observation_capture_does_not_stamp_current_filing_for_wrong_profi
 
 
 def test_iva_history_capture_selects_latest_alta_declaration_per_period() -> None:
-    selected = _latest_declarations_by_period(
+    selected = latest_declarations_by_period(
         (
             _declaration(
                 period="1T",
@@ -549,7 +551,7 @@ def test_iva_history_capture_selects_latest_alta_declaration_per_period() -> Non
 def test_duplicate_period_capture_promotes_alta_over_later_non_alta_observation(tmp_path: Path) -> None:
     with _secure_backend(tmp_path):
         repository = CalculationObservationRepository()
-        keys = _persist_latest_filed_calculation_observations(
+        keys = persist_latest_filed_calculation_observations(
             (
                 _prior_303_observation(
                     expediente_id="200030300000012Z",
@@ -577,7 +579,7 @@ def test_duplicate_period_capture_promotes_alta_over_later_non_alta_observation(
 
 def test_iva_history_strict_persist_promotes_alta_over_later_non_alta_observation(tmp_path: Path) -> None:
     with _secure_backend(tmp_path):
-        keys = _persist_iva_compensation_history_observations_strict(
+        keys = persist_iva_compensation_history_observations_strict(
             (
                 _prior_303_observation(
                     expediente_id="200030300000014Z",
@@ -603,7 +605,7 @@ def test_iva_history_strict_persist_promotes_alta_over_later_non_alta_observatio
 
 def test_iva_history_strict_persist_ignores_non_alta_only_period(tmp_path: Path) -> None:
     with _secure_backend(tmp_path):
-        keys = _persist_iva_compensation_history_observations_strict(
+        keys = persist_iva_compensation_history_observations_strict(
             (
                 _prior_303_observation(
                     expediente_id="200030300000016Z",
@@ -622,7 +624,7 @@ def test_iva_history_strict_persist_ignores_non_alta_only_period(tmp_path: Path)
 def test_duplicate_period_capture_promotes_latest_filing_to_calculation_history(tmp_path: Path) -> None:
     with _secure_backend(tmp_path):
         repository = CalculationObservationRepository()
-        _persist_latest_filed_calculation_observations(
+        persist_latest_filed_calculation_observations(
             (
                 _prior_303_observation(
                     expediente_id="200030300000002Z",
@@ -761,7 +763,7 @@ def test_multiyear_303_submitted_file_parser_promotes_sanitized_iva_history(tmp_
             ),
         )
 
-        keys = _persist_iva_compensation_history_observations_strict(observations)
+        keys = persist_iva_compensation_history_observations_strict(observations)
         history = list_iva_compensation_history(as_of_year=2026)
         remote_state = load_iva_remote_state(as_of_year=2026)
 
