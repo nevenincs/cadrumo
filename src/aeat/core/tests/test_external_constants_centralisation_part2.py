@@ -329,41 +329,6 @@ def test_default_iva_general_rate_pct_matches_registry() -> None:
     assert registry_rate.pct == DEFAULT_IVA_GENERAL_RATE_PCT
 
 
-def test_modules_import_default_iva_general_rate_pct_from_core() -> None:
-    """Known consumers import ``DEFAULT_IVA_GENERAL_RATE_PCT`` from core."""
-
-    from ..external_constants import DEFAULT_IVA_GENERAL_RATE_PCT
-
-    for _case_id, (module_name, message) in zip(_DEFAULT_IVA_IMPORT_IDS, _DEFAULT_IVA_IMPORT_CASES, strict=True):
-        _assert_module_constant_identity(
-            module_name=module_name,
-            attr_name="DEFAULT_IVA_GENERAL_RATE_PCT",
-            expected=DEFAULT_IVA_GENERAL_RATE_PCT,
-            import_message=message,
-        )
-
-
-def test_no_bare_iva_rate_decimal_literal_in_consumers() -> None:
-    """No bare ``Decimal("21.00")`` literal in IVA rate consumers."""
-
-    for case_id, (relative_path, display_path, replacement) in zip(
-        _IVA_DECIMAL_LITERAL_IDS,
-        _IVA_DECIMAL_LITERAL_CASES,
-        strict=True,
-    ):
-        offenders = _decimal_call_literal_offenders(
-            relative_path=relative_path,
-            display_path=display_path,
-            literal="21.00",
-            replacement=replacement,
-        )
-
-        assert offenders == [], (
-            f"Local IVA 21.00 literals found in {display_path} ({case_id}); "
-            "import DEFAULT_IVA_GENERAL_RATE_PCT from core instead:\n" + "\n".join(offenders)
-        )
-
-
 def test_no_bare_iva_rate_string_literal_in_ledger_inventory_cli() -> None:
     """No bare ``"21.00"`` string literal as a typer Option default in ``_ledger_inventory_cli.py``.
 
@@ -476,24 +441,19 @@ def test_no_bare_modelo_group_tuple_literals_in_consumers() -> None:
 # ---------------------------------------------------------------------------
 
 
-def test_irpf_int_constant_values_and_types() -> None:
-    """IRPF euro constants equal their values and remain ``int`` because target casillas carry no decimals."""
+def test_irpf_int_constant_values_types_and_maternidad_cap_relation() -> None:
+    """IRPF euro constants equal their values and preserve the maternidad cap relation."""
 
     from .. import external_constants
+    from ..external_constants import (
+        DEDUCCION_MATERNIDAD_ANUAL_CAP_EUR,
+        DEDUCCION_MATERNIDAD_MENSUAL_EUR,
+    )
 
     for case_id, (constant_name, expected) in zip(_IRPF_INT_CONSTANT_IDS, _IRPF_INT_CONSTANT_CASES, strict=True):
         value = getattr(external_constants, constant_name)
         assert isinstance(value, int), case_id
         assert value == expected, case_id
-
-
-def test_deduccion_maternidad_monthly_times_12_equals_annual_cap() -> None:
-    """12 monthly accruals sum to the annual cap: consistency guard."""
-
-    from ..external_constants import (
-        DEDUCCION_MATERNIDAD_ANUAL_CAP_EUR,
-        DEDUCCION_MATERNIDAD_MENSUAL_EUR,
-    )
 
     assert DEDUCCION_MATERNIDAD_MENSUAL_EUR * 12 == DEDUCCION_MATERNIDAD_ANUAL_CAP_EUR
 
@@ -549,6 +509,14 @@ def test_decimal_constant_consumers_alias_core_constants() -> None:
 
     from .. import external_constants
 
+    for _case_id, (module_name, message) in zip(_DEFAULT_IVA_IMPORT_IDS, _DEFAULT_IVA_IMPORT_CASES, strict=True):
+        _assert_module_constant_identity(
+            module_name=module_name,
+            attr_name="DEFAULT_IVA_GENERAL_RATE_PCT",
+            expected=external_constants.DEFAULT_IVA_GENERAL_RATE_PCT,
+            import_message=message,
+        )
+
     for _case_id, (module_name, module_attr, constant_name, message) in zip(
         _DECIMAL_ALIAS_IDS,
         _DECIMAL_ALIAS_CASES,
@@ -564,6 +532,23 @@ def test_decimal_constant_consumers_alias_core_constants() -> None:
 
 def test_no_bare_decimal_literals_in_consumers() -> None:
     """No bare Decimal literals in Decimal-constant consumers."""
+
+    for case_id, (relative_path, display_path, replacement) in zip(
+        _IVA_DECIMAL_LITERAL_IDS,
+        _IVA_DECIMAL_LITERAL_CASES,
+        strict=True,
+    ):
+        offenders = _decimal_call_literal_offenders(
+            relative_path=relative_path,
+            display_path=display_path,
+            literal="21.00",
+            replacement=replacement,
+        )
+
+        assert offenders == [], (
+            f"Local IVA 21.00 literals found in {display_path} ({case_id}); "
+            "import DEFAULT_IVA_GENERAL_RATE_PCT from core instead:\n" + "\n".join(offenders)
+        )
 
     for _case_id, (relative_path, display_path, literal, replacement, message) in zip(
         _DECIMAL_LITERAL_IDS,
