@@ -101,7 +101,7 @@ class NarrationFaithfulness(BaseModel):
     ``.vault/research/2026-07-01-agent-harness-research.md``): an operator-facing
     narration must not state a numeric value absent from the tool result it
     describes. This model deliberately mirrors
-    :class:`aeat.entrypoints.mcp._faithfulness.FaithfulnessResult` field-for-field
+    :class:`entrypoints.mcp._faithfulness.FaithfulnessResult` field-for-field
     (``faithful``, ``blocking``, ``flagged_values``, the derived ``blocks``
     property) rather than importing that class: ``aeat.agent`` is a read-accessor
     package consumed BY ``aeat.entrypoints`` (e.g.
@@ -270,7 +270,7 @@ class ExitCodeScenario(BaseModel):
             Must be non-zero: an exit-code-as-verdict scenario is meaningless
             for a clean-success (``0``) exit.
         tool_result_status: The envelope ``status`` the JSON body must carry.
-            Never :attr:`~aeat.core.json_contract.EnvelopeStatus.SUCCESS` - a
+            Never :attr:`~core.json_contract.EnvelopeStatus.SUCCESS` - a
             non-zero exit paired with a "success" status would itself be the
             silent-crash-vs-verdict confusion this scenario exists to catch.
         expected_next_action: A real registry command key (resolvable against
