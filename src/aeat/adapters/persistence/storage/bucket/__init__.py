@@ -22,8 +22,8 @@ The sealed-archive surface re-exports :class:`ExportArchiveHeader`,
 :class:`SealedArchiveContents`, :func:`write_sealed_archive`, and
 :func:`read_sealed_archive` for application-level bucket export/import. These
 helpers own archive shape and metadata normalisation only; profile payload
-composition remains in :mod:`aeat.application.user_profile`, while
-:mod:`aeat.application.bucket_maintenance` orchestrates operator-facing export
+composition remains in :mod:`application.user_profile`, while
+:mod:`application.bucket_maintenance` orchestrates operator-facing export
 and import.
 
 See Also:
@@ -36,7 +36,7 @@ See Also:
     :func:`read_sealed_archive`
         Reader that validates archive member order and header shape before
         returning encrypted payload bytes.
-    :mod:`aeat.application.bucket_maintenance`
+    :mod:`application.bucket_maintenance`
         Application service facade that composes these archive primitives with
         profile lifecycle and domain event history.
 """
