@@ -8,9 +8,9 @@ prorrata percentage.
 
 The register is a taxpayer-fact store (owned goods, acquisition year, cuota
 soportada, initial definitive prorrata percentage), sibling to
-:mod:`aeat.domain.iva_compensation`; the regulatory constants it consumes (the
+:mod:`domain.iva_compensation`; the regulatory constants it consumes (the
 4/9-year windows, the over-10-point gate, and the /5, /10 divisors) live in the
-central authoring surface :mod:`aeat.core.external_constants`, grounded verbatim
+central authoring surface :mod:`core.external_constants`, grounded verbatim
 in the bundled consolidated LIVA corpus.
 
 Register-wide projection returns :class:`RegistroRegularizacionResult`: each
@@ -25,14 +25,14 @@ disposal fields are carried on :class:`BienInversionIvaRecord` so no schema
 migration is needed when it lands.
 
 See Also:
-    :mod:`aeat.application.bienes_inversion`
+    :mod:`application.bienes_inversion`
         Profile-scoped service that declares and lists the persisted register.
-    :mod:`aeat.adapters.persistence.profile.bienes_inversion`
+    :mod:`adapters.persistence.profile.bienes_inversion`
         FINANCIAL secure-object repository that stores the register singleton.
-    :mod:`aeat.application.calculations`
+    :mod:`application.calculations`
         Advisory projection surface for the deferred
         ``bienes_inversion_regularizacion`` calculation source.
-    :mod:`aeat.domain.iva`
+    :mod:`domain.iva`
         Legal prorrata substrate that supplies the separate definitive
         percentage input; usage ratios are not a substitute.
 """
@@ -77,7 +77,7 @@ _MIN_ACQUISITION_YEAR = 2000
 class BienInversionKind(StrEnum):
     """LIVA art. 107 regularisation-window taxonomy for a capital good.
 
-    Distinct from the LIS art. 12 :class:`~aeat.domain.contribuyente.assets.AssetClass`
+    Distinct from the LIS art. 12 :class:`domain.contribuyente.assets.AssetClass`
     amortization taxonomy: this axis is the mueble-4yr / inmueble-9yr LIVA
     regularisation window (art. 107.Uno vs art. 107.Tres), not a depreciation
     coefficient family.
@@ -133,7 +133,7 @@ class BienInversionIvaRecord(BaseModel):
     Strict, frozen, no extra fields. Carries the taxpayer facts the art-109
     annual compute needs (acquisition year, cuota soportada, initial-year
     definitive prorrata percentage, mueble/inmueble window) plus an optional
-    cross-reference to an :class:`~aeat.domain.contribuyente.assets.AssetRecord`
+    cross-reference to an :class:`domain.contribuyente.assets.AssetRecord`
     to avoid double data-entry, and the art-108 concept-eligibility flag.
 
     Attributes:
@@ -152,7 +152,7 @@ class BienInversionIvaRecord(BaseModel):
             used over a year as an instrument of work). ``False`` marks a good
             the operator recorded but which is excluded from regularisation.
         asset_record_ref: Optional identifier of the sibling
-            :class:`~aeat.domain.contribuyente.assets.AssetRecord`. Cross-reference
+            :class:`domain.contribuyente.assets.AssetRecord`. Cross-reference
             only; this register — not the assets ledger — is the LIVA authority.
         disposal: Optional :class:`BienInversionDisposal` (art-110), carried for
             forward-stability; its compute is deferred.
@@ -262,7 +262,8 @@ def compute_regularizacion_anual(
 
     The art-107.Uno gate applies: the regularisation is practised only when the
     absolute difference between the two definitive percentages is *strictly greater
-    than* :data:`IVA_BIEN_INVERSION_REGULARIZACION_UMBRAL_PUNTOS` (10 points). When
+    than* :data:`core.external_constants.IVA_BIEN_INVERSION_REGULARIZACION_UMBRAL_PUNTOS`
+    (10 points). When
     the gate does not fire, ``importe`` is ``0.00`` and ``direccion`` is
     :attr:`RegularizacionDireccion.NINGUNA`.
 
