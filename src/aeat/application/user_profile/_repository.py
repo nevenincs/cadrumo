@@ -23,6 +23,7 @@ objects encrypted at rest by
 from __future__ import annotations
 
 from collections.abc import Iterable
+from datetime import date
 
 from pydantic import ValidationError
 
@@ -61,6 +62,8 @@ _PROFILE_RECORD_VERSION_MESSAGE = "profile record schema version is not supporte
 _PROFILE_SNAPSHOT_MISSING_MESSAGE = "profile snapshot not found in secure storage"
 _PROFILE_SNAPSHOT_CLASSIFICATION_MESSAGE = "profile snapshot classification is incompatible with this repository"
 _PROFILE_SNAPSHOT_VERSION_MESSAGE = "profile snapshot schema version is not supported"
+_OUTPUT_LANGUAGE_FACT_PATH = "preferences.output_language"
+_SENTINEL_DATE = date.min
 _log = get_logger(__name__)
 
 
@@ -92,6 +95,47 @@ def _clear_output_language_cache() -> None:
         _log.debug("user-profile output-language cache invalidation import failed", exc_info=True)
         return
     clear_output_language_cache()
+
+
+def _record_output_language(record: UserProfileRecord) -> str | None:
+    matches = [fact for fact in record.facts if fact.path == _OUTPUT_LANGUAGE_FACT_PATH and fact.value is not None]
+    if not matches:
+        return None
+    matches.sort(key=lambda fact: fact.valid_from or _SENTINEL_DATE)
+    return str(matches[-1].value)
+
+
+def _refresh_output_language_hint(*, bucket_id: str, record: UserProfileRecord) -> None:
+    from ...adapters.persistence.storage.bucket._output_language_hint import (
+        clear_bucket_output_language_hint,
+        write_bucket_output_language_hint,
+    )
+    from ...core.config import load_settings
+
+    language = _record_output_language(record)
+    try:
+        if language is None:
+            clear_bucket_output_language_hint(
+                storage_root=load_settings().aeat_local_storage_root,
+                bucket_id=bucket_id,
+            )
+            return
+        written = write_bucket_output_language_hint(
+            storage_root=load_settings().aeat_local_storage_root,
+            bucket_id=bucket_id,
+            language=language,
+        )
+        if not written:
+            clear_bucket_output_language_hint(
+                storage_root=load_settings().aeat_local_storage_root,
+                bucket_id=bucket_id,
+            )
+    except OSError:
+        _log.warning(
+            "user-profile output-language hint refresh failed bucket_id=%s",
+            bucket_id,
+            exc_info=True,
+        )
 
 
 def user_profile_value_object_key(profile_id: str) -> str:
@@ -290,6 +334,7 @@ class UserProfileLifecycleRepository(_BucketBoundRepository):
             written_at=envelope.written_at,
             payload=envelope.model_dump_json().encode("utf-8"),
         )
+        _refresh_output_language_hint(bucket_id=self._bucket_id, record=record)
         _clear_output_language_cache()
 
     def iter_records(self) -> Iterable[UserProfileRecord]:
