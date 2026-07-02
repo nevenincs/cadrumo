@@ -24,32 +24,24 @@ from ....domain.buckets import (
     BucketEventType,
 )
 from ....domain.calculations.registry import CasillaId, validated_casilla_id
-from ....domain.modelos._calculation_repository import (
-    CalculationRevisionCatalogueRepository,
-    upsert_calculation_revision,
-)
-from ....domain.modelos._calculation_revision import (
+from ....domain.modelos import (
     CalculationRevision,
     CalculationRevisionAmendmentKind,
+    CalculationRevisionCatalogueRepository,
     CalculationRevisionState,
-    derive_calculation_revision_id,
-)
-from ....domain.modelos._filing_record import (
     ExternalEvidence,
     ExternalEvidenceKind,
     ModeloRecord,
-    ModeloRecordStatus,
-    derive_filing_record_id,
-)
-from ....domain.modelos._filing_repository import (
     ModeloRecordCatalogueRepository,
+    ModeloRecordStatus,
+    VerificationReportCatalogueRepository,
+    WorkUnit,
+    WorkUnitCatalogueRepository,
+    derive_calculation_revision_id,
+    derive_filing_record_id,
+    upsert_calculation_revision,
     upsert_filing_record,
 )
-from ....domain.modelos._repository import WorkUnitCatalogueRepository
-from ....domain.modelos._verification_repository import (
-    VerificationReportCatalogueRepository,
-)
-from ....domain.modelos._work_unit import WorkUnit
 from ....domain.user_profile import UserProfileFact, UserProfileRecord
 from ....tests.registry_observations import registry_grounded_observations
 from ....tests.secure_sql import isolated_runtime_profile

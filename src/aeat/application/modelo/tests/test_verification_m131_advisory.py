@@ -8,7 +8,7 @@ import pytest
 
 from ....core.resources import resources
 from ....domain.calculations.registry import CasillaId, VerificationPredicateDefinition
-from ....domain.modelos._verification_report import (
+from ....domain.modelos import (
     ModeloVerificationFindingKind,
     ModeloVerificationFindingSeverity,
 )

@@ -45,13 +45,18 @@ from ....core.resources import resources
 from ....domain.buckets import BucketEventHistoryRepository
 from ....domain.calculations.registry import CasillaId, RelationId, validated_casilla_id
 from ....domain.deadlines import IVARegime, ModeloIVAProfile, TaxpayerProfile
-from ....domain.modelos._calculation_repository import CalculationRevisionCatalogueRepository
-from ....domain.modelos._filing_repository import ModeloRecordCatalogueRepository
-from ....domain.modelos._repository import WorkUnitCatalogueRepository
+from ....domain.modelos import (
+    CalculationRevisionCatalogueRepository,
+    ModeloRecordCatalogueRepository,
+    WorkUnitCatalogueRepository,
+)
 from ....domain.user_profile import UserProfileFact, UserProfileRecord
 from ....tests.secure_sql import isolated_runtime_profile
-from ...calculations import CalculationObservationRepository, reconcile_modelo_303_iva_compensation
-from ...calculations._relation_prefill import resolve_relations_from_local_store
+from ...calculations import (
+    CalculationObservationRepository,
+    reconcile_modelo_303_iva_compensation,
+    resolve_relations_from_local_store,
+)
 from ...user_profile import UserProfileLifecycleRepository
 from .. import (
     ModeloRefundElectionNotEligibleError,

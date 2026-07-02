@@ -15,8 +15,8 @@ from decimal import Decimal
 
 import pytest
 
-from ....core.errors._registry import resolve_error_message
-from ....domain.calculations.registry._schema import DataBindingDefinition
+from ....core.errors import resolve_error_message
+from ....domain.calculations.registry import DataBindingDefinition
 from .._calculate_input import ModeloCalculateDecimalInputError, _decimal_binding_value
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]

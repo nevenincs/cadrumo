@@ -46,10 +46,12 @@ from ....domain.calculations.registry import (
     RegistryModeloObservation,
     validated_casilla_id,
 )
-from ....domain.modelos._calculation_repository import CalculationRevisionCatalogueRepository
-from ....domain.modelos._filing_repository import ModeloRecordCatalogueRepository
-from ....domain.modelos._repository import WorkUnitCatalogueRepository
-from ....domain.modelos._verification_repository import VerificationReportCatalogueRepository
+from ....domain.modelos import (
+    CalculationRevisionCatalogueRepository,
+    ModeloRecordCatalogueRepository,
+    VerificationReportCatalogueRepository,
+    WorkUnitCatalogueRepository,
+)
 from ....domain.user_profile import UserProfileFact, UserProfileRecord
 from ....tests.registry_observations import registry_grounded_observations
 from ....tests.secure_sql import isolated_runtime_profile
@@ -382,10 +384,13 @@ def test_same_year_locally_filed_upstream_admitted_with_advisory(repos: _Repos) 
     cross-YEAR non-official prior still blocks. The within-year reconstruction can reach
     export; the operator files every period with AEAT externally.
     """
-    from ....domain.modelos import CalculationRevisionState, upsert_calculation_revision
-    from ....domain.modelos._filing_repository import ModeloRecordCatalogueRepository
-    from ....domain.modelos._verification_repository import VerificationReportCatalogueRepository
-    from ...calculations._cross_period_clean_state import CrossPeriodCleanStateBlocker
+    from ....domain.modelos import (
+        CalculationRevisionState,
+        ModeloRecordCatalogueRepository,
+        VerificationReportCatalogueRepository,
+        upsert_calculation_revision,
+    )
+    from ...calculations import CrossPeriodCleanStateBlocker
     from .._verification_actions import _cross_period_clean_state_verdict_for_work_unit
 
     wu_repo, cr_repo, fr_repo, _vr_repo, bv_repo = repos
@@ -666,8 +671,7 @@ def test_first_filer_same_year_chain_is_fully_reachable(repos: _Repos) -> None:
     verdict is clean => the quarter is reachable to verify/export. If suppression did NOT
     cover the previous_filing M100 dep, this verdict would be unclean (a real gap).
     """
-    from ....domain.modelos._filing_repository import ModeloRecordCatalogueRepository
-    from ....domain.modelos._verification_repository import VerificationReportCatalogueRepository
+    from ....domain.modelos import ModeloRecordCatalogueRepository, VerificationReportCatalogueRepository
     from .._verification_actions import _cross_period_clean_state_verdict_for_work_unit
 
     wu_repo, cr_repo, _fr_repo, _vr_repo, bv_repo = repos

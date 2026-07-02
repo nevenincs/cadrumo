@@ -33,7 +33,7 @@ from ....domain.calculations.registry import (
     expression_casilla_refs,
     validated_casilla_id,
 )
-from ....domain.modelos._calculation_revision import (
+from ....domain.modelos import (
     CalculationRevision,
     CalculationRevisionState,
     derive_calculation_revision_id,

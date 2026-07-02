@@ -11,9 +11,15 @@ import pytest
 
 from ....core import Period
 from ....domain.calculations.registry import BindingId, validated_casilla_id
-from ....domain.deadlines import TaxpayerProfile
-from ....domain.deadlines._models import EntityType, IVARegime, LegalEntityForm, ModeloIVAProfile, RefundAccount
-from ....domain.modelos._calculation_revision import CalculationRevisionState
+from ....domain.deadlines import (
+    EntityType,
+    IVARegime,
+    LegalEntityForm,
+    ModeloIVAProfile,
+    RefundAccount,
+    TaxpayerProfile,
+)
+from ....domain.modelos import CalculationRevisionState
 from .._export import ModeloExportCommand, ModeloExportError, compose_export_headers, export_modelo_revision
 from ._export_test_support import (
     _M303_RESULT_CASILLA,
@@ -116,7 +122,7 @@ def test_modelo_202_legal_entity_exports_company_name_in_razon_social_slot(
 ) -> None:
     from ....application.filing import build_runtime_schema_provider, export_draft
     from ....domain.filing import ModeloDraft
-    from ....domain.submission._protocols import ModeloDraftStatus
+    from ....domain.submission import ModeloDraftStatus
 
     company_name = "Rocio Ferrer Administracion Sociedad Limitada"
     tax_id = "B12345674"

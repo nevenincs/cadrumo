@@ -9,7 +9,7 @@ from pathlib import Path
 import pytest
 
 from ....domain.calculations.registry import RegistrySnapshot
-from ....domain.iva_compensation._reconciliation import IvaCompensationReconciliationDecision
+from ....domain.iva_compensation import IvaCompensationReconciliationDecision
 from ...calculations import (
     CalculationObservationRepository,
     IvaWalletDecisionRepository,

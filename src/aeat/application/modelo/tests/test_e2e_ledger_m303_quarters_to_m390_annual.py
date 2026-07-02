@@ -56,14 +56,16 @@ from ....domain.calculations.registry import CasillaId, validated_casilla_id
 from ....domain.deadlines import EntityType, IVARegime, LegalEntityForm, TaxpayerProfile
 from ....domain.invoices import InvoiceCatalogue, InvoiceCatalogueRepository
 from ....domain.iva import EUMemberState, InvoiceKind, IvaCategory
-from ....domain.iva_compensation._reconciliation import IvaCompensationReconciliationDecision
-from ....domain.modelos._calculation_repository import CalculationRevisionCatalogueRepository
-from ....domain.modelos._calculation_revision import CalculationRevision
-from ....domain.modelos._filing_repository import ModeloRecordCatalogueRepository
-from ....domain.modelos._repository import WorkUnitCatalogueRepository
-from ....domain.modelos._verification_report import VerificationCompletenessStatus
-from ....domain.modelos._verification_repository import VerificationReportCatalogueRepository
-from ....domain.modelos._work_unit import WorkUnit
+from ....domain.iva_compensation import IvaCompensationReconciliationDecision
+from ....domain.modelos import (
+    CalculationRevision,
+    CalculationRevisionCatalogueRepository,
+    ModeloRecordCatalogueRepository,
+    VerificationCompletenessStatus,
+    VerificationReportCatalogueRepository,
+    WorkUnit,
+    WorkUnitCatalogueRepository,
+)
 from ....domain.transactions import (
     BusinessClassification,
     RawProvenance,
@@ -76,8 +78,7 @@ from ....domain.transactions import (
 )
 from ....domain.user_profile import UserProfileFact, UserProfileRecord
 from ....tests.secure_sql import isolated_runtime_profile
-from ...calculations import IvaWalletDecisionRepository
-from ...calculations._observations_repository import CalculationObservationRepository
+from ...calculations import CalculationObservationRepository, IvaWalletDecisionRepository
 from ...invoices import build_catalogue_invoice
 from ...user_profile import UserProfileLifecycleRepository
 from .. import (

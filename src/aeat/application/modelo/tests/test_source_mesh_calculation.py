@@ -14,8 +14,7 @@ from ....core import Period
 from ....domain.calculations.registry import CasillaId
 from ....domain.invoices import InvoiceCatalogueRepository
 from ....domain.iva import EUMemberState, IvaCategory
-from ....domain.modelos._calculation_repository import CalculationRevisionCatalogueRepository
-from ....domain.modelos._repository import WorkUnitCatalogueRepository
+from ....domain.modelos import CalculationRevisionCatalogueRepository, WorkUnitCatalogueRepository
 from ....domain.transactions import (
     BusinessClassification,
     RawProvenance,

@@ -12,18 +12,19 @@ from ....core.config import Settings
 from ....core.resources import resources
 from ....domain.buckets import BucketEventHistoryRepository
 from ....domain.calculations.registry import BindingId, RegistryModeloObservation
-from ....domain.deadlines import TaxpayerProfile
-from ....domain.deadlines._models import IVARegime
-from ....domain.iva_compensation._reconciliation import (
+from ....domain.deadlines import IVARegime, TaxpayerProfile
+from ....domain.iva_compensation import (
     IvaCompensationAuthoritySource,
     IvaCompensationReconciliationDecision,
 )
-from ....domain.modelos._calculation_repository import CalculationRevisionCatalogueRepository
-from ....domain.modelos._calculation_revision import CalculationRevision
-from ....domain.modelos._filing_record import ExternalEvidenceKind
-from ....domain.modelos._filing_repository import ModeloRecordCatalogueRepository
-from ....domain.modelos._repository import WorkUnitCatalogueRepository
-from ....domain.modelos._verification_repository import VerificationReportCatalogueRepository
+from ....domain.modelos import (
+    CalculationRevision,
+    CalculationRevisionCatalogueRepository,
+    ExternalEvidenceKind,
+    ModeloRecordCatalogueRepository,
+    VerificationReportCatalogueRepository,
+    WorkUnitCatalogueRepository,
+)
 from ....tests.registry_observations import registry_grounded_observations
 from ...calculations import (
     CalculationObservationRepository,

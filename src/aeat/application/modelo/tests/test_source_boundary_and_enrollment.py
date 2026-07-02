@@ -32,8 +32,7 @@ from ....core import BindingSourceKind, Period
 from ....core.resources import resources
 from ....domain.calculations.registry import ModeloRevision
 from ....domain.invoices import InvoiceCatalogueRepository
-from ....domain.modelos._calculation_repository import CalculationRevisionCatalogueRepository
-from ....domain.modelos._repository import WorkUnitCatalogueRepository
+from ....domain.modelos import CalculationRevisionCatalogueRepository, WorkUnitCatalogueRepository
 from ....domain.transactions import TransactionCatalogueRepository
 from ....domain.user_profile import UserProfileFact, UserProfileRecord
 from ....tests.secure_sql import isolated_runtime_profile
@@ -169,7 +168,7 @@ def test_s26_assert_no_novel_source_kinds_rejects_synthetic_novel_source() -> No
     # Fabricate a revision with a synthetic unknown source by wrapping the real one.
     # model_construct bypasses Literal validation so we can inject a source value that
     # is not in the accepted set — exactly what the gate should detect and reject.
-    from ....domain.calculations.registry._schema import DataBindingDefinition
+    from ....domain.calculations.registry import DataBindingDefinition
 
     revision = _revision("303", "2023-y-siguientes")
     # Build a synthetic binding with a novel source kind via model_construct (no validators).

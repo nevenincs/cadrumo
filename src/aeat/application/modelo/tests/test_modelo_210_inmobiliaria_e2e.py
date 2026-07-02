@@ -59,22 +59,25 @@ from pathlib import Path
 import pytest
 
 from ....adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
-from ....core._casilla_id import CasillaId, validated_casilla_id
-from ....core._period import Period
+from ....core import (
+    CasillaId,
+    Period,
+    validated_casilla_id,
+)
 from ....core.resources import resources
 from ....domain.buckets import BucketEventHistoryRepository
 from ....domain.deadlines import FiscalResidency, IVARegime, TaxpayerProfile
-from ....domain.modelos._calculation_repository import CalculationRevisionCatalogueRepository
-from ....domain.modelos._calculation_revision import CalculationRevision
-from ....domain.modelos._repository import WorkUnitCatalogueRepository
-from ....domain.modelos._verification_report import (
+from ....domain.modelos import (
+    CalculationRevision,
+    CalculationRevisionCatalogueRepository,
     ModeloVerificationFindingKind,
     VerificationReport,
+    WorkUnitCatalogueRepository,
 )
 from ....domain.transactions import TransactionCatalogueRepository
 from ....domain.user_profile import UserProfileFact, UserProfileRecord
 from ....tests.secure_sql import isolated_runtime_profile
-from ...calculations._observations_repository import CalculationObservationRepository
+from ...calculations import CalculationObservationRepository
 from ...user_profile import UserProfileLifecycleRepository
 from .._calculation_actions import calculate_modelo_revision
 from .._verification_actions import verify_modelo_revision

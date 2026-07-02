@@ -49,21 +49,20 @@ from ....domain.calculations.registry import (
     validated_casilla_id,
 )
 from ....domain.invoices import InvoiceCatalogueRepository
-from ....domain.modelos._calculation_repository import CalculationRevisionCatalogueRepository
-from ....domain.modelos._repository import WorkUnitCatalogueRepository
+from ....domain.modelos import CalculationRevisionCatalogueRepository, WorkUnitCatalogueRepository
 from ....domain.transactions import TransactionCatalogueRepository
 from ....domain.user_profile import UserProfileFact, UserProfileRecord
 from ....tests.secure_sql import isolated_runtime_profile
-from ...aggregation._errors import AggregationValidationError
-from ...aggregation._retencion_observations_repository import RetencionObservationRepository
-from ...aggregation._retenciones import RetencionObservation, RetencionScheme
-from ...aggregation._source_mesh import (
+from ...aggregation import (
+    AggregationValidationError,
     CalculationSourceContext,
     CalculationSourceResolution,
+    RetencionObservation,
+    RetencionObservationRepository,
+    RetencionScheme,
     merge_source_resolutions,
 )
-from ...calculations import RelationPrefillSourceResolver
-from ...calculations._observations_repository import CalculationObservationRepository
+from ...calculations import CalculationObservationRepository, RelationPrefillSourceResolver
 from ...user_profile import UserProfileLifecycleRepository
 from .. import (
     calculate_modelo_revision_from_bucket_aggregation_with_diagnostics,

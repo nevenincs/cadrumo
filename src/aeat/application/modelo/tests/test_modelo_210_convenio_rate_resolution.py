@@ -34,15 +34,13 @@ from ....domain.calculations.registry import (
     RegistryCalculationUnresolvedOutcome,
     RegistrySnapshot,
     RegistryUnresolvedOutcomeReason,
+    VerificationPredicateDefinition,
     build_snapshot,
     load_convenio_authority,
     load_registry_tree,
 )
-from ....domain.calculations.registry._schema import VerificationPredicateDefinition
 from ....domain.deadlines import FiscalResidency, IVARegime, TaxpayerProfile
-from ....domain.modelos._verification_report import (
-    ModeloVerificationFindingKind,
-)
+from ....domain.modelos import ModeloVerificationFindingKind
 from .. import ModeloApplicabilityFilterError
 from .._m210_rate import resolve_m210_rate as _resolve_m210_rate
 from .._verification_actions import (

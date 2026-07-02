@@ -7,9 +7,8 @@ from decimal import Decimal
 import pytest
 
 from ....core.resources import resources
-from ....domain.calculations.registry._ids import CasillaId
-from ....domain.calculations.registry._schema import VerificationPredicateDefinition
-from ....domain.modelos._verification_report import (
+from ....domain.calculations.registry import CasillaId, VerificationPredicateDefinition
+from ....domain.modelos import (
     ModeloVerificationFindingKind,
     ModeloVerificationFindingSeverity,
 )
