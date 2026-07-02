@@ -31,6 +31,7 @@ related:
   - '[[2026-07-02-agent-harness-refoundation-W03-P06-S23]]'
   - '[[2026-07-02-agent-harness-refoundation-W03-P06-S24]]'
   - '[[2026-07-02-agent-harness-refoundation-W03-P06-S25]]'
+  - '[[2026-07-02-agent-harness-refoundation-W03-P06-S26]]'
   - '[[2026-07-02-agent-harness-refoundation-W04-P08-S28]]'
   - '[[2026-07-02-agent-harness-refoundation-W04-P08-S29]]'
   - '[[2026-07-02-agent-harness-refoundation-W04-P08-S30]]'
@@ -83,6 +84,7 @@ related:
   - '[[2026-07-02-agent-harness-refoundation-W06-P12-S78]]'
   - '[[2026-07-02-agent-harness-refoundation-W06-P12-S79]]'
   - '[[2026-07-02-agent-harness-refoundation-W06-P12-S87]]'
+  - '[[2026-07-02-agent-harness-refoundation-W06-P13-S80]]'
   - '[[2026-07-02-agent-harness-refoundation-W06-P14-S89]]'
   - '[[2026-07-02-agent-harness-refoundation-W06-P14-S90]]'
   - '[[2026-07-02-agent-harness-refoundation-adr]]'
@@ -127,6 +129,7 @@ Auto-generated index of all documents tagged with `#agent-harness-refoundation`.
 - `2026-07-02-agent-harness-refoundation-W03-P06-S23` - Wire faithfulness into the serving path as an advisory notice with a hard block at the export and record-marker boundary
 - `2026-07-02-agent-harness-refoundation-W03-P06-S24` - Add per-verb handoff deny rules over the family-granular persona scope
 - `2026-07-02-agent-harness-refoundation-W03-P06-S25` - Add local session telemetry recording per-call trajectory records with session ids
+- `2026-07-02-agent-harness-refoundation-W03-P06-S26` - Add tests for the faithfulness serving path, the handoff deny rules, and telemetry
 - `2026-07-02-agent-harness-refoundation-W04-P08-S28` - Build the live subagent-persona harness substrate that starts the real server, drives a real client session, and captures the trajectory
 - `2026-07-02-agent-harness-refoundation-W04-P08-S29` - Score observed calls against golden scenarios plus faithfulness and confirmation with the zero-live-submit and zero-handoff-faithfulness invariants
 - `2026-07-02-agent-harness-refoundation-W04-P08-S30` - Extend the golden-scenario models for live-persona trajectory capture and scoring
@@ -179,6 +182,7 @@ Auto-generated index of all documents tagged with `#agent-harness-refoundation`.
 - `2026-07-02-agent-harness-refoundation-W06-P12-S78` - Build the structured citation lookup keyed on citation id over the registry typed legal_refs, corpus_ref, and BOE permalink data
 - `2026-07-02-agent-harness-refoundation-W06-P12-S79` - Precompute the corpus embeddings at build time with model2vec potion-multilingual-128M and ship the numpy matrix as bundled data
 - `2026-07-02-agent-harness-refoundation-W06-P12-S87` - Confirm the potion-multilingual-128M packaged footprint and that the wheel ships the precomputed vectors but no model weights, onnxruntime, or caches
+- `2026-07-02-agent-harness-refoundation-W06-P13-S80` - Add the runtime query embedder with model2vec potion-multilingual-128M behind the capability-gated extra with a pinned revision, app-controlled cache dir, and install hint
 - `2026-07-02-agent-harness-refoundation-W06-P14-S89` - Pin the search-stack dependencies snowballstemmer, model2vec, and numpy in the capability-gated search extra with a lexical-only degraded default
 - `2026-07-02-agent-harness-refoundation-W06-P14-S90` - Author the third-party notices attribution for the potion-multilingual-128M lineage distilled from BGE-m3 on the C4 ODC-BY corpus
 
