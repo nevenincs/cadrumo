@@ -126,6 +126,16 @@ ALLOWLIST: tuple[AllowlistRule, ...] = (
         reason="archive bundle tests preserve external draft id labels",
     ),
     AllowlistRule(
+        path=_path(
+            r"^src/aeat/adapters/persistence/profile/tests/test_justificante_(?:repository|secure_storage_roundtrip)\.py$"
+        ),
+        reason="justificante persistence tests preserve external justificante PDF fixture filenames and period tokens",
+    ),
+    AllowlistRule(
+        path=_path(r"^src/aeat/entrypoints/cli/tests/test_modelo_result_summary_labels\.py$"),
+        reason="result-summary label tests pin external work-unit name labels that embed a period token",
+    ),
+    AllowlistRule(
         path=_path(r"^src/aeat/(core|domain)/(?:_period|period)\.py$|^src/aeat/(core|domain)/tests/test_period\.py$"),
         reason="Period source and tests explicitly document/refuse the killed combined input forms",
     ),
