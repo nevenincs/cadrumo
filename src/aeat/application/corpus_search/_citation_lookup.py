@@ -81,12 +81,42 @@ class CitationLookup:
             verbatim_text=verbatim,
         )
 
+    def resolve_corpus_text(self, ref: str) -> str:
+        """Resolve a citation id OR a corpus_ref (``path#anchor``) to verbatim text.
+
+        The ``aeat://corpus/{ref}`` resource accepts either form: a retrieval
+        hit's ``corpus_ref`` or a bare citation id. A known citation id routes
+        through :meth:`resolve`; otherwise ``ref`` is read as a corpus path and
+        anchor.
+
+        Raises:
+            CorpusSearchInputError: If ``ref`` resolves to no readable text or
+                escapes the corpus root.
+        """
+        key = ref.strip()
+        if key in self._legal:
+            return self.resolve(key).verbatim_text
+        path_part, _, anchor_part = key.partition("#")
+        text = self._read_corpus_text(path_part, anchor=anchor_part or None)
+        if text is None:
+            raise CorpusSearchInputError("no readable corpus text for reference", context={"ref": ref})
+        return text
+
     def _verbatim_text(self, reference: LegalReference, *, path_part: str, anchor: str | None) -> str:
+        text = self._read_corpus_text(path_part, anchor=anchor)
+        if text is None:
+            raise CorpusSearchInputError(
+                "citation has no readable extracted corpus text",
+                context={"citation_id": reference.id, "corpus_ref": reference.corpus_ref},
+            )
+        return text
+
+    def _read_corpus_text(self, path_part: str, *, anchor: str | None) -> str | None:
         source_path = (self._source_root / path_part).resolve()
         if self._source_root not in source_path.parents:
             raise CorpusSearchInputError(
-                "citation corpus_ref escapes the corpus root",
-                context={"citation_id": reference.id, "corpus_ref": reference.corpus_ref},
+                "corpus_ref escapes the corpus root",
+                context={"path": path_part},
             )
         extracted_json = source_path.with_name(source_path.name + ".extracted.json")
         if extracted_json.is_file():
@@ -102,10 +132,7 @@ class CitationLookup:
             text = _text_from_html(source_path)
             if text:
                 return text
-        raise CorpusSearchInputError(
-            "citation has no readable extracted corpus text",
-            context={"citation_id": reference.id, "corpus_ref": reference.corpus_ref},
-        )
+        return None
 
 
 def _text_from_units(extracted_json: Path, *, anchor: str | None) -> str:

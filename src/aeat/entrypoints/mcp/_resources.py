@@ -37,11 +37,17 @@ _MARKDOWN_SUFFIX = ".md"
 
 
 class HarnessResourceKind(StrEnum):
-    """The three operating-layer resource categories, matching the URI authority."""
+    """The operating-layer resource categories, matching the URI authority.
+
+    ``SKILL`` / ``RULE`` / ``PERSONA`` enumerate the shipped agent tree;
+    ``CORPUS`` is a template-only category resolving a citation id or
+    ``corpus_ref`` to its verbatim bundled legal text (ADR R3).
+    """
 
     SKILL = "skill"
     RULE = "rule"
     PERSONA = "persona"
+    CORPUS = "corpus"
 
 
 class HarnessResourceRef(BaseModel):
@@ -114,12 +120,17 @@ _DESCRIPTIONS: dict[HarnessResourceKind, str] = {
     HarnessResourceKind.SKILL: "aeat workflow skill",
     HarnessResourceKind.RULE: "aeat operator rule",
     HarnessResourceKind.PERSONA: "aeat operator persona",
+    HarnessResourceKind.CORPUS: "aeat legal corpus reference",
 }
 
 _TEMPLATE_DESCRIPTIONS: dict[HarnessResourceKind, str] = {
     HarnessResourceKind.SKILL: "Workflow skill playbooks, addressed by skill name.",
     HarnessResourceKind.RULE: "Operator operating-rule documents, addressed by rule name.",
     HarnessResourceKind.PERSONA: "Tax-advisor persona documents, addressed by persona name.",
+    HarnessResourceKind.CORPUS: (
+        "Verbatim BOE/AEAT legal text, addressed by citation id or corpus_ref "
+        "(e.g. ley-58-2003:art-27.2)."
+    ),
 }
 
 
@@ -190,6 +201,8 @@ def read_harness_resource(uri: str) -> HarnessResourceContent:
             that is not in the shipped tree.
     """
     kind, name = _parse_uri(uri)
+    if kind is HarnessResourceKind.CORPUS:
+        return _read_corpus_resource(name, uri)
     for entry_kind, entry_name, document in _iter_entries():
         if entry_kind is kind and entry_name == name:
             return HarnessResourceContent(
@@ -197,6 +210,21 @@ def read_harness_resource(uri: str) -> HarnessResourceContent:
                 text=document.read_text(encoding=_UTF_8),
             )
     raise HarnessResourceNotFoundError(f"no shipped {kind.value} named {name!r} ({uri})")
+
+
+def _read_corpus_resource(ref: str, uri: str) -> HarnessResourceContent:
+    """Resolve an ``aeat://corpus/<ref>`` URI to verbatim bundled legal text.
+
+    ``ref`` is a citation id or a retrieval ``corpus_ref``; resolution routes
+    through the registry legal catalogue (the single citation authority).
+    """
+    from ...application.corpus_search import CorpusSearchInputError, bundled_citation_lookup
+
+    try:
+        text = bundled_citation_lookup().resolve_corpus_text(ref)
+    except CorpusSearchInputError as exc:
+        raise HarnessResourceNotFoundError(f"no corpus text for {ref!r} ({uri})") from exc
+    return HarnessResourceContent(ref=_ref_for(HarnessResourceKind.CORPUS, ref), text=text)
 
 
 __all__ = [
