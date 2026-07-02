@@ -21,8 +21,8 @@ from ....core.aggregation import BindingAggregation, BindingAggregationOp, Bindi
 from ....core.resources import resources
 from ....domain.calculations.registry import DataBindingDefinition, ModeloRevision, WithholdingObservation
 from ....tests.secure_sql import isolated_runtime_profile
+from .._percepciones_observations_repository import PercepcionObservationRepository
 from .._source_mesh import CalculationSourceContext
-from .._withholding_observations_repository import WithholdingObservationRepository
 from .._withholding_source import WithholdingSourceResolver
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -76,7 +76,7 @@ def test_resolver_materialises_distinct_percepcion_count(tmp_path: Path) -> None
     with isolated_runtime_profile(tmp_path=tmp_path):
         binding = _percepcion_binding()
         period = Period.from_year_and_code(2024, "0A")
-        WithholdingObservationRepository().replace_observations(
+        PercepcionObservationRepository().replace_observations(
             modelo="190",
             filing_year=2024,
             period=period,

@@ -271,12 +271,12 @@ def _natural_key_resolvers() -> dict[str, NaturalKeyResolver]:
 
     resolvers["aeat.retenciones.observations"] = _bound_resolver(_retencion_repo)
 
-    def _withholding_repo() -> object:
-        from ..aggregation import WithholdingObservationRepository
+    def _percepciones_repo() -> object:
+        from ..aggregation import PercepcionObservationRepository
 
-        return WithholdingObservationRepository()
+        return PercepcionObservationRepository()
 
-    resolvers["aeat.withholding.observations"] = _bound_resolver(_withholding_repo)
+    resolvers["aeat.withholding.observations"] = _bound_resolver(_percepciones_repo)
 
     # --- Filing/ledger/submission state (SecureBoundRepository) ---------------
     def _filing_history_repo() -> object:
@@ -322,7 +322,7 @@ def _natural_key_resolvers() -> dict[str, NaturalKeyResolver]:
     resolvers["aeat.ledger.classification.rules"] = _bound_resolver(_classification_rule_repo)
 
     def _submission_repo() -> object:
-        from ...domain.submission import SubmissionRepository
+        from ...adapters.persistence.profile.submission import SubmissionRepository
 
         return SubmissionRepository()
 

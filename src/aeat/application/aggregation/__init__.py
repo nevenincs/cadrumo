@@ -38,7 +38,7 @@ state. Those steps remain in :mod:`domain.calculations.registry` and
 :mod:`application.modelo`.
 
 The facade also re-exports encrypted observation repositories for the
-retenciones and withholding stores, informativa rollups, and the shared
+retenciones and percepciones stores, informativa rollups, and the shared
 :class:`AggregationError` failure taxonomy.
 
 See Also:
@@ -136,6 +136,11 @@ from ._oss_ioss import (
     validate_oss_ioss_observation,
     validate_oss_ioss_observations,
 )
+from ._percepciones_observations_repository import (
+    PercepcionObservationRepository,
+    percepcion_observation_key,
+    persist_percepcion_observations,
+)
 from ._renta_ledger import (
     RentaLedgerAggregationIssue,
     RentaLedgerAggregationIssueReason,
@@ -195,11 +200,6 @@ from ._source_mesh import (
     storage_degradation_resolution,
 )
 from ._source_profile import ProfileSourceResolver
-from ._withholding_observations_repository import (
-    WithholdingObservationRepository,
-    persist_withholding_observations,
-    withholding_observation_key,
-)
 from ._withholding_source import WithholdingSourceResolver
 
 __all__ = [
@@ -254,6 +254,7 @@ __all__ = [
     "PerModeloAggregationContributor",
     "PerModeloAggregationLogFields",
     "PerModeloAggregationResult",
+    "PercepcionObservationRepository",
     "Period",
     "PeriodKind",
     "ProfileSourceResolver",
@@ -268,7 +269,6 @@ __all__ = [
     "RetencionesAggregation",
     "RetencionesAggregationSourceResolver",
     "WithholdingObservation",
-    "WithholdingObservationRepository",
     "WithholdingSourceResolver",
     "administrador_retencion_rate_advisory_observations",
     "aggregate_counterpart_347",
@@ -304,8 +304,9 @@ __all__ = [
     "merge_source_resolutions_by_precedence",
     "missing_evidence_advisory_observations",
     "oss_ioss_candidates_from_repositories",
+    "percepcion_observation_key",
+    "persist_percepcion_observations",
     "persist_retencion_observations",
-    "persist_withholding_observations",
     "precedence_ladder_sources",
     "retencion_observation_key",
     "stale_filed_revisions",
@@ -315,5 +316,4 @@ __all__ = [
     "validate_iva_ledger_observations",
     "validate_oss_ioss_observation",
     "validate_oss_ioss_observations",
-    "withholding_observation_key",
 ]
