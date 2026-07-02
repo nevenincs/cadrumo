@@ -240,11 +240,10 @@ from ._export_parse import (
 )
 from ._filed_state import RegistryFiledStateComparison, compare_calculation_to_filed_observation
 from ._formula_runtime import (
-    M210_CONVENIO_MISSING_SENTINEL,
-    M210_DEFERRED_TIPO_SENTINEL,
-    M210_RATE_SENTINELS,
     RegistryCalculationEntry,
     RegistryCalculationResult,
+    RegistryCalculationUnresolvedOutcome,
+    RegistryUnresolvedOutcomeReason,
     calculate_registry_snapshot,
     read_parameter,
 )
@@ -473,9 +472,6 @@ __all__ = [
     "KNOWN_PROFILE_FLAG_ADVISORY_FIELDS",
     "KNOWN_VERIFICATION_PREDICATE_OPERATORS",
     "LEDGER_BINDING_SOURCE_KINDS",
-    "M210_CONVENIO_MISSING_SENTINEL",
-    "M210_DEFERRED_TIPO_SENTINEL",
-    "M210_RATE_SENTINELS",
     "AeatNifIvaCheckerOracle",
     "AeatNifIvaObservation",
     "AmbiguousRevisionSelectionError",
@@ -606,6 +602,7 @@ __all__ = [
     "RefundOperationObservation",
     "RegistryCalculationEntry",
     "RegistryCalculationResult",
+    "RegistryCalculationUnresolvedOutcome",
     "RegistryCatalogues",
     "RegistryCoverageAudit",
     "RegistryError",
@@ -618,6 +615,7 @@ __all__ = [
     "RegistrySnapshot",
     "RegistrySnapshotError",
     "RegistrySnapshotRef",
+    "RegistryUnresolvedOutcomeReason",
     "RegistryValidationError",
     "RegistryValidator",
     "RegistryVerificationPolicy",

@@ -30,12 +30,10 @@ import pytest
 from ....core import ConvenioOverrideKind, TipoRentaIrnr
 from ....core.resources import bundled_path
 from ....domain.calculations.registry import (
-    M210_CONVENIO_MISSING_SENTINEL,
-    M210_DEFERRED_TIPO_SENTINEL,
-    CasillaId,
-    CasillaObservation,
     ConvenioAuthority,
+    RegistryCalculationUnresolvedOutcome,
     RegistrySnapshot,
+    RegistryUnresolvedOutcomeReason,
     build_snapshot,
     load_convenio_authority,
     load_registry_tree,
@@ -51,7 +49,7 @@ from .._verification_actions import (
     _evaluate_applicability_filter,
     _evaluate_predicate_expression,
     _evaluate_verification_predicates,
-    _rewrite_m210_sentinels,
+    _m210_unresolved_outcome_findings,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -277,99 +275,112 @@ def test_resident_pension_uses_live_domestic_tariff_without_scalar_rate(
     assert findings == []
 
 
-def _observation(casilla_id: CasillaId, value: Decimal) -> CasillaObservation:
-    """Build a minimal CasillaObservation carrying just a casilla_id + value."""
+def _unresolved_rate_outcome(
+    reason: RegistryUnresolvedOutcomeReason,
+    *,
+    tipo_renta: str = "general",
+    country: str = "ZW",
+) -> RegistryCalculationUnresolvedOutcome:
+    """Build the typed M210 unresolved-rate outcome emitted by the formula runtime."""
 
-    return CasillaObservation(
-        casilla_id=casilla_id,
-        value=value,
+    return RegistryCalculationUnresolvedOutcome(
+        casilla_id="tipo_gravamen",
+        reason=reason,
+        formula_id="m210-tipo-gravamen-2025-resolve",
+        op="irnr_resolve_tipo_gravamen",
+        operand_refs=(
+            "tipo_renta",
+            "m210-tipo-gravamen-2025",
+            "m210-2025-profile-country-of-fiscal-residence",
+        ),
+        operand_casilla_refs=("tipo_renta",),
         legal_refs=("trlirnr-rdleg-5-2004:art-25.1.a",),
         source_refs=("aeat-modelo-210-procedure",),
+        context={
+            "tipo_renta": tipo_renta,
+            "country": country,
+            "filing_year": "2025",
+            "baseline_parameter": "m210-tipo-gravamen-2025",
+            "country_binding": "m210-2025-profile-country-of-fiscal-residence",
+        },
     )
 
 
-def test_rewrite_m210_sentinels_passes_through_non_sentinel_observations(
+def test_m210_unresolved_outcome_findings_passes_through_empty_outcomes(
     m210_snapshot: RegistrySnapshot,
 ) -> None:
-    """Observations carrying real rates / zero values pass through unchanged."""
+    """No typed unresolved outcomes means no M210 verification finding."""
 
-    observations = (
-        _observation("base_imponible", Decimal("12000")),
-        _observation("tipo_gravamen", Decimal("0.24")),
-        _observation("cuota_integra", Decimal("2880.00")),
-    )
-    rewritten, findings = _rewrite_m210_sentinels(
-        observations,
+    findings = _m210_unresolved_outcome_findings(
+        (),
         profile=_irnr_profile("GB"),
         snapshot=m210_snapshot,
         year=2025,
         tipo_renta="general",
     )
 
-    assert rewritten == observations
     assert findings == []
 
 
-def test_rewrite_m210_sentinels_replaces_convenio_missing_sentinel(
+def test_m210_unresolved_outcome_findings_emits_convenio_missing_finding(
     m210_snapshot: RegistrySnapshot,
 ) -> None:
-    """A CONVENIO_MISSING sentinel is rewritten and the missing-row finding is emitted."""
+    """A typed convenio-missing outcome emits the missing-row finding."""
 
-    observations = (_observation("tipo_gravamen", M210_CONVENIO_MISSING_SENTINEL),)
-    rewritten, findings = _rewrite_m210_sentinels(
-        observations,
+    findings = _m210_unresolved_outcome_findings(
+        (_unresolved_rate_outcome(RegistryUnresolvedOutcomeReason.M210_CONVENIO_RATE_MISSING),),
         profile=_irnr_profile("ZW"),
         snapshot=m210_snapshot,
         year=2025,
         tipo_renta="general",
     )
 
-    assert rewritten[0].value == Decimal("0")
     assert len(findings) == 1
     assert "m210-convenio-rate-missing" in findings[0].message
 
 
-def test_rewrite_m210_sentinels_replaces_unknown_tipo_sentinel(
+def test_m210_unresolved_outcome_findings_emits_unknown_tipo_finding(
     m210_snapshot: RegistrySnapshot,
 ) -> None:
-    """A DEFERRED_TIPO sentinel + unknown no-treaty type rewrites to zero and emits a finding."""
+    """A typed baseline-deferred outcome + unknown type emits a finding."""
 
-    observations = (_observation("tipo_gravamen", M210_DEFERRED_TIPO_SENTINEL),)
-    rewritten, findings = _rewrite_m210_sentinels(
-        observations,
+    findings = _m210_unresolved_outcome_findings(
+        (
+            _unresolved_rate_outcome(
+                RegistryUnresolvedOutcomeReason.M210_BASELINE_TIPO_DEFERRED,
+                tipo_renta="royalty",
+                country="",
+            ),
+        ),
         profile=_resident_profile(),
         snapshot=m210_snapshot,
         year=2025,
         tipo_renta="royalty",
     )
 
-    assert rewritten[0].value == Decimal("0")
     assert len(findings) == 1
     assert "m210-baseline-tipo-deferred" in findings[0].message
 
 
-def test_rewrite_m210_sentinels_resolves_known_rate_in_place(
+def test_m210_unresolved_outcome_findings_omits_finding_when_rate_resolves(
     m210_snapshot: RegistrySnapshot,
 ) -> None:
-    """A sentinel observation paired with a resolvable Convenio row rewrites to the real rate.
+    """A typed outcome paired with a resolvable Convenio row emits no finding."""
 
-    Khadija (MA / interest) has a real 0.10 Convenio row. If the
-    engine emitted a sentinel for any reason (e.g. text_inputs were
-    not yet threaded into the application calculation path), the
-    verification sweep would re-resolve and rewrite the observation
-    to the canonical rate without emitting a BLOCKING finding.
-    """
-
-    observations = (_observation("tipo_gravamen", M210_CONVENIO_MISSING_SENTINEL),)
-    rewritten, findings = _rewrite_m210_sentinels(
-        observations,
+    findings = _m210_unresolved_outcome_findings(
+        (
+            _unresolved_rate_outcome(
+                RegistryUnresolvedOutcomeReason.M210_CONVENIO_RATE_MISSING,
+                tipo_renta="interest",
+                country="MA",
+            ),
+        ),
         profile=_irnr_profile("MA"),
         snapshot=m210_snapshot,
         year=2025,
         tipo_renta="interest",
     )
 
-    assert rewritten[0].value == Decimal("0.10")
     assert findings == []
 
 

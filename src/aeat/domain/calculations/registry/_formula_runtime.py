@@ -29,6 +29,7 @@ from collections.abc import Mapping
 from dataclasses import dataclass, field
 from datetime import date
 from decimal import Decimal, localcontext
+from enum import StrEnum
 
 from pydantic import BaseModel, Field, model_validator
 
@@ -60,26 +61,6 @@ _ONE = Decimal("1")
 _M100_IMPUTATION_YEAR_DAYS = Decimal("365")
 read_parameter, _resolve_bracket = _ops.read_parameter, _ops.resolve_bracket
 
-# M210 IRNR sentinel rate values. Emitted by
-# ``irnr_resolve_tipo_gravamen`` when a deterministic rate cannot be
-# resolved from the registry at evaluation time. The verification
-# layer rewrites these sentinels into BLOCKING findings post-engine
-# (see ``_rewrite_m210_sentinels`` in the application layer); they
-# never leak past the verification boundary into a draft / export.
-# Negative magnitudes guarantee no collision with a real registry-
-# authored rate, which is always in ``[0, 1]`` per TRLIRNR Art 25.
-_M210_DEFERRED_TIPO_SENTINEL = Decimal("-1")
-_M210_CONVENIO_MISSING_SENTINEL = Decimal("-2")
-_M210_RATE_SENTINELS = frozenset({_M210_DEFERRED_TIPO_SENTINEL, _M210_CONVENIO_MISSING_SENTINEL})
-
-# Public-aliased re-exports for the application-layer verification
-# sweep. The private module-internal names stay primary so the engine
-# implementation can be reorganised without forcing every caller to
-# track the rename.
-M210_DEFERRED_TIPO_SENTINEL = _M210_DEFERRED_TIPO_SENTINEL
-M210_CONVENIO_MISSING_SENTINEL = _M210_CONVENIO_MISSING_SENTINEL
-M210_RATE_SENTINELS = _M210_RATE_SENTINELS
-
 
 class _UnresolvedFormulaDependencyError(RegistrySnapshotError):
     """Raised internally when a non-blocking source gap makes a formula unresolved."""
@@ -87,6 +68,27 @@ class _UnresolvedFormulaDependencyError(RegistrySnapshotError):
     def __init__(self, dependency_ids: tuple[str, ...]) -> None:
         super().__init__(", ".join(dependency_ids))
         self.dependency_ids = dependency_ids
+
+
+class RegistryUnresolvedOutcomeReason(StrEnum):
+    """Closed reason catalogue for typed formula outcomes with no Decimal value."""
+
+    M210_BASELINE_TIPO_DEFERRED = "m210-baseline-tipo-deferred"
+    M210_CONVENIO_RATE_MISSING = "m210-convenio-rate-missing"
+
+
+class _UnresolvedFormulaOutcomeError(RegistrySnapshotError):
+    """Raised internally when a formula emits a typed unresolved outcome."""
+
+    def __init__(
+        self,
+        reason: RegistryUnresolvedOutcomeReason,
+        *,
+        context: Mapping[str, str],
+    ) -> None:
+        super().__init__(reason.value)
+        self.reason = reason
+        self.context = dict(context)
 
 
 @dataclass(frozen=True, slots=True)
@@ -155,6 +157,28 @@ class RegistryCalculationEntry(BaseModel):
     source_refs: tuple[SourceRefId, ...] = Field(min_length=1)
 
 
+class RegistryCalculationUnresolvedOutcome(BaseModel):
+    """One formula target that could not produce a Decimal value.
+
+    The outcome rides beside :attr:`RegistryCalculationResult.observations` so
+    the engine's value channels remain Decimal-only. Legal/source refs and
+    formula lineage mirror :class:`CasillaObservation` for the same target.
+    """
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    casilla_id: CasillaId
+    reason: RegistryUnresolvedOutcomeReason
+    formula_id: FormulaId
+    op: str
+    operand_refs: tuple[str, ...] = ()
+    operand_casilla_refs: tuple[CasillaId, ...] = ()
+    operand_values: tuple[Decimal, ...] = ()
+    legal_refs: tuple[LegalRefId, ...] = Field(min_length=1)
+    source_refs: tuple[SourceRefId, ...] = Field(min_length=1)
+    context: Mapping[str, str] = Field(default_factory=dict)
+
+
 class RegistryCalculationResult(BaseModel):
     """Calculated outputs for one registry snapshot.
 
@@ -191,6 +215,7 @@ class RegistryCalculationResult(BaseModel):
     modelo: str
     revision: str
     observations: tuple[CasillaObservation, ...] = Field(default_factory=tuple)
+    unresolved_outcomes: tuple[RegistryCalculationUnresolvedOutcome, ...] = Field(default_factory=tuple)
 
     @model_validator(mode="after")
     def _require_observation_provenance(self) -> RegistryCalculationResult:
@@ -204,6 +229,19 @@ class RegistryCalculationResult(BaseModel):
                         "modelo": self.modelo,
                         "revision": self.revision,
                         "casilla_id": observation.casilla_id,
+                    },
+                )
+        for outcome in self.unresolved_outcomes:
+            if not outcome.legal_refs or not outcome.source_refs:
+                raise RegistryValidationError(
+                    f"registry calculation result for modelo {self.modelo!r} revision {self.revision!r} "
+                    f"contains ungrounded unresolved outcome for casilla {outcome.casilla_id!r}; "
+                    "legal_refs and source_refs are required",
+                    context={
+                        "modelo": self.modelo,
+                        "revision": self.revision,
+                        "casilla_id": outcome.casilla_id,
+                        "reason": outcome.reason.value,
                     },
                 )
         return self
@@ -379,6 +417,7 @@ def calculate_registry_snapshot[InputKey, InputValue, TextInputKey, TextInputVal
     # the input/bound placeholder with the full operand lineage; non-computed
     # casillas keep the registry-sourced legal_refs/source_refs.
     computed_provenance: dict[CasillaId, CasillaObservation] = {}
+    unresolved_outcomes: list[RegistryCalculationUnresolvedOutcome] = []
     unresolved_casilla_ids: set[CasillaId] = set()
 
     with localcontext() as ctx:
@@ -408,6 +447,23 @@ def calculate_registry_snapshot[InputKey, InputValue, TextInputKey, TextInputVal
                     text_values=resolved_text_inputs,
                     convenio=snapshot.convenio,
                 )
+            except _UnresolvedFormulaOutcomeError as exc:
+                unresolved_casilla_ids.add(target)
+                unresolved_outcomes.append(
+                    RegistryCalculationUnresolvedOutcome(
+                        casilla_id=target,
+                        reason=exc.reason,
+                        formula_id=formula.id,
+                        op=formula.expression.op or "value",
+                        operand_refs=tuple(operand_refs),
+                        operand_casilla_refs=tuple(operand_casilla_refs),
+                        operand_values=tuple(operand_values),
+                        legal_refs=tuple(formula.legal_refs),
+                        source_refs=tuple(formula.source_refs),
+                        context=exc.context,
+                    ),
+                )
+                continue
             except _UnresolvedFormulaDependencyError:
                 unresolved_casilla_ids.add(target)
                 continue
@@ -455,6 +511,7 @@ def calculate_registry_snapshot[InputKey, InputValue, TextInputKey, TextInputVal
         modelo=snapshot.modelo.id,
         revision=revision.id,
         observations=observations,
+        unresolved_outcomes=tuple(unresolved_outcomes),
     )
 
 
@@ -905,17 +962,22 @@ def _evaluate_irnr_resolve_tipo_gravamen(expression: FormulaExpression, ctx: _Ev
       baseline rate otherwise),
     * ``exempt`` drives the source-state rate to zero.
 
-    A declared treaty country with no override row yields the missing-row
-    BLOCKING sentinel (``no-silent-under-declaration``); the application
-    verification sweep rewrites it into a finding post-engine.
+    A declared treaty country with no override row yields a typed unresolved
+    outcome (``no-silent-under-declaration``); the application verification
+    layer converts it into a finding post-engine.
     """
     args = _irnr_resolve_tipo_gravamen_args(expression)
     tipo_renta = ctx.text_values.get(args.tipo_casilla_id, "")
     ctx.operand_refs.append(args.tipo_casilla_id)
     ctx.operand_casilla_refs.append(args.tipo_casilla_id)
     if not tipo_renta:
-        ctx.operand_values.append(_M210_DEFERRED_TIPO_SENTINEL)
-        return _M210_DEFERRED_TIPO_SENTINEL
+        _raise_m210_unresolved_outcome(
+            RegistryUnresolvedOutcomeReason.M210_BASELINE_TIPO_DEFERRED,
+            ctx=ctx,
+            args=args,
+            tipo_renta=tipo_renta,
+            country="",
+        )
 
     baseline_param = ctx.parameters.get(args.baseline_parameter)
     ctx.operand_refs.extend((args.baseline_parameter, args.country_binding))
@@ -925,22 +987,68 @@ def _evaluate_irnr_resolve_tipo_gravamen(expression: FormulaExpression, ctx: _Ev
 
     if tipo_renta == TipoRentaIrnr.PENSION.value:
         rate = _irnr_pension_effective_rate(args, ctx, override=override, country=country)
+        if rate is None:
+            _raise_m210_unresolved_outcome(
+                RegistryUnresolvedOutcomeReason.M210_CONVENIO_RATE_MISSING,
+                ctx=ctx,
+                args=args,
+                tipo_renta=tipo_renta,
+                country=country,
+            )
         ctx.operand_values.append(rate)
         return rate
 
     if not country:
         if baseline_rate is None:
-            ctx.operand_values.append(_M210_DEFERRED_TIPO_SENTINEL)
-            return _M210_DEFERRED_TIPO_SENTINEL
+            _raise_m210_unresolved_outcome(
+                RegistryUnresolvedOutcomeReason.M210_BASELINE_TIPO_DEFERRED,
+                ctx=ctx,
+                args=args,
+                tipo_renta=tipo_renta,
+                country=country,
+            )
         ctx.operand_values.append(baseline_rate)
         return baseline_rate
 
     if override is None:
-        ctx.operand_values.append(_M210_CONVENIO_MISSING_SENTINEL)
-        return _M210_CONVENIO_MISSING_SENTINEL
+        _raise_m210_unresolved_outcome(
+            RegistryUnresolvedOutcomeReason.M210_CONVENIO_RATE_MISSING,
+            ctx=ctx,
+            args=args,
+            tipo_renta=tipo_renta,
+            country=country,
+        )
     rate = _apply_convenio_override(override, baseline_rate=baseline_rate)
+    if rate is None:
+        _raise_m210_unresolved_outcome(
+            RegistryUnresolvedOutcomeReason.M210_CONVENIO_RATE_MISSING,
+            ctx=ctx,
+            args=args,
+            tipo_renta=tipo_renta,
+            country=country,
+        )
     ctx.operand_values.append(rate)
     return rate
+
+
+def _raise_m210_unresolved_outcome(
+    reason: RegistryUnresolvedOutcomeReason,
+    *,
+    ctx: _EvalContext,
+    args: _IrnrResolveTipoGravamenArgs,
+    tipo_renta: str,
+    country: str,
+) -> None:
+    raise _UnresolvedFormulaOutcomeError(
+        reason,
+        context={
+            "tipo_renta": tipo_renta,
+            "country": country,
+            "filing_year": str(ctx.filing_year),
+            "baseline_parameter": args.baseline_parameter,
+            "country_binding": args.country_binding,
+        },
+    )
 
 
 def _irnr_resolve_tipo_gravamen_args(expression: FormulaExpression) -> _IrnrResolveTipoGravamenArgs:
@@ -1009,20 +1117,20 @@ def _resolve_convenio_override(
     return ctx.convenio.resolve(country.upper(), tipo_enum, ctx.filing_year)
 
 
-def _apply_convenio_override(override: ConvenioOverride, *, baseline_rate: Decimal | None) -> Decimal:
+def _apply_convenio_override(override: ConvenioOverride, *, baseline_rate: Decimal | None) -> Decimal | None:
     """Apply a non-pension treaty override to the domestic baseline rate."""
     kind = override.kind
     if kind is ConvenioOverrideKind.EXEMPT:
         return _ZERO
     if kind is ConvenioOverrideKind.ALLOCATION_DOMESTIC_TARIFF:
-        return baseline_rate if baseline_rate is not None else _M210_CONVENIO_MISSING_SENTINEL
+        return baseline_rate
     if override.rate is None:
-        return _M210_CONVENIO_MISSING_SENTINEL
+        return None
     if kind is ConvenioOverrideKind.FLAT:
         return override.rate
     # CEILING: min(domestic, treaty) — "más favorable" computed, not assumed.
     if baseline_rate is None:
-        return _M210_CONVENIO_MISSING_SENTINEL
+        return None
     return min(baseline_rate, override.rate)
 
 
@@ -1032,10 +1140,10 @@ def _irnr_pension_effective_rate(
     *,
     override: ConvenioOverride | None,
     country: str,
-) -> Decimal:
+) -> Decimal | None:
     if country:
         if override is None:
-            return _M210_CONVENIO_MISSING_SENTINEL
+            return None
         if override.kind is ConvenioOverrideKind.EXEMPT:
             return _ZERO
         if override.kind is ConvenioOverrideKind.FLAT and override.rate is not None:

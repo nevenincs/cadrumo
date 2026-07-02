@@ -1,8 +1,8 @@
 """Modelo 210 IRNR treaty-rate resolution helpers.
 
-The registry formula runtime computes the filing values and emits sentinel rates
-when a Modelo 210 rate cannot be applied directly. This application helper replays
-the same single tipo-de-gravamen resolution path over a
+The registry formula runtime computes the filing values and emits typed
+unresolved outcomes when a Modelo 210 rate cannot be applied directly. This
+application helper replays the same single tipo-de-gravamen resolution path over a
 :class:`~aeat.domain.calculations.registry.RegistrySnapshot`: it reads the
 ``m210-tipo-gravamen-2025`` baseline table, consults the cross-cutting
 :class:`~aeat.domain.calculations.registry.ConvenioAuthority` treaty projection for
@@ -18,7 +18,7 @@ runtime-computed effective rate for those.
 See Also:
     :mod:`aeat.domain.calculations.registry._formula_runtime`
         Formula-runtime implementation of ``irnr_resolve_tipo_gravamen`` and the
-        M210 sentinel values this application layer rewrites into findings.
+        typed M210 unresolved outcomes this application layer converts into findings.
     :func:`aeat.application.modelo._verification_actions.verify_modelo_revision`
         Verification path that replays this resolver for Modelo 210 observations.
     :mod:`aeat.application.calculations.tests.test_modelo_210_irnr_continuity`
@@ -56,9 +56,9 @@ def _m210_blocking_finding(
     """Build a BLOCKING_RULE M210 rate finding with the shared severity/kind.
 
     The returned :class:`~aeat.domain.modelos.ModeloVerificationFinding` is the
-    application-facing companion to the formula-runtime sentinel: callers surface
-    it to the operator instead of letting an unavailable M210 rate silently
-    produce filing output.
+    application-facing companion to the formula-runtime unresolved outcome:
+    callers surface it to the operator instead of letting an unavailable M210
+    rate silently produce filing output.
     """
     return ModeloVerificationFinding(
         kind=ModeloVerificationFindingKind.BLOCKING_RULE,
