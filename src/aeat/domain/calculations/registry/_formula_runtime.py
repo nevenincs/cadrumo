@@ -627,6 +627,8 @@ def _evaluate_expression(
         return _evaluate_if_then_else(expression, ctx)
     if op == "age_at_year_end":
         return _evaluate_age_at_year_end(expression, ctx)
+    if op == "m131_resolve_modulos_previo":
+        return _evaluate_m131_resolve_modulos_previo(expression, ctx)
     args = [_evaluate_with_ctx(arg, ctx) for arg in expression.args]
     return _ops.evaluate_args_op(op, args)
 
@@ -1386,6 +1388,152 @@ def _m210_days_in_filing_year(year: int) -> int:
             translated_message="errors.calc.m210_imputation_no_filing_year",
         )
     return (date(year, 12, 31) - date(year, 1, 1)).days + 1
+
+
+@dataclass(frozen=True, slots=True)
+class _M131ResolveModulosPrevioArgs:
+    """Resolved registry ids for the M131 estimación-objetiva módulos Fase 1ª dispatcher."""
+
+    epigrafe_casilla_id: CasillaId
+    modulo_unit_casilla_ids: tuple[CasillaId, CasillaId, CasillaId, CasillaId]
+    coefficient_parameter: ParameterId
+
+
+#: Módulo slot count the M131 first-slice coefficient tables carry (the
+#: highest-cardinality tabled activity, 972.1 peluquería, uses all four; the
+#: 3-módulo activities pass a literal ``0`` for the unused 4th slot).
+_M131_MODULOS_SLOT_COUNT = 4
+
+
+def _m131_resolve_modulos_previo_args(expression: FormulaExpression) -> _M131ResolveModulosPrevioArgs:
+    op = "m131_resolve_modulos_previo"
+    expected_arg_count = 2 + _M131_MODULOS_SLOT_COUNT
+    if len(expression.args) != expected_arg_count:
+        raise RegistryValidationError(
+            f"formula op {op!r} expects {expected_arg_count} args, got {len(expression.args)}",
+            translated_message="errors.calc.lookup_dispatch_arg_count",
+            context={"op": op, "expected": str(expected_arg_count)},
+        )
+    epigrafe_arg = expression.args[0]
+    modulo_args = expression.args[1 : 1 + _M131_MODULOS_SLOT_COUNT]
+    coefficient_arg = expression.args[1 + _M131_MODULOS_SLOT_COUNT]
+    if epigrafe_arg.casilla_id is None:
+        raise RegistryValidationError(
+            f"formula op {op!r} requires args[0] to be a casilla leaf",
+            translated_message="errors.calc.lookup_dispatch_arg_kind",
+            context={"op": op, "position": "args[0]", "expected_kind": "casilla"},
+        )
+    resolved_modulo_ids: list[CasillaId] = []
+    for index, modulo_arg in enumerate(modulo_args, start=1):
+        if modulo_arg.casilla_id is None:
+            raise RegistryValidationError(
+                f"formula op {op!r} requires args[{index}] to be a casilla leaf",
+                translated_message="errors.calc.lookup_dispatch_arg_kind",
+                context={"op": op, "position": f"args[{index}]", "expected_kind": "casilla"},
+            )
+        resolved_modulo_ids.append(modulo_arg.casilla_id)
+    if coefficient_arg.parameter is None:
+        raise RegistryValidationError(
+            f"formula op {op!r} requires args[{1 + _M131_MODULOS_SLOT_COUNT}] to be a parameter leaf",
+            translated_message="errors.calc.lookup_dispatch_arg_kind",
+            context={
+                "op": op,
+                "position": f"args[{1 + _M131_MODULOS_SLOT_COUNT}]",
+                "expected_kind": "parameter",
+            },
+        )
+    modulo_ids = (resolved_modulo_ids[0], resolved_modulo_ids[1], resolved_modulo_ids[2], resolved_modulo_ids[3])
+    return _M131ResolveModulosPrevioArgs(
+        epigrafe_casilla_id=epigrafe_arg.casilla_id,
+        modulo_unit_casilla_ids=modulo_ids,
+        coefficient_parameter=coefficient_arg.parameter,
+    )
+
+
+def _m131_modulos_coefficient(
+    parameter: ParameterDefinition | None,
+    *,
+    epigrafe: str,
+    modulo_index: int,
+    year: int,
+) -> Decimal | None:
+    """Look up the (epígrafe, módulo) coefficient in the M131 keyed-bracket table.
+
+    Returns ``None`` when the composite key has no row for the filing year —
+    the epígrafe is not (yet) part of the first-slice tabled activities, or
+    the module slot does not apply to that activity. A ``None`` result is the
+    engine's "not table-driven" signal; the caller returns ``Decimal('0')``
+    rather than raising, because :func:`_evaluate_m131_resolve_modulos_previo`
+    feeds an internal-only advisory-support casilla, not a filed casilla — the
+    official casilla 01 stays reachable as a manual operator input and the
+    registry-declared advisory predicate surfaces the gap
+    (no-silent-under-declaration), never a silent computed zero standing in
+    for the filed figure.
+    """
+    if parameter is None:
+        return None
+    key = f"{epigrafe}:{modulo_index}"
+    for entry in parameter.keyed_brackets:
+        in_window = entry.valid_from.year <= year and (entry.valid_to is None or entry.valid_to.year >= year)
+        if entry.key == key and in_window:
+            try:
+                return Decimal(entry.value)
+            except (ArithmeticError, ValueError):
+                return None
+    return None
+
+
+def _evaluate_m131_resolve_modulos_previo(expression: FormulaExpression, ctx: _EvalContext) -> Decimal:
+    """Resolve the M131/M100 estimación-objetiva Fase 1ª rendimiento neto previo.
+
+    LIRPF art. 31 + the annual Orden de módulos (Anexo II) fix the mechanism:
+    rendimiento neto previo = Σ(unidades_módulo × rendimiento anual por unidad
+    antes de amortización), per IAE epígrafe. This op reads the operator-
+    declared IAE epígrafe (a text casilla) and up to four módulo unit-count
+    casillas, looks up each módulo's coefficient in the registry-declared
+    :class:`~aeat.domain.calculations.registry.ParameterDefinition`
+    (``data_type='keyed_bracket_table'``, key ``"<epígrafe>:<módulo>"``), and
+    sums the per-módulo products.
+
+    An untabled epígrafe (bounded first-slice per the
+    ``2026-07-01-modelo-131-eo-modulos-engine-adr``) or a blank epígrafe
+    resolves to ``Decimal('0')`` — this op feeds an internal-only
+    advisory-support casilla, never the filed casilla 01 directly, so a zero
+    here means "the table-driven engine has no coverage for this activity",
+    not "the rendimiento is zero". The
+    ``advisory_when_computed_diverges`` verification predicate surfaces the
+    gap or the discrepancy to the operator; it never silently substitutes.
+    """
+    args = _m131_resolve_modulos_previo_args(expression)
+    epigrafe = ctx.text_values.get(args.epigrafe_casilla_id, "").strip()
+    ctx.operand_refs.append(args.epigrafe_casilla_id)
+    ctx.operand_casilla_refs.append(args.epigrafe_casilla_id)
+    parameter = ctx.parameters.get(args.coefficient_parameter)
+    ctx.operand_refs.append(args.coefficient_parameter)
+    if not epigrafe or parameter is None:
+        return _ZERO
+    total = _ZERO
+    for modulo_index, modulo_casilla_id in enumerate(args.modulo_unit_casilla_ids, start=1):
+        units = _m210_numeric_casilla_value(modulo_casilla_id, ctx)
+        if units == _ZERO:
+            continue
+        coefficient = _m131_modulos_coefficient(
+            parameter,
+            epigrafe=epigrafe,
+            modulo_index=modulo_index,
+            year=ctx.filing_year,
+        )
+        if coefficient is None:
+            # This módulo slot has no row for the declared epígrafe (either the
+            # epígrafe is entirely untabled, or this slot does not apply to it).
+            # A non-zero unit count against an untabled epígrafe means the
+            # WHOLE Fase 1ª product is untabled — the engine cannot mix tabled
+            # and untabled módulos for one activity — so the running total is
+            # abandoned and the internal casilla resolves to zero.
+            return _ZERO
+        ctx.operand_values.append(coefficient)
+        total += units * coefficient
+    return total
 
 
 def _evaluate_lookup_parameter_by_entity_type(expression: FormulaExpression, ctx: _EvalContext) -> Decimal:

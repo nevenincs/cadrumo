@@ -722,6 +722,27 @@ required_text = [
     "aplicables durante el año\u00a02025",
 ]
 
+[legal."orden-hac-1347-2024:da-1"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "orden"
+corpus_ref = "corpus/normatives/html/orden-hac-1347-2024.html#disposicion-adicional-primera"
+document_id = "BOE-A-2024-24949"
+section = "disposición adicional primera"
+permalink = "https://www.boe.es/buscar/doc.php?id=BOE-A-2024-24949"
+published_at = 2024-11-30
+effective_from = 2025-01-01
+effective_to = 2025-12-31
+review_status = "reviewed"
+reviewed_at = 2026-07-02
+reviewed_by = "claude-opus (agent-authored from bundled orden-hac-1347-2024.html; operator to re-stamp)"
+notes = "Reduccion general del 5 por ciento del rendimiento neto de modulos para 2025, aplicable tambien para cuantificar el rendimiento neto a efectos de los pagos fraccionados (M131) de 2025 (apartado 3)."
+required_text = [
+    "Reducción en 2025 del rendimiento neto calculado por el método de estimación objetiva",
+    "podrán reducir el rendimiento neto de módulos obtenido en 2025 en un 5 por ciento",
+    "Esta reducción se tendrá en cuenta para cuantificar el rendimiento neto a efectos de los pagos fraccionados correspondientes a 2025",
+]
+
 [legal."real-decreto-ley-13-2025:art-2"]
 evidence_tier = "legal_authority"
 authority = "boe"
@@ -2323,6 +2344,24 @@ required_text = [
     "Cuando no exista base liquidable general",
     "artículos 57, 58, 59 y 60",
     "gravamen autonómico",
+]
+
+[legal."ley-35-2006:art-61"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-35-2006-art-61.html#a61"
+document_id = "BOE-A-2006-20764"
+article = "61"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#a61"
+published_at = 2006-11-29
+effective_from = 2015-01-01
+review_status = "reviewed"
+reviewed_at = 2026-07-02
+reviewed_by = "claude-sonnet (agent-authored from bundled ley-35-2006.html#a61; operator to re-stamp)"
+notes = "LIRPF art 61: normas comunes para la aplicacion del minimo del contribuyente y por descendientes, ascendientes y discapacidad. Norma 1a: cuando dos o mas contribuyentes tengan derecho al minimo por descendientes, ascendientes o discapacidad respecto de los mismos ascendientes o descendientes, su importe se prorrateara entre ellos por partes iguales -- the custodia-compartida 50% prorrata applied to Modelo 100 casillas 0513/0514. Norma 4a fixes a reduced amount on a mid-year death (unrelated to entry timing); norma 5a's half-period residency rule is scoped to ascendientes only. AGENT-AUTHORED, grounded in the bundled authoritative ley-35-2006.html#a61 (en vigor 01/01/2015); operator to confirm and re-stamp."
+required_text = [
+    "su importe se prorrateará entre ellos por partes iguales",
 ]
 
 [legal."ley-35-2006:art-62"]

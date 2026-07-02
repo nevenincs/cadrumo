@@ -1,0 +1,53 @@
+# M131 estimación-objetiva módulos engine formulas (Phase 1 / first slice).
+#
+# Fase 1ª — rendimiento neto previo: dispatches the units×coefficient product
+# through the m131_resolve_modulos_previo op, which reads the epígrafe (text)
+# plus up to four módulo unit-count casillas and the registry-declared
+# keyed-bracket coefficient table (m131-modulos-coeficientes-2025). An
+# untabled epígrafe or a blank epígrafe resolves to zero (see the op's
+# docstring in _formula_runtime.py).
+[[revisions."2025".formulas]]
+id = "modelo-131-2025-modulos-rendimiento-neto-previo"
+target_casilla_id = "modulos-rendimiento-neto-previo"
+expression = { op = "m131_resolve_modulos_previo", args = [
+    { casilla_id = "modulos-epigrafe" },
+    { casilla_id = "modulos-1-unidades" },
+    { casilla_id = "modulos-2-unidades" },
+    { casilla_id = "modulos-3-unidades" },
+    { casilla_id = "modulos-4-unidades" },
+    { parameter = "m131-modulos-coeficientes-2025" },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-31", "orden-hac-1347-2024:art-4"]
+source_refs = ["aeat-renta-2025-manual-parte1"]
+[[revisions."2025".formulas.source_citations]]
+source_ref = "aeat-renta-2025-manual-parte1"
+required_text = [
+    "Rendimientos anuales por unidad de módulo antes de amortización aplicables en el ejercicio 2025",
+]
+
+# Fase 4ª — rendimiento neto de la actividad: previo minus the 5 por 100
+# reducción general (Orden HAC/1347/2024 DA-1, apartados 1 y 3). Fases 2ª
+# (minoración por incentivos al empleo/inversión) and 3ª (índices
+# correctores) are intentionally omitted from this Phase-1 computed figure:
+# both are LEGITIMATE reductions the taxpayer may or may not claim, so
+# omitting a reduction the filer has not declared does not over-state the
+# figure — the ADR's Option D concern (a fase-1-only PRODUCT standing in for
+# the filed figure) does not apply to an internal advisory-support casilla
+# that never substitutes for the operator's manual casilla 01.
+[[revisions."2025".formulas]]
+id = "modelo-131-2025-modulos-rendimiento-neto-actividad"
+target_casilla_id = "modulos-rendimiento-neto-actividad"
+expression = { op = "subtract", args = [
+    { casilla_id = "modulos-rendimiento-neto-previo" },
+    { op = "percent", args = [
+        { casilla_id = "modulos-rendimiento-neto-previo" },
+        { parameter = "m131-modulos-reduccion-general-2025" },
+    ] },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-31", "orden-hac-1347-2024:da-1"]
+source_refs = ["aeat-renta-2025-manual-parte1"]
+[[revisions."2025".formulas.source_citations]]
+source_ref = "aeat-renta-2025-manual-parte1"
+required_text = ["reducción general del 5 por 100"]
