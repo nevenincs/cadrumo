@@ -49,10 +49,10 @@ Move the M100 imputation-days constant to a registry parameter and collapse the 
 - [x] `W02.P02.S07` - Declare the M100 imputation-year-days value as a registry parameter on the M100 revisions in the registry authoring tree so it rides the loader and compiler; `src/aeat/_data/registry/aeat/modelos/100`.
 - [x] `W02.P02.S08` - Delete the _M100_IMPUTATION_YEAR_DAYS constant from the generic formula runtime and read the value from the compiled snapshot instead; `src/aeat/domain/calculations/registry/_formula_runtime.py`.
 - [x] `W02.P02.S09` - Confirm the existing grounded M100 calculation tests compute identical values before and after the parameter relocation, tolerating zero numeric drift; `src/aeat/domain/calculations/registry/tests`.
-- [ ] `W02.P02.S10` - Declare the iva-wallet owned relation-target binding set and the previous-filing exclusion binding id as one registry or core declaration; `src/aeat/domain/calculations/registry/_validate_relation_sources.py`.
-- [ ] `W02.P02.S11` - Consume the single iva-wallet ownership declaration from the registry relation-source validator, removing the inline _IVA_WALLET_OWNED_RELATION_TARGET_BINDINGS carve-out; `src/aeat/domain/calculations/registry/_validate_relation_sources.py`.
-- [ ] `W02.P02.S12` - Consume the same declaration from the calculate orchestrator and delete the function-local MODELO_303_IVA_COMPENSATION_BINDING_ID import and the previous-filing exclusion shim; `src/aeat/application/modelo/_calculation_actions.py`.
-- [ ] `W02.P02.S13` - Confirm the M303 iva-wallet compensation continuity suite passes with ownership driven by the single declaration; `src/aeat/application/modelo/tests`.
+- [x] `W02.P02.S10` - Declare the iva-wallet owned relation-target binding set and the previous-filing exclusion binding id as one registry or core declaration; `src/aeat/domain/calculations/registry/_validate_relation_sources.py`.
+- [x] `W02.P02.S11` - Consume the single iva-wallet ownership declaration from the registry relation-source validator, removing the inline _IVA_WALLET_OWNED_RELATION_TARGET_BINDINGS carve-out; `src/aeat/domain/calculations/registry/_validate_relation_sources.py`.
+- [x] `W02.P02.S12` - Consume the same declaration from the calculate orchestrator and delete the function-local MODELO_303_IVA_COMPENSATION_BINDING_ID import and the previous-filing exclusion shim; `src/aeat/application/modelo/_calculation_actions.py`.
+- [x] `W02.P02.S13` - Confirm the M303 iva-wallet compensation continuity suite passes with ownership driven by the single declaration; `src/aeat/application/modelo/tests`.
 
 ## Wave `W03` - precedence ladder as declared data
 
@@ -62,10 +62,10 @@ Express the calculate-path precedence ladder (profile, mesh backend, borrador, c
 
 Declare the precedence ladder as ordered tier data and bind a conformance test to the guard order.
 
-- [ ] `W03.P03.S14` - Declare the calculate-path precedence ladder as ordered tier data carrying tier name, owned sources, and override disposition in the aggregation package; `src/aeat/application/aggregation/_source_mesh.py`.
-- [ ] `W03.P03.S15` - Drive the caller-override rejection ladder guard code from the declared tier data rather than sequential inline guards; `src/aeat/application/modelo/_calculation_actions.py`.
-- [ ] `W03.P03.S16` - Add a conformance test binding the guard order to the declared precedence tier data so the two cannot diverge; `src/aeat/application/aggregation/tests/test_precedence_ladder_conformance.py`.
-- [ ] `W03.P03.S17` - Confirm the lock-versus-carry override semantics are unchanged by asserting the existing override-rejection suite passes against the data-driven ladder; `src/aeat/application/modelo/tests`.
+- [x] `W03.P03.S14` - Declare the calculate-path precedence ladder as ordered tier data carrying tier name, owned sources, and override disposition in the aggregation package; `src/aeat/application/aggregation/_source_mesh.py`.
+- [x] `W03.P03.S15` - Drive the caller-override rejection ladder guard code from the declared tier data rather than sequential inline guards; `src/aeat/application/modelo/_calculation_actions.py`.
+- [x] `W03.P03.S16` - Add a conformance test binding the guard order to the declared precedence tier data so the two cannot diverge; `src/aeat/application/aggregation/tests/test_precedence_ladder_conformance.py`.
+- [x] `W03.P03.S17` - Confirm the lock-versus-carry override semantics are unchanged by asserting the existing override-rejection suite passes against the data-driven ladder; `src/aeat/application/modelo/tests`.
 
 ## Wave `W04` - per-modelo token ratchet gate
 
