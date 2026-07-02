@@ -1,14 +1,14 @@
 """Storage route derivation helpers for core settings.
 
-This module implements the public :func:`~aeat.core.config.classify_storage_route`
-and :func:`~aeat.core.config.settings_for_active_profile_bucket` facades. It
-classifies :class:`~aeat.core.config.Settings` into a
-:class:`~aeat.core.config.StorageRouteClassification` whose
-:class:`~aeat.core.config.StorageRouteKind` distinguishes explicit database
+This module implements the public :func:`~core.config.classify_storage_route`
+and :func:`~core.config.settings_for_active_profile_bucket` facades. It
+classifies :class:`~core.config.Settings` into a
+:class:`~core.config.StorageRouteClassification` whose
+:class:`~core.config.StorageRouteKind` distinguishes explicit database
 URLs, root-fallback SQLite databases, and active-profile bucket databases.
 
 Application write guards such as
-:func:`~aeat.application.storage_write_policy.inspect_storage_write_policy`
+:func:`~application.storage_write_policy.inspect_storage_write_policy`
 consume that route classification rather than re-parsing database URLs.
 """
 
@@ -28,13 +28,13 @@ def classify_storage_route_for_settings(settings: Settings) -> StorageRouteClass
     """Classify the effective primary SQL route.
 
     Args:
-        settings: The :class:`~aeat.core.config.Settings` instance whose
+        settings: The :class:`~core.config.Settings` instance whose
             ``aeat_database_url`` and ``aeat_local_storage_root`` define the
             route.
 
     Returns:
-        A :class:`~aeat.core.config.StorageRouteClassification` carrying the
-        effective :class:`~aeat.core.config.StorageRouteKind`, database URL,
+        A :class:`~core.config.StorageRouteClassification` carrying the
+        effective :class:`~core.config.StorageRouteKind`, database URL,
         filesystem path when SQLite-backed, and active bucket id when present.
     """
     from .config import StorageRouteClassification, StorageRouteKind
@@ -77,12 +77,12 @@ def settings_for_bucket_route(bucket_id: str, source: Settings) -> Settings:
 
     Args:
         bucket_id: Active-profile bucket id to embed in the returned
-            :class:`~aeat.core.config.Settings`.
-        source: Source :class:`~aeat.core.config.Settings` whose non-route
+            :class:`~core.config.Settings`.
+        source: Source :class:`~core.config.Settings` whose non-route
             fields are preserved.
 
     Returns:
-        A :class:`~aeat.core.config.Settings` instance equivalent to ``source``
+        A :class:`~core.config.Settings` instance equivalent to ``source``
         but deriving ``aeat_database_url`` from ``bucket_id``.
 
     Raises:
