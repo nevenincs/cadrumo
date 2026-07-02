@@ -1,21 +1,21 @@
 """Typed ``--json`` payload schemas for censo config CLI commands.
 
 Each class declared here is a strict
-:class:`~aeat.entrypoints.cli._schemas.OutputSchema` subclass and is decorated
-with :func:`~aeat.entrypoints.cli._schemas.register_schema` so the
+:class:`OutputSchema` subclass and is decorated
+with :func:`register_schema` so the
 JSON-contract test suite can enumerate every censo command surface this module
 covers. Validated results enter
-:class:`~aeat.entrypoints.cli._schemas.SchemaEnvelope` through
-:func:`~aeat.entrypoints.cli._common._emit_envelope`.
+:class:`SchemaEnvelope` through
+:func:`_emit_envelope`.
 
 Field sets match the production payload dicts constructed in
-:mod:`~aeat.entrypoints.cli._config._profile_censo` at their emit sites.
+:mod:`_profile_censo` at their emit sites.
 
-The backing service is :class:`~aeat.application.user_profile.CensoSyncService`;
+The backing service is :class:`CensoSyncService`;
 this module documents only the CLI transport shapes for
-:class:`~aeat.application.live._censo.CensoSnapshot`,
-:class:`~aeat.application.user_profile.CensoProfileComparison`, and
-:class:`~aeat.application.user_profile.CensoApplyResult` projections.
+:class:`CensoSnapshot`,
+:class:`CensoProfileComparison`, and
+:class:`CensoApplyResult` projections.
 """
 
 from __future__ import annotations
@@ -32,7 +32,7 @@ if TYPE_CHECKING:
 class CensoRefreshResult(OutputSchema):
     """JSON envelope for ``aeat config profile censo pull``.
 
-    Mirrors the active :class:`~aeat.application.live._censo.CensoSnapshot`
+    Mirrors the active :class:`CensoSnapshot`
     captured from AEAT G313 by the censo service. ``facts`` is the flat
     dotted-path censo map used later by compare/apply; the encrypted snapshot
     payload itself remains in secure storage.
@@ -48,7 +48,7 @@ class CensoRefreshResult(OutputSchema):
 class CensoShowResult(OutputSchema):
     """JSON envelope for ``aeat config profile censo show``.
 
-    Projects the selected :class:`~aeat.application.live._censo.CensoSnapshot`,
+    Projects the selected :class:`CensoSnapshot`,
     including lifecycle ``state`` and ``source_url``, so an operator can inspect
     the AEAT-side facts before comparing or applying them to the local profile.
     """
@@ -65,8 +65,8 @@ class CensoShowResult(OutputSchema):
 class CensoCompareResult(OutputSchema):
     """JSON envelope for ``aeat config profile censo compare``.
 
-    Wraps :class:`~aeat.application.user_profile.CensoProfileComparison`.
-    ``rows`` contains every :class:`~aeat.application.user_profile.CensoFieldComparison`
+    Wraps :class:`CensoProfileComparison`.
+    ``rows`` contains every :class:`CensoFieldComparison`
     row, while ``diverging``, ``censo_only``, and ``profile_only`` are grouped
     projections populated by the CLI from the application comparison
     properties.
@@ -88,14 +88,14 @@ class CensoApplyPayload(OutputSchema):
     """JSON envelope for ``aeat config profile censo apply``.
 
     Distinct from the application
-    :class:`~aeat.application.user_profile.CensoApplyResult` (DB-26 S52): this
+    :class:`CensoApplyResult` (DB-26 S52): this
     envelope projects that result's JSON-coerced fields and (via
     ``extra=allow``) forwards any provider-specific extras without
     re-declaring them. The calendar fields are a CLI-side summary of the
-    resulting :class:`~aeat.application.overview.OverviewCalendar` after censo
+    resulting :class:`OverviewCalendar` after censo
     facts have updated the profile, so operators can see which obligations are
     now computable. Derive instances via
-    :meth:`~aeat.entrypoints.cli._config._profile_censo_payloads.CensoApplyPayload.from_result`.
+    :meth:`CensoApplyPayload.from_result`.
     """
 
     snapshot_id: str
@@ -118,14 +118,14 @@ class CensoApplyPayload(OutputSchema):
 
     @classmethod
     def from_result(cls, result: _AppCensoApplyResult) -> CensoApplyPayload:
-        """Project the application :class:`~aeat.application.user_profile.CensoApplyResult`.
+        """Project the application :class:`CensoApplyResult`.
 
         ``model_dump(mode="json")`` performs the typed-field coercion; ``extra=allow``
         forwards any additional fields the application result carries.
 
         Returns:
             The projected
-            :class:`~aeat.entrypoints.cli._config._profile_censo_payloads.CensoApplyPayload`
+            :class:`CensoApplyPayload`
             instance.
         """
         return cls.model_validate(result.model_dump(mode="json"))
