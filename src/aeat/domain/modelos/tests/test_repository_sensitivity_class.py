@@ -55,19 +55,19 @@ def _sensitivity_attr_references(source: Path) -> set[str]:
     return found
 
 
-@pytest.mark.parametrize(("repository_name", "source_path"), _REPOSITORY_SOURCES)
-def test_repository_classifies_every_persistence_under_financial(repository_name: str, source_path: Path) -> None:
+def test_repository_classifies_every_persistence_under_financial() -> None:
     """Each modelo / bucket-event-history repository must use only
     ``SensitivityClass.FINANCIAL`` for its load / save calls.
     A future migration to a different class would be a deliberate
     architectural change requiring updates here and in
     ``aeat.core.classification``."""
 
-    classes_used = _sensitivity_attr_references(source_path)
-    assert classes_used == {"FINANCIAL"}, (
-        f"{repository_name} ({source_path.relative_to(PROJECT_ROOT)}) "
-        f"references unexpected SensitivityClass members: {sorted(classes_used)!r}"
-    )
+    for repository_name, source_path in _REPOSITORY_SOURCES:
+        classes_used = _sensitivity_attr_references(source_path)
+        assert classes_used == {"FINANCIAL"}, (
+            f"{repository_name} ({source_path.relative_to(PROJECT_ROOT)}) "
+            f"references unexpected SensitivityClass members: {sorted(classes_used)!r}"
+        )
 
 
 def test_every_repository_source_actually_references_sensitivity_class() -> None:
