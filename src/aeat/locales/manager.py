@@ -80,7 +80,7 @@ class LocaleManager:
            ``message_key=`` kwargs, and ``build_entry`` portal keys.
         3. F-string registry — bounded f-string patterns whose value sets
            are fully known at import time (e.g. wizard choice labels
-           keyed by enum values). See :mod:`aeat.locales._fstring_registry`.
+           keyed by enum values). See :mod:`locales._fstring_registry`.
 
         Dynamic namespaces (open-ended f-string and concatenation forms)
         are returned by :meth:`get_codebase_namespaces` and checked
