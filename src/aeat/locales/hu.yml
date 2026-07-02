@@ -1302,9 +1302,11 @@ categories:
     display_label_851219: Megjelenítési felirat 851219
 cli:
   agent:
-    app_help: 'Az operátor ügynök keretrendszerének (szabályok, perszónák, készségek) materializálása Claude-natív .claude munkaterületként egy ügynök futtatókörnyezethez.'
+    app_help: Az operátor ügynök keretrendszerének (szabályok, perszónák, készségek)
+      materializálása Claude-natív .claude munkaterületként egy ügynök futtatókörnyezethez.
     materialise:
-      output_help: 'Az a könyvtár, ahová a Claude-natív operátor munkaterületet (.claude/ és egy CLAUDE.md) írja.'
+      output_help: Az a könyvtár, ahová a Claude-natív operátor munkaterületet (.claude/
+        és egy CLAUDE.md) írja.
       summary: 'Operator munkaterulet kiirva: {path}: {rules} szabaly, {personas}
         persona, {skills} keszseg.'
   app:
@@ -3646,6 +3648,12 @@ cli:
       help: A határidő-naptár megjelenítése az aktív profilhoz a megadott dátumablakon
         belül. Festivos és munkanapszámítás alkalmazásával. Csak helyi; soha nem lép
         kapcsolatba az AEAT-tal.
+      shift:
+        business_day: 'Munkanap'
+        calendar_unavailable: 'Naptár nem elérhető'
+        domingo: 'Vasárnap'
+        modelo_exception: 'Modelo-kivétel'
+        sabado: 'Szombat'
       show_suppressed_help: Elnyomott bejegyzések megjelenítése is a naptárban.
       to_help: A naptárablak záró dátuma (ISO ÉÉÉÉ-HH-NN, beleszámítva).
     calendar_local_filing_evidence_unavailable: Az attekinto naptar helyi bevallasi
@@ -5082,7 +5090,8 @@ mcp:
         az adózó saját maga nyújt be az AEAT-nál. A megerősítés semmit nem küld be
         sehová.
       consequence_local: Ez a művelet az aktív adózói profil helyi adatait módosítja.
-      declined: 'A(z) ''{command}'' parancsot a felhasználó nem erősítette meg ({outcome}); semmi nem futott le.'
+      declined: A(z) '{command}' parancsot a felhasználó nem erősítette meg ({outcome});
+        semmi nem futott le.
       field_description: Futtatod most a(z) '{command}' parancsot?
       message: Erősítsd meg a(z) '{command}' futtatását. {consequence} Válaszolj igennel
         a folytatáshoz vagy nemmel a leállításhoz.

@@ -1376,9 +1376,11 @@ categories:
     display_label_851219: Etiqueta de visualización 851219
 cli:
   agent:
-    app_help: 'Materializa el harness del agente operador (reglas, perfiles, habilidades) como un espacio de trabajo .claude nativo de Claude para un entorno de agente.'
+    app_help: Materializa el harness del agente operador (reglas, perfiles, habilidades)
+      como un espacio de trabajo .claude nativo de Claude para un entorno de agente.
     materialise:
-      output_help: 'Directorio donde escribir el espacio de trabajo del operador nativo de Claude (.claude/ y un CLAUDE.md).'
+      output_help: Directorio donde escribir el espacio de trabajo del operador nativo
+        de Claude (.claude/ y un CLAUDE.md).
       summary: 'Espacio de trabajo del operador escrito en {path}: {rules} reglas,
         {personas} personas, {skills} habilidades.'
   app:
@@ -3711,6 +3713,12 @@ cli:
       help: Genera el calendario de plazos para el perfil activo en la ventana de
         fechas indicada. Aplica festivos y desplazamientos de día hábil. Local; nunca
         contacta con AEAT.
+      shift:
+        business_day: 'Día hábil'
+        calendar_unavailable: 'Calendario no disponible'
+        domingo: 'Domingo'
+        modelo_exception: 'Excepción del modelo'
+        sabado: 'Sábado'
       show_suppressed_help: Mostrar también las entradas suprimidas (no aplicables)
         en el calendario.
       to_help: Fecha de fin inclusiva del calendario (ISO YYYY-MM-DD).
@@ -5234,7 +5242,8 @@ mcp:
       consequence_handoff: Esto genera el documento de presentación que el contribuyente
         presentará ante la AEAT por sí mismo. Confirmar no envía nada a ninguna parte.
       consequence_local: Esto modifica datos locales del perfil de contribuyente activo.
-      declined: '''{command}'' no fue confirmado por el usuario ({outcome}); no se ejecutó nada.'
+      declined: '''{command}'' no fue confirmado por el usuario ({outcome}); no se
+        ejecutó nada.'
       field_description: ¿Ejecutar '{command}' ahora?
       message: Confirma la ejecución de '{command}'. {consequence} Responde sí para
         continuar o no para detener.

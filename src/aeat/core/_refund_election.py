@@ -10,18 +10,18 @@ in REDEME may, in the LAST filing period of the year (the annual liquidación, L
 The exported :class:`RefundElection` closed value set is declared as a
 :class:`enum.StrEnum` in ``core`` per the core-authority discipline (closed axes
 live in ``core/``, hydrated at boundaries, asserted as members in tests). It is
-the operator-input sibling of :class:`~aeat.core.ResultDisposition` (the fichero
+the operator-input sibling of :class:`~core.ResultDisposition` (the fichero
 result-disposition codes): the election is what the operator *chooses*, while
-:func:`~aeat.application.modelo.resolve_modelo_result_disposition` derives the
+:func:`~application.modelo.resolve_modelo_result_disposition` derives the
 filed disposition from that choice plus the
-:func:`~aeat.domain.iva.refund_disposition_available` eligibility gate.
+:func:`~domain.iva.refund_disposition_available` eligibility gate.
 
-The enum is threaded by :class:`~aeat.application.modelo.ModeloExportCommand`
-and :func:`~aeat.application.modelo.file_modelo_revision` into the same
+The enum is threaded by :class:`~application.modelo.ModeloExportCommand`
+and :func:`~application.modelo.file_modelo_revision` into the same
 disposition resolver that
-:func:`aeat.application.modelo._result_disposition_resolution.revision_is_refund_disposition`
+:func:`application.modelo._result_disposition_resolution.revision_is_refund_disposition`
 uses for cross-period carry. It is not the refund account itself: the
-cuenta-devolución data lives in :class:`~aeat.domain.deadlines.RefundAccount`,
+cuenta-devolución data lives in :class:`~domain.deadlines.RefundAccount`,
 and a refund disposition without that account is refused downstream by the
 export path.
 """
@@ -52,7 +52,7 @@ class RefundElection(StrEnum):
             carry-forward disposition.
         DEVOLVER: Request devolución (``D``) through the shared Modelo 303
             resolver. The resolver honours it only when
-            :func:`aeat.domain.iva.refund_disposition_available` says the period
+            :func:`domain.iva.refund_disposition_available` says the period
             can lawfully refund; otherwise it raises the application-level
             refund-election refusal.
     """

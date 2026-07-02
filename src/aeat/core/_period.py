@@ -18,8 +18,8 @@ members plus extended OSS/IOSS literals, ``AD-HOC``, and the open-ended
 year, and :class:`PeriodKind` classifies the resulting cadence.
 
 This module is the runtime counterpart to the registry
-:data:`aeat.domain.calculations.registry.PeriodCode` alias and
-:class:`aeat.domain.calculations.registry.PeriodSelector` schema. Registry
+:data:`domain.calculations.registry.PeriodCode` alias and
+:class:`domain.calculations.registry.PeriodSelector` schema. Registry
 objects carry bare period tokens; application services that need a concrete
 filing window compose those tokens with a year into :class:`Period`.
 Operator commands follow the same separated shape (``--year YYYY --period
@@ -193,7 +193,7 @@ class Period(BaseModel):
     The model is frozen and hashes by ``(filing_year, code)``, so a ``Period`` is
     a drop-in dict key, set member, and equality target wherever a typed period
     is required. The ledger and aggregation boundary routes through
-    :func:`aeat.application.aggregation.aggregation_period_for_modelo`, then uses
+    :func:`application.aggregation.aggregation_period_for_modelo`, then uses
     :meth:`contains` as the single date-boundary authority.
 
     Attributes:
@@ -265,7 +265,7 @@ class Period(BaseModel):
         """Return the bare registry period code as a string (e.g. ``"1T"``).
 
         Use this when calling registry APIs that expect the bare
-        :data:`aeat.domain.calculations.registry.PeriodCode` token rather than a
+        :data:`domain.calculations.registry.PeriodCode` token rather than a
         structured :class:`Period`.
         """
         return str(self.code)

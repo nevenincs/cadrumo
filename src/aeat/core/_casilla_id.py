@@ -2,22 +2,22 @@
 
 The :data:`CasillaId` alias is the shared key for registry casillas,
 CLI ``--casilla`` inputs, parser observations, and calculation payloads.
-It is re-exported by :mod:`aeat.domain.calculations.registry` and anchors
-:class:`~aeat.domain.calculations.registry.CasillaDefinition`,
-:class:`~aeat.domain.calculations.registry.CalculationCompletenessCasilla`,
+It is re-exported by :mod:`domain.calculations.registry` and anchors
+:class:`~domain.calculations.registry.CasillaDefinition`,
+:class:`~domain.calculations.registry.CalculationCompletenessCasilla`,
 and filing snapshot facts such as
-:class:`~aeat.domain.modelos._ledger_filing_snapshot.ManualFactBasisEntry`.
+:class:`~domain.modelos._ledger_filing_snapshot.ManualFactBasisEntry`.
 
 Use :func:`validated_casilla_id` or :func:`validated_casilla_id_map`
 at boundaries so display numbers, labels, and export metadata do not
 masquerade as canonical registry identifiers. Registry membership helpers
-such as :func:`~aeat.domain.calculations.registry.casillas_by_id` and
-:func:`~aeat.domain.calculations.registry.declared_casilla_ids` then compare
+such as :func:`~domain.calculations.registry.casillas_by_id` and
+:func:`~domain.calculations.registry.declared_casilla_ids` then compare
 only declared ``casilla.id`` values.
 
 The alias is a structural token, not a registry lookup. It can prove that a
 string is shaped like a canonical ``casilla.id``; only a selected
-:class:`~aeat.domain.calculations.registry.ModeloRevision` can prove that the id
+:class:`~domain.calculations.registry.ModeloRevision` can prove that the id
 is declared for a filing context.
 """
 
@@ -40,8 +40,8 @@ def validated_casilla_id(value: object, *, surface: str = "casilla.id") -> Casil
 
     This validates the token shape only. Callers that need revision membership
     must also compare against
-    :func:`~aeat.domain.calculations.registry.declared_casilla_ids` or
-    :func:`~aeat.domain.calculations.registry.undeclared_casilla_ids`.
+    :func:`~domain.calculations.registry.declared_casilla_ids` or
+    :func:`~domain.calculations.registry.undeclared_casilla_ids`.
 
     Args:
         value: Candidate boundary value.
@@ -70,6 +70,6 @@ def validated_casilla_id_map[T](
     ``dict[CasillaId, T]`` inputs, including calculation-revision snapshots and
     registry filing test helpers. Like :func:`validated_casilla_id`, this checks
     key shape only; the caller remains responsible for validating membership
-    against the selected :class:`~aeat.domain.calculations.registry.ModeloRevision`.
+    against the selected :class:`~domain.calculations.registry.ModeloRevision`.
     """
     return {validated_casilla_id(key, surface=f"{surface} key"): value for key, value in values.items()}

@@ -18,8 +18,7 @@ from __future__ import annotations
 
 from pydantic import BaseModel, ConfigDict, Field
 
-from ...agent import iter_skill_documents, operator_rules_text
-from ...agent._skill_metadata import parse_skill_metadata
+from ...agent import iter_skill_documents, operator_rules_text, parse_skill_metadata
 from ...core.external_constants import UTF_8_ENCODING as _UTF_8
 
 _STRICT_FROZEN = ConfigDict(frozen=True, strict=True, validate_assignment=True, extra="forbid")

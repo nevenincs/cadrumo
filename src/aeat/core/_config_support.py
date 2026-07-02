@@ -1,18 +1,18 @@
 """Support types and defaults for the central settings facade.
 
 This module holds the closed settings enums and derived records consumed
-by :class:`~aeat.core.config.Settings`: authentication provider selectors
-(:class:`~aeat.core.config.AuthProviderKindSetting`,
-:class:`~aeat.core.config.CertificateBackend`), secret storage selection
-(:class:`~aeat.core.config.SecretStoreBackend`), LLM provider selection
-(:class:`~aeat.core.config.LLMProviderSetting`), and database routing via
-:class:`~aeat.core.config.StorageRouteKind` and
-:class:`~aeat.core.config.StorageRouteClassification`.
+by :class:`~core.config.Settings`: authentication provider selectors
+(:class:`~core.config.AuthProviderKindSetting`,
+:class:`~core.config.CertificateBackend`), secret storage selection
+(:class:`~core.config.SecretStoreBackend`), LLM provider selection
+(:class:`~core.config.LLMProviderSetting`), and database routing via
+:class:`~core.config.StorageRouteKind` and
+:class:`~core.config.StorageRouteClassification`.
 
 The route records are produced by
-:func:`~aeat.core.config.classify_storage_route`; output language strings are
-coerced to :class:`~aeat.core.external_constants.OutputLanguage`; and AEAT URL
-defaults are read from :func:`~aeat.core.external_constants.load_external_constants`.
+:func:`~core.config.classify_storage_route`; output language strings are
+coerced to :class:`~core.external_constants.OutputLanguage`; and AEAT URL
+defaults are read from :func:`~core.external_constants.load_external_constants`.
 """
 
 from __future__ import annotations
@@ -29,7 +29,7 @@ from .external_constants import OutputLanguage
 class SecretStoreBackend(StrEnum):
     """Supported backends for the master-key secret store.
 
-    :class:`~aeat.core.config.Settings` exposes this closed set through
+    :class:`~core.config.Settings` exposes this closed set through
     ``aeat_secret_store_backend`` so storage custody and operator setup share
     one spelling for automatic, keyring, file-backed, and explicitly unsecured
     secret storage.
@@ -52,7 +52,7 @@ def unwrap_optional_secret(value: SecretStr | None) -> str:
 
 
 class LLMProviderSetting(StrEnum):
-    """Closed set of LLM provider names accepted by :class:`~aeat.core.config.Settings`."""
+    """Closed set of LLM provider names accepted by :class:`~core.config.Settings`."""
 
     ANTHROPIC = "ANTHROPIC"
     OPENAI = "OPENAI"
@@ -80,7 +80,7 @@ class StorageRouteKind(StrEnum):
     Members distinguish operator-supplied database URLs from computed active
     bucket routes and cold root-fallback routes. The storage write policy
     consumes this value through
-    :func:`~aeat.application.storage_write_policy.inspect_storage_write_policy`.
+    :func:`~application.storage_write_policy.inspect_storage_write_policy`.
     """
 
     EXPLICIT_DATABASE_URL = "explicit_database_url"
@@ -91,7 +91,7 @@ class StorageRouteKind(StrEnum):
 class StorageRouteClassification(BaseModel):
     """Strict classification of the effective primary database route.
 
-    Instances are returned by :func:`~aeat.core.config.classify_storage_route`
+    Instances are returned by :func:`~core.config.classify_storage_route`
     and carry the effective :class:`StorageRouteKind`, original database URL,
     SQLite path when derivable, and active bucket id for bucket-attached routes.
     """
@@ -153,7 +153,7 @@ class JustificanteParserBackendSetting(StrEnum):
 def coerce_output_language_setting(value: str) -> OutputLanguage | None:
     """Coerce an env-var output-language string to an :class:`OutputLanguage`.
 
-    Returns ``None`` for invalid input so :class:`~aeat.core.config.Settings`
+    Returns ``None`` for invalid input so :class:`~core.config.Settings`
     validation can decide how to fall back or report the bad value.
     """
     if not value:

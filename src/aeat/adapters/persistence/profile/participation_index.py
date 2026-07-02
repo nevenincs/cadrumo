@@ -30,8 +30,6 @@ from ....domain.modelos import (
     TransactionParticipationIndexPersistenceError,
     TransactionRevisionParticipationIndex,
     derive_participation_index_id,
-)
-from ....domain.modelos._runtime_repository import (
     resolve_modelo_repository_bucket_id,
     secure_objects_for_modelo_bucket,
 )

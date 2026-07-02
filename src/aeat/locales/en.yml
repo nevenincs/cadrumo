@@ -1276,9 +1276,11 @@ categories:
     display_label_851219: Display label 851219
 cli:
   agent:
-    app_help: 'Materialise the operator agent harness (rules, personas, skills) as a Claude-native .claude workspace for an agent runtime.'
+    app_help: Materialise the operator agent harness (rules, personas, skills) as
+      a Claude-native .claude workspace for an agent runtime.
     materialise:
-      output_help: 'Directory to write the Claude-native operator workspace (.claude/ plus a CLAUDE.md) into.'
+      output_help: Directory to write the Claude-native operator workspace (.claude/
+        plus a CLAUDE.md) into.
       summary: 'Wrote operator workspace to {path}: {rules} rules, {personas} personas,
         {skills} skills.'
   app:
@@ -3468,6 +3470,12 @@ cli:
       help: Render the deadline calendar for the active profile across the supplied
         date window. Applies festivos and business-day shifts. Local-only; never contacts
         AEAT.
+      shift:
+        business_day: 'Business day'
+        calendar_unavailable: 'Calendar unavailable'
+        domingo: 'Sunday'
+        modelo_exception: 'Modelo exception'
+        sabado: 'Saturday'
       show_suppressed_help: Include filtered (non-applicable) obligations in the output
         with their applicability verdict and reason.
       to_help: Inclusive end date for the calendar window (ISO YYYY-MM-DD).
@@ -4894,7 +4902,8 @@ mcp:
       consequence_handoff: This produces the filing-grade artefact the taxpayer will
         file with AEAT themselves. Nothing is submitted anywhere by confirming.
       consequence_local: This changes local data for the active taxpayer profile.
-      declined: '''{command}'' was not confirmed by the user ({outcome}); nothing was run.'
+      declined: '''{command}'' was not confirmed by the user ({outcome}); nothing
+        was run.'
       field_description: Run '{command}' now?
       message: Confirm running '{command}'. {consequence} Answer yes to proceed or
         no to stop.
