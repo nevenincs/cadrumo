@@ -8,6 +8,10 @@ description: >-
   for the taxpayer to file. Use when the taxpayer withholds retención on rent
   it pays for a local de negocio or other urban premises it leases from a
   landlord.
+applies_when:
+  profile_facts:
+    - fact: pays_rent_with_retencion
+      match: is_true
 ---
 
 # Prepare Modelo 115
