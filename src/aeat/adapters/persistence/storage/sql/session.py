@@ -2,7 +2,7 @@
 
 Thin wrappers around :class:`sqlalchemy.orm.sessionmaker` that enforce
 commit-on-success and rollback-on-exception semantics via a context
-manager. Pairs with :func:`aeat.adapters.persistence.storage.sql.engine.get_engine`
+manager. Pairs with :func:`adapters.persistence.storage.sql.engine.get_engine`
 to provide a default binding when callers do not pass an explicit
 engine.
 """
