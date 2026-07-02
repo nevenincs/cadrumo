@@ -61,7 +61,7 @@ Relocate the invoices repository behind a domain port.
 
 Relocate the justificante repository behind a domain port.
 
-- [ ] `W02.P05.S07` - Relocate the justificante repository behind its domain port in one atomic commit, deleting its pinned domain-to-adapters entries; `src/aeat/domain/justificante/_repository.py`.
+- [x] `W02.P05.S07` - Relocate the justificante repository behind its domain port in one atomic commit, deleting its pinned domain-to-adapters entries; `src/aeat/domain/justificante/_repository.py`.
 
 ### Phase `W02.P06` - attachments repository inversion
 
