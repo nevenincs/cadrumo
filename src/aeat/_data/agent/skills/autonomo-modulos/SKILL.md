@@ -7,6 +7,14 @@ description: >-
   the taxpayer profile declares an actividad económica income category and
   `irpf_estimation_regime` is objetiva. Never hard-codes the obligation set;
   derives it from the overview surface.
+applies_when:
+  profile_facts:
+    - fact: irpf_income_categories
+      match: contains
+      values: [actividad_economica]
+    - fact: irpf_estimation_regime
+      match: equals
+      values: [objetiva]
 ---
 
 # Autónomo, estimación objetiva (módulos)
