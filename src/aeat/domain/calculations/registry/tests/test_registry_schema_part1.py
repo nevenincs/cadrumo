@@ -513,25 +513,58 @@ def test_validator_rejects_binding_citation_missing_from_official_source() -> No
         _validate_revision(modelo, catalogues, mutated)
 
 
-def test_validator_rejects_invoice_binding_without_typed_selector() -> None:
+def test_validator_rejects_invalid_invoice_binding_shapes() -> None:
     modelo, catalogues = _committed_registry()
     revision = _revision(modelo)
-    mutated = _with_binding(
-        revision,
-        revision.bindings[0].model_copy(
-            update={
+    cases = (
+        (
+            "missing-fact",
+            {
                 "source": "collectible_invoice",
                 "selector": {"claves": ("E",)},
                 "aggregation": BindingAggregation(op=BindingAggregationOp.SUM),
             },
+            r"selector violates _InvoiceSelector",
+        ),
+        (
+            "aggregation-mismatch",
+            {
+                "source": "collectible_invoice",
+                "selector": {"fact": "operator_count", "claves": ("E",)},
+                "aggregation": BindingAggregation(op=BindingAggregationOp.SUM),
+            },
+            "requires aggregation op 'count_distinct'",
+        ),
+        (
+            "rectification-delta-without-scope",
+            {
+                "source": "collectible_invoice",
+                "selector": {"fact": "rectified_base_delta_sum", "claves": ("E",)},
+                "aggregation": BindingAggregation(op=BindingAggregationOp.SUM),
+            },
+            "requires rectification_scope 'only_rectifications'",
+        ),
+        (
+            "period-rows-without-scope",
+            {
+                "source": "collectible_invoice",
+                "selector": {
+                    "fact": "row_field",
+                    "row_field": "base_imponible",
+                    "grouping": "operator_clave_period",
+                    "claves": ("E",),
+                },
+                "aggregation": BindingAggregation(op=BindingAggregationOp.ROWS),
+            },
+            "grouping 'operator_clave_period' requires",
         ),
     )
 
-    # The unified validator preserves the underlying pydantic field error rather
-    # than flattening to a generic "malformed selector": the missing ``fact`` key
-    # is named explicitly (selector violates _InvoiceSelector / fact Field required).
-    with pytest.raises(RegistryValidationError, match=r"selector violates _InvoiceSelector"):
-        _validate_revision(modelo, catalogues, mutated)
+    for case_id, update, match in cases:
+        mutated = _with_binding(revision, revision.bindings[0].model_copy(update=update))
+        with pytest.raises(RegistryValidationError, match=match) as excinfo:
+            _validate_revision(modelo, catalogues, mutated)
+        assert excinfo.type is RegistryValidationError, case_id
 
 
 def test_validator_rejects_profile_binding_selector_missing_from_user_profile_schema() -> None:
@@ -547,65 +580,6 @@ def test_validator_rejects_profile_binding_selector_missing_from_user_profile_sc
         RegistryValidationError,
         match=r"user-profile schema .* selector 'unknown\.profile'",
     ):
-        _validate_revision(modelo, catalogues, mutated)
-
-
-def test_validator_rejects_invoice_binding_aggregation_mismatch() -> None:
-    modelo, catalogues = _committed_registry()
-    revision = _revision(modelo)
-    mutated = _with_binding(
-        revision,
-        revision.bindings[0].model_copy(
-            update={
-                "source": "collectible_invoice",
-                "selector": {"fact": "operator_count", "claves": ("E",)},
-                "aggregation": BindingAggregation(op=BindingAggregationOp.SUM),
-            },
-        ),
-    )
-
-    with pytest.raises(RegistryValidationError, match="requires aggregation op 'count_distinct'"):
-        _validate_revision(modelo, catalogues, mutated)
-
-
-def test_validator_rejects_invoice_rectification_delta_without_rectification_scope() -> None:
-    modelo, catalogues = _committed_registry()
-    revision = _revision(modelo)
-    mutated = _with_binding(
-        revision,
-        revision.bindings[0].model_copy(
-            update={
-                "source": "collectible_invoice",
-                "selector": {"fact": "rectified_base_delta_sum", "claves": ("E",)},
-                "aggregation": BindingAggregation(op=BindingAggregationOp.SUM),
-            },
-        ),
-    )
-
-    with pytest.raises(RegistryValidationError, match="requires rectification_scope 'only_rectifications'"):
-        _validate_revision(modelo, catalogues, mutated)
-
-
-def test_validator_rejects_invoice_period_rows_without_rectification_scope() -> None:
-    modelo, catalogues = _committed_registry()
-    revision = _revision(modelo)
-    mutated = _with_binding(
-        revision,
-        revision.bindings[0].model_copy(
-            update={
-                "source": "collectible_invoice",
-                "selector": {
-                    "fact": "row_field",
-                    "row_field": "base_imponible",
-                    "grouping": "operator_clave_period",
-                    "claves": ("E",),
-                },
-                "aggregation": BindingAggregation(op=BindingAggregationOp.ROWS),
-            },
-        ),
-    )
-
-    with pytest.raises(RegistryValidationError, match="grouping 'operator_clave_period' requires"):
         _validate_revision(modelo, catalogues, mutated)
 
 
