@@ -23,8 +23,8 @@ from ...application.calculations import (
     CrossPeriodExpectedMemberSet,
     cross_period_dependency_inventory,
     evaluate_cross_period_clean_state,
+    m111_no_retenciones_periods_for_bucket,
 )
-from ...application.calculations._m111_no_retenciones import m111_no_retenciones_periods_for_bucket
 from ...application.modelo import (
     CalculationRevisionNotFoundError,
     CalculationRevisionStateError,

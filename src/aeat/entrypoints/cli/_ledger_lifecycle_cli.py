@@ -215,8 +215,7 @@ def ledger_doclink(
     provenance. Gmail links, arbitrary URLs, and out-of-scope Drive files are
     **refused** — a link is never stored as evidence.
     """
-    from ...adapters.outbound.google import resolve_document_link
-    from ...adapters.outbound.google._active_profile import resolve_active_profile
+    from ...adapters.outbound.google import resolve_active_profile, resolve_document_link
     from ...adapters.outbound.storage import OutboundStorageError, build_google_credentials
     from ...adapters.persistence.storage import AttachmentStore
     from ...domain.attachments import AttachmentKind, add_attachment_bytes

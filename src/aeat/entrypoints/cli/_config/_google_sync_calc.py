@@ -14,11 +14,11 @@ from typing import TYPE_CHECKING, Annotated
 import typer
 from pydantic import TypeAdapter, ValidationError
 
-from ....adapters.outbound.google import GoogleAuthError
-from ....adapters.outbound.google._active_profile import resolve_active_profile
-from ....adapters.outbound.google._calc_sheets_apply import (
+from ....adapters.outbound.google import (
     CalcSheetsApplyResult,
+    GoogleAuthError,
     apply_export_plan,
+    resolve_active_profile,
 )
 from ....adapters.outbound.storage import (
     OutboundStorageError,
@@ -56,7 +56,10 @@ from ._google_payloads import (
 )
 
 if TYPE_CHECKING:
-    from ....adapters.outbound.google._calc_sheets_pull import PullResult, RowSetEdit
+    from ....adapters.outbound.google import (
+        PullResult,
+        RowSetEdit,
+    )
     from ....domain.calculations.registry import RegistrySnapshot
 
 
@@ -376,7 +379,7 @@ def google_sync_calc_pull(
     ),
 ) -> None:
     """Read operator-edited cells back from a workbook into typed records."""
-    from ....adapters.outbound.google._calc_sheets_pull import pull_operator_edits
+    from ....adapters.outbound.google import pull_operator_edits
 
     try:
         active = resolve_active_profile()
@@ -518,7 +521,7 @@ def google_sync_calc_compute(
     ),
 ) -> None:
     """Compute casilla values from a workbook's operator edits; persist nothing."""
-    from ....adapters.outbound.google._calc_sheets_pull import (
+    from ....adapters.outbound.google import (
         compute_from_pull,
         pull_operator_edits,
     )

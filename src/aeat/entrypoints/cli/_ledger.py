@@ -38,7 +38,10 @@ from ...core.external_constants import DEFAULT_CURRENCY
 from ...core.i18n import tr
 from ...core.json_contract import Notice, NoticeSeverity
 from ...core.logging import get_logger
-from ...domain.iva._schema import EUMemberState, IvaCategory
+from ...domain.iva import (
+    EUMemberState,
+    IvaCategory,
+)
 from ...domain.transactions import (
     BusinessClassification,
     Transaction,
@@ -826,8 +829,7 @@ def ledger_link(
 ) -> None:
     """Bind a transaction to invoice / evidence references in one call."""
     from ...application.invoices import link_invoice_transaction_repositories
-    from ...domain.invoices import InvoiceCatalogueRepository
-    from ...domain.invoices._errors import InvoiceLinkError
+    from ...domain.invoices import InvoiceCatalogueRepository, InvoiceLinkError
 
     if invoice_id is None and evidence_id is None:
         raise _bad(

@@ -24,7 +24,10 @@ from __future__ import annotations
 from pydantic import Field
 
 from ...domain.calculations.registry import BindingId, CasillaId, RelationId
-from ...domain.modelos._ids import CalculationRevisionId, WorkUnitId
+from ...domain.modelos import (
+    CalculationRevisionId,
+    WorkUnitId,
+)
 from ._modelo_revision_payload_parts import DetailRowPayload, ObservationPayload, ResultSummaryRowPayload
 from ._schemas import OutputSchema, register_schema
 
