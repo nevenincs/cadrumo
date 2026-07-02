@@ -20,11 +20,13 @@ from .....core.i18n import tr
 from .. import (
     OutboundStorageIntegrityError,
     OutboundStorageNotFoundError,
+    OutboundStoragePathTooLongError,
     OutboundStorageValidationError,
     ProviderKind,
     StorageCorruptionError,
     StorageProvider,
 )
+from .._errors import OutboundStoragePermissionError
 from .._local import LocalFileSystemProvider
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
@@ -321,3 +323,62 @@ def test_get_raises_storage_corruption_error_when_sidecar_byte_length_is_wrong_t
         provider.get("ledger_transaction", "aabbccdd00112233")
     assert raised.value.translated_message == "adapters.outbound.storage.local.errors.byte_length_invalid"
     assert resolve_error_message(raised.value) == tr(raised.value.translated_message, **(raised.value.context or {}))
+
+
+# ---------------------------------------------------------------------------
+# WIN-003: Windows MAX_PATH (long-path) classification on the write boundary
+# ---------------------------------------------------------------------------
+
+
+def test_path_too_long_error_is_registered_in_error_registry() -> None:
+    """OutboundStoragePathTooLongError must have a bound ErrorCode in ERROR_REGISTRY."""
+    assert "ERROR_OUTBOUND_STORAGE_PATH_TOO_LONG" in ERROR_REGISTRY
+
+
+def test_path_too_long_error_round_trips_through_build_error_envelope() -> None:
+    """build_error_envelope must produce a valid, localized envelope for the new error."""
+    err = OutboundStoragePathTooLongError(
+        "cannot write object payload to C:\\deep\\path: path exceeds the Windows MAX_PATH ceiling",
+        context={"path": "C:\\deep\\path"},
+        translated_message="adapters.outbound.storage.local.errors.payload_write_path_too_long",
+    )
+    envelope = build_error_envelope(err)
+    assert envelope.code == "ERROR_OUTBOUND_STORAGE_PATH_TOO_LONG"
+    assert envelope.retryable is False
+    assert "path" in (envelope.context or {})
+    assert err.translated_message is not None
+    assert resolve_error_message(err) == tr(err.translated_message, **(err.context or {}))
+
+
+def test_put_still_raises_conflict_for_a_real_non_long_path_oserror(
+    provider: LocalFileSystemProvider,
+    tmp_path: Path,
+) -> None:
+    """A genuine, unrelated OSError during the payload write is NOT misclassified as long-path.
+
+    Reproduces a real (not mocked) write failure: the target object's
+    sidecar path is pre-occupied by a real directory, so
+    ``sidecar_path.write_text(...)`` raises a real ``OSError`` (Windows:
+    ``PermissionError``/WinError 5; POSIX: ``IsADirectoryError``) carrying
+    no long-path ``winerror`` signature. The cleanup path here only
+    unlinks the already-committed ``target_path`` file (not the colliding
+    directory), so the reproduction exercises the classification branch
+    without tripping the pre-existing directory-vs-tmp-file cleanup
+    ordering. Confirms the fallthrough for a genuinely unrelated failure
+    never raises :class:`OutboundStoragePathTooLongError`.
+    """
+    payload = b"payload whose sidecar path is a real directory"
+    hmac = "0011223344556677"
+    label = "blocked"
+    # Materialise the real namespace directory through the public API,
+    # then pre-occupy the exact sidecar path this hmac/label pair resolves
+    # to as a real directory so the real sidecar write step collides.
+    provider.put("ledger_transaction", "ffffffffffffffff", b"seed", content_hash=_hash(b"seed"), label="seed")
+    namespace_dir = tmp_path / "vault" / "ledger_transaction"
+    sidecar_collision = namespace_dir / f"{hmac[:8]}--{label}.meta.json"
+    sidecar_collision.mkdir()
+
+    with pytest.raises(OutboundStoragePermissionError) as raised:
+        provider.put("ledger_transaction", hmac, payload, content_hash=_hash(payload), label=label)
+    assert not isinstance(raised.value, OutboundStoragePathTooLongError)
+    assert raised.value.translated_message == "adapters.outbound.storage.local.errors.sidecar_write_failed"

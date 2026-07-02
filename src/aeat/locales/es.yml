@@ -236,6 +236,7 @@ adapters:
             comprobacion de integridad.
           namespace_blank: El espacio de nombres de almacenamiento local no puede
             estar vacio.
+          namespace_create_path_too_long: 'El almacenamiento local no pudo crear el espacio de nombres {namespace}: la ruta supera el límite de longitud de ruta de Windows. Traslade AEAT_LOCAL_STORAGE_ROOT a una ruta más corta o habilite LongPathsEnabled (véase `aeat config check`).'
           namespace_create_permission: El almacenamiento local no pudo crear el espacio
             de nombres {namespace}.
           namespace_forbidden_characters: El espacio de nombres local {namespace}
@@ -252,6 +253,7 @@ adapters:
             el payload del objeto.
           payload_read_permission: El almacenamiento local no pudo leer el payload
             del objeto.
+          payload_write_path_too_long: 'El almacenamiento local no pudo escribir la carga del objeto: la ruta supera el límite de longitud de ruta de Windows. Traslade AEAT_LOCAL_STORAGE_ROOT a una ruta más corta o habilite LongPathsEnabled (véase `aeat config check`).'
           payload_write_permission: El almacenamiento local no pudo escribir el payload
             del objeto.
           sidecar_malformed: El sidecar local {sidecar_path} no se puede leer o esta
@@ -260,6 +262,7 @@ adapters:
           sidecar_not_object: El sidecar local {sidecar_path} no es un objeto JSON.
           sidecar_write_failed: El almacenamiento local no pudo escribir el sidecar
             del objeto.
+          sidecar_write_path_too_long: 'El almacenamiento local no pudo escribir el sidecar del objeto: la ruta supera el límite de longitud de ruta de Windows. Traslade AEAT_LOCAL_STORAGE_ROOT a una ruta más corta o habilite LongPathsEnabled (véase `aeat config check`).'
   persistence:
     profile:
       assets:
@@ -4319,6 +4322,7 @@ errors:
       del repositorio.
     error_outbound_storage_not_found: No existe el objeto o el espacio de almacenamiento
       solicitado.
+    error_outbound_storage_path_too_long: 'La ruta de almacenamiento resuelta supera el límite MAX_PATH de Windows.'
     error_pdf_import_pdf_modelo_import: Falló la importación de la declaración desde
       el PDF.
     error_pdf_import_scrub: No se pudo producir una versión segura del PDF.
@@ -4372,6 +4376,7 @@ errors:
       con el filtro solicitado.
     error_sede_navigation: Falló un paso de navegación en la Sede de la AEAT.
     error_storage_bucket: Se produjo un error en el ciclo de vida del bucket de almacenamiento.
+    error_storage_bucket_path_too_long: 'La ruta del directorio del bucket supera el límite MAX_PATH de Windows. Traslade AEAT_LOCAL_STORAGE_ROOT a una ruta más corta o habilite LongPathsEnabled (véase `aeat config check`).'
     error_submission_validation: Un modelo de envío no superó la validación.
     error_transaction_catalogue: El catálogo de transacciones no es válido o es inconsistente.
     error_transaction_classification_rule: Una regla de clasificación del libro mayor

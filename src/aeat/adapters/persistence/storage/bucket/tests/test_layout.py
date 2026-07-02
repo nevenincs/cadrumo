@@ -7,8 +7,8 @@ from pathlib import Path
 import pytest
 from pydantic import ValidationError
 
-from ......core.errors import build_error_envelope
-from .._errors import BucketAlreadyPresentError, BucketValidationError
+from ......core.errors import ERROR_REGISTRY, build_error_envelope
+from .._errors import BucketAlreadyPresentError, BucketPathTooLongError, BucketValidationError
 from .._layout import (
     BucketPaths,
     bucket_paths,
@@ -115,3 +115,36 @@ def test_two_buckets_share_buckets_parent(tmp_path: Path) -> None:
 
     assert alpha.bucket_dir.parent == beta.bucket_dir.parent
     assert alpha.bucket_dir.parent == tmp_path / "buckets"
+
+
+# ── WIN-003 — Windows MAX_PATH (long-path) classification ────────────────────
+
+
+def test_bucket_path_too_long_error_is_registered_in_error_registry() -> None:
+    """BucketPathTooLongError must have a bound ErrorCode in ERROR_REGISTRY."""
+    assert "ERROR_STORAGE_BUCKET_PATH_TOO_LONG" in ERROR_REGISTRY
+
+
+def test_bucket_path_too_long_error_round_trips_through_build_error_envelope() -> None:
+    """build_error_envelope must produce a valid, redacted envelope for the new error."""
+    err = BucketPathTooLongError(bucket_id="alpha", path="C:\\deep\\buckets\\alpha")
+    envelope = build_error_envelope(err)
+    assert envelope.code == "ERROR_STORAGE_BUCKET_PATH_TOO_LONG"
+    assert envelope.retryable is False
+    assert envelope.context == {"bucket_id": "alpha", "path": "C:\\deep\\buckets\\alpha"}
+
+
+def test_provision_still_raises_already_present_for_a_real_file_collision(tmp_path: Path) -> None:
+    """A genuine FileExistsError collision is NOT misclassified as a long-path failure.
+
+    Regression guard for the new ``except OSError`` branch added alongside
+    ``FileExistsError`` handling in :func:`provision_bucket_directory`:
+    confirms a real, unrelated collision (the already-fail-closed path)
+    still raises :class:`BucketAlreadyPresentError`, never
+    :class:`BucketPathTooLongError`.
+    """
+    provision_bucket_directory(tmp_path, "alpha")
+
+    with pytest.raises(BucketAlreadyPresentError) as excinfo:
+        provision_bucket_directory(tmp_path, "alpha")
+    assert not isinstance(excinfo.value, BucketPathTooLongError)
