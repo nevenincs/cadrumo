@@ -128,6 +128,7 @@ def test_binding_selector_registry_covers_typed_sources() -> None:
         BindingSourceKind.FOREIGN_ASSET,
         BindingSourceKind.ATRIBUCION_MEMBER,
         BindingSourceKind.REFUND_OPERATION,
+        BindingSourceKind.DONATIVO_DONOR,
         BindingSourceKind.MANUAL_INPUT,
         BindingSourceKind.PROFILE,
         BindingSourceKind.IVA_COMPENSATION_ANNUAL_PARTITION,
