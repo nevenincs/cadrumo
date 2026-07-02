@@ -10,8 +10,7 @@ import pytest
 from click.testing import Result
 
 from ....application.modelo import create_work_unit, workflow_period_for_work_unit
-from ....application.user_profile import UserProfileLifecycleRepository
-from ....application.user_profile._orchestration import profile_create_storage_span
+from ....application.user_profile import UserProfileLifecycleRepository, profile_create_storage_span
 from ....application.user_profile._testing import register_minimal_profile
 from ....application.workflow import (
     WorkflowAbortReason,
@@ -19,8 +18,8 @@ from ....application.workflow import (
     WorkflowStage,
     WorkflowStep,
     save_run,
+    workflow_state_repository,
 )
-from ....application.workflow._persistence import workflow_state_repository
 from ....core import Period, resolve_active_bucket_id
 from ....domain.deadlines import ModeloDeadline, ObligationStatus
 from ....domain.user_profile import UserProfileFact, UserProfileRecord

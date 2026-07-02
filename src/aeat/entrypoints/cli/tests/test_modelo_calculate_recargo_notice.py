@@ -39,7 +39,7 @@ import pytest
 from ....application.modelo import ModeloWorkPlazoSummary
 from ....core import Period
 from ....core.resources import resources
-from ....domain.deadlines._plazo import resolve_filing_closes_on
+from ....domain.deadlines import resolve_filing_closes_on
 from ....tests.cli_runner import invoke_cached_cli
 from ....tests.secure_sql import isolated_profile_storage_root
 from .._modelo_rendering import _work_unit_deadline_output_from_summary

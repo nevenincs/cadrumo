@@ -32,7 +32,7 @@ from pathlib import Path
 
 import pytest
 
-from ....application.user_profile._repository import UserProfileLifecycleRepository
+from ....application.user_profile import UserProfileLifecycleRepository
 from ....domain.calculations.registry import RegistrySnapshot, resolve_parameter
 from ....domain.user_profile import UserProfileFact, UserProfileRecord, UserProfileStatus
 from ....tests.cli_runner import invoke_cached_cli

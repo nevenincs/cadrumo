@@ -20,7 +20,7 @@ def test_verification_report_lines_includes_next_action_when_refused() -> None:
     """A refused verification report surfaces a retrieval next_action pointer."""
     from datetime import UTC, datetime
 
-    from ....domain.modelos._verification_report import (
+    from ....domain.modelos import (
         ModeloVerificationFinding,
         ModeloVerificationFindingKind,
         ModeloVerificationFindingSeverity,
@@ -68,7 +68,7 @@ def test_verification_report_lines_omits_next_action_when_granted() -> None:
     """A granted verification report does NOT emit a next_action pointer."""
     from datetime import UTC, datetime
 
-    from ....domain.modelos._verification_report import (
+    from ....domain.modelos import (
         VerificationCompletenessStatus,
         VerificationReport,
         derive_verification_report_id,
@@ -109,7 +109,7 @@ def test_verification_report_view_exposes_finding_legal_and_source_refs() -> Non
     """
     from datetime import UTC, datetime
 
-    from ....domain.modelos._verification_report import (
+    from ....domain.modelos import (
         ModeloVerificationFinding,
         ModeloVerificationFindingKind,
         ModeloVerificationFindingSeverity,
@@ -185,7 +185,7 @@ def test_verification_report_view_lists_missing_required_casillas() -> None:
     """
     from datetime import UTC, datetime
 
-    from ....domain.modelos._verification_report import (
+    from ....domain.modelos import (
         VerificationCompletenessStatus,
         VerificationReport,
         derive_verification_report_id,

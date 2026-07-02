@@ -9,13 +9,17 @@ from pathlib import Path
 import pytest
 
 from ....adapters.persistence.storage.sql.engine import dispose_engine
-from ....application.user_profile._orchestration import profile_create_storage_span
+from ....application.user_profile import profile_create_storage_span
 from ....application.user_profile._testing import register_minimal_profile
-from ....application.workflow._persistence import workflow_state_repository
+from ....application.workflow import workflow_state_repository
 from ....core import Period
-from ....domain.modelos._codes import ModeloCode
-from ....domain.modelos._repository import WorkUnitCatalogueRepository, upsert_work_unit
-from ....domain.modelos._work_unit import WorkUnit, derive_work_unit_id
+from ....domain.modelos import (
+    ModeloCode,
+    WorkUnit,
+    WorkUnitCatalogueRepository,
+    derive_work_unit_id,
+    upsert_work_unit,
+)
 from ....tests.cli_runner import invoke_cached_cli
 from ....tests.secure_sql import isolated_profile_storage_root
 

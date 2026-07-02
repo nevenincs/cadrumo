@@ -9,8 +9,7 @@ from pathlib import Path
 import pytest
 
 from ....application.calculations import CalculationObservationRepository, resolve_bindings_from_local_store
-from ....application.user_profile import profile_storage_session
-from ....application.user_profile._repository import UserProfileLifecycleRepository
+from ....application.user_profile import UserProfileLifecycleRepository, profile_storage_session
 from ....core import Period
 from ....core.resources import resources
 from ....domain.user_profile import UserProfileFact, UserProfileRecord, UserProfileStatus

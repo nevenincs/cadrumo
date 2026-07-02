@@ -66,7 +66,7 @@ def test_profile_rename_is_label_only_and_keeps_uuid_directory_and_key(
     unchanged; only ``display_name`` on the record and ``label`` on
     the manifest move from A to B.
     """
-    from ....application.workflow._profile_bucket_scan import read_profile_bucket
+    from ....application.workflow import read_profile_bucket
 
     create_profile_via_cli("alpha")
 
@@ -101,8 +101,11 @@ def test_profile_rename_keeps_record_readable_under_unchanged_key(
     no re-key happens; ``profile show`` and the lifecycle service both
     still find the record, now carrying the new display label.
     """
-    from ....application.user_profile._orchestration import build_lifecycle_service, profile_storage_session
-    from ....application.workflow._profile_bucket_scan import read_profile_bucket
+    from ....application.user_profile import (
+        build_lifecycle_service,
+        profile_storage_session,
+    )
+    from ....application.workflow import read_profile_bucket
     from ....core.redaction import CLI_PROFILE_ID_PLACEHOLDER
 
     create_profile_via_cli("alice")
@@ -192,7 +195,7 @@ def test_profile_import_label_refuses_duplicate_bundle_identity(
     that does not already carry that UUID; it must not mint a second local
     profile for the same bundle identity.
     """
-    from ....application.workflow._profile_bucket_scan import read_profile_bucket
+    from ....application.workflow import read_profile_bucket
 
     # Seed the source profile via the canonical path (no tax-id cross-scan issue).
     seed("operator")
@@ -240,7 +243,7 @@ def test_switch_surviving_profile_after_deleting_the_active_one(
     regression active. Before the fix it refused with ``no active bucket
     session`` — the very recovery command the refusal recommended.
     """
-    from ....application.workflow._profile_bucket_scan import read_profile_bucket
+    from ....application.workflow import read_profile_bucket
     from ....core import resolve_active_bucket_id
 
     # Both profiles are setup for the switch/delete test; seed both so the
@@ -395,7 +398,7 @@ def test_delete_valid_profile_with_no_active_session_succeeds(
     state must succeed — ``delete`` opens its own bucket session scoped
     to the target, it does not require one to already be open.
     """
-    from ....application.workflow._profile_bucket_scan import read_profile_bucket
+    from ....application.workflow import read_profile_bucket
 
     create_profile_via_cli("alpha")
 
@@ -506,7 +509,7 @@ def test_profile_flag_refuses_tombstoned_uuid_like_tombstoned_label(
     identifier; otherwise a tombstoned UUID would bypass the label tombstone
     filter and route app commands into a deleted taxpayer bucket.
     """
-    from ....application.workflow._profile_bucket_scan import read_profile_bucket
+    from ....application.workflow import read_profile_bucket
     from ....core import resolve_active_bucket_id
 
     seed("alpha")
@@ -533,7 +536,7 @@ def test_active_profile_env_and_pointer_refuse_tombstoned_uuid(
 ) -> None:
     """A tombstoned UUID cannot activate app commands via env or pointer routing."""
 
-    from ....application.workflow._profile_bucket_scan import read_profile_bucket
+    from ....application.workflow import read_profile_bucket
     from ....core import BucketPointer, write_pointer
     from ....core.config import load_settings, override_settings
 
@@ -566,7 +569,7 @@ def test_explicit_profile_show_reaches_tombstoned_target_with_stale_active_uuid(
 ) -> None:
     """Explicit ``show <label|uuid>`` inspects tombstones despite stale active UUIDs."""
 
-    from ....application.workflow._profile_bucket_scan import read_profile_bucket
+    from ....application.workflow import read_profile_bucket
     from ....core import BucketPointer, write_pointer
     from ....core.config import load_settings, override_settings
 
@@ -602,7 +605,7 @@ def test_no_arg_profile_show_output_language_does_not_mask_stale_active_uuid(
 ) -> None:
     """No-arg ``show --output-language en`` still depends on the active profile."""
 
-    from ....application.workflow._profile_bucket_scan import read_profile_bucket
+    from ....application.workflow import read_profile_bucket
     from ....core.config import override_settings
 
     seed("alpha")

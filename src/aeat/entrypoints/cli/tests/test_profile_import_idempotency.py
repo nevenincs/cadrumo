@@ -257,8 +257,7 @@ def test_reimport_same_bundle_is_refused(tmp_path: Path) -> None:
         # Profile IDs are redacted at the CLI boundary; verify UUID
         # round-trip by reading the encrypted manifest directly through
         # the persistence layer.
-        from ....application.user_profile._orchestration import profile_storage_session
-        from ....application.user_profile._profile_repository import ProfileRepository
+        from ....application.user_profile import ProfileRepository, profile_storage_session
 
         with profile_storage_session(exported_id):
             aggregate = ProfileRepository().load(exported_id)
@@ -316,8 +315,7 @@ def test_label_collision_different_uuid_refused_even_with_explicit_label(tmp_pat
         assert r_free.exit_code == 0, r_free.output
         free_payload = assert_public_profile_payload_redacted(r_free.output, exported_id)
         assert free_payload["display_name"] == "idempotency-test-imported"
-        from ....application.user_profile._orchestration import profile_storage_session
-        from ....application.user_profile._profile_repository import ProfileRepository
+        from ....application.user_profile import ProfileRepository, profile_storage_session
 
         with profile_storage_session(exported_id):
             imported = ProfileRepository().load(exported_id)
@@ -387,8 +385,7 @@ def test_mutated_profile_id_creates_second_profile(tmp_path: Path) -> None:
 
         # Profile IDs are redacted at the CLI boundary; verify UUID round-trip
         # by reading both encrypted manifests through the persistence layer.
-        from ....application.user_profile._orchestration import profile_storage_session
-        from ....application.user_profile._profile_repository import ProfileRepository
+        from ....application.user_profile import ProfileRepository, profile_storage_session
 
         with profile_storage_session(exported_id):
             original_aggregate = ProfileRepository().load(exported_id)

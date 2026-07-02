@@ -17,7 +17,7 @@ from ....domain.calculations.registry import RegistryModeloObservation
 from ....domain.categories import SpendingCategory
 from ....domain.invoices import InvoiceCatalogue, InvoiceCatalogueRepository
 from ....domain.iva import EUMemberState, IvaCategory
-from ....domain.modelos._calculation_repository import CalculationRevisionCatalogueRepository
+from ....domain.modelos import CalculationRevisionCatalogueRepository
 from ....domain.transactions import (
     BusinessClassification,
     RawProvenance,
@@ -281,7 +281,7 @@ def _seed_m100_profile_facts(bucket_id: str) -> None:
 
 
 def _seed_prior_m100_zero_carry() -> None:
-    from ....application.calculations._observations_repository import CalculationObservationRepository
+    from ....application.calculations import CalculationObservationRepository
 
     CalculationObservationRepository().save_observation(
         RegistryModeloObservation(
@@ -368,7 +368,7 @@ def test_work_calculate_modelo_115_uses_retenciones_aggregation_observation() ->
 
 def test_work_calculate_modelo_100_routes_marta_auto_ledger_expenses() -> None:
     """Marta's public CLI M100 path carries ledger income through 0171/0180/0224."""
-    from ....application.user_profile._orchestration import profile_storage_session
+    from ....application.user_profile import profile_storage_session
     from ....core import resolve_active_bucket_id
 
     _create_profile()
@@ -573,7 +573,7 @@ def test_work_calculate_modelo_111_no_retenciones_quarter_names_profile_attestat
 
 def test_work_calculate_modelo_115_classified_rent_row_requires_perceptor_evidence() -> None:
     """A classified rent ledger row alone must hard-stop instead of producing zeros."""
-    from ....application.user_profile._orchestration import profile_storage_session
+    from ....application.user_profile import profile_storage_session
     from ....core import resolve_active_bucket_id
 
     _create_profile()
@@ -637,7 +637,7 @@ def test_work_calculate_modelo_180_refuses_string_perceptor_casilla_with_detail_
 
 
 def test_work_calculate_persists_ledger_source_mesh_observations() -> None:
-    from ....application.user_profile._orchestration import profile_storage_session
+    from ....application.user_profile import profile_storage_session
     from ....core import resolve_active_bucket_id
 
     _create_profile()
@@ -675,10 +675,8 @@ def test_work_calculate_persists_ledger_source_mesh_observations() -> None:
     # A local_recurrence decision with selected_amount=0 satisfies the guard
     # while leaving the ledger mesh assertions meaningful.
     with profile_storage_session(bucket_id):
-        from ....application.calculations._observations_repository import IvaWalletDecisionRepository
-        from ....domain.iva_compensation._reconciliation import (
-            IvaCompensationReconciliationDecision,
-        )
+        from ....application.calculations import IvaWalletDecisionRepository
+        from ....domain.iva_compensation import IvaCompensationReconciliationDecision
 
         TransactionCatalogueRepository(bucket_id=bucket_id).save(
             TransactionCatalogue.from_transactions((sale, purchase)),
@@ -785,9 +783,9 @@ def _seed_zero_iva_wallet_decision(bucket_id: str) -> None:
     with ``selected_amount=0`` satisfies the guard while leaving the source-mesh
     advisory assertions meaningful.
     """
-    from ....application.calculations._observations_repository import IvaWalletDecisionRepository
-    from ....application.user_profile._orchestration import profile_storage_session
-    from ....domain.iva_compensation._reconciliation import IvaCompensationReconciliationDecision
+    from ....application.calculations import IvaWalletDecisionRepository
+    from ....application.user_profile import profile_storage_session
+    from ....domain.iva_compensation import IvaCompensationReconciliationDecision
 
     with profile_storage_session(bucket_id):
         decision = IvaCompensationReconciliationDecision(
@@ -820,7 +818,7 @@ def test_work_calculate_suppresses_advisory_for_cuota_less_intra_community_suppl
     that suppression on the operator-facing calculate surface across both the
     JSON ``notices`` channel and the human text output.
     """
-    from ....application.user_profile._orchestration import profile_storage_session
+    from ....application.user_profile import profile_storage_session
     from ....core import resolve_active_bucket_id
 
     _create_profile()
@@ -898,7 +896,7 @@ def test_work_calculate_emits_no_advisory_when_all_iva_consumed() -> None:
     repercutido-general binding must leave ``source_advisories`` empty and emit
     no ADVISORY line.
     """
-    from ....application.user_profile._orchestration import profile_storage_session
+    from ....application.user_profile import profile_storage_session
     from ....core import resolve_active_bucket_id
 
     _create_profile()

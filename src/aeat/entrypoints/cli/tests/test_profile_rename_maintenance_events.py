@@ -21,7 +21,7 @@ import pytest
 from ....adapters.persistence.storage.runtime_repository import (
     secure_object_repository_for_bucket,
 )
-from ....application.workflow._profile_bucket_scan import read_profile_bucket
+from ....application.workflow import read_profile_bucket
 from ....domain.buckets import (
     BucketEventHistoryCatalogue,
     BucketEventHistoryRepository,
@@ -47,7 +47,7 @@ def _bucket_history(bucket_id: str) -> BucketEventHistoryCatalogue:
     Reading a bucket's encrypted store requires an active session scoped
     to that bucket, so the read runs inside ``profile_storage_session``.
     """
-    from ....application.user_profile._orchestration import profile_storage_session
+    from ....application.user_profile import profile_storage_session
 
     with profile_storage_session(bucket_id):
         repository = BucketEventHistoryRepository(objects=secure_object_repository_for_bucket(bucket_id))

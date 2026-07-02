@@ -9,7 +9,7 @@ from typing import cast
 from ....application.wizard import _catalogue as _wizard_catalogue
 from ....application.wizard import _persistence as _wizard_persistence
 from ....core import Period
-from ....domain.iva_compensation._carry_forward import IvaCompensationPeriodState
+from ....domain.iva_compensation import IvaCompensationPeriodState
 
 _WIZARD_REGISTRATION_MODULES = (_wizard_catalogue, _wizard_persistence)
 _NIF = "12345678Z"
