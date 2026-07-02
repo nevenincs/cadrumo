@@ -16,13 +16,15 @@ from pathlib import Path
 
 import pytest
 
+from ....adapters.persistence.profile.usage_ratios import (
+    load_usage_ratios_with_censo_guard,
+    save_usage_ratios,
+)
 from ....tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
 from ...categories import SpendingCategory
 from .. import (
     CensoRatioMismatchError,
     UsageRatioProfile,
-    load_usage_ratios_with_censo_guard,
-    save_usage_ratios,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]

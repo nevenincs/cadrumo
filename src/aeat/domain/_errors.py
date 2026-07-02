@@ -1,13 +1,13 @@
 """Lightweight validation error base for root domain value objects.
 
-Defines :class:`DomainValidationError`, the :class:`~aeat.core.errors.AeatError`
+Defines :class:`DomainValidationError`, the :class:`core.errors.AeatError`
 subclass that also behaves as :exc:`ValueError` so Pydantic validators can
 surface invalid domain identifiers and models as validation failures.
 
 This module is not a catch-all domain error hierarchy. Focused domain packages
 own their package-specific ``_errors.py`` trees and register those classes with
 the central error registry. The root validation base exists for lightweight
-cross-domain primitives such as :class:`aeat.domain.ModeloIdentifier`, where
+cross-domain primitives such as :class:`domain.ModeloIdentifier`, where
 importing a larger package-specific authority would be the wrong dependency.
 """
 

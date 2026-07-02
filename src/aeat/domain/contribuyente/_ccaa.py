@@ -65,7 +65,7 @@ class CCAA(StrEnum):
 
     Foral regimes (País Vasco, Navarra) and the autonomous cities (Ceuta,
     Melilla) are intentionally excluded; those raise
-    :class:`aeat.domain.contribuyente.ForalRegimeError` when a user selects them.
+    :class:`domain.contribuyente.ForalRegimeError` when a user selects them.
     """
 
     ANDALUCIA = "andalucia"

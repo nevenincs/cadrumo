@@ -173,12 +173,12 @@ def ratios_list(
 ) -> None:
     """List every per-category proportional-deduction override stored on the active bucket."""
     _activate_subcommand_output_language(ctx, output_language)
-    from ...application.user_profile import CensoSyncService
-    from ...domain.usage_ratios import (
-        CensoRatioMismatchError,
+    from ...adapters.persistence.profile.usage_ratios import (
         load_usage_ratios,
         load_usage_ratios_with_censo_guard,
     )
+    from ...application.user_profile import CensoSyncService
+    from ...domain.usage_ratios import CensoRatioMismatchError
     from ._ledger_payloads import RatiosListResult
 
     bucket_id, profile_id = _ratios_bucket_and_profile()

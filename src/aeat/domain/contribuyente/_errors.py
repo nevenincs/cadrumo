@@ -3,9 +3,9 @@
 Defines :class:`TaxResidenceProfileError` and its concrete failures
 surfaced to RENTA verification, plus :class:`ProfileKeysRegistrationError`
 for the profile-key registry. The ledger error hierarchies live with their
-records in :mod:`aeat.domain.contribuyente.assets` (asset) and
-:mod:`aeat.domain.contribuyente.inventory` (inventory and amortizacion). Every
-class derives from :class:`aeat.core.errors.AeatError` so the shared
+records in :mod:`domain.contribuyente.assets` (asset) and
+:mod:`domain.contribuyente.inventory` (inventory and amortizacion). Every
+class derives from :class:`core.errors.AeatError` so the shared
 error-code registration hook applies.
 """
 
@@ -72,7 +72,7 @@ class ProfileKeysRegistrationError(CoreError):
     registration with a conflicting tuple (the registry is single-writer, first
     registration wins), or an access before any registration — a programming /
     import-order error meaning the wizard catalogue
-    (:mod:`aeat.application.wizard`) was not imported at startup to push the
+    (:mod:`application.wizard`) was not imported at startup to push the
     compiled keys via :func:`register_profile_keys`. Replaces a bare
     ``RuntimeError`` so callers can catch it precisely and the failure surfaces
     in the central registry.

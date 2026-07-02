@@ -7,9 +7,10 @@ from pathlib import Path
 
 import pytest
 
+from ....adapters.persistence.profile.usage_ratios import save_usage_ratios
 from ....domain.categories import SpendingCategory
 from ....domain.transactions import BusinessClassification, TransactionCatalogue, TransactionCatalogueRepository
-from ....domain.usage_ratios import UsageRatioProfile, save_usage_ratios
+from ....domain.usage_ratios import UsageRatioProfile
 from ....tests.secure_sql import isolated_runtime_profile
 from .. import LedgerPreflightIssueReason, preflight_ledger_tax_readiness
 from ._preflight_test_support import (

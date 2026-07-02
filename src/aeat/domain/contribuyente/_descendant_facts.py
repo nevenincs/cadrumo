@@ -41,7 +41,7 @@ def descendant_facts_from_list(
 ) -> list[tuple[str, str]]:
     """Return a list of (path, canonical-value-string) tuples for all DescendantInfo entries.
 
-    The caller converts these to :class:`~aeat.domain.user_profile.UserProfileFact`
+    The caller converts these to :class:`domain.user_profile.UserProfileFact`
     records; this function only computes the canonical key-value pairs.
     """
     facts: list[tuple[str, str]] = []

@@ -74,6 +74,7 @@ You MUST respect these rules at all times:
 @.codex/rules/service-imports-via-top-level-reexports.md
 @.codex/rules/shipped-search-licence-clean.md
 @.codex/rules/single-subject-mutation-is-idempotent-guarded.md
+@.codex/rules/subagent-commits-require-explicit-pathspec.md
 @.codex/rules/terminology-scaffold-preserve-contract.md
 @.codex/rules/terminology-single-declaration.md
 @.codex/rules/tests-live-under-domain-tests-folders.md
@@ -81,6 +82,7 @@ You MUST respect these rules at all times:
 @.codex/rules/vaultspec-archive-discipline.builtin.md
 @.codex/rules/vaultspec-cli.builtin.md
 @.codex/rules/vaultspec-codify.builtin.md
+@.codex/rules/vaultspec-discovery.builtin.md
 @.codex/rules/vaultspec-dry-run-discipline.builtin.md
 @.codex/rules/vaultspec-plan-editing-discipline.builtin.md
 @.codex/rules/vaultspec-rag.builtin.md

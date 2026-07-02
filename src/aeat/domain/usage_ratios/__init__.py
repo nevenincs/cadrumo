@@ -10,11 +10,13 @@ Usage-ratio identifiers are concrete
 parallel ids.
 
 Profile persistence is an encrypted ``FINANCIAL`` secure-object round trip via
-:func:`load_usage_ratios` / :func:`save_usage_ratios`, keyed by
-:func:`usage_ratios_object_key` and guarded during read-modify-write by
-:func:`usage_ratio_bucket_lock`. HOME_OFFICE category values can also be derived
-from the bound censo through :func:`derive_home_office_ratios_from_censo` and
-refused on drift by :func:`load_usage_ratios_with_censo_guard`.
+:func:`aeat.adapters.persistence.profile.usage_ratios.load_usage_ratios` /
+:func:`~aeat.adapters.persistence.profile.usage_ratios.save_usage_ratios`, keyed
+by :func:`usage_ratios_object_key` and guarded during read-modify-write by
+:func:`usage_ratio_bucket_lock`. HOME_OFFICE category values are derived from the
+bound censo through :func:`derive_home_office_ratios_from_censo` and refused on
+drift by
+:func:`~aeat.adapters.persistence.profile.usage_ratios.load_usage_ratios_with_censo_guard`.
 
 Usage ratios model business/personal proportional deduction for ledger and
 Renta paths. Ledger commands validate ``usage_ratio_id`` against this profile
@@ -58,9 +60,6 @@ from ._model import (
 )
 from ._service import (
     derive_home_office_ratios_from_censo,
-    load_usage_ratios,
-    load_usage_ratios_with_censo_guard,
-    save_usage_ratios,
     usage_ratio_bucket_lock,
     usage_ratios_object_key,
 )
@@ -74,10 +73,7 @@ __all__ = [
     "UsageRatioReference",
     "UsageRatioValidationError",
     "derive_home_office_ratios_from_censo",
-    "load_usage_ratios",
-    "load_usage_ratios_with_censo_guard",
     "resolve_user_ratio",
-    "save_usage_ratios",
     "usage_ratio_bucket_lock",
     "usage_ratios_object_key",
     "validate_usage_ratio_reference",

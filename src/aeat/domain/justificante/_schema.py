@@ -41,7 +41,7 @@ class Justificante(BaseModel):
         csv: Código Seguro de Verificación — the short AEAT-assigned hash
             used to verify the document on the Sede electrónica.
         modelo: String ID of the modelo the receipt belongs to. References
-            the modelo catalogue in :mod:`aeat.domain.modelos`.
+            the modelo catalogue in :mod:`domain.modelos`.
         period: Typed filing period resolved from the AEAT period token
             printed on the receipt and ``ejercicio``.
         ejercicio: Four-digit tax year as printed on the receipt, when

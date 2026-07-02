@@ -13,6 +13,21 @@ and pass the registry-grounded parity gate (casilla set, numbering, section
 order). A structural divergence from the official AEAT modelo layout is a hard
 failure, never a warning.
 
+The same registry-grounded completeness gate MUST bind the fixed-width
+fichero-BOE (`.boe`) export, not only the workbook transport. `export_draft` MUST,
+before it writes any bytes, assert that every casilla the official record files
+that the `CalculationCompletenessManifest` also requires (`manifest ∩
+representable`, for the draft's disposition) carries a real value on disk; a
+required, representable casilla the draft omits would render as a blank fixed-width
+slot behind a valid SHA-256 digest — the structurally-thin file — and MUST raise a
+hard `FilingExportError` that enumerates every missing casilla with its official
+number and segmento. The rendered set keys on value presence
+(`ModeloValue.value is not None`), never on casilla-id membership, because
+`build_draft` emits an `EMPTY` (`value=None`) row for every declared casilla. The
+gate is scoped to `format == "fixed_width"`; an `xml_dictionary` export omits an
+absent casilla as a legitimately-absent optional element, so the blank-slot
+thinness does not apply.
+
 ## Why
 
 The `modelo-export-workbook-parity` research (finding A) found the calc-sheets
@@ -46,6 +61,18 @@ not a separate hand-maintained spec. This is the export-surface companion to
 - **Good:** the gate reports coverage honestly — a modelo whose completeness
   manifest is incomplete yields a weaker gate that says so, rather than implying
   full parity.
+- **Good:** `assert_export_mirrors_manifest` runs inside `export_draft` after the
+  rendered set is known and before `output_path.write_bytes`; a fixed-width `.boe`
+  that would omit a required, representable casilla panics with an enumerated
+  `FilingExportError` naming each casilla's number and segmento, and no file is
+  written.
+- **Bad:** computing the rendered set from `{v.casilla_id for v in draft.values}`
+  (id membership) instead of filtering `v.value is not None` — every declared
+  casilla, including the `EMPTY` ones, then counts as rendered and the gate never
+  fires on the real thin draft.
+- **Bad:** letting a fixed-width `.boe` export write a structurally-thin file (a
+  required casilla rendered blank) because the digest is valid — the digest is a
+  byte-integrity lock, not a completeness signal.
 - **Bad:** writing formatting, start/final, or evidence in one transport but not
   the other, or computing them at apply time instead of in the plan — offline
   and online then drift.
@@ -60,4 +87,11 @@ not a separate hand-maintained spec. This is the export-surface companion to
 ADR `2026-06-03-modelo-export-workbook-parity-adr` (accepted); research
 `2026-06-03-modelo-export-workbook-parity-research`; plan
 `2026-06-03-modelo-export-evidence-parity-plan` (W03/W04/W05). Promoted per the
-[[vaultspec-codify]] discipline.
+[[vaultspec-codify]] discipline. The fichero-BOE transport binding was added by
+ADR `2026-07-01-fichero-boe-parity-gate-adr` (accepted) after the gate completed a
+full implement→review→fix→validate cycle: an independent code review found the
+rendered set keyed on casilla-id membership rather than value presence (so the gate
+never fired on the real `EMPTY` thin state), which was fixed and locked with a test
+that reproduces the production state. Enforced by
+`test_export_completeness_gate.py`, `test_export_completeness_sets.py`, and
+`test_fichero_boe_completeness_parity.py`.

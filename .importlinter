@@ -643,6 +643,17 @@ ignore_imports =
     aeat.application.ledger._evidence_textlayer -> aeat.adapters.**
     aeat.application.ledger._llm_classification -> aeat.adapters.**
     aeat.application.ledger._llm_diagnostics -> aeat.adapters.**
+    # ── arch-remediation-ports-inversion: usage_ratios persistence relocated to
+    #    adapters.persistence.profile.usage_ratios; the ledger callers now import
+    #    the adapter directly (narrow target keeps the source-module set flat) ──
+    aeat.application.ledger._preflight -> aeat.adapters.persistence.profile.usage_ratios
+    aeat.application.ledger._ratios -> aeat.adapters.persistence.profile.usage_ratios
+    # ── arch-remediation-ports-inversion: application/entrypoint test fixtures
+    #    seed usage-ratio rows through the relocated adapter (roundtrip discipline) ──
+    aeat.application.aggregation.tests.test_renta_ledger -> aeat.adapters.persistence.profile.usage_ratios
+    aeat.application.ledger.tests.test_preflight_home_office -> aeat.adapters.persistence.profile.usage_ratios
+    aeat.application.ledger.tests.test_ratios_concurrency -> aeat.adapters.persistence.profile.usage_ratios
+    aeat.application.modelo.tests.test_e2e_ledger_m130_quarters_to_m100_annual -> aeat.adapters.persistence.profile.usage_ratios
     aeat.application.ledger._review_projection -> aeat.adapters.**
     aeat.application.ledger._rule_repository -> aeat.adapters.**
     aeat.application.ledger._vision_classifier -> aeat.adapters.**
@@ -694,8 +705,9 @@ ignore_imports =
     aeat.application.tests.test_config_parity -> aeat.tests.cli_runner
     # ── domain → adapters (repositories backed by persistence substrate) ──
     # Many domain repositories directly import the SQL persistence substrate.
-    # Full inversion (Protocol + adapter injection) deferred to a future refactor.
-    aeat.domain.usage_ratios._service -> aeat.adapters.persistence.storage.runtime_repository
+    # Full inversion (Protocol + adapter injection) tracked by the
+    # arch-remediation-ports-inversion campaign; usage_ratios persistence has
+    # migrated to adapters.persistence.profile.usage_ratios.
     aeat.domain.attachments.tests.test_repository -> aeat.adapters.persistence.storage.attachment
     aeat.domain.buckets._event_repository -> aeat.adapters.persistence.storage
     aeat.domain.filing._complementaria_repository -> aeat.adapters.persistence.storage
@@ -710,8 +722,8 @@ ignore_imports =
     aeat.domain.modelos._verification_repository -> aeat.adapters.persistence.storage
     aeat.domain.submission._repository -> aeat.adapters.persistence.storage
     aeat.domain.transactions._repository -> aeat.adapters.persistence.storage.crypto
-    aeat.domain.usage_ratios._service -> aeat.adapters.persistence.storage
-    aeat.domain.usage_ratios._service -> aeat.adapters.persistence.storage.errors
+    aeat.domain.usage_ratios.tests.test_censo_refuse_load -> aeat.adapters.persistence.profile.usage_ratios
+    aeat.domain.usage_ratios.tests.test_service -> aeat.adapters.persistence.profile.usage_ratios
     aeat.domain.usage_ratios.tests.test_service -> aeat.adapters.persistence.storage
     # ── runtime repositories / submission engine importing the storage package
     #    (co-located repository substrate; parent-package granularity of the

@@ -10,6 +10,7 @@ from pathlib import Path
 
 import pytest
 
+from ....adapters.persistence.profile.usage_ratios import save_usage_ratios
 from ....adapters.persistence.storage.sql import SecureObjectRepository
 from ....core import Period
 from ....core.resources import resources
@@ -36,7 +37,7 @@ from ....domain.transactions import (
     TransactionDirection,
     TransactionLifecycleState,
 )
-from ....domain.usage_ratios import UsageRatioProfile, save_usage_ratios
+from ....domain.usage_ratios import UsageRatioProfile
 from ....tests.secure_sql import isolated_runtime_profile
 from .. import (
     AggregationValidationError,

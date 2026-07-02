@@ -2,18 +2,18 @@
 
 :class:`AssetRecord`, :class:`AssetsLedgerDocument`, and
 :class:`AmortizacionLedger` payloads are stored as
-``FINANCIAL`` :class:`~aeat.adapters.persistence.storage.SensitivityClass`
+``FINANCIAL`` :class:`adapters.persistence.storage.SensitivityClass`
 secure objects in the primary database through
-:class:`~aeat.adapters.persistence.storage.SecureObjectRepository`. The
+:class:`adapters.persistence.storage.SecureObjectRepository`. The
 singleton namespace, default object key, schema version, and custody contracts
 come from
-:data:`aeat.adapters.persistence.storage.PROFILE_ASSETS_LEDGER_NAMESPACE` and
-:data:`aeat.adapters.persistence.storage.PROFILE_ASSETS_AMORTIZATION_LEDGER_NAMESPACE`.
+:data:`adapters.persistence.storage.PROFILE_ASSETS_LEDGER_NAMESPACE` and
+:data:`adapters.persistence.storage.PROFILE_ASSETS_AMORTIZATION_LEDGER_NAMESPACE`.
 
 See Also:
-    :mod:`aeat.domain.contribuyente.assets`
+    :mod:`domain.contribuyente.assets`
         Typed asset and amortizacion payload models persisted here.
-    :mod:`aeat.adapters.persistence.profile.inventory`
+    :mod:`adapters.persistence.profile.inventory`
         Sibling profile-local secure-object adapter for stock valuation ledgers.
 """
 
@@ -69,7 +69,7 @@ def save_assets(assets: tuple[AssetRecord, ...]) -> Path:
     """Persist ``assets`` as a governed FINANCIAL-class encrypted envelope.
 
     The storage contract comes from
-    :data:`aeat.adapters.persistence.storage.PROFILE_ASSETS_LEDGER_NAMESPACE`.
+    :data:`adapters.persistence.storage.PROFILE_ASSETS_LEDGER_NAMESPACE`.
 
     Args:
         assets: Asset records to persist.
@@ -107,7 +107,7 @@ def save_amortizacion_ledger(ledger: AmortizacionLedger) -> Path:
     """Persist ``ledger`` as a governed FINANCIAL-class encrypted envelope.
 
     The storage contract comes from
-    :data:`aeat.adapters.persistence.storage.PROFILE_ASSETS_AMORTIZATION_LEDGER_NAMESPACE`.
+    :data:`adapters.persistence.storage.PROFILE_ASSETS_AMORTIZATION_LEDGER_NAMESPACE`.
 
     Args:
         ledger: Amortizacion ledger to persist.
@@ -124,9 +124,9 @@ class AssetsLedgerRepository:
     """Governed repository for the encrypted :class:`AssetsLedgerDocument` singleton.
 
     The singleton row is owned by
-    :data:`aeat.adapters.persistence.storage.PROFILE_ASSETS_LEDGER_NAMESPACE`
+    :data:`adapters.persistence.storage.PROFILE_ASSETS_LEDGER_NAMESPACE`
     and persisted through
-    :class:`~aeat.adapters.persistence.storage.SecureObjectRepository`.
+    :class:`adapters.persistence.storage.SecureObjectRepository`.
     """
 
     def __init__(self, *, objects: SecureObjectRepository | None = None) -> None:
@@ -182,7 +182,7 @@ class AssetsLedgerRepository:
 
         The classification, schema version, namespace, and object key are taken
         from
-        :data:`aeat.adapters.persistence.storage.PROFILE_ASSETS_LEDGER_NAMESPACE`.
+        :data:`adapters.persistence.storage.PROFILE_ASSETS_LEDGER_NAMESPACE`.
 
         Args:
             document: Ledger document to encrypt and write.
@@ -237,9 +237,9 @@ class AmortizacionLedgerRepository:
 
     Mirrors :class:`AssetsLedgerRepository` for amortizacion entries; the
     payload type is :class:`AmortizacionLedger`. Its singleton row is owned by
-    :data:`aeat.adapters.persistence.storage.PROFILE_ASSETS_AMORTIZATION_LEDGER_NAMESPACE`
+    :data:`adapters.persistence.storage.PROFILE_ASSETS_AMORTIZATION_LEDGER_NAMESPACE`
     and persisted through
-    :class:`~aeat.adapters.persistence.storage.SecureObjectRepository`.
+    :class:`adapters.persistence.storage.SecureObjectRepository`.
     """
 
     def __init__(self, *, objects: SecureObjectRepository | None = None) -> None:
@@ -295,7 +295,7 @@ class AmortizacionLedgerRepository:
 
         The classification, schema version, namespace, and object key are taken
         from
-        :data:`aeat.adapters.persistence.storage.PROFILE_ASSETS_AMORTIZATION_LEDGER_NAMESPACE`.
+        :data:`adapters.persistence.storage.PROFILE_ASSETS_AMORTIZATION_LEDGER_NAMESPACE`.
 
         Args:
             ledger: Amortizacion ledger to encrypt and write.

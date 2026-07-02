@@ -133,7 +133,6 @@ from .....domain.transactions import (
     TransactionDirection,
 )
 from .....domain.usage_ratios import UsageRatioProfile
-from .....domain.usage_ratios._service import load_usage_ratios, save_usage_ratios
 from .....tests.aeat_literal_fixtures import (
     AEAT_HOST_SUFFIX_EXPECTED,
     AUTH_DIAGNOSTIC_PATH_FIXTURE,
@@ -153,6 +152,7 @@ from ....outbound.llm._models import LLMProvider, LLMRequest, LLMResponse, Usage
 from ....outbound.llm._usage import UsageRecorder
 from ...profile.assets import load_amortizacion_ledger, load_assets, save_amortizacion_ledger, save_assets
 from ...profile.inventory import load_inventory, save_inventory
+from ...profile.usage_ratios import load_usage_ratios, save_usage_ratios
 from .. import AttachmentStore, EphemeralMasterKeyProvider, SensitivityClass, StorageValidationError
 from .._namespace_registry import LLM_USAGE_NAMESPACE
 from ..master_key._active_session import activate_session

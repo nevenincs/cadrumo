@@ -15,6 +15,7 @@ from pathlib import Path
 import pytest
 from pydantic import ValidationError
 
+from ....adapters.persistence.profile.usage_ratios import load_usage_ratios, save_usage_ratios
 from ....adapters.persistence.storage import Envelope, SensitivityClass
 from ....adapters.persistence.storage.errors import StorageValidationError
 from ....tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
@@ -22,8 +23,6 @@ from ...categories import SpendingCategory
 from .. import (
     UsageRatioPersistenceError,
     UsageRatioProfile,
-    load_usage_ratios,
-    save_usage_ratios,
     usage_ratios_object_key,
 )
 
