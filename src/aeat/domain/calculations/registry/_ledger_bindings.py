@@ -21,7 +21,7 @@ from ...iva import (
     OssIossRegime,
     TransactionKind,
 )
-from ...iva._schema import IvaExemptionArticle
+from ...iva import IvaExemptionArticle
 from ._binding_aggregation import binding_aggregation_op
 from ._binding_selector_utils import invariant_diagnostics, selector_against_model
 from ._binding_selector_utils import selector_as_dict as _selector_as_dict
@@ -1112,6 +1112,10 @@ def unsupported_ledger_impatriado_income_observations(
     income silently dropped from the impatriado base — a modelling gap, not a
     legitimate zero. A zero-income observation contributes nothing and is
     excluded.
+
+    Returns:
+        The unsupported :class:`ImpatriadoIncomeObservationProtocol` rows, in
+        input order.
     """
     supported_casillas = frozenset(
         _impatriado_ledger_income_selector(binding).target_casilla_id

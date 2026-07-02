@@ -34,7 +34,7 @@ if TYPE_CHECKING:
 
 from ...adapters.persistence.storage import ClassificationError, DecryptionError, EnvelopeVersionError
 from ...domain.calculations.registry import BindingId, RegistrySnapshot
-from ..aggregation._source_mesh import (
+from ..aggregation import (
     CalculationSourceContext,
     CalculationSourceProvenance,
     CalculationSourceResolution,

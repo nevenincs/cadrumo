@@ -11,7 +11,9 @@ share only the word "prefill".
 Sits between the engine and the local observation store. The engine
 asks "what's the resolved value of every relation this revision
 declares?" and this module answers by consulting a
-:class:`RegistrySnapshot` to enumerate the declared relations:
+:class:`RegistrySnapshot` to enumerate the declared relations. The
+same-modelo first-period default resolver reads the relations and
+bindings declared on one :class:`ModeloRevision` directly:
 
 1. Reading the revision's relations to determine ``source_modelo``,
    ``source_revision_selector``, ``source_periods``, ``source_casilla_id``,
@@ -59,7 +61,10 @@ from decimal import Decimal
 from typing import TYPE_CHECKING, Final
 
 from ...adapters.persistence.storage import ClassificationError, DecryptionError, EnvelopeVersionError
-from ...application.storage.calc_sheets._records import RelationValue, RelationValues
+from ..storage.calc_sheets import (
+    RelationValue,
+    RelationValues,
+)
 from ...core import BindingSourceKind, Modelo, Period
 from ...core.logging import get_logger
 from ...core.parsing import parse_iso8601_date
@@ -76,7 +81,7 @@ from ...domain.calculations.registry import (
     relation_source_requirements,
     resolve_observed_requirement_value,
 )
-from ..aggregation._source_mesh import (
+from ..aggregation import (
     CalculationSourceContext,
     CalculationSourceDiagnostic,
     CalculationSourceProvenance,
@@ -211,8 +216,8 @@ def _profile_path_values_for_bucket(bucket_id: str) -> dict[str, str] | None:
     Returns ``None`` only when there is genuinely no profile for the bucket.
     """
     from ...domain.user_profile import ProfileNotFoundError
-    from ..user_profile._profile_repository import ProfileRepository
-    from ..user_profile._projections import record_to_path_values
+    from ..user_profile import ProfileRepository
+    from ..user_profile import record_to_path_values
 
     try:
         aggregate = ProfileRepository().load(bucket_id)
@@ -231,6 +236,9 @@ def _contains_profile_token(raw: object, token: str) -> bool | None:
             return None
         return token in {item.strip() for item in stripped.replace(";", ",").split(",") if item.strip()}
     try:
+        # TYPE-IGNORE-RATIONALE-PROFILE-TOKEN-CONTAINER: ``raw`` is an untyped
+        # profile projection value; a non-iterable raises TypeError, caught
+        # below, so the runtime is already defensive against the static escape.
         return token in set(raw)  # type: ignore[arg-type]
     except TypeError:
         return False

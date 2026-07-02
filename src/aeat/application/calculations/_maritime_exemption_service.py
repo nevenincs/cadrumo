@@ -48,9 +48,9 @@ from pydantic import BaseModel, Field
 
 from ...core import STRICT_FROZEN_CONFIG
 from ...domain.calculations.registry import CasillaId, CasillaObservation
-from ...domain.renta._errors import RentaValidationError
-from ...domain.renta._maritime_exemption import (
+from ...domain.renta import (
     MaritimeWorkerFacts,
+    RentaValidationError,
     art_7p_eligible,
     calculate_art_7p_exemption,
     calculate_rebeca_exemption,

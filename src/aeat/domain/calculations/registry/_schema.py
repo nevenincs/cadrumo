@@ -23,8 +23,7 @@ from pydantic import (
     model_validator,
 )
 
-from ....core._period import Period
-from ....core._tax_domain import TaxDomain
+from ....core import Period, TaxDomain
 from ....core.aggregation import BindingAggregation, BindingSourceKind, BindingTypedEnumKind
 from ....core.classification import SensitivityClass
 from .._export_field_kind import CasillaFieldKind, CasillaFieldKindValue

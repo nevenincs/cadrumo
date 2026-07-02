@@ -57,7 +57,7 @@ from ...core.hashing import sha256_hex
 from ...core.resources import resources
 from ...core.time import now
 from ...domain.calculations.registry import RegistryModeloObservation, RegistrySnapshotError, undeclared_casilla_ids
-from ...domain.iva_compensation._reconciliation import IvaCompensationReconciliationDecision
+from ...domain.iva_compensation import IvaCompensationReconciliationDecision
 from ._errors import ObservationCasillaReferenceError, ObservationKeyError
 
 

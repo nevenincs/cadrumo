@@ -48,7 +48,7 @@ def _coerce_casilla_field_kind(value: object) -> object:
     string matching one of the declared member values.  Rejects non-string
     and non-member inputs at the schema boundary.
     """
-    from .registry._errors import RegistryValidationError as ValidationError
+    from .registry import RegistryValidationError as ValidationError
 
     if isinstance(value, CasillaFieldKind):
         return value
