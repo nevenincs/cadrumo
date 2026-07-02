@@ -21,10 +21,12 @@ import sys
 from collections import Counter, defaultdict
 from dataclasses import dataclass, field
 from pathlib import Path
+from typing import Final
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 SRC_ROOT = REPO_ROOT / "src"
 PKG_ROOT = SRC_ROOT / "aeat"
+_UTF_8: Final[str] = "utf-8"
 
 
 # ---------------------------------------------------------------------------
@@ -143,7 +145,7 @@ def discover_facades() -> dict[str, FacadeInfo]:
     for init_path in PKG_ROOT.rglob("__init__.py"):
         mod = module_name_for(init_path)
         try:
-            src = init_path.read_text(encoding="utf-8")
+            src = init_path.read_text(encoding=_UTF_8)
             tree = ast.parse(src, filename=str(init_path))
         except (SyntaxError, UnicodeDecodeError):
             continue
@@ -184,7 +186,7 @@ def walk_module_imports(path: Path) -> list[ImportSite]:
     mod = module_name_for(path)
     is_pkg = path.name == "__init__.py"
     try:
-        src = path.read_text(encoding="utf-8")
+        src = path.read_text(encoding=_UTF_8)
         tree = ast.parse(src, filename=str(path))
     except (SyntaxError, UnicodeDecodeError):
         return []
@@ -357,11 +359,16 @@ def find_shim_modules(py_files: list[Path], facades: dict[str, FacadeInfo]) -> l
     for path in py_files:
         if path.name == "__init__.py":
             continue  # __init__ facades are expected to be import+__all__
+        if path.name == "__main__.py":
+            # Entry-point module: `from .cli import app` + `if __name__ ==
+            # "__main__": app()` is the standard `python -m pkg` pattern, not
+            # a Family-2 shim/pure-reexport surface.
+            continue
         mod = module_name_for(path)
         if is_test_module(mod, path):
             continue
         try:
-            src = path.read_text(encoding="utf-8")
+            src = path.read_text(encoding=_UTF_8)
             tree = ast.parse(src, filename=str(path))
         except (SyntaxError, UnicodeDecodeError):
             continue
@@ -442,7 +449,7 @@ def _facade_export_origins(facades: dict[str, FacadeInfo]) -> dict[str, dict[str
         if not info.has_real_all:
             continue
         try:
-            src = info.path.read_text(encoding="utf-8")
+            src = info.path.read_text(encoding=_UTF_8)
             tree = ast.parse(src, filename=str(info.path))
         except (SyntaxError, UnicodeDecodeError):
             continue
@@ -791,7 +798,7 @@ def main() -> int:
                 for f in fix_classes
             ],
         }
-        args.json.write_text(json.dumps(payload, indent=2), encoding="utf-8")
+        args.json.write_text(json.dumps(payload, indent=2), encoding=_UTF_8)
         print(f"Wrote full JSON inventory to {args.json}")
 
     return 0

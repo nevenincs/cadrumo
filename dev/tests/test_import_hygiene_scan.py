@@ -13,7 +13,12 @@ import ast
 
 import pytest
 
-from ..import_hygiene_scan import _dunder_all_assignment_value, discover_facades
+from ..import_hygiene_scan import (
+    REPO_ROOT,
+    _dunder_all_assignment_value,
+    discover_facades,
+    find_shim_modules,
+)
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
@@ -73,3 +78,35 @@ def test_discover_facades_registers_annotated_all_init_as_a_facade() -> None:
     assert core_facade.has_real_all is True
     assert "Modelo" in core_facade.all_names
     assert "CasillaId" in core_facade.all_names
+
+
+def test_find_shim_modules_excludes_dunder_main_entrypoint_modules() -> None:
+    """A standard ``__main__.py`` entrypoint module must never be classified as a shim.
+
+    Exercises the real classifier against ``src/aeat/locales/__main__.py`` --
+    the live module whose ``from .cli import app`` plus
+    ``if __name__ == "__main__": app()`` shape previously false-positived as a
+    shim (zero real defs, one import statement) before the classifier learned
+    to skip ``__main__.py`` modules as the standard entry-point pattern.
+    """
+    main_path = REPO_ROOT / "src" / "aeat" / "locales" / "__main__.py"
+    assert main_path.is_file()
+
+    shims = find_shim_modules([main_path], facades={})
+
+    assert shims == []
+
+
+def test_find_shim_modules_still_flags_a_non_main_pure_reexport_module() -> None:
+    """A genuine pure-reexport module (not named ``__main__.py``) is still flagged.
+
+    Guards against the exclusion in the prior test over-broadening to skip
+    every import-only module rather than only the ``__main__.py`` entrypoint
+    shape.
+    """
+    reexport_path = REPO_ROOT / "src" / "aeat" / "entrypoints" / "cli" / "_schemas.py"
+    assert reexport_path.is_file()
+
+    shims = find_shim_modules([reexport_path], facades={})
+
+    assert any(shim.reason == "pure_reexport_shape" for shim in shims)
