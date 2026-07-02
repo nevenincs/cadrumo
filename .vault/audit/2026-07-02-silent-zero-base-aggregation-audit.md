@@ -18,6 +18,10 @@ open steps against the ADR and live tests, and scoped shared-worktree WIP before
 test edits. This audit is not a closure honesty review because the campaign is not
 structurally complete.
 
+2026-07-02 refresh: `uv run --no-sync vaultspec-core vault plan status
+2026-06-19-silent-zero-base-aggregation-plan --json` reports 15 of 18 steps
+complete, `next_open_step` = `W01.P02.S03`, and `exec_missing_ids` = `[]`.
+
 ## Findings
 
 ### m390-predicate-reconciled | low | S16 was implemented but unchecked
@@ -33,8 +37,9 @@ reported 23 passed; full output is in `_scratch-wave1-d9/m390-reconciliation-tes
 S03 and S04 remain unchecked by design. The plan text and ADR both record that
 per-period prorrata volume bindings would be a wrong regulated mechanism for mixed
 traders; the faithful mechanism is a cross-period prorrata model. These steps are
-formally deferred to that future prorrata mechanism and must not be checked as
-completed registry bindings.
+formally deferred to the named cross-period prorrata mechanism follow-up:
+provisional-percentage carry plus Q4 regularisation over full-year volumes. They must
+not be checked as completed registry bindings.
 
 ### real-cli-e2e-tests-reconciled | medium | S06 and S14 now have true CLI evidence
 
@@ -63,7 +68,7 @@ stubs, skips, xfail markers, or tautological formula reimplementation were intro
 
 ## Recommendations
 
-Leave S03/S04 open as ADR-deferred prorrata work. Check S06 only after the
-non-authored plan-file WIP clears so `vaultspec-core vault plan step check` can run
-without overwriting a peer edit. Do not declare this campaign closed: `vault plan
+Leave S03/S04 open as ADR-deferred cross-period prorrata work. Check S06 only after
+the non-authored plan-file WIP clears so `vaultspec-core vault plan step check` can
+run without overwriting a peer edit. Do not declare this campaign closed: `vault plan
 status` still reports open steps.
