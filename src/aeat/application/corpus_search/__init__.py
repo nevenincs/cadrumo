@@ -54,6 +54,13 @@ from ._models import (
 )
 from ._query_embed import QueryEmbedder, search_extra_available, search_model_cache_dir
 from ._retrieval import PER_SIDE_CAP, RRF_K, hybrid_search
+from ._runtime import (
+    corpus_index_path,
+    corpus_search_dir,
+    ensure_corpus_index,
+    load_corpus_embeddings,
+    search_corpus,
+)
 
 __all__ = [
     "PER_SIDE_CAP",
@@ -78,11 +85,16 @@ __all__ = [
     "build_lexical_index",
     "bundled_citation_lookup",
     "bundled_corpus_html_root",
+    "corpus_index_path",
+    "corpus_search_dir",
     "embed_corpus",
+    "ensure_corpus_index",
     "hybrid_search",
     "iter_corpus_chunks",
+    "load_corpus_embeddings",
     "load_embeddings",
     "more_like_this",
+    "search_corpus",
     "search_extra_available",
     "search_lexical",
     "search_model_cache_dir",
