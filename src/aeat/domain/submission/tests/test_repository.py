@@ -66,10 +66,23 @@ def _make_filing(
     )
 
 
+def _save_two_filings(repo: SubmissionRepository) -> tuple[ModeloPresentado, ModeloPresentado]:
+    f1 = _make_filing(draft_id="d-1", attempt_ordinal=1)
+    f2 = _make_filing(draft_id="d-2", attempt_ordinal=1)
+    repo.save(f1)
+    repo.save(f2)
+    return f1, f2
+
+
 @pytest.fixture(autouse=True)
 def runtime_profile(tmp_path: Path) -> Iterator[TestRuntimeProfile]:
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="submission-test") as profile:
         yield profile
+
+
+@pytest.fixture
+def repo() -> SubmissionRepository:
+    return SubmissionRepository()
 
 
 def _database_bytes(runtime_profile: TestRuntimeProfile) -> bytes:
@@ -79,22 +92,18 @@ def _database_bytes(runtime_profile: TestRuntimeProfile) -> bytes:
 
 
 class TestEmptyState:
-    def test_load_returns_none_when_absent(self) -> None:
-        repo = SubmissionRepository()
+    def test_load_returns_none_when_absent(self, repo: SubmissionRepository) -> None:
         assert repo.load("missing-id") is None
 
-    def test_object_marker_identifies_secure_backend(self) -> None:
-        repo = SubmissionRepository()
+    def test_object_marker_identifies_secure_backend(self, repo: SubmissionRepository) -> None:
         assert repo.envelope_path_for("abc123").as_posix().endswith("aeat.domain.submission.records/abc123")
 
-    def test_list_submission_ids_empty(self) -> None:
-        repo = SubmissionRepository()
+    def test_list_submission_ids_empty(self, repo: SubmissionRepository) -> None:
         assert repo.list_submission_ids() == ()
 
 
 class TestSaveLoad:
-    def test_round_trip_preserves_payload(self) -> None:
-        repo = SubmissionRepository()
+    def test_round_trip_preserves_payload(self, repo: SubmissionRepository) -> None:
         filing = _make_filing()
         repo.save(filing)
 
@@ -102,8 +111,7 @@ class TestSaveLoad:
         loaded = repo_b.load(filing.submission_id)
         assert loaded == filing
 
-    def test_save_is_idempotent(self) -> None:
-        repo = SubmissionRepository()
+    def test_save_is_idempotent(self, repo: SubmissionRepository) -> None:
         filing = _make_filing()
         repo.save(filing)
         repo.save(filing)
@@ -124,32 +132,24 @@ class TestSaveLoad:
 
 
 class TestListAndIter:
-    def test_list_returns_persisted_ids_sorted(self) -> None:
-        repo = SubmissionRepository()
-        f1 = _make_filing(draft_id="d-1", attempt_ordinal=1)
-        f2 = _make_filing(draft_id="d-2", attempt_ordinal=1)
-        repo.save(f1)
-        repo.save(f2)
+    def test_list_returns_persisted_ids_sorted(self, repo: SubmissionRepository) -> None:
+        f1, f2 = _save_two_filings(repo)
         ids = repo.list_submission_ids()
         assert set(ids) == {f1.submission_id, f2.submission_id}
         assert ids == tuple(sorted(ids))
 
-    def test_iter_submissions_yields_payloads(self) -> None:
-        repo = SubmissionRepository()
-        f1 = _make_filing(draft_id="d-1", attempt_ordinal=1)
-        f2 = _make_filing(draft_id="d-2", attempt_ordinal=1)
-        repo.save(f1)
-        repo.save(f2)
+    def test_iter_submissions_yields_payloads(self, repo: SubmissionRepository) -> None:
+        f1, f2 = _save_two_filings(repo)
         loaded = {payload.submission_id: payload for payload in repo.iter_submissions()}
         assert loaded[f1.submission_id] == f1
         assert loaded[f2.submission_id] == f2
 
     def test_iter_submissions_skips_unreadable_rows_with_warning(
         self,
+        repo: SubmissionRepository,
         runtime_profile: TestRuntimeProfile,
         caplog: pytest.LogCaptureFixture,
     ) -> None:
-        repo = SubmissionRepository()
         healthy = _make_filing(draft_id="healthy", attempt_ordinal=1)
         future = _make_filing(draft_id="future", attempt_ordinal=1)
         repo.save(healthy)
@@ -172,24 +172,22 @@ class TestListAndIter:
 
 
 class TestDelete:
-    def test_delete_removes_object(self) -> None:
-        repo = SubmissionRepository()
+    def test_delete_removes_object(self, repo: SubmissionRepository) -> None:
         filing = _make_filing()
         repo.save(filing)
         assert repo.delete(filing.submission_id) is True
         assert repo.load(filing.submission_id) is None
 
-    def test_delete_missing_returns_false(self) -> None:
-        repo = SubmissionRepository()
+    def test_delete_missing_returns_false(self, repo: SubmissionRepository) -> None:
         assert repo.delete("never-existed") is False
 
 
 class TestClassificationGate:
     def test_database_payload_is_encrypted_audit_data(
         self,
+        repo: SubmissionRepository,
         runtime_profile: TestRuntimeProfile,
     ) -> None:
-        repo = SubmissionRepository()
         filing = _make_filing()
         repo.save(filing)
         raw = _database_bytes(runtime_profile)
@@ -229,15 +227,13 @@ class TestUnsafeSubmissionIds:
         "bad",
         ["", "..", ".", ".hidden", "../escape", "a/b", "a\\b"],
     )
-    def test_unsafe_id_rejected(self, bad: str) -> None:
-        repo = SubmissionRepository()
+    def test_unsafe_id_rejected(self, repo: SubmissionRepository, bad: str) -> None:
         with pytest.raises(ValueError):
             repo.envelope_path_for(bad)
 
 
 class TestPerSubmissionLockIsolation:
-    def test_lock_target_per_submission(self) -> None:
-        repo = SubmissionRepository()
+    def test_lock_target_per_submission(self, repo: SubmissionRepository) -> None:
         a = repo.lock_target_for("sub-a")
         b = repo.lock_target_for("sub-b")
         assert a != b
