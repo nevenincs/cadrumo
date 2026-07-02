@@ -1,15 +1,15 @@
 """Typed ``--json`` payload schemas for ``aeat config check``.
 
 The command is the workstation doctor: it reports every
-:class:`~aeat.core.ServiceCapability` resolved for the active profile beside the
+:class:`ServiceCapability` resolved for the active profile beside the
 external dependency probes that must be provisioned for opted-in capabilities.
-These strict :class:`~aeat.entrypoints.cli._schemas.OutputSchema` subclasses
+These strict :class:`OutputSchema` subclasses
 document only the transport shape registered with
-:func:`~aeat.entrypoints.cli._schemas.register_schema` and emitted through
-:class:`~aeat.entrypoints.cli._schemas.SchemaEnvelope` by
-:func:`~aeat.entrypoints.cli._common._emit_envelope`. Capability semantics live
-in :mod:`~aeat.application.user_profile`, and provisioning semantics live in
-:mod:`~aeat.application.provisioning`.
+:func:`register_schema` and emitted through
+:class:`SchemaEnvelope` by
+:func:`_emit_envelope`. Capability semantics live
+in :mod:`user_profile`, and provisioning semantics live in
+:mod:`provisioning`.
 """
 
 from __future__ import annotations
@@ -20,10 +20,10 @@ from .._schemas import OutputSchema, register_schema
 class CheckCapabilityPayload(OutputSchema):
     """One resolved capability posture for the active profile.
 
-    ``capability`` is a :class:`~aeat.core.ServiceCapability` value. ``enabled``
+    ``capability`` is a :class:`ServiceCapability` value. ``enabled``
     and ``source`` mirror
-    :class:`~aeat.application.user_profile.CapabilityDecision`, with the source
-    rendered from :class:`~aeat.application.user_profile.CapabilitySource` so the
+    :class:`CapabilityDecision`, with the source
+    rendered from :class:`CapabilitySource` so the
     doctor can distinguish profile facts, defaults, global settings, and safety
     floors without owning that resolution logic.
     """
@@ -37,13 +37,13 @@ class CheckDependencyPayload(OutputSchema):
     """One external dependency availability row.
 
     Nested in
-    :class:`~aeat.entrypoints.cli._config._check_payloads.ConfigCheckResult`
+    :class:`ConfigCheckResult`
     and mirrors
-    :class:`~aeat.application.provisioning.DependencyStatus` rows from
-    :func:`~aeat.application.provisioning.probe_ollama_vision`,
-    :func:`~aeat.application.provisioning.probe_subprocess_providers`,
-    :func:`~aeat.application.provisioning.probe_playwright_browser`, and
-    :func:`~aeat.application.provisioning.probe_optional_extras`. ``remediation``
+    :class:`DependencyStatus` rows from
+    :func:`probe_ollama_vision`,
+    :func:`probe_subprocess_providers`,
+    :func:`probe_playwright_browser`, and
+    :func:`probe_optional_extras`. ``remediation``
     is populated only when the probe can name a concrete operator action.
     """
 
@@ -57,15 +57,15 @@ class CheckPreflightPayload(OutputSchema):
     """One workstation-preflight health row.
 
     Nested in
-    :class:`~aeat.entrypoints.cli._config._check_payloads.ConfigCheckResult`
-    and mirrors :class:`~aeat.application.preflight.PreflightCheck` rows
-    from :func:`~aeat.application.preflight.run_preflight_checks`: the
+    :class:`ConfigCheckResult`
+    and mirrors :class:`PreflightCheck` rows
+    from :func:`run_preflight_checks`: the
     per-auth-provider certificate / Cl@ve Móvil configuration health, the
     secure-storage / bundled-corpus / configuration preflight, and the
     registry referential-integrity gate. ``check`` is the stable row id
     (e.g. ``auth-provider:certificate``, ``storage:local-root``,
     ``registry:referential-integrity``); ``severity`` renders the
-    :class:`~aeat.application.preflight.HealthSeverity` verdict
+    :class:`HealthSeverity` verdict
     (``ok`` / ``warn`` / ``error``); ``remediation`` names the concrete
     operator action when the row is not healthy. These rows are reported
     for operator visibility and do not, on their own, change the
@@ -84,12 +84,12 @@ class CheckPreflightPayload(OutputSchema):
 class ConfigCheckResult(OutputSchema):
     """JSON envelope for ``aeat config check``.
 
-    Combines :func:`~aeat.application.user_profile.resolve_active_capability`
+    Combines :func:`resolve_active_capability`
     decisions in
-    :class:`~aeat.entrypoints.cli._config._check_payloads.CheckCapabilityPayload`
+    :class:`CheckCapabilityPayload`
     rows with
-    :class:`~aeat.application.provisioning.DependencyStatus` projections in
-    :class:`~aeat.entrypoints.cli._config._check_payloads.CheckDependencyPayload`
+    :class:`DependencyStatus` projections in
+    :class:`CheckDependencyPayload`
     rows. ``ok`` is false (and the command exits
     non-zero) when a capability the profile opted into has a missing dependency,
     meaning the operator asked for a service that is not provisioned. ``issues``
