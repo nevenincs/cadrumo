@@ -22,11 +22,9 @@ from typing import TYPE_CHECKING
 
 from ....core.logging import get_logger
 from ....core.time import now
-from ....domain.modelos import (
-    WorkUnitCatalogue,
-    WorkUnitPersistenceError,
-)
+from ....domain.modelos import WorkUnitCatalogue
 from ....domain.modelos._errors import raise_catalogue_integrity_error
+from ....domain.modelos._repository import WorkUnitPersistenceError
 from ....domain.modelos._runtime_repository import (
     resolve_modelo_repository_bucket_id,
     secure_objects_for_modelo_bucket,
@@ -56,6 +54,13 @@ class WorkUnitCatalogueRepository:
     """
 
     def __init__(self, *, bucket_id: str | None = None, objects: SecureObjectRepository | None = None) -> None:
+        """Bind to a profile bucket's secure-object store, or an injected one.
+
+        Args:
+            bucket_id: Profile bucket whose encrypted store backs this repository;
+                resolved from the active session when ``None``.
+            objects: Optional injected secure-object repository (testing seam).
+        """
         self._bucket_id = bucket_id.strip() if bucket_id is not None else None
         if objects is not None:
             self._objects = objects

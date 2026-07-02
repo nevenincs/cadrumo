@@ -9,6 +9,7 @@ from pathlib import Path
 
 import pytest
 
+from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ....core import Period
 from ....domain.buckets import (
     BucketEventHistoryRepository,
@@ -20,7 +21,6 @@ from ....domain.modelos import (
     ModeloError,
     ModeloRecordCatalogueRepository,
     VerificationReportCatalogueRepository,
-    WorkUnitCatalogueRepository,
 )
 from ....domain.user_profile import UserProfileFact, UserProfileRecord
 from ....tests.secure_sql import isolated_runtime_profile

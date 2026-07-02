@@ -9,12 +9,14 @@ from pathlib import Path
 from .....core.resources import bundled_path
 from .. import CasillaId, ModeloDefinition, ModeloSource, validated_casilla_id
 from .._loader import (
+    _REVISION_SECTION_FIELDS,
     discover_modelo_sources,
     load_modelo_source,
     load_registry_tree,
 )
 
 _REVISION_HEADER_RE = re.compile(r'^\[\[?revisions\.(?:"([^"]+)"|([A-Za-z0-9_-]+))(?=[.\]])')
+_REVISION_FIELD_RE = re.compile(r'^\[\[?revisions\.(?:"[^"]+"|[A-Za-z0-9_-]+)\.([A-Za-z0-9_]+)')
 _MAX_SINGLE_FILE_MODELO_LINES = 2_000
 _MAX_TOML_FRAGMENT_LINES = 1_750
 _MAX_TOML_ROW_CHARS = 600
@@ -144,6 +146,44 @@ def _build_directory_layout(
         (revisions_dir / filename).write_text(content, encoding="utf-8")
 
 
+def write_fragmented_revision(revision_dir: Path, revision_text: str) -> None:
+    """Materialise a full revision TOML as the fragmented layout.
+
+    Splits ``revision_text`` (a whole ``[revisions."<id>"]`` table with inline
+    section arrays) into a scalar-only ``revision.toml`` manifest plus one
+    ``<section>/0001-<section>.toml`` fragment per section, matching the
+    fragmented-layout invariant the loader now enforces. Comments directly above
+    a section header travel with that section.
+    """
+    lines = revision_text.splitlines(keepends=True)
+    header_indexes = [index for index, line in enumerate(lines) if _REVISION_HEADER_RE.match(line)]
+    starts: list[int] = []
+    for position, header_index in enumerate(header_indexes):
+        start = header_index
+        lower = header_indexes[position - 1] + 1 if position > 0 else 0
+        while start - 1 >= lower and lines[start - 1].lstrip().startswith("#"):
+            start -= 1
+        starts.append(start)
+    scalar_blocks: list[str] = []
+    section_blocks: dict[str, list[str]] = {}
+    for position, header_index in enumerate(header_indexes):
+        start = starts[position]
+        end = starts[position + 1] if position + 1 < len(header_indexes) else len(lines)
+        block = "".join(lines[start:end])
+        field_match = _REVISION_FIELD_RE.match(lines[header_index])
+        field = field_match.group(1) if field_match else None
+        if field in _REVISION_SECTION_FIELDS:
+            section_blocks.setdefault(field, []).append(block)
+        else:
+            scalar_blocks.append(block)
+    revision_dir.mkdir(parents=True, exist_ok=True)
+    (revision_dir / "revision.toml").write_text("".join(scalar_blocks).rstrip("\n") + "\n", encoding="utf-8")
+    for field, blocks in section_blocks.items():
+        section_dir = revision_dir / field
+        section_dir.mkdir(parents=True, exist_ok=True)
+        (section_dir / f"0001-{field}.toml").write_text("".join(blocks).strip("\n") + "\n", encoding="utf-8")
+
+
 def _minimal_fragment_revision_layout(
     target_dir: Path,
     *,
@@ -196,7 +236,8 @@ source_refs = ["aeat-manual"]
 """.lstrip()
         for index, casilla_id in enumerate(casilla_ids, start=1)
     )
-    (revision_dir / "revision.toml").write_text(
+    write_fragmented_revision(
+        revision_dir,
         f"""
 [revisions."2025"]
 valid_from = 2025-01-01
@@ -206,7 +247,6 @@ source_refs = ["aeat-manual"]
 
 {casilla_tables}
 """.lstrip(),
-        encoding="utf-8",
     )
     return revision_dir
 

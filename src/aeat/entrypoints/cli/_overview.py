@@ -171,8 +171,8 @@ def _local_modelo_record_calendar_events(
 def _local_modelo_work_units(bucket_id: str):
     """Return active local Modelo work units for overview obligation surfaces."""
     try:
+        from ...adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
         from ...application.modelo import list_work_units
-        from ...domain.modelos import WorkUnitCatalogueRepository
 
         repository = WorkUnitCatalogueRepository(bucket_id=bucket_id)
         return list_work_units(bucket_id=bucket_id, include_discarded=False, repository=repository)

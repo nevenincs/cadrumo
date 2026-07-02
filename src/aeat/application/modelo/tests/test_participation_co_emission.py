@@ -17,6 +17,7 @@ from pathlib import Path
 
 import pytest
 
+from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ....adapters.persistence.profile.participation_index import TransactionParticipationIndexRepository
 from ....application.ledger._actions_common import _blocking_modelo_references
 from ....core import Period
@@ -28,7 +29,6 @@ from ....domain.modelos import (
     ModeloCode,
     ModeloRecordCatalogueRepository,
     WorkUnit,
-    WorkUnitCatalogueRepository,
     derive_calculation_revision_id,
     derive_work_unit_id,
     upsert_calculation_revision,

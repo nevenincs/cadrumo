@@ -22,6 +22,7 @@ from pathlib import Path
 import pytest
 
 from ....adapters.inbound.justificante import parse_justificante
+from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ....core import Period
 from ....core.resources import resources
 from ....domain.calculations.registry import validated_casilla_id
@@ -31,7 +32,6 @@ from ....domain.modelos import (
     CalculationRevisionState,
     ModeloCode,
     WorkUnit,
-    WorkUnitCatalogueRepository,
     derive_calculation_revision_id,
     derive_work_unit_id,
     upsert_calculation_revision,

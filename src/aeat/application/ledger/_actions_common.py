@@ -21,6 +21,7 @@ from ...core.time import now
 if TYPE_CHECKING:
     pass
 
+from ...adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ...adapters.persistence.profile.usage_ratios import load_usage_ratios
 from ...core.time import coerce_utc_aware
 from ...domain.attachments import AttachmentNotFoundError, AttachmentValidationError
@@ -40,7 +41,6 @@ from ...domain.modelos import (
     CalculationRevisionCatalogueRepository,
     CalculationRevisionCatalogueRepositoryProtocol,
     CalculationRevisionState,
-    WorkUnitCatalogueRepository,
     WorkUnitCatalogueRepositoryProtocol,
 )
 from ...domain.transactions import (

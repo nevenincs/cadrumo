@@ -11,6 +11,7 @@ from pathlib import Path
 import pytest
 from click.testing import Result
 
+from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ....adapters.persistence.storage.sql.engine import dispose_engine
 from ....application.modelo import resolve_registry_revision_for_work_target
 from ....application.user_profile import (
@@ -26,7 +27,6 @@ from ....domain.modelos import (
     CalculationRevisionState,
     ModeloCode,
     WorkUnit,
-    WorkUnitCatalogueRepository,
     derive_calculation_revision_id,
     derive_work_unit_id,
     upsert_calculation_revision,

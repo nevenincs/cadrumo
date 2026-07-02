@@ -58,6 +58,7 @@ from pathlib import Path
 
 import pytest
 
+from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ....adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
 from ....core import (
     CasillaId,
@@ -72,7 +73,6 @@ from ....domain.modelos import (
     CalculationRevisionCatalogueRepository,
     ModeloVerificationFindingKind,
     VerificationReport,
-    WorkUnitCatalogueRepository,
 )
 from ....domain.transactions import TransactionCatalogueRepository
 from ....domain.user_profile import UserProfileFact, UserProfileRecord

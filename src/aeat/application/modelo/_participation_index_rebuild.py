@@ -27,6 +27,7 @@ from __future__ import annotations
 
 from pydantic import BaseModel, Field
 
+from ...adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ...adapters.persistence.profile.participation_index import TransactionParticipationIndexRepository
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...domain.modelos import (
@@ -40,7 +41,6 @@ from ...domain.modelos import (
     ModeloRecordCatalogueRepositoryProtocol,
     TransactionRevisionParticipation,
     TransactionRevisionParticipationIndex,
-    WorkUnitCatalogueRepository,
     WorkUnitCatalogueRepositoryProtocol,
     upsert_transaction_participation,
 )

@@ -22,6 +22,7 @@ from typing import Any
 import pytest
 from pydantic import ValidationError
 
+from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ....application.modelo import (
     WorkUnitAlreadyDiscardedError,
     WorkUnitMutationRefusedError,
@@ -38,7 +39,6 @@ from ....tests.secure_sql import isolated_runtime_profile
 from ...user_profile import UserProfileFact, UserProfileRecord
 from .._errors import ModeloValidationError
 from .._repository import (
-    WorkUnitCatalogueRepository,
     remove_work_unit,
     upsert_work_unit,
 )

@@ -122,7 +122,7 @@ from ._protocols import (
     VerificationReportCatalogueRepositoryProtocol,
     WorkUnitCatalogueRepositoryProtocol,
 )
-from ._repository import WorkUnitCatalogueRepository, upsert_work_unit
+from ._repository import upsert_work_unit
 from ._row_models import (
     Modelo184MemberRow,
     Modelo184ShareSumError,
@@ -205,7 +205,6 @@ __all__ = (
     "VerificationReportId",
     "WorkUnit",
     "WorkUnitCatalogue",
-    "WorkUnitCatalogueRepository",
     "WorkUnitCatalogueRepositoryProtocol",
     "WorkUnitId",
     "WorkUnitState",

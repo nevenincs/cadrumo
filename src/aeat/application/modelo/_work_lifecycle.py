@@ -29,6 +29,7 @@ from __future__ import annotations
 
 from datetime import datetime
 
+from ...adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ...core import Period
 from ...core.time import now as _utc_now
 from ...domain.buckets import (
@@ -42,7 +43,6 @@ from ...domain.modelos import (
     ModeloCode,
     WorkUnit,
     WorkUnitCatalogue,
-    WorkUnitCatalogueRepository,
     WorkUnitCatalogueRepositoryProtocol,
     WorkUnitState,
     derive_work_unit_id,

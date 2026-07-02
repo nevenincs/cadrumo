@@ -9,6 +9,7 @@ from decimal import Decimal
 from pathlib import Path
 from typing import Any
 
+from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ....core import Period
 from ....domain.buckets import BucketEventHistoryRepository
 from ....domain.calculations.registry import CasillaId, validated_casilla_id
@@ -20,7 +21,6 @@ from ....domain.modelos import (
     ModeloRecordCatalogueRepository,
     VerificationReportCatalogueRepository,
     WorkUnit,
-    WorkUnitCatalogueRepository,
     derive_filing_record_id,
     upsert_calculation_revision,
     upsert_filing_record,

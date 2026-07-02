@@ -14,6 +14,7 @@ from pathlib import Path
 import pytest
 
 from ....adapters.inbound.financial.providers import ParsedLedgerRow
+from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ....adapters.persistence.storage import AttachmentStore
 from ....adapters.persistence.storage.errors import StorageValidationError
 from ....adapters.persistence.storage.sql import SecureObjectRepository
@@ -63,7 +64,6 @@ from ....domain.modelos import (
     ModeloCode,
     WorkUnit,
     WorkUnitCatalogue,
-    WorkUnitCatalogueRepository,
     derive_calculation_revision_id,
     derive_work_unit_id,
 )

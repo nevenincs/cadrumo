@@ -47,6 +47,7 @@ from typing import Literal
 
 import pytest
 
+from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ....adapters.persistence.storage.sql import SecureObjectRepository
 from ....core import Period
 from ....core.errors import AeatError
@@ -64,7 +65,6 @@ from ....domain.modelos import (
     VerificationCompletenessStatus,
     VerificationReportCatalogueRepository,
     WorkUnit,
-    WorkUnitCatalogueRepository,
 )
 from ....domain.transactions import (
     BusinessClassification,

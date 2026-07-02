@@ -13,7 +13,7 @@ from collections.abc import Iterable, Mapping
 from dataclasses import dataclass
 from functools import lru_cache
 from pathlib import Path
-from typing import Literal, cast, get_origin
+from typing import Literal, cast, get_args, get_origin
 
 from pydantic import BaseModel, Field, ValidationError
 
@@ -42,6 +42,33 @@ _REVISION_APPEND_ARRAYS: frozenset[str] = frozenset(
     and get_origin(field.annotation) is tuple
     and field_name not in _REVISION_SPECIAL_MERGE_FIELDS
 )
+
+
+def _compute_revision_section_fields() -> frozenset[str]:
+    """Return the ModeloRevision fields that are per-section fragment content.
+
+    A "section" is an array-of-tables field (bindings, casillas, formulas, …) or
+    the ``completeness_manifest`` singleton table — the content that lives in
+    per-section fragment subdirectories. Scalar metadata (label, valid_from,
+    period_selector, legal_refs, source_refs, orden_aplicabilidad, …) is NOT a
+    section: it stays inline in the fragment directory's ``revision.toml``
+    manifest. Derived from the schema so a new section field is section-classified
+    automatically.
+    """
+    sections: set[str] = {_REVISION_COMPLETENESS_MANIFEST}
+    for field_name, field in ModeloRevision.model_fields.items():
+        if get_origin(field.annotation) is not tuple:
+            continue
+        args = get_args(field.annotation)
+        element = args[0] if args else None
+        if isinstance(element, type) and issubclass(element, BaseModel):
+            sections.add(field_name)
+    return frozenset(sections)
+
+
+# Fields that MUST live in per-section fragment files, never inline in the
+# fragment directory's revision.toml manifest (the fragmented-layout invariant).
+_REVISION_SECTION_FIELDS: frozenset[str] = _compute_revision_section_fields()
 _COMPLETENESS_MANIFEST_APPEND_ARRAYS: frozenset[str] = frozenset({"casillas"})
 _CONSTRUCT_APPEND_ARRAYS: frozenset[str] = frozenset(
     {
@@ -583,20 +610,24 @@ def _merge_revision_directory(path: Path, merged_revisions: dict[str, object]) -
     revision_manifest = path / "revision.toml"
     if not revision_manifest.is_file():
         raise RegistryLoadError(f"{path}: revision fragment directory must contain revision.toml")
-    fragment_paths = [revision_manifest]
-    fragment_paths.extend(
-        sorted(
-            p for p in path.rglob("*.toml") if p != revision_manifest and not any(part == "locales" for part in p.parts)
-        ),
+    section_fragment_paths = sorted(
+        p for p in path.rglob("*.toml") if p != revision_manifest and not any(part == "locales" for part in p.parts)
     )
     merged_revision: dict[str, object] = {}
-    for fragment_path in fragment_paths:
+    _merge_revision_manifest(revision_manifest, revision_id, merged_revision)
+    for fragment_path in section_fragment_paths:
         _merge_revision_fragment(fragment_path, revision_id, merged_revision)
     merged_revisions[revision_id] = merged_revision
 
 
-def _merge_revision_fragment(path: Path, expected_revision_id: str, merged_revision: dict[str, object]) -> None:
-    """Merge one fragment TOML into a single raw revision payload."""
+def _read_single_revision_table(path: Path, expected_revision_id: str) -> dict[str, object]:
+    """Parse one revision TOML and return its ``[revisions."<id>"]`` table.
+
+    Enforces the shared preconditions for both the fragment-directory
+    ``revision.toml`` manifest and its per-section fragment files: no ``[modelo]``
+    table, no local catalogues, exactly one revision, and the declared id must
+    match the owning fragment directory.
+    """
     fragment_data = freeze_toml(read_toml(path, error_factory=RegistryLoadError))
     _reject_local_catalogues(path, fragment_data)
     if "modelo" in fragment_data:
@@ -616,6 +647,35 @@ def _merge_revision_fragment(path: Path, expected_revision_id: str, merged_revis
     raw_revision_table = _as_toml_table(raw_revision)
     if raw_revision_table is None:
         raise RegistryLoadError(f"{path}: revision {revision_id!r} must be a table")
+    return raw_revision_table
+
+
+def _merge_revision_manifest(path: Path, expected_revision_id: str, merged_revision: dict[str, object]) -> None:
+    """Merge the fragment directory's ``revision.toml`` scalar-metadata manifest.
+
+    In the fragmented layout the ``revision.toml`` manifest carries ONLY scalar
+    revision metadata (label, valid_from/valid_to, period_selector, legal_refs,
+    source_refs, orden_aplicabilidad, continuidad_validation). Every per-section
+    array-of-tables (bindings, casillas, formulas, verification_expectations, …)
+    and the completeness_manifest live in per-section fragment subdirectories;
+    an inline section table in ``revision.toml`` is a loud load error naming the
+    fragmented layout.
+    """
+    raw_revision_table = _read_single_revision_table(path, expected_revision_id)
+    for key, value in raw_revision_table.items():
+        if key in _REVISION_SECTION_FIELDS:
+            raise RegistryLoadError(
+                f"{path}: revision.toml must declare only scalar revision metadata; the {key!r} section "
+                f"must live in a '{key}/' fragment subdirectory (fragmented layout), not inline in revision.toml",
+            )
+        if key in merged_revision:
+            raise RegistryLoadError(f"{path}: revision manifest redeclares field {key!r}")
+        merged_revision[key] = value
+
+
+def _merge_revision_fragment(path: Path, expected_revision_id: str, merged_revision: dict[str, object]) -> None:
+    """Merge one per-section fragment TOML into a single raw revision payload."""
+    raw_revision_table = _read_single_revision_table(path, expected_revision_id)
     for key, value in raw_revision_table.items():
         _merge_revision_fragment_field(path, key, value, merged_revision)
 
