@@ -745,8 +745,8 @@ def _build_py_suffix_index(env):
 
     Returns:
         A mapping of bare object name to the list of fully-qualified names that
-        end in it (for example ``BorradorObservation`` ->
-        ``["aeat.adapters.inbound.borrador._schema.BorradorObservation"]``).
+        end in it (for example ``InboundBorradorObservation`` ->
+        ``["aeat.adapters.inbound.borrador._schema.InboundBorradorObservation"]``).
     """
     index: dict[str, list[str]] = {}
     for fullname in env.get_domain("py").objects:

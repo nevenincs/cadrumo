@@ -293,10 +293,10 @@ class TestReplacementShape:
                 encoding="literal",
             )
 
-    @pytest.mark.parametrize(
-        "payload",
-        (
-            pytest.param(
+    def test_rejects_unknown_enum_fields(self) -> None:
+        payloads: tuple[tuple[str, dict[str, object]], ...] = (
+            (
+                "surface",
                 {
                     "surface": "unknown_surface_kind",
                     "surface_index": (0,),
@@ -304,9 +304,9 @@ class TestReplacementShape:
                     "synthetic": "X",
                     "encoding": "literal",
                 },
-                id="surface",
             ),
-            pytest.param(
+            (
+                "encoding",
                 {
                     "surface": "content_stream",
                     "surface_index": (0,),
@@ -314,13 +314,14 @@ class TestReplacementShape:
                     "synthetic": "X",
                     "encoding": "bogus",
                 },
-                id="encoding",
             ),
-        ),
-    )
-    def test_rejects_unknown_enum_fields(self, payload: dict[str, object]) -> None:
-        with pytest.raises(ValidationError, match=r"Input should be"):
-            Replacement.model_validate(payload)
+        )
+        for case_id, payload in payloads:
+            try:
+                with pytest.raises(ValidationError, match=r"Input should be"):
+                    Replacement.model_validate(payload)
+            except AssertionError as exc:
+                raise AssertionError(f"unknown enum payload was accepted: {case_id}") from exc
 
 
 class TestScrubbedSurfaceShape:

@@ -50,6 +50,7 @@ from ...core import Modelo, Period
 from ...core.resources import resources
 from ...core.time import now
 from ...domain.calculations.registry import (
+    MODELO_303_IVA_COMPENSATION_BINDING_ID,
     BindingId,
     CasillaDefinition,
     CasillaId,
@@ -101,7 +102,6 @@ _LOCAL_FILING_PROVENANCE: Final = "local_filing"
 _PRE_ACTIVITY_NO_PRIOR_OBLIGATION_SOURCE_KIND: Final = "pre_activity_no_prior_obligation"
 _IVA_COMPENSATION_HISTORY_SOURCE_KIND: Final = "aeat_sede_iva_compensation_history"
 _MIXED_OBSERVATION_SOURCE_KIND: Final = "mixed_observation_sources"
-MODELO_303_IVA_COMPENSATION_BINDING_ID: Final = "modelo-303-compensacion-pendiente-anteriores"
 
 
 def _casilla_id(value: object) -> CasillaId:

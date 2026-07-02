@@ -320,7 +320,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ErrorCode(
             code="REFUSED_MODELO_WORKFLOW_GATE",
             category=ErrorCategory.REFUSED,
-            message_key="errors.refused.refused_modelo_workflow_gate",
+            message_key="application.modelo.errors.workflow_gate_no_pending_obligation",
             default_suggestion="aeat app modelo work list",
             retryable=False,
             runbook_id=None,

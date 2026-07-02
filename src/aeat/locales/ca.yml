@@ -922,6 +922,7 @@ application:
         Torneu a crear la unitat de treball per vincular-la a la revisio actual.
       workflow_input_mismatch: La sol·licitud d'entrada del flux de treball no coincideix
         amb la revisió de càlcul.
+      workflow_gate_no_pending_obligation: 'No hi ha cap obligació de presentació pendent per a aquest model/període en la data actual (la finestra d''obligació de presentació de l''AEAT no és oberta). La presentació a fitxer no requereix aquest pas: exporteu la revisió verificada-completa amb ''aeat app modelo export''; aquest és el punt final local. ''work file'' és el pas intern opcional per marcar com a presentat quan la finestra d''obligació sigui oberta.'
     findings:
       art20_reduccion_next_action: Verifiqueu si les vostres altres rendes diferents
         de les del treball excloses les exemptes de l'exercici no superen 6500 EUR;
@@ -4884,8 +4885,6 @@ errors:
     refused_modelo_refund_election_not_eligible: S'ha sol·licitat una devolucio en
       un periode on no esta disponible; nomes l'ultim periode de declaracio de l'any
       permet la devolucio a un no inscrit a REDEME.
-    refused_modelo_workflow_gate: El control del flux de treball ha rebutjat la transició
-      de la declaració. La declaració no es pot considerar presentada legalment.
     refused_no_active_profile: Aquesta operació necessita un perfil actiu. Crea o
       selecciona un perfil i torna-ho a provar.
     refused_operator_surface_contract: La superfície sol·licitada queda fora del contracte

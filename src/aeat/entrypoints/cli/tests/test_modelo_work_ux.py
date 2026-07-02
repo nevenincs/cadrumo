@@ -315,11 +315,14 @@ def test_work_file_defaults_to_current_verified_for_visible_target(_isolated_cli
         [
             "app", "modelo", "work", "file",
             "--modelo", "111", "--year", "2025", "--period", "1T",
+            "--output-language", "ca",
         ],
     )  # fmt: skip
     assert result.exit_code != 0
     assert "file requires a verified-complete revision" not in result.output
-    assert "filing-obligation window is not open" in result.output or "NO_PENDING_OBLIGATION" in result.output
+    assert "No pending filing obligation" not in result.output
+    assert "No hi ha cap obligació de presentació pendent" in result.output
+    assert "NO_PENDING_OBLIGATION" in result.output
 
 
 def test_work_dependencies_lists_cross_period_inventory(_isolated_cli_backend: Path) -> None:

@@ -2,82 +2,82 @@
 
 This package owns the application-layer authentication contract used by
 operator configuration, live-read preflight, and AEAT session acquisition.
-:class:`~aeat.application.auth.AuthProvider` and
-:class:`~aeat.application.auth.AuthProviderKind` define the provider protocol
-and closed provider catalogue; :func:`~aeat.application.auth.select_provider`
+:class:`AuthProvider` and
+:class:`AuthProviderKind` define the provider protocol
+and closed provider catalogue; :func:`select_provider`
 delegates lazily to concrete outbound providers under
-:mod:`aeat.adapters.outbound.aeat.auth` so application consumers keep one
+:mod:`adapters.outbound.aeat.auth` so application consumers keep one
 stable facade without importing adapter mechanics at module load.
 
 Operator-facing auth configuration stays in this layer.
-:func:`~aeat.application.auth.configure_operator_auth`,
-:func:`~aeat.application.auth.inspect_operator_auth`,
-:func:`~aeat.application.auth.test_operator_auth`,
-:func:`~aeat.application.auth.login_operator_auth`, and
-:func:`~aeat.application.auth.clear_operator_auth` return typed result records
-such as :class:`~aeat.application.auth.AuthStatusResult`,
-:class:`~aeat.application.auth.AuthLoginResult`, and
-:class:`~aeat.application.auth.LiveAuthPreflightReport`. The persisted local
-configuration is :class:`~aeat.application.auth.AuthState`, while provider
+:func:`configure_operator_auth`,
+:func:`inspect_operator_auth`,
+:func:`test_operator_auth`,
+:func:`login_operator_auth`, and
+:func:`clear_operator_auth` return typed result records
+such as :class:`AuthStatusResult`,
+:class:`AuthLoginResult`, and
+:class:`LiveAuthPreflightReport`. The persisted local
+configuration is :class:`AuthState`, while provider
 metadata is reported through
-:class:`~aeat.application.auth.AuthProviderDescription` and
-:class:`~aeat.application.auth.AuthProvidersReport`. Configuration writes are
-gated by :class:`~aeat.application.workflow.ActiveProfileHealth`: a missing,
+:class:`AuthProviderDescription` and
+:class:`AuthProvidersReport`. Configuration writes are
+gated by :class:`application.workflow.ActiveProfileHealth`: a missing,
 dangling, or unreadable active bucket is refused before workflow state changes.
 Successful provider configuration persists the updated
-:class:`~aeat.application.workflow.WorkflowState` and the typed
+:class:`application.workflow.WorkflowState` and the typed
 ``AUTH_PROVIDER_CONFIGURED`` bucket event in one secure-object transaction;
 the event payload may include a certificate path but never private keys,
 passwords, session tokens, or QR payloads.
 
 The session lifecycle is encrypted and profile-scoped.
-:func:`~aeat.application.auth.ensure_authenticated_aeat_session` and
-:func:`~aeat.application.auth.require_verified_aeat_session` coordinate
-:class:`~aeat.application.auth.PersistedAuthSession` reuse,
-:class:`~aeat.application.auth.AuthAcquisitionLockRecord` locking, and the
-provider's :class:`~aeat.adapters.outbound.aeat.auth.AeatSession` /
-:class:`~aeat.adapters.outbound.aeat.auth.AeatLoginAssertion` pair. Live-read
-call sites combine this facade with :class:`~aeat.core.access_gate.AeatAccessGate`;
+:func:`ensure_authenticated_aeat_session` and
+:func:`require_verified_aeat_session` coordinate
+:class:`PersistedAuthSession` reuse,
+:class:`AuthAcquisitionLockRecord` locking, and the provider's
+:class:`adapters.outbound.aeat.auth.AeatSession` /
+:class:`adapters.outbound.aeat.auth.AeatLoginAssertion` pair. Live-read call
+sites combine this facade with :class:`core.access_gate.AeatAccessGate`;
 this package does not expose AEAT-side write verbs. Session object keys are
 derived from the active bucket through
-:func:`~aeat.application.auth.storage_state_paths`, and operator verbs open an
+:func:`storage_state_paths`, and operator verbs open an
 active-profile storage span when the process has a selected pointer but no
 ambient master-key session. Cl@ve Móvil session acquisition additionally fails
-closed with :class:`~aeat.application.auth.AuthProfileIdentityMismatchError`
+closed with :class:`AuthProfileIdentityMismatchError`
 when the configured identity, active profile tax id, or verified session
 identity disagree.
 
 Additional package-level surfaces cover local auth diagnostics and
-apoderado configuration. :class:`~aeat.application.auth.AuthDiagnosticSummary`,
-:class:`~aeat.application.auth.AuthDiagnosticDetail`, and
-:func:`~aeat.application.auth.record_auth_diagnostic_phone_state` operate on
-redacted encrypted diagnostic records. :class:`~aeat.application.auth.ApoderadoService`
+apoderado configuration. :class:`AuthDiagnosticSummary`,
+:class:`AuthDiagnosticDetail`, and
+:func:`record_auth_diagnostic_phone_state` operate on redacted encrypted
+diagnostic records. :class:`ApoderadoService`
 persists identity-sensitive represented-party configuration through encrypted
 storage and permanently refuses live AEAT-side apoderamiento mutation.
 
 See Also:
-    :mod:`aeat.adapters.outbound.aeat.auth`
+    :mod:`adapters.outbound.aeat.auth`
         Concrete certificate and Cl@ve Movil providers selected through this
         application facade.
-    :class:`~aeat.core.access_gate.AeatAccessGate`
+    :class:`core.access_gate.AeatAccessGate`
         Mandatory live-read precondition and permanent live-write refusal used
         before authenticated AEAT access proceeds.
-    :mod:`aeat.application.state_projection`
+    :mod:`application.state_projection`
         Canonical operator-state projection consumed by auth status, auth test,
         and live-auth preflight surfaces.
-    :mod:`aeat.application.workflow`
+    :mod:`application.workflow`
         Public workflow facade that owns
-        :class:`~aeat.application.workflow.WorkflowState` and
-        :class:`~aeat.application.workflow.ActiveProfileHealth`.
-    :class:`aeat.domain.buckets.BucketEventHistoryRepository`
+        :class:`application.workflow.WorkflowState` and
+        :class:`application.workflow.ActiveProfileHealth`.
+    :class:`domain.buckets.BucketEventHistoryRepository`
         Durable bucket event catalogue that receives auth configuration,
         session, lock, and clear events without secret payload material.
-    :mod:`aeat.application.live`
+    :mod:`application.live`
         Read-only AEAT capture workflows that obtain verified sessions through
         this package.
-    :mod:`aeat.domain.auth.apoderamientos`
+    :mod:`domain.auth.apoderamientos`
         Domain-owned scope catalogue consumed by
-        :class:`~aeat.application.auth.ApoderadoService`.
+        :class:`ApoderadoService`.
 """
 
 from __future__ import annotations
@@ -154,7 +154,7 @@ class AuthProviderDescription(BaseModel):
 class AuthProvider(Protocol):
     """Protocol every concrete AEAT auth provider satisfies.
 
-    Implementations live under :mod:`aeat.adapters.outbound.aeat.auth`
+    Implementations live under :mod:`adapters.outbound.aeat.auth`
     and are dispatched by :func:`select_provider`.
     """
 

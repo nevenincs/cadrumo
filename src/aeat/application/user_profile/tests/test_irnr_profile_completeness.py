@@ -20,45 +20,40 @@ _BASE_VALUES: dict[str, str] = {
 }
 
 
-@pytest.mark.parametrize(
-    ("overrides", "expected_valid", "expected_missing"),
-    (
-        pytest.param(
+def test_profile_key_validation_applies_irnr_conditional_requirements() -> None:
+    cases = (
+        (
+            "missing-country",
             {"taxpayer_type.fiscal_residency": "non_resident_irnr"},
             False,
             ("taxpayer_type.country_of_fiscal_residence",),
-            id="missing-country",
         ),
-        pytest.param(
+        (
+            "gb-missing-representante",
             {
                 "taxpayer_type.fiscal_residency": "non_resident_irnr",
                 "taxpayer_type.country_of_fiscal_residence": "GB",
             },
             False,
             ("taxpayer_type.representante_fiscal_nif", "taxpayer_type.representante_fiscal_nombre"),
-            id="gb-missing-representante",
         ),
-        pytest.param(
+        (
+            "eu-country",
             {
                 "taxpayer_type.fiscal_residency": "non_resident_irnr",
                 "taxpayer_type.country_of_fiscal_residence": "FR",
             },
             True,
             (),
-            id="eu-country",
         ),
-    ),
-)
-def test_profile_key_validation_applies_irnr_conditional_requirements(
-    overrides: dict[str, str],
-    expected_valid: bool,
-    expected_missing: tuple[str, ...],
-) -> None:
-    result = validate_profile_values({**_BASE_VALUES, **overrides})
+    )
 
-    assert result.valid is expected_valid
-    for missing_path in expected_missing:
-        assert missing_path in result.missing_required
+    for case_id, overrides, expected_valid, expected_missing in cases:
+        result = validate_profile_values({**_BASE_VALUES, **overrides})
+
+        assert result.valid is expected_valid, case_id
+        for missing_path in expected_missing:
+            assert missing_path in result.missing_required, case_id
 
 
 def test_lifecycle_validation_reports_conditional_irnr_profile_errors() -> None:

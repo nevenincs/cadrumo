@@ -9,7 +9,7 @@ project a profile into :class:`BorradorExtractionProfile`.
   registry-profile validation.
 - :class:`BorradorExtractionProfile` — lightweight protocol projected by the
   caller from registry metadata when completeness checks are required.
-- :class:`BorradorObservation` — parsed observed record with printed
+- :class:`InboundBorradorObservation` — parsed observed record with printed
   casillas, source provenance and per-casilla advisory warnings.
 """
 
@@ -92,7 +92,7 @@ class BorradorExtractionProfile(Protocol):
     def min_coverage(self) -> Decimal: ...
 
 
-class BorradorObservation(BaseModel):
+class InboundBorradorObservation(BaseModel):
     """Observed Modelo 100 PDF data.
 
     Strict, frozen pydantic record produced by

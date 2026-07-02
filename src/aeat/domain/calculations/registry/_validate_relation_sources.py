@@ -17,6 +17,7 @@ See Also:
 from __future__ import annotations
 
 from collections.abc import Iterable, Mapping
+from typing import Final
 
 from ._bindings_previous_filing import _is_direct_previous_filing_binding
 from ._errors import RegistryValidationError
@@ -41,14 +42,24 @@ from ._validate_relation_periods import (
 )
 from ._validate_source_casilla_ids import source_casilla_id_reference_failure
 
-# The single iva-wallet-owned slot binding (aggregation-taxonomy ADR ruling D3):
-# the M303 compensación-pendiente binding is owned by the iva-wallet compensación
-# decision (resolved pre-mesh through ``_iva_wallet_gate``), NOT by the relation
-# mesh. It legitimately remains ``source = "previous_filing"`` while also being a
-# relation's ``target_binding`` — the iva-wallet gate strips it from the
-# previous-filing resolution before the mesh runs. It is therefore the documented
-# carve-out for the relation-vs-previous_filing collision gate below.
-_IVA_WALLET_OWNED_RELATION_TARGET_BINDINGS: frozenset[str] = frozenset({"modelo-303-compensacion-pendiente-anteriores"})
+#: The single M303 compensación-pendiente binding id, owned by the iva-wallet
+#: compensación decision (aggregation-taxonomy ADR ruling D3). This is the one
+#: canonical declaration of the identifier: the registry relation-source validator
+#: (below), the calculate orchestrator's mesh exclusion, and the previous-filing
+#: exclusion all consume it rather than re-spelling the literal. It rides down here
+#: in the registry domain so both the domain validator and the application
+#: orchestrator (application -> domain) read one source of truth.
+MODELO_303_IVA_COMPENSATION_BINDING_ID: Final[str] = "modelo-303-compensacion-pendiente-anteriores"
+
+#: The iva-wallet-owned relation-target slot binding set (aggregation-taxonomy ADR
+#: ruling D3): the M303 compensación-pendiente binding is owned by the iva-wallet
+#: compensación decision (resolved pre-mesh through ``_iva_wallet_gate``), NOT by
+#: the relation mesh. It legitimately remains ``source = "previous_filing"`` while
+#: also being a relation's ``target_binding`` — the iva-wallet gate strips it from
+#: the previous-filing resolution before the mesh runs. It is therefore the
+#: documented carve-out for the relation-vs-previous_filing collision gate below,
+#: and the same set the orchestrator excludes from previous-filing resolution.
+IVA_WALLET_OWNED_RELATION_TARGET_BINDINGS: frozenset[str] = frozenset({MODELO_303_IVA_COMPENSATION_BINDING_ID})
 
 
 def validate_relation_closure(
@@ -263,7 +274,7 @@ def _validate_slot_binding_source(
     failures: list[str] = []
     is_previous_filing = str(binding.source) == "previous_filing"
     is_relation_targeted = binding.id in relation_targets
-    iva_wallet_owned = binding.id in _IVA_WALLET_OWNED_RELATION_TARGET_BINDINGS
+    iva_wallet_owned = binding.id in IVA_WALLET_OWNED_RELATION_TARGET_BINDINGS
     # Gate (a): a previous_filing binding must carry a DIRECT selector.
     if is_previous_filing and not iva_wallet_owned and not _is_direct_previous_filing_binding(binding):
         failures.append(

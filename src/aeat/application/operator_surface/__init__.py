@@ -1,12 +1,12 @@
 """Public re-export boundary for the backend-owned operator surface.
 
 The package collects the application-layer command-shape declarations from
-:mod:`aeat.application.operator_surface._contract`,
-:mod:`aeat.application.operator_surface._models`,
-:mod:`aeat.application.operator_surface._help`,
-:mod:`aeat.application.operator_surface._crud_contract`,
-:mod:`aeat.application.operator_surface._crud_registry`, and
-:mod:`aeat.application.operator_surface._errors`. Command adapters consume this
+:mod:`application.operator_surface._contract`,
+:mod:`application.operator_surface._models`,
+:mod:`application.operator_surface._help`,
+:mod:`application.operator_surface._crud_contract`,
+:mod:`application.operator_surface._crud_registry`, and
+:mod:`application.operator_surface._errors`. Command adapters consume this
 surface as data and render it; they do not define a second contract.
 
 Root-surface declarations flow through :func:`get_operator_surface_contract`,
@@ -14,7 +14,7 @@ Root-surface declarations flow through :func:`get_operator_surface_contract`,
 :class:`OperatorSurfaceContract`. Source-kind aliases remain parser-only
 :class:`SourceKindAlias` records that resolve through
 :func:`resolve_source_kind_alias` to canonical
-:class:`~aeat.core.BindingSourceKind` members. No operator-specific source-kind
+:class:`core.BindingSourceKind` members. No operator-specific source-kind
 taxonomy is introduced here.
 
 The CRUD vocabulary is exposed through :class:`CrudVerb`,
@@ -36,10 +36,10 @@ See Also:
     ``aeat app contract``
         Command adapter that emits the :class:`OperatorSurfaceManifest` through
         the CLI envelope.
-    :mod:`aeat.entrypoints.mcp`
+    :mod:`entrypoints.mcp`
         Tool-exposure entrypoint that consumes the same manifest without
         duplicating the operator-surface contract.
-    :mod:`aeat.core.json_contract`
+    :mod:`core.json_contract`
         CLI result-schema registry supplied to the manifest by entrypoint
         adapters.
 """

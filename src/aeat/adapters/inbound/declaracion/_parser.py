@@ -8,7 +8,7 @@ casillas. There is deliberately no per-modelo extractor class registry here.
 When callers do not supply a snapshot, the parser loads one through
 :class:`ValidatedRegistryAuthority`. The snapshot's :class:`ModeloRevision`
 owns the canonical casilla declarations and the returned
-:class:`DeclaracionObservation` stamps the exact :class:`RegistrySnapshotRef`.
+:class:`InboundDeclaracionObservation` stamps the exact :class:`RegistrySnapshotRef`.
 The bytes entry point keeps decrypted live-read PDF content in memory rather
 than materialising a plaintext temporary file.
 """
@@ -45,7 +45,7 @@ from ..pdf._utils import sha256_file, source_pdf_reference_path
 from ._detect import detect_template_revision, detect_template_revision_from_pages
 from ._errors import DeclaracionParseError, TemplateNotDetectedError
 from ._parsers import extract_pages_text, extract_pages_text_from_bytes
-from ._schema import DeclaracionObservation, TemplateRevision
+from ._schema import InboundDeclaracionObservation, TemplateRevision
 
 # ADAPTER-INTERNAL-ALIAS-RATIONALE-PDFWORD: pdfplumber's Page.extract_words()
 # returns dicts whose full key-set varies by version and page content.  A
@@ -91,8 +91,8 @@ def parse_declaracion(
     registry_snapshot: RegistrySnapshot | None = None,
     registry_root: Path | None = None,
     source_root: Path | None = None,
-) -> DeclaracionObservation:
-    """Parse an AEAT declaración PDF into a :class:`DeclaracionObservation`.
+) -> InboundDeclaracionObservation:
+    """Parse an AEAT declaración PDF into a :class:`InboundDeclaracionObservation`.
 
     Use this filesystem entry point when the declaration copy is already on
     disk. The observation carries a digest-backed PDF source reference and a
@@ -118,7 +118,7 @@ def parse_declaracion(
             checks while building a snapshot.
 
     Returns:
-        A strict :class:`DeclaracionObservation` populated with the extracted
+        A strict :class:`InboundDeclaracionObservation` populated with the extracted
         casillas, warnings, and provenance metadata.
 
     Raises:
@@ -157,7 +157,7 @@ def parse_declaracion_bytes(
     registry_snapshot: RegistrySnapshot | None = None,
     registry_root: Path | None = None,
     source_root: Path | None = None,
-) -> DeclaracionObservation:
+) -> InboundDeclaracionObservation:
     """Parse declaración PDF bytes without writing them to a plaintext temp file.
 
     This is the live-read path for already-decrypted artefacts. Page text and
@@ -184,7 +184,7 @@ def parse_declaracion_bytes(
             checks while building a snapshot.
 
     Returns:
-        A :class:`DeclaracionObservation` populated with the extracted casillas,
+        A :class:`InboundDeclaracionObservation` populated with the extracted casillas,
         warnings, and provenance metadata.
 
     Raises:
@@ -226,7 +226,7 @@ def _parse_declaracion_pages(
     registry_root: Path | None,
     source_root: Path | None,
     pdf_bytes: bytes | None = None,
-) -> DeclaracionObservation:
+) -> InboundDeclaracionObservation:
     """Assemble the shared registry-grounded parse result.
 
     Both public entry points converge here after obtaining per-page text. The
@@ -276,7 +276,7 @@ def _parse_declaracion_pages(
         modelo_year=snapshot.filing_year,
         period=snapshot.period,
     )
-    return DeclaracionObservation(
+    return InboundDeclaracionObservation(
         modelo=template.modelo,
         period=_filing_period_for_observation(template.año, period),
         ejercicio=str(template.año),

@@ -7,12 +7,12 @@ already-persisted live-read snapshots, local filing records, and query dates;
 these builders do not contact AEAT and do not mutate storage.
 
 ``overview status`` delegates to
-:func:`~aeat.application.state_projection.build_operator_state_projection`
+:func:`application.state_projection.build_operator_state_projection`
 and projects the canonical
-:class:`~aeat.application.state_projection.OperatorStateProjection` through
+:class:`application.state_projection.OperatorStateProjection` through
 :func:`overview_status_report_from_projection` into
 :class:`OverviewStatusReport`. ``overview calendar`` composes the existing
-:class:`~aeat.domain.deadlines.DeadlineEngine` over the requested year
+:class:`domain.deadlines.DeadlineEngine` over the requested year
 window, returning :class:`OverviewCalendarEntry` obligation rows, additive
 :class:`OverviewCalendarEvent` observations, and
 :class:`OverviewCalendarFilingEvidence` rows.
@@ -27,20 +27,20 @@ records through :func:`build_filing_obligation_advisories` so
 deadline-engine defaults are visible rather than silent.
 
 See Also:
-    :mod:`aeat.application.state_projection`
-        Canonical producer for the :class:`~aeat.application.state_projection.OperatorStateProjection`
+    :mod:`application.state_projection`
+        Canonical producer for the :class:`application.state_projection.OperatorStateProjection`
         consumed by ``overview status``.
-    :mod:`aeat.domain.deadlines`
-        Deadline engine and :class:`~aeat.domain.deadlines.Schedule` authority
+    :mod:`domain.deadlines`
+        Deadline engine and :class:`domain.deadlines.Schedule` authority
         used by calendar, agenda, backlog, and explain read models.
-    :mod:`aeat.application.live`
+    :mod:`application.live`
         Read-only capture surface that persists the live evidence this package
         can display without opening AEAT again.
-    :mod:`aeat.domain.modelos`
-        Local :class:`~aeat.domain.modelos.ModeloRecord` and
-        :class:`~aeat.domain.modelos.ExternalEvidence` records projected into
+    :mod:`domain.modelos`
+        Local :class:`domain.modelos.ModeloRecord` and
+        :class:`domain.modelos.ExternalEvidence` records projected into
         overview calendar evidence.
-    :mod:`aeat.application.workflow`
+    :mod:`application.workflow`
         Active-profile and pending-obligation state that remains upstream of
         overview rendering.
 """
@@ -125,7 +125,7 @@ def build_filing_obligation_advisories(
     The helper feeds :class:`OverviewStatusReport` and stays on the local
     read-model path. It implements the Art. 96.2.a)/96.3 LIRPF
     multiple-pagadores rule through
-    :func:`~aeat.domain.deadlines.evaluate_multiple_pagadores_obligation`:
+    :func:`domain.deadlines.evaluate_multiple_pagadores_obligation`:
     when the operator has declared ``irpf.pagadores_count >= 2`` and
     ``irpf.pagadores_secondary_income > 1500``, the work-income exemption
     limit drops from the general €22,000 to the per-year reduced limit, and
@@ -193,7 +193,7 @@ def build_unsupported_work_create_modelos(
     """Return modelos whose local work-create path is unsupported.
 
     The result feeds :class:`OverviewStatusReport` and uses canonical
-    :class:`~aeat.core.Modelo` identifiers. Non-resident IRNR profile state
+    :class:`core.Modelo` identifiers. Non-resident IRNR profile state
     currently advertises Modelo 210 because the local work-create path is not
     available for that filing.
     """
@@ -219,10 +219,10 @@ def overview_status_report_from_projection(
     """Project the canonical state projection into the ``overview status`` emit shape.
 
     The :class:`OverviewStatusReport` is a CLI emit shape derived from
-    the one :class:`~aeat.application.state_projection.OperatorStateProjection`;
+    the one :class:`application.state_projection.OperatorStateProjection`;
     it is not a second state-assembly path. Both the declaration-draft
-    :class:`~aeat.domain.filing.ModeloDraft` count and the
-    :class:`~aeat.domain.modelos.WorkUnitCatalogue` count are carried
+    :class:`domain.filing.ModeloDraft` count and the
+    :class:`domain.modelos.WorkUnitCatalogue` count are carried
     distinctly.
 
     Args:
@@ -257,7 +257,7 @@ def build_overview_status_report(
     """Build and return the :class:`OverviewStatusReport` used by root and overview status.
 
     Consumes the canonical
-    :func:`~aeat.application.state_projection.build_operator_state_projection`
+    :func:`application.state_projection.build_operator_state_projection`
     and projects it through :func:`overview_status_report_from_projection`;
     the bespoke per-surface store assembly this function once carried is
     deleted. ``overview status`` therefore reports the same counters as

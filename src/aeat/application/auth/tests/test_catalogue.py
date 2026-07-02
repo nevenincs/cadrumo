@@ -51,10 +51,13 @@ def test_get_auth_provider_returns_canonical_entry() -> None:
     assert entry.description
 
 
-@pytest.mark.parametrize("provider_id", ["not.a.provider", "clave-permanente", "clave-movil"])
-def test_get_auth_provider_raises_keyerror_for_unsupported_provider_id(provider_id: str) -> None:
-    with pytest.raises(KeyError, match=r"provider|unknown|not.a.provider|clave"):
-        get_auth_provider(provider_id)
+def test_get_auth_provider_raises_keyerror_for_unsupported_provider_ids() -> None:
+    for provider_id in ("not.a.provider", "clave-permanente", "clave-movil"):
+        try:
+            with pytest.raises(KeyError, match=r"provider|unknown|not.a.provider|clave"):
+                get_auth_provider(provider_id)
+        except AssertionError as exc:
+            raise AssertionError(f"provider id should be unsupported: {provider_id}") from exc
 
 
 def test_listing_rejects_blank_id() -> None:

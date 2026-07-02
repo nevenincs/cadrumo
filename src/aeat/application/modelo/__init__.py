@@ -21,38 +21,39 @@ those services, including :class:`CalculationRevisionState`,
 :class:`VerificationCompletenessStatus`.
 
 Verification, filing, and export remain owned by their focused service modules.
-:func:`~aeat.application.modelo.verify_modelo_revision` persists a verification
+:func:`verify_modelo_revision` persists a verification
 report for one
 :class:`CalculationRevision`; filing and export then consume the same persisted
 revision rather than rebuilding parallel workflow state.
 
 Local filing and external evidence are deliberately separate.
-:func:`~aeat.application.modelo.file_modelo_revision` creates an internal
-current :class:`ModeloRecord` without :class:`ExternalEvidence`;
-:func:`~aeat.application.modelo.import_external_filing_evidence` creates the
+:func:`file_modelo_revision` creates an internal
+current :class:`domain.modelos.ModeloRecord` without
+:class:`domain.modelos.ExternalEvidence`;
+:func:`import_external_filing_evidence` creates the
 AEAT-attested evidence baseline, and
-:func:`~aeat.application.modelo.amend_modelo_revision` requires that baseline
+:func:`amend_modelo_revision` requires that baseline
 before recording a :class:`CalculationRevisionAmendmentKind`.
 
 See Also:
-    :mod:`~aeat.application.modelo._work_lifecycle`:
+    :mod:`application.modelo._work_lifecycle`:
         Work-unit creation, listing, rename, discard, and lookup services.
-    :mod:`~aeat.application.modelo._work_addressing`:
+    :mod:`application.modelo._work_addressing`:
         Visible modelo/year/period addressing and exact-id resolution.
-    :mod:`~aeat.application.modelo._calculation_actions`:
+    :mod:`application.modelo._calculation_actions`:
         Calculation revision creation, lookup, and completion services.
-    :mod:`~aeat.application.modelo._verification_actions`:
+    :mod:`application.modelo._verification_actions`:
         Verification findings and report persistence for draft revisions.
-    :mod:`~aeat.application.modelo._filing_actions`:
+    :mod:`application.modelo._filing_actions`:
         Local filing-record transitions and verification-report reads.
-    :mod:`~aeat.application.modelo._external_import_actions`:
+    :mod:`application.modelo._external_import_actions`:
         External-evidence import path that stamps official AEAT evidence on
         current filing records.
-    :mod:`~aeat.application.modelo._amendment_actions`:
+    :mod:`application.modelo._amendment_actions`:
         Amendment path for current externally evidenced filing records.
-    :mod:`~aeat.application.modelo._workflow_gate`:
+    :mod:`application.modelo._workflow_gate`:
         Workflow preflight adapter used by verification and filing services.
-    :mod:`~aeat.application.modelo._export`:
+    :mod:`application.modelo._export`:
         Local official-file export for verified or filed revisions.
 """
 

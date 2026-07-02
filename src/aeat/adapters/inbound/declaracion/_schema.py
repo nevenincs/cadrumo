@@ -3,7 +3,7 @@
 Defines the boundary types every extractor produces — the
 :class:`TemplateRevision` triple that identifies an AEAT template
 revision, the :class:`ExtractionWarning` advisory record, and the
-top-level :class:`DeclaracionObservation` aggregate. All models are
+top-level :class:`InboundDeclaracionObservation` aggregate. All models are
 frozen and ``extra="forbid"`` so accidental field drift surfaces at
 validation time.
 
@@ -58,7 +58,7 @@ class ExtractionWarning(BaseModel):
 
     Captures non-fatal extraction conditions (casilla missing, label
     ambiguous, value unparseable, bbox fallback used, ...). Surfaces in
-    :attr:`DeclaracionObservation.warnings`.
+    :attr:`InboundDeclaracionObservation.warnings`.
 
     Attributes:
         casilla_id: The affected casilla identifier, or ``None`` when
@@ -80,7 +80,7 @@ class ExtractionWarning(BaseModel):
     primitive_attempted: Literal["acroform", "label_regex", "bbox", "ocr", "merged"]
 
 
-class DeclaracionObservation(BaseModel):
+class InboundDeclaracionObservation(BaseModel):
     """Observed values parsed from a declaración PDF.
 
     Attributes:

@@ -10,8 +10,8 @@ from pathlib import Path
 import pytest
 
 from ....adapters.inbound.declaracion import (
-    DeclaracionObservation,
     ExtractionWarning,
+    InboundDeclaracionObservation,
     TemplateRevision,
 )
 from ....adapters.inbound.pdf._shared import ExtractedCasilla
@@ -45,7 +45,7 @@ def _build_filing(
     period: str = "1T",
     ejercicio: str = "2025",
     registry_revision_id: str = "2019-y-siguientes",
-) -> DeclaracionObservation:
+) -> InboundDeclaracionObservation:
     """Build a parsed declaration boundary object for verification."""
     extracted = tuple(
         ExtractedCasilla(
@@ -57,7 +57,7 @@ def _build_filing(
         )
         for casilla_id, value in values
     )
-    return DeclaracionObservation(
+    return InboundDeclaracionObservation(
         modelo=modelo,
         period=Period.from_year_and_code(int(ejercicio), period),
         ejercicio=ejercicio,

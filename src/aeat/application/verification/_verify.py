@@ -4,7 +4,7 @@ Verifies a parsed declaracion against the engine output for the same inputs.
 The :class:`ValidatedRegistryAuthority` supplies the :class:`RegistrySnapshot`
 used to run the formula engine over operator-provided casilla values.
 
-The verifier consumes :class:`DeclaracionObservation` values from the inbound
+The verifier consumes :class:`InboundDeclaracionObservation` values from the inbound
 parser, selects the law-determined registry revision for the filing period,
 calculates the snapshot with supplied :class:`BindingId` values, and emits a
 local :class:`VerificationVerdict`. It does not perform live AEAT reads or
@@ -21,7 +21,7 @@ from decimal import Decimal
 from pathlib import Path
 from typing import Protocol
 
-from ...adapters.inbound.declaracion import DeclaracionObservation
+from ...adapters.inbound.declaracion import InboundDeclaracionObservation
 from ...core import Period
 from ...core.decimal import coerce_decimal
 from ...core.logging import get_logger
@@ -82,7 +82,7 @@ class _Discrepancy:
 
 
 def verify_declaracion(
-    declaracion: DeclaracionObservation,
+    declaracion: InboundDeclaracionObservation,
     *,
     binding_values: Mapping[BindingId, Decimal] | None = None,
     registry_root: Path | None = None,
@@ -208,7 +208,7 @@ def verify_declaracion(
 
 
 def _load_snapshot(
-    declaracion: DeclaracionObservation,
+    declaracion: InboundDeclaracionObservation,
     *,
     period: Period,
     registry_root: Path | None,
@@ -239,7 +239,7 @@ def _load_snapshot(
 
 
 def _assert_snapshot_ref_matches(
-    declaracion: DeclaracionObservation,
+    declaracion: InboundDeclaracionObservation,
     snapshot: RegistrySnapshot,
     *,
     period: Period,
@@ -266,7 +266,7 @@ def _snapshot_ref_context(modelo: str, revision_id: str, modelo_year: int, perio
     return f"registry:{modelo}:{revision_id}:{modelo_year}:{period}"
 
 
-def _decimal_extracted_values(declaracion: DeclaracionObservation) -> dict[CasillaId, Decimal]:
+def _decimal_extracted_values(declaracion: InboundDeclaracionObservation) -> dict[CasillaId, Decimal]:
     """Return decimal printed values keyed by canonical :class:`CasillaId`."""
     extracted: dict[CasillaId, Decimal] = {}
     for value in declaracion.values:
@@ -376,7 +376,7 @@ def _classify_discrepancy(
 
 
 def _compute_coverage(
-    declaracion: DeclaracionObservation,
+    declaracion: InboundDeclaracionObservation,
     expected_casilla_ids: AbstractSet[CasillaId],
 ) -> float:
     """Return the fraction of registry casillas the extraction supplied.
@@ -420,7 +420,7 @@ def _derive_status(
 
 
 def _compose_narrative(
-    declaracion: DeclaracionObservation,
+    declaracion: InboundDeclaracionObservation,
     status: VerificationStatus,
     classified: tuple[ClassifiedDiscrepancy, ...],
     coverage: float,

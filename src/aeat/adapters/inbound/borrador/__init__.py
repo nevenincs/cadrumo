@@ -18,7 +18,7 @@ projection and selects registry-profile parsing. Returned observations carry a
 privacy-preserving source reference derived from the PDF digest, not the
 operator's local source path.
 
-The public API surfaces :class:`BorradorObservation`,
+The public API surfaces :class:`InboundBorradorObservation`,
 :class:`BorradorParseMode`, :class:`BorradorParseError`,
 :class:`BorradorExtractionProfile`, :class:`ArtefactKind`, and
 :func:`parse_borrador`.
@@ -44,13 +44,13 @@ from __future__ import annotations
 
 from ._errors import BorradorParseError
 from ._parser import parse_borrador
-from ._schema import ArtefactKind, BorradorExtractionProfile, BorradorObservation, BorradorParseMode
+from ._schema import ArtefactKind, BorradorExtractionProfile, BorradorParseMode, InboundBorradorObservation
 
 __all__ = [
     "ArtefactKind",
     "BorradorExtractionProfile",
-    "BorradorObservation",
     "BorradorParseError",
     "BorradorParseMode",
+    "InboundBorradorObservation",
     "parse_borrador",
 ]

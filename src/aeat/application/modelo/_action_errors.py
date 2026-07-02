@@ -119,11 +119,13 @@ class ModeloWorkflowGateError(ModeloError):
         self._result = result
         reason = result.aborted_reason.value if result.aborted_reason is not None else "unknown"
         summary = result.summary.strip() or "the workflow gate aborted this transition"
+        message = summary
         suggestion: str | None = None
         if result.aborted_reason is WorkflowAbortReason.NO_PENDING_OBLIGATION:
+            message = None
             suggestion = "aeat app modelo export <work-unit-id> --output <path>"
         super().__init__(
-            summary,
+            message,
             context={
                 "abort_code": reason,
                 "stage": result.final_stage.value,

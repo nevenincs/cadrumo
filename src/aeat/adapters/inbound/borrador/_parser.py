@@ -25,8 +25,8 @@ from ._extractors import get_extractor
 from ._schema import (
     ArtefactKind,
     BorradorExtractionProfile,
-    BorradorObservation,
     BorradorParseMode,
+    InboundBorradorObservation,
 )
 
 _logger = get_logger(__name__)
@@ -39,7 +39,7 @@ def parse_borrador(
     año_override: int | None = None,
     extraction_profile: BorradorExtractionProfile | None = None,
     parse_mode: BorradorParseMode = BorradorParseMode.OBSERVED,
-) -> BorradorObservation:
+) -> InboundBorradorObservation:
     """Parse an observed AEAT Modelo 100 artefact PDF.
 
     Args:
@@ -55,7 +55,7 @@ def parse_borrador(
             requires ``extraction_profile`` and validates coverage.
 
     Returns:
-        A strict :class:`~aeat.adapters.inbound.borrador._schema.BorradorObservation`
+        A strict :class:`~aeat.adapters.inbound.borrador._schema.InboundBorradorObservation`
         with observed casilla rows extracted.
 
     Raises:
