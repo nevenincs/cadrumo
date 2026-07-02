@@ -20,10 +20,10 @@ from .....domain.submission._models import (
     SubmissionStatus,
     make_submission_id,
 )
-from .....domain.submission._repository import (
+from .....tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
+from ...profile.submission import (
     SubmissionRepository,
 )
-from .....tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
 from .. import (
     SensitivityClass,
 )

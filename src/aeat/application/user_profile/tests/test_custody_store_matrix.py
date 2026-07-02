@@ -213,14 +213,14 @@ def _verify_draft(bucket_id: str) -> None:
 
 
 def _seed_usage_ratios(bucket_id: str) -> None:
+    from ....adapters.persistence.profile.usage_ratios import save_usage_ratios
     from ....domain.usage_ratios._model import UsageRatioProfile
-    from ....domain.usage_ratios._service import save_usage_ratios
 
     save_usage_ratios(UsageRatioProfile(), bucket_id=bucket_id)
 
 
 def _verify_usage_ratios(bucket_id: str) -> None:
-    from ....domain.usage_ratios._service import load_usage_ratios
+    from ....adapters.persistence.profile.usage_ratios import load_usage_ratios
 
     assert load_usage_ratios(bucket_id=bucket_id) is not None, "usage ratios lost"
 

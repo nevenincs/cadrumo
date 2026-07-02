@@ -207,16 +207,13 @@ class ModeloDraftLoader(Protocol):
 class SubmissionRepositoryProtocol(Protocol):
     """Narrow domain-facing repository contract for the submission engine.
 
-    The concrete :class:`SubmissionRepository` inherits from the adapter-layer
+    The concrete
+    :class:`~aeat.adapters.persistence.profile.submission.SubmissionRepository`
+    lives in the persistence adapter and inherits from the adapter-layer
     :class:`~aeat.adapters.persistence.storage.SecureBoundRepository`. This
-    Protocol captures only the surface the engine consumes so callers can
-    depend inward on this port without importing the concrete class.
-
-    Note: :class:`SubmissionRepository` itself retains adapter-level imports
-    because its base class
-    (:class:`~aeat.adapters.persistence.storage.SecureBoundRepository`) lives
-    in the adapter layer. Moving the concrete class to adapters is deferred to
-    a later wave.
+    Protocol captures only the surface the engine consumes so the domain
+    depends inward on this port, and the application layer constructs the
+    concrete repository and injects it into :class:`SubmissionEngine`.
     """
 
     def load(self, record_id: str) -> ModeloPresentado | None:

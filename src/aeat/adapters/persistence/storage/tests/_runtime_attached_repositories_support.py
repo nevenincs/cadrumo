@@ -119,7 +119,6 @@ from .....domain.submission import (
     ModeloDraftStatus,
     ModeloPresentado,
     SubmissionAttempt,
-    SubmissionRepository,
     SubmissionStatus,
     make_submission_id,
 )
@@ -152,6 +151,7 @@ from ....outbound.llm._models import LLMProvider, LLMRequest, LLMResponse, Usage
 from ....outbound.llm._usage import UsageRecorder
 from ...profile.assets import load_amortizacion_ledger, load_assets, save_amortizacion_ledger, save_assets
 from ...profile.inventory import load_inventory, save_inventory
+from ...profile.submission import SubmissionRepository
 from ...profile.usage_ratios import load_usage_ratios, save_usage_ratios
 from .. import AttachmentStore, EphemeralMasterKeyProvider, SensitivityClass, StorageValidationError
 from .._namespace_registry import LLM_USAGE_NAMESPACE
