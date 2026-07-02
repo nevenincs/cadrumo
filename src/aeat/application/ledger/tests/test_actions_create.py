@@ -45,14 +45,12 @@ def test_create_manual_transaction_persists_source_provenance(secure_objects: Se
     assert outcome.persisted.raw.provenance.provider_name == "manual-ledger"
 
 
-@pytest.mark.parametrize(("field", "expected"), PROVENANCE_RAW_FIELD_EXPECTATIONS)
 def test_create_manual_transaction_persists_raw_field(
     secure_objects: SecureObjectRepository,
-    field: str,
-    expected: str,
 ) -> None:
     outcome = drive_create_manual_transaction(secure_objects)
-    assert outcome.persisted.raw.raw_fields[field] == expected
+    for field, expected in PROVENANCE_RAW_FIELD_EXPECTATIONS:
+        assert outcome.persisted.raw.raw_fields[field] == expected, field
 
 
 def test_create_manual_transaction_persists_purchase_invoice_evidence_in_raw_fields(
@@ -62,14 +60,12 @@ def test_create_manual_transaction_persists_purchase_invoice_evidence_in_raw_fie
     assert outcome.persisted.raw.raw_fields["purchase_invoice_evidence_id"] == outcome.purchase_invoice_evidence_id
 
 
-@pytest.mark.parametrize(("attribute", "expected"), TAXABLE_IVA_EXPECTATIONS)
 def test_create_manual_transaction_persists_taxable_iva(
     secure_objects: SecureObjectRepository,
-    attribute: str,
-    expected: Decimal,
 ) -> None:
     outcome = drive_create_manual_transaction(secure_objects)
-    assert getattr(outcome.persisted, attribute) == expected
+    for attribute, expected in TAXABLE_IVA_EXPECTATIONS:
+        assert getattr(outcome.persisted, attribute) == expected, attribute
 
 
 def test_create_manual_transaction_links_purchase_invoice_evidence(secure_objects: SecureObjectRepository) -> None:
