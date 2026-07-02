@@ -10,20 +10,22 @@ from pathlib import Path
 import pytest
 
 from ....adapters.persistence.storage.sql.engine import dispose_engine
-from ....application.modelo._result_summary import calculation_result_summary
-from ....application.user_profile._orchestration import profile_create_storage_span
+from ....application.modelo import calculation_result_summary
+from ....application.user_profile import profile_create_storage_span
 from ....application.user_profile._testing import register_minimal_profile
-from ....application.workflow._persistence import workflow_state_repository
-from ....core._period import Period
+from ....application.workflow import workflow_state_repository
+from ....core import Period
 from ....core.config import override_settings
-from ....domain.modelos._calculation_revision import (
+from ....domain.modelos import (
     CalculationRevision,
     CalculationRevisionState,
+    ModeloCode,
+    WorkUnit,
+    WorkUnitCatalogueRepository,
     derive_calculation_revision_id,
+    derive_work_unit_id,
+    upsert_work_unit,
 )
-from ....domain.modelos._codes import ModeloCode
-from ....domain.modelos._repository import WorkUnitCatalogueRepository, upsert_work_unit
-from ....domain.modelos._work_unit import WorkUnit, derive_work_unit_id
 from ....tests.registry_observations import registry_grounded_observations
 from ....tests.secure_sql import isolated_profile_storage_root
 from .._modelo_rendering import result_summary_lines, result_summary_payload
