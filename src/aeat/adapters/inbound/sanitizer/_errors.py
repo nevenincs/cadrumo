@@ -1,7 +1,7 @@
-"""Domain errors raised by the :mod:`aeat.adapters.inbound.sanitizer` subpackage.
+"""Domain errors raised by the :mod:`adapters.inbound.sanitizer` subpackage.
 
 All sanitiser errors inherit from
-:class:`aeat.core.errors.AeatError` so callers can catch the family
+:class:`core.errors.AeatError` so callers can catch the family
 without importing implementation details. The hierarchy mirrors the
 failure surfaces the sanitiser pipeline can encounter — source-parse
 failure, signature-present refusal, already-sanitised guard, and
@@ -16,7 +16,7 @@ _SANITIZER_SOURCE_LABEL = "<input-pdf>"
 
 
 class SanitizationError(AeatError):
-    """Base error for the :mod:`aeat.adapters.inbound.sanitizer` subpackage."""
+    """Base error for the :mod:`adapters.inbound.sanitizer` subpackage."""
 
 
 class SanitizerValidationError(SanitizationError, ValueError):
