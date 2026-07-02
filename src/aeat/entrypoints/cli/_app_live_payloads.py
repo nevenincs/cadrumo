@@ -453,13 +453,10 @@ class NotificationsLatestResult(OutputSchema):
 class PortalEntryPayload(OutputSchema):
     """One local portal-registry catalogue entry.
 
-    Projects :class:`~aeat.domain.portals.PortalMetadata` from
-    :data:`~aeat.domain.portals.PORTAL_REGISTRY`, resolving translatable labels
-    before the value enters the CLI envelope.  Category, auth-method, and URL
-    stability fields carry the domain enum values from
-    :class:`~aeat.domain.portals.PortalCategory`,
-    :class:`~aeat.domain.portals.AuthMethod`, and
-    :class:`~aeat.domain.portals.UrlStability`.
+    Projects :class:`PortalMetadata` from :data:`PORTAL_REGISTRY`, resolving
+    translatable labels before the value enters the CLI envelope. Category,
+    auth-method, and URL stability fields carry the domain enum values from
+    :class:`PortalCategory`, :class:`AuthMethod`, and :class:`UrlStability`.
     """
 
     portal: str
@@ -477,10 +474,10 @@ class PortalEntryPayload(OutputSchema):
 class PortalsListResult(OutputSchema):
     """Typed local-catalogue result for ``aeat app live portals list``.
 
-    Rows are selected from :data:`~aeat.domain.portals.PORTAL_REGISTRY` directly
-    or through :func:`~aeat.domain.portals.portals_by_category` /
-    :func:`~aeat.domain.portals.portals_for_modelo`; the command never opens a
-    browser or contacts AEAT.
+    Rows are selected from :data:`PORTAL_REGISTRY` directly or through
+    :func:`portals_by_category` / :func:`portals_for_modelo`, then projected as
+    :class:`PortalEntryPayload`; the command never opens a browser or contacts
+    AEAT.
     """
 
     count: int
@@ -491,10 +488,8 @@ class PortalsListResult(OutputSchema):
 class PortalsViewResult(PortalEntryPayload):
     """Typed local-catalogue result for ``aeat app live portals view``.
 
-    The requested portal id resolves through
-    :func:`~aeat.domain.portals.get_portal` and emits the same
-    :class:`~aeat.entrypoints.cli._app_live_payloads.PortalEntryPayload`
-    projection as the list surface.
+    The requested portal id resolves through :func:`get_portal` and emits the
+    same :class:`PortalEntryPayload` projection as the list surface.
     """
 
 
