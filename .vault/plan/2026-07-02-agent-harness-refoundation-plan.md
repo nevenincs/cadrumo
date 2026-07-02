@@ -9,15 +9,6 @@ related:
   - '[[2026-07-02-agent-harness-refoundation-adr]]'
 ---
 
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the
-       related: field above.
-     - The related: field carries the AUTHORISING documents
-       (ADR, research, reference, prior plan) for every Step in
-       this plan. Steps inherit this chain; per-row reference
-       footers do not exist.
-     - NEVER use [[wiki-links]] or markdown links in the
-       document body. -->
 
 # `agent-harness-refoundation` plan
 
@@ -120,40 +111,40 @@ Define the structured applies_when frontmatter schema, validate it at skill load
 
 - [x] `W05.P09.S34` - Define the structured applies_when frontmatter schema and its parser over TaxpayerProfile facts and lifecycle state; `src/aeat/agent/_skill_metadata.py`.
 - [x] `W05.P09.S35` - Validate the applies_when field at skill load; `src/aeat/agent/__init__.py`.
-- [ ] `W05.P09.S36` - Add the applies_when coverage gate asserting every skill declares a structured predicate; `src/aeat/agent/tests/test_skill_applies_when.py`.
+- [x] `W05.P09.S36` - Add the applies_when coverage gate asserting every skill declares a structured predicate; `src/aeat/agent/tests/test_skill_applies_when.py`.
 
 ### Phase `W05.P10` - Lift selection predicates into existing skills
 
 Move each existing skill prose selection predicate into the structured applies_when frontmatter field.
 
-- [ ] `W05.P10.S37` - Lift the alta-contribuyente selection predicate from prose into the applies_when frontmatter field; `src/aeat/_data/agent/skills/alta-contribuyente/SKILL.md`.
-- [ ] `W05.P10.S38` - Lift the arrendador selection predicate from prose into the applies_when frontmatter field; `src/aeat/_data/agent/skills/arrendador/SKILL.md`.
-- [ ] `W05.P10.S39` - Lift the autonomo-estimacion-directa selection predicate from prose into the applies_when frontmatter field; `src/aeat/_data/agent/skills/autonomo-estimacion-directa/SKILL.md`.
-- [ ] `W05.P10.S40` - Lift the autonomo-modulos selection predicate from prose into the applies_when frontmatter field; `src/aeat/_data/agent/skills/autonomo-modulos/SKILL.md`.
-- [ ] `W05.P10.S41` - Lift the clasificar selection predicate from prose into the applies_when frontmatter field; `src/aeat/_data/agent/skills/clasificar/SKILL.md`.
-- [ ] `W05.P10.S42` - Lift the exportar-declaracion selection predicate from prose into the applies_when frontmatter field; `src/aeat/_data/agent/skills/exportar-declaracion/SKILL.md`.
-- [ ] `W05.P10.S43` - Lift the intra-community-operator selection predicate from prose into the applies_when frontmatter field; `src/aeat/_data/agent/skills/intra-community-operator/SKILL.md`.
-- [ ] `W05.P10.S44` - Lift the llevar-libro selection predicate from prose into the applies_when frontmatter field; `src/aeat/_data/agent/skills/llevar-libro/SKILL.md`.
-- [ ] `W05.P10.S45` - Lift the preparar-modelo-100 selection predicate from prose into the applies_when frontmatter field; `src/aeat/_data/agent/skills/preparar-modelo-100/SKILL.md`.
-- [ ] `W05.P10.S46` - Lift the preparar-modelo-111 selection predicate from prose into the applies_when frontmatter field; `src/aeat/_data/agent/skills/preparar-modelo-111/SKILL.md`.
-- [ ] `W05.P10.S47` - Lift the preparar-modelo-115 selection predicate from prose into the applies_when frontmatter field; `src/aeat/_data/agent/skills/preparar-modelo-115/SKILL.md`.
-- [ ] `W05.P10.S48` - Lift the preparar-modelo-130 selection predicate from prose into the applies_when frontmatter field; `src/aeat/_data/agent/skills/preparar-modelo-130/SKILL.md`.
-- [ ] `W05.P10.S49` - Lift the preparar-modelo-131 selection predicate from prose into the applies_when frontmatter field; `src/aeat/_data/agent/skills/preparar-modelo-131/SKILL.md`.
-- [ ] `W05.P10.S50` - Lift the preparar-modelo-180 selection predicate from prose into the applies_when frontmatter field; `src/aeat/_data/agent/skills/preparar-modelo-180/SKILL.md`.
-- [ ] `W05.P10.S51` - Lift the preparar-modelo-190 selection predicate from prose into the applies_when frontmatter field; `src/aeat/_data/agent/skills/preparar-modelo-190/SKILL.md`.
-- [ ] `W05.P10.S52` - Lift the preparar-modelo-193 selection predicate from prose into the applies_when frontmatter field; `src/aeat/_data/agent/skills/preparar-modelo-193/SKILL.md`.
-- [ ] `W05.P10.S53` - Lift the preparar-modelo-200 selection predicate from prose into the applies_when frontmatter field; `src/aeat/_data/agent/skills/preparar-modelo-200/SKILL.md`.
-- [ ] `W05.P10.S54` - Lift the preparar-modelo-202 selection predicate from prose into the applies_when frontmatter field; `src/aeat/_data/agent/skills/preparar-modelo-202/SKILL.md`.
-- [ ] `W05.P10.S55` - Lift the preparar-modelo-303 selection predicate from prose into the applies_when frontmatter field; `src/aeat/_data/agent/skills/preparar-modelo-303/SKILL.md`.
-- [ ] `W05.P10.S56` - Lift the preparar-modelo-309 selection predicate from prose into the applies_when frontmatter field; `src/aeat/_data/agent/skills/preparar-modelo-309/SKILL.md`.
-- [ ] `W05.P10.S57` - Lift the preparar-modelo-322 selection predicate from prose into the applies_when frontmatter field; `src/aeat/_data/agent/skills/preparar-modelo-322/SKILL.md`.
-- [ ] `W05.P10.S58` - Lift the preparar-modelo-349 selection predicate from prose into the applies_when frontmatter field; `src/aeat/_data/agent/skills/preparar-modelo-349/SKILL.md`.
-- [ ] `W05.P10.S59` - Lift the preparar-modelo-353 selection predicate from prose into the applies_when frontmatter field; `src/aeat/_data/agent/skills/preparar-modelo-353/SKILL.md`.
-- [ ] `W05.P10.S60` - Lift the preparar-modelo-369 selection predicate from prose into the applies_when frontmatter field; `src/aeat/_data/agent/skills/preparar-modelo-369/SKILL.md`.
-- [ ] `W05.P10.S61` - Lift the preparar-modelo-390 selection predicate from prose into the applies_when frontmatter field; `src/aeat/_data/agent/skills/preparar-modelo-390/SKILL.md`.
-- [ ] `W05.P10.S62` - Lift the pyme-sociedad selection predicate from prose into the applies_when frontmatter field; `src/aeat/_data/agent/skills/pyme-sociedad/SKILL.md`.
-- [ ] `W05.P10.S63` - Lift the reconciliar selection predicate from prose into the applies_when frontmatter field; `src/aeat/_data/agent/skills/reconciliar/SKILL.md`.
-- [ ] `W05.P10.S64` - Lift the retenedor-empleador selection predicate from prose into the applies_when frontmatter field; `src/aeat/_data/agent/skills/retenedor-empleador/SKILL.md`.
+- [x] `W05.P10.S37` - Lift the alta-contribuyente selection predicate from prose into the applies_when frontmatter field; `src/aeat/_data/agent/skills/alta-contribuyente/SKILL.md`.
+- [x] `W05.P10.S38` - Lift the arrendador selection predicate from prose into the applies_when frontmatter field; `src/aeat/_data/agent/skills/arrendador/SKILL.md`.
+- [x] `W05.P10.S39` - Lift the autonomo-estimacion-directa selection predicate from prose into the applies_when frontmatter field; `src/aeat/_data/agent/skills/autonomo-estimacion-directa/SKILL.md`.
+- [x] `W05.P10.S40` - Lift the autonomo-modulos selection predicate from prose into the applies_when frontmatter field; `src/aeat/_data/agent/skills/autonomo-modulos/SKILL.md`.
+- [x] `W05.P10.S41` - Lift the clasificar selection predicate from prose into the applies_when frontmatter field; `src/aeat/_data/agent/skills/clasificar/SKILL.md`.
+- [x] `W05.P10.S42` - Lift the exportar-declaracion selection predicate from prose into the applies_when frontmatter field; `src/aeat/_data/agent/skills/exportar-declaracion/SKILL.md`.
+- [x] `W05.P10.S43` - Lift the intra-community-operator selection predicate from prose into the applies_when frontmatter field; `src/aeat/_data/agent/skills/intra-community-operator/SKILL.md`.
+- [x] `W05.P10.S44` - Lift the llevar-libro selection predicate from prose into the applies_when frontmatter field; `src/aeat/_data/agent/skills/llevar-libro/SKILL.md`.
+- [x] `W05.P10.S45` - Lift the preparar-modelo-100 selection predicate from prose into the applies_when frontmatter field; `src/aeat/_data/agent/skills/preparar-modelo-100/SKILL.md`.
+- [x] `W05.P10.S46` - Lift the preparar-modelo-111 selection predicate from prose into the applies_when frontmatter field; `src/aeat/_data/agent/skills/preparar-modelo-111/SKILL.md`.
+- [x] `W05.P10.S47` - Lift the preparar-modelo-115 selection predicate from prose into the applies_when frontmatter field; `src/aeat/_data/agent/skills/preparar-modelo-115/SKILL.md`.
+- [x] `W05.P10.S48` - Lift the preparar-modelo-130 selection predicate from prose into the applies_when frontmatter field; `src/aeat/_data/agent/skills/preparar-modelo-130/SKILL.md`.
+- [x] `W05.P10.S49` - Lift the preparar-modelo-131 selection predicate from prose into the applies_when frontmatter field; `src/aeat/_data/agent/skills/preparar-modelo-131/SKILL.md`.
+- [x] `W05.P10.S50` - Lift the preparar-modelo-180 selection predicate from prose into the applies_when frontmatter field; `src/aeat/_data/agent/skills/preparar-modelo-180/SKILL.md`.
+- [x] `W05.P10.S51` - Lift the preparar-modelo-190 selection predicate from prose into the applies_when frontmatter field; `src/aeat/_data/agent/skills/preparar-modelo-190/SKILL.md`.
+- [x] `W05.P10.S52` - Lift the preparar-modelo-193 selection predicate from prose into the applies_when frontmatter field; `src/aeat/_data/agent/skills/preparar-modelo-193/SKILL.md`.
+- [x] `W05.P10.S53` - Lift the preparar-modelo-200 selection predicate from prose into the applies_when frontmatter field; `src/aeat/_data/agent/skills/preparar-modelo-200/SKILL.md`.
+- [x] `W05.P10.S54` - Lift the preparar-modelo-202 selection predicate from prose into the applies_when frontmatter field; `src/aeat/_data/agent/skills/preparar-modelo-202/SKILL.md`.
+- [x] `W05.P10.S55` - Lift the preparar-modelo-303 selection predicate from prose into the applies_when frontmatter field; `src/aeat/_data/agent/skills/preparar-modelo-303/SKILL.md`.
+- [x] `W05.P10.S56` - Lift the preparar-modelo-309 selection predicate from prose into the applies_when frontmatter field; `src/aeat/_data/agent/skills/preparar-modelo-309/SKILL.md`.
+- [x] `W05.P10.S57` - Lift the preparar-modelo-322 selection predicate from prose into the applies_when frontmatter field; `src/aeat/_data/agent/skills/preparar-modelo-322/SKILL.md`.
+- [x] `W05.P10.S58` - Lift the preparar-modelo-349 selection predicate from prose into the applies_when frontmatter field; `src/aeat/_data/agent/skills/preparar-modelo-349/SKILL.md`.
+- [x] `W05.P10.S59` - Lift the preparar-modelo-353 selection predicate from prose into the applies_when frontmatter field; `src/aeat/_data/agent/skills/preparar-modelo-353/SKILL.md`.
+- [x] `W05.P10.S60` - Lift the preparar-modelo-369 selection predicate from prose into the applies_when frontmatter field; `src/aeat/_data/agent/skills/preparar-modelo-369/SKILL.md`.
+- [x] `W05.P10.S61` - Lift the preparar-modelo-390 selection predicate from prose into the applies_when frontmatter field; `src/aeat/_data/agent/skills/preparar-modelo-390/SKILL.md`.
+- [x] `W05.P10.S62` - Lift the pyme-sociedad selection predicate from prose into the applies_when frontmatter field; `src/aeat/_data/agent/skills/pyme-sociedad/SKILL.md`.
+- [x] `W05.P10.S63` - Lift the reconciliar selection predicate from prose into the applies_when frontmatter field; `src/aeat/_data/agent/skills/reconciliar/SKILL.md`.
+- [x] `W05.P10.S64` - Lift the retenedor-empleador selection predicate from prose into the applies_when frontmatter field; `src/aeat/_data/agent/skills/retenedor-empleador/SKILL.md`.
 
 ### Phase `W05.P11` - Life-situation skills
 
