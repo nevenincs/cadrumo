@@ -59,6 +59,7 @@ _VALID_AND_INVALID: list[tuple[str, str, str]] = [
     ("GR", "EL123456789", "EL12345678"),  # Greek prefix EL, 8 digits needs 9
 ]
 
+
 def test_nif_iva_patterns_match_examples_and_country_cases() -> None:
     """Each Member State's pattern matches well-formed examples and rejects malformed cases."""
     for prefix, spec in NIF_IVA_FORMATS.items():

@@ -24,8 +24,7 @@ from pathlib import Path
 
 import pytest
 
-from ..application.aggregation import aggregate_renta_ledger_expenses
-from ..application.aggregation._iva_ledger import aggregate_iva_ledger_observations
+from ..application.aggregation import aggregate_iva_ledger_observations, aggregate_renta_ledger_expenses
 from ..application.aggregation._renta_income_ledger import aggregate_renta_income_ledger
 from ..core import Period
 from ..domain.categories import SpendingCategory

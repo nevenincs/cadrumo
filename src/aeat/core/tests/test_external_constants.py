@@ -318,8 +318,7 @@ def test_live_sede_executable_route_literals_stay_centralized() -> None:
 def test_subdomain_enum_aligns_with_aeat_domains() -> None:
     """Portal host keys resolve to the TOML registry hosts."""
 
-    from ...domain.portals._categories import PortalHost
-    from ...domain.portals._hosts import portal_host_name
+    from ...domain.portals import PortalHost, portal_host_name
 
     domains = load_external_constants().aeat.domains
     configured_hosts = {
@@ -345,7 +344,7 @@ def test_subdomain_enum_aligns_with_aeat_domains() -> None:
 def test_portal_paths_registry_covers_literal_free_portal_entries() -> None:
     """Portal catalogue route paths are owned by external constants."""
 
-    from ...domain.portals._codes import Portal
+    from ...domain.portals import Portal
     from ...domain.portals._entries._common import portal_path
 
     constants = load_external_constants().aeat

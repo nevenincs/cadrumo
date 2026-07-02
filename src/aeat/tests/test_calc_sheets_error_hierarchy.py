@@ -12,11 +12,11 @@ from __future__ import annotations
 
 import pytest
 
-from ..adapters.outbound.google._errors import (
+from ..adapters.outbound.google import (
     GoogleAuthError,
     GoogleAuthValidationError,
 )
-from ..adapters.persistence.storage.bucket._errors import (
+from ..adapters.persistence.storage.bucket import (
     BucketError,
     BucketValidationError,
 )
@@ -25,8 +25,7 @@ from ..application.storage.calc_sheets._errors import (
     CalcSheetsParityError,
     CalcSheetsRecordError,
 )
-from ..core.errors import AeatError, build_error_envelope, get_registered_error_code
-from ..core.errors._registry import ErrorEnvelope
+from ..core.errors import AeatError, ErrorEnvelope, build_error_envelope, get_registered_error_code
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 

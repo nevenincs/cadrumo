@@ -15,8 +15,11 @@ pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
 
 def _resolver():
-    from ....entrypoints.mcp._dispatch import command_key_for_tool, tool_request_argv
-    from ....entrypoints.mcp._tools import build_tool_descriptors
+    from ....entrypoints.mcp import (
+        build_tool_descriptors,
+        command_key_for_tool,
+        tool_request_argv,
+    )
 
     keys = [d.command_key for d in build_tool_descriptors()]
 

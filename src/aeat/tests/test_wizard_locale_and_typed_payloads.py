@@ -238,7 +238,7 @@ def test_decode_invoice_payload_returns_invoice_row_payload_from_json() -> None:
 
 def test_parse_invoice_payload_end_to_end_json() -> None:
     """parse_invoice_payload must produce a validated Invoice from a complete JSON row."""
-    from ..application.invoices._importing import parse_invoice_payload
+    from ..application.invoices import parse_invoice_payload
     from ..domain.invoices import Invoice
 
     raw = json.dumps(

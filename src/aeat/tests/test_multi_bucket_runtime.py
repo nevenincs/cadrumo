@@ -13,8 +13,11 @@ from pathlib import Path
 
 import pytest
 
-from ..adapters.persistence.storage.bucket._layout import bucket_paths
-from ..adapters.persistence.storage.bucket._manifest_io import manifest_path, read_manifest
+from ..adapters.persistence.storage.bucket import (
+    bucket_paths,
+    manifest_path,
+    read_manifest,
+)
 from ..core import resolve_active_bucket_id
 from .secure_sql import isolated_two_bucket_runtime
 

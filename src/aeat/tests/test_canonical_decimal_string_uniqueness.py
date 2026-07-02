@@ -93,7 +93,7 @@ def test_financial_package_canonical_decimal_delegates_to_domain() -> None:
             del sys.modules[key]
 
     from ..adapters.inbound.financial import canonical_decimal
-    from ..domain._identifiers import canonical_decimal_string
+    from ..domain import canonical_decimal_string
 
     assert canonical_decimal is canonical_decimal_string, (
         "aeat.adapters.inbound.financial.canonical_decimal must be the same "
