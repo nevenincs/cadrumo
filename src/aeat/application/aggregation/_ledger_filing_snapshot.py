@@ -1,14 +1,14 @@
 """Capture and staleness for the modelo filing ledger snapshot.
 
-Used by: :mod:`aeat.application.modelo._work_lifecycle` for revision staleness checks,
-:mod:`aeat.application.evidence` for audit bundle generation.
+Used by: :mod:`application.modelo._work_lifecycle` for revision staleness checks,
+:mod:`application.evidence` for audit bundle generation.
 
-The pure records live in :mod:`aeat.domain.modelos._ledger_filing_snapshot`.
+The pure records live in :mod:`domain.modelos._ledger_filing_snapshot`.
 This application module holds the Transaction-aware halves:
 computing a contributor's content fingerprint from the live
-:class:`~aeat.domain.transactions.TransactionCatalogue`, building a
-:class:`~aeat.domain.modelos._ledger_filing_snapshot.LedgerFilingSnapshot` for a
-:class:`~aeat.domain.modelos._calculation_revision.CalculationRevision`'s ``source_transaction_ids``,
+:class:`~domain.transactions.TransactionCatalogue`, building a
+:class:`~domain.modelos._ledger_filing_snapshot.LedgerFilingSnapshot` for a
+:class:`~domain.modelos._calculation_revision.CalculationRevision`'s ``source_transaction_ids``,
 and evaluating drift between a filed snapshot and the current ledger state.
 
 The fingerprint covers exactly the transaction facts that can move a casilla --
@@ -19,7 +19,7 @@ Cosmetic fields (description, counterparty, notes) are deliberately excluded so
 staleness fires on material change, not on a relabel.
 
 This module uses
-:class:`~aeat.domain.modelos._ledger_filing_snapshot.LedgerFilingStalenessVerdict`
+:class:`~domain.modelos._ledger_filing_snapshot.LedgerFilingStalenessVerdict`
 for drift evaluation.
 """
 
