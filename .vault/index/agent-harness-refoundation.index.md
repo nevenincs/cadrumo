@@ -87,7 +87,13 @@ related:
   - '[[2026-07-02-agent-harness-refoundation-W06-P12-S79]]'
   - '[[2026-07-02-agent-harness-refoundation-W06-P12-S87]]'
   - '[[2026-07-02-agent-harness-refoundation-W06-P13-S80]]'
+  - '[[2026-07-02-agent-harness-refoundation-W06-P13-S81]]'
+  - '[[2026-07-02-agent-harness-refoundation-W06-P13-S82]]'
+  - '[[2026-07-02-agent-harness-refoundation-W06-P13-S83]]'
+  - '[[2026-07-02-agent-harness-refoundation-W06-P13-S84]]'
   - '[[2026-07-02-agent-harness-refoundation-W06-P13-S88]]'
+  - '[[2026-07-02-agent-harness-refoundation-W06-P14-S85]]'
+  - '[[2026-07-02-agent-harness-refoundation-W06-P14-S86]]'
   - '[[2026-07-02-agent-harness-refoundation-W06-P14-S89]]'
   - '[[2026-07-02-agent-harness-refoundation-W06-P14-S90]]'
   - '[[2026-07-02-agent-harness-refoundation-adr]]'
@@ -188,7 +194,13 @@ Auto-generated index of all documents tagged with `#agent-harness-refoundation`.
 - `2026-07-02-agent-harness-refoundation-W06-P12-S79` - Precompute the corpus embeddings at build time with model2vec potion-multilingual-128M and ship the numpy matrix as bundled data
 - `2026-07-02-agent-harness-refoundation-W06-P12-S87` - Confirm the potion-multilingual-128M packaged footprint and that the wheel ships the precomputed vectors but no model weights, onnxruntime, or caches
 - `2026-07-02-agent-harness-refoundation-W06-P13-S80` - Add the runtime query embedder with model2vec potion-multilingual-128M behind the capability-gated extra with a pinned revision, app-controlled cache dir, and install hint
+- `2026-07-02-agent-harness-refoundation-W06-P13-S81` - Expose the corpus search MCP tool
+- `2026-07-02-agent-harness-refoundation-W06-P13-S82` - Add aeat corpus ref resources resolving citations to verbatim authoritative text
+- `2026-07-02-agent-harness-refoundation-W06-P13-S83` - Expose the terminology handbook search tool
+- `2026-07-02-agent-harness-refoundation-W06-P13-S84` - Add retrieval, RRF fusion, and lexical-only degraded-mode tests
 - `2026-07-02-agent-harness-refoundation-W06-P13-S88` - Add brute-force numpy cosine vector search with RRF k=60 fusion in plain Python and a lexical-only FTS5-plus-citation degraded mode
+- `2026-07-02-agent-harness-refoundation-W06-P14-S85` - Author the mcpb Desktop Extension manifest
+- `2026-07-02-agent-harness-refoundation-W06-P14-S86` - Add the mcpb build-and-sign script behind the agent extra
 - `2026-07-02-agent-harness-refoundation-W06-P14-S89` - Pin the search-stack dependencies snowballstemmer, model2vec, and numpy in the capability-gated search extra with a lexical-only degraded default
 - `2026-07-02-agent-harness-refoundation-W06-P14-S90` - Author the third-party notices attribution for the potion-multilingual-128M lineage distilled from BGE-m3 on the C4 ODC-BY corpus
 
