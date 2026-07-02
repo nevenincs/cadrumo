@@ -105,24 +105,24 @@ REQUIRED_RELOCATED_PATHS: tuple[str, ...] = (
 )
 
 
-@pytest.mark.parametrize("module_name", CANONICAL_LAYOUT_PACKAGES)
-def test_canonical_layout_package_import_smoke(module_name: str) -> None:
+def test_canonical_layout_package_import_smoke() -> None:
     """Every canonical layout import surface must be importable."""
-    importlib.import_module(module_name)
+    for module_name in CANONICAL_LAYOUT_PACKAGES:
+        importlib.import_module(module_name)
 
 
-@pytest.mark.parametrize(("module_name", "symbol_name"), CANONICAL_PUBLIC_SYMBOLS)
-def test_canonical_public_symbols_are_exposed(module_name: str, symbol_name: str) -> None:
+def test_canonical_public_symbols_are_exposed() -> None:
     """Representative public symbols remain available at canonical paths."""
-    module = importlib.import_module(module_name)
+    for module_name, symbol_name in CANONICAL_PUBLIC_SYMBOLS:
+        module = importlib.import_module(module_name)
 
-    assert hasattr(module, symbol_name), f"{module_name} must expose {symbol_name}"
+        assert hasattr(module, symbol_name), f"{module_name} must expose {symbol_name}"
 
 
-@pytest.mark.parametrize("relative_path", REQUIRED_RELOCATED_PATHS)
-def test_relocated_surfaces_exist_at_canonical_paths(relative_path: str) -> None:
+def test_relocated_surfaces_exist_at_canonical_paths() -> None:
     """Moved implementation surfaces must exist at their canonical destinations."""
-    assert (SRC_AEAT / relative_path).exists()
+    for relative_path in REQUIRED_RELOCATED_PATHS:
+        assert (SRC_AEAT / relative_path).exists(), relative_path
 
 
 def test_legacy_normatives_package_is_absent() -> None:
