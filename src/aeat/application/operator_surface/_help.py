@@ -2,7 +2,7 @@
 
 The builders return typed :class:`HelpDocument` and
 :class:`RootLandingReport` records for the contract-backed root, config, and
-app help surfaces declared by :mod:`aeat.application.operator_surface`.  CLI
+app help surfaces declared by :mod:`application.operator_surface`.  CLI
 adapters render these records through the shared output boundary; they do not
 own the command inventory.
 
