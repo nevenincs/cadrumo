@@ -2,7 +2,7 @@
 
 The filing-record commands render stored :class:`ModeloRecord` rows, import
 AEAT-attested external evidence through
-:func:`aeat.application.modelo.import_external_filing_evidence`, and record
+:func:`import_external_filing_evidence`, and record
 operator-supplied local observations for calculation prefill. Verification-report
 commands expose persisted :class:`VerificationReport` rows.
 """
@@ -254,7 +254,7 @@ def filing_record_import(
 
     The CLI validates :class:`ExternalEvidenceKind`, parses each ``--set`` value
     into a :class:`CasillaId` decimal, resolves the active profile tax id, and
-    delegates to :func:`aeat.application.modelo.import_external_filing_evidence`.
+    delegates to :func:`import_external_filing_evidence`.
     The result is emitted as :class:`FilingRecordImportResult`; it is an
     AEAT-attested baseline for the amendment path, not a live submission from
     this application.
@@ -348,7 +348,7 @@ def filing_record_observe_local(
     """Record non-official local observations for later calculation prefill.
 
     The command parses canonical :class:`CasillaId` decimal values, delegates to
-    :func:`aeat.application.modelo.record_operator_local_observation`, and emits
+    :func:`record_operator_local_observation`, and emits
     :class:`FilingRecordLocalObservationResult` plus an advisory
     :class:`Notice`. It deliberately creates no
     :class:`ModeloRecord` and supplies no official AEAT
@@ -445,7 +445,7 @@ def verification_report_list(
 
     Each row is a persisted :class:`VerificationReport` projected through
     :class:`VerificationReportListResult` and nested
-    :class:`~aeat.entrypoints.cli._modelo_payloads.VerificationReportPayload`,
+    :class:`VerificationReportPayload`,
     preserving the same findings surface as ``aeat app modelo work verify``.
     """
     reports = list_verification_reports(calculation_revision_id=calculation_revision_id)
@@ -487,11 +487,11 @@ def verification_report_show(
     """View one persisted verification report by id.
 
     The command validates the shared
-    :class:`~aeat.entrypoints.cli._modelo_payloads.VerificationReportPayload`
+    :class:`VerificationReportPayload`
     into
-    :class:`~aeat.entrypoints.cli._modelo_payloads.VerificationReportShowResult`,
+    :class:`VerificationReportShowResult`,
     so saved report views retain the legal/source-reference
-    :class:`~aeat.entrypoints.cli._modelo_payloads.FindingPayload` detail emitted
+    :class:`FindingPayload` detail emitted
     by ``aeat app modelo work verify``.
     """
     try:
