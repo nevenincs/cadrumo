@@ -19,21 +19,19 @@ import pytest
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 
-@pytest.mark.parametrize(
-    "symbol",
-    (
+def test_application_package_reexports_callable_symbols() -> None:
+    from ... import user_profile as package
+
+    symbols = (
         "serialize_profile_bundle",
         "deserialize_profile_bundle",
         "rename_profile",
         "delete_profile_with_lifecycle_span",
         "remove_profile_bucket_directory",
-    ),
-)
-def test_application_package_reexports_callable_symbols(symbol: str) -> None:
-    from ... import user_profile as package
-
-    assert symbol in package.__all__
-    assert callable(getattr(package, symbol))
+    )
+    for symbol in symbols:
+        assert symbol in package.__all__, symbol
+        assert callable(getattr(package, symbol)), symbol
 
 
 def test_application_package_reexports_supported_bundle_schema_versions() -> None:
