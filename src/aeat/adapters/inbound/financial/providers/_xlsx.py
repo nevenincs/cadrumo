@@ -1,14 +1,14 @@
 """XLSX financial provider with header-row detection.
 
 Implements :class:`XlsxProvider`, an
-:class:`~aeat.adapters.inbound.financial.providers.FinancialProvider`
+:class:`~adapters.inbound.financial.providers.FinancialProvider`
 backed by ``openpyxl``. Reuses the bank-layout catalogue and scoring
-helpers from :mod:`aeat.adapters.inbound.financial.providers._csv` so
+helpers from :mod:`adapters.inbound.financial.providers._csv` so
 the same alias rules apply to spreadsheet exports as to the
 matching CSV downloads.
 
 The selected worksheet emits
-:class:`~aeat.adapters.inbound.financial.providers.ParsedLedgerRow` records
+:class:`~adapters.inbound.financial.providers.ParsedLedgerRow` records
 with the same magnitude/direction split as the CSV provider, while preserving
 typed workbook cell values for dates and amounts until the parse boundary.
 """
@@ -54,14 +54,14 @@ class XlsxProvider(FinancialProvider):
     """Ingest raw transactions from ``.xlsx`` bank statement exports.
 
     Iterates every worksheet, scoring the first ten rows of each
-    against :data:`aeat.adapters.inbound.financial.providers._csv.CSV_LAYOUTS`
+    against :data:`adapters.inbound.financial.providers._csv.CSV_LAYOUTS`
     and selecting the worksheet/row pair with the highest match
     score. Numeric and date cell values are read directly from the
     cell types (rather than coerced through their printed strings)
     so locale-formatted ``Decimal`` and ``date`` parsing stays
     accurate.
 
-    Like :class:`~aeat.adapters.inbound.financial.providers.CsvProvider`, this
+    Like :class:`~adapters.inbound.financial.providers.CsvProvider`, this
     provider shares the tabular alias catalogue and stores every parsed row as
     a raw transaction with explicit flow direction.
 
