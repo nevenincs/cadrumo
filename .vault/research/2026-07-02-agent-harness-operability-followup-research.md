@@ -91,6 +91,30 @@ today, but a future ledger-exporting persona would hit a spurious refusal).
 Promote the `corpus_search` errors from plain `Exception` to registered
 `AeatError` (L1) once the contested locale catalogues settle.
 
+**9. Findings from the live-model persona measurement (2026-07-02).** Three
+real Claude-Opus personas operating the harness surfaced these — none reachable
+by a scripted driver, which is why they matter:
+- **The grounding entry point is brittle (MEDIUM).** `aeat app contract` — the
+  manifest the operator rules mandate reading first — crashes when ANY payload
+  module is broken, because `_ensure_result_schemas_registered()` eagerly walks
+  every payload module. Make the capability surface degrade gracefully and name
+  the failing module rather than crashing the whole contract opaquely. This is
+  structural, independent of the transient peer break that exposed it.
+- **`regularizar-atrasos` presupposes work state the target taxpayer lacks
+  (MEDIUM).** `overview backlog`/`calendar` refuse without persisted work-unit
+  state, and `--allow-incomplete` does not relax it — but a behind-on-everything
+  taxpayer has no work units yet, so the situation skill's own step 1 is
+  dead-on-arrival for its own persona. Rework the WHEN-layer entry so it can
+  answer "what have I missed" for a fresh-but-behind profile (derive from
+  obligation applicability + the deadline schedule, not from persisted work
+  state).
+- **Misleading exit-6 recovery hint (LOW).** The INTERNAL error suggests
+  `aeat config repair integrity`, but a code import error is not corrupted
+  state; the hint is wrong for that failure class and could send an operator to
+  a pointless or mutating action.
+- **Mojibake in `registry citations view` error text (cosmetic).**
+  Double-encoded UTF-8 in an error message.
+
 ### Not in scope here
 
 ADR ratification (L3) is an owner decision, not a research/build item: the
