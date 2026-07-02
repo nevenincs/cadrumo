@@ -7,7 +7,12 @@ refuses with the install hint and a non-zero exit instead of raising a raw
 browser, and Anthropic integrations follow. The tool list, annotations, and the
 forbidden-live-write block are sourced from the SDK-independent core in this
 package; ``call_tool`` runs the deterministic CLI in a subprocess and returns its
-JSON envelope as structured content.
+JSON envelope as structured content. Alongside the per-verb tools the server
+advertises the ``search`` / ``execute`` meta-tools and registers empty-but-valid
+prompt and resource handlers, so the ``prompts`` and ``resources`` capabilities
+are negotiated now and W02 can populate their bodies. :func:`build_server` owns
+that registration and is unit-tested against the real SDK without the stdio
+transport.
 
 Per D1 of ``2026-07-01-agent-harness-adr``, the server also enforces the
 persona-scoped tool boundary declared in ``_persona_scope.py``:
@@ -33,11 +38,18 @@ import sys
 from ._dispatch import command_key_for_tool
 from ._hitl import ConfirmationPolicy, confirmation_for_tool
 from ._input_schema import cli_argv_for
+from ._meta_tools import meta_execute, search_commands
 from ._persona_scope import AgentPersona, active_persona, is_tool_in_persona_scope
 from ._tools import McpToolDescriptor, build_tool_descriptors
 
 _INSTALL_HINT = "the MCP server requires the agent extra: pip install 'aeat[agent]'"
 _SERVER_NAME = "aeat"
+
+# The two meta-tools that reach the long-tail verb surface outside the curated
+# toolsets. They are advertised alongside the per-verb tools and are never
+# persona-scoped away (``execute`` applies the persona gate internally).
+_META_SEARCH_TOOL = "search"
+_META_EXECUTE_TOOL = "execute"
 
 
 def emit_missing_sdk_refusal() -> None:
@@ -159,39 +171,117 @@ def _run_subprocess_tool(
     return (envelope, is_error)
 
 
-def _run_server(
+def build_meta_sdk_tools() -> list[object]:
+    """Build the SDK ``Tool`` objects for the ``search`` and ``execute`` meta-tools.
+
+    Lazily imports the SDK ``Tool`` type so the module still imports when the
+    ``aeat[agent]`` extra is absent. Exposed at module level so the meta-tool
+    surface is unit-tested against the real SDK types when they are installed.
+
+    Returns:
+        The ``search`` and ``execute`` :class:`mcp.types.Tool` objects.
+    """
+    from mcp.types import Tool
+
+    return [
+        Tool(
+            name=_META_SEARCH_TOOL,
+            description="Search aeat commands by keyword; returns matching command keys with mutability hints.",
+            inputSchema={
+                "type": "object",
+                "properties": {
+                    "query": {
+                        "type": "string",
+                        "description": "Keywords to match against command names and descriptions.",
+                    }
+                },
+                "required": ["query"],
+                "additionalProperties": False,
+            },
+        ),
+        Tool(
+            name=_META_EXECUTE_TOOL,
+            description="Execute one aeat command by key with named arguments, through the same safety gates.",
+            inputSchema={
+                "type": "object",
+                "properties": {
+                    "command_key": {
+                        "type": "string",
+                        "description": "The registry command key to run, e.g. modelo.work.calculate.",
+                    },
+                    "arguments": {"type": "object", "description": "The named arguments for the command."},
+                },
+                "required": ["command_key"],
+                "additionalProperties": False,
+            },
+        ),
+    ]
+
+
+def build_server(
     descriptors: tuple[McpToolDescriptor, ...],
     *,
     persona: AgentPersona | None = None,
-) -> None:  # pragma: no cover - requires the SDK runtime
-    """Build and run the MCP stdio server from the tool descriptors.
+) -> object:
+    """Build the MCP ``Server`` with the tool, prompt, and resource handlers.
 
-    Exercised only when the ``aeat[agent]`` extra is installed; the descriptor,
-    annotation, dispatch, and block logic it composes are all unit-tested without
-    the SDK. ``persona`` (resolved once by :func:`serve`) scopes both the
-    advertised tool list and the call-tool refusal per D1; ``None`` preserves
-    the full, unscoped surface.
+    Registers the persona-scoped per-verb tools plus the ``search`` / ``execute``
+    meta-tools, and empty-but-valid prompt and resource handlers so the server
+    advertises the ``prompts`` and ``resources`` capabilities during negotiation -
+    W02 populates the handler bodies. Extracted from the stdio runner so the
+    handler registration and capability negotiation are unit-tested against the
+    real SDK. ``persona`` scopes the per-verb tool list and the direct call-tool
+    refusal per D1; the meta-tools are always advertised and ``execute`` applies
+    the persona gate internally.
+
+    Returns:
+        The configured :class:`mcp.server.Server`.
     """
-    import anyio
     from mcp.server import Server
-    from mcp.server.stdio import stdio_server
-    from mcp.types import CallToolResult, TextContent, Tool
+    from mcp.types import CallToolResult, GetPromptResult, Prompt, Resource, TextContent, Tool
 
     scoped_descriptors = filter_descriptors_for_persona(descriptors, persona=persona)
     by_name = {descriptor.name: descriptor for descriptor in descriptors}
     sdk_tools = build_sdk_tools(scoped_descriptors)
+    meta_tools = build_meta_sdk_tools()
 
     server: Server = Server(_SERVER_NAME)
 
     @server.list_tools()
     async def _list_tools() -> list[Tool]:
-        # TYPE-IGNORE-RATIONALE-SDK-TOOL-LIST: build_sdk_tools returns a
-        # sequence of the MCP SDK's real Tool type; the stub package this
-        # module type-checks against declares a narrower parameter type.
-        return list(sdk_tools)  # type: ignore[arg-type]
+        # TYPE-IGNORE-RATIONALE-SDK-TOOL-LIST: build_sdk_tools / build_meta_sdk_tools
+        # return the MCP SDK's real Tool type; the stub package this module
+        # type-checks against declares a narrower parameter type.
+        return [*sdk_tools, *meta_tools]  # type: ignore[list-item]
 
     @server.call_tool()
     async def _call_tool(name: str, arguments: dict[str, object]) -> CallToolResult:
+        if name == _META_SEARCH_TOOL:
+            results = search_commands(str(arguments.get("query", "") or ""), descriptors=descriptors)
+            payload: dict[str, object] = {"results": [result.model_dump() for result in results]}
+            return CallToolResult(
+                content=[TextContent(type="text", text=json.dumps(payload, indent=2))],
+                structuredContent=payload,
+                isError=False,
+            )
+        if name == _META_EXECUTE_TOOL:
+            raw_args = arguments.get("arguments", {})
+            exec_args = dict(raw_args) if isinstance(raw_args, dict) else {}
+            outcome = meta_execute(
+                str(arguments.get("command_key", "") or ""),
+                exec_args,
+                descriptors=descriptors,
+                persona=persona,
+                run=_run_subprocess_tool,
+            )
+            if outcome.refused is not None:
+                return CallToolResult(content=[TextContent(type="text", text=outcome.refused)], isError=True)
+            envelope = outcome.envelope or {}
+            return CallToolResult(
+                content=[TextContent(type="text", text=json.dumps(envelope, indent=2))],
+                structuredContent=envelope,
+                isError=outcome.is_error,
+            )
         descriptor = by_name.get(name)
         if descriptor is None:
             return CallToolResult(content=[TextContent(type="text", text=f"unknown tool: {name}")], isError=True)
@@ -212,6 +302,47 @@ def _run_server(
             structuredContent=envelope,
             isError=is_error,
         )
+
+    # Empty-but-valid prompt and resource handlers: registering them makes the
+    # server advertise the ``prompts`` and ``resources`` capabilities during
+    # negotiation; W02 populates the handler bodies with the operating-layer
+    # documents. Registering an empty ``list`` and a not-found ``get`` / ``read``
+    # is the minimal valid surface until then.
+    @server.list_prompts()
+    async def _list_prompts() -> list[Prompt]:
+        return []
+
+    @server.get_prompt()
+    async def _get_prompt(name: str, arguments: dict[str, str] | None = None) -> GetPromptResult:
+        raise ValueError(f"unknown prompt: {name}")
+
+    @server.list_resources()
+    async def _list_resources() -> list[Resource]:
+        return []
+
+    @server.read_resource()
+    async def _read_resource(uri: object) -> str:
+        raise ValueError(f"unknown resource: {uri}")
+
+    return server
+
+
+def _run_server(
+    descriptors: tuple[McpToolDescriptor, ...],
+    *,
+    persona: AgentPersona | None = None,
+) -> None:  # pragma: no cover - requires the SDK runtime
+    """Build and run the MCP stdio server from the tool descriptors.
+
+    Exercised only when the ``aeat[agent]`` extra is installed; the descriptor,
+    annotation, dispatch, block, and capability-registration logic it composes are
+    unit-tested without the stdio transport via :func:`build_server`.
+    """
+    import anyio
+    from mcp.server import Server
+    from mcp.server.stdio import stdio_server
+
+    server: Server = build_server(descriptors, persona=persona)  # type: ignore[assignment]
 
     async def _amain() -> None:
         async with stdio_server() as (read_stream, write_stream):
