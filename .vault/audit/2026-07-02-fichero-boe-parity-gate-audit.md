@@ -140,10 +140,12 @@ passes with the gate active — including modelo 200 (sociedades,
 `test_export_writes_modelo_200_negative_cuota_diferencial_as_signed_money`) and 303
 (IVA, the roundtrip test). So the concern that "the gate is unverified on 8 shipped
 modelos" is resolved in substance: a complete draft that trips the gate would fail
-those tests. The P04 parity file (130/111/115/123/131) and the fichero-BOE
-roundtrip (130/303) are the ADDITIONAL explicit invariant assertions on top. The
-only genuine remaining nicety is a dedicated explicit-parity assertion for 200 and
-the informativas in the P04 file; the gate itself is already validated on them.
+those tests. The P04 parity file now covers 130/111/115/123/131/**200** (a complete Modelo 200
+sociedades draft fixture was added, with its 2024/0A provider) and the fichero-BOE
+roundtrip covers 130/303 — the ADDITIONAL explicit invariant assertions on top of
+the whole-suite exercise. The only remaining nicety is a dedicated explicit-parity
+assertion for the informativas (`180 202 232 349 720`); the gate is already
+validated on every fixed-width export test, so this is genuinely optional.
 
 ### code-review-medium-coverage-historic | low | (superseded) P04 draft-based lock covers 5 of 12; dormancy lock covers 7
 
