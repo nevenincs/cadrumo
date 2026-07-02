@@ -144,13 +144,18 @@ def test_categories_output_names_the_category_id_column(tmp_path: Path) -> None:
 def test_classify_help_points_irpf_category_to_categories_catalogue(
     tmp_path: Path,
 ) -> None:
-    """`--help` names the public command that lists accepted IRPF category ids."""
+    """`--help` names accepted ids and the royalty activity/capital distinction."""
     result = _invoke(["app", "ledger", "classify", "--help"], env={"COLUMNS": "160"})
     assert result.exit_code == 0, result.output
     flat = " ".join(result.output.split())
     assert "aeat app ledger categories" in flat
     assert "actividad_economica" in flat
     assert "arrendamiento_local" in flat
+    assert "Royalties" in flat
+    assert "LIRPF Art. 27" in flat
+    assert "Art. 25.4" in flat
+    assert "capital mobiliario" in flat
+    assert "not the author" in flat
 
 
 def test_invalid_category_error_shows_a_concrete_valid_example(
