@@ -17,6 +17,8 @@ related:
   - '[[2026-06-26-binding-resolver-contract-unification-P02-S09]]'
   - '[[2026-06-26-binding-resolver-contract-unification-P03-S10]]'
   - '[[2026-06-26-binding-resolver-contract-unification-P03-S11]]'
+  - '[[2026-06-26-binding-resolver-contract-unification-P03-S20]]'
+  - '[[2026-06-26-binding-resolver-contract-unification-P03-S21]]'
   - '[[2026-06-26-binding-resolver-contract-unification-P04-S15]]'
   - '[[2026-06-26-binding-resolver-contract-unification-P04-S16]]'
   - '[[2026-06-26-binding-resolver-contract-unification-P04-S17]]'
@@ -56,6 +58,8 @@ Auto-generated index of all documents tagged with `#binding-resolver-contract-un
 - `2026-06-26-binding-resolver-contract-unification-P01-S04` - Drop the deleted envelopes from the aggregation package __all__ and lazy __getattr__ re-export surface in the same commits that delete them
 - `2026-06-26-binding-resolver-contract-unification-P03-S10` - Author a counterpart 347/349 ModeloSourceResolver returning CalculationSourceResolution that delegates to aggregate_counterpart_347/349, behaviour-preserving against the existing counterpart suites
 - `2026-06-26-binding-resolver-contract-unification-P03-S11` - Author a foreign-assets 720 ModeloSourceResolver returning CalculationSourceResolution that delegates to aggregate_foreign_assets_720, behaviour-preserving against the existing 720 suites
+- `2026-06-26-binding-resolver-contract-unification-P03-S20` - Foreign-assets 720 correctness gate follow-up
+- `2026-06-26-binding-resolver-contract-unification-P03-S21` - Counterpart 347/349 correctness gate follow-up
 
 ### plan
 
