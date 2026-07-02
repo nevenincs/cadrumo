@@ -2725,6 +2725,10 @@ cli:
   contract:
     app_help: 'Emit the operator capability manifest: roots, command families, lifecycle,
       and result schemas.'
+    schema_module_load_failed: 'Capability surface degraded: the result-schema module
+      ''{module}'' failed to load ({error}); the commands it registers are absent
+      from this manifest. This is usually an unrelated in-flight code change, not
+      a data problem.'
     summary_commands: 'Registered commands: {count}'
     summary_families: 'Command families: {count}'
     summary_heading: Operator surface manifest

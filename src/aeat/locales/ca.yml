@@ -2899,6 +2899,10 @@ cli:
   contract:
     app_help: 'Emet el manifest de capacitats de l''operador: arrels, families d''ordres,
       cicle de vida i esquemes de resultat.'
+    schema_module_load_failed: 'Superfície de capacitats degradada: el mòdul d''esquema
+      de resultats ''{module}'' no s''ha pogut carregar ({error}); les ordres que
+      registra no apareixen en aquest manifest. Sol ser un canvi de codi en curs no
+      relacionat, no un problema de dades.'
     summary_commands: 'Ordres registrades: {count}'
     summary_families: 'Families d''ordres: {count}'
     summary_heading: Manifest de la superficie de l'operador
