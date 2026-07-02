@@ -49,6 +49,7 @@ from ._models import (
     LexicalSearchHit,
     SimilarChunk,
 )
+from ._query_embed import QueryEmbedder, search_extra_available, search_model_cache_dir
 
 __all__ = [
     "POTION_MODEL_ID",
@@ -63,6 +64,7 @@ __all__ = [
     "CorpusSearchError",
     "CorpusSearchInputError",
     "LexicalSearchHit",
+    "QueryEmbedder",
     "SimilarChunk",
     "build_lexical_index",
     "bundled_citation_lookup",
@@ -71,5 +73,7 @@ __all__ = [
     "iter_corpus_chunks",
     "load_embeddings",
     "more_like_this",
+    "search_extra_available",
     "search_lexical",
+    "search_model_cache_dir",
 ]
