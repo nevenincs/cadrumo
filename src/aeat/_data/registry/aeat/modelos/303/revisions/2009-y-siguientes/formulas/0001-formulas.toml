@@ -1,0 +1,232 @@
+[[revisions.2009-y-siguientes.formulas]]
+id = "modelo-303-iva-cuota-devengada-total"
+target_casilla_id = "iva.cuota-devengada-total"
+rounding = "money-2"
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025", "aeat-modelo-303-procedure", "boe-modelo-303-2008-form"]
+
+[[revisions.2009-y-siguientes.formulas.source_citations]]
+source_ref = "aeat-modelo-303-procedure"
+required_text = ["modelo 303"]
+
+[revisions.2009-y-siguientes.formulas.expression]
+op = "add"
+
+[[revisions.2009-y-siguientes.formulas.expression.args]]
+casilla_id = "iva.repercutido.general"
+
+[[revisions.2009-y-siguientes.formulas.expression.args]]
+casilla_id = "iva.repercutido.reducido"
+
+[[revisions.2009-y-siguientes.formulas.expression.args]]
+casilla_id = "iva.repercutido.super-reducido"
+
+[[revisions.2009-y-siguientes.formulas.expression.args]]
+casilla_id = "iva.autorepercutido.intracomunitaria"
+
+[[revisions.2009-y-siguientes.formulas.expression.args]]
+casilla_id = "iva.autorepercutido.interior.devengado"
+
+[[revisions.2009-y-siguientes.formulas]]
+id = "modelo-303-iva-cuota-deducible-total"
+target_casilla_id = "iva.cuota-deducible-total"
+rounding = "money-2"
+legal_refs = ["ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025", "aeat-modelo-303-procedure", "boe-modelo-303-2008-form"]
+
+[[revisions.2009-y-siguientes.formulas.source_citations]]
+source_ref = "aeat-modelo-303-procedure"
+required_text = ["modelo 303"]
+
+[revisions.2009-y-siguientes.formulas.expression]
+op = "add"
+
+[[revisions.2009-y-siguientes.formulas.expression.args]]
+casilla_id = "iva.soportado.interiores"
+
+[[revisions.2009-y-siguientes.formulas.expression.args]]
+casilla_id = "iva.soportado.importaciones"
+
+[[revisions.2009-y-siguientes.formulas.expression.args]]
+casilla_id = "iva.autorepercutido.intracomunitaria"
+
+[[revisions.2009-y-siguientes.formulas.expression.args]]
+casilla_id = "iva.autorepercutido.interior.deducible"
+
+[[revisions.2009-y-siguientes.formulas]]
+id = "modelo-303-iva-resultado-regimen-general"
+target_casilla_id = "iva.resultado-regimen-general"
+rounding = "money-2"
+# Orden EHA/3786/2008 art. 1: box [46] = [27] - [45].  The M303 printed form labels this cell
+# "Resultado régimen general (27 - 45)".  Casilla 27 = Total cuota devengada (LIVA art. 88);
+# casilla 45 = Total a deducir (LIVA arts. 92-94).  Source: boe-modelo-303-2008-form (Orden
+# EHA/3786/2008 form spec) and aeat-modelo-303-procedure (AEAT instrucciones de cumplimentación).
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025", "boe-modelo-303-2008-form", "aeat-modelo-303-procedure"]
+
+[[revisions.2009-y-siguientes.formulas.source_citations]]
+source_ref = "aeat-modelo-303-procedure"
+required_text = ["modelo 303"]
+
+[[revisions.2009-y-siguientes.formulas.source_citations]]
+source_ref = "aeat-modelo-303-procedure"
+required_text = ["modelo 303"]
+
+[revisions.2009-y-siguientes.formulas.expression]
+op = "subtract"
+
+[[revisions.2009-y-siguientes.formulas.expression.args]]
+casilla_id = "iva.cuota-devengada-total"
+
+[[revisions.2009-y-siguientes.formulas.expression.args]]
+casilla_id = "iva.cuota-deducible-total"
+
+[[revisions.2009-y-siguientes.formulas]]
+id = "modelo-303-iva-prorrata-porcentaje"
+target_casilla_id = "iva.prorrata-porcentaje"
+rounding = "integer"
+legal_refs = ["ley-37-1992:art-104", "ley-37-1992:art-102", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025", "aeat-modelo-303-procedure", "boe-modelo-303-2008-form"]
+
+[[revisions.2009-y-siguientes.formulas.source_citations]]
+source_ref = "aeat-modelo-303-procedure"
+required_text = ["modelo 303"]
+
+[revisions.2009-y-siguientes.formulas.expression]
+op = "if_then_else"
+
+[[revisions.2009-y-siguientes.formulas.expression.args]]
+op = "greater_than"
+
+[[revisions.2009-y-siguientes.formulas.expression.args.args]]
+casilla_id = "iva.prorrata-volumen-total"
+
+[[revisions.2009-y-siguientes.formulas.expression.args.args]]
+literal = "0"
+
+[[revisions.2009-y-siguientes.formulas.expression.args]]
+op = "divide"
+
+[[revisions.2009-y-siguientes.formulas.expression.args.args]]
+op = "multiply"
+
+[[revisions.2009-y-siguientes.formulas.expression.args.args.args]]
+casilla_id = "iva.prorrata-volumen-con-derecho"
+
+[[revisions.2009-y-siguientes.formulas.expression.args.args.args]]
+literal = "100"
+
+[[revisions.2009-y-siguientes.formulas.expression.args.args]]
+casilla_id = "iva.prorrata-volumen-total"
+
+[[revisions.2009-y-siguientes.formulas.expression.args]]
+literal = "0"
+
+[[revisions.2009-y-siguientes.formulas]]
+id = "modelo-303-compensacion-aplicada-periodo"
+target_casilla_id = "iva.compensacion-aplicada-periodo"
+rounding = "money-2"
+legal_refs = ["ley-37-1992:art-99", "ley-37-1992:art-115", "ley-37-1992:art-116", "rd-1624-1992:art-71", "rd-1624-1992:art-29", "rd-1624-1992:art-30", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025", "aeat-modelo-303-procedure", "boe-modelo-303-2008-form"]
+
+[[revisions.2009-y-siguientes.formulas.source_citations]]
+source_ref = "aeat-modelo-303-procedure"
+required_text = ["modelo 303"]
+
+[revisions.2009-y-siguientes.formulas.expression]
+op = "min"
+
+[[revisions.2009-y-siguientes.formulas.expression.args]]
+casilla_id = "iva.compensacion-pendiente-periodos-anteriores"
+
+[[revisions.2009-y-siguientes.formulas.expression.args]]
+op = "max"
+
+[[revisions.2009-y-siguientes.formulas.expression.args.args]]
+literal = "0"
+
+[[revisions.2009-y-siguientes.formulas.expression.args.args]]
+casilla_id = "iva.resultado-regimen-general"
+
+[[revisions.2009-y-siguientes.formulas]]
+id = "modelo-303-compensacion-pendiente-periodos-posteriores"
+target_casilla_id = "iva.compensacion-pendiente-periodos-posteriores"
+rounding = "money-2"
+legal_refs = ["ley-37-1992:art-99", "ley-37-1992:art-115", "ley-37-1992:art-116", "rd-1624-1992:art-71", "rd-1624-1992:art-29", "rd-1624-1992:art-30", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025", "aeat-modelo-303-procedure", "boe-modelo-303-2008-form"]
+
+[[revisions.2009-y-siguientes.formulas.source_citations]]
+source_ref = "aeat-modelo-303-procedure"
+required_text = ["modelo 303"]
+
+[revisions.2009-y-siguientes.formulas.expression]
+op = "subtract"
+
+[[revisions.2009-y-siguientes.formulas.expression.args]]
+casilla_id = "iva.compensacion-pendiente-periodos-anteriores"
+
+[[revisions.2009-y-siguientes.formulas.expression.args]]
+casilla_id = "iva.compensacion-aplicada-periodo"
+
+[[revisions.2009-y-siguientes.formulas]]
+id = "modelo-303-iva-resultado"
+target_casilla_id = "iva.resultado"
+rounding = "money-2"
+legal_refs = ["ley-37-1992:art-99", "ley-37-1992:art-115", "ley-37-1992:art-116", "rd-1624-1992:art-71", "rd-1624-1992:art-29", "rd-1624-1992:art-30", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025", "aeat-modelo-303-procedure", "boe-modelo-303-2008-form"]
+
+[[revisions.2009-y-siguientes.formulas.source_citations]]
+source_ref = "aeat-modelo-303-procedure"
+required_text = ["modelo 303"]
+
+[revisions.2009-y-siguientes.formulas.expression]
+op = "subtract"
+
+[[revisions.2009-y-siguientes.formulas.expression.args]]
+casilla_id = "iva.resultado-regimen-general"
+
+[[revisions.2009-y-siguientes.formulas.expression.args]]
+casilla_id = "iva.compensacion-aplicada-periodo"
+
+[[revisions.2009-y-siguientes.formulas]]
+id = "modelo-303-compensacion-disponible-fin-periodo"
+target_casilla_id = "iva.compensacion-disponible-fin-periodo"
+rounding = "money-2"
+legal_refs = ["ley-37-1992:art-99", "ley-37-1992:art-115", "ley-37-1992:art-116", "rd-1624-1992:art-71", "rd-1624-1992:art-29", "rd-1624-1992:art-30", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025", "aeat-modelo-303-procedure", "boe-modelo-303-2008-form"]
+
+[[revisions.2009-y-siguientes.formulas.source_citations]]
+source_ref = "aeat-modelo-303-procedure"
+required_text = ["modelo 303"]
+
+[revisions.2009-y-siguientes.formulas.expression]
+op = "add"
+
+[[revisions.2009-y-siguientes.formulas.expression.args]]
+casilla_id = "iva.compensacion-pendiente-periodos-posteriores"
+
+[[revisions.2009-y-siguientes.formulas.expression.args]]
+casilla_id = "iva.compensacion-generada-periodo"
+
+[[revisions.2009-y-siguientes.formulas]]
+id = "modelo-303-compensacion-generada-periodo"
+target_casilla_id = "iva.compensacion-generada-periodo"
+rounding = "money-2"
+legal_refs = ["ley-37-1992:art-99", "ley-37-1992:art-115", "ley-37-1992:art-116", "rd-1624-1992:art-71", "rd-1624-1992:art-29", "rd-1624-1992:art-30", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025", "aeat-modelo-303-procedure", "boe-modelo-303-2008-form"]
+
+[[revisions.2009-y-siguientes.formulas.source_citations]]
+source_ref = "aeat-modelo-303-procedure"
+required_text = ["modelo 303"]
+
+[revisions.2009-y-siguientes.formulas.expression]
+op = "max"
+
+[[revisions.2009-y-siguientes.formulas.expression.args]]
+literal = "0"
+
+[[revisions.2009-y-siguientes.formulas.expression.args]]
+op = "negate"
+
+[[revisions.2009-y-siguientes.formulas.expression.args.args]]
+casilla_id = "iva.resultado"
