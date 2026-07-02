@@ -38,7 +38,7 @@ from ._apoderado import apoderado_app, register_apoderado_commands
 from ._auth import auth_app
 from ._auth_diagnostics import auth_diagnostics_app
 from ._bucket_archive import register_bucket_archive_commands
-from ._bucket_history import _parse_bucket_event_types, register_bucket_history_commands
+from ._bucket_history import register_bucket_history_commands
 from ._custody import register_custody_commands
 from ._descendiente import register_descendiente_commands
 from ._errors import ConfigBoundaryError as _ConfigBoundaryError
@@ -1219,7 +1219,6 @@ from ._google import google_app as _google_app
 app.add_typer(_google_app, name="google")
 
 __all__ = [
-    "_parse_bucket_event_types",
     "apoderado_app",
     "app",
     "auth_app",

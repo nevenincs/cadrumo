@@ -29,10 +29,6 @@ from .. import (
     LiveIvaReadStatus,
     LiveIvaReadSurface,
     LiveIvaSurfaceTimeoutError,
-    _aggregate_iva_compensation_history_reports,
-    _await_live_iva_surface,
-    _filed_history_surface_timeout_ms,
-    _suppress_live_iva_playwright_cancellation_noise,
     build_iva_remote_state_acquisition_report,
     capture_iva_compensation_history,
     capture_iva_compensation_wallet,
@@ -42,6 +38,12 @@ from .. import (
     load_iva_remote_state,
     load_iva_remote_state_acquisition_manifest,
     persist_iva_remote_state_acquisition_report,
+)
+from .._iva_remote_state import (
+    _aggregate_iva_compensation_history_reports,
+    _await_live_iva_surface,
+    _filed_history_surface_timeout_ms,
+    _suppress_live_iva_playwright_cancellation_noise,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
