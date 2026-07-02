@@ -20,10 +20,8 @@ the CLI and surface the discrepancy.
 
 ## Do not present an under-declaration as complete
 
-A verify that returns `verified_complete` with zero findings on positive income is
-suspect, not reassuring (see the safety rule). More broadly: if the taxpayer's
-declared activity is positive but the tax due is zero, treat that as a question to
-resolve, not a result to celebrate. The honest answer names why the tax is zero.
+See the honest-declaration rule: a `verified_complete` result with zero findings
+on positive income is a question to resolve, never a result to celebrate.
 
 ## Use the ledger as the source of truth, not your summary of it
 

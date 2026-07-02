@@ -1,19 +1,15 @@
 """CLI root landing renderer for the bare ``aeat`` invocation.
 
 Provides the root landing text helper
-:func:`~aeat.entrypoints.cli._root_landing.render_cli_root_landing_lines`, which
-converts the
-:class:`~aeat.application.operator_surface.RootLandingReport` built by
-:func:`~aeat.application.operator_surface.build_root_landing_report` into an
-ordered tuple of i18n-translated strings ready for
-:func:`~aeat.entrypoints.cli._common._emit_envelope`. The matching JSON payload
-is :class:`~aeat.entrypoints.cli._root_payloads.RootStatusResult`; this module owns
-only the text-mode lines for the same ``root.status`` surface.
+:func:`render_cli_root_landing_lines`, which converts the
+:class:`RootLandingReport` built by :func:`build_root_landing_report` into an
+ordered tuple of i18n-translated strings ready for :func:`_emit_envelope`. The
+matching JSON payload is :class:`RootStatusResult`; this module owns only the
+text-mode lines for the same ``root.status`` surface.
 
 The renderer is presentation-only: active-profile discovery, bucket-session
-checks, and overview fallback selection live upstream in
-:mod:`~aeat.entrypoints.cli` and :mod:`~aeat.application.operator_surface`. The
-helper functions in this module are private; only
+checks, and overview fallback selection live upstream in the root callback and
+operator-surface facade. The helper functions in this module are private; only
 ``render_cli_root_landing_lines`` is part of the public surface.
 """
 
@@ -29,10 +25,10 @@ def render_cli_root_landing_lines(landing: RootLandingReport) -> tuple[str, ...]
     """Render ``landing`` as the text half of the ``root.status`` envelope.
 
     The caller supplies an already-projected
-    :class:`~aeat.application.operator_surface.RootLandingReport`; this function
-    only selects locale keys and interpolates the projected profile label. It
-    does not inspect storage, resolve profiles, or decide whether the bare root
-    should render the landing card or the overview status report.
+    :class:`RootLandingReport`; this function only selects locale keys and
+    interpolates the projected profile label. It does not inspect storage,
+    resolve profiles, or decide whether the bare root should render the landing
+    card or the overview status report.
     """
     lines: list[str] = [
         tr("cli.root.landing.headline"),

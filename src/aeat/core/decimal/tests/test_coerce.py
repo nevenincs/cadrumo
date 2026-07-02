@@ -69,6 +69,13 @@ def test_coerce_decimal_policy_cases() -> None:
         if default is not None:
             assert result is not None, label
 
+    passthrough = Decimal("3.14")
+    assert coerce_decimal(passthrough) is passthrough
+
+    for value in ("Inf", "-Inf", "Infinity", "NaN"):
+        result = coerce_decimal(value)
+        assert isinstance(result, Decimal), value
+
 
 def test_coerce_decimal_debug_log_omits_raw_malformed_value(
     caplog: pytest.LogCaptureFixture,
@@ -88,17 +95,3 @@ def test_coerce_decimal_debug_log_omits_raw_malformed_value(
     assert getattr(relevant[0], "default_is_none", None) is True
     assert getattr(relevant[0], "error_type", None) == "InvalidOperation"
     assert raw_value not in relevant[0].getMessage()
-
-
-def test_coerce_decimal_passthrough_is_same_object() -> None:
-    """Decimal inputs are returned without wrapping in a new Decimal instance."""
-    d = Decimal("3.14")
-    result = coerce_decimal(d)
-    assert result is d
-
-
-def test_coerce_decimal_special_tokens_parsed() -> None:
-    """Decimal's special tokens (Inf, NaN) are valid inputs and should parse."""
-    for value in ("Inf", "-Inf", "Infinity", "NaN"):
-        result = coerce_decimal(value)
-        assert isinstance(result, Decimal), value

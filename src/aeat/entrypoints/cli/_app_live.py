@@ -1,11 +1,14 @@
 """Explicit read-only AEAT live observation CLI commands.
 
-This module wires the live filed-declaration, IVA-wallet, and subgroup command
-families to :mod:`~aeat.application.live` services, then emits registered
-:mod:`~aeat.entrypoints.cli._app_live_payloads` result schemas through
-:func:`~aeat.entrypoints.cli._common._emit_envelope`. The commands collect or
-render local evidence only; live submission, payment, acknowledgement, and
-representative write actions remain outside this CLI surface.
+This module wires filed-declaration commands through :func:`list_filed_data`,
+:func:`list_filed_data_bulk`, :func:`capture_filed_data`,
+:func:`capture_filed_data_bulk`, and :func:`capture_source_filed_data`; it also
+delegates IVA-wallet and subgroup command families to live application services.
+It emits registered payload schemas such as :class:`FiledListResult`,
+:class:`FiledCaptureResult`, and :class:`FiledCaptureSourcesResult` through
+:func:`_emit_envelope`. The commands collect or render local evidence only; live
+submission, payment, acknowledgement, and representative write actions remain
+outside this CLI surface.
 """
 
 from __future__ import annotations
@@ -206,13 +209,13 @@ def iva_wallet_pull_cmd(
         ),
     ] = None,
 ) -> None:
-    """Pull the authenticated AEAT IVA wallet into an :class:`~aeat.application.live.IvaWalletCaptureReport`.
+    """Pull the authenticated AEAT IVA wallet into an :class:`IvaWalletCaptureReport`.
 
-    The command delegates to
-    :func:`~aeat.application.live.capture_iva_compensation_wallet`. It can
-    trigger the configured authentication provider, including Cl@ve Móvil
-    manual approval, but the only remote action is the guarded wallet read
-    query; reconciliation and blocking decisions are profile-local evidence.
+    Delegates to :func:`capture_iva_compensation_wallet` and emits
+    :class:`IvaWalletPullResult`. The command can trigger the configured
+    authentication provider, including Cl@ve Móvil manual approval, but the only
+    remote action is the guarded wallet read query; reconciliation and blocking
+    decisions are profile-local evidence.
     """
     from ...application.live import capture_iva_compensation_wallet
 
@@ -281,11 +284,12 @@ def iva_wallet_history_cmd(
         typer.Option("--as-of-year", min=2000, max=2099, help=tr("cli.app.live.iva_wallet.as_of_year_help")),
     ] = None,
 ) -> None:
-    """List stored :class:`~aeat.application.live.IvaCompensationHistoryReport` evidence.
+    """List stored :class:`IvaCompensationHistoryReport` evidence.
 
-    This local-only read reloads compensation history, carry-forward lots, and
-    wallet authority decisions from secure profile storage without contacting
-    AEAT.
+    Delegates to :func:`list_iva_compensation_history` and emits
+    :class:`IvaWalletHistoryResult`. This local-only read reloads compensation
+    history, carry-forward lots, and wallet authority decisions from secure
+    profile storage without contacting AEAT.
     """
     from ...application.live import list_iva_compensation_history
 
@@ -467,11 +471,13 @@ def iva_wallet_pull_history_cmd(
         ),
     ] = Path("var/aeat/live/iva-compensation-history"),
 ) -> None:
-    """Pull Modelo 303 filed history into an :class:`~aeat.application.live.IvaCompensationHistoryCaptureReport`.
+    """Pull Modelo 303 filed history into an :class:`IvaCompensationHistoryCaptureReport`.
 
-    The live read captures filed-history evidence, promotes calculation
-    observations, then verifies the secure profile-local reload count. It does
-    not query the wallet/cartera surface or submit AEAT form choices.
+    Delegates to :func:`capture_iva_compensation_history` and emits
+    :class:`IvaWalletCaptureHistoryResult`. The live read captures filed-history
+    evidence, promotes calculation observations, then verifies the secure
+    profile-local reload count. It does not query the wallet/cartera surface or
+    submit AEAT form choices.
     """
     from ...application.live import capture_iva_compensation_history
 
@@ -553,13 +559,13 @@ def iva_wallet_pull_evidence_cmd(
 ) -> None:
     """Capture filed-history and wallet/cartera evidence as an IVA remote-state report.
 
-    The application service returns a redacted
-    :class:`~aeat.application.live.IvaRemoteStateAcquisitionReport`, persists a
-    :class:`~aeat.application.live.IvaRemoteStateAcquisitionManifest`, and keeps
-    :class:`~aeat.application.live.LiveIvaReadOutcome` rows separate per surface.
-    Filed-history evidence can therefore survive a wallet/cartera failure and
-    vice versa. The command never performs AEAT filing, payment, or
-    representative submission actions.
+    Delegates to :func:`capture_iva_remote_state`, emits
+    :class:`IvaWalletPullEvidenceResult`, returns a redacted
+    :class:`IvaRemoteStateAcquisitionReport`, persists a
+    :class:`IvaRemoteStateAcquisitionManifest`, and keeps
+    :class:`LiveIvaReadOutcome` rows separate per surface. Filed-history evidence
+    can therefore survive a wallet/cartera failure and vice versa. The command
+    never performs AEAT filing, payment, or representative submission actions.
     """
     from ...application.live import capture_iva_remote_state
 
@@ -852,14 +858,14 @@ def filed_list_cmd(
         typer.Option("--to-year", min=2000, max=2099, help=tr("cli.app.live.to_year_help")),
     ] = None,
 ) -> None:
-    """List :class:`~aeat.application.live.FiledDataListingRow` register rows.
+    """List :class:`FiledDataListingRow` register rows.
 
     The command reads AEAT's declaration register and emits
-    :class:`~aeat.entrypoints.cli._app_live_payloads.FiledListResult` without
-    downloading justificantes, submitted files, or declaration-copy artefacts.
-    All filters are optional refinements: omitting ``--modelo`` iterates every
-    registry-configured modelo, and omitted year bounds default to the current
-    calendar year.
+    :class:`FiledListResult` without downloading justificantes, submitted files,
+    or declaration-copy artefacts. Single-modelo reads delegate to
+    :func:`list_filed_data`; omitted ``--modelo`` uses :func:`list_filed_data_bulk`
+    across every registry-configured modelo. Omitted year bounds default to the
+    current calendar year.
     """
     from datetime import date as _date
 
@@ -1019,12 +1025,12 @@ def filed_pull_cmd(
     """Capture filed-declaration observations through the read-only AEAT register.
 
     Single-modelo mode delegates to
-    :func:`~aeat.application.live.capture_filed_data`; range mode delegates to
-    :func:`~aeat.application.live.capture_filed_data_bulk`. Both flows persist
-    encrypted filed observations and artefact references, register parsed
+    :func:`capture_filed_data`; range mode delegates to
+    :func:`capture_filed_data_bulk`. Both flows emit :class:`FiledCaptureResult`,
+    persist encrypted filed observations and artefact references, register parsed
     justificante metadata when available, and only stamp local
-    :class:`~aeat.domain.modelos.ModeloRecord` evidence when an existing current
-    filing record matches.
+    :class:`ModeloRecord` evidence when an existing current filing record
+    matches.
     """
     from ._app_live_payloads import FiledCaptureFailurePayload, FiledCaptureResult
 
@@ -1155,13 +1161,12 @@ def filed_pull_sources_cmd(
         ),
     ] = None,
 ) -> None:
-    """Capture registry-selected source observations for a target :class:`~aeat.core.Period`.
+    """Capture registry-selected source observations for a target :class:`Period`.
 
-    Delegates to :func:`~aeat.application.live.capture_source_filed_data`, which
-    resolves dependencies from a validated registry snapshot before reading
-    prior filed declarations. The emitted
-    :class:`~aeat.entrypoints.cli._app_live_payloads.FiledCaptureSourcesResult`
-    is local evidence only; the command does not submit or mutate AEAT state.
+    Delegates to :func:`capture_source_filed_data`, which resolves dependencies
+    from a validated registry snapshot before reading prior filed declarations.
+    The emitted :class:`FiledCaptureSourcesResult` is local evidence only; the
+    command does not submit or mutate AEAT state.
     """
     from ._app_live_payloads import FiledCaptureSourcesResult
 

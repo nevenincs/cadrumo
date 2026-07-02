@@ -326,8 +326,10 @@ aggregation:
         bucket de agregación solicitado.
       candidate_outside_period: 'Error interno: el candidato IVA cae fuera del periodo
         de agregacion.'
-      domestic_counterparty_on_intra_community_transaction: 'Los terceros españoles no son válidos para operaciones intracomunitarias.'
-      eu_member_state_on_export_transaction: 'Las operaciones de exportación o asimiladas no pueden llevar un Estado miembro de la UE; recibido %{member_state}.'
+      domestic_counterparty_on_intra_community_transaction: Los terceros españoles
+        no son válidos para operaciones intracomunitarias.
+      eu_member_state_on_export_transaction: Las operaciones de exportación o asimiladas
+        no pueden llevar un Estado miembro de la UE; recibido %{member_state}.
       unsupported_iva_category: 'Error interno: categoria IVA no admitida para la
         agregacion.'
   modelo_bindings:
@@ -1241,6 +1243,9 @@ application:
         %{observed_ref}, resuelta %{resolved_ref}.'
   wizard:
     errors:
+      command_input_invalid: 'Los datos del perfil no superaron la validación: %{details}'
+      command_input_invalid_fallback: uno o más campos del perfil no superaron la
+        validación
       create_missing_filing_baseline: 'A la creación del perfil le faltan datos de
         identidad para presentar modelos. Añade estos flags y vuelve a ejecutar el
         comando: %{missing_flags}.'
@@ -1256,8 +1261,6 @@ application:
       quiet_missing_flags: 'A esta ejecución con --quiet le faltan datos obligatorios.
         Añade estos flags y vuelve a ejecutar el comando: %{missing_flags}. O ejecútalo
         sin --quiet desde una terminal interactiva para usar el asistente guiado.'
-      command_input_invalid: 'Los datos del perfil no superaron la validación: %{details}'
-      command_input_invalid_fallback: 'uno o más campos del perfil no superaron la validación'
     next_hint:
       modelo_work_create: aeat app modelo work create
     notices:
@@ -1660,9 +1663,13 @@ cli:
           temporales opcionales, sin mutar el estado
         unknown_keys: 'Clave(s) de --binding desconocida(s) {keys}; vinculaciones
           conocidas para {code}@{revision} ({period}): {suggestion}.'
+        unscoped_revision_suggestion: Antes de copiar ids en work calculate, vuelve
+          a ejecutar con --modelo MODELO --year YEAR --period PERIOD para la unidad
+          de trabajo destino.
+        unscoped_revision_warning: La lista de vinculaciones no esta acotada por %{missing_filters};
+          puede incluir ids de vinculaciones de una revision que no coincide con la
+          unidad de trabajo usada por work calculate.
         year_help: Ejercicio fiscal del modelo (p. ej. 2026)
-        unscoped_revision_suggestion: 'Antes de copiar ids en work calculate, vuelve a ejecutar con --modelo MODELO --year YEAR --period PERIOD para la unidad de trabajo destino.'
-        unscoped_revision_warning: 'La lista de vinculaciones no esta acotada por %{missing_filters}; puede incluir ids de vinculaciones de una revision que no coincide con la unidad de trabajo usada por work calculate.'
       casilla:
         casilla_help: Id de casilla o numero impreso de casilla que se debe describir
           (p. ej. 0596).
@@ -3611,7 +3618,8 @@ cli:
     period_help: 'Periodo de declaración como token AEAT: 1T-4T (trimestres), 0A (anual),
       01-12 (meses). Combínelo con --year para elegir el año.'
     post_filing:
-      pending: '%{count} evento(s) posteriores a la presentación de AEAT requieren atención: %{kinds}. Revísalos con ''aeat app live notifications list''.'
+      pending: '%{count} evento(s) posteriores a la presentación de AEAT requieren
+        atención: %{kinds}. Revísalos con ''aeat app live notifications list''.'
     status:
       drafts_empty: No se encontraron borradores de declaraciones guardados.
       drafts_empty_with_work_units: No hay borradores de declaraciones guardados;
@@ -5420,14 +5428,14 @@ wizard:
         help: Fecha en que el trabajador optó por el régimen de impatriados (AAAA-MM-DD).
           Solo cuando irpf-special-regime es "impatriado". RIRPF Art. 116. El régimen
           expira al finalizar el 6.º año natural.
+      iva-group-dominant-entity-enrolled:
+        help: Alta como entidad dominante de un grupo de IVA
+      iva-group-member-enrolled:
+        help: Alta como entidad miembro de un grupo de IVA
       iva-intracommunity-operations-exceed-50000-eur:
         help: Operaciones intracomunitarias superan 50.000 EUR
       iva-oss-enrolled:
         help: Alta en OSS
-      iva-group-member-enrolled:
-        help: Alta como entidad miembro de un grupo de IVA
-      iva-group-dominant-entity-enrolled:
-        help: Alta como entidad dominante de un grupo de IVA
       iva-redeme-enrolled:
         help: Si el contribuyente está inscrito en REDEME
       iva-regime:
@@ -5565,14 +5573,14 @@ wizard:
 
       Después de guardar, revisa el progreso con `aeat config profile status`.'
     iva:
+      iva-group-dominant-entity-enrolled:
+        prompt: Alta como entidad dominante de un grupo de IVA
+      iva-group-member-enrolled:
+        prompt: Alta como entidad miembro de un grupo de IVA
       iva-intracommunity-operations-exceed-50000-eur:
         prompt: Operaciones intracomunitarias superan 50.000 EUR
       iva-oss-enrolled:
         prompt: Alta en OSS
-      iva-group-member-enrolled:
-        prompt: Alta como entidad miembro de un grupo de IVA
-      iva-group-dominant-entity-enrolled:
-        prompt: Alta como entidad dominante de un grupo de IVA
       iva-redeme-enrolled:
         prompt: Inscrito en REDEME (Registro de Devolución Mensual del IVA)
       iva-regime:

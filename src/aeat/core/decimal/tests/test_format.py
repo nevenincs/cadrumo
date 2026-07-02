@@ -58,8 +58,5 @@ def test_format_decimal_policy_cases() -> None:
             result = format_decimal(value, normalize=normalize, none_value=none_value)
         assert result == expected, label
 
-
-def test_format_decimal_none_raises_by_default() -> None:
-    """When none_value is not provided, passing None is a programming error."""
     with pytest.raises(DecimalFormatError, match="none_value was not provided"):
         format_decimal(None)

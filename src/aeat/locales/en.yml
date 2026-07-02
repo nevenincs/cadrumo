@@ -293,8 +293,10 @@ aggregation:
         aggregation bucket.
       candidate_outside_period: 'Internal error: IVA candidate falls outside the aggregation
         period.'
-      domestic_counterparty_on_intra_community_transaction: 'Spanish counterparties are not valid for intra-community transactions.'
-      eu_member_state_on_export_transaction: 'Export or export-assimilated operations must not carry an EU member state; got %{member_state}.'
+      domestic_counterparty_on_intra_community_transaction: Spanish counterparties
+        are not valid for intra-community transactions.
+      eu_member_state_on_export_transaction: Export or export-assimilated operations
+        must not carry an EU member state; got %{member_state}.
       unsupported_iva_category: 'Internal error: unsupported IVA category for aggregation.'
   modelo_bindings:
     errors:
@@ -1153,6 +1155,8 @@ application:
         resolved %{resolved_ref}.'
   wizard:
     errors:
+      command_input_invalid: 'The profile details are invalid: %{details}'
+      command_input_invalid_fallback: one or more profile fields failed validation
       create_missing_filing_baseline: 'Profile creation is missing filing identity
         details. Add these flags and run the command again: %{missing_flags}.'
       edit_missing_filing_baseline: 'This profile edit would leave filing identity
@@ -1167,8 +1171,6 @@ application:
       quiet_missing_flags: 'This --quiet run is missing required details. Add these
         flags and run the command again: %{missing_flags}. Or run it without --quiet
         from an interactive terminal to use the guided setup.'
-      command_input_invalid: 'The profile details are invalid: %{details}'
-      command_input_invalid_fallback: 'one or more profile fields failed validation'
     next_hint:
       modelo_work_create: aeat app modelo work create
     notices:
@@ -1545,9 +1547,12 @@ cli:
           overrides, without mutating state
         unknown_keys: 'Unknown --binding key(s) {keys}; known bindings for {code}@{revision}
           ({period}): {suggestion}.'
+        unscoped_revision_suggestion: Before copying ids into work calculate, rerun
+          with --modelo MODELO --year YEAR --period PERIOD for the target work unit.
+        unscoped_revision_warning: The binding list is not scoped by %{missing_filters};
+          it may include binding ids from a revision that does not match the work
+          unit used by work calculate.
         year_help: Tax year of the modelo (e.g. 2026)
-        unscoped_revision_suggestion: 'Before copying ids into work calculate, rerun with --modelo MODELO --year YEAR --period PERIOD for the target work unit.'
-        unscoped_revision_warning: 'The binding list is not scoped by %{missing_filters}; it may include binding ids from a revision that does not match the work unit used by work calculate.'
       casilla:
         casilla_help: Casilla id or printed casilla number to describe (e.g. 0596).
         help: Show the label, legal grounding, input kind, and formula for one casilla
@@ -3383,7 +3388,8 @@ cli:
     period_help: 'Filing period as an AEAT token: 1T-4T (quarters), 0A (annual), 01-12
       (months). Combine with --year to choose the year.'
     post_filing:
-      pending: '%{count} AEAT post-filing event(s) require attention: %{kinds}. Review them with ''aeat app live notifications list''.'
+      pending: '%{count} AEAT post-filing event(s) require attention: %{kinds}. Review
+        them with ''aeat app live notifications list''.'
     status:
       drafts_empty: No saved declaration drafts were found.
       drafts_empty_with_work_units: No declaration drafts are saved - this is normal
@@ -5090,14 +5096,14 @@ wizard:
         help: Date the worker elected the inpatriate regime (YYYY-MM-DD). Only when
           irpf-special-regime is "impatriado". RIRPF Art. 116. The regime expires
           at the end of the 6th calendar year.
+      iva-group-dominant-entity-enrolled:
+        help: Enrolled as the dominant entity of an IVA group
+      iva-group-member-enrolled:
+        help: Enrolled as a member entity of an IVA group
       iva-intracommunity-operations-exceed-50000-eur:
         help: Intra-community operations exceed 50,000 EUR
       iva-oss-enrolled:
         help: Enrolled in OSS
-      iva-group-member-enrolled:
-        help: Enrolled as a member entity of an IVA group
-      iva-group-dominant-entity-enrolled:
-        help: Enrolled as the dominant entity of an IVA group
       iva-redeme-enrolled:
         help: Whether the taxpayer is registered in REDEME
       iva-regime:
@@ -5226,14 +5232,14 @@ wizard:
       residence, and family details if they apply. After saving, check progress with
       `aeat config profile status`.'
     iva:
+      iva-group-dominant-entity-enrolled:
+        prompt: Enrolled as an IVA group dominant entity
+      iva-group-member-enrolled:
+        prompt: Enrolled as an IVA group member entity
       iva-intracommunity-operations-exceed-50000-eur:
         prompt: Intra-community operations exceed 50,000 EUR
       iva-oss-enrolled:
         prompt: Enrolled in OSS
-      iva-group-member-enrolled:
-        prompt: Enrolled as an IVA group member entity
-      iva-group-dominant-entity-enrolled:
-        prompt: Enrolled as an IVA group dominant entity
       iva-redeme-enrolled:
         prompt: Registered in REDEME (monthly IVA refund register)
       iva-regime:

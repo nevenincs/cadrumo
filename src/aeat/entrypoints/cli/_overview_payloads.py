@@ -1,33 +1,26 @@
 """Typed ``--json`` payload schemas for overview CLI commands.
 
 Each class declared here is a strict
-:class:`~aeat.entrypoints.cli._schemas.OutputSchema` subclass and is decorated
-with :func:`~aeat.entrypoints.cli._schemas.register_schema` so the
-JSON-contract test suite can enumerate every overview-command surface this
+:class:`OutputSchema` subclass and is decorated with :func:`register_schema` so
+the JSON-contract test suite can enumerate every overview-command surface this
 module covers.
 
 Field sets match the production payload dicts constructed in
-:mod:`~aeat.entrypoints.cli._overview` at their emit sites. All sequence fields
-use ``list`` rather than ``tuple`` because ``model_dump(mode='json')``
-serialises pydantic tuples as JSON arrays, and the strict
-:class:`~aeat.entrypoints.cli._schemas.OutputSchema` base does not coerce lists
-to tuples on re-validation.
+:mod:`_overview` at their emit sites. All sequence fields use ``list`` rather
+than ``tuple`` because ``model_dump(mode='json')`` serialises pydantic tuples as
+JSON arrays, and the strict :class:`OutputSchema` base does not coerce lists to
+tuples on re-validation.
 
 The nested calendar payloads mirror the JSON form of
-:class:`~aeat.application.overview.OverviewCalendar`,
-:class:`~aeat.application.overview.OverviewCalendarEntry`,
-:class:`~aeat.application.overview.OverviewCalendarEvent`, and
-:class:`~aeat.application.overview.OverviewCalendarFilingEvidence`. Registered
-result schemas then wrap those fragments, plus read models returned by
-:func:`~aeat.application.overview.build_overview_status_report`,
-:func:`~aeat.application.overview.build_overview_agenda`,
-:func:`~aeat.application.overview.build_overview_backlog`, and
-:func:`~aeat.application.overview.build_overview_explain`, for the
-:class:`~aeat.entrypoints.cli._schemas.SchemaEnvelope` surface through
-:func:`~aeat.entrypoints.cli._common._emit_envelope`. The application overview
-package remains the source of business semantics; this module only documents
-and validates the transport shape emitted by
-:mod:`~aeat.entrypoints.cli._overview`.
+:class:`OverviewCalendar`, :class:`OverviewCalendarEntry`,
+:class:`OverviewCalendarEvent`, and
+:class:`OverviewCalendarFilingEvidence`. Registered result schemas then wrap
+those fragments, plus read models returned by
+:func:`build_overview_status_report`, :func:`build_overview_agenda`,
+:func:`build_overview_backlog`, and :func:`build_overview_explain`, for the
+:class:`SchemaEnvelope` surface through :func:`_emit_envelope`. The application
+overview package remains the source of business semantics; this module only
+documents and validates the transport shape emitted by :mod:`_overview`.
 """
 
 from __future__ import annotations
@@ -43,11 +36,9 @@ class OverviewDraftPayload(OutputSchema):
     """One draft row nested in a period-scoped overview status result.
 
     Nested in
-    :class:`~aeat.entrypoints.cli._overview_payloads.OverviewStatusResult`. The
-    full-status branch forwards
-    :class:`~aeat.application.overview.OverviewStatusReport` counters, while the
-    period branch expands the selected :class:`~aeat.domain.filing.ModeloDraft`
-    records into these small JSON rows.
+    :class:`OverviewStatusResult`. The full-status branch forwards
+    :class:`OverviewStatusReport` counters, while the period branch expands the
+    selected :class:`ModeloDraft` records into these small JSON rows.
     """
 
     draft_id: str
@@ -56,15 +47,13 @@ class OverviewDraftPayload(OutputSchema):
 
 
 class OverviewCalendarEntryPayload(OutputSchema):
-    """One :class:`~aeat.application.overview.OverviewCalendarEntry` row.
+    """One :class:`OverviewCalendarEntry` row.
 
-    The nested
-    :class:`~aeat.entrypoints.cli._overview_payloads.OverviewCalendarFilingEvidencePayload`
-    keeps filing
+    The nested :class:`OverviewCalendarFilingEvidencePayload` keeps filing
     evidence beside the legal deadline row rather than flattening it into the
     command result. Deadline fields remain the legal schedule from
-    :class:`~aeat.domain.deadlines.ModeloDeadline`; local and observed filing
-    state are carried separately on the evidence payload.
+    :class:`ModeloDeadline`; local and observed filing state are carried
+    separately on the evidence payload.
     """
 
     modelo: str
@@ -91,15 +80,12 @@ class OverviewCalendarEntryPayload(OutputSchema):
 class OverviewCalendarFilingEvidencePayload(OutputSchema):
     """Filing evidence nested in an overview calendar entry payload.
 
-    Nested in
-    :class:`~aeat.entrypoints.cli._overview_payloads.OverviewCalendarEntryPayload`.
-    Mirrors
-    :class:`~aeat.application.overview.OverviewCalendarFilingEvidence` and keeps
-    local filing state, observed AEAT submission state, and justificante
-    verification as separate JSON fields. That distinction preserves the
-    application rule that a local filed record is not an AEAT submission and an
-    observed submission is not a verified justificante until CSV evidence
-    proves the match.
+    Nested in :class:`OverviewCalendarEntryPayload`. Mirrors
+    :class:`OverviewCalendarFilingEvidence` and keeps local filing state,
+    observed AEAT submission state, and justificante verification as separate
+    JSON fields. That distinction preserves the application rule that a local
+    filed record is not an AEAT submission and an observed submission is not a
+    verified justificante until CSV evidence proves the match.
     """
 
     modelo: str | None = None
@@ -122,14 +108,12 @@ class OverviewCalendarFilingEvidencePayload(OutputSchema):
 
 
 class OverviewCalendarEventPayload(OutputSchema):
-    """One :class:`~aeat.application.overview.OverviewCalendarEvent` row.
+    """One :class:`OverviewCalendarEvent` row.
 
     Events are additive observations beside the legal calendar, such as filed
     declarations or notifications loaded from persisted live snapshots. Optional
     filing fields mirror the application event model without upgrading the
-    corresponding
-    :class:`~aeat.entrypoints.cli._overview_payloads.OverviewCalendarEntryPayload`
-    evidence row by
+    corresponding :class:`OverviewCalendarEntryPayload` evidence row by
     themselves.
     """
 
@@ -152,7 +136,7 @@ class OverviewCalendarEventPayload(OutputSchema):
 
 
 class OverviewCalendarWarningPayload(OutputSchema):
-    """One :class:`~aeat.application.overview.CalendarWarning` row.
+    """One :class:`CalendarWarning` row.
 
     Warnings identify profile keys whose missing values forced the calendar
     builder to use deadline-engine defaults. ``affected_modelos`` mirrors the
@@ -167,7 +151,7 @@ class OverviewCalendarWarningPayload(OutputSchema):
 
 
 class OverviewCalendarRangePayload(OutputSchema):
-    """JSON form of :class:`~aeat.application.overview.OverviewCalendarRange`.
+    """JSON form of :class:`OverviewCalendarRange`.
 
     The application range is inclusive; the CLI schema keeps the same
     ``from_date`` / ``to_date`` keys as ISO strings inside calendar and backlog
@@ -179,7 +163,7 @@ class OverviewCalendarRangePayload(OutputSchema):
 
 
 class OverviewCalendarCompletenessPayload(OutputSchema):
-    """JSON form of :class:`~aeat.application.overview.CalendarCompleteness`.
+    """JSON form of :class:`CalendarCompleteness`.
 
     The tuple fields from the application DTO become JSON arrays so the
     envelope can report which profile keys were explicit, which defaulted, and
@@ -193,7 +177,7 @@ class OverviewCalendarCompletenessPayload(OutputSchema):
 
 
 class OverviewSuppressedCalendarEntryPayload(OutputSchema):
-    """JSON form of :class:`~aeat.application.overview.SuppressedCalendarEntry`.
+    """JSON form of :class:`SuppressedCalendarEntry`.
 
     These rows exist only when the calendar command asks to retain
     non-applicable obligations; they preserve the applicability verdict and
@@ -207,7 +191,7 @@ class OverviewSuppressedCalendarEntryPayload(OutputSchema):
 
 
 class OverviewCalendarPayload(OutputSchema):
-    """Typed :class:`~aeat.application.overview.OverviewCalendar` JSON fragment.
+    """Typed :class:`OverviewCalendar` JSON fragment.
 
     Used by ``overview calendar --all-profiles`` profile blocks and by typed
     conformance checks. The payload keeps legal entries, additive events,
@@ -229,11 +213,8 @@ class OverviewCalendarPayload(OutputSchema):
 class OverviewCalendarProfilePayload(OutputSchema):
     """One profile block in ``overview calendar --all-profiles`` mode.
 
-    The embedded
-    :class:`~aeat.entrypoints.cli._overview_payloads.OverviewCalendarPayload`
-    is the full calendar result for that profile.
-    :class:`~aeat.entrypoints.cli._overview_payloads.OverviewCalendarResult`
-    then carries these blocks
+    The embedded :class:`OverviewCalendarPayload` is the full calendar result
+    for that profile. :class:`OverviewCalendarResult` then carries these blocks
     under ``profiles``, keeping all-profile output typed instead of falling back
     to a raw nested ``dict``.
     """
@@ -253,14 +234,12 @@ class OverviewStatusResult(OutputSchema):
     """JSON envelope result for ``aeat app overview status``.
 
     The full-status branch accepts the JSON form of
-    :class:`~aeat.application.overview.OverviewStatusReport`; the period branch
-    uses :class:`~aeat.entrypoints.cli._overview_payloads.OverviewDraftPayload`
-    rows derived from matching
-    :class:`~aeat.domain.filing.ModeloDraft` records for the scoped draft list.
-    The application report is derived from
-    :class:`~aeat.application.state_projection.OperatorStateProjection`; this
-    schema only bounds the CLI envelope branch and permits future report fields
-    through ``extra='allow'``.
+    :class:`OverviewStatusReport`; the period branch uses
+    :class:`OverviewDraftPayload` rows derived from matching
+    :class:`ModeloDraft` records for the scoped draft list. The application
+    report is derived from :class:`OperatorStateProjection`; this schema only
+    bounds the CLI envelope branch and permits future report fields through
+    ``extra='allow'``.
     """
 
     # Period-scoped branch fields
@@ -291,7 +270,7 @@ class OverviewCalendarResult(OutputSchema):
     envelope key serves the leaf so the JSON-contract registry holds
     exactly one schema per CLI leaf; the populated field set tells the
     consumer which branch produced the payload. Both branches still mirror the
-    same :class:`~aeat.application.overview.OverviewCalendar` compartments.
+    same :class:`OverviewCalendar` compartments.
     """
 
     from_date: str | None = None
@@ -311,13 +290,10 @@ class OverviewCalendarResult(OutputSchema):
 class OverviewAgendaResult(OutputSchema):
     """JSON envelope result for ``aeat app overview agenda``.
 
-    Accepts the JSON form of
-    :class:`~aeat.application.overview._agenda.OverviewAgenda` so the
-    application read model remains the payload authority. That model reuses
-    :class:`~aeat.application.overview.OverviewCalendarEntry`,
-    :class:`~aeat.application.overview.CalendarWarning`, and
-    :class:`~aeat.application.overview.CalendarCompleteness` rows from the
-    calendar build.
+    Accepts the JSON form of :class:`OverviewAgenda` so the application read
+    model remains the payload authority. That model reuses
+    :class:`OverviewCalendarEntry`, :class:`CalendarWarning`, and
+    :class:`CalendarCompleteness` rows from the calendar build.
     """
 
     as_of: str | None = None
@@ -332,12 +308,10 @@ class OverviewAgendaResult(OutputSchema):
 class OverviewBacklogResult(OutputSchema):
     """JSON envelope result for ``aeat app overview backlog``.
 
-    Accepts the JSON form of
-    :class:`~aeat.application.overview._backlog.OverviewBacklog` while the CLI
-    controls only envelope registration and rendering. The backlog read model
-    is a filtered :class:`~aeat.application.overview.OverviewCalendar`
-    projection, so its items remain calendar entry rows rather than
-    command-local DTOs.
+    Accepts the JSON form of :class:`OverviewBacklog` while the CLI controls
+    only envelope registration and rendering. The backlog read model is a
+    filtered :class:`OverviewCalendar` projection, so its items remain calendar
+    entry rows rather than command-local DTOs.
     """
 
     # TYPE-IGNORE-RATIONALE-PYDANTIC-MODEL-CONFIG-CLASSVAR:
@@ -350,12 +324,10 @@ class OverviewBacklogResult(OutputSchema):
 class OverviewExplainResult(OutputSchema):
     """JSON envelope result for ``aeat app overview explain``.
 
-    Accepts the JSON form of
-    :class:`~aeat.application.overview._explain.OverviewExplain`, including the
+    Accepts the JSON form of :class:`OverviewExplain`, including the
     applicability verdict, legal references, and profile facts. The verdict is
-    the registry-grounded
-    :class:`~aeat.domain.calculations.registry.applicability.ApplicabilityVerdict`,
-    not a deadline-window guess made by the CLI.
+    the registry-grounded :class:`ApplicabilityVerdict`, not a deadline-window
+    guess made by the CLI.
     """
 
     modelo: str | None = None
