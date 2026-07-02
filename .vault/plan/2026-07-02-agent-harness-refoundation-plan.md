@@ -33,7 +33,7 @@ Replace the shared args bag with per-verb input schemas and group the manifest-d
 - [x] `W01.P01.S02` - Consume per-verb input schemas in build_tool_descriptors and retire the _ARGS_INPUT_SCHEMA bag; `src/aeat/entrypoints/mcp/_tools.py`.
 - [x] `W01.P01.S03` - Add a domain-toolset grouping derived from the operator-surface manifest for renta, iva, ledger, censo, and modelo-lifecycle; `src/aeat/entrypoints/mcp/_toolsets.py`.
 - [x] `W01.P01.S04` - Assert readOnlyHint and destructiveHint annotation coverage on every descriptor and close any gap; `src/aeat/entrypoints/mcp/_annotations.py`.
-- [ ] `W01.P01.S05` - Extend the tool-descriptor tests for per-verb schemas, toolsets, and annotation coverage; `src/aeat/entrypoints/mcp/tests/test_tools_and_dispatch.py`.
+- [x] `W01.P01.S05` - Extend the tool-descriptor tests for per-verb schemas, toolsets, and annotation coverage; `src/aeat/entrypoints/mcp/tests/test_tools_and_dispatch.py`.
 
 ### Phase `W01.P02` - Meta-tool fallback and capability registration
 
@@ -160,7 +160,7 @@ Move each existing skill prose selection predicate into the structured applies_w
 Author the six WHEN-layer skills, regularizar-atrasos first, each with a golden scenario.
 
 - [x] `W05.P11.S65` - Author the regularizar-atrasos skill sequencing the overview backlog past-due and recargo extemporaneo surface; `src/aeat/_data/agent/skills/regularizar-atrasos/SKILL.md`.
-- [ ] `W05.P11.S66` - Add the regularizar-atrasos golden scenario; `src/aeat/agent/eval/scenarios/regularizar_atrasos.toml`.
+- [x] `W05.P11.S66` - Add the regularizar-atrasos golden scenario; `src/aeat/agent/eval/scenarios/regularizar_atrasos.toml`.
 - [ ] `W05.P11.S67` - Author the cierre-trimestre skill sequencing the quarter-boundary agenda obligations; `src/aeat/_data/agent/skills/cierre-trimestre/SKILL.md`.
 - [ ] `W05.P11.S68` - Add the cierre-trimestre golden scenario; `src/aeat/agent/eval/scenarios/cierre_trimestre.toml`.
 - [ ] `W05.P11.S69` - Author the resumen-anual skill sequencing the annual-window obligations; `src/aeat/_data/agent/skills/resumen-anual/SKILL.md`.
