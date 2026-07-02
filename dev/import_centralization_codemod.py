@@ -1,11 +1,17 @@
-"""Codemod: rewrite production cross-package private imports onto owning facades.
+"""Codemod: rewrite cross-package private imports onto owning facades.
 
-Wave W02 of the import-centralization campaign. Consumes the same AST walk as
-``dev/import_hygiene_scan.py`` (re-run fresh, not from a stale JSON) and, for
-every production (non-test) ``ImportFrom`` statement that reaches into a
-foreign package's private submodule where the imported name is resolvable
-from the owning package's top-level facade, rewrites the statement to import
-from the facade instead.
+Wave W02 (production) and Wave W05 (test-only) of the import-centralization
+campaign. Consumes the same AST walk as ``dev/import_hygiene_scan.py``
+(re-run fresh, not from a stale JSON) and, for every ``ImportFrom`` statement
+that reaches into a foreign package's private submodule where the imported
+name is resolvable from the owning package's top-level facade, rewrites the
+statement to import from the facade instead.
+
+By default only production (non-test) files are visited, matching Wave W02.
+Pass ``--include-tests`` to also visit test files (``tests/`` directories,
+``test_*`` modules, and ``conftest``) for Wave W05; combine with
+``--tests-only`` to restrict the rewrite to test files exclusively once the
+production wave has already landed.
 
 Behavior-preserving only:
 
@@ -19,15 +25,16 @@ Behavior-preserving only:
   imports for the rewritten statement when the facade is reachable via a
   relative path of the same or lower depth; otherwise falls back to the
   absolute ``aeat....`` form, which is always valid).
-* Intra-package imports and test files are left untouched (never visited --
-  the scanner's ``find_private_import_violations`` already excludes
-  same-package importers, and this script filters ``is_test``).
+* Intra-package imports are always left untouched -- the scanner's
+  ``find_private_import_violations`` already excludes same-package
+  importers.
 
 Read-only unless ``--apply`` is passed. ``--only-file PATH`` restricts the
 rewrite to one file (useful for verifying a single batch before committing).
 
     python dev/import_centralization_codemod.py --apply
     python dev/import_centralization_codemod.py --apply --only-file src/aeat/application/modelo/_calculation_actions.py
+    python dev/import_centralization_codemod.py --apply --tests-only --only-file src/aeat/domain/modelos/tests/test_foo.py
 """
 
 from __future__ import annotations
@@ -118,8 +125,16 @@ def _format_import_stmt(
     return f"{indent}from {module_clause} import (\n{joined},\n{indent})\n"
 
 
-def collect_plans(*, only_file: Path | None) -> tuple[list[RewritePlan], dict[str, scan.FacadeInfo]]:
-    """Collect every rewritable production ``ImportFrom`` statement under ``src/aeat``."""
+def collect_plans(
+    *, only_file: Path | None, include_tests: bool = False, tests_only: bool = False
+) -> tuple[list[RewritePlan], dict[str, scan.FacadeInfo]]:
+    """Collect every rewritable ``ImportFrom`` statement under ``src/aeat``.
+
+    ``include_tests=False`` (the default) preserves the Wave W02
+    production-only behavior. ``include_tests=True`` also visits test
+    modules; ``tests_only=True`` additionally excludes production modules,
+    restricting the sweep to test files only (Wave W05).
+    """
     facades = scan.discover_facades()
 
     py_files = sorted(PKG_ROOT.rglob("*.py"))
@@ -130,7 +145,10 @@ def collect_plans(*, only_file: Path | None) -> tuple[list[RewritePlan], dict[st
     plans: list[RewritePlan] = []
     for path in py_files:
         mod = scan.module_name_for(path)
-        if scan.is_test_module(mod, path):
+        is_test = scan.is_test_module(mod, path)
+        if is_test and not include_tests:
+            continue
+        if not is_test and tests_only:
             continue
         is_pkg = _module_is_package(path)
         try:
@@ -230,6 +248,12 @@ def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--apply", action="store_true", help="Write changes (default: dry-run report only)")
     parser.add_argument("--only-file", type=Path, default=None, help="Restrict to one file (repo-relative or absolute)")
+    parser.add_argument(
+        "--include-tests", action="store_true", help="Also visit test files (Wave W05; default: production only)"
+    )
+    parser.add_argument(
+        "--tests-only", action="store_true", help="Restrict the sweep to test files only (implies --include-tests)"
+    )
     args = parser.parse_args()
 
     only_file = None
@@ -237,7 +261,8 @@ def main() -> int:
         only_file = args.only_file if args.only_file.is_absolute() else (REPO_ROOT / args.only_file)
         only_file = only_file.resolve()
 
-    plans, _facades = collect_plans(only_file=only_file)
+    include_tests = args.include_tests or args.tests_only
+    plans, _facades = collect_plans(only_file=only_file, include_tests=include_tests, tests_only=args.tests_only)
 
     by_file: dict[Path, list[RewritePlan]] = defaultdict(list)
     for plan in plans:
