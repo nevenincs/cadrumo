@@ -5,6 +5,14 @@ description: >-
   ledger: create the work unit, calculate, verify, export the fichero-BOE, and
   hand off for the taxpayer to file. Use when the taxpayer is a self-employed
   individual filing their quarterly IRPF instalment.
+applies_when:
+  profile_facts:
+    - fact: irpf_income_categories
+      match: contains
+      values: [actividad_economica]
+    - fact: irpf_estimation_regime
+      match: equals
+      values: [directa_normal, directa_simplificada]
 ---
 
 # Prepare Modelo 130
