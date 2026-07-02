@@ -91,7 +91,17 @@ def test_modelo_100_2025_scale_result_casillas_use_scale_articles_not_fractional
         assert _FRACTIONAL_PAYMENT_ARTICLE_REF not in formula.legal_refs, formula.id
 
 
-@pytest.mark.parametrize("filing_year", range(2021, 2026))
+# Casilla 0527 (anualidades por alimentos) is a direct manual input in 2020 and
+# 2021 (the bundled AEAT XSD declares IMPALIM `maxOccurs="1"`, a plain scalar
+# with no per-child structure) and a computed sum over the per-child "Hijo/Hija
+# N: Importe de las anualidades por alimentos satisfechas" block from 2022
+# onward (#532 finding #1: the 2021 revision previously summed casillas
+# 1741/1744/1749/1754/1759, which in 2021 are unrelated Anexo C
+# aportaciones/contribuciones a sistemas de previsión social fields).
+_ANUALIDADES_FORMULA_YEARS = range(2022, 2026)
+
+
+@pytest.mark.parametrize("filing_year", _ANUALIDADES_FORMULA_YEARS)
 def test_modelo_100_anualidades_formula_uses_child_support_articles(filing_year: int) -> None:
     revision = _modelo_100_snapshot(filing_year).revision
     formula_id = f"renta-{filing_year}-anualidades-alimentos-hijos-suma"
@@ -111,6 +121,29 @@ def test_modelo_100_anualidades_formula_uses_child_support_articles(filing_year:
     required_text = {text for citation in formula.source_citations for text in citation.required_text}
     assert "anualidades por alimentos a favor de los hijos" in required_text
     assert "resto de la base liquidable general" in required_text
+
+
+@pytest.mark.parametrize("filing_year", (2020, 2021))
+def test_modelo_100_anualidades_casilla_is_manual_input_pre_2022(filing_year: int) -> None:
+    """2020/2021 carry 0527 as a manual scalar input with no sum formula (#532)."""
+    revision = _modelo_100_snapshot(filing_year).revision
+    formula_id = f"renta-{filing_year}-anualidades-alimentos-hijos-suma"
+    formulas_by_id = {formula.id: formula for formula in revision.formulas}
+    casillas_by_id = {casilla.id: casilla for casilla in revision.casillas}
+    expected_refs = {
+        _STATE_CHILD_SUPPORT_ANNUITIES_ART_64_REF,
+        _AUTONOMIC_CHILD_SUPPORT_ANNUITIES_ART_75_REF,
+    }
+
+    assert formula_id not in formulas_by_id, (
+        f"{filing_year}: casilla 0527 must not be computed from a per-child sum formula; "
+        "the per-child anualidades block only exists in the AEAT form from 2022 onward."
+    )
+    anualidades_casilla = casillas_by_id[_ANUALIDADES_ALIMENTOS_TOTAL_CASILLA]
+    assert getattr(anualidades_casilla, "input_kind", None) != "computed", (
+        f"{filing_year}: casilla 0527 must be a manual input, not computed."
+    )
+    assert expected_refs <= set(anualidades_casilla.legal_refs)
 
 
 def test_modelo_100_2025_cuota_chain_casillas_do_not_cite_fractional_payment_article() -> None:
