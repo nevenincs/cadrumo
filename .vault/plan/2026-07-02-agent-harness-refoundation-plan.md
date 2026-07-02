@@ -9,6 +9,15 @@ related:
   - '[[2026-07-02-agent-harness-refoundation-adr]]'
 ---
 
+<!-- LINK RULES:
+     - [[wiki-links]] are ONLY for .vault/ documents in the
+       related: field above.
+     - The related: field carries the AUTHORISING documents
+       (ADR, research, reference, prior plan) for every Step in
+       this plan. Steps inherit this chain; per-row reference
+       footers do not exist.
+     - NEVER use [[wiki-links]] or markdown links in the
+       document body. -->
 
 # `agent-harness-refoundation` plan
 
@@ -52,7 +61,7 @@ Deliver the operating layer as a harness.load floor tool and aeat skill/rule/per
 Add guided-workflow prompts embedding skill plus grounding and demote the workspace materialiser to an optional Claude-native mirror.
 
 - [x] `W02.P04.S13` - Add guided-workflow prompts that embed the matching skill plus its grounding excerpt; `src/aeat/entrypoints/mcp/_prompts.py`.
-- [ ] `W02.P04.S14` - Wire the prompt list and get handlers into the server; `src/aeat/entrypoints/mcp/_server.py`.
+- [x] `W02.P04.S14` - Wire the prompt list and get handlers into the server; `src/aeat/entrypoints/mcp/_server.py`.
 - [ ] `W02.P04.S15` - Demote the workspace materialiser to an optional Claude-native .claude/skills mirror layout; `src/aeat/agent/_workspace.py`.
 - [ ] `W02.P04.S16` - Update the app-agent workspace CLI to emit the Claude-native mirror; `src/aeat/entrypoints/cli/_app_agent_workspace.py`.
 - [ ] `W02.P04.S17` - Add tests for the guided-workflow prompts; `src/aeat/entrypoints/mcp/tests/test_prompts.py`.
