@@ -49,11 +49,7 @@ delegates every filing to the per-modelo skill that owns it.
    - Quarterly IVA (when the calendar surfaces it, e.g. Modelo 303 under régimen
      simplificado): delegate to `preparar-modelo-303`.
    - Quarterly IRPF pago fraccionado on the módulos route (Modelo 131, when the
-     calendar surfaces it): read `aeat app modelo describe 131 --year <YEAR>
-     --period <PERIOD>` and drive the shared `work create -> calculate -> verify
-     -> revision review -> export -> record marker -> reconcile` spine
-     demonstrated by `preparar-modelo-130`, substituting Modelo 131's own
-     casillas.
+     calendar surfaces it): delegate to `preparar-modelo-131`.
    - Any other surfaced modelo: drive the same spine against its own
      `aeat app modelo describe` / `casillas` output.
 5. After each filing's local export, hand off to `reconciliar` once the taxpayer
