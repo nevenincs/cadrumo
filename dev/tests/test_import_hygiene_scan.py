@@ -163,3 +163,23 @@ def test_find_underscore_in_all_violations_ignores_facades_without_real_all() ->
     }
 
     assert find_underscore_in_all_violations(facades) == []
+
+
+def test_live_tree_has_zero_underscore_in_all_violations() -> None:
+    """The live ``src/aeat`` tree must carry zero underscore-named ``__all__`` entries.
+
+    Real-behavior regression pinning the disposal outcome: every previously
+    private-named facade export was either promoted to a public name and its
+    consumers swept, or dropped from ``__all__``. This is the scanner-level
+    proof that closes the underscore-in-``__all__`` finding; the pytest gate
+    (``src/aeat/tests/test_import_hygiene_gate.py``) is the CI-wired
+    counterpart.
+    """
+    facades = discover_facades()
+
+    violations = find_underscore_in_all_violations(facades)
+
+    assert violations == [], (
+        f"underscore-named __all__ entries found (public facade exporting a private-named "
+        f"symbol): {[(v.package, v.name) for v in violations]}"
+    )
