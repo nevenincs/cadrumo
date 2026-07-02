@@ -22,7 +22,7 @@ from collections.abc import Callable
 from pydantic import BaseModel, ConfigDict, Field
 
 from ._hitl import ConfirmationPolicy, confirmation_for_tool
-from ._persona_scope import AgentPersona, is_tool_in_persona_scope
+from ._persona_scope import AgentPersona, handoff_denial_message, is_handoff_denied, is_tool_in_persona_scope
 from ._tools import McpToolDescriptor
 
 _STRICT_FROZEN = ConfigDict(frozen=True, strict=True, validate_assignment=True, extra="forbid")
@@ -123,15 +123,20 @@ def gate_refusal(*, persona: AgentPersona | None, descriptor: McpToolDescriptor)
     """Return the refusal a tool call incurs, or ``None`` when it may proceed.
 
     The single gate sequence run by BOTH the direct call path and ``execute``: an
-    out-of-scope call is refused before the permanent live-write block is even
-    consulted. The messages are byte-identical to the direct path's refusals, so
-    the two entry points cannot diverge.
+    out-of-scope call is refused, then a persona's handoff-denied verb, then the
+    permanent live-write block. The messages are byte-identical to the direct
+    path's refusals, so the two entry points cannot diverge — the per-verb
+    handoff deny (verifier-only export/record-marker, ADR R6(iii)) is enforced
+    here STRUCTURALLY, not left to the sync path's incidental no-elicitation
+    fallback.
 
     Returns:
         The refusal message, or ``None`` when the call is allowed.
     """
     if persona is not None and not is_tool_in_persona_scope(persona=persona, command_key=descriptor.command_key):
         return f"refused: {descriptor.command_key!r} is outside the active persona {persona.value!r}'s tool scope"
+    if persona is not None and is_handoff_denied(persona=persona, command_key=descriptor.command_key):
+        return handoff_denial_message(persona=persona, command_key=descriptor.command_key)
     if (
         confirmation_for_tool(command_key=descriptor.command_key, annotations=descriptor.annotations)
         is ConfirmationPolicy.BLOCK
