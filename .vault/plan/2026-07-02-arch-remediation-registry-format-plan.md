@@ -11,6 +11,16 @@ related:
   - '[[2026-07-02-arch-remediation-registry-format-adr]]'
 ---
 
+<!-- LINK RULES:
+     - [[wiki-links]] are ONLY for .vault/ documents in the
+       related: field above.
+     - The related: field carries the AUTHORISING documents
+       (ADR, research, reference, prior plan) for every Step in
+       this plan. Steps inherit this chain; per-row reference
+       footers do not exist.
+     - NEVER use [[wiki-links]] or markdown links in the
+       document body. -->
+
 # `arch-remediation-registry-format` plan
 
 ### Phase `P01` - mechanical majority migration
@@ -19,12 +29,12 @@ Migrate the eight small inline informativa and retencion revisions to the fragme
 
 - [x] `P01.S01` - Author the parameterised compiled-schema equality harness that captures each inline revision pre-migration ModeloRevision and asserts model equality against the post-migration fragmented shape; `src/aeat/domain/calculations/registry/tests/test_inline_fragment_equality.py`.
 - [x] `P01.S02` - Enumerate the actual inline revision set at HEAD by grep for inline binding and formula tables in revision.toml, confirming it against the ADR list before migrating; `src/aeat/_data/registry/aeat/modelos`.
-- [ ] `P01.S03` - Migrate modelo 117 inline revision to the fragmented layout in one atomic commit gated by the equality test and a green registry validator; `src/aeat/_data/registry/aeat/modelos/117`.
-- [ ] `P01.S04` - Migrate modelo 126 inline revision to the fragmented layout in one atomic commit gated by the equality test and a green registry validator; `src/aeat/_data/registry/aeat/modelos/126`.
-- [ ] `P01.S05` - Migrate modelo 128 inline revision to the fragmented layout in one atomic commit gated by the equality test and a green registry validator; `src/aeat/_data/registry/aeat/modelos/128`.
-- [ ] `P01.S06` - Migrate modelo 187 inline revision to the fragmented layout in one atomic commit gated by the equality test and a green registry validator; `src/aeat/_data/registry/aeat/modelos/187`.
-- [ ] `P01.S07` - Migrate modelo 188 inline revision to the fragmented layout in one atomic commit gated by the equality test and a green registry validator; `src/aeat/_data/registry/aeat/modelos/188`.
-- [ ] `P01.S08` - Migrate modelo 194 inline revision to the fragmented layout in one atomic commit gated by the equality test and a green registry validator; `src/aeat/_data/registry/aeat/modelos/194`.
+- [x] `P01.S03` - Migrate modelo 117 inline revision to the fragmented layout in one atomic commit gated by the equality test and a green registry validator; `src/aeat/_data/registry/aeat/modelos/117`.
+- [x] `P01.S04` - Migrate modelo 126 inline revision to the fragmented layout in one atomic commit gated by the equality test and a green registry validator; `src/aeat/_data/registry/aeat/modelos/126`.
+- [x] `P01.S05` - Migrate modelo 128 inline revision to the fragmented layout in one atomic commit gated by the equality test and a green registry validator; `src/aeat/_data/registry/aeat/modelos/128`.
+- [x] `P01.S06` - Migrate modelo 187 inline revision to the fragmented layout in one atomic commit gated by the equality test and a green registry validator; `src/aeat/_data/registry/aeat/modelos/187`.
+- [x] `P01.S07` - Migrate modelo 188 inline revision to the fragmented layout in one atomic commit gated by the equality test and a green registry validator; `src/aeat/_data/registry/aeat/modelos/188`.
+- [x] `P01.S08` - Migrate modelo 194 inline revision to the fragmented layout in one atomic commit gated by the equality test and a green registry validator; `src/aeat/_data/registry/aeat/modelos/194`.
 - [x] `P01.S09` - Migrate modelo 231 inline revision to the fragmented layout in one atomic commit gated by the equality test and a green registry validator; `src/aeat/_data/registry/aeat/modelos/231`.
 - [x] `P01.S10` - Migrate modelo 361 inline revision to the fragmented layout in one atomic commit gated by the equality test and a green registry validator; `src/aeat/_data/registry/aeat/modelos/361`.
 
@@ -39,7 +49,7 @@ Migrate the two large calc-grade inline surfaces (M303 2009-y-siguientes and the
 
 At zero inline revisions, delete the loader inline-parsing branches, add the loud inline-refusal load error, converge the discovery rule at its vaultspec source, and delete the parameterised equality test.
 
-- [ ] `P03.S13` - Confirm zero inline revisions remain by grep before deleting inline support; `src/aeat/_data/registry/aeat/modelos`.
+- [x] `P03.S13` - Confirm zero inline revisions remain by grep before deleting inline support; `src/aeat/_data/registry/aeat/modelos`.
 - [ ] `P03.S14` - Delete the loader inline-parsing branches now that no revision declares bindings or formulas inline; `src/aeat/domain/calculations/registry/_loader.py`.
 - [ ] `P03.S15` - Add a loud loader refusal that raises a load error naming the fragmented layout when an inline bindings or formulas table appears in revision.toml; `src/aeat/domain/calculations/registry/_loader.py`.
 - [ ] `P03.S16` - Converge the registry-revision-content-inline-or-fragmented discovery rule at its vaultspec source to record the convergence and retire the dual-format caveat, then run vaultspec-core sync; `.vaultspec/rules/registry-revision-content-inline-or-fragmented.md`.
