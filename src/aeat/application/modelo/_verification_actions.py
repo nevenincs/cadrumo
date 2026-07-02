@@ -317,6 +317,21 @@ _PREDICATE_CASILLA_EQUALS_IMPLIES_NONZERO = _re.compile(
 _PREDICATE_DEDUCCION_REQUIRES_ADQUISICION_BEFORE = _re.compile(
     r"^deduccion_requires_adquisicion_before\(\[(?P<ids>[^\]]*)\]\)$",
 )
+# advisory_when_computed_diverges(["declared_id", "computed_id"]) —
+# table-driven-engine-vs-operator-declared discrepancy: fires when the named
+# COMPUTED reference casilla resolves strictly > 0 (the engine has table
+# coverage for the declared activity) AND it differs from the named
+# operator-declared casilla by more than one cent. ADVISORY-only; see the
+# advisory_when_computed_diverges branch in _evaluate_advisory_predicate_fires
+# and the 2026-07-01-modelo-131-eo-modulos-engine-adr. Authored for the M131
+# estimación-objetiva módulos engine: casilla 01 ("Suma de rendimientos
+# netos") stays a manual operator input (Phase 1 does not wire fases 2ª/3ª),
+# but a tabled first-slice activity now has a computed reference figure
+# (modulos-rendimiento-neto-actividad) the operator can be prompted to
+# reconcile against.
+_PREDICATE_ADVISORY_WHEN_COMPUTED_DIVERGES = _re.compile(
+    r"^advisory_when_computed_diverges\(\[(?P<ids>[^\]]*)\]\)$",
+)
 
 #: One-cent tolerance for the roll-forward continuity reconciliation — absorbs the
 #: sub-cent drift a total-of-per-year-detail figure can accumulate without masking
@@ -771,6 +786,25 @@ def _evaluate_advisory_predicate_fires(
         eligible_by_acquisition = acquisition_date is not None and acquisition_date < cutoff
         eligible_by_construction = bool(text_values.get(construction_date_id, "").strip())
         return not (eligible_by_acquisition or eligible_by_construction)
+    m = _PREDICATE_ADVISORY_WHEN_COMPUTED_DIVERGES.match(expr)
+    if m:
+        # advisory_when_computed_diverges(["declared_id", "computed_id"]) —
+        # fires (advisory shown) when the named COMPUTED reference casilla is
+        # strictly positive (the table-driven engine has coverage for the
+        # declared activity) AND it differs from the named operator-declared
+        # casilla by more than one cent. A malformed arity does not fire
+        # (defensive, same convention as the other operators). A zero
+        # computed casilla holds trivially — the engine has no table
+        # coverage, so there is nothing to reconcile against.
+        ids = _parse_predicate_casilla_ids(m.group("ids"))
+        if len(ids) != 2:
+            return False
+        declared_id, computed_id = ids[0], ids[1]
+        computed = casilla_values.get(computed_id, Decimal(0))
+        if computed <= Decimal(0):
+            return False
+        declared = casilla_values.get(declared_id, Decimal(0))
+        return abs(declared - computed) > Decimal("0.01")
     return False
 
 

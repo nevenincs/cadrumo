@@ -1,0 +1,127 @@
+# M131 estimación-objetiva módulos coefficient table (Fase 1ª: rendimiento neto
+# previo). Keyed-bracket-table parameter mapping "<epígrafe IAE>:<módulo>" to
+# the "rendimiento anual por unidad antes de amortización" (Anexo II, Orden
+# HAC/1347/2024, art. 4). Lookup is exact-match on the composite key; there is
+# no interval-overlap semantics because the domain is a discrete (epígrafe,
+# módulo) catalogue, not a numeric-continuous base.
+#
+# Bounded first slice (2026-07-01-modelo-131-eo-modulos-engine-adr, Option B):
+# only the highest-prevalence activities named in the ADR/#516 are tabled here.
+# An epígrafe absent from this table is NOT computed by the engine; casilla 01
+# stays reachable as a manual operator input and the
+# "modelo-131-2025-modulos-computed-diverges-de-c01" advisory fires instead of a
+# silent zero (no-silent-under-declaration).
+#
+# Cross-checked against the bundled consolidated Orden HAC/1347/2024 Anexo II
+# (corpus/normatives/html/orden-hac-1347-2024.html, rows at IAE epígrafe
+# 721.2 / 722 / 972.1) AND against the AEAT Manual práctico de Renta 2025,
+# Parte 1, Capítulo 8 "Apéndice: Rendimientos anuales por unidad de módulo
+# antes de amortización aplicables en el ejercicio 2025" — both sources state
+# byte-identical euro figures for every row below
+# (legal-grounding-verifies-bundled-authoritative-corpus).
+[[revisions."2025".parameters]]
+id = "m131-modulos-coeficientes-2025"
+data_type = "keyed_bracket_table"
+unit = "euro_per_unit"
+legal_refs = ["orden-hac-1347-2024:art-4"]
+source_refs = ["aeat-renta-2025-manual-parte1"]
+
+[[revisions."2025".parameters.source_citations]]
+source_ref = "aeat-renta-2025-manual-parte1"
+required_text = [
+    "Rendimientos anuales por unidad de módulo antes de amortización aplicables en el ejercicio 2025",
+]
+
+# Epígrafe IAE 721.2 — Transporte por autotaxis.
+# Módulo 1 Personal asalariado (persona): 1.346,27
+[[revisions."2025".parameters.keyed_brackets]]
+key = "721.2:1"
+value = "1346.27"
+valid_from = 2025-01-01
+valid_to = 2025-12-31
+
+# Módulo 2 Personal no asalariado (persona): 7.656,89
+[[revisions."2025".parameters.keyed_brackets]]
+key = "721.2:2"
+value = "7656.89"
+valid_from = 2025-01-01
+valid_to = 2025-12-31
+
+# Módulo 3 Distancia recorrida (1.000 kilómetros): 45,08
+[[revisions."2025".parameters.keyed_brackets]]
+key = "721.2:3"
+value = "45.08"
+valid_from = 2025-01-01
+valid_to = 2025-12-31
+
+# Epígrafe IAE 722 — Transporte de mercancías por carretera.
+# Módulo 1 Personal asalariado (persona): 2.728,59
+[[revisions."2025".parameters.keyed_brackets]]
+key = "722:1"
+value = "2728.59"
+valid_from = 2025-01-01
+valid_to = 2025-12-31
+
+# Módulo 2 Personal no asalariado (persona): 10.090,99
+[[revisions."2025".parameters.keyed_brackets]]
+key = "722:2"
+value = "10090.99"
+valid_from = 2025-01-01
+valid_to = 2025-12-31
+
+# Módulo 3 Carga vehículos (tonelada): 126,21
+[[revisions."2025".parameters.keyed_brackets]]
+key = "722:3"
+value = "126.21"
+valid_from = 2025-01-01
+valid_to = 2025-12-31
+
+# Epígrafe IAE 972.1 — Servicios de peluquería de señora y caballero.
+# Módulo 1 Personal asalariado (persona): 3.161,90
+[[revisions."2025".parameters.keyed_brackets]]
+key = "972.1:1"
+value = "3161.90"
+valid_from = 2025-01-01
+valid_to = 2025-12-31
+
+# Módulo 2 Personal no asalariado (persona): 9.649,47
+[[revisions."2025".parameters.keyed_brackets]]
+key = "972.1:2"
+value = "9649.47"
+valid_from = 2025-01-01
+valid_to = 2025-12-31
+
+# Módulo 3 Superficie del local (m2): 94,48
+[[revisions."2025".parameters.keyed_brackets]]
+key = "972.1:3"
+value = "94.48"
+valid_from = 2025-01-01
+valid_to = 2025-12-31
+
+# Módulo 4 Consumo de energía eléctrica (100 kWh): 81,88
+[[revisions."2025".parameters.keyed_brackets]]
+key = "972.1:4"
+value = "81.88"
+valid_from = 2025-01-01
+valid_to = 2025-12-31
+
+# Reducción general del rendimiento neto de módulos aplicable en 2025 (fase
+# 4ª), grounded in orden-hac-1347-2024:da-1 apartado 1 ("podrán reducir el
+# rendimiento neto de módulos obtenido en 2025 en un 5 por ciento"), apartado
+# 3 confirming its application to the 2025 pagos fraccionados.
+[[revisions."2025".parameters]]
+id = "m131-modulos-reduccion-general-2025"
+data_type = "ratio"
+unit = "percent"
+legal_refs = ["orden-hac-1347-2024:da-1"]
+source_refs = ["aeat-renta-2025-manual-parte1"]
+
+[[revisions."2025".parameters.values]]
+value = "5"
+date_axis = "filing_period"
+valid_from = 2025-01-01
+valid_to = 2025-12-31
+
+[[revisions."2025".parameters.source_citations]]
+source_ref = "aeat-renta-2025-manual-parte1"
+required_text = ["reducción general del 5 por 100"]

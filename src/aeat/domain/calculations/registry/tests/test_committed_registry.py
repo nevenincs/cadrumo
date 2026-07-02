@@ -238,7 +238,7 @@ def test_committed_modelo_131_registry_snapshot_calculates_objective_estimation_
 
     assert snapshot.revision.id == revision_id
     entries = {entry.target_casilla_id: entry for entry in result.entries}
-    assert set(entries) == {
+    expected_entries = {
         "04",
         "06",
         "07",
@@ -247,6 +247,14 @@ def test_committed_modelo_131_registry_snapshot_calculates_objective_estimation_
         "15",
         "saldo-negativo-fin-periodo",
     }
+    if revision_id == "2025":
+        # 2025 additionally carries the estimación-objetiva módulos engine
+        # (Phase 1: fase 1ª rendimiento neto previo + fase 4ª reducción
+        # general), a bounded first-slice computed reference figure that
+        # never substitutes for the manual casilla 01. See
+        # 2026-07-01-modelo-131-eo-modulos-engine-adr.
+        expected_entries |= {"modulos-rendimiento-neto-previo", "modulos-rendimiento-neto-actividad"}
+    assert set(entries) == expected_entries
     assert entries["04"].operand_refs == ("03", "irpf.objective_no_base_fractional_payment_rate")
     assert entries["06"].operand_refs == ("05", "irpf.objective_agriculture_fractional_payment_rate")
     assert entries["07"].operand_refs == ("02", "04", "06")

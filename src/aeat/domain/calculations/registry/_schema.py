@@ -1118,6 +1118,25 @@ KNOWN_VERIFICATION_PREDICATE_OPERATORS: frozenset[str] = frozenset(
         # deduccion_requires_adquisicion_before branch in
         # _evaluate_advisory_predicate_fires.
         "deduccion_requires_adquisicion_before",
+        # advisory_when_computed_diverges(["declared_id", "computed_id"]) —
+        # table-driven-engine-vs-operator-declared discrepancy: FIRES (ADVISORY
+        # shown) when the named COMPUTED reference casilla resolves strictly >
+        # 0 (the table-driven engine has coverage for the declared activity)
+        # AND it differs from the named operator-declared casilla by more than
+        # one cent. A zero computed casilla holds trivially (the engine has no
+        # table coverage for the declared epígrafe/módulos — nothing to
+        # compare against, so no advisory). ADVISORY-only (no BLOCKING_RULE
+        # branch is implemented): the computed reference intentionally omits
+        # fases 2ª/3ª correcting factors the taxpayer may legitimately claim,
+        # so a discrepancy is a prompt to review, not a refusal. Authored for
+        # the M131 estimación-objetiva módulos engine (casilla 01 "Suma de
+        # rendimientos netos" vs the internal
+        # modulos-rendimiento-neto-actividad reference), per
+        # no-silent-under-declaration and the
+        # 2026-07-01-modelo-131-eo-modulos-engine-adr Phase 1 guard. See the
+        # advisory_when_computed_diverges branch in
+        # _evaluate_advisory_predicate_fires.
+        "advisory_when_computed_diverges",
         # equals(["lhs_id", "rhs_id"]) — consistency invariant: the two named
         # casillas must hold the same value. Authored for the M303 official
         # Diseño box projections (Stage 2): each numbered box copies a semantic
