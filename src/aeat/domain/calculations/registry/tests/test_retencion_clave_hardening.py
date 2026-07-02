@@ -10,7 +10,7 @@ operation "clave" is a DISTINCT taxonomy (:class:`OperationKind349`) and is unto
 These tests pin: the enum equals the bundled Modelo 190 Diseño de Registros clave set
 (A-L, the parity gate); a valid clave constructs; an out-of-set / lowercase / empty
 clave is REFUSED; the subclave accepts the numeric AEAT form and refuses non-numeric.
-They read the real model and the real enum -- no mocks, no tautology.
+They read the real model and the real enum directly, with no tautological mirror.
 """
 
 from __future__ import annotations
@@ -54,36 +54,36 @@ def test_retencion_clave_enum_matches_m190_dr_clave_set() -> None:
     assert all(member.value == member.name for member in RetencionClave)
 
 
-@pytest.mark.parametrize("clave", sorted(_M190_DR_CLAVES))
-def test_withholding_observation_accepts_every_valid_clave(clave: str) -> None:
+def test_withholding_observation_accepts_every_valid_clave() -> None:
     """Every A-L clave constructs and hydrates to its typed enum member."""
-    observation = _observation(clave=clave)
-    assert observation.clave is RetencionClave(clave)
+    for clave in sorted(_M190_DR_CLAVES):
+        observation = _observation(clave=clave)
+        assert observation.clave is RetencionClave(clave), clave
 
 
-@pytest.mark.parametrize("bad_clave", ["Z", "ZZ", "1", "a", "", "AA"])
-def test_withholding_observation_refuses_invalid_clave(bad_clave: str) -> None:
+def test_withholding_observation_refuses_invalid_clave() -> None:
     """An out-of-set / lowercase / empty / multi-char clave is REFUSED at construction.
 
     The old free-form field accepted any 1-2 char uppercase string (e.g. "Z", "ZZ");
     the typed enum now refuses everything outside the AEAT A-L catalogue -- the
     hardening that makes the percepciones key trustworthy.
     """
-    with pytest.raises(ValidationError):
-        _observation(clave=bad_clave)
+    for bad_clave in ("Z", "ZZ", "1", "a", "", "AA"):
+        with pytest.raises(ValidationError):
+            _observation(clave=bad_clave)
 
 
-@pytest.mark.parametrize("subclave", ["", "01", "13", "0099"])
-def test_withholding_observation_accepts_numeric_subclave(subclave: str) -> None:
+def test_withholding_observation_accepts_numeric_subclave() -> None:
     """The subclave accepts the empty default and the AEAT numeric form (e.g. 01, 13)."""
-    assert _observation(clave="A", subclave=subclave).subclave == subclave
+    for subclave in ("", "01", "13", "0099"):
+        assert _observation(clave="A", subclave=subclave).subclave == subclave, subclave
 
 
-@pytest.mark.parametrize("bad_subclave", ["XX", "A1", "1.2", "012345"])
-def test_withholding_observation_refuses_non_numeric_or_overlong_subclave(bad_subclave: str) -> None:
+def test_withholding_observation_refuses_non_numeric_or_overlong_subclave() -> None:
     """A non-numeric or over-length subclave is REFUSED (numeric, max 4 digits)."""
-    with pytest.raises(ValidationError):
-        _observation(clave="A", subclave=bad_subclave)
+    for bad_subclave in ("XX", "A1", "1.2", "012345"):
+        with pytest.raises(ValidationError):
+            _observation(clave="A", subclave=bad_subclave)
 
 
 def test_withholding_requirement_claves_are_typed() -> None:
