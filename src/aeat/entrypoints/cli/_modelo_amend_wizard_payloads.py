@@ -10,6 +10,8 @@ delegation live in :mod:`_modelo_amend_wizard_cli`.
 
 from __future__ import annotations
 
+from ...core import Period
+from ...core.identity import BucketId
 from ...domain.calculations.registry import CasillaId, LegalRefId, SourceRefId
 from ...domain.modelos import CalculationRevisionId, FilingRecordId, WorkUnitId
 from ._modelo_payloads import ExternalEvidencePayload
@@ -53,14 +55,20 @@ class WorkAmendWizardResult(OutputSchema):
     filing_record_id: FilingRecordId
     work_unit_id: WorkUnitId
     calculation_revision_id: CalculationRevisionId
-    bucket_id: str
+    bucket_id: BucketId
     modelo: str
     filing_year: int
-    period: str
+    period: Period
     filed_at: str
     filed_by: str
+    notes: str | None = None
+    aeat_accepted: bool | None = None
     status: str
+    superseded_at: str | None = None
+    superseded_by_filing_record_id: FilingRecordId | None = None
     external_evidence: ExternalEvidencePayload | None = None
+    kind: str = "internal_filing"
+    live_submission: bool = False
     corrected_casillas: tuple[AmendWizardCorrectedCasillaPayload, ...] = ()
     export_next_action: str
 
