@@ -399,7 +399,7 @@ def test_malformed_bucket_dek_error_renders_in_profile_output_language() -> None
     from ....adapters.persistence.storage.master_key._master_key_bucket_dek import bucket_dek_path
     from ....application.workflow._profile_bucket_scan import read_profile_bucket
     from ....core.config import load_settings, override_settings
-    from ....core.i18n._render import clear_output_language_cache, tr
+    from ....core.i18n import clear_output_language_cache, tr
 
     create_result = _create_profile(
         "catala",
@@ -444,7 +444,7 @@ def test_config_switch_malformed_target_bucket_dek_uses_target_profile_output_la
     from ....application.workflow._profile_bucket_scan import read_profile_bucket
     from ....core._bucket_pointer_io import resolve_active_bucket_id
     from ....core.config import load_settings, override_settings
-    from ....core.i18n._render import clear_output_language_cache, tr
+    from ....core.i18n import clear_output_language_cache, tr
 
     alpha = _create_profile(
         "alpha",
