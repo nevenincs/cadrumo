@@ -128,6 +128,15 @@ the apply-cached drive once that changeset commits and the index clears. The
 committed gate is currently ineffective (it never fires on the real thin state) but
 causes no active harm: it does not false-panic and writes nothing incorrect.
 
+RESOLUTION: the fix LANDED. The value-presence code fix was co-committed into a
+concurrent peer import-centralization commit (`3c1748da7`, which swept the
+working-tree change via `git commit -a`) -- verified intact in HEAD. The
+strengthened test (emptying a required-applicable casilla in place to reproduce the
+real `EMPTY` state) landed cleanly via pathspec (`2488ef810`). All 17 feature tests
+pass against HEAD. The gate now fires on the real production thin state. No peer
+work was swept by this feature (the peer's 238-file changeset committed on its own;
+my reverse-apply left their index intact throughout).
+
 ### code-review-medium-row-field | medium | dormant false-panic vector via row_field_casilla_ids
 
 `boe_representable_casilla_ids` unions `record.row_field_casilla_ids.values()` into
