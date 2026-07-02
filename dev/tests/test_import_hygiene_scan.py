@@ -15,9 +15,12 @@ import pytest
 
 from ..import_hygiene_scan import (
     REPO_ROOT,
+    FacadeInfo,
     _dunder_all_assignment_value,
     discover_facades,
     find_shim_modules,
+    find_underscore_in_all_violations,
+    is_underscore_named,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
@@ -110,3 +113,53 @@ def test_find_shim_modules_still_flags_a_non_main_pure_reexport_module() -> None
     shims = find_shim_modules([reexport_path], facades={})
 
     assert any(shim.reason == "pure_reexport_shape" for shim in shims)
+
+
+def test_is_underscore_named_flags_leading_underscore_but_not_dunders() -> None:
+    """A leading-underscore identifier is private-convention; a dunder is not."""
+    assert is_underscore_named("_private_helper") is True
+    assert is_underscore_named("__all__") is False
+    assert is_underscore_named("__init__") is False
+    assert is_underscore_named("public_name") is False
+
+
+def test_find_underscore_in_all_violations_flags_a_private_named_export() -> None:
+    """A facade whose ``__all__`` contains a leading-underscore name is flagged.
+
+    Real-behavior fixture: a synthetic :class:`FacadeInfo` standing in for a
+    parsed ``__init__.py`` (the detector operates purely on the already-parsed
+    facade inventory ``discover_facades`` produces, so no file I/O is needed to
+    exercise the finder's own logic).
+    """
+    facades = {
+        "aeat.fixture_pkg": FacadeInfo(
+            package="aeat.fixture_pkg",
+            path=REPO_ROOT / "src" / "aeat" / "fixture_pkg" / "__init__.py",
+            all_names=["PublicThing", "_private_helper", "__all__"],
+            has_real_all=True,
+        ),
+        "aeat.clean_pkg": FacadeInfo(
+            package="aeat.clean_pkg",
+            path=REPO_ROOT / "src" / "aeat" / "clean_pkg" / "__init__.py",
+            all_names=["PublicOnly"],
+            has_real_all=True,
+        ),
+    }
+
+    violations = find_underscore_in_all_violations(facades)
+
+    assert [(v.package, v.name) for v in violations] == [("aeat.fixture_pkg", "_private_helper")]
+
+
+def test_find_underscore_in_all_violations_ignores_facades_without_real_all() -> None:
+    """A facade with no real ``__all__`` (empty / absent) yields no violations, even if named."""
+    facades = {
+        "aeat.no_all_pkg": FacadeInfo(
+            package="aeat.no_all_pkg",
+            path=REPO_ROOT / "src" / "aeat" / "no_all_pkg" / "__init__.py",
+            all_names=["_would_be_flagged_if_real"],
+            has_real_all=False,
+        ),
+    }
+
+    assert find_underscore_in_all_violations(facades) == []
