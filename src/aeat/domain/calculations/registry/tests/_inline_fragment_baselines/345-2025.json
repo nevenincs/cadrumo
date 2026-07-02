@@ -1,0 +1,1308 @@
+{
+  "modelo_id": "345",
+  "revision_id": "2025",
+  "revision": {
+    "id": "2025",
+    "label": "Modelo 345 ejercicio 2025 (Orden HFP/823/2022 y Orden HAC/1430/2025)",
+    "valid_from": "2025-01-01",
+    "valid_to": null,
+    "period_selector": {
+      "years": [
+        2025
+      ],
+      "year_from": null,
+      "year_to": null,
+      "periods": [
+        "0A"
+      ]
+    },
+    "legal_refs": [
+      "orden-hfp-823-2022:art-1",
+      "orden-hfp-823-2022:art-2",
+      "orden-hfp-823-2022:art-3",
+      "orden-hfp-823-2022:art-4",
+      "orden-hfp-823-2022:art-5",
+      "orden-hfp-528-2023:art-unico",
+      "orden-hfp-528-2023:df-unica",
+      "orden-hfp-1397-2023:art-sexto",
+      "orden-hfp-1397-2023:df-unica",
+      "orden-hac-1504-2024:art-octavo",
+      "orden-hac-1504-2024:df-unica",
+      "orden-hac-1430-2025:art-septimo",
+      "orden-hac-1430-2025:df-unica"
+    ],
+    "source_refs": [
+      "aeat-modelo-345-procedure",
+      "aeat-modelo-345-deadlines",
+      "aeat-dr-345-2025",
+      "boe-modelo-345-base-order",
+      "boe-modelo-345-2023-amendment-hfp-528",
+      "boe-modelo-345-2023-amendment-hfp-1397",
+      "boe-modelo-345-2024-amendment-hac-1504",
+      "boe-modelo-345-2025-amendment-hac-1430"
+    ],
+    "orden_aplicabilidad": [
+      "orden-hfp-823-2022:art-1",
+      "orden-hfp-823-2022:art-3",
+      "orden-hfp-823-2022:art-4",
+      "orden-hac-1430-2025:art-septimo",
+      "orden-hac-1430-2025:df-unica"
+    ],
+    "parameters": [],
+    "casillas": [
+      {
+        "id": "declarante-nif",
+        "number": "tipo1.9-17",
+        "segmento": null,
+        "label": "NIF del declarante",
+        "localized_labels": {},
+        "localized_help": {},
+        "section": [
+          "registro_declarante",
+          "identificacion"
+        ],
+        "data_type": "nif",
+        "required": false,
+        "input_kind": "manual",
+        "formula": null,
+        "binding": null,
+        "alternate_bindings": [],
+        "export_refs": [],
+        "constraints": null,
+        "form_number": null,
+        "continuidad_id": null,
+        "semantic_role": "m345_declarante_nif",
+        "semantic_role_cardinality": "intentional_singleton",
+        "semantic_role_cardinality_reason": "Modelo 345 current declarant NIF slot is unique to the 2025 record-design revision.",
+        "aliases": [],
+        "internal_only": false,
+        "legal_refs": [
+          "orden-hfp-823-2022:art-1",
+          "orden-hfp-823-2022:art-2"
+        ],
+        "source_refs": [
+          "aeat-dr-345-2025",
+          "boe-modelo-345-base-order"
+        ]
+      },
+      {
+        "id": "ejercicio-declaracion",
+        "number": "tipo1.5-8",
+        "segmento": null,
+        "label": "Ejercicio de declaracion",
+        "localized_labels": {},
+        "localized_help": {},
+        "section": [
+          "registro_declarante",
+          "identificacion"
+        ],
+        "data_type": "year",
+        "required": false,
+        "input_kind": "manual",
+        "formula": null,
+        "binding": null,
+        "alternate_bindings": [],
+        "export_refs": [],
+        "constraints": null,
+        "form_number": null,
+        "continuidad_id": null,
+        "semantic_role": "m345_ejercicio_declaracion",
+        "semantic_role_cardinality": "intentional_singleton",
+        "semantic_role_cardinality_reason": "Modelo 345 current exercise slot is unique to the 2025 record-design revision.",
+        "aliases": [],
+        "internal_only": false,
+        "legal_refs": [
+          "orden-hfp-823-2022:art-4",
+          "orden-hac-1430-2025:df-unica"
+        ],
+        "source_refs": [
+          "aeat-dr-345-2025",
+          "aeat-modelo-345-deadlines",
+          "boe-modelo-345-2025-amendment-hac-1430"
+        ]
+      },
+      {
+        "id": "declarante-razon-social",
+        "number": "tipo1.18-57",
+        "segmento": null,
+        "label": "Apellidos y nombre o razon social del declarante",
+        "localized_labels": {},
+        "localized_help": {},
+        "section": [
+          "registro_declarante",
+          "identificacion"
+        ],
+        "data_type": "name",
+        "required": false,
+        "input_kind": "manual",
+        "formula": null,
+        "binding": null,
+        "alternate_bindings": [],
+        "export_refs": [],
+        "constraints": null,
+        "form_number": null,
+        "continuidad_id": null,
+        "semantic_role": "m345_declarante_razon_social",
+        "semantic_role_cardinality": "shared",
+        "semantic_role_cardinality_reason": null,
+        "aliases": [],
+        "internal_only": false,
+        "legal_refs": [
+          "orden-hfp-823-2022:art-1",
+          "orden-hfp-823-2022:art-2"
+        ],
+        "source_refs": [
+          "aeat-dr-345-2025",
+          "boe-modelo-345-base-order"
+        ]
+      },
+      {
+        "id": "total-declarados",
+        "number": "tipo1.136-144",
+        "segmento": null,
+        "label": "Numero total de declarados",
+        "localized_labels": {},
+        "localized_help": {},
+        "section": [
+          "registro_declarante",
+          "resumen"
+        ],
+        "data_type": "integer",
+        "required": false,
+        "input_kind": "manual",
+        "formula": null,
+        "binding": null,
+        "alternate_bindings": [],
+        "export_refs": [],
+        "constraints": null,
+        "form_number": null,
+        "continuidad_id": null,
+        "semantic_role": "m345_total_declarados",
+        "semantic_role_cardinality": "shared",
+        "semantic_role_cardinality_reason": null,
+        "aliases": [],
+        "internal_only": false,
+        "legal_refs": [
+          "orden-hfp-823-2022:art-1",
+          "orden-hfp-823-2022:art-3"
+        ],
+        "source_refs": [
+          "aeat-dr-345-2025",
+          "boe-modelo-345-base-order"
+        ]
+      },
+      {
+        "id": "importe-total-aportaciones",
+        "number": "tipo1.145-159",
+        "segmento": null,
+        "label": "Importe total de las aportaciones",
+        "localized_labels": {},
+        "localized_help": {},
+        "section": [
+          "registro_declarante",
+          "resumen"
+        ],
+        "data_type": "money",
+        "required": false,
+        "input_kind": "manual",
+        "formula": null,
+        "binding": null,
+        "alternate_bindings": [],
+        "export_refs": [],
+        "constraints": null,
+        "form_number": null,
+        "continuidad_id": null,
+        "semantic_role": "m345_importe_total_aportaciones",
+        "semantic_role_cardinality": "shared",
+        "semantic_role_cardinality_reason": null,
+        "aliases": [],
+        "internal_only": false,
+        "legal_refs": [
+          "orden-hfp-823-2022:art-1",
+          "orden-hfp-823-2022:art-3"
+        ],
+        "source_refs": [
+          "aeat-dr-345-2025",
+          "boe-modelo-345-base-order"
+        ]
+      },
+      {
+        "id": "declarado-nif",
+        "number": "tipo2.18-26",
+        "segmento": null,
+        "label": "NIF del declarado",
+        "localized_labels": {},
+        "localized_help": {},
+        "section": [
+          "registro_declarado",
+          "identificacion"
+        ],
+        "data_type": "nif",
+        "required": false,
+        "input_kind": "manual",
+        "formula": null,
+        "binding": null,
+        "alternate_bindings": [],
+        "export_refs": [],
+        "constraints": null,
+        "form_number": null,
+        "continuidad_id": null,
+        "semantic_role": "m345_declarado_nif",
+        "semantic_role_cardinality": "shared",
+        "semantic_role_cardinality_reason": null,
+        "aliases": [],
+        "internal_only": false,
+        "legal_refs": [
+          "orden-hfp-823-2022:art-2",
+          "orden-hfp-823-2022:art-3"
+        ],
+        "source_refs": [
+          "aeat-dr-345-2025",
+          "boe-modelo-345-base-order"
+        ]
+      },
+      {
+        "id": "declarado-nombre",
+        "number": "tipo2.36-75",
+        "segmento": null,
+        "label": "Apellidos y nombre del declarado",
+        "localized_labels": {},
+        "localized_help": {},
+        "section": [
+          "registro_declarado",
+          "identificacion"
+        ],
+        "data_type": "name",
+        "required": false,
+        "input_kind": "manual",
+        "formula": null,
+        "binding": null,
+        "alternate_bindings": [],
+        "export_refs": [],
+        "constraints": null,
+        "form_number": null,
+        "continuidad_id": null,
+        "semantic_role": "m345_declarado_nombre",
+        "semantic_role_cardinality": "shared",
+        "semantic_role_cardinality_reason": null,
+        "aliases": [],
+        "internal_only": false,
+        "legal_refs": [
+          "orden-hfp-823-2022:art-2",
+          "orden-hfp-823-2022:art-3"
+        ],
+        "source_refs": [
+          "aeat-dr-345-2025",
+          "boe-modelo-345-base-order"
+        ]
+      },
+      {
+        "id": "anio-nacimiento",
+        "number": "tipo2.76-79",
+        "segmento": null,
+        "label": "Ano de nacimiento",
+        "localized_labels": {},
+        "localized_help": {},
+        "section": [
+          "registro_declarado",
+          "identificacion"
+        ],
+        "data_type": "year",
+        "required": false,
+        "input_kind": "manual",
+        "formula": null,
+        "binding": null,
+        "alternate_bindings": [],
+        "export_refs": [],
+        "constraints": null,
+        "form_number": null,
+        "continuidad_id": null,
+        "semantic_role": "m345_anio_nacimiento",
+        "semantic_role_cardinality": "shared",
+        "semantic_role_cardinality_reason": null,
+        "aliases": [],
+        "internal_only": false,
+        "legal_refs": [
+          "orden-hfp-823-2022:art-3"
+        ],
+        "source_refs": [
+          "aeat-dr-345-2025",
+          "boe-modelo-345-base-order"
+        ]
+      },
+      {
+        "id": "codigo-provincia",
+        "number": "tipo2.80-81",
+        "segmento": null,
+        "label": "Codigo provincia",
+        "localized_labels": {},
+        "localized_help": {},
+        "section": [
+          "registro_declarado",
+          "domicilio"
+        ],
+        "data_type": "text",
+        "required": false,
+        "input_kind": "manual",
+        "formula": null,
+        "binding": null,
+        "alternate_bindings": [],
+        "export_refs": [],
+        "constraints": null,
+        "form_number": null,
+        "continuidad_id": null,
+        "semantic_role": "m345_codigo_provincia",
+        "semantic_role_cardinality": "shared",
+        "semantic_role_cardinality_reason": null,
+        "aliases": [],
+        "internal_only": false,
+        "legal_refs": [
+          "orden-hfp-823-2022:art-3"
+        ],
+        "source_refs": [
+          "aeat-dr-345-2025",
+          "boe-modelo-345-base-order"
+        ]
+      },
+      {
+        "id": "clave",
+        "number": "tipo2.82",
+        "segmento": null,
+        "label": "Clave",
+        "localized_labels": {},
+        "localized_help": {},
+        "section": [
+          "registro_declarado",
+          "aportaciones"
+        ],
+        "data_type": "text",
+        "required": false,
+        "input_kind": "manual",
+        "formula": null,
+        "binding": null,
+        "alternate_bindings": [],
+        "export_refs": [],
+        "constraints": null,
+        "form_number": null,
+        "continuidad_id": null,
+        "semantic_role": "m345_clave",
+        "semantic_role_cardinality": "shared",
+        "semantic_role_cardinality_reason": null,
+        "aliases": [],
+        "internal_only": false,
+        "legal_refs": [
+          "orden-hfp-823-2022:art-1",
+          "orden-hfp-528-2023:art-unico",
+          "orden-hac-1504-2024:art-octavo"
+        ],
+        "source_refs": [
+          "aeat-dr-345-2025",
+          "boe-modelo-345-base-order",
+          "boe-modelo-345-2023-amendment-hfp-528",
+          "boe-modelo-345-2024-amendment-hac-1504"
+        ]
+      },
+      {
+        "id": "subclave",
+        "number": "tipo2.83-84",
+        "segmento": null,
+        "label": "Subclave",
+        "localized_labels": {},
+        "localized_help": {},
+        "section": [
+          "registro_declarado",
+          "aportaciones"
+        ],
+        "data_type": "text",
+        "required": false,
+        "input_kind": "manual",
+        "formula": null,
+        "binding": null,
+        "alternate_bindings": [],
+        "export_refs": [],
+        "constraints": null,
+        "form_number": null,
+        "continuidad_id": null,
+        "semantic_role": "m345_subclave",
+        "semantic_role_cardinality": "shared",
+        "semantic_role_cardinality_reason": null,
+        "aliases": [],
+        "internal_only": false,
+        "legal_refs": [
+          "orden-hfp-528-2023:art-unico",
+          "orden-hfp-1397-2023:art-sexto",
+          "orden-hac-1504-2024:art-octavo"
+        ],
+        "source_refs": [
+          "aeat-dr-345-2025",
+          "boe-modelo-345-2023-amendment-hfp-528",
+          "boe-modelo-345-2023-amendment-hfp-1397",
+          "boe-modelo-345-2024-amendment-hac-1504"
+        ]
+      },
+      {
+        "id": "beneficiario-nif",
+        "number": "tipo2.85-93",
+        "segmento": null,
+        "label": "NIF del beneficiario persona con discapacidad",
+        "localized_labels": {},
+        "localized_help": {},
+        "section": [
+          "registro_declarado",
+          "beneficiario"
+        ],
+        "data_type": "nif",
+        "required": false,
+        "input_kind": "manual",
+        "formula": null,
+        "binding": null,
+        "alternate_bindings": [],
+        "export_refs": [],
+        "constraints": null,
+        "form_number": null,
+        "continuidad_id": null,
+        "semantic_role": "m345_beneficiario_nif",
+        "semantic_role_cardinality": "shared",
+        "semantic_role_cardinality_reason": null,
+        "aliases": [],
+        "internal_only": false,
+        "legal_refs": [
+          "orden-hfp-823-2022:art-3"
+        ],
+        "source_refs": [
+          "aeat-dr-345-2025",
+          "boe-modelo-345-base-order"
+        ]
+      },
+      {
+        "id": "importe",
+        "number": "tipo2.94-106",
+        "segmento": null,
+        "label": "Importe",
+        "localized_labels": {},
+        "localized_help": {},
+        "section": [
+          "registro_declarado",
+          "aportaciones"
+        ],
+        "data_type": "money",
+        "required": false,
+        "input_kind": "manual",
+        "formula": null,
+        "binding": null,
+        "alternate_bindings": [],
+        "export_refs": [],
+        "constraints": null,
+        "form_number": null,
+        "continuidad_id": null,
+        "semantic_role": "m345_importe",
+        "semantic_role_cardinality": "shared",
+        "semantic_role_cardinality_reason": null,
+        "aliases": [],
+        "internal_only": false,
+        "legal_refs": [
+          "orden-hfp-823-2022:art-3"
+        ],
+        "source_refs": [
+          "aeat-dr-345-2025",
+          "boe-modelo-345-base-order"
+        ]
+      },
+      {
+        "id": "datos-adicionales-claves-abc",
+        "number": "tipo2.107-160",
+        "segmento": null,
+        "label": "Datos adicionales para las claves A, B y C",
+        "localized_labels": {},
+        "localized_help": {},
+        "section": [
+          "registro_declarado",
+          "datos_adicionales"
+        ],
+        "data_type": "text",
+        "required": false,
+        "input_kind": "manual",
+        "formula": null,
+        "binding": null,
+        "alternate_bindings": [],
+        "export_refs": [],
+        "constraints": null,
+        "form_number": null,
+        "continuidad_id": null,
+        "semantic_role": null,
+        "semantic_role_cardinality": "shared",
+        "semantic_role_cardinality_reason": null,
+        "aliases": [],
+        "internal_only": false,
+        "legal_refs": [
+          "orden-hfp-823-2022:art-3",
+          "orden-hfp-528-2023:art-unico"
+        ],
+        "source_refs": [
+          "aeat-dr-345-2025",
+          "boe-modelo-345-base-order",
+          "boe-modelo-345-2023-amendment-hfp-528"
+        ]
+      },
+      {
+        "id": "plan-pensiones-denominacion",
+        "number": "tipo2.107-146",
+        "segmento": null,
+        "label": "Denominacion del plan de pensiones",
+        "localized_labels": {},
+        "localized_help": {},
+        "section": [
+          "registro_declarado",
+          "datos_adicionales",
+          "claves_abc"
+        ],
+        "data_type": "text",
+        "required": false,
+        "input_kind": "manual",
+        "formula": null,
+        "binding": null,
+        "alternate_bindings": [],
+        "export_refs": [],
+        "constraints": {
+          "sign": "any",
+          "min_value": null,
+          "max_value": null,
+          "pattern": null,
+          "min_length": null,
+          "max_length": 40,
+          "enum": null,
+          "legal_refs": [
+            "orden-hfp-823-2022:art-3"
+          ],
+          "source_refs": [
+            "aeat-dr-345-2025",
+            "boe-modelo-345-base-order"
+          ]
+        },
+        "form_number": null,
+        "continuidad_id": null,
+        "semantic_role": "m345_plan_pensiones_denominacion",
+        "semantic_role_cardinality": "shared",
+        "semantic_role_cardinality_reason": null,
+        "aliases": [],
+        "internal_only": false,
+        "legal_refs": [
+          "orden-hfp-823-2022:art-3"
+        ],
+        "source_refs": [
+          "aeat-dr-345-2025",
+          "boe-modelo-345-base-order"
+        ]
+      },
+      {
+        "id": "fondo-pensiones-numero-registro",
+        "number": "tipo2.147-151",
+        "segmento": null,
+        "label": "Numero de registro del fondo de pensiones",
+        "localized_labels": {},
+        "localized_help": {},
+        "section": [
+          "registro_declarado",
+          "datos_adicionales",
+          "claves_abc"
+        ],
+        "data_type": "text",
+        "required": false,
+        "input_kind": "manual",
+        "formula": null,
+        "binding": null,
+        "alternate_bindings": [],
+        "export_refs": [],
+        "constraints": {
+          "sign": "any",
+          "min_value": null,
+          "max_value": null,
+          "pattern": null,
+          "min_length": null,
+          "max_length": 5,
+          "enum": null,
+          "legal_refs": [
+            "orden-hfp-823-2022:art-3"
+          ],
+          "source_refs": [
+            "aeat-dr-345-2025",
+            "boe-modelo-345-base-order"
+          ]
+        },
+        "form_number": null,
+        "continuidad_id": null,
+        "semantic_role": "m345_fondo_pensiones_numero_registro",
+        "semantic_role_cardinality": "shared",
+        "semantic_role_cardinality_reason": null,
+        "aliases": [],
+        "internal_only": false,
+        "legal_refs": [
+          "orden-hfp-823-2022:art-3"
+        ],
+        "source_refs": [
+          "aeat-dr-345-2025",
+          "boe-modelo-345-base-order"
+        ]
+      },
+      {
+        "id": "fondo-pensiones-nif",
+        "number": "tipo2.152-160",
+        "segmento": null,
+        "label": "NIF del fondo de pensiones",
+        "localized_labels": {},
+        "localized_help": {},
+        "section": [
+          "registro_declarado",
+          "datos_adicionales",
+          "claves_abc"
+        ],
+        "data_type": "nif",
+        "required": false,
+        "input_kind": "manual",
+        "formula": null,
+        "binding": null,
+        "alternate_bindings": [],
+        "export_refs": [],
+        "constraints": {
+          "sign": "any",
+          "min_value": null,
+          "max_value": null,
+          "pattern": null,
+          "min_length": null,
+          "max_length": 9,
+          "enum": null,
+          "legal_refs": [
+            "orden-hfp-823-2022:art-3"
+          ],
+          "source_refs": [
+            "aeat-dr-345-2025",
+            "boe-modelo-345-base-order"
+          ]
+        },
+        "form_number": null,
+        "continuidad_id": null,
+        "semantic_role": "m345_fondo_pensiones_nif",
+        "semantic_role_cardinality": "shared",
+        "semantic_role_cardinality_reason": null,
+        "aliases": [],
+        "internal_only": false,
+        "legal_refs": [
+          "orden-hfp-823-2022:art-3"
+        ],
+        "source_refs": [
+          "aeat-dr-345-2025",
+          "boe-modelo-345-base-order"
+        ]
+      },
+      {
+        "id": "entidad-aseguradora-nif",
+        "number": "tipo2.161-169",
+        "segmento": null,
+        "label": "NIF de la entidad aseguradora",
+        "localized_labels": {},
+        "localized_help": {},
+        "section": [
+          "registro_declarado",
+          "datos_adicionales",
+          "clave_d"
+        ],
+        "data_type": "nif",
+        "required": false,
+        "input_kind": "manual",
+        "formula": null,
+        "binding": null,
+        "alternate_bindings": [],
+        "export_refs": [],
+        "constraints": {
+          "sign": "any",
+          "min_value": null,
+          "max_value": null,
+          "pattern": null,
+          "min_length": null,
+          "max_length": 9,
+          "enum": null,
+          "legal_refs": [
+            "orden-hfp-823-2022:art-3"
+          ],
+          "source_refs": [
+            "aeat-dr-345-2025",
+            "boe-modelo-345-base-order"
+          ]
+        },
+        "form_number": null,
+        "continuidad_id": null,
+        "semantic_role": "m345_entidad_aseguradora_nif",
+        "semantic_role_cardinality": "shared",
+        "semantic_role_cardinality_reason": null,
+        "aliases": [],
+        "internal_only": false,
+        "legal_refs": [
+          "orden-hfp-823-2022:art-3"
+        ],
+        "source_refs": [
+          "aeat-dr-345-2025",
+          "boe-modelo-345-base-order"
+        ]
+      },
+      {
+        "id": "datos-adicionales-clave-i",
+        "number": "tipo2.170-189",
+        "segmento": null,
+        "label": "Datos adicionales para la clave I",
+        "localized_labels": {},
+        "localized_help": {},
+        "section": [
+          "registro_declarado",
+          "datos_adicionales"
+        ],
+        "data_type": "integer",
+        "required": false,
+        "input_kind": "manual",
+        "formula": null,
+        "binding": null,
+        "alternate_bindings": [],
+        "export_refs": [],
+        "constraints": null,
+        "form_number": null,
+        "continuidad_id": null,
+        "semantic_role": null,
+        "semantic_role_cardinality": "shared",
+        "semantic_role_cardinality_reason": null,
+        "aliases": [],
+        "internal_only": false,
+        "legal_refs": [
+          "orden-hfp-823-2022:art-3"
+        ],
+        "source_refs": [
+          "aeat-dr-345-2025",
+          "boe-modelo-345-base-order"
+        ]
+      },
+      {
+        "id": "pias-fecha-primera-prima",
+        "number": "tipo2.170-177",
+        "segmento": null,
+        "label": "Fecha de pago de la primera prima",
+        "localized_labels": {},
+        "localized_help": {},
+        "section": [
+          "registro_declarado",
+          "datos_adicionales",
+          "clave_i"
+        ],
+        "data_type": "date",
+        "required": false,
+        "input_kind": "manual",
+        "formula": null,
+        "binding": null,
+        "alternate_bindings": [],
+        "export_refs": [],
+        "constraints": null,
+        "form_number": null,
+        "continuidad_id": null,
+        "semantic_role": "m345_pias_fecha_primera_prima",
+        "semantic_role_cardinality": "shared",
+        "semantic_role_cardinality_reason": null,
+        "aliases": [],
+        "internal_only": false,
+        "legal_refs": [
+          "orden-hfp-823-2022:art-3"
+        ],
+        "source_refs": [
+          "aeat-dr-345-2025",
+          "boe-modelo-345-base-order"
+        ]
+      },
+      {
+        "id": "pias-importe-acumulado",
+        "number": "tipo2.178-189",
+        "segmento": null,
+        "label": "Importe acumulado PIAS",
+        "localized_labels": {},
+        "localized_help": {},
+        "section": [
+          "registro_declarado",
+          "datos_adicionales",
+          "clave_i"
+        ],
+        "data_type": "money",
+        "required": false,
+        "input_kind": "manual",
+        "formula": null,
+        "binding": null,
+        "alternate_bindings": [],
+        "export_refs": [],
+        "constraints": {
+          "sign": "non_negative",
+          "min_value": null,
+          "max_value": "240000",
+          "pattern": null,
+          "min_length": null,
+          "max_length": null,
+          "enum": null,
+          "legal_refs": [
+            "orden-hfp-823-2022:art-3"
+          ],
+          "source_refs": [
+            "aeat-dr-345-2025",
+            "boe-modelo-345-base-order"
+          ]
+        },
+        "form_number": null,
+        "continuidad_id": null,
+        "semantic_role": "m345_pias_importe_acumulado",
+        "semantic_role_cardinality": "shared",
+        "semantic_role_cardinality_reason": null,
+        "aliases": [],
+        "internal_only": false,
+        "legal_refs": [
+          "orden-hfp-823-2022:art-3"
+        ],
+        "source_refs": [
+          "aeat-dr-345-2025",
+          "boe-modelo-345-base-order"
+        ]
+      },
+      {
+        "id": "datos-adicionales-clave-m",
+        "number": "tipo2.190-270",
+        "segmento": null,
+        "label": "Datos adicionales para la clave M",
+        "localized_labels": {},
+        "localized_help": {},
+        "section": [
+          "registro_declarado",
+          "datos_adicionales"
+        ],
+        "data_type": "text",
+        "required": false,
+        "input_kind": "manual",
+        "formula": null,
+        "binding": null,
+        "alternate_bindings": [],
+        "export_refs": [],
+        "constraints": null,
+        "form_number": null,
+        "continuidad_id": null,
+        "semantic_role": null,
+        "semantic_role_cardinality": "shared",
+        "semantic_role_cardinality_reason": null,
+        "aliases": [],
+        "internal_only": false,
+        "legal_refs": [
+          "orden-hfp-528-2023:art-unico"
+        ],
+        "source_refs": [
+          "aeat-dr-345-2025",
+          "boe-modelo-345-2023-amendment-hfp-528"
+        ]
+      },
+      {
+        "id": "pepp-denominacion",
+        "number": "tipo2.190-229",
+        "segmento": null,
+        "label": "Denominacion del PEPP",
+        "localized_labels": {},
+        "localized_help": {},
+        "section": [
+          "registro_declarado",
+          "datos_adicionales",
+          "clave_m"
+        ],
+        "data_type": "text",
+        "required": false,
+        "input_kind": "manual",
+        "formula": null,
+        "binding": null,
+        "alternate_bindings": [],
+        "export_refs": [],
+        "constraints": {
+          "sign": "any",
+          "min_value": null,
+          "max_value": null,
+          "pattern": null,
+          "min_length": null,
+          "max_length": 40,
+          "enum": null,
+          "legal_refs": [
+            "orden-hfp-528-2023:art-unico"
+          ],
+          "source_refs": [
+            "aeat-dr-345-2025",
+            "boe-modelo-345-2023-amendment-hfp-528"
+          ]
+        },
+        "form_number": null,
+        "continuidad_id": null,
+        "semantic_role": "m345_pepp_denominacion",
+        "semantic_role_cardinality": "shared",
+        "semantic_role_cardinality_reason": null,
+        "aliases": [],
+        "internal_only": false,
+        "legal_refs": [
+          "orden-hfp-528-2023:art-unico"
+        ],
+        "source_refs": [
+          "aeat-dr-345-2025",
+          "boe-modelo-345-2023-amendment-hfp-528"
+        ]
+      },
+      {
+        "id": "pepp-numero-inscripcion",
+        "number": "tipo2.230-269",
+        "segmento": null,
+        "label": "Numero de inscripcion del PEPP",
+        "localized_labels": {},
+        "localized_help": {},
+        "section": [
+          "registro_declarado",
+          "datos_adicionales",
+          "clave_m"
+        ],
+        "data_type": "text",
+        "required": false,
+        "input_kind": "manual",
+        "formula": null,
+        "binding": null,
+        "alternate_bindings": [],
+        "export_refs": [],
+        "constraints": {
+          "sign": "any",
+          "min_value": null,
+          "max_value": null,
+          "pattern": null,
+          "min_length": null,
+          "max_length": 40,
+          "enum": null,
+          "legal_refs": [
+            "orden-hfp-528-2023:art-unico"
+          ],
+          "source_refs": [
+            "aeat-dr-345-2025",
+            "boe-modelo-345-2023-amendment-hfp-528"
+          ]
+        },
+        "form_number": null,
+        "continuidad_id": null,
+        "semantic_role": "m345_pepp_numero_inscripcion",
+        "semantic_role_cardinality": "shared",
+        "semantic_role_cardinality_reason": null,
+        "aliases": [],
+        "internal_only": false,
+        "legal_refs": [
+          "orden-hfp-528-2023:art-unico"
+        ],
+        "source_refs": [
+          "aeat-dr-345-2025",
+          "boe-modelo-345-2023-amendment-hfp-528"
+        ]
+      },
+      {
+        "id": "pepp-cuenta-subcuenta",
+        "number": "tipo2.270",
+        "segmento": null,
+        "label": "Cuenta/subcuenta",
+        "localized_labels": {},
+        "localized_help": {},
+        "section": [
+          "registro_declarado",
+          "datos_adicionales",
+          "clave_m"
+        ],
+        "data_type": "text",
+        "required": false,
+        "input_kind": "manual",
+        "formula": null,
+        "binding": null,
+        "alternate_bindings": [],
+        "export_refs": [],
+        "constraints": {
+          "sign": "any",
+          "min_value": null,
+          "max_value": null,
+          "pattern": null,
+          "min_length": null,
+          "max_length": 1,
+          "enum": [
+            "C",
+            "S"
+          ],
+          "legal_refs": [
+            "orden-hfp-528-2023:art-unico"
+          ],
+          "source_refs": [
+            "aeat-dr-345-2025",
+            "boe-modelo-345-2023-amendment-hfp-528"
+          ]
+        },
+        "form_number": null,
+        "continuidad_id": null,
+        "semantic_role": "m345_pepp_cuenta_subcuenta",
+        "semantic_role_cardinality": "shared",
+        "semantic_role_cardinality_reason": null,
+        "aliases": [],
+        "internal_only": false,
+        "legal_refs": [
+          "orden-hfp-528-2023:art-unico"
+        ],
+        "source_refs": [
+          "aeat-dr-345-2025",
+          "boe-modelo-345-2023-amendment-hfp-528"
+        ]
+      },
+      {
+        "id": "rendimientos-trabajo-superiores-60000",
+        "number": "tipo2.271",
+        "segmento": null,
+        "label": "Rendimientos integros del trabajo superiores a 60000 euros",
+        "localized_labels": {},
+        "localized_help": {},
+        "section": [
+          "registro_declarado",
+          "datos_adicionales"
+        ],
+        "data_type": "text",
+        "required": false,
+        "input_kind": "manual",
+        "formula": null,
+        "binding": null,
+        "alternate_bindings": [],
+        "export_refs": [],
+        "constraints": null,
+        "form_number": null,
+        "continuidad_id": null,
+        "semantic_role": "m345_rendimientos_trabajo_superiores_60000",
+        "semantic_role_cardinality": "shared",
+        "semantic_role_cardinality_reason": null,
+        "aliases": [],
+        "internal_only": false,
+        "legal_refs": [
+          "orden-hfp-528-2023:art-unico",
+          "orden-hac-1504-2024:art-octavo",
+          "orden-hac-1430-2025:art-septimo"
+        ],
+        "source_refs": [
+          "aeat-dr-345-2025",
+          "boe-modelo-345-2023-amendment-hfp-528",
+          "boe-modelo-345-2024-amendment-hac-1504",
+          "boe-modelo-345-2025-amendment-hac-1430"
+        ]
+      },
+      {
+        "id": "empleador-nif",
+        "number": "tipo2.272-280",
+        "segmento": null,
+        "label": "NIF del empleador promotor o tomador",
+        "localized_labels": {},
+        "localized_help": {},
+        "section": [
+          "registro_declarado",
+          "empleador"
+        ],
+        "data_type": "nif",
+        "required": false,
+        "input_kind": "manual",
+        "formula": null,
+        "binding": null,
+        "alternate_bindings": [],
+        "export_refs": [],
+        "constraints": null,
+        "form_number": null,
+        "continuidad_id": null,
+        "semantic_role": "m345_empleador_nif",
+        "semantic_role_cardinality": "shared",
+        "semantic_role_cardinality_reason": null,
+        "aliases": [],
+        "internal_only": false,
+        "legal_refs": [
+          "orden-hfp-528-2023:art-unico"
+        ],
+        "source_refs": [
+          "aeat-dr-345-2025",
+          "boe-modelo-345-2023-amendment-hfp-528"
+        ]
+      },
+      {
+        "id": "empleador-nombre",
+        "number": "tipo2.281-320",
+        "segmento": null,
+        "label": "Apellidos y nombre o razon social del empleador",
+        "localized_labels": {},
+        "localized_help": {},
+        "section": [
+          "registro_declarado",
+          "empleador"
+        ],
+        "data_type": "name",
+        "required": false,
+        "input_kind": "manual",
+        "formula": null,
+        "binding": null,
+        "alternate_bindings": [],
+        "export_refs": [],
+        "constraints": null,
+        "form_number": null,
+        "continuidad_id": null,
+        "semantic_role": "m345_empleador_nombre",
+        "semantic_role_cardinality": "shared",
+        "semantic_role_cardinality_reason": null,
+        "aliases": [],
+        "internal_only": false,
+        "legal_refs": [
+          "orden-hfp-528-2023:art-unico"
+        ],
+        "source_refs": [
+          "aeat-dr-345-2025",
+          "boe-modelo-345-2023-amendment-hfp-528"
+        ]
+      },
+      {
+        "id": "devoluciones-excesos",
+        "number": "tipo2.321",
+        "segmento": null,
+        "label": "Devoluciones o reintegros por excesos de aportaciones",
+        "localized_labels": {},
+        "localized_help": {},
+        "section": [
+          "registro_declarado",
+          "aportaciones"
+        ],
+        "data_type": "text",
+        "required": false,
+        "input_kind": "manual",
+        "formula": null,
+        "binding": null,
+        "alternate_bindings": [],
+        "export_refs": [],
+        "constraints": null,
+        "form_number": null,
+        "continuidad_id": null,
+        "semantic_role": "m345_devoluciones_excesos",
+        "semantic_role_cardinality": "shared",
+        "semantic_role_cardinality_reason": null,
+        "aliases": [],
+        "internal_only": false,
+        "legal_refs": [
+          "orden-hfp-528-2023:art-unico"
+        ],
+        "source_refs": [
+          "aeat-dr-345-2025",
+          "boe-modelo-345-2023-amendment-hfp-528"
+        ]
+      }
+    ],
+    "formulas": [],
+    "bindings": [],
+    "algorithm_providers": [],
+    "algorithm_bindings": [],
+    "relations": [],
+    "export_layouts": [],
+    "extraction_profiles": [],
+    "live_cross_references": [],
+    "workbook_parity_refs": [
+      {
+        "id": "modelo-345-2025-static-layout",
+        "workbook_source": "aeat-dr-345-2025",
+        "fixture_id": "modelo-345-2025-record-design-layout",
+        "formula_coverage": "static_layout",
+        "runner_required": false,
+        "output_cells": {},
+        "tolerance": "0.00",
+        "legal_refs": [
+          "orden-hfp-823-2022:art-1",
+          "orden-hfp-528-2023:art-unico",
+          "orden-hfp-1397-2023:art-sexto",
+          "orden-hac-1504-2024:art-octavo",
+          "orden-hac-1430-2025:art-septimo"
+        ],
+        "source_refs": [
+          "aeat-dr-345-2025",
+          "boe-modelo-345-base-order",
+          "boe-modelo-345-2023-amendment-hfp-528",
+          "boe-modelo-345-2023-amendment-hfp-1397",
+          "boe-modelo-345-2024-amendment-hac-1504",
+          "boe-modelo-345-2025-amendment-hac-1430"
+        ]
+      }
+    ],
+    "verification_expectations": [],
+    "application_links": [
+      {
+        "id": "modelo-345-filing",
+        "surface": "filing",
+        "consumer": "aeat.application.filing",
+        "requires_snapshot": true,
+        "legal_refs": [
+          "orden-hfp-823-2022:art-1",
+          "orden-hfp-823-2022:art-5"
+        ],
+        "source_refs": [
+          "aeat-modelo-345-procedure",
+          "aeat-dr-345-2025",
+          "boe-modelo-345-base-order"
+        ]
+      },
+      {
+        "id": "modelo-345-deadline",
+        "surface": "deadline",
+        "consumer": "aeat.domain.deadlines",
+        "requires_snapshot": true,
+        "legal_refs": [
+          "orden-hfp-823-2022:art-4"
+        ],
+        "source_refs": [
+          "aeat-modelo-345-deadlines",
+          "boe-modelo-345-base-order"
+        ]
+      }
+    ],
+    "deadline_windows": [
+      {
+        "id": "modelo-345-2025-0a",
+        "filing_year": 2025,
+        "period": {
+          "filing_year": 2025,
+          "code": "0A"
+        },
+        "period_kind": "annual",
+        "opens_on": "2026-01-01",
+        "closes_on": "2026-02-02",
+        "payment_cutoff_on": null,
+        "applicability_condition_mode": "all",
+        "applicability_conditions": [],
+        "legal_refs": [
+          "orden-hfp-823-2022:art-4"
+        ],
+        "source_refs": [
+          "aeat-modelo-345-deadlines",
+          "boe-modelo-345-base-order"
+        ]
+      }
+    ],
+    "filing_schedules": [
+      {
+        "id": "modelo-345-anual",
+        "period_kind": "annual",
+        "periods": [
+          "0A"
+        ],
+        "profile_condition_mode": "all",
+        "profile_conditions": [],
+        "legal_refs": [
+          "orden-hfp-823-2022:art-4"
+        ],
+        "source_refs": [
+          "aeat-modelo-345-deadlines",
+          "boe-modelo-345-base-order"
+        ]
+      }
+    ],
+    "support_removal_decisions": [],
+    "constructs": [],
+    "dependency_classifications": [],
+    "completeness_manifest": null,
+    "verification_predicates": [],
+    "continuidad_validation": "advisory",
+    "casilla_continuidad_evolutions": []
+  }
+}

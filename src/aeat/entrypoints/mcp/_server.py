@@ -40,6 +40,12 @@ import sys
 import time
 import uuid
 
+from ._corpus_tools import (
+    CORPUS_SEARCH_TOOL,
+    build_corpus_search_payload,
+    build_corpus_search_tool,
+    render_corpus_search_text,
+)
 from ._dispatch import command_key_for_tool
 from ._elicitation import (
     ConfirmDecision,
@@ -74,6 +80,12 @@ from ._resources import (
     read_harness_resource,
 )
 from ._telemetry import SessionTelemetryWriter
+from ._terminology_tools import (
+    TERMINOLOGY_SEARCH_TOOL,
+    build_terminology_search_payload,
+    build_terminology_search_tool,
+    render_terminology_search_text,
+)
 from ._tools import McpToolDescriptor, build_tool_descriptors
 
 _INSTALL_HINT = "the MCP server requires the agent extra: pip install 'aeat[agent]'"
@@ -341,6 +353,11 @@ def build_server(
     sdk_tools = build_sdk_tools(scoped_descriptors)
     meta_tools = build_meta_sdk_tools()
     floor_tool = build_harness_floor_tool()
+    # Grounding tools (ADR R3): read-only search over the bundled legal corpus
+    # and the taxpayer-facing terminology handbook. Always advertised (never
+    # persona-scoped away) — every persona benefits from grounding its narration
+    # in authoritative text, and neither tool mutates state.
+    grounding_tools = [build_corpus_search_tool(), build_terminology_search_tool()]
 
     # Per-session serving-path gates (ADR R6) and telemetry (ADR R7): the
     # grounding window accumulates this session's tool-result JSON in memory
@@ -405,8 +422,9 @@ def build_server(
         # package this module type-checks against declares a narrower parameter type.
         # The harness.load floor tool is advertised first and is never persona-scoped
         # away: per ADR R4 it is the universal operating-layer channel that must reach
-        # any client, including a minimal tools-only one.
-        return [floor_tool, *sdk_tools, *meta_tools]  # type: ignore[list-item]
+        # any client, including a minimal tools-only one. The grounding tools follow
+        # for the same always-available reason (ADR R3).
+        return [floor_tool, *grounding_tools, *sdk_tools, *meta_tools]  # type: ignore[list-item]
 
     @server.call_tool()
     async def _call_tool(name: str, arguments: dict[str, object]) -> CallToolResult:
@@ -415,6 +433,38 @@ def build_server(
             return CallToolResult(
                 content=[TextContent(type="text", text=render_harness_floor_text(floor_payload))],
                 structuredContent=floor_payload.model_dump(mode="json"),
+                isError=False,
+            )
+        if name == CORPUS_SEARCH_TOOL:
+            try:
+                corpus_payload = build_corpus_search_payload(
+                    str(arguments.get("query", "") or ""),
+                    limit=int(arguments.get("limit", 8) or 8),
+                )
+            except Exception as exc:
+                return CallToolResult(
+                    content=[TextContent(type="text", text=f"corpus search unavailable: {exc}")],
+                    isError=True,
+                )
+            return CallToolResult(
+                content=[TextContent(type="text", text=render_corpus_search_text(corpus_payload))],
+                structuredContent=corpus_payload.model_dump(mode="json"),
+                isError=False,
+            )
+        if name == TERMINOLOGY_SEARCH_TOOL:
+            try:
+                term_payload = build_terminology_search_payload(
+                    str(arguments.get("query", "") or ""),
+                    limit=int(arguments.get("limit", 8) or 8),
+                )
+            except Exception as exc:
+                return CallToolResult(
+                    content=[TextContent(type="text", text=f"terminology search unavailable: {exc}")],
+                    isError=True,
+                )
+            return CallToolResult(
+                content=[TextContent(type="text", text=render_terminology_search_text(term_payload))],
+                structuredContent=term_payload.model_dump(mode="json"),
                 isError=False,
             )
         if name == _META_SEARCH_TOOL:

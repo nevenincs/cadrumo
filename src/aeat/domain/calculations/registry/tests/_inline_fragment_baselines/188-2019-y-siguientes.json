@@ -1,214 +1,403 @@
 {
   "modelo_id": "188",
+  "revision_id": "2019-y-siguientes",
   "revision": {
-    "algorithm_bindings": [],
+    "id": "2019-y-siguientes",
+    "label": "Orden EHA/3377/2011, ejercicios 2019 y siguientes",
+    "valid_from": "2019-01-01",
+    "valid_to": null,
+    "period_selector": {
+      "years": [],
+      "year_from": 2019,
+      "year_to": null,
+      "periods": [
+        "0A"
+      ]
+    },
+    "legal_refs": [
+      "orden-eha-3377-2011:art-1",
+      "ley-35-2006:art-99",
+      "rd-439-2007:art-108"
+    ],
+    "source_refs": [
+      "aeat-modelo-188-procedure",
+      "boe-modelo-188-form-layout"
+    ],
+    "orden_aplicabilidad": [
+      "orden-eha-3377-2011:art-1"
+    ],
+    "parameters": [],
+    "casillas": [
+      {
+        "id": "03",
+        "number": "03",
+        "segmento": null,
+        "label": "Base retenciones e ingresos a cuenta",
+        "localized_labels": {},
+        "localized_help": {},
+        "section": [
+          "resumen"
+        ],
+        "data_type": "money",
+        "required": false,
+        "input_kind": "manual",
+        "formula": null,
+        "binding": null,
+        "alternate_bindings": [],
+        "export_refs": [],
+        "constraints": null,
+        "form_number": null,
+        "continuidad_id": null,
+        "semantic_role": "capitalizacion_seguros_resumen_base",
+        "semantic_role_cardinality": "shared",
+        "semantic_role_cardinality_reason": null,
+        "aliases": [],
+        "internal_only": false,
+        "legal_refs": [
+          "ley-35-2006:art-99",
+          "orden-eha-3377-2011:art-1"
+        ],
+        "source_refs": [
+          "boe-modelo-188-form-layout"
+        ]
+      },
+      {
+        "id": "04",
+        "number": "04",
+        "segmento": null,
+        "label": "Retenciones e ingresos a cuenta declarados",
+        "localized_labels": {},
+        "localized_help": {},
+        "section": [
+          "resumen"
+        ],
+        "data_type": "money",
+        "required": false,
+        "input_kind": "manual",
+        "formula": null,
+        "binding": null,
+        "alternate_bindings": [],
+        "export_refs": [],
+        "constraints": null,
+        "form_number": null,
+        "continuidad_id": null,
+        "semantic_role": "capitalizacion_seguros_resumen_retenciones",
+        "semantic_role_cardinality": "shared",
+        "semantic_role_cardinality_reason": null,
+        "aliases": [],
+        "internal_only": false,
+        "legal_refs": [
+          "ley-35-2006:art-99",
+          "orden-eha-3377-2011:art-1"
+        ],
+        "source_refs": [
+          "boe-modelo-188-form-layout"
+        ]
+      },
+      {
+        "id": "05",
+        "number": "05",
+        "segmento": null,
+        "label": "Total retenciones del resumen anual",
+        "localized_labels": {},
+        "localized_help": {},
+        "section": [
+          "resumen"
+        ],
+        "data_type": "money",
+        "required": false,
+        "input_kind": "computed",
+        "formula": "modelo-188-total",
+        "binding": null,
+        "alternate_bindings": [],
+        "export_refs": [],
+        "constraints": null,
+        "form_number": null,
+        "continuidad_id": null,
+        "semantic_role": "capitalizacion_seguros_resumen_total",
+        "semantic_role_cardinality": "shared",
+        "semantic_role_cardinality_reason": null,
+        "aliases": [],
+        "internal_only": false,
+        "legal_refs": [
+          "ley-35-2006:art-99",
+          "orden-eha-3377-2011:art-1"
+        ],
+        "source_refs": [
+          "boe-modelo-188-form-layout"
+        ]
+      }
+    ],
+    "formulas": [
+      {
+        "id": "modelo-188-total",
+        "target_casilla_id": "05",
+        "expression": {
+          "op": "add",
+          "args": [
+            {
+              "op": null,
+              "args": [],
+              "casilla_id": "04",
+              "binding": null,
+              "date_binding": null,
+              "parameter": null,
+              "relation": null,
+              "literal": null,
+              "dispatch_table": null
+            }
+          ],
+          "casilla_id": null,
+          "binding": null,
+          "date_binding": null,
+          "parameter": null,
+          "relation": null,
+          "literal": null,
+          "dispatch_table": null
+        },
+        "rounding": "money-2",
+        "legal_refs": [
+          "ley-35-2006:art-99",
+          "orden-eha-3377-2011:art-1"
+        ],
+        "source_refs": [
+          "aeat-modelo-188-procedure",
+          "boe-modelo-188-form-layout"
+        ],
+        "source_citations": [
+          {
+            "source_ref": "aeat-modelo-188-procedure",
+            "required_text": [
+              "188"
+            ]
+          }
+        ]
+      }
+    ],
+    "bindings": [],
     "algorithm_providers": [],
+    "algorithm_bindings": [],
+    "relations": [],
+    "export_layouts": [],
+    "extraction_profiles": [],
+    "live_cross_references": [],
+    "workbook_parity_refs": [
+      {
+        "id": "modelo-188-record-design",
+        "workbook_source": "boe-modelo-188-form-layout",
+        "fixture_id": "modelo-188-record-design-layout",
+        "formula_coverage": "record_design_layout",
+        "runner_required": false,
+        "output_cells": {},
+        "tolerance": "0.00",
+        "legal_refs": [
+          "orden-eha-3377-2011:art-1"
+        ],
+        "source_refs": [
+          "boe-modelo-188-form-layout"
+        ]
+      }
+    ],
+    "verification_expectations": [
+      {
+        "id": "modelo-188-2019-y-siguientes-reconcile-when-present",
+        "computed_casilla_ids": [],
+        "reconcile_when_present_casilla_ids": [
+          "05"
+        ],
+        "externally_grounded_casilla_ids": [],
+        "reconciliation_total_casilla_ids": {},
+        "tolerance": "0.01",
+        "rounding": "money-2",
+        "min_coverage": "0",
+        "discrepancy_causes": [
+          "extraction_unreliable",
+          "unmodelled_rule",
+          "rounding",
+          "correctness_divergence"
+        ],
+        "legal_refs": [
+          "ley-35-2006:art-99",
+          "orden-eha-3377-2011:art-1"
+        ],
+        "source_refs": [
+          "aeat-modelo-188-procedure",
+          "boe-modelo-188-form-layout"
+        ]
+      }
+    ],
     "application_links": [
       {
-        "consumer": "aeat.domain.calculations.registry",
         "id": "modelo-188-calculation",
+        "surface": "calculation",
+        "consumer": "aeat.domain.calculations.registry",
+        "requires_snapshot": true,
         "legal_refs": [
           "orden-eha-3377-2011:art-1",
           "ley-35-2006:art-99"
         ],
-        "requires_snapshot": true,
         "source_refs": [
           "aeat-modelo-188-procedure",
           "boe-modelo-188-form-layout"
-        ],
-        "surface": "calculation"
+        ]
       },
       {
-        "consumer": "aeat.domain.deadlines",
         "id": "modelo-188-deadline",
+        "surface": "deadline",
+        "consumer": "aeat.domain.deadlines",
+        "requires_snapshot": true,
         "legal_refs": [
           "orden-eha-3377-2011:art-1"
         ],
-        "requires_snapshot": true,
         "source_refs": [
           "aeat-modelo-188-procedure"
-        ],
-        "surface": "deadline"
+        ]
       },
       {
-        "consumer": "aeat.application.filing",
         "id": "modelo-188-filing",
+        "surface": "filing",
+        "consumer": "aeat.application.filing",
+        "requires_snapshot": true,
         "legal_refs": [
           "orden-eha-3377-2011:art-1"
         ],
-        "requires_snapshot": true,
         "source_refs": [
           "aeat-modelo-188-procedure"
-        ],
-        "surface": "filing"
+        ]
       },
       {
-        "consumer": "aeat.application.verification",
         "id": "modelo-188-2019-y-siguientes-verification",
+        "surface": "verification",
+        "consumer": "aeat.application.verification",
+        "requires_snapshot": true,
         "legal_refs": [
           "ley-35-2006:art-99",
           "orden-eha-3377-2011:art-1"
         ],
+        "source_refs": [
+          "aeat-modelo-188-procedure",
+          "boe-modelo-188-form-layout"
+        ]
+      },
+      {
+        "id": "modelo-188-review",
+        "surface": "review",
+        "consumer": "aeat.application.filing.review",
         "requires_snapshot": true,
+        "legal_refs": [
+          "orden-eha-3377-2011:art-1"
+        ],
+        "source_refs": [
+          "aeat-modelo-188-procedure"
+        ]
+      },
+      {
+        "id": "modelo-188-approval",
+        "surface": "approval",
+        "consumer": "aeat.application.workflow.approval",
+        "requires_snapshot": true,
+        "legal_refs": [
+          "orden-eha-3377-2011:art-1"
+        ],
+        "source_refs": [
+          "aeat-modelo-188-procedure"
+        ]
+      },
+      {
+        "id": "modelo-188-reconciliation",
+        "surface": "reconciliation",
+        "consumer": "aeat.application.reconciliation",
+        "requires_snapshot": true,
+        "legal_refs": [
+          "orden-eha-3377-2011:art-1"
+        ],
+        "source_refs": [
+          "aeat-modelo-188-procedure"
+        ]
+      },
+      {
+        "id": "modelo-188-workflow",
+        "surface": "workflow",
+        "consumer": "aeat.application.workflow",
+        "requires_snapshot": true,
+        "legal_refs": [
+          "orden-eha-3377-2011:art-1"
+        ],
+        "source_refs": [
+          "aeat-modelo-188-procedure"
+        ]
+      }
+    ],
+    "deadline_windows": [
+      {
+        "id": "modelo-188-2025-0a",
+        "filing_year": 2025,
+        "period": {
+          "filing_year": 2025,
+          "code": "0A"
+        },
+        "period_kind": "annual",
+        "opens_on": "2026-01-01",
+        "closes_on": "2026-01-31",
+        "payment_cutoff_on": null,
+        "applicability_condition_mode": "all",
+        "applicability_conditions": [],
+        "legal_refs": [
+          "orden-eha-3377-2011:art-1"
+        ],
+        "source_refs": [
+          "aeat-modelo-188-procedure",
+          "boe-modelo-188-form-layout"
+        ]
+      }
+    ],
+    "filing_schedules": [],
+    "support_removal_decisions": [],
+    "constructs": [
+      {
+        "id": "modelo-188-calculation-construct",
+        "title": "Modelo 188 calculation construct",
+        "legal_refs": [
+          "ley-35-2006:art-99",
+          "orden-eha-3377-2011:art-1"
+        ],
         "source_refs": [
           "aeat-modelo-188-procedure",
           "boe-modelo-188-form-layout"
         ],
-        "surface": "verification"
-      },
-      {
-        "consumer": "aeat.application.filing.review",
-        "id": "modelo-188-review",
-        "legal_refs": [
-          "orden-eha-3377-2011:art-1"
+        "casilla_ids": [],
+        "formulas": [
+          "modelo-188-total"
         ],
-        "requires_snapshot": true,
-        "source_refs": [
-          "aeat-modelo-188-procedure"
+        "parameters": [],
+        "bindings": [],
+        "algorithm_providers": [],
+        "algorithm_bindings": [],
+        "relations": [],
+        "export_layouts": [],
+        "extraction_profiles": [],
+        "live_cross_references": [],
+        "workbook_parity_refs": [],
+        "verification_expectations": [],
+        "application_links": [
+          "modelo-188-calculation",
+          "modelo-188-deadline",
+          "modelo-188-filing",
+          "modelo-188-2019-y-siguientes-verification",
+          "modelo-188-review",
+          "modelo-188-approval",
+          "modelo-188-reconciliation",
+          "modelo-188-workflow"
         ],
-        "surface": "review"
-      },
-      {
-        "consumer": "aeat.application.workflow.approval",
-        "id": "modelo-188-approval",
-        "legal_refs": [
-          "orden-eha-3377-2011:art-1"
-        ],
-        "requires_snapshot": true,
-        "source_refs": [
-          "aeat-modelo-188-procedure"
-        ],
-        "surface": "approval"
-      },
-      {
-        "consumer": "aeat.application.reconciliation",
-        "id": "modelo-188-reconciliation",
-        "legal_refs": [
-          "orden-eha-3377-2011:art-1"
-        ],
-        "requires_snapshot": true,
-        "source_refs": [
-          "aeat-modelo-188-procedure"
-        ],
-        "surface": "reconciliation"
-      },
-      {
-        "consumer": "aeat.application.workflow",
-        "id": "modelo-188-workflow",
-        "legal_refs": [
-          "orden-eha-3377-2011:art-1"
-        ],
-        "requires_snapshot": true,
-        "source_refs": [
-          "aeat-modelo-188-procedure"
-        ],
-        "surface": "workflow"
+        "deadline_windows": [],
+        "filing_schedules": [],
+        "support_removal_decisions": [],
+        "dependency_classifications": []
       }
     ],
-    "bindings": [],
-    "casilla_continuidad_evolutions": [],
-    "casillas": [
-      {
-        "aliases": [],
-        "alternate_bindings": [],
-        "binding": null,
-        "constraints": null,
-        "continuidad_id": null,
-        "data_type": "money",
-        "export_refs": [],
-        "form_number": null,
-        "formula": null,
-        "id": "03",
-        "input_kind": "manual",
-        "internal_only": false,
-        "label": "Base retenciones e ingresos a cuenta",
-        "legal_refs": [
-          "ley-35-2006:art-99",
-          "orden-eha-3377-2011:art-1"
-        ],
-        "localized_help": {},
-        "localized_labels": {},
-        "number": "03",
-        "required": false,
-        "section": [
-          "resumen"
-        ],
-        "segmento": null,
-        "semantic_role": "capitalizacion_seguros_resumen_base",
-        "semantic_role_cardinality": "shared",
-        "semantic_role_cardinality_reason": null,
-        "source_refs": [
-          "boe-modelo-188-form-layout"
-        ]
-      },
-      {
-        "aliases": [],
-        "alternate_bindings": [],
-        "binding": null,
-        "constraints": null,
-        "continuidad_id": null,
-        "data_type": "money",
-        "export_refs": [],
-        "form_number": null,
-        "formula": null,
-        "id": "04",
-        "input_kind": "manual",
-        "internal_only": false,
-        "label": "Retenciones e ingresos a cuenta declarados",
-        "legal_refs": [
-          "ley-35-2006:art-99",
-          "orden-eha-3377-2011:art-1"
-        ],
-        "localized_help": {},
-        "localized_labels": {},
-        "number": "04",
-        "required": false,
-        "section": [
-          "resumen"
-        ],
-        "segmento": null,
-        "semantic_role": "capitalizacion_seguros_resumen_retenciones",
-        "semantic_role_cardinality": "shared",
-        "semantic_role_cardinality_reason": null,
-        "source_refs": [
-          "boe-modelo-188-form-layout"
-        ]
-      },
-      {
-        "aliases": [],
-        "alternate_bindings": [],
-        "binding": null,
-        "constraints": null,
-        "continuidad_id": null,
-        "data_type": "money",
-        "export_refs": [],
-        "form_number": null,
-        "formula": "modelo-188-total",
-        "id": "05",
-        "input_kind": "computed",
-        "internal_only": false,
-        "label": "Total retenciones del resumen anual",
-        "legal_refs": [
-          "ley-35-2006:art-99",
-          "orden-eha-3377-2011:art-1"
-        ],
-        "localized_help": {},
-        "localized_labels": {},
-        "number": "05",
-        "required": false,
-        "section": [
-          "resumen"
-        ],
-        "segmento": null,
-        "semantic_role": "capitalizacion_seguros_resumen_total",
-        "semantic_role_cardinality": "shared",
-        "semantic_role_cardinality_reason": null,
-        "source_refs": [
-          "boe-modelo-188-form-layout"
-        ]
-      }
-    ],
+    "dependency_classifications": [],
     "completeness_manifest": {
+      "source_ref": "boe-modelo-188-form-layout",
       "casillas": [
         {
           "casilla_id": "05",
@@ -221,207 +410,18 @@
           "segmento": null
         }
       ],
+      "manual_extraction": false,
+      "manual_extraction_reason": null,
       "legal_refs": [
         "orden-eha-3377-2011:art-1",
         "ley-35-2006:art-99"
       ],
-      "manual_extraction": false,
-      "manual_extraction_reason": null,
-      "source_ref": "boe-modelo-188-form-layout",
       "source_refs": [
         "boe-modelo-188-form-layout"
       ]
     },
-    "constructs": [
-      {
-        "algorithm_bindings": [],
-        "algorithm_providers": [],
-        "application_links": [
-          "modelo-188-calculation",
-          "modelo-188-deadline",
-          "modelo-188-filing",
-          "modelo-188-2019-y-siguientes-verification",
-          "modelo-188-review",
-          "modelo-188-approval",
-          "modelo-188-reconciliation",
-          "modelo-188-workflow"
-        ],
-        "bindings": [],
-        "casilla_ids": [],
-        "deadline_windows": [],
-        "dependency_classifications": [],
-        "export_layouts": [],
-        "extraction_profiles": [],
-        "filing_schedules": [],
-        "formulas": [
-          "modelo-188-total"
-        ],
-        "id": "modelo-188-calculation-construct",
-        "legal_refs": [
-          "ley-35-2006:art-99",
-          "orden-eha-3377-2011:art-1"
-        ],
-        "live_cross_references": [],
-        "parameters": [],
-        "relations": [],
-        "source_refs": [
-          "aeat-modelo-188-procedure",
-          "boe-modelo-188-form-layout"
-        ],
-        "support_removal_decisions": [],
-        "title": "Modelo 188 calculation construct",
-        "verification_expectations": [],
-        "workbook_parity_refs": []
-      }
-    ],
-    "continuidad_validation": "advisory",
-    "deadline_windows": [
-      {
-        "applicability_condition_mode": "all",
-        "applicability_conditions": [],
-        "closes_on": "2026-01-31",
-        "filing_year": 2025,
-        "id": "modelo-188-2025-0a",
-        "legal_refs": [
-          "orden-eha-3377-2011:art-1"
-        ],
-        "opens_on": "2026-01-01",
-        "payment_cutoff_on": null,
-        "period": {
-          "code": "0A",
-          "filing_year": 2025
-        },
-        "period_kind": "annual",
-        "source_refs": [
-          "aeat-modelo-188-procedure",
-          "boe-modelo-188-form-layout"
-        ]
-      }
-    ],
-    "dependency_classifications": [],
-    "export_layouts": [],
-    "extraction_profiles": [],
-    "filing_schedules": [],
-    "formulas": [
-      {
-        "expression": {
-          "args": [
-            {
-              "args": [],
-              "binding": null,
-              "casilla_id": "04",
-              "date_binding": null,
-              "dispatch_table": null,
-              "literal": null,
-              "op": null,
-              "parameter": null,
-              "relation": null
-            }
-          ],
-          "binding": null,
-          "casilla_id": null,
-          "date_binding": null,
-          "dispatch_table": null,
-          "literal": null,
-          "op": "add",
-          "parameter": null,
-          "relation": null
-        },
-        "id": "modelo-188-total",
-        "legal_refs": [
-          "ley-35-2006:art-99",
-          "orden-eha-3377-2011:art-1"
-        ],
-        "rounding": "money-2",
-        "source_citations": [
-          {
-            "required_text": [
-              "188"
-            ],
-            "source_ref": "aeat-modelo-188-procedure"
-          }
-        ],
-        "source_refs": [
-          "aeat-modelo-188-procedure",
-          "boe-modelo-188-form-layout"
-        ],
-        "target_casilla_id": "05"
-      }
-    ],
-    "id": "2019-y-siguientes",
-    "label": "Orden EHA/3377/2011, ejercicios 2019 y siguientes",
-    "legal_refs": [
-      "orden-eha-3377-2011:art-1",
-      "ley-35-2006:art-99",
-      "rd-439-2007:art-108"
-    ],
-    "live_cross_references": [],
-    "orden_aplicabilidad": [
-      "orden-eha-3377-2011:art-1"
-    ],
-    "parameters": [],
-    "period_selector": {
-      "periods": [
-        "0A"
-      ],
-      "year_from": 2019,
-      "year_to": null,
-      "years": []
-    },
-    "relations": [],
-    "source_refs": [
-      "aeat-modelo-188-procedure",
-      "boe-modelo-188-form-layout"
-    ],
-    "support_removal_decisions": [],
-    "valid_from": "2019-01-01",
-    "valid_to": null,
-    "verification_expectations": [
-      {
-        "computed_casilla_ids": [],
-        "discrepancy_causes": [
-          "extraction_unreliable",
-          "unmodelled_rule",
-          "rounding",
-          "correctness_divergence"
-        ],
-        "externally_grounded_casilla_ids": [],
-        "id": "modelo-188-2019-y-siguientes-reconcile-when-present",
-        "legal_refs": [
-          "ley-35-2006:art-99",
-          "orden-eha-3377-2011:art-1"
-        ],
-        "min_coverage": "0",
-        "reconcile_when_present_casilla_ids": [
-          "05"
-        ],
-        "reconciliation_total_casilla_ids": {},
-        "rounding": "money-2",
-        "source_refs": [
-          "aeat-modelo-188-procedure",
-          "boe-modelo-188-form-layout"
-        ],
-        "tolerance": "0.01"
-      }
-    ],
     "verification_predicates": [],
-    "workbook_parity_refs": [
-      {
-        "fixture_id": "modelo-188-record-design-layout",
-        "formula_coverage": "record_design_layout",
-        "id": "modelo-188-record-design",
-        "legal_refs": [
-          "orden-eha-3377-2011:art-1"
-        ],
-        "output_cells": {},
-        "runner_required": false,
-        "source_refs": [
-          "boe-modelo-188-form-layout"
-        ],
-        "tolerance": "0.00",
-        "workbook_source": "boe-modelo-188-form-layout"
-      }
-    ]
-  },
-  "revision_id": "2019-y-siguientes"
+    "continuidad_validation": "advisory",
+    "casilla_continuidad_evolutions": []
+  }
 }

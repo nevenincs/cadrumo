@@ -1,0 +1,40 @@
+[[revisions."2026".deadline_windows]]
+id = "modelo-136-2026-1t"
+filing_year = 2026
+period = "2026 1T"
+period_kind = "quarterly"
+opens_on = 2026-04-01
+closes_on = 2026-04-20
+legal_refs = ["orden-hap-70-2013:art-7"]
+source_refs = ["aeat-modelo-136-procedure", "boe-modelo-136-base-order"]
+
+[[revisions."2026".deadline_windows]]
+id = "modelo-136-2026-2t"
+filing_year = 2026
+period = "2026 2T"
+period_kind = "quarterly"
+opens_on = 2026-07-01
+closes_on = 2026-07-20
+legal_refs = ["orden-hap-70-2013:art-7"]
+source_refs = ["aeat-modelo-136-procedure", "boe-modelo-136-base-order"]
+
+[[revisions."2026".deadline_windows]]
+id = "modelo-136-2026-3t"
+filing_year = 2026
+period = "2026 3T"
+period_kind = "quarterly"
+opens_on = 2026-10-01
+closes_on = 2026-10-20
+legal_refs = ["orden-hap-70-2013:art-7"]
+source_refs = ["aeat-modelo-136-procedure", "boe-modelo-136-base-order"]
+
+[[revisions."2026".deadline_windows]]
+id = "modelo-136-2026-4t"
+filing_year = 2026
+period = "2026 4T"
+period_kind = "quarterly"
+opens_on = 2027-01-01
+closes_on = 2027-01-20
+legal_refs = ["orden-hap-70-2013:art-7"]
+source_refs = ["aeat-modelo-136-procedure", "boe-modelo-136-base-order"]
+

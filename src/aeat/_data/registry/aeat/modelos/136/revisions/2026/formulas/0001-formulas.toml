@@ -1,0 +1,49 @@
+[[revisions."2026".formulas]]
+id = "modelo-136-base-imponible"
+target_casilla_id = "04"
+expression = { op = "subtract", args = [{ casilla_id = "02" }, { casilla_id = "03" }] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:da-33", "orden-hac-763-2018:art-tercero"]
+source_refs = ["boe-lirpf-lottery-prize-special-levy", "boe-modelo-136-current-form-text"]
+
+[[revisions."2026".formulas.source_citations]]
+source_ref = "boe-lirpf-lottery-prize-special-levy"
+required_text = [
+    "La base imponible del gravamen especial estara formada por el importe del premio que exceda de la cuantia exenta",
+]
+
+[[revisions."2026".formulas.source_citations]]
+source_ref = "boe-modelo-136-current-form-text"
+required_text = ["Base imponible", "02", "03"]
+
+[[revisions."2026".formulas]]
+id = "modelo-136-cuota-gravamen-especial"
+target_casilla_id = "05"
+expression = { op = "percent", args = [{ casilla_id = "04" }, { literal = "20" }] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:da-33", "orden-hac-763-2018:art-tercero"]
+source_refs = ["boe-lirpf-lottery-prize-special-levy", "boe-modelo-136-current-form-text"]
+
+[[revisions."2026".formulas.source_citations]]
+source_ref = "boe-lirpf-lottery-prize-special-levy"
+required_text = [
+    "La cuota integra del gravamen especial sera la resultante de aplicar a la base imponible",
+    "tipo del 20 por ciento",
+]
+
+[[revisions."2026".formulas.source_citations]]
+source_ref = "boe-modelo-136-current-form-text"
+required_text = ["Cuota del gravamen especial", "20%", "casilla 04"]
+
+[[revisions."2026".formulas]]
+id = "modelo-136-resultado-ingresar"
+target_casilla_id = "07"
+expression = { op = "subtract", args = [{ casilla_id = "05" }, { casilla_id = "06" }] }
+rounding = "money-2"
+legal_refs = ["orden-hap-70-2013:art-11", "orden-hac-763-2018:art-tercero"]
+source_refs = ["boe-modelo-136-current-form-text"]
+
+[[revisions."2026".formulas.source_citations]]
+source_ref = "boe-modelo-136-current-form-text"
+required_text = ["Resultado a ingresar", "05", "06"]
+

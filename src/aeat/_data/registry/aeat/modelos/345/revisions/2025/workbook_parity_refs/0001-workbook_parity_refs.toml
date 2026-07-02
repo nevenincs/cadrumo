@@ -1,0 +1,23 @@
+[[revisions."2025".workbook_parity_refs]]
+id = "modelo-345-2025-static-layout"
+workbook_source = "aeat-dr-345-2025"
+fixture_id = "modelo-345-2025-record-design-layout"
+formula_coverage = "static_layout"
+runner_required = false
+tolerance = "0.00"
+legal_refs = [
+    "orden-hfp-823-2022:art-1",
+    "orden-hfp-528-2023:art-unico",
+    "orden-hfp-1397-2023:art-sexto",
+    "orden-hac-1504-2024:art-octavo",
+    "orden-hac-1430-2025:art-septimo",
+]
+source_refs = [
+    "aeat-dr-345-2025",
+    "boe-modelo-345-base-order",
+    "boe-modelo-345-2023-amendment-hfp-528",
+    "boe-modelo-345-2023-amendment-hfp-1397",
+    "boe-modelo-345-2024-amendment-hac-1504",
+    "boe-modelo-345-2025-amendment-hac-1430",
+]
+

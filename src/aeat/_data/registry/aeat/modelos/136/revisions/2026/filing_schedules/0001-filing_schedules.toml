@@ -1,0 +1,7 @@
+[[revisions."2026".filing_schedules]]
+id = "modelo-136-trimestral"
+period_kind = "quarterly"
+periods = ["1T", "2T", "3T", "4T"]
+profile_condition_mode = "all"
+legal_refs = ["orden-hap-70-2013:art-7", "orden-hap-70-2013:art-11"]
+source_refs = ["aeat-modelo-136-procedure", "boe-modelo-136-base-order"]
