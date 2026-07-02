@@ -9,6 +9,15 @@ related:
   - '[[2026-07-02-agent-harness-refoundation-adr]]'
 ---
 
+<!-- LINK RULES:
+     - [[wiki-links]] are ONLY for .vault/ documents in the
+       related: field above.
+     - The related: field carries the AUTHORISING documents
+       (ADR, research, reference, prior plan) for every Step in
+       this plan. Steps inherit this chain; per-row reference
+       footers do not exist.
+     - NEVER use [[wiki-links]] or markdown links in the
+       document body. -->
 
 # `agent-harness-refoundation` plan
 
@@ -111,7 +120,7 @@ Define the structured applies_when frontmatter schema, validate it at skill load
 
 - [x] `W05.P09.S34` - Define the structured applies_when frontmatter schema and its parser over TaxpayerProfile facts and lifecycle state; `src/aeat/agent/_skill_metadata.py`.
 - [x] `W05.P09.S35` - Validate the applies_when field at skill load; `src/aeat/agent/__init__.py`.
-- [ ] `W05.P09.S36` - Add the applies_when coverage gate asserting every skill declares a structured predicate; `src/aeat/agent/tests/test_skill_applies_when.py`.
+- [x] `W05.P09.S36` - Add the applies_when coverage gate asserting every skill declares a structured predicate; `src/aeat/agent/tests/test_skill_applies_when.py`.
 
 ### Phase `W05.P10` - Lift selection predicates into existing skills
 
