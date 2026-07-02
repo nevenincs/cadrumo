@@ -11,7 +11,7 @@ from typing import Final
 from pydantic import ValidationError
 
 from .....core.external_constants import UTF_8_ENCODING as _UTF_8_ENCODING
-from ..crypto._crypto import KEY_SIZE
+from ..crypto import KEY_SIZE
 from ..errors import DecryptionError, MasterKeyMaterialMissingError, MasterKeyUnavailableError
 from ._master_key_io import _b64decode, _b64encode, atomic_write_secure_bytes
 from ._master_key_records import _WrappedBucketDekDocument

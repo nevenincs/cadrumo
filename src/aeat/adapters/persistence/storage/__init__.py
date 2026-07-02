@@ -174,39 +174,35 @@ from ._rotation import (
     rotate_master_key,
 )
 from .attachment import AttachmentStore
-from .blob_store._blob_store import (
+from .blob_store import (
     BlobManifest,
     BlobReference,
     EncryptedBlobStore,
-)
-from .blob_store._materialisation import (
     export_to_temp_path,
     get_secret_store,
     materialise_secret,
     override_secret_store,
 )
 from .bucket import RecoveryVerificationError
-from .crypto._crypto import (
+from .crypto import (
     GCM_TAG_SIZE,
     KEY_SIZE,
     NONCE_SIZE,
     EncryptedBlob,
-    decrypt_record,
-    derive_key,
-    encrypt_record,
-)
-from .crypto._encrypted_columns import (
     EncryptedBytes,
     EncryptedJSON,
     EncryptedString,
     HashedLookup,
+    decrypt_record,
+    derive_key,
+    encrypt_record,
 )
-from .envelope import SecureBoundRepository
-from .envelope._envelope import (
+from .envelope import (
     AeadAlgorithm,
     CipherEnvelope,
     EncryptionMetadata,
     Envelope,
+    SecureBoundRepository,
     load_encrypted_envelope,
     load_envelope,
     reencrypt_envelope_file,
@@ -240,46 +236,40 @@ from .errors import (
     StorageValidationError,
     UnsecuredModeRefusedError,
 )
-from .master_key._active_session import (
-    NoActiveBucketSessionError,
-    activate_session,
-    get_active_master_key,
-    has_active_bucket_session,
-    suspend_active_session,
-)
-from .master_key._master_key import (
+from .master_key import (
     EphemeralMasterKeyProvider,
     FileFallbackMasterKeyProvider,
     KeyringMasterKeyProvider,
     MasterKeyProvider,
-    UnsecuredMasterKeyProvider,
-    activate_master_key_provider,
-    atomic_write_secure_bytes,
-    get_master_key_provider,
-    looks_like_real_tax_id,
-    refuse_unsecured_with_real_nif,
-)
-from .master_key._recovery import (
+    MintedRecovery,
+    NoActiveBucketSessionError,
     RecoveryKey,
+    RecoveryRecord,
+    UnsecuredMasterKeyProvider,
     WrappedMasterKey,
+    activate_master_key_provider,
+    activate_session,
+    atomic_write_secure_bytes,
     decode_mnemonic,
     encode_mnemonic,
     generate_recovery_key,
-    load_wrapped_master_key,
-    save_wrapped_master_key,
-    unwrap_master_key,
-    wrap_master_key,
-)
-from .master_key._recovery_facade import (
-    MintedRecovery,
+    get_active_master_key,
+    get_master_key_provider,
+    has_active_bucket_session,
     load_recovery_envelope,
+    load_wrapped_master_key,
+    looks_like_real_tax_id,
     mint_recovery_envelope,
     open_session_from_recovery,
+    refuse_unsecured_with_real_nif,
     save_recovery_envelope,
+    save_wrapped_master_key,
+    suspend_active_session,
+    unwrap_master_key,
     unwrap_recovery_envelope,
     verify_recovery_mnemonic,
+    wrap_master_key,
 )
-from .master_key._recovery_record import RecoveryRecord
 from .runtime import (
     StorageRuntime,
     StorageRuntimeReadiness,
@@ -295,7 +285,10 @@ from .runtime_repository import (
     secure_object_repository_for_bucket,
     secure_object_repository_for_cold_bootstrap_state,
 )
-from .secret_store._secret_store import SecretRecord, SecretStore
+from .secret_store import (
+    SecretRecord,
+    SecretStore,
+)
 from .sql import (
     SecureObjectDeletion,
     SecureObjectNamespaceIntegrity,

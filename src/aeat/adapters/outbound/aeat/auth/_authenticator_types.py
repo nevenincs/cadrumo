@@ -25,7 +25,7 @@ from typing import TYPE_CHECKING, Protocol, runtime_checkable
 from pydantic import BaseModel, Field, SecretStr
 
 from .....core import STRICT_FROZEN_CONFIG
-from .....core.time._utc import coerce_utc_aware
+from .....core.time import coerce_utc_aware
 from ._errors import AeatLoginAssertionError
 from ._providers import (
     AuthLoginAssertionDetail,
@@ -220,7 +220,7 @@ class BrowserSessionLike(Protocol):
 
     @property
     def profile(self) -> BrowserSessionProfileLike | None:
-        """Optional profile carrying this session's resume ``storage_state_path``."""
+        """Optional :class:`BrowserSessionProfileLike` carrying this session's resume ``storage_state_path``."""
         ...
 
     async def create_context(

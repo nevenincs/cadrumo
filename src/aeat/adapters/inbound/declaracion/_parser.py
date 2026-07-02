@@ -39,9 +39,14 @@ from ....domain.calculations.registry import (
     ValidatedRegistryAuthority,
     casillas_by_id,
 )
-from ..pdf import ExtractedCasilla
-from ..pdf._label_regex import SPANISH_AMOUNT_GROUP, TEXT_VALUE_GROUP, parse_spanish_decimal
-from ..pdf._utils import sha256_file, source_pdf_reference_path
+from ..pdf import (
+    SPANISH_AMOUNT_GROUP,
+    TEXT_VALUE_GROUP,
+    ExtractedCasilla,
+    parse_spanish_decimal,
+    sha256_file,
+    source_pdf_reference_path,
+)
 from ._detect import detect_template_revision, detect_template_revision_from_pages
 from ._errors import DeclaracionParseError, TemplateNotDetectedError
 from ._parsers import extract_pages_text, extract_pages_text_from_bytes

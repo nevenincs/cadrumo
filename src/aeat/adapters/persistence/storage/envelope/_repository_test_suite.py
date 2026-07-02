@@ -56,13 +56,16 @@ from sqlalchemy import Engine, select
 
 from .....core.config import override_settings
 from .. import EphemeralMasterKeyProvider, SensitivityClass
-from ..crypto._encrypted_columns import (
+from ..crypto import (
     decrypt_secure_object_payload,
     encrypt_secure_object_payload,
     secure_object_payload_aad,
 )
 from ..errors import ClassificationError
-from ..sql._orm import Base, SecureObjectRow
+from ..sql import (
+    Base,
+    SecureObjectRow,
+)
 from ..sql.engine import create_engine_from_settings, dispose_engine
 from ..sql.session import session_scope
 from ._envelope import Envelope

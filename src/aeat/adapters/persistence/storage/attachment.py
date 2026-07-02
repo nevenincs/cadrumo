@@ -35,11 +35,12 @@ from ....core.external_constants import UTF_8_ENCODING
 from ....core.hashing import sha256_hex
 from ....core.logging import get_logger
 from ....core.time import now
-from ....domain.attachments import Attachment, is_link_only_mime_type
-from ....domain.attachments._errors import (
+from ....domain.attachments import (
+    Attachment,
     AttachmentNotFoundError,
     AttachmentPersistenceError,
     AttachmentValidationError,
+    is_link_only_mime_type,
 )
 from ._namespace_registry import (
     ATTACHMENT_BLOB_NAMESPACE as ATTACHMENT_BLOB_STORAGE_NAMESPACE,

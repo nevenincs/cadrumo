@@ -34,7 +34,7 @@ from typing import TYPE_CHECKING
 
 from .....core.logging import get_logger
 from ..errors import StorageValidationError
-from ..secret_store._secret_store import SecretStore
+from ..secret_store import SecretStore
 from ._blob_store import EncryptedBlobStore
 
 if TYPE_CHECKING:

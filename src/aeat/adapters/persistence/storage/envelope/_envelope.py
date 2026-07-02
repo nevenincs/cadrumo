@@ -47,8 +47,13 @@ from .....core.errors import CoreValidationError
 from .....core.external_constants import UTF_8_ENCODING as _UTF_8_ENCODING
 from .....core.locks import fsync_parent_dir
 from .....core.logging import get_logger
-from .....core.time._utc import validate_utc_aware
-from ..crypto._crypto import EncryptedBlob, decrypt_record, derive_key, encrypt_record
+from .....core.time import validate_utc_aware
+from ..crypto import (
+    EncryptedBlob,
+    decrypt_record,
+    derive_key,
+    encrypt_record,
+)
 from ..errors import (
     ClassificationError,
     DecryptionError,
@@ -58,7 +63,7 @@ from ..errors import (
 from ..errors import (
     storage_validation_error as _storage_validation_error,
 )
-from ..master_key._master_key import MasterKeyProvider
+from ..master_key import MasterKeyProvider
 
 _log = get_logger(__name__)
 
@@ -337,10 +342,10 @@ class CipherEnvelope(BaseModel):
 def build_aad(classification: SensitivityClass, hkdf_context: bytes) -> bytes:
     """Build the AEAD associated-data binding for a cipher envelope.
 
-    The AAD authenticates both the classification and the consumer's
-    HKDF context, so an attacker cannot relabel ciphertext as a
-    different sensitivity class or graft a payload from one consumer
-    onto another.
+    The AAD authenticates both the :class:`SensitivityClass` classification
+    and the consumer's HKDF context, so an attacker cannot relabel
+    ciphertext as a different sensitivity class or graft a payload from
+    one consumer onto another.
     """
     return _CIPHER_ENVELOPE_AAD_PREFIX + classification.value.encode("ascii") + b"::" + hkdf_context
 

@@ -45,7 +45,7 @@ from ._parse import parse_expediente_detail, parse_resumen_tree
 from ._schema import Expediente, JustificanteRef, SedeCapture
 
 if TYPE_CHECKING:
-    from ..auth._authenticator import AeatSession
+    from ..auth import AeatSession
 
 
 log = get_logger(__name__)

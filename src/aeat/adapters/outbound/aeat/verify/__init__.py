@@ -50,9 +50,9 @@ from .....domain.calculations.registry import (
 from .....domain.calculations.registry import (
     assert_remote_operation_allowed as _assert_remote_operation_allowed,
 )
-from .....domain.justificante._errors import JustificanteVerificationError as _JustificanteVerificationError
+from .....domain.justificante import JustificanteVerificationError as _JustificanteVerificationError
 from .._playwright import PlaywrightError as _PlaywrightError
-from ..sede._errors import BrowserAdapterTypeError as _BrowserAdapterTypeError
+from ..sede import BrowserAdapterTypeError as _BrowserAdapterTypeError
 
 _logger = _get_logger(__name__)
 
