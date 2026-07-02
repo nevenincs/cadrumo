@@ -1,19 +1,19 @@
 """M036 declaration, reconcile-history, and IVA-wallet-correction payloads.
 
-Split from :mod:`~aeat.entrypoints.cli._modelo_payloads` to keep each module
+Split from :mod:`_modelo_payloads` to keep each module
 within the line budget. Each class is a strict
 :class:`OutputSchema` subclass registered through
 :func:`register_schema` and re-exported through
-:mod:`~aeat.entrypoints.cli._modelo_payloads` so the public ``--json``
+:mod:`_modelo_payloads` so the public ``--json``
 payload import surface is
 unchanged. Validated results enter
 :class:`SchemaEnvelope` through
-:func:`~aeat.entrypoints.cli._common._emit_envelope`.
+:func:`_emit_envelope`.
 
 The application modelo facade remains authoritative for
 :class:`M036DeclarationResult`,
 :class:`ModeloReconciliationHistoryEntry`, and
-:func:`~aeat.application.modelo.correct_iva_compensation_period_for_bucket`;
+:func:`correct_iva_compensation_period_for_bucket`;
 this module only documents their CLI transport projections.
 """
 
@@ -145,7 +145,7 @@ class IvaWalletCorrectResult(OutputSchema):
     and the operator reason recorded into the audit event.
 
     The mutation itself is owned by
-    :func:`~aeat.application.modelo.correct_iva_compensation_period_for_bucket`,
+    :func:`correct_iva_compensation_period_for_bucket`,
     which returns the corrected
     :class:`IvaCompensationPeriodState` and emits
     the ``MODELO_IVA_WALLET_CORRECTED`` audit event.
