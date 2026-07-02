@@ -14,8 +14,7 @@ from pathlib import Path
 
 import pytest
 
-from ....domain.filing import FilingExportError
-from ....domain.filing import ModeloValueKind
+from ....domain.filing import FilingExportError, ModeloValueKind
 from .._export import boe_representable_casilla_ids, export_draft
 from ._export_support import (
     _approved_registry_draft,
@@ -27,11 +26,20 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 
 def _required_applicable_130(provider, layout, headers) -> set:
+    # Mirror the gate's required set: calculation RESULTS (formula) and
+    # schema-required casillas that are representable. Optional inputs are excluded.
     subview = provider.get_subview("130")
     manifest = subview.completeness_manifest
     assert manifest is not None
     representable = boe_representable_casilla_ids(layout, headers=headers, schema_provider=provider)
-    return {casilla.casilla_id for casilla in manifest.casillas} & representable
+    collection = provider.get_collection("130")
+    required = {
+        casilla.casilla_id
+        for casilla in manifest.casillas
+        if (schema := collection.get(casilla.casilla_id)) is not None
+        and (schema.formula is not None or schema.required)
+    }
+    return required & representable
 
 
 def test_complete_fixed_width_draft_exports_without_panic(tmp_path: Path) -> None:

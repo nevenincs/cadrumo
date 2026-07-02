@@ -77,12 +77,21 @@ def test_complete_draft_reaches_disk_for_every_required_casilla(
     assert manifest is not None, f"modelo {modelo} must declare a completeness manifest to ground the parity gate"
 
     representable = boe_representable_casilla_ids(layout, headers=headers, schema_provider=provider)
-    required_applicable = {casilla.casilla_id for casilla in manifest.casillas} & representable
     rendered = rendered_casilla_ids(layout, draft=draft, headers=headers, schema_provider=provider)
+    # Mirror the gate's required set: calculation RESULTS (formula) and
+    # schema-required casillas that are representable. Optional inputs are excluded
+    # (a blank optional input is a valid zero, not a thin file).
+    collection = provider.get_collection(modelo)
+    required_applicable = {
+        casilla.casilla_id
+        for casilla in manifest.casillas
+        if (schema := collection.get(casilla.casilla_id)) is not None
+        and (schema.formula is not None or schema.required)
+    } & representable
 
     # Non-vacuous: the gate is genuinely active for this modelo.
     assert required_applicable, f"modelo {modelo} has an empty required-applicable set; the gate would pass trivially"
-    # Parity: every required, representable casilla reaches disk for a complete draft.
+    # Parity: every required computed/schema-required casilla reaches disk for a complete draft.
     missing = sorted(required_applicable - rendered)
     assert not missing, f"modelo {modelo} complete draft omits required casillas: {missing}"
 
