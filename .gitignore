@@ -340,7 +340,8 @@ cache/
 /_scratch*/
 # Absolute-path filenames whose colon was UTF-8-encoded past the /C\:* pattern
 # (accidental Windows temp path captured as a repo-root filename).
-/C\357\200\272*
+/C*AppData*
+/*scratchpadvault_check*
 
 # Quarantined: this plan repeatedly self-corrupts to multi-GB via the
 # vaultspec-core plan round-trip bug (wgergely/vaultspec-core#125) whenever
