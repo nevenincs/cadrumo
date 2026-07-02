@@ -174,8 +174,8 @@ class ProviderConfigurationProbe(BaseModel):
     Wraps the pure-local :func:`_probe_configured_provider` (no network,
     no active-profile requirement) so the workstation doctor
     (``aeat config check``) can render one certificate / Cl@ve Móvil
-    readiness row per :class:`~aeat.application.auth.AuthProviderKind`
-    directly from :class:`~aeat.core.config.Settings`. ``result`` is the
+    readiness row per :class:`application.auth.AuthProviderKind`
+    directly from :class:`core.config.Settings`. ``result`` is the
     typed :class:`ProviderProbeResult`; ``summary`` is the localised
     one-line operator-facing verdict.
     """
@@ -195,7 +195,7 @@ def probe_provider_configuration(
     """Run the pure-local per-provider configuration probe for ``provider``.
 
     Resolves the certificate path or Cl@ve Móvil identity from
-    :class:`~aeat.core.config.Settings` and classifies the local
+    :class:`core.config.Settings` and classifies the local
     configuration health without any network call or active-profile
     session. Returns a typed :class:`ProviderConfigurationProbe`; it
     never raises for a missing or malformed configuration — an absent
