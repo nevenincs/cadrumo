@@ -832,11 +832,10 @@ class VerifyTgviResult(VerifyObservationPayload):
 class Borrador100SnapshotSummaryPayload(OutputSchema):
     """Summary row for one persisted Modelo 100 borrador snapshot.
 
-    ``state`` is the
-    :class:`~aeat.application.live.SnapshotLifecycleState` value that controls
-    whether :class:`~aeat.application.live.Borrador100SnapshotService` exposes
-    the snapshot as active, superseded, discarded, or only through an explicit
-    ``--state all`` listing.
+    Projects :class:`Borrador100Snapshot` for :class:`Borrador100ListResult`.
+    ``state`` is the :class:`SnapshotLifecycleState` value that controls
+    whether :class:`Borrador100SnapshotService` exposes the snapshot as active,
+    superseded, discarded, or only through an explicit ``--state all`` listing.
     """
 
     snapshot_id: str
@@ -852,11 +851,9 @@ class Borrador100SnapshotSummaryPayload(OutputSchema):
 class Borrador100ListResult(OutputSchema):
     """Typed listing of bucket-scoped Modelo 100 borrador snapshots.
 
-    ``rows`` contains
-    :class:`~aeat.entrypoints.cli._app_live_payloads.Borrador100SnapshotSummaryPayload`
-    projections of
-    :class:`~aeat.application.live.Borrador100Snapshot` records returned by
-    :class:`~aeat.application.live.Borrador100SnapshotService`.
+    ``rows`` contains :class:`Borrador100SnapshotSummaryPayload` projections of
+    :class:`Borrador100Snapshot` records returned by
+    :class:`Borrador100SnapshotService`.
     """
 
     bucket_id: str
@@ -868,12 +865,12 @@ class Borrador100ListResult(OutputSchema):
 class Borrador100ViewResult(OutputSchema):
     """Typed detail view for one Modelo 100 borrador snapshot.
 
-    ``binding_values`` is a ``{BindingId: string_value}`` mapping from the
-    persisted :class:`~aeat.application.live.Borrador100Snapshot`. Decimal values
-    are rendered as their canonical string form before they reach the envelope
-    so the strict :class:`~aeat.entrypoints.cli._schemas.OutputSchema` never
-    encounters a non-JSON-native
-    scalar at validation time.
+    ``binding_values`` is a ``{BindingId: string_value}`` mapping keyed by
+    :data:`BindingId` from the persisted :class:`Borrador100Snapshot` resolved
+    through :class:`Borrador100SnapshotService`. Decimal values are rendered as
+    their canonical string form before they reach the envelope so the strict
+    :class:`OutputSchema` never encounters a non-JSON-native scalar at
+    validation time.
     """
 
     bucket_id: str
@@ -891,10 +888,11 @@ class Borrador100ViewResult(OutputSchema):
 class Borrador100LatestResult(OutputSchema):
     """Typed newest-active response for Modelo 100 borrador snapshots.
 
-    ``snapshot_id`` is ``None`` when no active snapshot exists for the requested
-    filing year; in that case every snapshot-derived field is also ``None`` to
-    keep the payload shape stable while still identifying the queried
-    ``filing_year``.
+    ``snapshot_id`` is ``None`` when :class:`Borrador100SnapshotService` finds
+    no active :class:`Borrador100Snapshot` for the requested filing year; in
+    that case every snapshot-derived field, including the
+    :class:`SnapshotLifecycleState` value, is also ``None`` to keep the payload
+    shape stable while still identifying the queried ``filing_year``.
     """
 
     bucket_id: str
