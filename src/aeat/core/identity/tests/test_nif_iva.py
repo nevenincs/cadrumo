@@ -59,8 +59,12 @@ _VALID_AND_INVALID: list[tuple[str, str, str]] = [
     ("GR", "EL123456789", "EL12345678"),  # Greek prefix EL, 8 digits needs 9
 ]
 
-def test_nif_iva_pattern_accepts_valid_and_rejects_invalid() -> None:
-    """Each Member State's pattern matches a well-formed number and rejects a malformed one."""
+def test_nif_iva_patterns_match_examples_and_country_cases() -> None:
+    """Each Member State's pattern matches well-formed examples and rejects malformed cases."""
+    for prefix, spec in NIF_IVA_FORMATS.items():
+        assert spec.prefix is prefix
+        assert spec.pattern.match(spec.example) is not None, f"{prefix} example {spec.example!r} fails its pattern"
+
     for iso_country, valid, invalid in _VALID_AND_INVALID:
         spec = nif_iva_format_for_country(iso_country)
         assert spec is not None, f"no NIF-IVA spec resolved for {iso_country}"
@@ -68,22 +72,11 @@ def test_nif_iva_pattern_accepts_valid_and_rejects_invalid() -> None:
         assert spec.pattern.match(normalise_nif_iva(invalid)) is None, iso_country
 
 
-def test_every_table_example_matches_its_own_pattern() -> None:
-    """The canonical example carried for each spec must itself satisfy the pattern."""
-    for prefix, spec in NIF_IVA_FORMATS.items():
-        assert spec.prefix is prefix
-        assert spec.pattern.match(spec.example) is not None, f"{prefix} example {spec.example!r} fails its pattern"
-
-
-def test_greece_iso_code_resolves_to_el_vat_prefix() -> None:
-    """Greece's ISO code GR resolves to the EL VAT prefix, and EL resolves directly."""
+def test_country_prefix_resolution_handles_greece_spain_and_unknown_codes() -> None:
+    """Greece resolves to EL; Spain and non-EU countries carry no structural spec."""
     assert nif_iva_prefix_for_country("GR") is NifIvaPrefix.EL
     assert nif_iva_prefix_for_country("gr") is NifIvaPrefix.EL
     assert nif_iva_prefix_for_country("EL") is NifIvaPrefix.EL
-
-
-def test_spain_and_non_eu_carry_no_pattern() -> None:
-    """Spain (checksum-validated elsewhere) and non-EU codes resolve to no spec."""
     assert nif_iva_format_for_country("ES") is None
     assert nif_iva_format_for_country("US") is None
     assert nif_iva_format_for_country("JP") is None
