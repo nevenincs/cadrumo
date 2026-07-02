@@ -41,9 +41,14 @@ def _binding_values(year: int) -> dict[str, Decimal]:
         f"renta-{year}-profile-marriage-month-start": Decimal("0"),
         f"renta-{year}-profile-marriage-month-end": Decimal("0"),
         f"renta-{year}-base-liquidable-negativa-general-anterior": Decimal("0"),
+        f"renta-{year}-profile-minimo-descendientes-estatal": Decimal("0"),
     }
     if year == 2025:
         values["renta-2025-modelo-184-atribucion-actividades-economicas"] = Decimal("0")
+        # Madrid nacimiento/adopción deducción (casilla 1039) profile-derived
+        # facts; neutral zero when the chain under test is unrelated.
+        values["renta-2025-profile-madrid-nacimiento-adopcion-eligible-count"] = Decimal("0")
+        values["renta-2025-profile-unidad-familiar-otros-miembros-base"] = Decimal("0")
     if year == 2024:
         values.update(
             {
@@ -118,6 +123,7 @@ def test_m100_art85_computes_manual_cadastral_example_for_revised_value(
         "0087",
         "0088",
         "0084",
+        f"renta-{year}-imputacion-inmobiliaria-year-days",
         f"renta-{year}-imputacion-inmobiliaria-rate-recent-revision",
         f"renta-{year}-imputacion-inmobiliaria-rate-old-or-no-revision",
     )
