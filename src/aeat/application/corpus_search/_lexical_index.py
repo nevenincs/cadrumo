@@ -30,6 +30,7 @@ import sqlite3
 from collections.abc import Iterable, Iterator
 from pathlib import Path
 
+from ...core.external_constants import UTF_8_ENCODING
 from ...core.resources import bundled_path
 from ._models import CorpusChunk, CorpusDocument, CorpusIndexBuildResult, LexicalSearchHit
 
@@ -73,7 +74,7 @@ def iter_corpus_chunks(corpus_root: Path | None = None) -> Iterator[CorpusChunk]
 
 
 def _chunks_for_source(json_path: Path) -> Iterator[CorpusChunk]:
-    payload = json.loads(json_path.read_text(encoding="utf-8"))
+    payload = json.loads(json_path.read_text(encoding=UTF_8_ENCODING))
     units = payload.get("units") or ()
     if not units:
         return

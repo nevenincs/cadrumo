@@ -24,6 +24,7 @@ from typing import Annotated
 from pydantic import BaseModel, Field, StringConstraints
 
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ...core.external_constants import UTF_8_ENCODING
 from ...core.resources import bundled_path
 from ._errors import CorpusSearchInputError
 
@@ -151,7 +152,7 @@ def load_terminology_concepts(locale: str = _FALLBACK_LOCALE) -> tuple[Terminolo
     root = _terminology_root()
     concepts: list[TerminologyConcept] = []
     for path in sorted(root.glob("*.toml"), key=lambda item: item.name):  # type: ignore[attr-defined]
-        payload = tomllib.loads(path.read_text(encoding="utf-8"))
+        payload = tomllib.loads(path.read_text(encoding=UTF_8_ENCODING))
         projected = _project_concept(payload, locale=locale)
         if projected is not None:
             concepts.append(projected)
