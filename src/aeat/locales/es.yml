@@ -2314,6 +2314,17 @@ cli:
         verify_help: Verificar una revisión draft contra el contrato verified-complete
         verify_selector_help: Selector de revision borrador (current, latest-draft
           o explicit).
+        wizard_help: Guia paso a paso por las casillas manuales pendientes de la unidad
+          de trabajo y calcula
+        wizard_prompt: Casilla %{number} (%{label})
+        wizard_relation_help: Alimentado por la relacion de registro %{binding_id};
+          introduce el valor entre periodos o entre modelos que aporta esta relacion.
+        wizard_retry_exhausted: 'El asistente no pudo resolver todas las entradas de calculo tras %{limit} preguntas de seguimiento. Ejecuta `aeat app modelo work calculate` directamente y aporta los valores --binding / --relation restantes a mano.'
+        wizard_saved: 'Guardado como revision de calculo en borrador %{revision_id}
+          (estado: %{state}). Esta persistido y puede retomarse mas tarde; lista las
+          revisiones con `aeat app modelo work revisions --modelo %{modelo} --year
+          %{year} --period %{period}` y vuelve a consultar esta con `aeat app modelo
+          work revision %{revision_id}`.'
         work_unit_id_help: Identificador estable (SHA-256 de 64 caracteres) de la
           unidad de trabajo
         year_help: Ejercicio fiscal de la unidad de trabajo (p. ej. 2026)
@@ -2639,14 +2650,17 @@ cli:
         config profile delete %{name} --yes' para confirmar.
       delete_yes_help: Confirma explícitamente la eliminación
       descendiente:
-        add_flag_help: 'NACIMIENTO=AAAA-MM-DD[,ADOPCION=AAAA-MM-DD][,DISCAPACIDAD=0|33|65][,CONVIVENCIA=true|false][,CUSTODIA=true|false][,MESES_TRABAJO=0..12][,GASTOS_GUARDERIA=N][,NIF=XXXXXXXXX]. Repetible.'
-        add_help: 'Añadir uno o varios descendientes al perfil activo.'
-        help: 'Declarar descendientes para el mínimo por descendientes del art. 58/61 LIRPF.'
-        index_out_of_range: 'Índice %{index} fuera de rango; el perfil tiene %{total} descendiente(s).'
+        add_flag_help: NACIMIENTO=AAAA-MM-DD[,ADOPCION=AAAA-MM-DD][,DISCAPACIDAD=0|33|65][,CONVIVENCIA=true|false][,CUSTODIA=true|false][,MESES_TRABAJO=0..12][,GASTOS_GUARDERIA=N][,NIF=XXXXXXXXX].
+          Repetible.
+        add_help: Añadir uno o varios descendientes al perfil activo.
+        help: Declarar descendientes para el mínimo por descendientes del art. 58/61
+          LIRPF.
+        index_out_of_range: Índice %{index} fuera de rango; el perfil tiene %{total}
+          descendiente(s).
         invalid_flag: 'El indicador --descendiente %{flag} no es válido: %{detail}'
-        list_help: 'Listar los descendientes declarados en el perfil activo.'
-        remove_help: 'Eliminar un descendiente por índice (base 0) del perfil activo.'
-        remove_index_help: 'Índice (base 0) del descendiente a eliminar.'
+        list_help: Listar los descendientes declarados en el perfil activo.
+        remove_help: Eliminar un descendiente por índice (base 0) del perfil activo.
+        remove_index_help: Índice (base 0) del descendiente a eliminar.
       duplicate_display_name_help: Nombre visible para el nuevo perfil (por defecto
         el id de destino)
       duplicate_help: Copiar un perfil bajo un nuevo id y nombre visible

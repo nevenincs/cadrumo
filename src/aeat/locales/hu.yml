@@ -2233,6 +2233,16 @@ cli:
           szerződéssel szemben.
         verify_selector_help: Piszkozat-revízió választó (current, latest-draft vagy
           explicit).
+        wizard_help: Vegigvezet a munkaegyseg hianyzo kezi mezoin, majd kiszamitja
+          az eredmenyt
+        wizard_prompt: '%{number}. sz. rovat (%{label})'
+        wizard_relation_help: A(z) %{binding_id} regiszterkapcsolat tolti fel; add
+          meg az idoszakok vagy modellek kozotti erteket, amit ez a kapcsolat hordoz.
+        wizard_retry_exhausted: 'A varazslo %{limit} kovetkezmenyi kerdes utan sem tudta feloldani az osszes szamitasi bemenetet. Futtasd kozvetlenul az `aeat app modelo work calculate` parancsot, es add meg kezzel a fennmarado --binding / --relation ertekeket.'
+        wizard_saved: 'Elmentve piszkozat szamitasi verziokent: %{revision_id} (allapot:
+          %{state}). Tartosan tarolva van, kesobb folytathato; a verziok listazasa:
+          `aeat app modelo work revisions --modelo %{modelo} --year %{year} --period
+          %{period}`, ennek ujravizsgalata: `aeat app modelo work revision %{revision_id}`.'
         work_unit_id_help: A munkaegység stabil 64 karakteres SHA-256 azonosítója.
         year_help: A munkaegység adóéve (pl. 2026).
         year_out_of_range: A(z) %{year} benyújtási év kívül esik a tartományon; adjon
@@ -2561,14 +2571,17 @@ cli:
         profile delete %{name} --yes` a megerősítéshez.'
       delete_yes_help: Törlési művelet explicit megerősítése.
       descendiente:
-        add_flag_help: 'NACIMIENTO=EEEE-HH-NN[,ADOPCION=EEEE-HH-NN][,DISCAPACIDAD=0|33|65][,CONVIVENCIA=true|false][,CUSTODIA=true|false][,MESES_TRABAJO=0..12][,GASTOS_GUARDERIA=N][,NIF=XXXXXXXXX]. Ismetelheto.'
-        add_help: 'Egy vagy tobb leszarmazott hozzaadasa az aktiv profilhoz.'
-        help: 'Leszarmazottak megadasa a LIRPF 58/61. cikk szerinti leszarmazotti minimumhoz.'
-        index_out_of_range: 'A(z) %{index} index tartomanyon kivul esik; a profilon %{total} leszarmazott van.'
+        add_flag_help: NACIMIENTO=EEEE-HH-NN[,ADOPCION=EEEE-HH-NN][,DISCAPACIDAD=0|33|65][,CONVIVENCIA=true|false][,CUSTODIA=true|false][,MESES_TRABAJO=0..12][,GASTOS_GUARDERIA=N][,NIF=XXXXXXXXX].
+          Ismetelheto.
+        add_help: Egy vagy tobb leszarmazott hozzaadasa az aktiv profilhoz.
+        help: Leszarmazottak megadasa a LIRPF 58/61. cikk szerinti leszarmazotti minimumhoz.
+        index_out_of_range: A(z) %{index} index tartomanyon kivul esik; a profilon
+          %{total} leszarmazott van.
         invalid_flag: 'A --descendiente jelzo %{flag} ervenytelen: %{detail}'
-        list_help: 'Az aktiv profilon megadott leszarmazottak listazasa.'
-        remove_help: 'Egy leszarmazott eltavolitasa 0-alapu index szerint az aktiv profilrol.'
-        remove_index_help: 'Az eltavolitando leszarmazott 0-alapu indexe.'
+        list_help: Az aktiv profilon megadott leszarmazottak listazasa.
+        remove_help: Egy leszarmazott eltavolitasa 0-alapu index szerint az aktiv
+          profilrol.
+        remove_index_help: Az eltavolitando leszarmazott 0-alapu indexe.
       duplicate_display_name_help: 'Az új profil megjelenítési neve (alapértelmezés:
         a célazonosító).'
       duplicate_help: Profil másolása új azonosítóra és megjelenítési névre.
