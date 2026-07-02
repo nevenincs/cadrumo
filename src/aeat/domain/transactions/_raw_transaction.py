@@ -2,7 +2,7 @@
 
 Defines the upstream-immutable records every transaction parser must
 emit, before they are wrapped in
-:class:`aeat.domain.transactions.Transaction`:
+:class:`domain.transactions.Transaction`:
 
 - :class:`RawTransaction` -- the verbatim per-row record.
 - :class:`RawProvenance` -- the source-file metadata pinned to each row.
@@ -125,14 +125,14 @@ class RawTransaction(BaseModel):
         provider_transaction_id: Provider-assigned native identifier; never
             normalised beyond a strip + non-blank check. This is the bank/feed's
             own id for the row, distinct from the content-addressed
-            :attr:`aeat.domain.transactions.Transaction.transaction_id` hash the
+            :attr:`domain.transactions.Transaction.transaction_id` hash the
             domain derives from it.
         booked_date: Date the transaction posted to the account.
         value_date: Optional value date; falls back to ``booked_date``
             when ``None``.
         amount: Non-negative magnitude :class:`decimal.Decimal` in
             :attr:`currency`. Flow direction is carried solely by
-            :attr:`aeat.domain.transactions.Transaction.direction`; the
+            :attr:`domain.transactions.Transaction.direction`; the
             sign is never stored on the amount.
         currency: Three-letter ISO 4217 currency code, uppercase.
         counterparty: Optional counterparty descriptor; trimmed and
@@ -170,7 +170,7 @@ class RawTransaction(BaseModel):
         """Reject a negative ``amount``; the stored magnitude is non-negative.
 
         Flow direction is carried solely by
-        :attr:`aeat.domain.transactions.Transaction.direction`; the sign is
+        :attr:`domain.transactions.Transaction.direction`; the sign is
         never stored on the amount. This gate fires on both the import and the
         manual construction paths because every transaction wraps one
         :class:`RawTransaction`.
