@@ -11,8 +11,10 @@ Verifies:
 
 from __future__ import annotations
 
+import ast
 import decimal
 from datetime import UTC, datetime
+from pathlib import Path
 from typing import NoReturn
 
 import pytest
@@ -35,6 +37,48 @@ from ..domain.modelos._calculation_revision import (
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
+_SRC = Path(__file__).parent.parent
+
+
+def _except_handler_names(module_relative: str, function_name: str) -> tuple[tuple[str, ...], ...]:
+    module_path = _SRC / module_relative
+    tree = ast.parse(module_path.read_text(encoding="utf-8"))
+    function_node = next(
+        (
+            node
+            for node in ast.walk(tree)
+            if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)) and node.name == function_name
+        ),
+        None,
+    )
+    assert function_node is not None, f"{module_relative}: missing function {function_name}"
+
+    handlers: list[tuple[str, ...]] = []
+
+    class _HandlerVisitor(ast.NodeVisitor):
+        def visit_ExceptHandler(self, node: ast.ExceptHandler) -> None:
+            handlers.append(_handler_type_names(node.type))
+            self.generic_visit(node)
+
+    _HandlerVisitor().visit(function_node)
+    return tuple(handlers)
+
+
+def _handler_type_names(node: ast.expr | None) -> tuple[str, ...]:
+    if node is None:
+        return ("<bare>",)
+    if isinstance(node, ast.Tuple):
+        return tuple(_single_handler_type_name(element) for element in node.elts)
+    return (_single_handler_type_name(node),)
+
+
+def _single_handler_type_name(node: ast.expr) -> str:
+    if isinstance(node, ast.Name):
+        return node.id
+    if isinstance(node, ast.Attribute):
+        return f"{_single_handler_type_name(node.value)}.{node.attr}"
+    raise AssertionError(f"unsupported except handler expression: {ast.dump(node)}")
+
 
 # ---------------------------------------------------------------------------
 # (a) Registry + envelope roundtrip for the three new error classes
@@ -44,46 +88,28 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 class TestNewErrorClassesRegistered:
     """The three new error classes are AeatError subclasses with registry entries."""
 
-    @pytest.mark.parametrize(
-        "error_cls",
-        [
-            WizardCatalogueNotRegisteredError,
-            WizardCatalogueAlreadyRegisteredError,
-            ProjectAnswersNotRegisteredError,
-        ],
+    _ERROR_CASES = (
+        (WizardCatalogueNotRegisteredError, "INTERNAL_WIZARD_CATALOGUE_NOT_REGISTERED"),
+        (WizardCatalogueAlreadyRegisteredError, "INTERNAL_WIZARD_CATALOGUE_ALREADY_REGISTERED"),
+        (ProjectAnswersNotRegisteredError, "INTERNAL_PROFILE_PROJECT_ANSWERS_NOT_REGISTERED"),
     )
-    def test_is_aeat_error_subclass(self, error_cls: type[AeatError]) -> None:
-        assert issubclass(error_cls, AeatError)
 
-    @pytest.mark.parametrize(
-        "error_cls,expected_code",
-        [
-            (WizardCatalogueNotRegisteredError, "INTERNAL_WIZARD_CATALOGUE_NOT_REGISTERED"),
-            (WizardCatalogueAlreadyRegisteredError, "INTERNAL_WIZARD_CATALOGUE_ALREADY_REGISTERED"),
-            (ProjectAnswersNotRegisteredError, "INTERNAL_PROFILE_PROJECT_ANSWERS_NOT_REGISTERED"),
-        ],
-    )
-    def test_error_code_registered(self, error_cls: type[BaseException], expected_code: str) -> None:
-        code = get_registered_error_code(error_cls)
-        assert code.code == expected_code
+    def test_error_classes_are_aeat_errors_with_registered_codes(self) -> None:
+        for error_cls, expected_code in self._ERROR_CASES:
+            assert issubclass(error_cls, AeatError), error_cls.__name__
+            code = get_registered_error_code(error_cls)
+            assert code.code == expected_code
 
-    @pytest.mark.parametrize(
-        "error_cls",
-        [
-            WizardCatalogueNotRegisteredError,
-            WizardCatalogueAlreadyRegisteredError,
-            ProjectAnswersNotRegisteredError,
-        ],
-    )
-    def test_envelope_roundtrip(self, error_cls: type[AeatError]) -> None:
+    def test_envelope_roundtrip(self) -> None:
         """An instance can be built into an ErrorEnvelope without raising."""
-        try:
-            instance = error_cls()
-        except TypeError:
-            instance = error_cls("test message")
-        envelope = build_error_envelope(instance)
-        assert envelope.code == get_registered_error_code(error_cls).code
-        assert envelope.message
+        for error_cls, _expected_code in self._ERROR_CASES:
+            try:
+                instance = error_cls()
+            except TypeError:
+                instance = error_cls("test message")
+            envelope = build_error_envelope(instance)
+            assert envelope.code == get_registered_error_code(error_cls).code
+            assert envelope.message, error_cls.__name__
 
 
 # ---------------------------------------------------------------------------
@@ -97,37 +123,30 @@ class TestAdvisoryPredicateDecimalNarrowing:
     _VALID_EXPR = 'advisory_when_ratio_ge(["num_id", "den_id", "0.5"])'
     _INVALID_THR_EXPR = 'advisory_when_ratio_ge(["num_id", "den_id", "notadecimal"])'
 
-    @pytest.mark.parametrize(
-        ("expression", "values", "expected"),
-        [
+    def test_advisory_ratio_predicate_decimal_threshold_cases(self) -> None:
+        from ..application.modelo._verification_actions import _evaluate_advisory_predicate_fires
+
+        cases = (
             (
-                _INVALID_THR_EXPR,
+                self._INVALID_THR_EXPR,
                 {"num_id": decimal.Decimal("2"), "den_id": decimal.Decimal("1")},
                 False,
             ),
             (
-                _VALID_EXPR,
+                self._VALID_EXPR,
                 {"num_id": decimal.Decimal("2"), "den_id": decimal.Decimal("1")},
                 True,
             ),
             (
-                _VALID_EXPR,
+                self._VALID_EXPR,
                 {"num_id": decimal.Decimal("0.1"), "den_id": decimal.Decimal("1")},
                 False,
             ),
-        ],
-        ids=("invalid-threshold", "ratio-at-or-above-threshold", "ratio-below-threshold"),
-    )
-    def test_advisory_ratio_predicate_decimal_threshold_cases(
-        self,
-        expression: str,
-        values: dict[str, decimal.Decimal],
-        expected: bool,
-    ) -> None:
-        from ..application.modelo._verification_actions import _evaluate_advisory_predicate_fires
+        )
 
-        result = _evaluate_advisory_predicate_fires(expression, values)
-        assert result is expected
+        for expression, values, expected in cases:
+            result = _evaluate_advisory_predicate_fires(expression, values)
+            assert result is expected, expression
 
 
 class TestResultSummaryNarrowing:
@@ -190,66 +209,24 @@ class TestResultSummaryNarrowing:
 class TestLedgerBulkClassifyNarrowing:
     """Bulk classify loops capture typed errors; propagate unexpected ones."""
 
-    def test_validation_error_is_captured_by_parse_clause(self) -> None:
-        """pydantic ValidationError is a subclass of ValueError and is caught by the narrowed clause."""
-        from pydantic import ValidationError
+    def test_parse_loop_catches_only_typed_row_validation_errors(self) -> None:
+        assert _except_handler_names(
+            "application/ledger/_actions_classification.py",
+            "_parse_bulk_classify_rows",
+        ) == (("ValidationError", "ValueError", "KeyError"),)
 
-        # Confirm ValidationError is in the expected narrow tuple
-        assert issubclass(ValidationError, ValueError)
-
-    def test_apply_loop_aeat_error_is_captured(self) -> None:
-        """AeatError subclasses are captured by the apply loop's narrow clause."""
-        caught = False
-        try:
-            # Use a registered AeatError subclass
-            raise ProjectAnswersNotRegisteredError()
-        except AeatError:
-            caught = True
-        assert caught
-
-    def test_unexpected_type_error_in_parse_would_propagate(self) -> None:
-        """A TypeError (not in parse tuple) propagates — proves narrowing is real."""
-        propagated = False
-        try:
-            try:
-                raise TypeError("structural mismatch")
-            except (ValueError, KeyError):
-                pass
-        except TypeError:
-            propagated = True
-        assert propagated
+    def test_apply_loop_catches_only_typed_apply_errors(self) -> None:
+        assert _except_handler_names(
+            "application/ledger/_actions_classification.py",
+            "_apply_bulk_classify_rows",
+        ) == (("AeatError", "ValidationError", "ValueError"),)
 
 
 class TestReviewAdapterImportNarrowing:
     """_resolve_active_tax_id splits ImportError from workflow state errors."""
 
-    def test_import_error_clause_is_narrower_than_exception(self) -> None:
-        """ImportError is a subclass of Exception but narrower — our clause catches it."""
-        assert issubclass(ImportError, Exception)
-        caught = False
-        try:
-            raise ImportError("no module")
-        except ImportError:
-            caught = True
-        assert caught
-
-    def test_attribute_error_clause_catches_none_access(self) -> None:
-        """AttributeError is caught by (AeatError, AttributeError) clause."""
-        caught = False
-        try:
-            raise AttributeError("object has no attribute state")
-        except (AeatError, AttributeError):
-            caught = True
-        assert caught
-
-    def test_runtime_error_is_not_caught_by_attribute_error_clause(self) -> None:
-        """RuntimeError is NOT in (AeatError, AttributeError) — it propagates."""
-        propagated = False
-        try:
-            try:
-                raise RuntimeError("db exploded")
-            except (AeatError, AttributeError):
-                pass
-        except RuntimeError:
-            propagated = True
-        assert propagated
+    def test_active_tax_id_resolution_keeps_import_and_workflow_errors_separate(self) -> None:
+        assert _except_handler_names(
+            "application/review/_adapters.py",
+            "_resolve_active_tax_id",
+        ) == (("ImportError",), ("AeatError", "AttributeError"))
