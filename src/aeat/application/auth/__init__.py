@@ -255,6 +255,7 @@ from ._diagnostics import (
     load_auth_diagnostic,
     record_auth_diagnostic_phone_state,
 )
+from ._errors import AuthDiagnosticPayloadError
 from ._models import AuthState
 from ._operator import (
     build_live_auth_preflight_report,
@@ -290,6 +291,7 @@ from ._sessions import (
     AuthSessionUnavailableError,
     CorruptAuthSessionError,
     PersistedAuthSession,
+    SessionDeserializationError,
     StorageStatePaths,
     configure_session_store,
     delete_persisted_session,
@@ -316,6 +318,7 @@ __all__ = [
     "AuthConfigureNoActiveBucketError",
     "AuthConfigureResult",
     "AuthDiagnosticDetail",
+    "AuthDiagnosticPayloadError",
     "AuthDiagnosticListReport",
     "AuthDiagnosticReportResult",
     "AuthDiagnosticSummary",
@@ -339,6 +342,7 @@ __all__ = [
     "PersistedAuthSession",
     "ProviderConfigurationProbe",
     "ProviderProbeResult",
+    "SessionDeserializationError",
     "StorageStatePaths",
     "acquire_auth_acquisition_lock",
     "auth_acquisition_lock_path",
