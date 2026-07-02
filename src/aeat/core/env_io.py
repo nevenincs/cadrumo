@@ -12,13 +12,13 @@ flat key/value file in this project and any deviation from that shape
 is treated as an error.
 
 The boundary is file persistence only. Runtime configuration still flows
-through :class:`~aeat.core.config.Settings`, :func:`~aeat.core.config.load_settings`,
-and :func:`~aeat.core.config.override_settings`; this module does not inspect or
+through :class:`~core.config.Settings`, :func:`~core.config.load_settings`,
+and :func:`~core.config.override_settings`; this module does not inspect or
 mutate process environment variables.
 
 The public surface is :func:`read_env_file`, :func:`write_env_var`, and
 :func:`write_env_vars`; each takes a :class:`~pathlib.Path` target. Malformed
-input raises :class:`~aeat.core.errors.CoreValidationError`, while writers use
+input raises :class:`~core.errors.CoreValidationError`, while writers use
 :func:`_atomic_write_text` so the ``.env`` file is replaced atomically.
 """
 
@@ -38,7 +38,7 @@ def _atomic_write_text(path: Path, text: str, *, encoding: str = "utf-8") -> Non
     """Atomically write ``text`` to ``path`` via tempfile + :func:`os.replace`.
 
     Mirrors the substrate's atomic-write discipline at
-    :func:`aeat.adapters.persistence.storage.master_key._master_key.atomic_write_secure_bytes`.
+    :func:`adapters.persistence.storage.master_key._master_key.atomic_write_secure_bytes`.
     The plaintext ``env/.env`` payload is operator-controlled
     configuration, not a secret — but the durability story matters:
     :meth:`pathlib.Path.write_text` truncates the existing inode in
