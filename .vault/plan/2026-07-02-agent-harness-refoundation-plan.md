@@ -9,6 +9,15 @@ related:
   - '[[2026-07-02-agent-harness-refoundation-adr]]'
 ---
 
+<!-- LINK RULES:
+     - [[wiki-links]] are ONLY for .vault/ documents in the
+       related: field above.
+     - The related: field carries the AUTHORISING documents
+       (ADR, research, reference, prior plan) for every Step in
+       this plan. Steps inherit this chain; per-row reference
+       footers do not exist.
+     - NEVER use [[wiki-links]] or markdown links in the
+       document body. -->
 
 # `agent-harness-refoundation` plan
 
@@ -42,7 +51,7 @@ Deliver the operator rules, personas, and skills to any MCP client through the p
 
 Deliver the operating layer as a harness.load floor tool and aeat skill/rule/persona resource templates.
 
-- [ ] `W02.P03.S09` - Add the harness.load floor tool returning operator rules and the active persona via aeat.agent; `src/aeat/entrypoints/mcp/_harness_tools.py`.
+- [x] `W02.P03.S09` - Add the harness.load floor tool returning operator rules and the active persona via aeat.agent; `src/aeat/entrypoints/mcp/_harness_tools.py`.
 - [ ] `W02.P03.S10` - Add aeat skill, rule, and persona resource templates with a read handler; `src/aeat/entrypoints/mcp/_resources.py`.
 - [ ] `W02.P03.S11` - Wire the resource list and read handlers into the server; `src/aeat/entrypoints/mcp/_server.py`.
 - [ ] `W02.P03.S12` - Add tests for the floor tool and resource templates; `src/aeat/entrypoints/mcp/tests/test_harness_delivery.py`.
