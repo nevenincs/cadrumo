@@ -43,145 +43,145 @@ _ART_7P_SOURCE_REFS = ("boe-lirpf-art-7-authority",)
 _REBECA_SOURCE_REFS = ("boe-ley-19-1994-art-75-authority",)
 
 _ART_7P_SELECTOR_CASES = (
-    pytest.param(
+    (
+        "foreign-flag-international-waters",
         MaritimeWorkerFacts(
             worker_class="trabajador_del_mar",
             vessel_flag="foreign",
             waters_type="international",
         ),
         True,
-        id="foreign-flag-international-waters",
     ),
-    pytest.param(
+    (
+        "foreign-flag-national-waters",
         MaritimeWorkerFacts(
             worker_class="trabajador_del_mar",
             vessel_flag="foreign",
             waters_type="national",
         ),
         True,
-        id="foreign-flag-national-waters",
     ),
-    pytest.param(
+    (
+        "spanish-flag-international-waters",
         MaritimeWorkerFacts(
             worker_class="trabajador_del_mar",
             vessel_flag="ES",
             waters_type="international",
         ),
         True,
-        id="spanish-flag-international-waters",
     ),
-    pytest.param(
+    (
+        "spanish-flag-national-waters",
         MaritimeWorkerFacts(
             worker_class="trabajador_del_mar",
             vessel_flag="ES",
             waters_type="national",
         ),
         False,
-        id="spanish-flag-national-waters",
     ),
-    pytest.param(
+    (
+        "missing-worker-class",
         MaritimeWorkerFacts(
             worker_class=None,
             vessel_flag="foreign",
             waters_type="international",
         ),
         False,
-        id="missing-worker-class",
     ),
-    pytest.param(
+    (
+        "other-worker-class",
         MaritimeWorkerFacts(
             worker_class="standard_employee",
             vessel_flag="foreign",
             waters_type="international",
         ),
         False,
-        id="other-worker-class",
     ),
-    pytest.param(MaritimeWorkerFacts(), False, id="default-facts"),
+    ("default-facts", MaritimeWorkerFacts(), False),
 )
 
 _REBECA_SELECTOR_CASES = (
-    pytest.param(
+    (
+        "rebeca-registry",
         MaritimeWorkerFacts(
             worker_class="trabajador_del_mar",
             vessel_registry="REBECA",
         ),
         True,
-        id="rebeca-registry",
     ),
-    pytest.param(
+    (
+        "rebeca-eu-eea-registry",
         MaritimeWorkerFacts(
             worker_class="trabajador_del_mar",
             vessel_registry="rebeca_eu_eea",
         ),
         True,
-        id="rebeca-eu-eea-registry",
     ),
-    pytest.param(
+    (
+        "scheduled-canary-route",
         MaritimeWorkerFacts(
             worker_class="trabajador_del_mar",
             vessel_registry="scheduled_canary_route",
         ),
         True,
-        id="scheduled-canary-route",
     ),
-    pytest.param(
+    (
+        "missing-registry",
         MaritimeWorkerFacts(
             worker_class="trabajador_del_mar",
             vessel_registry=None,
         ),
         False,
-        id="missing-registry",
     ),
-    pytest.param(
+    (
+        "missing-worker-class",
         MaritimeWorkerFacts(
             worker_class=None,
             vessel_registry="REBECA",
         ),
         False,
-        id="missing-worker-class",
     ),
-    pytest.param(MaritimeWorkerFacts(), False, id="default-facts"),
+    ("default-facts", MaritimeWorkerFacts(), False),
 )
 
 _DA41_SELECTOR_CASES = (
-    pytest.param(
+    (
+        "tuna-fleet-pending-clearance",
         MaritimeWorkerFacts(
             worker_class="trabajador_del_mar",
             tuna_fleet=True,
             pending_eu_clearance=True,
         ),
         True,
-        id="tuna-fleet-pending-clearance",
     ),
-    pytest.param(
+    (
+        "tuna-fleet-without-pending-clearance",
         MaritimeWorkerFacts(
             worker_class="trabajador_del_mar",
             tuna_fleet=True,
             pending_eu_clearance=False,
         ),
         False,
-        id="tuna-fleet-without-pending-clearance",
     ),
-    pytest.param(
+    (
+        "pending-clearance-without-tuna-fleet",
         MaritimeWorkerFacts(
             worker_class="trabajador_del_mar",
             tuna_fleet=False,
             pending_eu_clearance=True,
         ),
         False,
-        id="pending-clearance-without-tuna-fleet",
     ),
-    pytest.param(
+    (
+        "missing-worker-class",
         MaritimeWorkerFacts(
             worker_class=None,
             tuna_fleet=True,
             pending_eu_clearance=True,
         ),
         False,
-        id="missing-worker-class",
     ),
-    pytest.param(MaritimeWorkerFacts(), False, id="default-facts"),
+    ("default-facts", MaritimeWorkerFacts(), False),
 )
 
 
@@ -193,25 +193,25 @@ _DA41_SELECTOR_CASES = (
 class TestArt7pEligible:
     """art_7p_eligible predicate: vessel_flag != ES AND waters_type == international."""
 
-    @pytest.mark.parametrize(("facts", "expected"), _ART_7P_SELECTOR_CASES)
-    def test_selector_cases(self, facts: MaritimeWorkerFacts, expected: bool) -> None:
-        assert art_7p_eligible(facts) is expected
+    def test_selector_cases(self) -> None:
+        for label, facts, expected in _ART_7P_SELECTOR_CASES:
+            assert art_7p_eligible(facts) is expected, label
 
 
 class TestRebecaEligible:
     """rebeca_eligible predicate: vessel_registry in {REBECA, rebeca_eu_eea, scheduled_canary_route}."""
 
-    @pytest.mark.parametrize(("facts", "expected"), _REBECA_SELECTOR_CASES)
-    def test_selector_cases(self, facts: MaritimeWorkerFacts, expected: bool) -> None:
-        assert rebeca_eligible(facts) is expected
+    def test_selector_cases(self) -> None:
+        for label, facts, expected in _REBECA_SELECTOR_CASES:
+            assert rebeca_eligible(facts) is expected, label
 
 
 class TestDa41Eligible:
     """da41_eligible predicate: tuna_fleet AND pending_eu_clearance."""
 
-    @pytest.mark.parametrize(("facts", "expected"), _DA41_SELECTOR_CASES)
-    def test_selector_cases(self, facts: MaritimeWorkerFacts, expected: bool) -> None:
-        assert da41_eligible(facts) is expected
+    def test_selector_cases(self) -> None:
+        for label, facts, expected in _DA41_SELECTOR_CASES:
+            assert da41_eligible(facts) is expected, label
 
 
 # ---------------------------------------------------------------------------
