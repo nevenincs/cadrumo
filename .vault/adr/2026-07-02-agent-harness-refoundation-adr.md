@@ -8,7 +8,7 @@ related:
   - "[[2026-07-02-agent-harness-refoundation-research]]"
 ---
 
-# `agent-harness-refoundation` adr: `black-box tool universe, situation-keyed skills, and the MCP operating console` | (**status:** `proposed`)
+# `agent-harness-refoundation` adr: `black-box tool universe, situation-keyed skills, and the MCP operating console` | (**status:** `accepted`)
 
 ## Problem Statement
 
