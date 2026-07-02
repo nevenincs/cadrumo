@@ -61,27 +61,28 @@ def _calc_engine_period(token: str, *, year: int) -> Period:
     return aggregation_period_for_modelo(filing_year=year, code=token)
 
 
-@pytest.mark.parametrize("year", _YEARS)
-@pytest.mark.parametrize("token", _LEDGER_SPAN_TOKENS)
-def test_cli_and_calc_engine_produce_an_identical_period(token: str, year: int) -> None:
+def test_cli_and_calc_engine_produce_an_identical_period() -> None:
     """Both transports yield the same Period for the same (year, AEAT-token).
 
     Strict pydantic equality across the two transports is the proof that one
     boundary authority serves the CLI filter and the modelo calculation
     snapshot. The fully-closed start/end bounds must match exactly.
     """
-    command_period = _cli_period_via_command_transport(token, year=year)
-    filter_period = _cli_period_via_filter_transport(token, year=year)
-    engine_period = _calc_engine_period(token, year=year)
+    for token in _LEDGER_SPAN_TOKENS:
+        for year in _YEARS:
+            case_id = (token, year)
+            command_period = _cli_period_via_command_transport(token, year=year)
+            filter_period = _cli_period_via_filter_transport(token, year=year)
+            engine_period = _calc_engine_period(token, year=year)
 
-    # All three spellings collapse to one boundary object.
-    assert command_period == filter_period == engine_period
+            # All three spellings collapse to one boundary object.
+            assert command_period == filter_period == engine_period, case_id
 
-    # And to the same fully-closed [start, end] span (the boundary authority).
-    assert command_period.start_date == engine_period.start_date
-    assert command_period.end_date == engine_period.end_date
-    assert command_period.contains(command_period.start_date)
-    assert command_period.contains(command_period.end_date)
+            # And to the same fully-closed [start, end] span (the boundary authority).
+            assert command_period.start_date == engine_period.start_date, case_id
+            assert command_period.end_date == engine_period.end_date, case_id
+            assert command_period.contains(command_period.start_date), case_id
+            assert command_period.contains(command_period.end_date), case_id
 
 
 def test_both_transports_route_through_one_period_boundary() -> None:
