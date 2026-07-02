@@ -30,13 +30,9 @@ from enum import StrEnum
 
 from pydantic import BaseModel, ConfigDict, Field
 
-from ._hitl import ConfirmationPolicy
+from ._hitl import ConfirmationPolicy, is_handoff_command
 
 _STRICT_FROZEN = ConfigDict(frozen=True, strict=True, validate_assignment=True, extra="forbid")
-
-# The irreversible filing-handoff boundary (mirrors the _hitl handoff set): the
-# verbs whose consequence justifies refusing when no human channel exists.
-_HANDOFF_LEAVES: frozenset[str] = frozenset({"export", "file"})
 
 _CONFIRM_FIELD = "confirm"
 
@@ -82,11 +78,6 @@ class ConfirmationRequest(BaseModel):
     requested_schema: dict[str, object]
 
 
-def is_handoff_command(command_key: str) -> bool:
-    """True when the command's leaf verb is the irreversible filing-handoff boundary."""
-    return command_key.rsplit(".", 1)[-1] in _HANDOFF_LEAVES
-
-
 def resolve_confirm_route(
     *,
     policy: ConfirmationPolicy,
@@ -115,10 +106,7 @@ def confirmation_request(*, command_key: str) -> ConfirmationRequest:
     else:
         consequence = "This changes local data for the active taxpayer profile."
     return ConfirmationRequest(
-        message=(
-            f"Confirm running '{command_key}'. {consequence} "
-            "Answer yes to proceed or no to stop."
-        ),
+        message=(f"Confirm running '{command_key}'. {consequence} Answer yes to proceed or no to stop."),
         requested_schema={
             "type": "object",
             "properties": {

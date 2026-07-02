@@ -16,8 +16,9 @@ from ._annotations import McpAnnotations
 
 # Leaf verbs that hand a filing-grade artefact off (an export, a local file
 # marker). They are not destructive, but they are deliberate outputs a human
-# should confirm.
-_HANDOFF_LEAVES: frozenset[str] = frozenset({"export", "file"})
+# should confirm. Public: the single declaration the elicitation matrix and
+# the persona handoff-deny rules also consume.
+HANDOFF_LEAVES: frozenset[str] = frozenset({"export", "file"})
 # Leaf verbs that would write to AEAT. None are exposed today (the live tree is
 # read-only and live submission is permanently forbidden); this guard blocks one
 # defensively if it ever appears in the command set. "declare" is deliberately
@@ -53,6 +54,11 @@ def confirmation_for_tool(*, command_key: str, annotations: McpAnnotations) -> C
     leaf = command_key.rsplit(".", 1)[-1]
     if leaf in _LIVE_WRITE_LEAVES:
         return ConfirmationPolicy.BLOCK
-    if annotations.destructive_hint or leaf in _HANDOFF_LEAVES:
+    if annotations.destructive_hint or leaf in HANDOFF_LEAVES:
         return ConfirmationPolicy.CONFIRM
     return ConfirmationPolicy.AUTO_APPROVE
+
+
+def is_handoff_command(command_key: str) -> bool:
+    """True when the command's leaf verb is the irreversible filing-handoff boundary."""
+    return command_key.rsplit(".", 1)[-1] in HANDOFF_LEAVES
