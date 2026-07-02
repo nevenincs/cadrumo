@@ -33,6 +33,19 @@ _PROFILE_ID = "10010010-0100-4100-8100-100100100100"
 _BUCKET_ID = _PROFILE_ID
 _CCAA_BINDING = "renta-2025-profile-tax-residence-ccaa"
 _PROFILE_FINGERPRINT = "sha256:e43c88edad4d98897cc610aad74834a0ef1711f53a635269846e54069237b207"
+# Derived-fact profile bindings that unconditionally resolve a grounded value
+# (zero/false for a childless, non-Madrid, non-anualidades profile) alongside
+# the CCAA binding: minimo por descendientes (Art. 58/61 LIRPF, this ADR),
+# Madrid nacimiento/adopcion (casilla 1039, DL 1/2010), and the anualidades
+# sin minimo separate-escala eligibility flag (Art. 64/75 LIRPF).
+_DERIVED_FACT_PROFILE_BINDINGS = frozenset(
+    {
+        "renta-2025-profile-minimo-descendientes-estatal",
+        "renta-2025-profile-madrid-nacimiento-adopcion-eligible-count",
+        "renta-2025-profile-unidad-familiar-otros-miembros-base",
+        "renta-2025-profile-anualidades-sin-minimo-descendientes",
+    },
+)
 
 
 @pytest.fixture
@@ -109,7 +122,8 @@ def test_profile_source_resolver_matches_direct_profile_binding_resolution() -> 
     assert resolution.source_transaction_ids == ()
     assert resolution.provenance
     assert {item.source_ref for item in resolution.provenance if item.source_kind == "profile"} == {
-        f"profile:{_BUCKET_ID}:binding:{_CCAA_BINDING}",
+        f"profile:{_BUCKET_ID}:binding:{binding_id}"
+        for binding_id in ({_CCAA_BINDING} | _DERIVED_FACT_PROFILE_BINDINGS)
     }
     assert {item.fingerprint for item in resolution.provenance if item.source_kind == "profile"} == {
         _PROFILE_FINGERPRINT,
@@ -158,7 +172,12 @@ def test_profile_source_resolver_respects_caller_owned_precedence() -> None:
 
     assert _CCAA_BINDING not in resolution.binding_values
     assert _CCAA_BINDING not in resolution.enum_binding_values
-    assert resolution.provenance == ()
+    # Only the CCAA binding is caller-owned here; the unconditional derived-fact
+    # profile bindings (minimo por descendientes, Madrid nacimiento/adopcion,
+    # anualidades sin minimo) still resolve their grounded zero/false values.
+    assert {item.source_ref for item in resolution.provenance if item.source_kind == "profile"} == {
+        f"profile:{_BUCKET_ID}:binding:{binding_id}" for binding_id in _DERIVED_FACT_PROFILE_BINDINGS
+    }
 
 
 def test_live_iva_wallet_source_resolution_carries_decision_fingerprint() -> None:
