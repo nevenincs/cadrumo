@@ -44,6 +44,7 @@ _FECHA_CONSTRUCCION: CasillaId = validated_casilla_id(
     "0690",
     surface="test_verification_m100_vivienda_advisory",
 )
+_YEARS = ("2024", "2025")
 
 
 def _predicate_id(year: str) -> str:
@@ -59,83 +60,83 @@ def _vivienda_advisory_predicate(year: str) -> VerificationPredicateDefinition:
     return predicate
 
 
-@pytest.mark.parametrize("year", ["2024", "2025"])
-def test_vivienda_advisory_ships_with_dt_18_grounding(year: str) -> None:
+def test_vivienda_advisory_ships_with_dt_18_grounding() -> None:
     """The advisory cites LIRPF DT 18ª (the transitional-régimen legal basis)."""
-    predicate = _vivienda_advisory_predicate(year)
-    assert "ley-35-2006:dt-18" in tuple(str(r) for r in predicate.legal_refs)
+    for year in _YEARS:
+        predicate = _vivienda_advisory_predicate(year)
+        assert "ley-35-2006:dt-18" in tuple(str(r) for r in predicate.legal_refs), year
 
 
-@pytest.mark.parametrize("year", ["2024", "2025"])
-def test_vivienda_advisory_fires_when_claimed_without_any_eligibility_signal(year: str) -> None:
+def test_vivienda_advisory_fires_when_claimed_without_any_eligibility_signal() -> None:
     """A claimed deducción with no acquisition/construction date surfaces a warning advisory."""
-    predicate = _vivienda_advisory_predicate(year)
-    casilla_values: dict[CasillaId, Decimal] = {_DEDUCCION_ESTATAL: Decimal("678.00")}
+    for year in _YEARS:
+        predicate = _vivienda_advisory_predicate(year)
+        casilla_values: dict[CasillaId, Decimal] = {_DEDUCCION_ESTATAL: Decimal("678.00")}
 
-    findings = evaluate_verification_predicates((predicate,), casilla_values, _workflow_profile())
+        findings = evaluate_verification_predicates((predicate,), casilla_values, _workflow_profile())
 
-    assert len(findings) == 1
-    assert findings[0].kind is ModeloVerificationFindingKind.ADVISORY
-    assert findings[0].severity is ModeloVerificationFindingSeverity.WARNING
-    assert "ley-35-2006:dt-18" in findings[0].legal_refs
-    assert findings[0].message  # a non-empty operator-facing message is rendered
+        assert len(findings) == 1, year
+        assert findings[0].kind is ModeloVerificationFindingKind.ADVISORY, year
+        assert findings[0].severity is ModeloVerificationFindingSeverity.WARNING, year
+        assert "ley-35-2006:dt-18" in findings[0].legal_refs, year
+        assert findings[0].message, year  # a non-empty operator-facing message is rendered
 
 
-@pytest.mark.parametrize("year", ["2024", "2025"])
-def test_vivienda_advisory_fires_when_acquisition_date_is_post_2012(year: str) -> None:
+def test_vivienda_advisory_fires_when_acquisition_date_is_post_2012() -> None:
     """A claimed deducción with an acquisition date on/after 01-01-2013 fires the advisory."""
-    predicate = _vivienda_advisory_predicate(year)
-    casilla_values: dict[CasillaId, Decimal] = {_DEDUCCION_ESTATAL: Decimal("678.00")}
-    text_values: dict[CasillaId, str] = {_FECHA_ADQUISICION: "15/06/2015"}
+    for year in _YEARS:
+        predicate = _vivienda_advisory_predicate(year)
+        casilla_values: dict[CasillaId, Decimal] = {_DEDUCCION_ESTATAL: Decimal("678.00")}
+        text_values: dict[CasillaId, str] = {_FECHA_ADQUISICION: "15/06/2015"}
 
-    findings = evaluate_verification_predicates((predicate,), casilla_values, _workflow_profile(), text_values)
-
-    assert len(findings) == 1
-    assert findings[0].kind is ModeloVerificationFindingKind.ADVISORY
-    assert findings[0].severity is ModeloVerificationFindingSeverity.WARNING
-
-
-@pytest.mark.parametrize("year", ["2024", "2025"])
-def test_vivienda_advisory_fires_when_acquisition_date_on_cutoff(year: str) -> None:
-    """The cutoff is exclusive: an acquisition dated exactly 01-01-2013 is NOT eligible."""
-    predicate = _vivienda_advisory_predicate(year)
-    casilla_values: dict[CasillaId, Decimal] = {_DEDUCCION_ESTATAL: Decimal("678.00")}
-    text_values: dict[CasillaId, str] = {_FECHA_ADQUISICION: "2013-01-01"}
-
-    findings = evaluate_verification_predicates((predicate,), casilla_values, _workflow_profile(), text_values)
-    assert len(findings) == 1
-
-
-@pytest.mark.parametrize("year", ["2024", "2025"])
-def test_vivienda_advisory_silent_for_grounded_pre_2013_acquisition(year: str) -> None:
-    """A claimed deducción with a pre-01-01-2013 acquisition date holds — no advisory."""
-    predicate = _vivienda_advisory_predicate(year)
-    casilla_values: dict[CasillaId, Decimal] = {_DEDUCCION_ESTATAL: Decimal("678.00")}
-
-    for pre_2013 in ("10/03/2010", "2010-03-10", "31/12/2012"):
-        text_values: dict[CasillaId, str] = {_FECHA_ADQUISICION: pre_2013}
         findings = evaluate_verification_predicates((predicate,), casilla_values, _workflow_profile(), text_values)
-        assert findings == [], f"pre-2013 acquisition {pre_2013!r} must not fire the advisory"
+
+        assert len(findings) == 1, year
+        assert findings[0].kind is ModeloVerificationFindingKind.ADVISORY, year
+        assert findings[0].severity is ModeloVerificationFindingSeverity.WARNING, year
 
 
-@pytest.mark.parametrize("year", ["2024", "2025"])
-def test_vivienda_advisory_silent_for_construction_transitional_case(year: str) -> None:
+def test_vivienda_advisory_fires_when_acquisition_date_on_cutoff() -> None:
+    """The cutoff is exclusive: an acquisition dated exactly 01-01-2013 is NOT eligible."""
+    for year in _YEARS:
+        predicate = _vivienda_advisory_predicate(year)
+        casilla_values: dict[CasillaId, Decimal] = {_DEDUCCION_ESTATAL: Decimal("678.00")}
+        text_values: dict[CasillaId, str] = {_FECHA_ADQUISICION: "2013-01-01"}
+
+        findings = evaluate_verification_predicates((predicate,), casilla_values, _workflow_profile(), text_values)
+        assert len(findings) == 1, year
+
+
+def test_vivienda_advisory_silent_for_grounded_pre_2013_acquisition() -> None:
+    """A claimed deducción with a pre-01-01-2013 acquisition date holds — no advisory."""
+    for year in _YEARS:
+        predicate = _vivienda_advisory_predicate(year)
+        casilla_values: dict[CasillaId, Decimal] = {_DEDUCCION_ESTATAL: Decimal("678.00")}
+
+        for pre_2013 in ("10/03/2010", "2010-03-10", "31/12/2012"):
+            text_values: dict[CasillaId, str] = {_FECHA_ADQUISICION: pre_2013}
+            findings = evaluate_verification_predicates((predicate,), casilla_values, _workflow_profile(), text_values)
+            assert findings == [], f"{year}: pre-2013 acquisition {pre_2013!r} must not fire the advisory"
+
+
+def test_vivienda_advisory_silent_for_construction_transitional_case() -> None:
     """A claimed deducción with a construction-transitional date (0690) holds — no advisory."""
-    predicate = _vivienda_advisory_predicate(year)
-    casilla_values: dict[CasillaId, Decimal] = {_DEDUCCION_ESTATAL: Decimal("678.00")}
-    text_values: dict[CasillaId, str] = {_FECHA_CONSTRUCCION: "20/07/2013"}
+    for year in _YEARS:
+        predicate = _vivienda_advisory_predicate(year)
+        casilla_values: dict[CasillaId, Decimal] = {_DEDUCCION_ESTATAL: Decimal("678.00")}
+        text_values: dict[CasillaId, str] = {_FECHA_CONSTRUCCION: "20/07/2013"}
 
-    findings = evaluate_verification_predicates((predicate,), casilla_values, _workflow_profile(), text_values)
-    assert findings == []
+        findings = evaluate_verification_predicates((predicate,), casilla_values, _workflow_profile(), text_values)
+        assert findings == [], year
 
 
-@pytest.mark.parametrize("year", ["2024", "2025"])
-def test_vivienda_advisory_silent_when_no_deduccion_claimed(year: str) -> None:
+def test_vivienda_advisory_silent_when_no_deduccion_claimed() -> None:
     """A zero or absent deducción amount holds the eligibility check trivially."""
-    predicate = _vivienda_advisory_predicate(year)
+    for year in _YEARS:
+        predicate = _vivienda_advisory_predicate(year)
 
-    explicit_zero: dict[CasillaId, Decimal] = {_DEDUCCION_ESTATAL: Decimal("0")}
-    absent: dict[CasillaId, Decimal] = {}
+        explicit_zero: dict[CasillaId, Decimal] = {_DEDUCCION_ESTATAL: Decimal("0")}
+        absent: dict[CasillaId, Decimal] = {}
 
-    assert evaluate_verification_predicates((predicate,), explicit_zero, _workflow_profile()) == []
-    assert evaluate_verification_predicates((predicate,), absent, _workflow_profile()) == []
+        assert evaluate_verification_predicates((predicate,), explicit_zero, _workflow_profile()) == [], year
+        assert evaluate_verification_predicates((predicate,), absent, _workflow_profile()) == [], year

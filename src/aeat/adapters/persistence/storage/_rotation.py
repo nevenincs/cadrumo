@@ -9,7 +9,7 @@ key, and re-writing under the new key. This module is the single
 sanctioned path for that operation.
 
 Rotation operates at the bytes level - it never parses the inner
-:class:`Envelope` payload. That keeps the rotation contract
+:class:`adapters.persistence.storage.Envelope` payload. That keeps the rotation contract
 content-preserving across every consumer's payload type without
 requiring rotation code to know the typed payload schemas.
 
@@ -395,7 +395,8 @@ def default_rotation_plan(settings: _RotationPlanSettings) -> tuple[RotationPlan
     whose ciphertext is derived directly from the project master key (via the
     per-consumer HKDF context above). The SQL ``secure_objects`` store is NOT in
     this plan and intentionally so: its payloads are encrypted under the
-    per-bucket DEK (the column layer resolves the active :class:`BucketSession`
+    per-bucket DEK (the column layer resolves the active
+    :class:`adapters.persistence.storage.master_key._bucket_session.BucketSession`
     DEK, not the master key). A master-key / passphrase custody change rewraps
     that DEK without changing its value, so the ``secure_objects`` ciphertext
     stays valid and never requires re-encryption on master-key rotation.
@@ -512,10 +513,10 @@ def default_blob_store_roots(settings: _BlobStoreSettings) -> tuple[Path, ...]:
     The substrate persists wrapped DEKs in:
 
     - The secret-store's blob store (``aeat_blob_store_dir``), wired up
-      by :func:`get_secret_store` for opaque-bearer credentials, OAuth
+      by :func:`adapters.persistence.storage.get_secret_store` for opaque-bearer credentials, OAuth
       refresh tokens, and identity records.
     - The financial-attachments store (``aeat_attachments_dir``), wired
-      up by :class:`aeat.domain.attachments.AttachmentStore` for
+      up by :class:`adapters.persistence.storage.AttachmentStore` for
       receipts, invoices, and bank statements.
 
     Each root is a directory whose ``blobs/<hex[:2]>/<hex>.manifest.json``

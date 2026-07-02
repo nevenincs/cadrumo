@@ -1,43 +1,43 @@
 """Public outbound AEAT auth facade.
 
 This package mirrors the application auth contract from
-:mod:`aeat.application.auth` by re-exporting
-:class:`~aeat.application.auth.AuthProvider` and
-:class:`~aeat.application.auth.AuthProviderKind` alongside the concrete
+:mod:`application.auth` by re-exporting
+:class:`application.auth.AuthProvider` and
+:class:`application.auth.AuthProviderKind` alongside the concrete
 certificate and Cl@ve Móvil providers. Use
-:func:`~aeat.adapters.outbound.aeat.auth.select_provider` to resolve
-``CERTIFICATE`` to :class:`~aeat.adapters.outbound.aeat.auth.AeatAuthenticator`
+:func:`select_provider` to resolve
+``CERTIFICATE`` to :class:`AeatAuthenticator`
 and ``CLAVE_MOVIL`` to
-:class:`~aeat.adapters.outbound.aeat.auth.ClaveMovilAuthProvider`;
+:class:`ClaveMovilAuthProvider`;
 unsupported kinds raise
-:exc:`~aeat.adapters.outbound.aeat.auth.AuthConfigurationError`.
+:exc:`AuthConfigurationError`.
 
 Authentication results are strict, frozen, secret-free records:
-:class:`~aeat.adapters.outbound.aeat.auth.AeatSession` and
-:class:`~aeat.adapters.outbound.aeat.auth.AeatLoginAssertion` carry
+:class:`AeatSession` and
+:class:`AeatLoginAssertion` carry
 provider-specific payloads through the discriminated ``AuthSessionDetail`` and
 ``AuthLoginAssertionDetail`` unions.
 Selected certificate public API is available through
-:mod:`aeat.adapters.outbound.aeat.auth.certificate`, including
-:func:`~aeat.adapters.outbound.aeat.auth.certificate.load_certificate`,
-:func:`~aeat.adapters.outbound.aeat.auth.certificate.verify_handshake`, and
-:func:`~aeat.adapters.outbound.aeat.auth.certificate.health`.
+:mod:`adapters.outbound.aeat.auth.certificate`, including
+:func:`adapters.outbound.aeat.auth.certificate.load_certificate`,
+:func:`adapters.outbound.aeat.auth.certificate.verify_handshake`, and
+:func:`adapters.outbound.aeat.auth.certificate.health`.
 
 Live-read policy is owned by
-:class:`~aeat.core.access_gate.AeatAccessGate`: pytest live reads require
+:class:`core.access_gate.AeatAccessGate`: pytest live reads require
 the live-test opt-in enabled, while operator-context reads continue
 through auth, profile, and read-only guards. The associated
-:class:`~aeat.core.access_gate.AeatGateEnvSnapshot` records only the
+:class:`core.access_gate.AeatGateEnvSnapshot` records only the
 live-test opt-in flag and the current pytest test id. Live AEAT writes and
 live AEAT submissions are permanently refused by
-:exc:`~aeat.core.access_gate.LiveSubmitForbiddenError`; auth exposes no
+:exc:`core.access_gate.LiveSubmitForbiddenError`; auth exposes no
 AEAT-side write verb.
 
 Errors remain typed at the facade boundary, including
-:exc:`~aeat.adapters.outbound.aeat.auth.AuthError`,
-:exc:`~aeat.adapters.outbound.aeat.auth.AuthConfigurationError`,
-:exc:`~aeat.adapters.outbound.aeat.auth.AeatLoginAssertionError`,
-:exc:`~aeat.adapters.outbound.aeat.auth.AeatSessionExpiredError`, certificate
+:exc:`AuthError`,
+:exc:`AuthConfigurationError`,
+:exc:`AeatLoginAssertionError`,
+:exc:`AeatSessionExpiredError`, certificate
 errors, and Cl@ve Móvil errors.
 """
 

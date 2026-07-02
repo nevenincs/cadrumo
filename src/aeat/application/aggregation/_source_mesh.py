@@ -24,7 +24,7 @@ from datetime import date, datetime
 from decimal import Decimal
 from enum import StrEnum
 from types import MappingProxyType
-from typing import Literal, Protocol, runtime_checkable
+from typing import Literal, NamedTuple, Protocol, runtime_checkable
 
 from pydantic import BaseModel, Field, field_serializer, field_validator, model_validator
 
@@ -159,6 +159,95 @@ RESERVED_SOURCE_KINDS: frozenset[BindingSourceKind] = frozenset(
         BindingSourceKind.LEDGER_TRANSACTION,
     },
 )
+
+
+class CallerOverrideDisposition(StrEnum):
+    """Whether the calculate path permits a caller override of a source's value.
+
+    The override disposition axis of the caller-override precedence ladder
+    (aggregation-taxonomy ADR ruling D2).
+
+    Members:
+        LOCK: Deterministic bucket-owned resolvers (the ledger aggregations and
+            the invoice families). A caller override is REJECTED so the persisted
+            revision faithfully reflects the sources it aggregates.
+        CARRY: Carry-style sources (previous_filing, relation_prefill, and the
+            IVA-compensation annual partition). A caller override of an
+            automatically-carried prior value is legitimate and must reach the
+            engine, so these are EXCLUDED from the post-merge caller-override
+            guard.
+    """
+
+    LOCK = "lock"
+    CARRY = "carry"
+
+
+class CallerOverridePrecedenceTier(NamedTuple):
+    """One ordered tier of the calculate-path caller-override precedence ladder.
+
+    Carries the tier name, the source kinds it owns, and the override disposition
+    the guard applies to them. The ordered ladder is the single declaration the
+    caller-override guard sets are derived from — :data:`CALLER_OVERRIDE_PRECEDENCE_LADDER`
+    replaces the hand-listed lock / carry frozensets, and a conformance test binds
+    the policy's derived sets to it so the two cannot silently diverge.
+    """
+
+    name: str
+    source_kinds: frozenset[BindingSourceKind]
+    disposition: CallerOverrideDisposition
+
+
+#: The calculate-path caller-override precedence ladder as ordered tier data
+#: (aggregation-taxonomy ADR ruling D2), lowest-precedence tier first. The
+#: guard's lock and carry source sets are the unions of the LOCK- and
+#: CARRY-disposition tiers (see :func:`precedence_ladder_sources`). This encodes
+#: the override DISPOSITION axis only; the merge OVERLAY order (profile < mesh
+#: backend < borrador < caller, later tier wins) is enforced separately by
+#: :func:`merge_source_resolutions`.
+CALLER_OVERRIDE_PRECEDENCE_LADDER: tuple[CallerOverridePrecedenceTier, ...] = (
+    CallerOverridePrecedenceTier(
+        name="deterministic_lock",
+        source_kinds=frozenset(
+            {
+                BindingSourceKind.LEDGER_IVA_AGGREGATION,
+                BindingSourceKind.LEDGER_RENTA_EXPENSE_AGGREGATION,
+                BindingSourceKind.LEDGER_RENTA_INCOME_AGGREGATION,
+                BindingSourceKind.LEDGER_RENTA_GASTO_AGGREGATION,
+                BindingSourceKind.LEDGER_IMPATRIADO_INCOME_AGGREGATION,
+                BindingSourceKind.LEDGER_OSS_AGGREGATION,
+                BindingSourceKind.COLLECTIBLE_INVOICE,
+                BindingSourceKind.PAYABLE_INVOICE,
+            },
+        ),
+        disposition=CallerOverrideDisposition.LOCK,
+    ),
+    CallerOverridePrecedenceTier(
+        name="carry_forward",
+        source_kinds=frozenset(
+            {
+                BindingSourceKind.PREVIOUS_FILING,
+                BindingSourceKind.RELATION_PREFILL,
+                BindingSourceKind.IVA_COMPENSATION_ANNUAL_PARTITION,
+            },
+        ),
+        disposition=CallerOverrideDisposition.CARRY,
+    ),
+)
+
+
+def precedence_ladder_sources(disposition: CallerOverrideDisposition) -> frozenset[BindingSourceKind]:
+    """Union of the source kinds carried by every ladder tier of ``disposition``.
+
+    The single derivation the caller-override policy sets read, so a source kind's
+    lock-vs-carry disposition is declared once in
+    :data:`CALLER_OVERRIDE_PRECEDENCE_LADDER` rather than hand-listed per set.
+    """
+    return frozenset(
+        kind
+        for tier in CALLER_OVERRIDE_PRECEDENCE_LADDER
+        if tier.disposition is disposition
+        for kind in tier.source_kinds
+    )
 
 
 class BindingSourceDisposition(StrEnum):
@@ -744,6 +833,7 @@ def _claim_relation(owners: dict[RelationId, str], relation_id: RelationId, reso
 
 
 __all__ = [
+    "CALLER_OVERRIDE_PRECEDENCE_LADDER",
     "DEFERRED_SOURCE_KINDS",
     "RESERVED_SOURCE_KINDS",
     "BindingSourceDisposition",
@@ -753,10 +843,13 @@ __all__ = [
     "CalculationSourceDiagnosticReason",
     "CalculationSourceProvenance",
     "CalculationSourceResolution",
+    "CallerOverrideDisposition",
+    "CallerOverridePrecedenceTier",
     "ModeloSourceResolver",
     "build_binding_source_dispositions",
     "collect_unhandled_source_diagnostics",
     "merge_source_resolutions",
     "merge_source_resolutions_by_precedence",
+    "precedence_ladder_sources",
     "storage_degradation_resolution",
 ]

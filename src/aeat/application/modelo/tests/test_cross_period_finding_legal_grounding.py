@@ -225,12 +225,13 @@ def test_not_applicable_suppression_summary_carries_dependency_legal_refs() -> N
 
     findings = _cross_period_clean_state_findings(verdict, activity_start_date=None)
 
-    summary = next(f for f in findings if "not-applicable" in f.message)
+    summary = next(f for f in findings if f.kind is ModeloVerificationFindingKind.ADVISORY)
     assert set(_CROSS_PERIOD_DEPENDENCY_LEGAL_REFS) <= set(summary.legal_refs)
     assert _IVA_COMPENSATION_CARRY_LEGAL_REF in summary.legal_refs
     assert tuple(summary.source_refs) == _DEFAULT_DEPENDENCY_SOURCE_REFS
-    assert "--binding KEY=VALUE" in summary.message
-    assert "--binding KEY=VALUE" in summary.next_action
+    assert "--binding CLAVE=VALOR" in summary.message
+    assert "unico signo igual" in summary.message
+    assert "--binding CLAVE=VALOR" in summary.next_action
     assert "corresponding casilla" not in summary.message
 
 

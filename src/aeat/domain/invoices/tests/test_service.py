@@ -41,9 +41,10 @@ _SAMPLE_HEX_64 = "a" * 64
 # ---------------------------------------------------------------------------
 
 
-@pytest.mark.parametrize(
-    ("record_type", "kwargs"),
-    [
+def test_service_records_accept_64_char_transaction_id() -> None:
+    """A SHA-256-shaped 64-character transaction id satisfies the
+    catalogue-key contract."""
+    cases: tuple[tuple[type[ReconciliationSuggestion] | type[LinkInconsistency], dict[str, object]], ...] = (
         (
             ReconciliationSuggestion,
             {
@@ -54,23 +55,15 @@ _SAMPLE_HEX_64 = "a" * 64
             },
         ),
         (LinkInconsistency, {"invoice_id": "INV-1", "direction": "invoice-only"}),
-    ],
-    ids=("suggestion", "inconsistency"),
-)
-def test_service_records_accept_64_char_transaction_id(
-    record_type: type[ReconciliationSuggestion] | type[LinkInconsistency],
-    kwargs: dict[str, object],
-) -> None:
-    """A SHA-256-shaped 64-character transaction id satisfies the
-    catalogue-key contract."""
+    )
 
-    record = record_type(transaction_id=_SAMPLE_HEX_64, **kwargs)
-    assert record.transaction_id == _SAMPLE_HEX_64
+    for record_type, kwargs in cases:
+        record = record_type(transaction_id=_SAMPLE_HEX_64, **kwargs)
+        assert record.transaction_id == _SAMPLE_HEX_64
 
 
-@pytest.mark.parametrize(
-    ("record_type", "kwargs", "transaction_id", "match"),
-    [
+def test_service_records_reject_noncanonical_transaction_ids() -> None:
+    cases: tuple[tuple[type[ReconciliationSuggestion] | type[LinkInconsistency], dict[str, object], str, str], ...] = (
         (
             ReconciliationSuggestion,
             {"invoice_id": "INV-1", "amount_match": True, "counterparty_match": True, "score": Decimal("1")},
@@ -95,17 +88,11 @@ def test_service_records_accept_64_char_transaction_id(
             _SAMPLE_HEX_64 + "x",
             r"transaction_id|length|String should have at most",
         ),
-    ],
-    ids=("suggestion-short", "suggestion-oversized", "inconsistency-short", "inconsistency-oversized"),
-)
-def test_service_records_reject_noncanonical_transaction_ids(
-    record_type: type[ReconciliationSuggestion] | type[LinkInconsistency],
-    kwargs: dict[str, object],
-    transaction_id: str,
-    match: str,
-) -> None:
-    with pytest.raises(ValidationError, match=match):
-        record_type(transaction_id=transaction_id, **kwargs)
+    )
+
+    for record_type, kwargs, transaction_id, match in cases:
+        with pytest.raises(ValidationError, match=match):
+            record_type(transaction_id=transaction_id, **kwargs)
 
 
 def test_link_inconsistency_invoice_id_remains_non_empty_required() -> None:

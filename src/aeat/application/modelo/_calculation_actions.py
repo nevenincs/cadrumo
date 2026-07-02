@@ -56,7 +56,6 @@ from ...domain.buckets._event_repository import BucketEventHistoryRepository
 from ...domain.buckets._protocols import BucketEventHistoryRepositoryProtocol
 from ...domain.calculations.registry import (
     IVA_WALLET_OWNED_RELATION_TARGET_BINDINGS,
-    MODELO_303_IVA_COMPENSATION_BINDING_ID,
     selector_as_dict,
     validated_text_input_casilla_ids,
 )
@@ -704,12 +703,10 @@ def _resolve_bucket_source_mesh(
             # rejection set below — ruling D2). The 303 IVA-compensation
             # binding is excluded here because the iva-wallet compensación
             # decision owns it (ruling D3).
-            _previous_filing_resolution_excluding_iva_compensation(
-                PreviousFilingSourceResolver(
-                    registry_snapshot=snapshot,
-                    excluded_binding_ids=_iva_compensation_previous_filing_exclusions(),
-                ).resolve(context),
-            ),
+            PreviousFilingSourceResolver(
+                registry_snapshot=snapshot,
+                excluded_binding_ids=IVA_WALLET_OWNED_RELATION_TARGET_BINDINGS,
+            ).resolve(context),
             # Relation canonical for cross-modelo fold-in. The relation resolver
             # folds prior filed observations through each declared relation's
             # aggregation op and MATERIALISES the result into the relation's
@@ -1089,59 +1086,26 @@ def _merge_bucket_bound_inputs(
     return dict(sorted({**bound_inputs, **casilla_inputs}.items()))
 
 
-def _previous_filing_resolution_excluding_iva_compensation(
-    resolution: CalculationSourceResolution,
-) -> CalculationSourceResolution:
-    """Strip the M303 IVA-compensation binding from a previous_filing resolution.
-
-    ADR ruling D3: the iva-wallet compensación decision owns the
-    ``modelo-303-compensacion-pendiente-anteriores`` binding. The cross-period
-    carry resolver must NOT also emit it, or the two write paths would
-    double-count the prior carry-forward balance. This drops both the binding
-    value and any matching provenance row before the resolution enters the
-    source mesh.
-
-    Because :class:`~aeat.application.aggregation.CalculationSourceResolution`
-    is immutable, the exclusion returns a copied resolution with only the 303
-    compensation binding and its provenance removed.
-    """
-    excluded = MODELO_303_IVA_COMPENSATION_BINDING_ID
-    if excluded not in resolution.binding_values:
-        return resolution
-    return resolution.model_copy(
-        update={
-            "binding_values": {k: v for k, v in resolution.binding_values.items() if k != excluded},
-            "provenance": tuple(item for item in resolution.provenance if not item.source_ref.endswith(f":{excluded}")),
-        },
-    )
-
-
-def _iva_compensation_previous_filing_exclusions() -> frozenset[str]:
-    """Binding ids previous-filing must not resolve because the IVA wallet owns them.
-
-    The single canonical iva-wallet-owned set declared in the registry domain; the
-    registry relation-source validator consumes the same declaration.
-    """
-    return IVA_WALLET_OWNED_RELATION_TARGET_BINDINGS
-
-
 def _source_resolution_excluding_iva_compensation(
     revision: ModeloRevision,
     resolution: CalculationSourceResolution,
 ) -> CalculationSourceResolution:
     """Keep Modelo 303 prior-compensation owned exclusively by the IVA wallet."""
-    excluded = MODELO_303_IVA_COMPENSATION_BINDING_ID
-    relation_ids = frozenset(rel.id for rel in revision.relations if rel.target_binding == excluded)
-    if excluded not in resolution.binding_values and not relation_ids.intersection(resolution.relation_values):
+    excluded_bindings = IVA_WALLET_OWNED_RELATION_TARGET_BINDINGS
+    relation_ids = frozenset(rel.id for rel in revision.relations if rel.target_binding in excluded_bindings)
+    if not excluded_bindings.intersection(resolution.binding_values) and not relation_ids.intersection(
+        resolution.relation_values,
+    ):
         return resolution
     return resolution.model_copy(
         update={
-            "binding_values": {k: v for k, v in resolution.binding_values.items() if k != excluded},
+            "binding_values": {k: v for k, v in resolution.binding_values.items() if k not in excluded_bindings},
             "relation_values": {k: v for k, v in resolution.relation_values.items() if k not in relation_ids},
             "provenance": tuple(
                 item
                 for item in resolution.provenance
-                if not item.source_ref.endswith(f":{excluded}") and item.source_ref.split(":", 1)[0] not in relation_ids
+                if not any(item.source_ref.endswith(f":{binding_id}") for binding_id in excluded_bindings)
+                and item.source_ref.split(":", 1)[0] not in relation_ids
             ),
         },
     )

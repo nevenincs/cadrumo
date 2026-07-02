@@ -1,6 +1,6 @@
 """AST-based locale-key discovery for sites the regex scanner misses.
 
-The regex scanner under :class:`aeat.locales.manager.LocaleManager`
+The regex scanner under :class:`locales.manager.LocaleManager`
 captures `tr("…")` and `t("…")` literal call sites. Two surfaces slip
 past that contract:
 
@@ -20,7 +20,7 @@ past that contract:
   to a later caller instead of calling :func:`tr` locally.
 
 Both findings feed into
-:meth:`aeat.locales.manager.LocaleManager.get_codebase_keys` so the
+:meth:`locales.manager.LocaleManager.get_codebase_keys` so the
 parity audit covers programmatic emissions and dynamic namespaces.
 """
 
@@ -59,7 +59,7 @@ _DYNAMIC_TRANSLATION_ROOTS = frozenset(
 
 Documented dynamic-dispatch survivors
 --------------------------------------
-The following f-string patterns in ``aeat.application.wizard._catalogue``
+The following f-string patterns in :mod:`application.wizard._catalogue`
 produce dynamic translation keys. They are bounded (not open-ended) because
 the tail is always an enum member value or a flow-registered question ID —
 the set of runtime keys is fully enumerable from the domain model. They are
@@ -207,8 +207,9 @@ def _collect_translation_key_kwargs(node: ast.Call, findings: set[str]) -> None:
 def _collect_build_entry_keys(node: ast.Call, findings: set[str]) -> None:
     """Pick up portal-catalogue translation keys passed to ``build_entry``.
 
-    ``aeat.domain.portals._entries`` modules construct each portal entry
-    through :func:`build_entry`, passing the multilingual ``label`` and
+    :mod:`domain.portals._entries` modules construct each portal entry
+    through :func:`domain.portals._entries._common.build_entry`, passing the
+    multilingual ``label`` and
     ``purpose`` keys (and an optional ``notes`` tuple of keys) as keyword
     arguments rather than through a ``tr(...)`` call. The regex scanner
     and the ``tr``/``t`` call-site path both miss them, so resolve those

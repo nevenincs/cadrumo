@@ -6,7 +6,7 @@ reachable, rate-limiting, under maintenance, or serving a WAF challenge.
 The optional browser runtime is materialised only by the session factories;
 importing this facade exposes types and factories without opening a browser.
 Non-OK site-health classifications are carried through
-:class:`~aeat.core.errors.SiteHealthError` so diagnostics and live-read
+:class:`core.errors.SiteHealthError` so diagnostics and live-read
 application code can inspect one status envelope instead of re-parsing pages.
 
 Major declarations:
@@ -22,12 +22,12 @@ Major declarations:
   :class:`BrowserFailureMode` — the failure taxonomy.
 
 See Also:
-    :class:`aeat.adapters.outbound.aeat.auth.BrowserContextProvisioner`
+    :class:`adapters.outbound.aeat.auth.BrowserContextProvisioner`
         Auth-provider hook consumed by :meth:`BrowserSession.create_context`.
-    :class:`aeat.adapters.outbound.aeat.auth.CertificateContextProvisioner`
+    :class:`adapters.outbound.aeat.auth.CertificateContextProvisioner`
         Certificate-auth provisioner that adds Playwright client-certificate
         kwargs and the context thumbprint marker.
-    :mod:`aeat.adapters.outbound.aeat.sede`
+    :mod:`adapters.outbound.aeat.sede`
         Read-only Sede readers that consume these browser sessions.
 """
 

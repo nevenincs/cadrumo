@@ -97,19 +97,22 @@ def test_response_defaults_iva_fields_to_none() -> None:
     assert response.business_pct is None
 
 
-@pytest.mark.parametrize("numeric_field", ["iva_rate", "taxable_base", "iva_amount"])
-def test_response_structurally_refuses_numeric_tax_fields(numeric_field: str) -> None:
+def test_response_structurally_refuses_numeric_tax_fields() -> None:
     """The model must never carry a regulated number — extra fields are forbidden."""
-    with pytest.raises(ValidationError):
-        LLMClassificationResponse.model_validate(
-            {
-                "classification": "BUSINESS",
-                "confidence": Decimal("0.9"),
-                "reason": "a business expense",
-                "iva_category": "domestic_general_21",
-                numeric_field: "21.00",
-            },
-        )
+    for numeric_field in ("iva_rate", "taxable_base", "iva_amount"):
+        try:
+            with pytest.raises(ValidationError):
+                LLMClassificationResponse.model_validate(
+                    {
+                        "classification": "BUSINESS",
+                        "confidence": Decimal("0.9"),
+                        "reason": "a business expense",
+                        "iva_category": "domestic_general_21",
+                        numeric_field: "21.00",
+                    },
+                )
+        except AssertionError as exc:
+            raise AssertionError(f"numeric tax field was accepted: {numeric_field}") from exc
 
 
 def test_response_rejects_business_pct_out_of_range() -> None:

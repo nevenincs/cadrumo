@@ -1,10 +1,10 @@
 """Encrypted usage recorder for LLM calls.
 
-Persists :class:`~aeat.adapters.outbound.llm.UsageRecord` payloads under
-:data:`~aeat.adapters.persistence.storage.LLM_USAGE_NAMESPACE` in the encrypted
+Persists :class:`adapters.outbound.llm.UsageRecord` payloads under
+:data:`adapters.persistence.storage.LLM_USAGE_NAMESPACE` in the encrypted
 SQL secure-object backend and exposes load and aggregate helpers. Records are
-routed through :func:`~aeat.core.redaction.redact_structured` at
-:class:`~aeat.core.classification.SensitivityClass` ``DIAGNOSTIC`` before they
+routed through :func:`core.redaction.redact_structured` at
+:class:`core.classification.SensitivityClass` ``DIAGNOSTIC`` before they
 are encrypted, so NIFs and bearer-shaped tokens are redacted before
 persistence.
 """
@@ -31,8 +31,8 @@ class UsageRecorder:
     """Append LLM usage records to encrypted secure objects.
 
     Each call to :meth:`record` stores one redacted
-    :class:`~aeat.adapters.outbound.llm.UsageRecord` through
-    :func:`~aeat.adapters.persistence.storage.secure_object_repository_for_active_bucket`
+    :class:`adapters.outbound.llm.UsageRecord` through
+    :func:`adapters.persistence.storage.secure_object_repository_for_active_bucket`
     under the recorder's logical root.
 
     Attributes:
@@ -49,10 +49,10 @@ class UsageRecorder:
         self.root_dir = root_dir or load_settings().aeat_llm_usage_dir
 
     def build_record(self, response: LLMResponse, prompt_id: str, caller: str) -> UsageRecord:
-        """Build a :class:`~aeat.adapters.outbound.llm.UsageRecord` from a response.
+        """Build a :class:`adapters.outbound.llm.UsageRecord` from a response.
 
         Args:
-            response: Public :class:`~aeat.adapters.outbound.llm.LLMResponse`
+            response: Public :class:`adapters.outbound.llm.LLMResponse`
                 model.
             prompt_id: Stable prompt identifier (e.g. ``"translation_v1"``).
             caller: Stable caller identifier used for cost attribution.
@@ -79,8 +79,8 @@ class UsageRecorder:
         """Append a redacted ``record`` to encrypted secure-object storage.
 
         The record is routed through
-        :func:`~aeat.core.redaction.redact_structured` at
-        :class:`~aeat.core.classification.SensitivityClass` ``DIAGNOSTIC``
+        :func:`core.redaction.redact_structured` at
+        :class:`core.classification.SensitivityClass` ``DIAGNOSTIC``
         class before encoding so NIFs are SHA-256 prefixed, URLs are reduced
         to host-only, and bearer-shaped tokens are fingerprinted. Storage-layer
         imports are deferred to the method body so that CLI commands which
@@ -94,7 +94,7 @@ class UsageRecorder:
             Logical daily usage path for operator display only.
 
         Raises:
-            :exc:`~aeat.adapters.outbound.llm.LLMCacheError`: When the storage
+            :exc:`adapters.outbound.llm.LLMCacheError`: When the storage
             write fails.
         """
         from ....adapters.persistence.storage import secure_object_repository_for_active_bucket
@@ -132,7 +132,7 @@ class UsageRecorder:
             until: Inclusive upper date bound, or ``None`` for no upper bound.
 
         Returns:
-            Loaded :class:`~aeat.adapters.outbound.llm.UsageRecord` entries in
+            Loaded :class:`adapters.outbound.llm.UsageRecord` entries in
             file-iteration order.
         """
         from ....adapters.persistence.storage import secure_object_repository_for_active_bucket
@@ -157,7 +157,7 @@ class UsageRecorder:
         return tuple(sorted(records, key=lambda item: (item.created_at, item.request_id, item.prompt_id, item.caller)))
 
     def summarize(self, since: date | None = None, until: date | None = None) -> UsageSummary:
-        """Aggregate usage records into a :class:`~aeat.adapters.outbound.llm.UsageSummary`.
+        """Aggregate usage records into a :class:`adapters.outbound.llm.UsageSummary`.
 
         Args:
             since: Inclusive lower date bound, or ``None`` for no lower bound.

@@ -15,7 +15,7 @@ The secure-object surface also exports :class:`SecureObjectRecord`,
 :class:`SecureObjectMetadata`, :class:`SecureObjectNamespaceIntegrity`,
 and :class:`SecureObjectDecryptabilityRow`. The repository stores payloads as
 AES-GCM encrypted bytes, stores natural keys through
-:class:`~aeat.adapters.persistence.storage.HashedLookup`, binds row identity
+:class:`adapters.persistence.storage.HashedLookup`, binds row identity
 into AEAD associated data, and gates reads by sensitivity class and schema
 version. Listing defaults fail closed on unreadable rows; explicit diagnostic
 APIs return typed decryptability metadata without plaintext disclosure.

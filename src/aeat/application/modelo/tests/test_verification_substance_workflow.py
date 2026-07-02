@@ -191,6 +191,9 @@ def test_runtime_evaluator_recognises_every_known_predicate_operator() -> None:
         "deduccion_requires_adquisicion_before": (
             'deduccion_requires_adquisicion_before(["0547", "0708", "0690", "2013-01-01"])'
         ),
+        "advisory_when_computed_diverges": (
+            'advisory_when_computed_diverges(["01", "modulos-rendimiento-neto-actividad"])'
+        ),
     }
     regex_attr_names: dict[str, str] = {
         "all_nonzero": "_PREDICATE_ALL_NONZERO",
@@ -207,6 +210,7 @@ def test_runtime_evaluator_recognises_every_known_predicate_operator() -> None:
         "roll_forward_balances": "_PREDICATE_ROLL_FORWARD_BALANCES",
         "casilla_equals_implies_nonzero": "_PREDICATE_CASILLA_EQUALS_IMPLIES_NONZERO",
         "deduccion_requires_adquisicion_before": "_PREDICATE_DEDUCCION_REQUIRES_ADQUISICION_BEFORE",
+        "advisory_when_computed_diverges": "_PREDICATE_ADVISORY_WHEN_COMPUTED_DIVERGES",
     }
 
     missing_probes = KNOWN_VERIFICATION_PREDICATE_OPERATORS.difference(probe_expressions)

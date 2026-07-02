@@ -28,6 +28,13 @@ from .._blob_store import BlobManifest, EncryptedBlobStore
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 
 _SESSION_OPENED_AT = datetime(2099, 5, 28, 11, 45, 0, tzinfo=UTC)
+_BAD_DIGESTS = (
+    "../" + ("a" * 61),
+    ("a" * 63) + "/",
+    "." + ("a" * 63),
+    "A" + ("a" * 63),
+    "g" * 64,
+)
 
 
 def _digest_hex(data: bytes) -> str:
@@ -90,21 +97,20 @@ class TestPlaintextCorpusBlobs:
 class TestCiphertextSensitiveBlobs:
     """Non-CORPUS blobs are stored as ciphertext with envelope-encrypted DEKs."""
 
-    @pytest.mark.parametrize(
-        "classification",
-        [
+    def test_round_trip_each_sensitive_classification(self, store: EncryptedBlobStore) -> None:
+        classifications = (
             SensitivityClass.SECRET,
             SensitivityClass.SESSION,
             SensitivityClass.IDENTITY,
             SensitivityClass.FINANCIAL,
             SensitivityClass.AUDIT,
-        ],
-    )
-    def test_round_trip(self, store: EncryptedBlobStore, classification: SensitivityClass) -> None:
-        payload = b"sensitive-payload-bytes" * 50
-        ref = store.put(payload, classification=classification)
-        assert ref.classification is classification
-        assert store.get(ref) == payload
+        )
+
+        for classification in classifications:
+            payload = (f"sensitive-payload-{classification.value}-".encode()) * 50
+            ref = store.put(payload, classification=classification)
+            assert ref.classification is classification
+            assert store.get(ref) == payload
 
     def test_ciphertext_blob_is_not_plaintext_on_disk(self, store: EncryptedBlobStore) -> None:
         payload = b"this-must-not-leak-to-disk-in-plaintext"
@@ -291,42 +297,22 @@ class TestMasterKeyIsolation:
 
 
 class TestBlobDigestValidation:
-    @pytest.mark.parametrize(
-        "bad_digest",
-        (
-            "../" + ("a" * 61),
-            ("a" * 63) + "/",
-            "." + ("a" * 63),
-            "A" + ("a" * 63),
-            "g" * 64,
-        ),
-    )
-    def test_reference_rejects_non_lowercase_hex_digest(self, bad_digest: str) -> None:
-        with pytest.raises(ValidationError):
-            BlobReference(
-                sha256_plaintext_hex=bad_digest,
-                classification=SensitivityClass.CORPUS,
-            )
+    def test_reference_and_manifest_reject_path_bearing_or_non_hex_digests(self) -> None:
+        for bad_digest in _BAD_DIGESTS:
+            with pytest.raises(ValidationError):
+                BlobReference(
+                    sha256_plaintext_hex=bad_digest,
+                    classification=SensitivityClass.CORPUS,
+                )
 
-    @pytest.mark.parametrize(
-        "bad_digest",
-        (
-            "../" + ("a" * 61),
-            ("a" * 63) + "/",
-            "." + ("a" * 63),
-            "A" + ("a" * 63),
-            "g" * 64,
-        ),
-    )
-    def test_manifest_rejects_path_bearing_or_non_hex_digest(self, bad_digest: str) -> None:
-        with pytest.raises(ValidationError):
-            BlobManifest(
-                sha256_plaintext_hex=bad_digest,
-                sha256_ciphertext_hex=None,
-                size_plaintext=0,
-                content_type="application/octet-stream",
-                classification=SensitivityClass.CORPUS,
-            )
+            with pytest.raises(ValidationError):
+                BlobManifest(
+                    sha256_plaintext_hex=bad_digest,
+                    sha256_ciphertext_hex=None,
+                    size_plaintext=0,
+                    content_type="application/octet-stream",
+                    classification=SensitivityClass.CORPUS,
+                )
 
 
 class TestActiveSessionDefaultProvider:

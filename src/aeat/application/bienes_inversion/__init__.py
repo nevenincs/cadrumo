@@ -1,11 +1,11 @@
 """Application service for the capital-goods IVA regularización register.
 
 Thin orchestration over
-:class:`~aeat.adapters.persistence.profile.bienes_inversion.BienesInversionIvaRegisterRepository`:
+:class:`adapters.persistence.profile.bienes_inversion.BienesInversionIvaRegisterRepository`:
 the operator declares tracked capital goods and lists them. The register is
 authoritative profile-scoped state; this service owns no calculation, only the
 declare/list surface the CLI exposes. The art-109 annual compute lives in the
-pure domain module :mod:`aeat.domain.bienes_inversion`.
+pure domain module :mod:`domain.bienes_inversion`.
 
 The register is source evidence for the deferred
 ``bienes_inversion_regularizacion`` calculation source: application calculation
@@ -14,16 +14,16 @@ Modelo 390 regularización, but this facade does not derive definitive prorrata
 percentages or write binding values.
 
 See Also:
-    :mod:`aeat.domain.bienes_inversion`
+    :mod:`domain.bienes_inversion`
         Pure LIVA arts. 107-110 register records and annual regularización
         computations.
-    :mod:`aeat.adapters.persistence.profile.bienes_inversion`
+    :mod:`adapters.persistence.profile.bienes_inversion`
         FINANCIAL secure-object repository that stores the profile-scoped
         register singleton.
-    :mod:`aeat.application.calculations`
+    :mod:`application.calculations`
         Calculation-source and advisory surfaces that can project the register
         once definitive prorrata inputs exist.
-    :mod:`aeat.domain.iva`
+    :mod:`domain.iva`
         Legal IVA prorrata substrate that supplies the separate definitive
         percentage input; usage ratios are not a substitute.
 """

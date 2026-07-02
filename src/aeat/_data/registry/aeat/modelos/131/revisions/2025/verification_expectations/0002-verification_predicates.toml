@@ -43,3 +43,22 @@ predicate_id = "modelo-131-2025-pago-fraccionado-determinado-cuando-rendimientos
 expression = 'implies_nonzero(["01", "02"])'
 finding_kind = "ADVISORY"
 legal_refs = ["rd-439-2007:art-110"]
+
+# Table-driven-engine-vs-operator-declared discrepancy (Phase 1 of the M131
+# estimación-objetiva módulos engine, 2026-07-01-modelo-131-eo-modulos-engine-adr).
+# Casilla 01 ("Suma de rendimientos netos") stays a manual operator input;
+# for a first-slice tabled IAE activity (972.1 peluquería, 721.2 autotaxis,
+# 722 transporte de mercancías) the units×coefficient engine now produces a
+# computed reference figure (modulos-rendimiento-neto-actividad, Fase 1ª +
+# Fase 4ª: previo − 5 por ciento reducción general). When the engine has
+# coverage (computed casilla > 0) and the operator's declared casilla 01
+# differs from it by more than one cent, this ADVISORY prompts a review — it
+# does not assume the engine is authoritative over the operator's declared
+# figure (Fases 2ª/3ª correcting factors, which the taxpayer may legitimately
+# claim, are intentionally not modelled in Phase 1), so it stays a prompt,
+# never a BLOCKING_RULE.
+[[revisions."2025".verification_predicates]]
+predicate_id = "modelo-131-2025-modulos-computed-diverges-de-c01"
+expression = 'advisory_when_computed_diverges(["01", "modulos-rendimiento-neto-actividad"])'
+finding_kind = "ADVISORY"
+legal_refs = ["ley-35-2006:art-31", "orden-hac-1347-2024:art-4", "orden-hac-1347-2024:da-1"]

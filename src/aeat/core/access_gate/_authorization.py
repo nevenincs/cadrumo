@@ -23,7 +23,7 @@ Four collaborating pieces live here:
   an absent directory or one with no fragments authorizes zero modelos.
 - :class:`ModeloAuthorization` — the *derived* per-modelo capability the
   runtime consults. It is computed at the registry boundary (see
-  :meth:`aeat.domain.calculations.registry.ValidatedRegistryAuthority.authorization`),
+  :meth:`domain.calculations.registry.ValidatedRegistryAuthority.authorization`),
   never authored independently per revision, so the capability cannot
   drift from the manifest.
 
@@ -212,7 +212,7 @@ class ModeloAuthorization(BaseModel):
     cross-checked against the loadable registry — it is never authored
     independently per revision, so it cannot drift from the manifest.
     See
-    :meth:`aeat.domain.calculations.registry.ValidatedRegistryAuthority.authorization`.
+    :meth:`domain.calculations.registry.ValidatedRegistryAuthority.authorization`.
 
     Attributes:
         modelo: The modelo id this capability describes.

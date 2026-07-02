@@ -573,16 +573,25 @@ def _cross_period_modelo_not_applicable_advisory_finding(
     return ModeloVerificationFinding(
         kind=ModeloVerificationFindingKind.ADVISORY,
         severity=ModeloVerificationFindingSeverity.WARNING,
-        message=(
-            "cross-period dependencies on source modelos the taxpayer does not file were scoped out as "
-            f"not-applicable: {', '.join(modelos)}. For suffered retenciones, enter the income-certificate "
-            "amount with the corresponding --binding KEY=VALUE source, not --casilla; for mutually "
-            "exclusive pagos fraccionados, confirm the activity-estimation regime on the profile."
+        message=tr(
+            "application.modelo.findings.cross_period_modelo_not_applicable.message",
+            default=(
+                "Cross-period dependencies on source modelos the taxpayer does not file were scoped out as "
+                "not applicable: {modelos}. For suffered retenciones, enter the income-certificate amount "
+                "with --binding KEY=VALUE, not --casilla. KEY=VALUE means the binding id on the left of one "
+                "equals sign and the value on the right. For mutually exclusive pagos fraccionados, confirm "
+                "the activity-estimation regime on the profile."
+            ),
+            modelos=", ".join(modelos),
         ),
-        next_action=(
-            "Use the bindings list --missing command to identify the retenciones binding, supply the "
-            "certificate amount with --binding KEY=VALUE where applicable, and confirm the profile's IRPF "
-            "estimation regime if a mutually exclusive pago-fraccionado modelo was scoped out."
+        next_action=tr(
+            "application.modelo.findings.cross_period_modelo_not_applicable.next_action",
+            default=(
+                "Use `aeat app modelo bindings list --missing` to identify the retenciones binding. "
+                "Supply the certificate amount with --binding KEY=VALUE where applicable: put the binding id "
+                "on the left of one equals sign and the amount on the right. Confirm the profile's IRPF "
+                "estimation regime if a mutually exclusive pago-fraccionado modelo was scoped out."
+            ),
         ),
         legal_refs=legal_refs,
         source_refs=source_refs,

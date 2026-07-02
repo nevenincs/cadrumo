@@ -40,6 +40,7 @@ import pytest
 from ....core import Period
 from ....domain.buckets import BucketEventHistoryRepository
 from ....domain.calculations.registry import (
+    IVA_WALLET_OWNED_RELATION_TARGET_BINDINGS,
     MODELO_303_IVA_COMPENSATION_BINDING_ID,
     CasillaId,
     RegistryModeloObservation,
@@ -62,7 +63,6 @@ from .. import (
     create_work_unit,
 )
 from .._calculation_actions import (
-    _previous_filing_resolution_excluding_iva_compensation,
     _resolve_bucket_source_mesh,
     calculate_modelo_revision_from_bucket_aggregation_with_diagnostics,
 )
@@ -497,9 +497,9 @@ def test_carry_resolver_excludes_303_iva_compensation_binding(repos: _Repos) -> 
 
     A prior 303 filing whose observation carries the compensation casillas is persisted
     locally. The carry resolver's raw output DOES surface the
-    ``modelo-303-compensacion-pendiente-anteriores`` binding (proven first), but the
-    enrollment helper :func:`_previous_filing_resolution_excluding_iva_compensation`
-    strips it so the iva-wallet decision remains the sole owner.
+    ``modelo-303-compensacion-pendiente-anteriores`` binding (proven first), but
+    the enrolled resolver receives the registry-declared iva-wallet-owned set as
+    ``excluded_binding_ids`` so the iva-wallet decision remains the sole owner.
     """
     from ....core import Period
     from ...aggregation import CalculationSourceContext
@@ -534,7 +534,10 @@ def test_carry_resolver_excludes_303_iva_compensation_binding(repos: _Repos) -> 
         "so the exclusion has something to strip"
     )
 
-    filtered = _previous_filing_resolution_excluding_iva_compensation(raw)
+    filtered = PreviousFilingSourceResolver(
+        registry_snapshot=snapshot,
+        excluded_binding_ids=IVA_WALLET_OWNED_RELATION_TARGET_BINDINGS,
+    ).resolve(context)
     assert MODELO_303_IVA_COMPENSATION_BINDING_ID not in filtered.binding_values
     assert all(
         not item.source_ref.endswith(f":{MODELO_303_IVA_COMPENSATION_BINDING_ID}") for item in filtered.provenance

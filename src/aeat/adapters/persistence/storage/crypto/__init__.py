@@ -11,9 +11,9 @@ constants) alongside the SQLAlchemy ``TypeDecorator`` set
 :func:`secure_object_key_digest` for secure-object row AAD binding.
 
 Column-level decrypt and encrypt operations resolve key bytes through
-:func:`~aeat.adapters.persistence.storage.master_key._active_session.get_active_master_key`
+:func:`adapters.persistence.storage.master_key._active_session.get_active_master_key`
 on the active
-:class:`~aeat.adapters.persistence.storage.master_key._bucket_session.BucketSession`.
+:class:`adapters.persistence.storage.master_key._bucket_session.BucketSession`.
 This facade only re-exports crypto objects; it does not acquire key
 material or activate a session at import time.
 """

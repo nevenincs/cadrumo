@@ -15,7 +15,8 @@ import time.
 Adding a new enum value without updating the matching registration here
 will cause scaffold to omit the required locale entries, which the
 registration coverage test will surface immediately. The expanded key set
-is exposed through :func:`get_registered_keys` for :class:`LocaleManager`
+is exposed through :func:`get_registered_keys` for
+:class:`locales.manager.LocaleManager`
 scaffold and parity checks.
 """
 
@@ -46,7 +47,7 @@ def _hyphen(v: str) -> str:
 
 
 # The service-capability CONFIRM question ids (hyphenated, matching the catalogue
-# question ids in :mod:`aeat.application.wizard._catalogue`). Their prompt and
+# question ids in :mod:`application.wizard._catalogue`). Their prompt and
 # CLI-flag-help keys are f-string-built, so they are enumerated here for scaffold.
 _CAPABILITY_QUESTION_IDS: tuple[str, ...] = (
     "cloud-evidence-upload",

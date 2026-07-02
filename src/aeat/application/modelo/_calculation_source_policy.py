@@ -34,7 +34,9 @@ from __future__ import annotations
 from ...core import BindingSourceKind
 from ..aggregation._source_mesh import DEFERRED_SOURCE_KINDS
 from ..aggregation._source_mesh import BindingSourceDisposition as _BindingSourceDisposition
+from ..aggregation._source_mesh import CallerOverrideDisposition as _CallerOverrideDisposition
 from ..aggregation._source_mesh import build_binding_source_dispositions as _build_binding_source_dispositions
+from ..aggregation._source_mesh import precedence_ladder_sources as _precedence_ladder_sources
 
 # S26 boundary gate: source kinds handled by the live calculate path, either
 # through an enrolled resolver or an explicitly-deferred advisory.
@@ -68,29 +70,20 @@ BUCKET_AGGREGATION_OWNED_SOURCES: frozenset[BindingSourceKind] = frozenset(
     if disposition is _BindingSourceDisposition.ENROLLED
 )
 
-# Caller-override lock set: deterministic bucket-owned resolvers whose binding
-# or bound-casilla values must not be supplied by the caller on the aggregation
-# path. Optional-return carry/profile/OSS/invoice sources are intentionally not
-# locked so legitimate fallback overrides can still reach the engine.
-BUCKET_AGGREGATION_LOCK_SOURCES: frozenset[BindingSourceKind] = frozenset(
-    {
-        BindingSourceKind.LEDGER_IVA_AGGREGATION,
-        BindingSourceKind.LEDGER_RENTA_EXPENSE_AGGREGATION,
-        BindingSourceKind.LEDGER_RENTA_INCOME_AGGREGATION,
-        BindingSourceKind.LEDGER_RENTA_GASTO_AGGREGATION,
-        BindingSourceKind.LEDGER_IMPATRIADO_INCOME_AGGREGATION,
-        BindingSourceKind.LEDGER_OSS_AGGREGATION,
-        BindingSourceKind.COLLECTIBLE_INVOICE,
-        BindingSourceKind.PAYABLE_INVOICE,
-    },
+# Caller-override lock / carry sets, DERIVED from the ordered precedence-ladder
+# declaration (``CALLER_OVERRIDE_PRECEDENCE_LADDER`` in the aggregation package)
+# rather than hand-listed here. LOCK: deterministic bucket-owned resolvers whose
+# binding or bound-casilla values must not be supplied by the caller on the
+# aggregation path. CARRY: optional-return carry sources intentionally NOT locked
+# so legitimate fallback overrides can still reach the engine. The conformance
+# gate ``test_precedence_ladder_conformance`` binds these to the declaration so
+# the guard and the ladder cannot silently diverge.
+BUCKET_AGGREGATION_LOCK_SOURCES: frozenset[BindingSourceKind] = _precedence_ladder_sources(
+    _CallerOverrideDisposition.LOCK,
 )
 
-CALLER_OVERRIDABLE_CARRY_SOURCES: frozenset[BindingSourceKind] = frozenset(
-    {
-        BindingSourceKind.PREVIOUS_FILING,
-        BindingSourceKind.RELATION_PREFILL,
-        BindingSourceKind.IVA_COMPENSATION_ANNUAL_PARTITION,
-    },
+CALLER_OVERRIDABLE_CARRY_SOURCES: frozenset[BindingSourceKind] = _precedence_ladder_sources(
+    _CallerOverrideDisposition.CARRY,
 )
 
 ACCEPTED_BUCKET_AGGREGATION_SOURCE_KINDS = BUCKET_AGGREGATION_OWNED_SOURCES | DEFERRED_SOURCE_KINDS

@@ -178,9 +178,8 @@ def test_source_resolution_rejects_noncanonical_relation_keys() -> None:
     assert unresolved_exc.value.errors()[0]["loc"][0] == "unresolved_relation_ids"
 
 
-@pytest.mark.parametrize(
-    ("payload", "message_key"),
-    (
+def test_source_resolution_validator_errors_are_localized() -> None:
+    cases: tuple[tuple[dict[str, object], str], ...] = (
         (
             {"resolver_id": "source-mesh", "owned_sources": ("profile", " ")},
             "aggregation.source_mesh.errors.owned_sources_blank",
@@ -197,21 +196,18 @@ def test_source_resolution_rejects_noncanonical_relation_keys() -> None:
             {"resolver_id": "source-mesh", "source_transaction_ids": ("tx-1", "tx-1")},
             "aggregation.source_mesh.errors.source_transaction_ids_duplicate",
         ),
-    ),
-)
-def test_source_resolution_validator_errors_are_localized(
-    payload: dict[str, object],
-    message_key: str,
-) -> None:
-    with pytest.raises(ValidationError) as exc_info:
-        CalculationSourceResolution.model_validate(payload)
+    )
 
-    context = exc_info.value.errors()[0].get("ctx")
-    assert context is not None
-    error = context["error"]
-    assert isinstance(error, SourceMeshError)
-    assert str(error) == message_key
-    assert error.translated_message == message_key
+    for payload, message_key in cases:
+        with pytest.raises(ValidationError) as exc_info:
+            CalculationSourceResolution.model_validate(payload)
+
+        context = exc_info.value.errors()[0].get("ctx")
+        assert context is not None, message_key
+        error = context["error"]
+        assert isinstance(error, SourceMeshError), message_key
+        assert str(error) == message_key
+        assert error.translated_message == message_key
 
 
 def test_owned_sources_unknown_token_is_rejected_by_the_typed_field() -> None:

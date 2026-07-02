@@ -105,6 +105,7 @@ FormulaOperator = Literal[
     "previous_period_sum",
     "cross_model_sum",
     "age_at_year_end",
+    "m131_resolve_modulos_previo",
 ]
 
 

@@ -127,6 +127,11 @@ def parse_kv_spec[T](
         raise typer.BadParameter(
             tr(
                 "cli.app.modelo.work.kv_format_error",
+                default=(
+                    "{flag} must be written as {key_label}={value_label}. "
+                    "This is a key-value entry: put the field name on the left of one equals sign "
+                    "and the value on the right. Received {spec}."
+                ),
                 flag=flag,
                 key_label=key_label,
                 value_label=value_label,
@@ -327,7 +332,11 @@ def parse_row_spec(spec: str) -> ModeloDetailRow:
             raise typer.BadParameter(
                 tr(
                     "cli.app.modelo.work.row_kv_format_error",
-                    default=f"--row field {token!r} must be in KEY=VALUE format",
+                    default=(
+                        "--row field {token} must be written as KEY=VALUE. "
+                        "This is a key-value entry: put the row field name on the left of one equals sign "
+                        "and its value on the right."
+                    ),
                     token=token,
                 ),
             )

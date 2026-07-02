@@ -15,8 +15,8 @@ manifest helpers (:func:`build_remote_mirror_namespace_manifest`,
 :func:`remote_mirror_object_key_hmac`), and the typed
 :class:`OutboundStorageError` hierarchy.
 
-Concrete backends in :mod:`aeat.adapters.outbound.storage._local` and
-:mod:`aeat.adapters.outbound.storage._google_drive` remain private
+Concrete backends in :mod:`adapters.outbound.storage._local` and
+:mod:`adapters.outbound.storage._google_drive` remain private
 implementation details; consumers depend on this Protocol, these records, the
 manifest helpers, and the factory.
 """
