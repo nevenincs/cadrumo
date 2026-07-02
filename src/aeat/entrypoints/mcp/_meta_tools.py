@@ -97,6 +97,9 @@ def search_commands(
 
     Returns:
         The matched commands, highest score first.
+
+    Returns:
+        A :class:`MetaSearchResult`.
     """
     tokens = _query_tokens(query)
     if not tokens:

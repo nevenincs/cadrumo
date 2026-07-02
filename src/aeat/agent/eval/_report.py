@@ -63,7 +63,11 @@ def build_measurement_report(
     scores: tuple[LiveScenarioScore, ...],
     trajectories: tuple[LiveTrajectory, ...],
 ) -> MeasurementReport:
-    """Aggregate one run's scores and trajectories into the measurement report."""
+    """Aggregate one run's scores and trajectories into the measurement report.
+
+    Returns:
+        A :class:`MeasurementReport`.
+    """
     by_session = {trajectory.session_id: trajectory for trajectory in trajectories}
     rows: list[ScenarioOutcomeRow] = []
     for score in scores:

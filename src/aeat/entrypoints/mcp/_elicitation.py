@@ -85,7 +85,11 @@ def resolve_confirm_route(
     command_key: str,
     client_supports_elicitation: bool,
 ) -> ConfirmRoute:
-    """The degradation matrix: how this call's tier is enforced for this client."""
+    """The degradation matrix: how this call's tier is enforced for this client.
+
+    Returns:
+        A :class:`ConfirmRoute`.
+    """
     if policy is ConfirmationPolicy.BLOCK:
         return ConfirmRoute.REFUSE_BLOCKED
     if policy is ConfirmationPolicy.AUTO_APPROVE:
@@ -104,6 +108,9 @@ def confirmation_request(*, command_key: str) -> ConfirmationRequest:
     HUMAN taxpayer, so both are localized through :func:`tr` (the configured
     output language), unlike the model-facing refusal/advisory strings in this
     layer, which the model re-narrates in the user's language itself.
+
+    Returns:
+        A :class:`ConfirmationRequest`.
     """
     if is_handoff_command(command_key):
         consequence = tr(
@@ -148,6 +155,9 @@ def decision_from_elicitation(*, action: str, content: dict[str, object] | None)
     Fail-closed on every path that is not an explicit accepted yes: a decline,
     a cancel, a malformed accept, and an accepted ``confirm: false`` all
     refuse.
+
+    Returns:
+        A :class:`ConfirmDecision`.
     """
     if action == "accept":
         value = (content or {}).get(_CONFIRM_FIELD)

@@ -128,6 +128,9 @@ def build_prompt_catalogue() -> tuple[GuidedPrompt, ...]:
     Sorted by name for deterministic ``prompts/list`` output. Every skill's
     frontmatter is validated on the way through (a malformed skill fails
     loudly here rather than shipping a broken prompt).
+
+    Returns:
+        A :class:`GuidedPrompt`.
     """
     rows: list[GuidedPrompt] = [
         GuidedPrompt(
@@ -159,6 +162,9 @@ def prompt_document(name: str) -> PromptDocument:
     Raises:
         PromptNotFoundError: When ``name`` is neither the orientation prompt
             nor a shipped skill's workflow.
+
+    Returns:
+        A :class:`PromptDocument`.
     """
     if name == ORIENTATION_PROMPT_NAME:
         catalogue = {row.name: row for row in build_prompt_catalogue()}
