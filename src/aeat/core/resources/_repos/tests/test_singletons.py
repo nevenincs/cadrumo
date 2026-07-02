@@ -25,6 +25,7 @@ def test_apoderamientos_singleton_loads_real_catalogue() -> None:
 
     assert isinstance(result, ApoderamientosCatalogue), f"Expected ApoderamientosCatalogue, got {type(result).__name__}"
     assert repo.singleton is result  # cached identity
+    assert repo.get(None) is result
     assert len(result.scopes) > 0, "Apoderamientos catalogue must declare at least one scope"
     scope_codes = {s.code for s in result.scopes}
     assert "GENERALNT" in scope_codes, f"Expected canonical 'GENERALNT' scope in catalogue; got codes: {scope_codes}"
@@ -59,6 +60,13 @@ def test_topics_singleton_loads_real_catalogue() -> None:
     assert isinstance(result, TopicCatalogue), f"Expected TopicCatalogue, got {type(result).__name__}"
     assert len(result.topics) > 0, "Topic catalogue must contain at least one topic"
     assert repo.singleton is result  # cached identity
+
+    repo.clear_cache()
+    reloaded = repo.singleton
+
+    # Same content, but cache was cleared between calls so the repository invoked
+    # _load twice. Equality holds because the bundled data is immutable.
+    assert reloaded == result
 
 
 def test_recargo_bands_singleton_loads_real_tuple() -> None:
@@ -96,21 +104,3 @@ def test_legal_parameters_singleton_loads_real_mapping() -> None:
     )
     assert repo.singleton is result  # cached identity
 
-
-def test_singleton_clear_cache_forces_reload() -> None:
-    repo = TopicCatalogueRepository()
-
-    first = repo.singleton
-    repo.clear_cache()
-    second = repo.singleton
-
-    # Same content, but cache was cleared between calls so the
-    # repository invoked _load twice. Equality holds because the
-    # bundled data is immutable.
-    assert first == second
-
-
-def test_get_with_explicit_none_matches_singleton_property() -> None:
-    repo = ApoderamientosRepository()
-
-    assert repo.get(None) is repo.singleton
