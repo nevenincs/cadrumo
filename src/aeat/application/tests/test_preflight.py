@@ -12,6 +12,7 @@ through minimal real snapshot fixtures — no mocks.
 
 from __future__ import annotations
 
+import sys
 from pathlib import Path
 
 import pytest
@@ -233,10 +234,53 @@ def test_run_preflight_checks_never_raises_and_covers_every_dimension() -> None:
         "corpus:normatives",
         "corpus:manuals",
         "env:configuration",
+        "storage:windows-long-path",
         "registry:referential-integrity",
         "portal-registry:health",
     } <= ids
     assert all(isinstance(row, PreflightCheck) for row in rows)
+
+
+# ── WIN-003 — Windows MAX_PATH (long-path) headroom ───────────────────────────
+
+
+def test_windows_long_path_row_ok_when_root_has_ample_headroom(tmp_path: Path) -> None:
+    """A short, shallow storage root leaves ample MAX_PATH headroom (or is OK off-Windows)."""
+    with override_settings(aeat_local_storage_root=tmp_path / "s"):
+        rows = probe_storage_corpus_env()
+    row = _row(rows, "storage:windows-long-path")
+    assert row.healthy is True
+
+
+def test_windows_long_path_row_flags_a_deep_root(tmp_path: Path) -> None:
+    """A storage root already close to MAX_PATH surfaces the ceiling detail on Windows.
+
+    Builds a genuinely deep on-disk path (not a mock) so
+    ``windows_storage_root_long_path_margin`` computes a real, small-or-negative
+    margin. The row's disposition legitimately depends on the workstation's own
+    ``LongPathsEnabled`` opt-in (a real, machine-wide OS setting this test must
+    not mutate): with the opt-in on, the row reports OK because the ceiling does
+    not apply; with it off, the deep root's real margin drives an ERROR or WARN
+    row naming the resolved root. Both are asserted as legitimate outcomes so the
+    test is honest about depending on real, unmutated machine state rather than
+    asserting a single hardcoded disposition.
+    """
+    from ...core.paths import windows_long_paths_enabled
+
+    deep_root = tmp_path
+    for segment in range(6):
+        deep_root = deep_root / f"segment-{segment}-{'x' * 30}"
+    with override_settings(aeat_local_storage_root=deep_root):
+        rows = probe_storage_corpus_env()
+    row = _row(rows, "storage:windows-long-path")
+
+    if sys.platform != "win32" or windows_long_paths_enabled():
+        assert row.healthy is True
+        assert "not applicable" in row.detail or "LongPathsEnabled is set" in row.detail
+    else:
+        assert str(deep_root) in row.detail
+        assert row.severity in (HealthSeverity.ERROR, HealthSeverity.WARN)
+        assert row.remediation
 
 
 # ── #413 — portal-registry health / recorded portal drift ────────────────────

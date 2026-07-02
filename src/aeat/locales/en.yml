@@ -212,6 +212,7 @@ adapters:
           content_hash_mismatch: Local storage content hash mismatch; payload integrity
             check failed.
           namespace_blank: Local storage namespace must not be blank.
+          namespace_create_path_too_long: 'Local storage could not create namespace {namespace}: the path exceeds the Windows path-length limit. Move AEAT_LOCAL_STORAGE_ROOT to a shorter path or enable LongPathsEnabled (see `aeat config check`).'
           namespace_create_permission: Local storage could not create namespace {namespace}.
           namespace_forbidden_characters: Local storage namespace {namespace} contains
             forbidden path characters.
@@ -224,12 +225,14 @@ adapters:
             namespace {namespace}.
           payload_commit_failed: Local storage could not commit object payload atomically.
           payload_read_permission: Local storage could not read object payload.
+          payload_write_path_too_long: 'Local storage could not write the object payload: the path exceeds the Windows path-length limit. Move AEAT_LOCAL_STORAGE_ROOT to a shorter path or enable LongPathsEnabled (see `aeat config check`).'
           payload_write_permission: Local storage could not write object payload.
           sidecar_malformed: Local storage sidecar {sidecar_path} is unreadable or
             malformed.
           sidecar_missing: Local storage object sidecar is missing.
           sidecar_not_object: Local storage sidecar {sidecar_path} is not a JSON object.
           sidecar_write_failed: Local storage could not write the object sidecar.
+          sidecar_write_path_too_long: 'Local storage could not write the object sidecar: the path exceeds the Windows path-length limit. Move AEAT_LOCAL_STORAGE_ROOT to a shorter path or enable LongPathsEnabled (see `aeat config check`).'
   persistence:
     profile:
       assets:
@@ -4054,6 +4057,7 @@ errors:
     error_observation_key: An observation key component failed its repository contract.
     error_outbound_storage_not_found: The requested storage object or namespace does
       not exist.
+    error_outbound_storage_path_too_long: 'The resolved storage path exceeds the Windows MAX_PATH limit.'
     error_pdf_import_pdf_modelo_import: Importing the filing from the PDF failed.
     error_pdf_import_scrub: A safe version of the PDF could not be produced.
     error_period: A period-related error occurred.
@@ -4097,6 +4101,7 @@ errors:
     error_sede_expediente_not_found: No expediente matched the requested filter.
     error_sede_navigation: A navigation step in the AEAT Sede failed.
     error_storage_bucket: An error occurred in the storage bucket lifecycle.
+    error_storage_bucket_path_too_long: 'The bucket directory path exceeds the Windows MAX_PATH limit. Move AEAT_LOCAL_STORAGE_ROOT to a shorter path or enable LongPathsEnabled (see `aeat config check`).'
     error_submission_validation: A submission model failed validation.
     error_transaction_catalogue: The transaction catalogue is invalid or inconsistent.
     error_transaction_classification_rule: A ledger classification rule is invalid.

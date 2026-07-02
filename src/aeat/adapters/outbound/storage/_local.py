@@ -25,11 +25,13 @@ from pathlib import Path
 from ....core.external_constants import UTF_8_ENCODING
 from ....core.hashing import sha256_hex
 from ....core.logging import get_logger
+from ....core.paths import is_windows_long_path_error
 from ....core.time import now
 from ._errors import (
     OutboundStorageConflictError,
     OutboundStorageIntegrityError,
     OutboundStorageNotFoundError,
+    OutboundStoragePathTooLongError,
     OutboundStoragePermissionError,
     OutboundStorageValidationError,
     StorageCorruptionError,
@@ -123,6 +125,14 @@ class LocalFileSystemProvider:
                 context={"namespace": namespace, "path": str(target)},
                 translated_message="adapters.outbound.storage.local.errors.namespace_create_permission",
             ) from None
+        except OSError as exc:
+            if is_windows_long_path_error(exc):
+                raise OutboundStoragePathTooLongError(
+                    f"cannot create namespace directory {target}: path exceeds the Windows MAX_PATH ceiling ({exc})",
+                    context={"namespace": namespace, "path": str(target)},
+                    translated_message="adapters.outbound.storage.local.errors.namespace_create_path_too_long",
+                ) from None
+            raise
         return target
 
     def _resolve_object_path(self, namespace: str, object_key_hmac: str) -> Path | None:
@@ -214,6 +224,12 @@ class LocalFileSystemProvider:
             ) from None
         except OSError as exc:
             tmp_path.unlink(missing_ok=True)
+            if is_windows_long_path_error(exc):
+                raise OutboundStoragePathTooLongError(
+                    f"cannot write object payload to {target_path}: path exceeds the Windows MAX_PATH ceiling ({exc})",
+                    context={"path": str(target_path)},
+                    translated_message="adapters.outbound.storage.local.errors.payload_write_path_too_long",
+                ) from None
             raise OutboundStorageConflictError(
                 f"failed to commit object payload to {target_path}: {exc}",
                 context={"path": str(target_path)},
@@ -233,6 +249,12 @@ class LocalFileSystemProvider:
             sidecar_path.write_text(json.dumps(sidecar_payload, sort_keys=True), encoding=UTF_8_ENCODING)
         except OSError as exc:
             target_path.unlink(missing_ok=True)
+            if is_windows_long_path_error(exc):
+                raise OutboundStoragePathTooLongError(
+                    f"cannot write sidecar {sidecar_path}: path exceeds the Windows MAX_PATH ceiling ({exc})",
+                    context={"path": str(sidecar_path)},
+                    translated_message="adapters.outbound.storage.local.errors.sidecar_write_path_too_long",
+                ) from None
             raise OutboundStoragePermissionError(
                 f"failed to write sidecar {sidecar_path}: {exc}",
                 context={"path": str(sidecar_path)},

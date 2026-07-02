@@ -219,6 +219,7 @@ adapters:
           content_hash_mismatch: A helyi tartalom hash nem egyezik; a payload integritasellenorzese
             sikertelen.
           namespace_blank: A helyi tarhely nevtere nem lehet ures.
+          namespace_create_path_too_long: 'A helyi tárhely nem tudta létrehozni a(z) {namespace} névteret: az elérési út meghaladja a Windows elérésiút-hossz korlátját. Helyezze át az AEAT_LOCAL_STORAGE_ROOT beállítást egy rövidebb útvonalra, vagy engedélyezze a LongPathsEnabled beállítást (lásd `aeat config check`).'
           namespace_create_permission: 'A helyi tarhely nem tudta letrehozni a nevteret:
             {namespace}.'
           namespace_forbidden_characters: A helyi tarhely nevtere {namespace} tiltott
@@ -234,11 +235,13 @@ adapters:
           payload_commit_failed: A helyi tarhely nem tudta atomikusan veglegesiteni
             az objektum payloadjat.
           payload_read_permission: A helyi tarhely nem tudta olvasni az objektum payloadjat.
+          payload_write_path_too_long: 'A helyi tárhely nem tudta kiírni az objektum tartalmát: az elérési út meghaladja a Windows elérésiút-hossz korlátját. Helyezze át az AEAT_LOCAL_STORAGE_ROOT beállítást egy rövidebb útvonalra, vagy engedélyezze a LongPathsEnabled beállítást (lásd `aeat config check`).'
           payload_write_permission: A helyi tarhely nem tudta irni az objektum payloadjat.
           sidecar_malformed: A helyi sidecar {sidecar_path} nem olvashato vagy hibas.
           sidecar_missing: A helyi objektum sidecarja hianyzik.
           sidecar_not_object: A helyi sidecar {sidecar_path} nem JSON objektum.
           sidecar_write_failed: A helyi tarhely nem tudta irni az objektum sidecarjat.
+          sidecar_write_path_too_long: 'A helyi tárhely nem tudta kiírni az objektum sidecar fájlját: az elérési út meghaladja a Windows elérésiút-hossz korlátját. Helyezze át az AEAT_LOCAL_STORAGE_ROOT beállítást egy rövidebb útvonalra, vagy engedélyezze a LongPathsEnabled beállítást (lásd `aeat config check`).'
   persistence:
     profile:
       assets:
@@ -4229,6 +4232,7 @@ errors:
     error_observation_key: Egy megfigyelési kulcs komponense nem felel meg a tárrepozitórium
       szerződésének.
     error_outbound_storage_not_found: A kért tárolási objektum vagy névtér nem létezik.
+    error_outbound_storage_path_too_long: 'A feloldott tárhelyi elérési út meghaladja a Windows MAX_PATH korlátját.'
     error_pdf_import_pdf_modelo_import: A bevallás PDF-ből való importálása meghiúsult.
     error_pdf_import_scrub: Nem sikerült a PDF biztonságos verzióját előállítani.
     error_period: Időszakkal kapcsolatos hiba történt.
@@ -4271,6 +4275,7 @@ errors:
     error_sede_expediente_not_found: Egyetlen expediente sem felel meg a kért szűrőnek.
     error_sede_navigation: Az AEAT Sede navigációs lépése meghiúsult.
     error_storage_bucket: Hiba történt a tároló-bucket életciklusában.
+    error_storage_bucket_path_too_long: 'A bucket könyvtár elérési útja meghaladja a Windows MAX_PATH korlátját. Helyezze át az AEAT_LOCAL_STORAGE_ROOT beállítást egy rövidebb útvonalra, vagy engedélyezze a LongPathsEnabled beállítást (lásd `aeat config check`).'
     error_submission_validation: Egy benyújtási modell nem ment át az érvényesítésen.
     error_transaction_catalogue: A tranzakció-katalógus érvénytelen vagy ellentmondásos.
     error_transaction_classification_rule: Egy főkönyvi osztályozási szabály érvénytelen.
