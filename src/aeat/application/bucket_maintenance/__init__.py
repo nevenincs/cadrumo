@@ -37,9 +37,10 @@ digests, so import re-saves them through the recipient bucket's
 :class:`~aeat.adapters.persistence.storage.SecureObjectRepository` and
 re-encrypts under that bucket's DEK.
 This package exposes the lifecycle composition verbs ``browse``,
-``delete``, ``export``, ``import``, and ``rename``. The ``search`` verb is
-deferred behind its own ADR because it must route through domain
-repositories instead of decrypting secure-object storage directly.
+``delete``, ``export``, ``import``, ``inspect``, and ``rename``. The
+``search`` verb is deferred behind its own ADR because it must route
+through domain repositories instead of decrypting secure-object storage
+directly.
 
 See Also:
     :mod:`aeat.application.user_profile`
@@ -54,7 +55,7 @@ See Also:
         contracts used by export and import.
     :class:`BucketMaintenanceService`
         Stateless service that implements the ``browse``, ``delete``,
-        ``export``, ``import``, and ``rename`` verbs.
+        ``export``, ``import``, ``inspect``, and ``rename`` verbs.
     :func:`compute_manifest_digest`
         Archive-header integrity anchor bound into the sealed payload's AEAD
         associated data.
@@ -72,6 +73,8 @@ from ._contracts import (
     ExportBucketResult,
     ImportBucketCommand,
     ImportBucketResult,
+    InspectBucketArchiveCommand,
+    InspectBucketArchiveResult,
     RenameBucketCommand,
     RenameBucketResult,
 )
@@ -89,6 +92,8 @@ __all__ = [
     "ExportBucketResult",
     "ImportBucketCommand",
     "ImportBucketResult",
+    "InspectBucketArchiveCommand",
+    "InspectBucketArchiveResult",
     "RenameBucketCommand",
     "RenameBucketResult",
     "compute_manifest_digest",

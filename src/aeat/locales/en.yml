@@ -212,7 +212,9 @@ adapters:
           content_hash_mismatch: Local storage content hash mismatch; payload integrity
             check failed.
           namespace_blank: Local storage namespace must not be blank.
-          namespace_create_path_too_long: 'Local storage could not create namespace {namespace}: the path exceeds the Windows path-length limit. Move AEAT_LOCAL_STORAGE_ROOT to a shorter path or enable LongPathsEnabled (see `aeat config check`).'
+          namespace_create_path_too_long: 'Local storage could not create namespace
+            {namespace}: the path exceeds the Windows path-length limit. Move AEAT_LOCAL_STORAGE_ROOT
+            to a shorter path or enable LongPathsEnabled (see `aeat config check`).'
           namespace_create_permission: Local storage could not create namespace {namespace}.
           namespace_forbidden_characters: Local storage namespace {namespace} contains
             forbidden path characters.
@@ -225,7 +227,9 @@ adapters:
             namespace {namespace}.
           payload_commit_failed: Local storage could not commit object payload atomically.
           payload_read_permission: Local storage could not read object payload.
-          payload_write_path_too_long: 'Local storage could not write the object payload: the path exceeds the Windows path-length limit. Move AEAT_LOCAL_STORAGE_ROOT to a shorter path or enable LongPathsEnabled (see `aeat config check`).'
+          payload_write_path_too_long: 'Local storage could not write the object payload:
+            the path exceeds the Windows path-length limit. Move AEAT_LOCAL_STORAGE_ROOT
+            to a shorter path or enable LongPathsEnabled (see `aeat config check`).'
           payload_write_permission: Local storage could not write object payload.
           sidecar_malformed: Local storage sidecar {sidecar_path} is unreadable or
             malformed.
@@ -2364,6 +2368,27 @@ cli:
       help: Lock the current profile by clearing the active profile pointer.
     profile:
       already_exists: Profile %{name} already exists. Pick a different target id.
+      archive:
+        export_full_backup_info: 'This archive is a FULL backup: it is AEAD-encrypted
+          at rest and carries attachment evidence bytes, the audit trail, and the
+          cross-period calculation inputs, in addition to the profile, ledger, calculation,
+          and filing history. Store it somewhere safe; restore with ''aeat config
+          profile archive import''.'
+        export_help: Write a sealed, encrypted full-backup archive to PATH.
+        export_name_help: Profile to back up; defaults to active.
+        export_out_help: Destination path for the archive.
+        export_recovery_wrap_help: Optional passphrase to seal the archive under,
+          instead of the active bucket key; required if the archive will leave this
+          host.
+        help: Back up and restore a profile as a sealed, AEAD-encrypted archive (the
+          full-custody recovery transport).
+        import_active_switch_info: 'The restored profile is now the ACTIVE profile; subsequent commands operate on it. Run ''aeat config switch <name>'' to change the active profile.'
+        import_force_help: 'Overwrite an existing profile that shares the archive''s bucket id.'
+        import_help: 'Restore a profile from a sealed, encrypted archive at PATH.'
+        import_path_help: 'Path to the sealed archive.'
+        import_recovery_wrap_help: 'Passphrase to unseal the archive; required if it was exported with one.'
+        inspect_help: 'Show a sealed archive''s header without decrypting or restoring it.'
+        inspect_path_help: 'Path to the sealed archive.'
       capabilities:
         capability_help: Service capability to opt in or out of.
         capability_label: capability
@@ -4057,7 +4082,8 @@ errors:
     error_observation_key: An observation key component failed its repository contract.
     error_outbound_storage_not_found: The requested storage object or namespace does
       not exist.
-    error_outbound_storage_path_too_long: 'The resolved storage path exceeds the Windows MAX_PATH limit.'
+    error_outbound_storage_path_too_long: The resolved storage path exceeds the Windows
+      MAX_PATH limit.
     error_pdf_import_pdf_modelo_import: Importing the filing from the PDF failed.
     error_pdf_import_scrub: A safe version of the PDF could not be produced.
     error_period: A period-related error occurred.
@@ -4101,7 +4127,9 @@ errors:
     error_sede_expediente_not_found: No expediente matched the requested filter.
     error_sede_navigation: A navigation step in the AEAT Sede failed.
     error_storage_bucket: An error occurred in the storage bucket lifecycle.
-    error_storage_bucket_path_too_long: 'The bucket directory path exceeds the Windows MAX_PATH limit. Move AEAT_LOCAL_STORAGE_ROOT to a shorter path or enable LongPathsEnabled (see `aeat config check`).'
+    error_storage_bucket_path_too_long: The bucket directory path exceeds the Windows
+      MAX_PATH limit. Move AEAT_LOCAL_STORAGE_ROOT to a shorter path or enable LongPathsEnabled
+      (see `aeat config check`).
     error_submission_validation: A submission model failed validation.
     error_transaction_catalogue: The transaction catalogue is invalid or inconsistent.
     error_transaction_classification_rule: A ledger classification rule is invalid.
@@ -4984,11 +5012,11 @@ wizard:
       \ run does not have one.\nNothing has been saved yet.\n\nYou can finish creating\
       \ this profile in one of two ways:\n\n1. Run the command again from an interactive\
       \ terminal to use the guided setup:\n     aeat config profile create NAME\n\n\
-      2. Or create a resident IRPF natural-person profile in one step by supplying
-      the required details as flags:\n     aeat config profile create NAME --quiet
-      --tax-id NIF/CIF/DNI/NIE --entity-type natural_person --irpf-income-categories
-      actividad_economica --tax-residence-ccaa madrid --name GIVEN_NAME --surnames
-      FAMILY_NAMES"
+      2. Or create a resident IRPF natural-person profile in one step by supplying\
+      \ the required details as flags:\n     aeat config profile create NAME --quiet\
+      \ --tax-id NIF/CIF/DNI/NIE --entity-type natural_person --irpf-income-categories\
+      \ actividad_economica --tax-residence-ccaa madrid --name GIVEN_NAME --surnames\
+      \ FAMILY_NAMES"
     unsupported_console_edit: "The guided setup could not open an interactive prompt\
       \ in this run.\nNothing has been saved yet.\n\nEdit this profile non-interactively\
       \ by naming the field to change:\n  aeat config profile edit %{profile_name}\

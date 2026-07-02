@@ -231,7 +231,10 @@ adapters:
           content_hash_mismatch: El hash de contingut local no coincideix; ha fallat
             la comprovacio d integritat.
           namespace_blank: L espai de noms d emmagatzematge local no pot estar buit.
-          namespace_create_path_too_long: 'L''emmagatzematge local no ha pogut crear l''espai de noms {namespace}: el camí supera el límit de longitud de camí de Windows. Trasllada AEAT_LOCAL_STORAGE_ROOT a un camí més curt o activa LongPathsEnabled (vegeu `aeat config check`).'
+          namespace_create_path_too_long: 'L''emmagatzematge local no ha pogut crear
+            l''espai de noms {namespace}: el camí supera el límit de longitud de camí
+            de Windows. Trasllada AEAT_LOCAL_STORAGE_ROOT a un camí més curt o activa
+            LongPathsEnabled (vegeu `aeat config check`).'
           namespace_create_permission: L emmagatzematge local no ha pogut crear l
             espai de noms {namespace}.
           namespace_forbidden_characters: L espai de noms local {namespace} conte
@@ -248,7 +251,10 @@ adapters:
             el payload de l objecte.
           payload_read_permission: L emmagatzematge local no ha pogut llegir el payload
             de l objecte.
-          payload_write_path_too_long: 'L''emmagatzematge local no ha pogut escriure la càrrega de l''objecte: el camí supera el límit de longitud de camí de Windows. Trasllada AEAT_LOCAL_STORAGE_ROOT a un camí més curt o activa LongPathsEnabled (vegeu `aeat config check`).'
+          payload_write_path_too_long: 'L''emmagatzematge local no ha pogut escriure
+            la càrrega de l''objecte: el camí supera el límit de longitud de camí
+            de Windows. Trasllada AEAT_LOCAL_STORAGE_ROOT a un camí més curt o activa
+            LongPathsEnabled (vegeu `aeat config check`).'
           payload_write_permission: L emmagatzematge local no ha pogut escriure el
             payload de l objecte.
           sidecar_malformed: El sidecar local {sidecar_path} no es pot llegir o esta
@@ -2511,6 +2517,20 @@ cli:
     profile:
       already_exists: El perfil %{name} ja existeix. Tria un altre identificador de
         destinació.
+      archive:
+        export_full_backup_info: 'Aquest arxiu és una còpia de seguretat COMPLETA: està xifrat AEAD en repòs i inclou els bytes d''evidència de justificants, el registre d''auditoria i les entrades de càlcul entre períodes, a més del perfil, el llibre comptable, els càlculs i l''historial de presentacions. Desa''l en un lloc segur; restaura''l amb ''aeat config profile archive import''.'
+        export_help: 'Escriu un arxiu de còpia de seguretat completa, segellat i xifrat, a CAMÍ.'
+        export_name_help: 'Perfil a copiar; per defecte l''actiu.'
+        export_out_help: 'Camí de destinació de l''arxiu.'
+        export_recovery_wrap_help: 'Frase de pas opcional per segellar l''arxiu, en lloc de la clau activa del bucket; obligatòria si l''arxiu sortirà d''aquest equip.'
+        help: 'Fes còpia de seguretat i restaura un perfil com a arxiu segellat i xifrat AEAD (el transport de recuperació de custòdia completa).'
+        import_active_switch_info: 'El perfil restaurat és ara el perfil ACTIU; les ordres següents hi operen. Executa ''aeat config switch <nom>'' per canviar el perfil actiu.'
+        import_force_help: 'Sobreescriu un perfil existent que comparteixi l''identificador de bucket de l''arxiu.'
+        import_help: 'Restaura un perfil des d''un arxiu segellat i xifrat a CAMÍ.'
+        import_path_help: 'Camí de l''arxiu segellat.'
+        import_recovery_wrap_help: 'Frase de pas per desxifrar l''arxiu; obligatòria si es va exportar amb una.'
+        inspect_help: 'Mostra la capçalera d''un arxiu segellat sense desxifrar-lo ni restaurar-lo.'
+        inspect_path_help: 'Camí de l''arxiu segellat.'
       capabilities:
         capability_help: Servei que es vol activar o desactivar.
         capability_label: capacitat
@@ -4285,7 +4305,8 @@ errors:
       del repositori.
     error_outbound_storage_not_found: No existeix l'objecte o l'espai d'emmagatzematge
       sol·licitat.
-    error_outbound_storage_path_too_long: 'El camí d''emmagatzematge resolt supera el límit MAX_PATH de Windows.'
+    error_outbound_storage_path_too_long: El camí d'emmagatzematge resolt supera el
+      límit MAX_PATH de Windows.
     error_pdf_import_pdf_modelo_import: Ha fallat la importació de la declaració des
       del PDF.
     error_pdf_import_scrub: No s'ha pogut produir una versió segura del PDF.
@@ -4337,7 +4358,9 @@ errors:
       amb el filtre sol·licitat.
     error_sede_navigation: Ha fallat un pas de navegació en la Seu de l'AEAT.
     error_storage_bucket: S'ha produït un error en el cicle de vida del bucket d'emmagatzematge.
-    error_storage_bucket_path_too_long: 'El camí del directori del bucket supera el límit MAX_PATH de Windows. Trasllada AEAT_LOCAL_STORAGE_ROOT a un camí més curt o activa LongPathsEnabled (vegeu `aeat config check`).'
+    error_storage_bucket_path_too_long: El camí del directori del bucket supera el
+      límit MAX_PATH de Windows. Trasllada AEAT_LOCAL_STORAGE_ROOT a un camí més curt
+      o activa LongPathsEnabled (vegeu `aeat config check`).
     error_submission_validation: Un model d'enviament no ha superat la validació.
     error_transaction_catalogue: El catàleg de transaccions no és vàlid o és inconsistent.
     error_transaction_classification_rule: Una regla de classificació del llibre major
@@ -5273,10 +5296,10 @@ wizard:
       \ execució no en té.\nEncara no s'ha desat res.\n\nPots acabar de crear aquest\
       \ perfil de dues maneres:\n\n1. Torna a executar l'ordre des d'un terminal interactiu\
       \ per fer servir l'assistent guiat:\n     aeat config profile create NAME\n\n\
-      2. O crea un perfil de persona física resident IRPF en un sol pas indicant les
-      dades obligatòries com a flags:\n     aeat config profile create NAME --quiet
-      --tax-id NIF --entity-type natural_person --irpf-income-categories actividad_economica
-      --tax-residence-ccaa madrid --name NOM --surnames COGNOMS"
+      2. O crea un perfil de persona física resident IRPF en un sol pas indicant les\
+      \ dades obligatòries com a flags:\n     aeat config profile create NAME --quiet\
+      \ --tax-id NIF --entity-type natural_person --irpf-income-categories actividad_economica\
+      \ --tax-residence-ccaa madrid --name NOM --surnames COGNOMS"
     unsupported_console_edit: "La configuració guiada no ha pogut obrir una pregunta\
       \ interactiva en aquesta execució.\nEncara no s'ha desat res.\n\nEdita aquest\
       \ perfil de manera no interactiva indicant el camp a canviar:\n  aeat config\
