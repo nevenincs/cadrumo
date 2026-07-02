@@ -1,8 +1,8 @@
 """Typed ``--json`` payload schemas for registry-corpus CLI commands.
 
 Each class declared here is a strict
-:class:`~aeat.entrypoints.cli._schemas.OutputSchema` subclass and is decorated
-with :func:`~aeat.entrypoints.cli._schemas.register_schema` so the
+:class:`OutputSchema` subclass and is decorated
+with :func:`register_schema` so the
 JSON-contract test suite can enumerate every registry-corpus command surface
 this module covers.
 
@@ -15,7 +15,7 @@ lists to tuples on re-validation.
 The application reports in :mod:`~aeat.application.registry` remain the
 authority for legal-citation and manual-corpus semantics. These payload classes
 validate the CLI transport shape that enters
-:class:`~aeat.entrypoints.cli._schemas.SchemaEnvelope` through
+:class:`SchemaEnvelope` through
 :func:`~aeat.entrypoints.cli._common._emit_envelope`.
 """
 
@@ -32,9 +32,9 @@ from ._schemas import OutputSchema, register_schema
 class CitationListResult(OutputSchema):
     """JSON envelope for ``aeat app registry citations list``.
 
-    Mirrors :class:`~aeat.application.registry.RegistryCitationsListReport`:
+    Mirrors :class:`RegistryCitationsListReport`:
     reviewed legal-reference rows are projected as
-    :class:`~aeat.application.registry.RegistryCitationReferenceProjection`,
+    :class:`RegistryCitationReferenceProjection`,
     while localized related topics remain extra fields on the permissive
     transport model.
     """
@@ -54,11 +54,11 @@ class CitationListResult(OutputSchema):
 class CitationShowResult(OutputSchema):
     """JSON envelope for ``aeat app registry citations view``.
 
-    Validates :class:`~aeat.application.registry.RegistryCitationShowReport`
+    Validates :class:`RegistryCitationShowReport`
     under the CLI command path ``registry.citations.view``. The inner
     ``operation`` remains the application report's ``registry.citations.show``
     value and may include a
-    :class:`~aeat.application.registry.RegistryCitationArticleProjection`.
+    :class:`RegistryCitationArticleProjection`.
     """
 
     operation: str = "registry.citations.show"
@@ -76,9 +76,9 @@ class CitationVerifyResult(OutputSchema):
     """JSON envelope for ``aeat app registry citations verify``.
 
     Mirrors
-    :class:`~aeat.application.registry.RegistryCitationsVerificationReport`.
+    :class:`RegistryCitationsVerificationReport`.
     Issue rows use
-    :class:`~aeat.application.registry.RegistryCorpusIssueProjection`, and
+    :class:`RegistryCorpusIssueProjection`, and
     ``passed`` is the authority for whether the CLI exits successfully.
     """
 
@@ -98,11 +98,11 @@ class CitationVerifyResult(OutputSchema):
 class ManualListResult(OutputSchema):
     """JSON envelope for ``aeat app registry manuals list``.
 
-    Mirrors :class:`~aeat.application.registry.RegistryManualsListReport`.
+    Mirrors :class:`RegistryManualsListReport`.
     ``parts`` contains discovered
-    :class:`~aeat.application.registry.RegistryManualPartProjection` rows
-    keyed by :class:`~aeat.application.registry.RegistryManualId`,
-    :class:`~aeat.domain.manuals.ManualPart`, and tax year.
+    :class:`RegistryManualPartProjection` rows
+    keyed by :class:`RegistryManualId`,
+    :class:`ManualPart`, and tax year.
     """
 
     operation: str = "registry.manuals.list"
@@ -121,10 +121,10 @@ class ManualListResult(OutputSchema):
 class ManualShowResult(OutputSchema):
     """JSON envelope for ``aeat app registry manuals view``.
 
-    Mirrors :class:`~aeat.application.registry.RegistryManualShowReport` for
+    Mirrors :class:`RegistryManualShowReport` for
     one local manual part. When extracted structure is available, ``section``
     carries a
-    :class:`~aeat.application.registry.RegistryManualSectionProjection`;
+    :class:`RegistryManualSectionProjection`;
     otherwise the report remains a manifest-level view over the source PDF.
     """
 
@@ -149,11 +149,11 @@ class ManualShowResult(OutputSchema):
 class ManualRulesListResult(OutputSchema):
     """JSON envelope for ``aeat app registry manuals rules``.
 
-    Mirrors :class:`~aeat.application.registry.RegistryManualRulesReport`.
+    Mirrors :class:`RegistryManualRulesReport`.
     ``rules`` contains
-    :class:`~aeat.application.registry.RegistryManualRuleProjection` rows whose
+    :class:`RegistryManualRuleProjection` rows whose
     manual casilla references are checked against
-    :class:`~aeat.domain.calculations.registry.ValidatedRegistryAuthority` by
+    :class:`ValidatedRegistryAuthority` by
     the application service.
     """
 
@@ -176,9 +176,9 @@ class ManualRulesListResult(OutputSchema):
 class ManualVerifyResult(OutputSchema):
     """JSON envelope for ``aeat app registry manuals verify``.
 
-    Mirrors :class:`~aeat.application.registry.RegistryManualVerificationReport`
+    Mirrors :class:`RegistryManualVerificationReport`
     after manual-corpus validation and
-    :class:`~aeat.domain.calculations.registry.ValidatedRegistryAuthority`
+    :class:`ValidatedRegistryAuthority`
     casilla cross-reference checks. Counts split total issues into error and
     warning severities; ``passed`` controls the command exit status.
     """
