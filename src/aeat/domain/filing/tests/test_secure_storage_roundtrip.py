@@ -25,8 +25,7 @@ from pydantic import ValidationError
 
 from ....core import Period
 from ....tests.secure_sql import isolated_runtime_profile
-from ...calculations.registry import CasillaId, validated_casilla_id
-from ...calculations.registry._schema import RegistrySnapshotRef
+from ...calculations.registry import CasillaId, RegistrySnapshotRef, validated_casilla_id
 from .._repository import ModeloDraftRepository
 from .._schema import (
     ModeloApprovalBasis,
@@ -199,13 +198,11 @@ def test_calculation_revision_observations_survive_encrypted_storage(
     drop them silently.
     """
 
-    from ...calculations.registry._bindings import CasillaObservation
-    from ...modelos._calculation_repository import (
-        CalculationRevisionCatalogueRepository,
-    )
-    from ...modelos._calculation_revision import (
+    from ...calculations.registry import CasillaObservation
+    from ...modelos import (
         CalculationRevision,
         CalculationRevisionCatalogue,
+        CalculationRevisionCatalogueRepository,
         CalculationRevisionState,
         derive_calculation_revision_id,
     )

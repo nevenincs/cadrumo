@@ -9,7 +9,7 @@ from pydantic import ValidationError
 
 from ....core.classification import SensitivityClass
 from ....core.resources import bundled_path, resources
-from ...calculations.registry._legal import verify_legal_catalogue
+from ...calculations.registry import verify_legal_catalogue
 from .. import (
     ProfileFieldDefinition,
     ProfileFieldType,

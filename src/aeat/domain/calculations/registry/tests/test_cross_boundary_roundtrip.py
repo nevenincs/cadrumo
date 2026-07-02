@@ -23,15 +23,15 @@ from pydantic import ValidationError
 
 from .....core import Period
 from .....core.identity import SubjectTaxId
-from ....filing._schema import (
+from ....filing import (
     ModeloBindingValue,
     ModeloDraft,
-    ModeloDraftStatus,
     ModeloValidationFinding,
     ModeloValue,
     ModeloValueKind,
 )
-from ....modelos._calculation_revision import (
+from ....filing._schema import ModeloDraftStatus
+from ....modelos import (
     CalculationRevision,
     CalculationRevisionState,
     derive_calculation_revision_id,
@@ -545,11 +545,11 @@ def test_workflow_step_details_typed_envelope_roundtrip() -> None:
 
     from datetime import timedelta
 
-    from .....application.workflow._models import (
+    from .....application.workflow import (
         WorkflowStage,
         WorkflowStep,
-        WorkflowStepDetails,
     )
+    from .....application.workflow._models import WorkflowStepDetails
 
     original = WorkflowStep(
         stage=WorkflowStage.RUNNING_PREFLIGHT,

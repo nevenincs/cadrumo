@@ -9,8 +9,7 @@ from functools import lru_cache
 from .....application.calculations import resolve_iva_compensation_annual_partition_binding_values
 from .....core.aggregation import BindingAggregation, BindingAggregationOp
 from .....core.resources import resources
-from ....iva import IvaCategory, IvaFlowDirection, IvaRateKind
-from ....iva._schema import IvaExemptionArticle
+from ....iva import IvaCategory, IvaExemptionArticle, IvaFlowDirection, IvaRateKind
 from .. import (
     CasillaId,
     DataBindingDefinition,

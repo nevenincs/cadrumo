@@ -10,7 +10,10 @@ from pathlib import Path
 import pytest
 from pydantic import ValidationError
 
-from ...iva._schema import IvaCategory, IvaExemptionArticle
+from ...iva import (
+    IvaCategory,
+    IvaExemptionArticle,
+)
 from .. import (
     BusinessClassification,
     ClassificationHistoryEntry,

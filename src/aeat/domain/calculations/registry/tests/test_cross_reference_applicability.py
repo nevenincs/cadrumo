@@ -284,9 +284,9 @@ def test_user_profile_contract_rejects_typoed_predicate_field() -> None:
     deadline-window predicate validation.
     """
 
-    from ....user_profile._loader import load_user_profile_schema
-    from ....user_profile._registry_contract import (
+    from ....user_profile import (
         UserProfileRegistryContractSeverity,
+        load_user_profile_schema,
         validate_user_profile_registry_contract,
     )
 
