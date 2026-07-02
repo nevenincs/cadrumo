@@ -58,6 +58,43 @@ the locale/operator-surface WIP is clear and the locale CLI can own the full swe
 The named follow-up is this plan's W04.P07 CLI source-pull verb reconciliation
 sequence, resuming at S21.
 
+## Fresh-Context Honesty Review
+
+Reviewed the campaign as newly inherited, using the current plan status, ADR/reference
+scope, exec-record inventory, focused F8 evidence, and scoped WIP checks as the
+authority. Findings:
+
+### close-observation-prefix | medium | S15-S18 are real relocation work blocked by dirty target files
+
+The observation-prefix rows are not complete. The close-blocker pass found live
+unprefixed carriers and a dirty first target (`_ledger_bindings.py`). Because each
+relocation step is intended to be an atomic own-hunk rename with docs/API regeneration,
+starting it on top of non-authored WIP would risk overwriting peer work. The formal
+follow-up remains this plan's W03.P05 sequence, resuming at `S15` once the listed
+carrier files are clean.
+
+### close-operator-verb | medium | S21-S24 are operator-visible locale work blocked by locale WIP
+
+The CLI verb rows are not complete. The locale catalogues currently carry
+non-authored edits, and the rows require locale CLI ownership plus the write-policy,
+error-suggestion, next-action, help, and command-identifier sweeps in one coherent
+operator-visible change. The formal follow-up remains this plan's W04.P07 sequence,
+resuming at `S21` once locale/operator-surface WIP is clear.
+
+### close-f8-verification | low | S27 remains the F8 verification carry-forward
+
+`S25` and `S26` have exec records and checked rows, but `S27` remains open because the
+selector coverage test is not green against the live `DONATIVO_DONOR` source and the
+test file carried non-authored WIP during this pass. The named follow-up is the same
+W05.P08 F8 verification row, resuming when the selector coverage owner has cleared or
+landed that test update.
+
+## Closure Decision
+
+For Wave 1 D9 purposes, this campaign's remaining tail is honestly drained: every open
+row is formally deferred to a named in-plan follow-up sequence with its blocker named.
+The vault plan remains open by design; no missing exec alert remains.
+
 ## Recommendations
 
 Resume at `W03.P05.S15` once `_ledger_bindings.py` and the affected observation

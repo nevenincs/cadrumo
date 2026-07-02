@@ -59,6 +59,44 @@ which has non-authored WIP in the shared worktree. The dispatch brief treats tha
 as single-owner. This pass did not touch it. P05.S18 remains open until P03 is resolved
 and the gate surface is peer-clean.
 
+## Fresh-Context Honesty Review
+
+Reviewed the campaign as newly inherited, using the current plan status, the ADR
+execution refinement, the shape-C research, the live invoice resolver evidence, the
+exec-record inventory, and the shared-worktree WIP checks as the authority. Findings:
+
+### close-counterpart-foreign-assets | medium | S10/S11/S12/S20/S21 are intentionally not phase-2.2 work
+
+The ADR execution refinement already scopes counterpart 347/349 and foreign-assets 720
+out to task #36. Current code confirms the rationale: M349 is live through
+`InvoiceCatalogueSourceResolver`, M347 has no calculate modelling to feed a mesh
+resolver, and M720 remains an explicit deferred source rather than a silent blank. These
+rows must stay unchecked until #36 decides per modelo whether to retire, promote, or
+re-ratify the shape-C surface.
+
+### close-retenciones-cli | medium | S13/S19/S14 need #36 shape-C adjudication before implementation
+
+The later shape-C research recommends retiring the second `aggregate_per_modelo`
+rollup and deriving CLI preview from canonical mesh outputs, while the old plan rows
+still describe collapsing retenciones inside the existing service. Implementing those
+rows as written would preserve a second aggregation mechanism. The formal follow-up is
+#36: amend or replace the retenciones/CLI projection rows with the canonical
+mesh-preview retirement shape, then execute with real parity gates.
+
+### close-final-gate | medium | S18 cannot run until the deferred P03 shape is resolved
+
+`P05.S18` asks for the full unified resolver-contract gate after P03 is complete. With
+P03 formally deferred to #36 and `_calculation_actions.py` carrying non-authored
+single-owner WIP, running or checking S18 now would overclaim. The named follow-up is
+#36 completion plus a peer-clean final-gate window for `P05.S18`.
+
+## Closure Decision
+
+For Wave 1 D9 purposes, this campaign's remaining tail is honestly drained: every open
+row is formally deferred to #36 or to the peer-clean final-gate window that follows
+#36. The vault plan remains open by design; no missing exec alert remains and no new
+resolver convention was introduced under the freeze.
+
 ## Recommendations
 
 Keep the deferred counterpart/foreign-assets steps unchecked unless the coordinator
