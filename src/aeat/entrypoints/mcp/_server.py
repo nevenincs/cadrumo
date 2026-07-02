@@ -193,9 +193,24 @@ def _run_subprocess_tool(
     The argv is reconstructed from the descriptor's per-verb input schema and the
     named ``arguments`` the client supplied - positional arguments in CLI order,
     then options - so the retired ``{args: [string]}`` bag has no path back in.
+
+    ``stdin`` is isolated to ``DEVNULL``. Over the stdio transport the server's
+    own stdin IS the MCP client pipe; without this isolation the spawned CLI
+    child inherits that pipe and any read from it (a prompt, a confirm, or the
+    secret-store passphrase fallback) blocks forever, competing with the client
+    for the transport and deadlocking the session on the first CLI-backed call.
+    A non-interactive stdin also makes every CLI verb take its explicit-flag /
+    env path rather than an interactive prompt, which is the only correct mode
+    for an agent-operated console.
     """
     argv = ["aeat", *cli_argv_for(descriptor.verb_schema, arguments)]
-    completed = subprocess.run(argv, capture_output=True, text=True, check=False)  # noqa: S603
+    completed = subprocess.run(  # noqa: S603
+        argv,
+        capture_output=True,
+        text=True,
+        check=False,
+        stdin=subprocess.DEVNULL,
+    )
     raw = completed.stdout.strip() or completed.stderr.strip()
     try:
         envelope = json.loads(raw)

@@ -110,7 +110,11 @@ class SessionTelemetryWriter:
         arguments_text: str = "",
         result_text: str = "",
     ) -> ToolCallTelemetryRecord:
-        """Append one payload-free record and return it."""
+        """Append one payload-free record and return it.
+
+        Returns:
+            A :class:`ToolCallTelemetryRecord`.
+        """
         row = ToolCallTelemetryRecord(
             session_id=self._session_id,
             sequence=self._sequence,
@@ -131,7 +135,11 @@ class SessionTelemetryWriter:
 
 
 def read_session_records(path: Path) -> tuple[ToolCallTelemetryRecord, ...]:
-    """Load one session file back into typed records (a strict roundtrip surface)."""
+    """Load one session file back into typed records (a strict roundtrip surface).
+
+    Returns:
+        A :class:`ToolCallTelemetryRecord`.
+    """
     rows: list[ToolCallTelemetryRecord] = []
     for line in path.read_text(encoding=_UTF_8).splitlines():
         if line.strip():

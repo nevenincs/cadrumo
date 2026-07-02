@@ -148,7 +148,11 @@ def _as_optional_text(value: object) -> str | None:
 
 @lru_cache(maxsize=8)
 def load_terminology_concepts(locale: str = _FALLBACK_LOCALE) -> tuple[TerminologyConcept, ...]:
-    """Load every Handbook concept projected for ``locale`` (fallback ``es``)."""
+    """Load every Handbook concept projected for ``locale`` (fallback ``es``).
+
+    Returns:
+        A :class:`TerminologyConcept`.
+    """
     root = _terminology_root()
     concepts: list[TerminologyConcept] = []
     for path in sorted(root.glob("*.toml"), key=lambda item: item.name):  # type: ignore[attr-defined]
@@ -192,6 +196,9 @@ def search_terminology(
     Raises:
         CorpusSearchInputError: If ``query`` is blank or ``limit`` is not
             positive.
+
+    Returns:
+        A :class:`TerminologyHit`.
     """
     needle = _fold(query)
     if not needle:
@@ -227,6 +234,9 @@ def lookup_terminology(concept_id: str, *, locale: str = _FALLBACK_LOCALE) -> Te
 
     Raises:
         CorpusSearchInputError: If ``concept_id`` is unknown.
+
+    Returns:
+        A :class:`TerminologyConcept`.
     """
     key = concept_id.strip()
     for concept in load_terminology_concepts(locale):

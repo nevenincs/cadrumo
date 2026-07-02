@@ -11,6 +11,10 @@ amendment kind and a free-text reason, then calls the exact same
 ``work amend`` uses. The wizard is a guided front end over that one write
 path, not a second one (``composition-service-no-parallel-write-path``).
 
+The baseline casilla values the wizard displays are read from the filing
+record's :class:`~aeat.domain.modelos.CalculationRevision`, so the operator
+edits the exact attested figures rather than a re-computed draft.
+
 Once the amendment is filed, the wizard points the operator at the existing
 ``aeat app modelo export`` verb for the fichero-BOE artefact; it never writes
 an export file itself, mirroring how ``work wizard`` hands off to

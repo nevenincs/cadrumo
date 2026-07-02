@@ -88,7 +88,11 @@ def _snippet(text: str) -> str:
 
 
 def corpus_search_payload_from_response(response: RetrievalResponse) -> CorpusSearchPayload:
-    """Map a :class:`RetrievalResponse` to the tool's typed payload."""
+    """Map a :class:`RetrievalResponse` to the tool's typed payload.
+
+    Returns:
+        A :class:`CorpusSearchPayload`.
+    """
     if response.mode is RetrievalMode.CITATION and response.citation is not None:
         citation = response.citation
         return CorpusSearchPayload(
@@ -116,7 +120,11 @@ def corpus_search_payload_from_response(response: RetrievalResponse) -> CorpusSe
 
 
 def build_corpus_search_payload(query: str, *, limit: int = _DEFAULT_LIMIT) -> CorpusSearchPayload:
-    """Run grounding retrieval for ``query`` and return the tool payload."""
+    """Run grounding retrieval for ``query`` and return the tool payload.
+
+    Returns:
+        A :class:`CorpusSearchPayload`.
+    """
     response = search_corpus(query, limit=limit)
     return corpus_search_payload_from_response(response)
 

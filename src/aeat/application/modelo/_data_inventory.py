@@ -120,6 +120,9 @@ def data_inventory_checklist(
     Raises:
         RegistrySnapshotError: When the registry has no revision covering
             ``(modelo, filing_year, period)``.
+
+    Returns:
+        A :class:`DataInventoryChecklist`.
     """
     authority = authority_via_resources()
     snapshot = authority.snapshot(modelo, filing_year=filing_year, period=period.registry_token)

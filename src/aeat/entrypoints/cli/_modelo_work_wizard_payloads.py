@@ -5,7 +5,8 @@ casillas and bindings/relations in plain language, then calls the same
 :func:`~aeat.application.modelo.calculate_modelo_work_revision` composition
 path :mod:`_modelo_work_calculate_cli` uses. This module documents the JSON
 transport shape only; the wizard's step-by-step prompting and calculation
-delegation live in :mod:`_modelo_work_wizard_cli`.
+delegation live in :mod:`_modelo_work_wizard_cli`. Every payload here is an
+:class:`OutputSchema` subclass registered on the JSON-contract surface.
 """
 
 from __future__ import annotations

@@ -126,7 +126,11 @@ def decline_all_elicitations(
     message: str,
     requested_schema: Mapping[str, object],
 ) -> tuple[ElicitationAction, Mapping[str, object] | None]:
-    """The safe default responder: decline every server-initiated question."""
+    """The safe default responder: decline every server-initiated question.
+
+    Returns:
+        A :class:`ElicitationAction`.
+    """
     return (ElicitationAction.DECLINE, None)
 
 
@@ -139,6 +143,9 @@ def accept_all_confirmations(
     Use only in scenarios that deliberately exercise the post-confirmation
     path; the scorer still records every exchange for confirmation-honesty
     assertions.
+
+    Returns:
+        A :class:`ElicitationAction`.
     """
     return (ElicitationAction.ACCEPT, {})
 
@@ -406,7 +413,11 @@ def run_live_session(
     elicitation_responder: ElicitationResponder = decline_all_elicitations,
     max_actions: int = 64,
 ) -> LiveTrajectory:
-    """Synchronous wrapper over :func:`run_live_session_async` for test callers."""
+    """Synchronous wrapper over :func:`run_live_session_async` for test callers.
+
+    Returns:
+        A :class:`LiveTrajectory`.
+    """
     return asyncio.run(
         run_live_session_async(
             server_command,
