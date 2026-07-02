@@ -1302,9 +1302,9 @@ categories:
     display_label_851219: Megjelenítési felirat 851219
 cli:
   agent:
-    app_help: Az operator agent-harness (szabalyok, personak, keszsegek) kiirasa agent-futtatokornyezethez.
+    app_help: 'Az operátor ügynök keretrendszerének (szabályok, perszónák, készségek) materializálása Claude-natív .claude munkaterületként egy ügynök futtatókörnyezethez.'
     materialise:
-      output_help: A konyvtar, ahova az operator munkateruletet kiirja.
+      output_help: 'Az a könyvtár, ahová a Claude-natív operátor munkaterületet (.claude/ és egy CLAUDE.md) írja.'
       summary: 'Operator munkaterulet kiirva: {path}: {rules} szabaly, {personas}
         persona, {skills} keszseg.'
   app:
@@ -5078,17 +5078,30 @@ locales:
 mcp:
   elicitation:
     confirm:
-      consequence_handoff: 'Ez elkészíti a benyújtásra szánt dokumentumot, amelyet az adózó saját maga nyújt be az AEAT-nál. A megerősítés semmit nem küld be sehová.'
-      consequence_local: 'Ez a művelet az aktív adózói profil helyi adatait módosítja.'
-      field_description: 'Futtatod most a(z) ''{command}'' parancsot?'
-      message: 'Erősítsd meg a(z) ''{command}'' futtatását. {consequence} Válaszolj igennel a folytatáshoz vagy nemmel a leállításhoz.'
+      consequence_handoff: Ez elkészíti a benyújtásra szánt dokumentumot, amelyet
+        az adózó saját maga nyújt be az AEAT-nál. A megerősítés semmit nem küld be
+        sehová.
+      consequence_local: Ez a művelet az aktív adózói profil helyi adatait módosítja.
+      declined: 'A(z) ''{command}'' parancsot a felhasználó nem erősítette meg ({outcome}); semmi nem futott le.'
+      field_description: Futtatod most a(z) '{command}' parancsot?
+      message: Erősítsd meg a(z) '{command}' futtatását. {consequence} Válaszolj igennel
+        a folytatáshoz vagy nemmel a leállításhoz.
     refusal:
-      blocked: 'A(z) ''{command}'' véglegesen tiltott: az AEAT felé történő élő benyújtás tervezetten tilos. Exportálj helyben; az adózó maga nyújt be.'
-      no_channel: 'A(z) ''{command}'' emberi megerősítést igényel, és ez a kliens nem támogatja a kérdezés (elicitation) funkciót. Futtasd olyan kliensből, amely tud kérdezni, vagy futtasd a megfelelő aeat parancsot közvetlenül a terminálban.'
+      blocked: 'A(z) ''{command}'' véglegesen tiltott: az AEAT felé történő élő benyújtás
+        tervezetten tilos. Exportálj helyben; az adózó maga nyújt be.'
+      no_channel: A(z) '{command}' emberi megerősítést igényel, és ez a kliens nem
+        támogatja a kérdezés (elicitation) funkciót. Futtasd olyan kliensből, amely
+        tud kérdezni, vagy futtasd a megfelelő aeat parancsot közvetlenül a terminálban.
   faithfulness:
-    advisory: 'HŰSÉGI FIGYELMEZTETÉS: a hívás argumentumai olyan összeg(ek)et [{values}] hivatkoznak, amelyeket ebben a munkamenetben egyetlen eszközeredmény sem állított elő. Ellenőrizd az összeget calculate/revision olvasással, mielőtt támaszkodnál rá.'
+    advisory: 'HŰSÉGI FIGYELMEZTETÉS: a hívás argumentumai olyan összeg(ek)et [{values}]
+      hivatkoznak, amelyeket ebben a munkamenetben egyetlen eszközeredmény sem állított
+      elő. Ellenőrizd az összeget calculate/revision olvasással, mielőtt támaszkodnál
+      rá.'
   persona:
-    handoff_denied: 'A(z) ''{command}'' a benyújtás-átadás visszafordíthatatlan határa, amely a(z) ''{owner}'' personához tartozik; a(z) ''{persona}'' persona számára szerkezetileg tiltott. Add át az ellenőrzött munkaegységet a verifier munkamenetnek az export vagy a nyilvántartási jelölő elkészítéséhez.'
+    handoff_denied: A(z) '{command}' a benyújtás-átadás visszafordíthatatlan határa,
+      amely a(z) '{owner}' personához tartozik; a(z) '{persona}' persona számára szerkezetileg
+      tiltott. Add át az ellenőrzött munkaegységet a verifier munkamenetnek az export
+      vagy a nyilvántartási jelölő elkészítéséhez.
 profile:
   descendiente:
     custodia_compartida_prorrata_applied: 50%-os arányosítás alkalmazva (LIRPF 61.

@@ -37,18 +37,35 @@ from __future__ import annotations
 import json
 import subprocess
 import sys
+import time
+import uuid
 
 from ._dispatch import command_key_for_tool
+from ._elicitation import (
+    ConfirmDecision,
+    ConfirmRoute,
+    confirmation_request,
+    decision_from_elicitation,
+    refusal_message,
+    resolve_confirm_route,
+)
+from ._faithfulness import SessionGroundingWindow, advisory_line, arguments_faithfulness
 from ._harness_tools import (
     HARNESS_LOAD_TOOL,
     build_harness_floor_payload,
     build_harness_floor_tool,
     render_harness_floor_text,
 )
-from ._hitl import ConfirmationPolicy, confirmation_for_tool
+from ._hitl import confirmation_for_tool, is_handoff_command
 from ._input_schema import cli_argv_for
 from ._meta_tools import meta_execute, search_commands
-from ._persona_scope import AgentPersona, active_persona, is_tool_in_persona_scope
+from ._persona_scope import (
+    AgentPersona,
+    active_persona,
+    handoff_denial_message,
+    is_handoff_denied,
+    is_tool_in_persona_scope,
+)
 from ._prompts import PromptNotFoundError, build_prompt_catalogue, prompt_document
 from ._resources import (
     HarnessResourceNotFoundError,
@@ -56,6 +73,7 @@ from ._resources import (
     list_harness_resources,
     read_harness_resource,
 )
+from ._telemetry import SessionTelemetryWriter
 from ._tools import McpToolDescriptor, build_tool_descriptors
 
 _INSTALL_HINT = "the MCP server requires the agent extra: pip install 'aeat[agent]'"
@@ -234,10 +252,40 @@ def build_meta_sdk_tools() -> list[object]:
     ]
 
 
+def _declined_message(*, command_key: str, decision: ConfirmDecision) -> str:
+    """The client-relayed, localized text for a not-confirmed call."""
+    from ...core.i18n import tr
+
+    return tr(
+        "mcp.elicitation.confirm.declined",
+        command=command_key,
+        outcome=decision.value,
+        default="'{command}' was not confirmed by the user ({outcome}); nothing was run.",
+    )
+
+
+def _client_supports_elicitation(server: object) -> bool:
+    """Read the negotiated client capabilities for elicitation support (fail-closed).
+
+    Inside a request handler the lowlevel server exposes the session through
+    ``request_context``; a missing context, missing params, or missing
+    capability all read as unsupported, so the degradation matrix falls back
+    to the safe routes.
+    """
+    try:
+        context = server.request_context  # type: ignore[attr-defined]  # TYPE-IGNORE-RATIONALE-SDK-CONTEXT: build_server types the server as object so the module imports without the SDK; the real Server carries request_context.
+        params = context.session.client_params
+    except (LookupError, AttributeError):
+        return False
+    capabilities = getattr(params, "capabilities", None)
+    return bool(capabilities is not None and getattr(capabilities, "elicitation", None) is not None)
+
+
 def build_server(
     descriptors: tuple[McpToolDescriptor, ...],
     *,
     persona: AgentPersona | None = None,
+    telemetry: SessionTelemetryWriter | None = None,
 ) -> object:
     """Build the MCP ``Server`` with the tool, prompt, and resource handlers.
 
@@ -269,11 +317,69 @@ def build_server(
     )
     from pydantic import AnyUrl
 
-    scoped_descriptors = filter_descriptors_for_persona(descriptors, persona=persona)
+    scoped_descriptors = tuple(
+        descriptor
+        for descriptor in filter_descriptors_for_persona(descriptors, persona=persona)
+        if persona is None or not is_handoff_denied(persona=persona, command_key=descriptor.command_key)
+    )
     by_name = {descriptor.name: descriptor for descriptor in descriptors}
     sdk_tools = build_sdk_tools(scoped_descriptors)
     meta_tools = build_meta_sdk_tools()
     floor_tool = build_harness_floor_tool()
+
+    # Per-session serving-path gates (ADR R6) and telemetry (ADR R7): the
+    # grounding window accumulates this session's tool-result JSON in memory
+    # only; the telemetry writer (injected by the stdio runner; None in unit
+    # builds) records payload-free per-call rows.
+    window = SessionGroundingWindow()
+
+    def _telemetry_record(**kwargs: object) -> None:
+        if telemetry is not None:
+            telemetry.record(**kwargs)  # type: ignore[arg-type]  # TYPE-IGNORE-RATIONALE-KWARGS-PASSTHROUGH: thin optional-sink forwarding; the writer validates via its typed record model.
+
+    def _gated_subprocess_run(
+        descriptor: McpToolDescriptor,
+        arguments: dict[str, object],
+    ) -> tuple[dict[str, object], bool]:
+        """The sync gate suite shared by the meta-execute path.
+
+        A sync callable cannot elicit, so the degradation matrix runs with
+        ``client_supports_elicitation=False``: handoff-tier CONFIRM refuses
+        (fail-closed), non-handoff CONFIRM proceeds under the client's
+        annotation-driven confirmation. Faithfulness and telemetry match the
+        direct path.
+        """
+        key = descriptor.command_key
+        policy = confirmation_for_tool(command_key=key, annotations=descriptor.annotations)
+        route = resolve_confirm_route(policy=policy, command_key=key, client_supports_elicitation=False)
+        if route in (ConfirmRoute.REFUSE_BLOCKED, ConfirmRoute.REFUSE_NO_CHANNEL):
+            _telemetry_record(tool_name=descriptor.name, command_key=key, route=route.value, is_error=True)
+            return ({"status": "error", "refusal": refusal_message(route, command_key=key)}, True)
+        arguments_json = json.dumps(arguments, ensure_ascii=False, sort_keys=True)
+        faith = arguments_faithfulness(arguments_json=arguments_json, window=window, blocking=is_handoff_command(key))
+        if faith.blocks:
+            _telemetry_record(
+                tool_name=descriptor.name,
+                command_key=key,
+                route="faithfulness_block",
+                is_error=True,
+                arguments_text=arguments_json,
+            )
+            return ({"status": "error", "refusal": advisory_line(faith)}, True)
+        started = time.monotonic()
+        envelope, is_error = _run_subprocess_tool(descriptor, arguments)
+        envelope_json = json.dumps(envelope, ensure_ascii=False, sort_keys=True)
+        window.record(envelope_json)
+        _telemetry_record(
+            tool_name=descriptor.name,
+            command_key=key,
+            route=route.value,
+            is_error=is_error,
+            duration_ms=int((time.monotonic() - started) * 1000),
+            arguments_text=arguments_json,
+            result_text=envelope_json,
+        )
+        return (envelope, is_error)
 
     server: Server = Server(_SERVER_NAME)
 
@@ -312,7 +418,7 @@ def build_server(
                 exec_args,
                 descriptors=descriptors,
                 persona=persona,
-                run=_run_subprocess_tool,
+                run=_gated_subprocess_run,
             )
             if outcome.refused is not None:
                 return CallToolResult(content=[TextContent(type="text", text=outcome.refused)], isError=True)
@@ -331,17 +437,78 @@ def build_server(
         scope_refusal = persona_scope_refusal(persona=persona, command_key=key)
         if scope_refusal is not None:
             return CallToolResult(content=[TextContent(type="text", text=scope_refusal)], isError=True)
-        if confirmation_for_tool(command_key=key, annotations=descriptor.annotations) is ConfirmationPolicy.BLOCK:
+        if persona is not None and is_handoff_denied(persona=persona, command_key=key):
             return CallToolResult(
-                content=[TextContent(type="text", text="refused: AEAT live-write is permanently forbidden")],
+                content=[TextContent(type="text", text=handoff_denial_message(persona=persona, command_key=key))],
                 isError=True,
             )
-        envelope, is_error = _run_subprocess_tool(descriptor, arguments)
-        return CallToolResult(
-            content=[TextContent(type="text", text=json.dumps(envelope, indent=2))],
-            structuredContent=envelope,
-            isError=is_error,
+        policy = confirmation_for_tool(command_key=key, annotations=descriptor.annotations)
+        route = resolve_confirm_route(
+            policy=policy,
+            command_key=key,
+            client_supports_elicitation=_client_supports_elicitation(server),
         )
+        if route in (ConfirmRoute.REFUSE_BLOCKED, ConfirmRoute.REFUSE_NO_CHANNEL):
+            _telemetry_record(tool_name=name, command_key=key, route=route.value, is_error=True)
+            return CallToolResult(
+                content=[TextContent(type="text", text=refusal_message(route, command_key=key))],
+                isError=True,
+            )
+        route_label = route.value
+        if route is ConfirmRoute.ELICIT:
+            request = confirmation_request(command_key=key)
+            result = await server.request_context.session.elicit(
+                message=request.message,
+                requestedSchema=request.requested_schema,
+            )
+            decision = decision_from_elicitation(
+                action=str(result.action),
+                content=dict(result.content) if result.content else None,
+            )
+            route_label = f"{route.value}:{decision.value}"
+            if decision is not ConfirmDecision.PROCEED:
+                _telemetry_record(tool_name=name, command_key=key, route=route_label, is_error=True)
+                return CallToolResult(
+                    content=[
+                        TextContent(
+                            type="text",
+                            text=_declined_message(command_key=key, decision=decision),
+                        ),
+                    ],
+                    isError=True,
+                )
+        arguments_json = json.dumps(arguments, ensure_ascii=False, sort_keys=True)
+        faith = arguments_faithfulness(arguments_json=arguments_json, window=window, blocking=is_handoff_command(key))
+        if faith.blocks:
+            _telemetry_record(
+                tool_name=name,
+                command_key=key,
+                route="faithfulness_block",
+                is_error=True,
+                arguments_text=arguments_json,
+            )
+            return CallToolResult(
+                content=[TextContent(type="text", text=advisory_line(faith))],
+                isError=True,
+            )
+        started = time.monotonic()
+        envelope, is_error = _run_subprocess_tool(descriptor, arguments)
+        envelope_json = json.dumps(envelope, ensure_ascii=False, sort_keys=True)
+        window.record(envelope_json)
+        _telemetry_record(
+            tool_name=name,
+            command_key=key,
+            route=route_label,
+            is_error=is_error,
+            duration_ms=int((time.monotonic() - started) * 1000),
+            arguments_text=arguments_json,
+            result_text=envelope_json,
+        )
+        content: list[TextContent] = []
+        if not faith.faithful:
+            content.append(TextContent(type="text", text=advisory_line(faith)))
+        content.append(TextContent(type="text", text=json.dumps(envelope, indent=2)))
+        return CallToolResult(content=content, structuredContent=envelope, isError=is_error)
 
     # Guided-workflow prompt channel (ADR R4): the slash-command surface a client
     # renders for the USER. The catalogue and each prompt's embedded skill (plus
@@ -434,7 +601,8 @@ def _run_server(
     from mcp.server import Server
     from mcp.server.stdio import stdio_server
 
-    server: Server = build_server(descriptors, persona=persona)  # type: ignore[assignment]
+    telemetry = SessionTelemetryWriter(session_id=f"mcp-{uuid.uuid4().hex[:12]}")
+    server: Server = build_server(descriptors, persona=persona, telemetry=telemetry)  # type: ignore[assignment]
 
     async def _amain() -> None:
         async with stdio_server() as (read_stream, write_stream):

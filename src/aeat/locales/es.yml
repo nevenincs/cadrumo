@@ -1376,10 +1376,9 @@ categories:
     display_label_851219: Etiqueta de visualización 851219
 cli:
   agent:
-    app_help: Materializa el harness del operador (reglas, personas, habilidades)
-      para un runtime de agente.
+    app_help: 'Materializa el harness del agente operador (reglas, perfiles, habilidades) como un espacio de trabajo .claude nativo de Claude para un entorno de agente.'
     materialise:
-      output_help: Directorio donde escribir el espacio de trabajo del operador.
+      output_help: 'Directorio donde escribir el espacio de trabajo del operador nativo de Claude (.claude/ y un CLAUDE.md).'
       summary: 'Espacio de trabajo del operador escrito en {path}: {rules} reglas,
         {personas} personas, {skills} habilidades.'
   app:
@@ -5232,17 +5231,30 @@ locales:
 mcp:
   elicitation:
     confirm:
-      consequence_handoff: 'Esto genera el documento de presentación que el contribuyente presentará ante la AEAT por sí mismo. Confirmar no envía nada a ninguna parte.'
-      consequence_local: 'Esto modifica datos locales del perfil de contribuyente activo.'
-      field_description: '¿Ejecutar ''{command}'' ahora?'
-      message: 'Confirma la ejecución de ''{command}''. {consequence} Responde sí para continuar o no para detener.'
+      consequence_handoff: Esto genera el documento de presentación que el contribuyente
+        presentará ante la AEAT por sí mismo. Confirmar no envía nada a ninguna parte.
+      consequence_local: Esto modifica datos locales del perfil de contribuyente activo.
+      declined: '''{command}'' no fue confirmado por el usuario ({outcome}); no se ejecutó nada.'
+      field_description: ¿Ejecutar '{command}' ahora?
+      message: Confirma la ejecución de '{command}'. {consequence} Responde sí para
+        continuar o no para detener.
     refusal:
-      blocked: '''{command}'' está bloqueado permanentemente: la presentación en línea ante la AEAT está prohibida por diseño. Exporta localmente; el contribuyente presenta por sí mismo.'
-      no_channel: '''{command}'' requiere confirmación humana y este cliente no admite la función de preguntas (elicitation). Ejecútalo desde un cliente que pueda hacerte preguntas, o ejecuta el comando aeat equivalente directamente en un terminal.'
+      blocked: '''{command}'' está bloqueado permanentemente: la presentación en línea
+        ante la AEAT está prohibida por diseño. Exporta localmente; el contribuyente
+        presenta por sí mismo.'
+      no_channel: '''{command}'' requiere confirmación humana y este cliente no admite
+        la función de preguntas (elicitation). Ejecútalo desde un cliente que pueda
+        hacerte preguntas, o ejecuta el comando aeat equivalente directamente en un
+        terminal.'
   faithfulness:
-    advisory: 'AVISO DE FIDELIDAD: los argumentos de la llamada citan importes [{values}] que ningún resultado de herramienta de esta sesión ha producido. Verifica la cifra con una lectura de calculate/revision antes de confiar en ella.'
+    advisory: 'AVISO DE FIDELIDAD: los argumentos de la llamada citan importes [{values}]
+      que ningún resultado de herramienta de esta sesión ha producido. Verifica la
+      cifra con una lectura de calculate/revision antes de confiar en ella.'
   persona:
-    handoff_denied: '''{command}'' es la frontera irreversible de entrega de la presentación, propiedad de la persona ''{owner}''; la persona ''{persona}'' la tiene denegada estructuralmente. Entrega la unidad de trabajo verificada a la sesión del verificador para producir la exportación o el marcador de registro.'
+    handoff_denied: '''{command}'' es la frontera irreversible de entrega de la presentación,
+      propiedad de la persona ''{owner}''; la persona ''{persona}'' la tiene denegada
+      estructuralmente. Entrega la unidad de trabajo verificada a la sesión del verificador
+      para producir la exportación o el marcador de registro.'
 profile:
   descendiente:
     custodia_compartida_prorrata_applied: Se ha aplicado prorrata 50 % (Art. 61 LIRPF)
