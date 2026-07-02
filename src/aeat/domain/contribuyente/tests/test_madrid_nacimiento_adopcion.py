@@ -28,19 +28,17 @@ from ..family import (
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 
-@pytest.mark.parametrize(
-    ("entry_year", "expected"),
-    [
-        (2023, True),  # entry year itself
-        (2024, True),  # first following period
-        (2025, True),  # second following period
-        (2022, False),  # window closed (before the two-following span)
-        (2026, False),  # not yet born/adopted for filing year 2025
-    ],
-)
-def test_applicability_window_three_period_span_for_filing_year_2025(entry_year: int, expected: bool) -> None:
+def test_applicability_window_three_period_span_for_filing_year_2025() -> None:
     """The window is the closed interval [entry_year, entry_year + 2]."""
-    assert within_multi_year_applicability_window(entry_year, 2025, following_periods=2) is expected
+    cases = (
+        ("entry-year", 2023, True),
+        ("first-following-period", 2024, True),
+        ("second-following-period", 2025, True),
+        ("before-window", 2022, False),
+        ("future-entry", 2026, False),
+    )
+    for case_id, entry_year, expected in cases:
+        assert within_multi_year_applicability_window(entry_year, 2025, following_periods=2) is expected, case_id
 
 
 def test_applicability_window_single_year_when_no_following_periods() -> None:
@@ -71,22 +69,22 @@ def test_eligibility_uses_adoption_date_as_entry_when_present() -> None:
     assert child.is_nacimiento_adopcion_eligible(2025) is True
 
 
-def test_eligibility_requires_cohabitation() -> None:
-    non_cohabiting = _child(birth=date(2024, 2, 1), convive=False)
-    assert non_cohabiting.is_nacimiento_adopcion_eligible(2025) is False
+def test_eligibility_excludes_non_cohabiting_and_out_of_window_children() -> None:
+    cases = (
+        ("non-cohabiting", _child(birth=date(2024, 2, 1), convive=False)),
+        ("out-of-window", _child(birth=date(2020, 1, 1))),
+    )
+    for case_id, child in cases:
+        assert child.is_nacimiento_adopcion_eligible(2025) is False, case_id
 
 
-def test_eligibility_out_of_window_child_is_not_eligible() -> None:
-    old_child = _child(birth=date(2020, 1, 1))
-    assert old_child.is_nacimiento_adopcion_eligible(2025) is False
-
-
-def test_prorrateo_share_full_when_not_shared_custody() -> None:
-    assert _child(birth=date(2024, 1, 1)).nacimiento_adopcion_prorrateo_share() == Decimal("1")
-
-
-def test_prorrateo_share_half_under_shared_custody() -> None:
-    assert _child(birth=date(2024, 1, 1), shared=True).nacimiento_adopcion_prorrateo_share() == Decimal("0.5")
+def test_prorrateo_share_reflects_shared_custody() -> None:
+    cases = (
+        ("not-shared", _child(birth=date(2024, 1, 1)), Decimal("1")),
+        ("shared", _child(birth=date(2024, 1, 1), shared=True), Decimal("0.5")),
+    )
+    for case_id, child, expected in cases:
+        assert child.nacimiento_adopcion_prorrateo_share() == expected, case_id
 
 
 def test_profile_eligible_count_ignores_out_of_window_and_non_cohabiting() -> None:
