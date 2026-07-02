@@ -672,34 +672,30 @@ def test_export_writes_modelo_131_historical_flat_layout(tmp_path: Path) -> None
     }
 
 
-@pytest.mark.parametrize(("filing_year", "binding_prefix"), ((2024, "modelo-131-2024"), (2025, "modelo-131-2025")))
-def test_export_writes_modelo_131_year_scoped_binding_layouts(
-    tmp_path: Path,
-    filing_year: int,
-    binding_prefix: str,
-) -> None:
-    draft = _approved_modelo_131_year_scoped_registry_draft(filing_year, binding_prefix)
-    output = tmp_path / f"modelo-131-{filing_year}.txt"
-    provider = _schema_provider(filing_year=filing_year, period="1T", modelos=("131",))
+def test_export_writes_modelo_131_year_scoped_binding_layouts(tmp_path: Path) -> None:
+    for filing_year, binding_prefix in ((2024, "modelo-131-2024"), (2025, "modelo-131-2025")):
+        draft = _approved_modelo_131_year_scoped_registry_draft(filing_year, binding_prefix)
+        output = tmp_path / f"modelo-131-{filing_year}.txt"
+        provider = _schema_provider(filing_year=filing_year, period="1T", modelos=("131",))
 
-    receipt = export_draft(
-        draft,
-        output_path=output,
-        headers={"declaration_type": "I"},
-        schema_provider=provider,
-    )
+        receipt = export_draft(
+            draft,
+            output_path=output,
+            headers={"declaration_type": "I"},
+            schema_provider=provider,
+        )
 
-    payload = output.read_bytes()
-    parsed = parse_export_payload(provider.get_subview(draft.modelo).export_layouts[0], payload)
-    values = {entry.binding_id: entry.value for entry in parsed.fields if entry.binding_id}
+        payload = output.read_bytes()
+        parsed = parse_export_payload(provider.get_subview(draft.modelo).export_layouts[0], payload)
+        values = {entry.binding_id: entry.value for entry in parsed.fields if entry.binding_id}
 
-    assert receipt.modelo == "131"
-    assert receipt.byte_size == len(payload)
-    assert values[f"{binding_prefix}.page1.110-113.actividad-1-epigrafe"] == "722"
-    assert values[f"{binding_prefix}.page1.114-130.actividad-1-rendimiento-neto"] == Decimal("1200.50")
-    assert values[f"{binding_prefix}.dpa.013-016.epigrafe-iae"] == "722"
-    assert values[f"{binding_prefix}.dpa.031-032.vehiculos-afectos"] == Decimal("2")
-    assert values[f"{binding_prefix}.did.012-045.iban"] == "ES9121000418450200051332"
+        assert receipt.modelo == "131", filing_year
+        assert receipt.byte_size == len(payload), filing_year
+        assert values[f"{binding_prefix}.page1.110-113.actividad-1-epigrafe"] == "722"
+        assert values[f"{binding_prefix}.page1.114-130.actividad-1-rendimiento-neto"] == Decimal("1200.50")
+        assert values[f"{binding_prefix}.dpa.013-016.epigrafe-iae"] == "722"
+        assert values[f"{binding_prefix}.dpa.031-032.vehiculos-afectos"] == Decimal("2")
+        assert values[f"{binding_prefix}.did.012-045.iban"] == "ES9121000418450200051332"
 
 
 def test_export_omits_modelo_131_direct_debit_record_without_iban(tmp_path: Path) -> None:
@@ -925,9 +921,10 @@ def test_export_requires_declared_header_values(tmp_path: Path) -> None:
         )
 
 
-@pytest.mark.parametrize(
-    ("headers", "missing_header"),
-    (
+def test_export_rejects_blank_required_header_values(tmp_path: Path) -> None:
+    draft = _approved_registry_draft()
+
+    for headers, missing_header in (
         (
             {"declaration_type": "", "surnames": "EXPORT TEST", "name": "ANA"},
             "declaration_type",
@@ -940,22 +937,14 @@ def test_export_requires_declared_header_values(tmp_path: Path) -> None:
             {"declaration_type": "I", "surnames": "EXPORT TEST", "name": " "},
             "name",
         ),
-    ),
-    ids=("declaration-type", "surnames", "name"),
-)
-def test_export_rejects_blank_required_header_values(
-    tmp_path: Path,
-    headers: dict[str, str],
-    missing_header: str,
-) -> None:
-    draft = _approved_registry_draft()
-    with pytest.raises(ValueError, match=missing_header):
-        export_draft(
-            draft,
-            output_path=tmp_path / "modelo-130.txt",
-            headers=headers,
-            schema_provider=_schema_provider(),
-        )
+    ):
+        with pytest.raises(ValueError, match=missing_header):
+            export_draft(
+                draft,
+                output_path=tmp_path / "modelo-130.txt",
+                headers=headers,
+                schema_provider=_schema_provider(),
+            )
 
 
 def test_verify_reports_unchecked_reserved_or_derived_casillas(tmp_path: Path) -> None:
