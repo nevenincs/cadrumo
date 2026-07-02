@@ -4,6 +4,8 @@ description: >-
   Classify and apportion the ledger: assign IRPF/IVA categories, allocate mixed-use
   items, and set business-use ratios and prorrata. Use after the ledger is clean and
   before preparing a modelo.
+applies_when:
+  workflow_phase: classification
 ---
 
 # Classify and apportion
