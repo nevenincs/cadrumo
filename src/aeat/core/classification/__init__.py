@@ -14,7 +14,7 @@ repositories MAY override the default for an individual record (e.g.
 when an operator tags a corpus blob as identity-bearing), but the
 default is always available via :func:`default_policy_for`. Redaction
 rule references stored as names are resolved to live
-:class:`RedactionRule` instances by :mod:`aeat.core.redaction`.
+:class:`RedactionRule` instances by :mod:`core.redaction`.
 """
 
 from __future__ import annotations
@@ -164,8 +164,8 @@ class RedactionStrategy(StrEnum):
 class RedactionRule(BaseModel):
     """One rule applied at write time by the audit sink and run-trace path.
 
-    The rule shape is stable; :func:`aeat.core.redaction.redact` and
-    :func:`aeat.core.redaction.redact_structured` consume tuples of
+    The rule shape is stable; :func:`core.redaction.redact` and
+    :func:`core.redaction.redact_structured` consume tuples of
     rules and apply them in order.
 
     Attributes:
@@ -205,7 +205,7 @@ class ClassificationPolicy(BaseModel):
             :attr:`RedactionRule.name`) that apply when this class
             participates in audit-sink writes. Resolution to live
             :class:`RedactionRule` instances is performed by
-            :func:`aeat.core.redaction.default_rules_for`; the policy
+            :func:`core.redaction.default_rules_for`; the policy
             carries names only so the table can be loaded eagerly
             without depending on the rule registry.
     """
