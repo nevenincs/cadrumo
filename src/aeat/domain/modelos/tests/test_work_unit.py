@@ -597,7 +597,17 @@ def test_no_parallel_work_unit_storage_namespace() -> None:
     # carry writes through ``repository.save(namespace=carried.namespace, ...)``).
     custody_bundle_manifest = source_root / "application" / "user_profile" / "_bundle.py"
     custody_carry_manifest = source_root / "application" / "user_profile" / "_custody_carry.py"
-    allowlisted = {canonical, canonical_namespace_registry, custody_bundle_manifest, custody_carry_manifest}
+    # The consolidated work-unit catalogue persistence adapter that implements the
+    # actual secure-object storage for the namespace; it legitimately holds the
+    # namespace string as its storage location, not as a competing one.
+    work_unit_catalogue_adapter = source_root / "adapters" / "persistence" / "profile" / "modelos_work_units.py"
+    allowlisted = {
+        canonical,
+        canonical_namespace_registry,
+        custody_bundle_manifest,
+        custody_carry_manifest,
+        work_unit_catalogue_adapter,
+    }
     forbidden_namespace = '"aeat.domain.modelos.work_units"'
     offenders = []
     for py_file in source_root.rglob("*.py"):
