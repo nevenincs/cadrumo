@@ -58,4 +58,7 @@ Three tests pass, pinning read-time damage detection plus refuse-overwrite.
 
 ## Notes
 
+After the bounded reader fix landed, the test asserts the real guarantees: 30-80% truncation raises the documented typed payload error at read, member corruption raises the typed layout error, and the writer refuses to overwrite. The near-complete truncation residual is covered by the import AEAD test in S13.
+
+
 End-truncation detection is a reported production gap in the reader (raw EOFError / silent accept); the test pins mid-stream corruption detection, which holds, and documents the truncation gap.

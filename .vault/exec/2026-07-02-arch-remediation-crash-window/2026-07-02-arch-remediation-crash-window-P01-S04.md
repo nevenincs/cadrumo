@@ -58,4 +58,7 @@ Confirmed guarantee: read-time positional/layout detection plus refuse-overwrite
 
 ## Notes
 
+Surfaced a production gap: the reader caught only `tarfile.TarError`/`OSError`, so a torn-write truncation leaked a raw EOFError. After coordinator authorization the bounded contract fix landed (widen the caught set to `gzip.BadGzipFile`/`EOFError`, re-raise as the documented `SealedArchivePayloadError`, honest docstring). The cell is now CONFIRMED-with-residual: 30-80% truncation caught at read; near-complete truncation caught by the AEAD backstop before provisioning; a trailing-marker format change is a tracked follow-up.
+
+
 Surfaced a production gap: the reader does not reliably reject a truncated archive (raw EOFError for mid-file truncation, silent accept near-complete). Reported to the coordinator; not patched under this test-only campaign.
