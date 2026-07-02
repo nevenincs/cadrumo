@@ -142,143 +142,45 @@ def _attribution_entity() -> TaxpayerProfile:
 # ---------------------------------------------------------------------
 
 
-def test_landlord_owes_modelo_100() -> None:
-    """A pure landlord is a natural person and files the Renta."""
+def test_core_personas_route_to_expected_modelo_verdicts() -> None:
+    """Core personas map to their expected Renta, IVA, and corporate modelo verdicts."""
 
-    result = derive_modelo_applicability(_landlord(), "100")
-    assert result.verdict is ApplicabilityVerdict.APPLICABLE
-    assert result.applicable is True
-    assert result.legal_refs
+    cases = (
+        ("landlord-m100", _landlord, "100", ApplicabilityVerdict.APPLICABLE, True, None),
+        ("landlord-m130", _landlord, "130", ApplicabilityVerdict.NOT_APPLICABLE, False, "actividades económicas"),
+        ("landlord-m303", _landlord, "303", ApplicabilityVerdict.NOT_APPLICABLE, False, None),
+        ("landlord-m200", _landlord, "200", ApplicabilityVerdict.NOT_APPLICABLE, False, None),
+        ("landlord-m202", _landlord, "202", ApplicabilityVerdict.NOT_APPLICABLE, False, None),
+        ("salaried-m100", _salaried_only, "100", ApplicabilityVerdict.APPLICABLE, True, None),
+        ("salaried-m130", _salaried_only, "130", ApplicabilityVerdict.NOT_APPLICABLE, False, None),
+        ("salaried-m303", _salaried_only, "303", ApplicabilityVerdict.NOT_APPLICABLE, False, None),
+        ("salaried-m200", _salaried_only, "200", ApplicabilityVerdict.NOT_APPLICABLE, False, None),
+        ("salaried-m202", _salaried_only, "202", ApplicabilityVerdict.NOT_APPLICABLE, False, None),
+        ("pensioner-m100", _pensioner, "100", ApplicabilityVerdict.APPLICABLE, True, None),
+        ("pensioner-m130", _pensioner, "130", ApplicabilityVerdict.NOT_APPLICABLE, False, None),
+        ("pensioner-m303", _pensioner, "303", ApplicabilityVerdict.NOT_APPLICABLE, False, None),
+        ("pensioner-m200", _pensioner, "200", ApplicabilityVerdict.NOT_APPLICABLE, False, None),
+        ("pensioner-m202", _pensioner, "202", ApplicabilityVerdict.NOT_APPLICABLE, False, None),
+        ("autonomo-m100", _autonomo, "100", ApplicabilityVerdict.APPLICABLE, True, None),
+        ("autonomo-m130", _autonomo, "130", ApplicabilityVerdict.APPLICABLE, True, None),
+        ("autonomo-m303", _autonomo, "303", ApplicabilityVerdict.APPLICABLE, True, None),
+        ("autonomo-m200", _autonomo, "200", ApplicabilityVerdict.NOT_APPLICABLE, False, None),
+        ("autonomo-m202", _autonomo, "202", ApplicabilityVerdict.NOT_APPLICABLE, False, None),
+        ("sl-m100", _sociedad_limitada, "100", ApplicabilityVerdict.NOT_APPLICABLE, False, None),
+        ("sl-m130", _sociedad_limitada, "130", ApplicabilityVerdict.NOT_APPLICABLE, False, None),
+        ("sl-m200", _sociedad_limitada, "200", ApplicabilityVerdict.APPLICABLE, True, None),
+        ("sl-m202", _sociedad_limitada, "202", ApplicabilityVerdict.APPLICABLE, True, None),
+        ("sl-m303", _sociedad_limitada, "303", ApplicabilityVerdict.APPLICABLE, True, None),
+    )
 
-
-def test_landlord_does_not_owe_modelo_130() -> None:
-    """A landlord has no actividad económica and
-    therefore no Modelo 130 obligation — verdict NOT_APPLICABLE, never
-    'applicable and overdue'."""
-
-    result = derive_modelo_applicability(_landlord(), "130")
-    assert result.verdict is ApplicabilityVerdict.NOT_APPLICABLE
-    assert result.applicable is False
-    assert "actividades económicas" in result.reason
-
-
-def test_landlord_does_not_owe_modelo_303() -> None:
-    """A landlord with no actividad económica owes no periodic IVA."""
-
-    result = derive_modelo_applicability(_landlord(), "303")
-    assert result.verdict is ApplicabilityVerdict.NOT_APPLICABLE
-    assert result.applicable is False
-
-
-def test_landlord_does_not_owe_corporate_modelos() -> None:
-    """A natural-person landlord never files the Impuesto sobre Sociedades."""
-
-    for modelo in ("200", "202"):
-        result = derive_modelo_applicability(_landlord(), modelo)
-        assert result.verdict is ApplicabilityVerdict.NOT_APPLICABLE, modelo
-
-
-# ---------------------------------------------------------------------
-# Salaried-only — Modelo 100, no quarterly modelos
-# ---------------------------------------------------------------------
-
-
-def test_salaried_only_owes_modelo_100() -> None:
-    result = derive_modelo_applicability(_salaried_only(), "100")
-    assert result.verdict is ApplicabilityVerdict.APPLICABLE
-
-
-def test_salaried_only_owes_no_quarterly_modelos() -> None:
-    """A salaried-only taxpayer has no quarterly filing obligations."""
-
-    for modelo in ("130", "303", "200", "202"):
-        result = derive_modelo_applicability(_salaried_only(), modelo)
-        assert result.verdict is ApplicabilityVerdict.NOT_APPLICABLE, modelo
-        assert result.applicable is False
-
-
-# ---------------------------------------------------------------------
-# Pensioner — Modelo 100, no quarterly modelos
-# ---------------------------------------------------------------------
-
-
-def test_pensioner_owes_modelo_100() -> None:
-    result = derive_modelo_applicability(_pensioner(), "100")
-    assert result.verdict is ApplicabilityVerdict.APPLICABLE
-
-
-def test_pensioner_owes_no_quarterly_modelos() -> None:
-    """A pensioner has no quarterly filing obligations."""
-
-    for modelo in ("130", "303", "200", "202"):
-        result = derive_modelo_applicability(_pensioner(), modelo)
-        assert result.verdict is ApplicabilityVerdict.NOT_APPLICABLE, modelo
-
-
-# ---------------------------------------------------------------------
-# Autónomo — 130 / 303 unchanged
-# ---------------------------------------------------------------------
-
-
-def test_autonomo_owes_modelo_130_and_303() -> None:
-    """The autónomo persona is unchanged: 130 and 303 still apply."""
-
-    profile = _autonomo()
-    for modelo in ("130", "303"):
-        result = derive_modelo_applicability(profile, modelo)
-        assert result.verdict is ApplicabilityVerdict.APPLICABLE, modelo
-        assert result.applicable is True
-
-
-def test_autonomo_owes_modelo_100() -> None:
-    """An autónomo is still a natural person and files the Renta."""
-
-    result = derive_modelo_applicability(_autonomo(), "100")
-    assert result.verdict is ApplicabilityVerdict.APPLICABLE
-
-
-def test_autonomo_does_not_owe_corporate_modelos() -> None:
-    """A natural-person autónomo never files corporate modelos."""
-
-    for modelo in ("200", "202"):
-        result = derive_modelo_applicability(_autonomo(), modelo)
-        assert result.verdict is ApplicabilityVerdict.NOT_APPLICABLE, modelo
-
-
-# ---------------------------------------------------------------------
-# Sociedad limitada — 200 / 202, NOT 100 / 130
-# ---------------------------------------------------------------------
-
-
-def test_sociedad_limitada_owes_corporate_modelos() -> None:
-    """An S.L. files the Impuesto sobre Sociedades: Modelo 200 and 202."""
-
-    profile = _sociedad_limitada()
-    for modelo in ("200", "202"):
-        result = derive_modelo_applicability(profile, modelo)
-        assert result.verdict is ApplicabilityVerdict.APPLICABLE, modelo
-        assert result.applicable is True
-        assert result.legal_refs
-
-
-def test_sociedad_limitada_owes_modelo_303() -> None:
-    """An S.L. carrying on an IVA-subject activity files Modelo 303 —
-    the IVA autoliquidación is settled by the entity type, not by an
-    income-category axis a legal entity does not carry."""
-
-    result = derive_modelo_applicability(_sociedad_limitada(), "303")
-    assert result.verdict is ApplicabilityVerdict.APPLICABLE
-    assert result.applicable is True
-
-
-def test_sociedad_limitada_does_not_owe_irpf_modelos() -> None:
-    """An S.L. is not an IRPF taxpayer: no Modelo 100, no Modelo 130."""
-
-    profile = _sociedad_limitada()
-    for modelo in ("100", "130"):
-        result = derive_modelo_applicability(profile, modelo)
-        assert result.verdict is ApplicabilityVerdict.NOT_APPLICABLE, modelo
-        assert result.applicable is False
+    for case_id, profile_factory, modelo, expected_verdict, expected_applicable, reason_fragment in cases:
+        result = derive_modelo_applicability(profile_factory(), modelo)
+        assert result.verdict is expected_verdict, case_id
+        assert result.applicable is expected_applicable, case_id
+        if expected_applicable:
+            assert result.legal_refs, case_id
+        if reason_fragment is not None:
+            assert reason_fragment in result.reason, case_id
 
 
 # ---------------------------------------------------------------------
