@@ -177,7 +177,7 @@ is.modelo-200.tipo-gravamen-pyme brackets cover 2025+ only inside a revision nam
 - [x] `W03.P14.S57` - add registry-validation check that every bracket_table parameter brackets cover the revision declared date range; `src/aeat/domain/calculations/registry/_validate_revision_rules.py`.
 - [x] `W03.P14.S58` - regression test: Modelo 200 work unit with 2024 filing_period and micro-empresa profile calculates without bracket_no_window; `src/aeat/domain/calculations/registry/test_modelo_200_temporal_coverage.py`.
 - [x] `W03.P14.S218` - CRITICAL BLOCKER R7-001 fix M200 verify path ModeloBuilderError: legal_entity_form binding is a string enum sl/sa but _decimal_inputs_for_ids tries to convert to Decimal; `M200 verify completely broken for corporate profiles; investigate _decimal_inputs_for_ids in application filing to type-discriminate enum bindings from decimal bindings; verify path must support all binding kinds not only Decimal; `src/aeat/application/filing/__init__.py`.
-- [ ] `W03.P14.S223` - R7-B variant of S218 covers tax-residence-ccaa enum binding in M100 verify path; `fix is the same _decimal_inputs_for_ids type-discrimination from S218; this Step pins regression coverage explicitly for the M100 CCAA case so a future M200-only fix does not regress M100; `src/aeat/application/filing/__init__.py`.
+- [x] `W03.P14.S223` - R7-B variant of S218 covers tax-residence-ccaa enum binding in M100 verify path; `fix is the same _decimal_inputs_for_ids type-discrimination from S218; this Step pins regression coverage explicitly for the M100 CCAA case so a future M200-only fix does not regress M100; `src/aeat/application/filing/__init__.py`.
 
 ### Phase `W03.P15` - Modelo 200 base imponible input casilla resolution Cluster D.3
 
