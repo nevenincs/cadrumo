@@ -11,16 +11,6 @@ related:
   - '[[2026-07-02-agent-harness-content-review-audit]]'
 ---
 
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the
-       related: field above.
-     - The related: field carries the AUTHORISING documents
-       (ADR, research, reference, prior plan) for every Step in
-       this plan. Steps inherit this chain; per-row reference
-       footers do not exist.
-     - NEVER use [[wiki-links]] or markdown links in the
-       document body. -->
-
 # `agent-harness` plan
 
 ### Phase `P01` - D2 - retire the unused LIVE_READ mutability member
@@ -55,8 +45,8 @@ State the verifier context-isolation invariant testably and runtime-agnostically
 Declare the runtime manifest-read persona-scoped tool boundary backed by a build-time pinning test, then wire the filter into the live MCP PreToolUse dispatch path so prose and runtime behaviour cannot diverge.
 
 - [x] `P05.S08` - status:done (commit 198e6d6c7) - declare the runtime manifest-read persona-scope filter and its build-time pinning test asserting each persona's (family, mutability) ceiling resolves against the live contract; `src/aeat/entrypoints/mcp/_persona_scope.py`.
-- [ ] `P05.S09` - status:uncommitted-verified - wire the persona-scope filter into the MCP PreToolUse dispatch path so the declared boundary actually gates the tool call, closing the critical dead-code finding; `src/aeat/entrypoints/mcp/_server.py`.
-- [ ] `P05.S10` - status:uncommitted-verified - add the end-to-end wiring test exercising a persona's tool boundary through the live dispatch path; `src/aeat/entrypoints/mcp/tests/test_persona_server_wiring.py`.
+- [x] `P05.S09` - status:done (commit 00349c998) - wire the persona-scope filter into the MCP PreToolUse dispatch path so the declared boundary actually gates the tool call, closing the critical dead-code finding; `src/aeat/entrypoints/mcp/_server.py`.
+- [x] `P05.S10` - status:done (commit 00349c998) - add the end-to-end wiring test exercising a persona's tool boundary through the live dispatch path; `src/aeat/entrypoints/mcp/tests/test_persona_server_wiring.py`.
 
 ### Phase `P06` - Assurance spine - golden-eval categories proving the harness faithfully
 
@@ -122,11 +112,14 @@ record the explicit gate rather than to sequence work.
 The plan is complete when every Step below is closed (`- [x]`). A Step is
 closed only when its status is `done` (committed, with the cited commit SHA
 resolving in `git log`) or when it is explicitly `deferred-gated` with its
-gating dependency named - never on an unverified self-report. The
-`uncommitted-verified` Steps in Phase `P05` and `P06` remain open until the
-coordinator lands them via the apply-cached discipline
-(`uncommitted-wip-is-not-orphaned`); re-running the cited test files after
-that commit is the closure gate for each. The two CRITICAL findings in
+gating dependency named - never on an unverified self-report. Phase `P05`
+(commit `00349c998`) and Phase `P06` (commit `df75c1b63`) were landed by the
+coordinator via the apply-cached discipline
+(`uncommitted-wip-is-not-orphaned`) after this plan's initial authoring, and
+each Step now carries a matching exec record under
+`.vault/exec/2026-07-02-agent-harness/`
+(`2026-07-02-agent-harness-close-audit`,
+`plan-ledger-honesty-closed` finding). The two CRITICAL findings in
 `2026-07-02-agent-harness-content-review-audit` are cross-referenced, not
 duplicated, as Steps here: D1's dead-code finding is the same fact as Phase
 `P05`'s wiring Step; the D2/M100 breakage is explicitly NOT a Step in this
