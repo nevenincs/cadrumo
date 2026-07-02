@@ -118,8 +118,8 @@ def _secure_backend(tmp_path: Path) -> Iterator[None]:
         yield
 
 
-def _store_operator_profile(*, created_at: datetime) -> None:
-    activity_start_date = _activity_start_date_for_period(_LAST_PERIOD if created_at.month == 12 else _MID_PERIOD)
+def _store_operator_profile(*, created_at: datetime, period_token: str) -> None:
+    activity_start_date = _activity_start_date_for_period(period_token)
     UserProfileLifecycleRepository(bucket_id=_BUCKET_ID).save(
         UserProfileRecord(
             profile_id=_BUCKET_ID,
@@ -144,7 +144,24 @@ def _store_operator_profile(*, created_at: datetime) -> None:
 
 
 def _activity_start_date_for_period(period_token: str) -> date:
-    return date(_YEAR, 10, 1) if period_token in (_LAST_PERIOD, _REDEME_LAST_PERIOD) else date(_YEAR, 4, 1)
+    """First-IVA-period activity start proving no prior M303 compensation existed.
+
+    The first-period-zero IVA-wallet gate scopes a prior-compensation dependency
+    out only when its source period is strictly before the profile's declared
+    activity-start date (``_activity_start_proves_first_iva_period``). A quarterly
+    period's prior-compensation dependency is the previous quarter and a monthly
+    REDEME period's is the previous month, so for the period to be genuinely the
+    taxpayer's first IVA filing the activity must begin at the start of that
+    period: 1 October for 4T (scoping out 3T), 1 December for the monthly REDEME
+    "12" (scoping out November), 1 April for the mid-year 2T (scoping out 1T). A
+    pre-period activity start would leave a real prior IVA period in scope, which
+    the gate correctly refuses to treat as a first-period zero.
+    """
+    if period_token == _LAST_PERIOD:
+        return date(_YEAR, 10, 1)
+    if period_token == _REDEME_LAST_PERIOD:
+        return date(_YEAR, 12, 1)
+    return date(_YEAR, 4, 1)
 
 
 def _workflow_profile(*, redeme_enrolled: bool, activity_start_date: date) -> TaxpayerProfile:
@@ -202,7 +219,7 @@ def _calculate_negative_period(
     """
     decided_at = _decision_clock(period_token)
     verified_at = _verify_clock(period_token)
-    _store_operator_profile(created_at=decided_at)
+    _store_operator_profile(created_at=decided_at, period_token=period_token)
     work_repo = WorkUnitCatalogueRepository()
     calc_repo = CalculationRevisionCatalogueRepository()
     filing_repo = ModeloRecordCatalogueRepository()
@@ -407,6 +424,16 @@ def test_redeme_taxpayer_refunds_without_election_regression_guard(tmp_path: Pat
     art. 30 / RD 596/2016), never quarterly, so this scenario uses the monthly
     ``_REDEME_LAST_PERIOD`` (December) in place of the quarterly ``_LAST_PERIOD``
     (4T) the non-REDEME tests in this module use.
+
+    The self-compensación carry relation
+    (``modelo-303-rel-self-compensacion-anteriores``) the registry declares
+    targets only the quarterly periods (``target_periods = ["1T", "2T", "3T",
+    "4T"]``, ``previous_quarter`` alignment); the registry models no monthly
+    ``previous_month`` self-compensación carry. So the January-of-the-next-year
+    monthly period resolves NO casilla-110 carry-in via this relation
+    (``carry_in is None``): the refunded December credit is not carried forward,
+    so the standing-REDEME devolución path does not double-claim it. The positive
+    quarterly-carry counterpart is exercised by the non-REDEME control above.
     """
     with _secure_backend(tmp_path):
         revision_id, saldo = _calculate_negative_period(period_token=_REDEME_LAST_PERIOD, redeme_enrolled=True)
@@ -419,4 +446,4 @@ def test_redeme_taxpayer_refunds_without_election_regression_guard(tmp_path: Pat
         carry_in = _next_period_carry_in(next_year=_YEAR + 1, next_period="01")
 
     assert disposition is ResultDisposition.DEVOLUCION
-    assert carry_in == Decimal("0")
+    assert carry_in is None
