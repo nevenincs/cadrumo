@@ -8,13 +8,13 @@ and wrapped at emit time in
 :func:`~aeat.entrypoints.cli._common._emit_envelope`. This file is the CLI-side
 projection boundary for :mod:`~aeat.application.modelo`: application and domain
 results stay authoritative while these classes expose JSON-safe
-:class:`~aeat.domain.modelos.WorkUnit`,
-:class:`~aeat.domain.modelos.CalculationRevision`,
-:class:`~aeat.domain.modelos.ModeloRecord`,
-:class:`~aeat.domain.modelos.VerificationReport`,
-:class:`~aeat.domain.calculations.registry.CasillaId`,
-:class:`~aeat.domain.calculations.registry.LegalRefId`, and
-:class:`~aeat.domain.calculations.registry.SourceRefId` fields to operators.
+:class:`WorkUnit`,
+:class:`CalculationRevision`,
+:class:`ModeloRecord`,
+:class:`VerificationReport`,
+:obj:`CasillaId`,
+:obj:`LegalRefId`, and
+:obj:`SourceRefId` fields to operators.
 """
 
 from __future__ import annotations
@@ -71,14 +71,14 @@ if TYPE_CHECKING:
 
 
 class WorkUnitPayload(OutputSchema):
-    """Shared JSON projection of a bucket-scoped :class:`~aeat.domain.modelos.WorkUnit`.
+    """Shared JSON projection of a bucket-scoped :class:`WorkUnit`.
 
     Built by :func:`~aeat.entrypoints.cli._modelo_rendering.work_unit_payload`.
     The payload carries the stable
-    :class:`~aeat.domain.modelos.WorkUnitId`, operator-facing short ids,
+    :obj:`WorkUnitId`, operator-facing short ids,
     current / filed
-    :class:`~aeat.domain.modelos._ids.CalculationRevisionId` pointers, optional
-    :class:`~aeat.domain.modelos._ids.FilingRecordId`, and discard metadata used
+    :obj:`CalculationRevisionId` pointers, optional
+    :obj:`FilingRecordId`, and discard metadata used
     by create, list, status, rename, and discard lifecycle commands. It is
     lifecycle metadata only: calculation, verification, filing, and import
     evidence remain in their own command payloads.
@@ -138,14 +138,14 @@ class WorkPlazoDeadlinePayload(OutputSchema):
 
 
 class CalculationRevisionPayload(OutputSchema):
-    """Shared JSON projection of a persisted :class:`~aeat.domain.modelos.CalculationRevision`.
+    """Shared JSON projection of a persisted :class:`CalculationRevision`.
 
     Built by
     :func:`~aeat.entrypoints.cli._modelo_rendering.calculation_revision_payload`.
     ``casilla_values`` is the flat convenience table keyed by
-    :class:`~aeat.domain.calculations.registry.CasillaId`, while
+    :obj:`CasillaId`, while
     ``observations`` carries joinable :class:`ObservationPayload` rows projected
-    from :class:`~aeat.domain.calculations.registry.CasillaObservation`.
+    from :class:`CasillaObservation`.
     ``result_summary`` carries :class:`ResultSummaryRowPayload` rows selected
     from :class:`~aeat.application.modelo.ResultSummaryRow`. The binding and
     relation override maps preserve the operator inputs that shaped the draft
@@ -239,12 +239,12 @@ class CrossPeriodCleanStatePayload(OutputSchema):
 
 
 class VerificationReportPayload(OutputSchema):
-    """Shared projection of a :class:`~aeat.domain.modelos.VerificationReport`.
+    """Shared projection of a :class:`VerificationReport`.
 
     ``findings`` carries the blocking or advisory
-    :class:`~aeat.entrypoints.cli._modelo_payloads.FindingPayload` rows that
+    :class:`FindingPayload` rows that
     explain whether the selected
-    :class:`~aeat.domain.modelos.CalculationRevision` earned the
+    :class:`CalculationRevision` earned the
     verified-complete transition.
     """
 
@@ -260,7 +260,7 @@ class VerificationReportPayload(OutputSchema):
 
 
 class ExternalEvidencePayload(OutputSchema):
-    """JSON projection of :class:`~aeat.domain.modelos.ExternalEvidence`.
+    """JSON projection of :class:`ExternalEvidence`.
 
     The evidence reference records the official AEAT source consumed by
     :func:`~aeat.application.modelo.import_external_filing_evidence`; it is data
@@ -273,10 +273,10 @@ class ExternalEvidencePayload(OutputSchema):
 
 
 class ModeloRecordPayload(OutputSchema):
-    """Shared projection of a :class:`~aeat.domain.modelos.ModeloRecord`.
+    """Shared projection of a :class:`ModeloRecord`.
 
     The payload represents local filing state for a verified
-    :class:`~aeat.domain.modelos.CalculationRevision`; it is not a live AEAT
+    :class:`CalculationRevision`; it is not a live AEAT
     submission. Evidence appears only through ``external_evidence``.
     """
 
@@ -322,7 +322,7 @@ class WorkCreateResult(OutputSchema):
     service resolves the registry revision and active bucket profile, then adds
     create-specific status fields such as ``name_applied`` and
     ``applicability_guard_bypassed``. Newly created work units have no current
-    :class:`~aeat.domain.modelos.CalculationRevision` or filing record until
+    :class:`CalculationRevision` or filing record until
     later lifecycle commands populate those pointers.
     """
 
@@ -373,7 +373,7 @@ class WorkListResult(OutputSchema):
 class WorkStatusResult(OutputSchema):
     """Status projection returned by ``aeat app modelo work status``.
 
-    Reports one :class:`~aeat.domain.modelos.WorkUnit` lifecycle root together
+    Reports one :class:`WorkUnit` lifecycle root together
     with the current calculation, filed calculation, and filing-record pointers
     that default downstream work-unit commands. It does not inline the referenced
     calculation, verification, or filing payloads.
@@ -406,7 +406,7 @@ class WorkStatusResult(OutputSchema):
 class WorkRenameResult(OutputSchema):
     """Rename confirmation returned by ``aeat app modelo work rename``.
 
-    A rename preserves the :class:`~aeat.domain.modelos.WorkUnitId`, registry
+    A rename preserves the :obj:`WorkUnitId`, registry
     revision, and stored calculation / filing pointers while updating only
     display metadata and ``updated_at``. Discarded work units are rejected before
     this payload is emitted.
@@ -440,7 +440,7 @@ class WorkDiscardResult(OutputSchema):
     """Work-unit discard confirmation returned by ``aeat app modelo work discard``.
 
     The discard is an audit-grade transition on the
-    :class:`~aeat.domain.modelos.WorkUnit` lifecycle root: the record is
+    :class:`WorkUnit` lifecycle root: the record is
     preserved with ``discarded_at`` / ``discarded_by`` / ``discard_reason``
     populated, default listings hide it, and subsequent mutations are rejected.
     It never deletes the stored calculation revisions or contacts AEAT.
@@ -474,13 +474,13 @@ class WorkCalculateResult(OutputSchema):
     """Successful ``modelo work calculate`` result payload.
 
     The calculate CLI flattens the persisted
-    :class:`~aeat.domain.modelos.CalculationRevision` fields from
-    :class:`~aeat.entrypoints.cli._modelo_payloads.CalculationRevisionPayload`,
+    :class:`CalculationRevision` fields from
+    :class:`CalculationRevisionPayload`,
     then adds the presentation-only values
     carried by
     :class:`~aeat.application.modelo.ModeloWorkCalculationServiceResult`: Modelo
     202 modality, backend authorization state, and optional
-    :class:`~aeat.entrypoints.cli._modelo_payloads.WorkPlazoDeadlinePayload`.
+    :class:`WorkPlazoDeadlinePayload`.
     Non-blocking authorization and source diagnostics are projected into the envelope's
     :class:`~aeat.core.json_contract.Notice` rows, not bespoke result fields.
     """
@@ -516,9 +516,9 @@ class WorkRevisionsResult(OutputSchema):
     """Calculation-revision listing returned by ``aeat app modelo work revisions``.
 
     Each entry in ``revisions`` is a
-    :class:`~aeat.entrypoints.cli._modelo_payloads.CalculationRevisionPayload`
+    :class:`CalculationRevisionPayload`
     carrying the full casilla table, typed observations, and provenance for one
-    persisted :class:`~aeat.domain.modelos.CalculationRevision`.
+    persisted :class:`CalculationRevision`.
     """
 
     operation: str = "modelo.work.revisions"
@@ -534,7 +534,7 @@ class WorkVerifyResult(OutputSchema):
     The command delegates to
     :func:`~aeat.application.modelo.verify_modelo_revision` and returns the
     resulting
-    :class:`~aeat.entrypoints.cli._modelo_payloads.VerificationReportPayload`.
+    :class:`VerificationReportPayload`.
     On a successful
     verificado-completo verdict the revision transitions to
     ``verificado_completo``; on a refused verdict the revision is unchanged and
@@ -609,7 +609,7 @@ class WorkAmendResult(OutputSchema):
     :func:`~aeat.application.modelo.amend_modelo_revision` and returns the
     resulting :class:`ModeloRecordPayload` with the amendment-specific pair
     (``amendment_kind``, ``amends_filing_record_id``). The source filing record
-    must carry :class:`~aeat.domain.modelos.ExternalEvidence`; the new filing
+    must carry :class:`ExternalEvidence`; the new filing
     record clears ``external_evidence`` and remains local, so ``live_submission``
     is always ``False``.
     """
@@ -678,7 +678,7 @@ class VerificationReportListResult(OutputSchema):
     """Typed listing of persisted verification reports.
 
     ``reports`` contains shared
-    :class:`~aeat.entrypoints.cli._modelo_payloads.VerificationReportPayload`
+    :class:`VerificationReportPayload`
     projections; filtering only constrains ``calculation_revision_id_filter`` and
     leaves each report's finding, missing-casilla, and verificado-completo fields
     intact.
@@ -696,8 +696,8 @@ class VerificationReportShowResult(OutputSchema):
 
     This schema mirrors :class:`WorkVerifyResult` verification fields so
     operators can re-read a saved
-    :class:`~aeat.domain.modelos.VerificationReport` with the same
-    :class:`~aeat.entrypoints.cli._modelo_payloads.FindingPayload`
+    :class:`VerificationReport` with the same
+    :class:`FindingPayload`
     legal/source-reference detail emitted by
     ``aeat app modelo work verify``.
     """
@@ -733,7 +733,7 @@ class FilingRecordImportResult(OutputSchema):
     :func:`~aeat.application.modelo.import_external_filing_evidence` and returns
     the resulting evidence-bearing :class:`ModeloRecordPayload` with
     :class:`ExternalEvidencePayload` data. Imported records are the
-    :class:`~aeat.domain.modelos.ModeloRecord` baseline consumed by
+    :class:`ModeloRecord` baseline consumed by
     :func:`~aeat.application.modelo.amend_modelo_revision`, not live submission.
     """
 
