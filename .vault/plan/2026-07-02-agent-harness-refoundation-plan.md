@@ -189,7 +189,7 @@ Build the FTS5 lexical index, the structured citation lookup over registry citat
 
 Add the runtime query embedder behind the capability-gated extra, brute-force numpy cosine plus RRF fusion with a lexical-only degraded mode, and the corpus, citation-resource, and terminology console tools.
 
-- [ ] `W06.P13.S80` - Add the runtime query embedder with model2vec potion-multilingual-128M behind the capability-gated extra with a pinned revision, app-controlled cache dir, and install hint; `src/aeat/application/corpus_search/_query_embed.py`.
+- [x] `W06.P13.S80` - Add the runtime query embedder with model2vec potion-multilingual-128M behind the capability-gated extra with a pinned revision, app-controlled cache dir, and install hint; `src/aeat/application/corpus_search/_query_embed.py`.
 - [ ] `W06.P13.S88` - Add brute-force numpy cosine vector search with RRF k=60 fusion in plain Python and a lexical-only FTS5-plus-citation degraded mode; `src/aeat/application/corpus_search/_retrieval.py`.
 - [ ] `W06.P13.S81` - Expose the corpus search MCP tool; `src/aeat/entrypoints/mcp/_corpus_tools.py`.
 - [ ] `W06.P13.S82` - Add aeat corpus ref resources resolving citations to verbatim authoritative text; `src/aeat/entrypoints/mcp/_resources.py`.
