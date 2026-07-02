@@ -33,6 +33,14 @@ reporting positive taxable income with no computed liability.
 - An active profile exists and carries the taxpayer's personal and family
   facts (marital status, descendientes, discapacidad, comunidad autónoma of
   residence) - `aeat app overview status`.
+- Descendientes are declared explicitly with
+  `aeat config profile descendiente add` (inspect with
+  `aeat config profile descendiente list`, drop one with
+  `aeat config profile descendiente remove`). The mínimo por descendientes
+  (casillas 0513/0514, LIRPF art. 58/61) and the art. 64/75 anualidades
+  separate-escala eligibility are computed from these rows - a taxpayer with
+  children whose descendientes are not declared files a larger liability than
+  owed, so declare them before calculating.
 - The ledger for the full `filing_year` is built and classified where the
   taxpayer has actividades económicas: IRPF categories and business-use
   ratios are applied (`aeat app ledger check`).
