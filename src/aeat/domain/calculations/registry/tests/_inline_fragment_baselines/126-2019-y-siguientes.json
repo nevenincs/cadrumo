@@ -1,520 +1,460 @@
 {
   "modelo_id": "126",
+  "revision_id": "2019-y-siguientes",
   "revision": {
-    "algorithm_bindings": [],
-    "algorithm_providers": [],
-    "application_links": [
-      {
-        "consumer": "aeat.domain.calculations.registry",
-        "id": "modelo-126-calculation",
-        "legal_refs": [
-          "ley-35-2006:art-25",
-          "ley-35-2006:art-99",
-          "rd-439-2007:art-108",
-          "orden-eha-3435-2007:anexo-iv"
-        ],
-        "requires_snapshot": true,
-        "source_refs": [
-          "aeat-modelo-126-procedure",
-          "boe-modelo-126-form-text",
-          "boe-modelo-126-form-layout"
-        ],
-        "surface": "calculation"
-      },
-      {
-        "consumer": "aeat.domain.deadlines",
-        "id": "modelo-126-deadline",
-        "legal_refs": [
-          "orden-eha-3435-2007:anexo-iv"
-        ],
-        "requires_snapshot": true,
-        "source_refs": [
-          "aeat-modelo-126-procedure"
-        ],
-        "surface": "deadline"
-      },
-      {
-        "consumer": "aeat.application.filing",
-        "id": "modelo-126-filing",
-        "legal_refs": [
-          "orden-eha-3435-2007:anexo-iv"
-        ],
-        "requires_snapshot": true,
-        "source_refs": [
-          "aeat-modelo-126-procedure"
-        ],
-        "surface": "filing"
-      },
-      {
-        "consumer": "aeat.application.verification",
-        "id": "modelo-126-2019-y-siguientes-verification",
-        "legal_refs": [
-          "ley-35-2006:art-25",
-          "ley-35-2006:art-99",
-          "rd-439-2007:art-108",
-          "orden-eha-3435-2007:anexo-iv"
-        ],
-        "requires_snapshot": true,
-        "source_refs": [
-          "boe-modelo-126-form-text",
-          "boe-modelo-126-form-layout"
-        ],
-        "surface": "verification"
-      },
-      {
-        "consumer": "aeat.application.filing.review",
-        "id": "modelo-126-review",
-        "legal_refs": [
-          "orden-eha-3435-2007:anexo-iv"
-        ],
-        "requires_snapshot": true,
-        "source_refs": [
-          "aeat-modelo-126-procedure"
-        ],
-        "surface": "review"
-      },
-      {
-        "consumer": "aeat.application.workflow.approval",
-        "id": "modelo-126-approval",
-        "legal_refs": [
-          "orden-eha-3435-2007:anexo-iv"
-        ],
-        "requires_snapshot": true,
-        "source_refs": [
-          "aeat-modelo-126-procedure"
-        ],
-        "surface": "approval"
-      },
-      {
-        "consumer": "aeat.application.reconciliation",
-        "id": "modelo-126-reconciliation",
-        "legal_refs": [
-          "orden-eha-3435-2007:anexo-iv"
-        ],
-        "requires_snapshot": true,
-        "source_refs": [
-          "aeat-modelo-126-procedure"
-        ],
-        "surface": "reconciliation"
-      },
-      {
-        "consumer": "aeat.application.workflow",
-        "id": "modelo-126-workflow",
-        "legal_refs": [
-          "orden-eha-3435-2007:anexo-iv"
-        ],
-        "requires_snapshot": true,
-        "source_refs": [
-          "aeat-modelo-126-procedure"
-        ],
-        "surface": "workflow"
-      }
+    "id": "2019-y-siguientes",
+    "label": "Orden EHA/3435/2007, ejercicios 2019 y siguientes",
+    "valid_from": "2019-01-01",
+    "valid_to": null,
+    "period_selector": {
+      "years": [],
+      "year_from": 2019,
+      "year_to": null,
+      "periods": [
+        "1T",
+        "2T",
+        "3T",
+        "4T"
+      ]
+    },
+    "legal_refs": [
+      "ley-35-2006:art-25",
+      "ley-35-2006:art-99",
+      "rd-439-2007:art-108",
+      "orden-eha-3435-2007:anexo-iv"
     ],
-    "bindings": [],
-    "casilla_continuidad_evolutions": [],
+    "source_refs": [
+      "aeat-modelo-126-procedure",
+      "boe-modelo-126-form-text",
+      "boe-modelo-126-form-layout"
+    ],
+    "orden_aplicabilidad": [
+      "orden-eha-3435-2007:anexo-iv"
+    ],
+    "parameters": [],
     "casillas": [
       {
-        "aliases": [],
-        "alternate_bindings": [],
-        "binding": null,
-        "constraints": null,
-        "continuidad_id": null,
-        "data_type": "money",
-        "export_refs": [],
-        "form_number": null,
-        "formula": null,
         "id": "01",
-        "input_kind": "manual",
-        "internal_only": false,
-        "label": "Base de retenciones e ingresos a cuenta",
-        "legal_refs": [
-          "ley-35-2006:art-25",
-          "ley-35-2006:art-99",
-          "rd-439-2007:art-108",
-          "orden-eha-3435-2007:anexo-iv"
-        ],
-        "localized_help": {},
-        "localized_labels": {},
         "number": "01",
-        "required": false,
+        "segmento": null,
+        "label": "Base de retenciones e ingresos a cuenta",
+        "localized_labels": {},
+        "localized_help": {},
         "section": [
           "liquidacion",
           "retenciones_ingresos_cuenta"
         ],
-        "segmento": null,
+        "data_type": "money",
+        "required": false,
+        "input_kind": "manual",
+        "formula": null,
+        "binding": null,
+        "alternate_bindings": [],
+        "export_refs": [],
+        "constraints": null,
+        "form_number": null,
+        "continuidad_id": null,
         "semantic_role": "capital_cuentas_base",
         "semantic_role_cardinality": "shared",
         "semantic_role_cardinality_reason": null,
-        "source_refs": [
-          "boe-modelo-126-form-layout"
-        ]
-      },
-      {
         "aliases": [],
-        "alternate_bindings": [],
-        "binding": null,
-        "constraints": null,
-        "continuidad_id": null,
-        "data_type": "money",
-        "export_refs": [],
-        "form_number": null,
-        "formula": null,
-        "id": "02",
-        "input_kind": "manual",
         "internal_only": false,
-        "label": "Retenciones e ingresos a cuenta",
         "legal_refs": [
           "ley-35-2006:art-25",
           "ley-35-2006:art-99",
           "rd-439-2007:art-108",
           "orden-eha-3435-2007:anexo-iv"
         ],
-        "localized_help": {},
-        "localized_labels": {},
+        "source_refs": [
+          "boe-modelo-126-form-layout"
+        ]
+      },
+      {
+        "id": "02",
         "number": "02",
-        "required": false,
+        "segmento": null,
+        "label": "Retenciones e ingresos a cuenta",
+        "localized_labels": {},
+        "localized_help": {},
         "section": [
           "liquidacion",
           "retenciones_ingresos_cuenta"
         ],
-        "segmento": null,
+        "data_type": "money",
+        "required": false,
+        "input_kind": "manual",
+        "formula": null,
+        "binding": null,
+        "alternate_bindings": [],
+        "export_refs": [],
+        "constraints": null,
+        "form_number": null,
+        "continuidad_id": null,
         "semantic_role": "capital_cuentas_retenciones",
         "semantic_role_cardinality": "shared",
         "semantic_role_cardinality_reason": null,
-        "source_refs": [
-          "boe-modelo-126-form-layout"
-        ]
-      },
-      {
         "aliases": [],
-        "alternate_bindings": [],
-        "binding": null,
-        "constraints": null,
-        "continuidad_id": null,
-        "data_type": "money",
-        "export_refs": [],
-        "form_number": null,
-        "formula": null,
-        "id": "03",
-        "input_kind": "manual",
         "internal_only": false,
-        "label": "Periodificacion: base de retenciones e ingresos a cuenta",
         "legal_refs": [
           "ley-35-2006:art-25",
           "ley-35-2006:art-99",
           "rd-439-2007:art-108",
           "orden-eha-3435-2007:anexo-iv"
         ],
-        "localized_help": {},
-        "localized_labels": {},
+        "source_refs": [
+          "boe-modelo-126-form-layout"
+        ]
+      },
+      {
+        "id": "03",
         "number": "03",
-        "required": false,
+        "segmento": null,
+        "label": "Periodificacion: base de retenciones e ingresos a cuenta",
+        "localized_labels": {},
+        "localized_help": {},
         "section": [
           "liquidacion",
           "periodificacion"
         ],
-        "segmento": null,
+        "data_type": "money",
+        "required": false,
+        "input_kind": "manual",
+        "formula": null,
+        "binding": null,
+        "alternate_bindings": [],
+        "export_refs": [],
+        "constraints": null,
+        "form_number": null,
+        "continuidad_id": null,
         "semantic_role": "capital_cuentas_periodificacion_base_1",
         "semantic_role_cardinality": "intentional_singleton",
         "semantic_role_cardinality_reason": "Modelo 126 declara un bloque de periodificacion ordinario (casillas 03-05) y un bloque adicional (casillas 07-09, orden EHA/3435/2007 anexo IV); el rol del bloque ordinario aparece legitimamente en una sola casilla.",
-        "source_refs": [
-          "boe-modelo-126-form-layout"
-        ]
-      },
-      {
         "aliases": [],
-        "alternate_bindings": [],
-        "binding": null,
-        "constraints": null,
-        "continuidad_id": null,
-        "data_type": "money",
-        "export_refs": [],
-        "form_number": null,
-        "formula": null,
-        "id": "04",
-        "input_kind": "manual",
         "internal_only": false,
-        "label": "Periodificacion: retenciones e ingresos a cuenta",
         "legal_refs": [
           "ley-35-2006:art-25",
           "ley-35-2006:art-99",
           "rd-439-2007:art-108",
           "orden-eha-3435-2007:anexo-iv"
         ],
-        "localized_help": {},
-        "localized_labels": {},
+        "source_refs": [
+          "boe-modelo-126-form-layout"
+        ]
+      },
+      {
+        "id": "04",
         "number": "04",
-        "required": false,
+        "segmento": null,
+        "label": "Periodificacion: retenciones e ingresos a cuenta",
+        "localized_labels": {},
+        "localized_help": {},
         "section": [
           "liquidacion",
           "periodificacion"
         ],
-        "segmento": null,
+        "data_type": "money",
+        "required": false,
+        "input_kind": "manual",
+        "formula": null,
+        "binding": null,
+        "alternate_bindings": [],
+        "export_refs": [],
+        "constraints": null,
+        "form_number": null,
+        "continuidad_id": null,
         "semantic_role": "capital_cuentas_periodificacion_retenciones_1",
         "semantic_role_cardinality": "intentional_singleton",
         "semantic_role_cardinality_reason": "Modelo 126 declara un bloque de periodificacion ordinario (casillas 03-05) y un bloque adicional (casillas 07-09, orden EHA/3435/2007 anexo IV); el rol del bloque ordinario aparece legitimamente en una sola casilla.",
-        "source_refs": [
-          "boe-modelo-126-form-layout"
-        ]
-      },
-      {
         "aliases": [],
-        "alternate_bindings": [],
-        "binding": null,
-        "constraints": null,
-        "continuidad_id": null,
-        "data_type": "money",
-        "export_refs": [],
-        "form_number": null,
-        "formula": null,
-        "id": "05",
-        "input_kind": "manual",
         "internal_only": false,
-        "label": "Ingresos de ejercicios anteriores",
         "legal_refs": [
           "ley-35-2006:art-25",
           "ley-35-2006:art-99",
           "rd-439-2007:art-108",
           "orden-eha-3435-2007:anexo-iv"
         ],
-        "localized_help": {},
-        "localized_labels": {},
+        "source_refs": [
+          "boe-modelo-126-form-layout"
+        ]
+      },
+      {
+        "id": "05",
         "number": "05",
-        "required": false,
+        "segmento": null,
+        "label": "Ingresos de ejercicios anteriores",
+        "localized_labels": {},
+        "localized_help": {},
         "section": [
           "liquidacion",
           "periodificacion"
         ],
-        "segmento": null,
+        "data_type": "money",
+        "required": false,
+        "input_kind": "manual",
+        "formula": null,
+        "binding": null,
+        "alternate_bindings": [],
+        "export_refs": [],
+        "constraints": null,
+        "form_number": null,
+        "continuidad_id": null,
         "semantic_role": "capital_cuentas_ingresos_ejercicios_anteriores_1",
         "semantic_role_cardinality": "intentional_singleton",
         "semantic_role_cardinality_reason": "Modelo 126 declara un bloque de periodificacion ordinario (casillas 03-05) y un bloque adicional (casillas 07-09, orden EHA/3435/2007 anexo IV); el rol del bloque ordinario aparece legitimamente en una sola casilla.",
-        "source_refs": [
-          "boe-modelo-126-form-layout"
-        ]
-      },
-      {
         "aliases": [],
-        "alternate_bindings": [],
-        "binding": null,
-        "constraints": null,
-        "continuidad_id": null,
-        "data_type": "money",
-        "export_refs": [],
-        "form_number": null,
-        "formula": null,
-        "id": "06",
-        "input_kind": "manual",
         "internal_only": false,
-        "label": "Regularizacion",
         "legal_refs": [
           "ley-35-2006:art-25",
           "ley-35-2006:art-99",
           "rd-439-2007:art-108",
           "orden-eha-3435-2007:anexo-iv"
         ],
-        "localized_help": {},
-        "localized_labels": {},
+        "source_refs": [
+          "boe-modelo-126-form-layout"
+        ]
+      },
+      {
+        "id": "06",
         "number": "06",
-        "required": false,
+        "segmento": null,
+        "label": "Regularizacion",
+        "localized_labels": {},
+        "localized_help": {},
         "section": [
           "liquidacion",
           "regularizacion"
         ],
-        "segmento": null,
+        "data_type": "money",
+        "required": false,
+        "input_kind": "manual",
+        "formula": null,
+        "binding": null,
+        "alternate_bindings": [],
+        "export_refs": [],
+        "constraints": null,
+        "form_number": null,
+        "continuidad_id": null,
         "semantic_role": "capital_cuentas_regularizacion",
         "semantic_role_cardinality": "shared",
         "semantic_role_cardinality_reason": null,
-        "source_refs": [
-          "boe-modelo-126-form-layout"
-        ]
-      },
-      {
         "aliases": [],
-        "alternate_bindings": [],
-        "binding": null,
-        "constraints": null,
-        "continuidad_id": null,
-        "data_type": "money",
-        "export_refs": [],
-        "form_number": null,
-        "formula": null,
-        "id": "07",
-        "input_kind": "manual",
         "internal_only": false,
-        "label": "Periodificacion: base de retenciones e ingresos a cuenta adicional",
         "legal_refs": [
           "ley-35-2006:art-25",
           "ley-35-2006:art-99",
           "rd-439-2007:art-108",
           "orden-eha-3435-2007:anexo-iv"
         ],
-        "localized_help": {},
-        "localized_labels": {},
+        "source_refs": [
+          "boe-modelo-126-form-layout"
+        ]
+      },
+      {
+        "id": "07",
         "number": "07",
-        "required": false,
+        "segmento": null,
+        "label": "Periodificacion: base de retenciones e ingresos a cuenta adicional",
+        "localized_labels": {},
+        "localized_help": {},
         "section": [
           "liquidacion",
           "periodificacion"
         ],
-        "segmento": null,
+        "data_type": "money",
+        "required": false,
+        "input_kind": "manual",
+        "formula": null,
+        "binding": null,
+        "alternate_bindings": [],
+        "export_refs": [],
+        "constraints": null,
+        "form_number": null,
+        "continuidad_id": null,
         "semantic_role": "capital_cuentas_periodificacion_base_2",
         "semantic_role_cardinality": "intentional_singleton",
         "semantic_role_cardinality_reason": "Modelo 126 declara un bloque de periodificacion ordinario (casillas 03-05) y un bloque adicional (casillas 07-09, orden EHA/3435/2007 anexo IV); el rol del bloque adicional aparece legitimamente en una sola casilla.",
-        "source_refs": [
-          "boe-modelo-126-form-layout"
-        ]
-      },
-      {
         "aliases": [],
-        "alternate_bindings": [],
-        "binding": null,
-        "constraints": null,
-        "continuidad_id": null,
-        "data_type": "money",
-        "export_refs": [],
-        "form_number": null,
-        "formula": null,
-        "id": "08",
-        "input_kind": "manual",
         "internal_only": false,
-        "label": "Periodificacion: retenciones e ingresos a cuenta adicional",
         "legal_refs": [
           "ley-35-2006:art-25",
           "ley-35-2006:art-99",
           "rd-439-2007:art-108",
           "orden-eha-3435-2007:anexo-iv"
         ],
-        "localized_help": {},
-        "localized_labels": {},
+        "source_refs": [
+          "boe-modelo-126-form-layout"
+        ]
+      },
+      {
+        "id": "08",
         "number": "08",
-        "required": false,
+        "segmento": null,
+        "label": "Periodificacion: retenciones e ingresos a cuenta adicional",
+        "localized_labels": {},
+        "localized_help": {},
         "section": [
           "liquidacion",
           "periodificacion"
         ],
-        "segmento": null,
+        "data_type": "money",
+        "required": false,
+        "input_kind": "manual",
+        "formula": null,
+        "binding": null,
+        "alternate_bindings": [],
+        "export_refs": [],
+        "constraints": null,
+        "form_number": null,
+        "continuidad_id": null,
         "semantic_role": "capital_cuentas_periodificacion_retenciones_2",
         "semantic_role_cardinality": "intentional_singleton",
         "semantic_role_cardinality_reason": "Modelo 126 declara un bloque de periodificacion ordinario (casillas 03-05) y un bloque adicional (casillas 07-09, orden EHA/3435/2007 anexo IV); el rol del bloque adicional aparece legitimamente en una sola casilla.",
-        "source_refs": [
-          "boe-modelo-126-form-layout"
-        ]
-      },
-      {
         "aliases": [],
-        "alternate_bindings": [],
-        "binding": null,
-        "constraints": null,
-        "continuidad_id": null,
-        "data_type": "money",
-        "export_refs": [],
-        "form_number": null,
-        "formula": null,
-        "id": "09",
-        "input_kind": "manual",
         "internal_only": false,
-        "label": "Ingresos de ejercicios anteriores adicionales",
         "legal_refs": [
           "ley-35-2006:art-25",
           "ley-35-2006:art-99",
           "rd-439-2007:art-108",
           "orden-eha-3435-2007:anexo-iv"
         ],
-        "localized_help": {},
-        "localized_labels": {},
+        "source_refs": [
+          "boe-modelo-126-form-layout"
+        ]
+      },
+      {
+        "id": "09",
         "number": "09",
-        "required": false,
+        "segmento": null,
+        "label": "Ingresos de ejercicios anteriores adicionales",
+        "localized_labels": {},
+        "localized_help": {},
         "section": [
           "liquidacion",
           "periodificacion"
         ],
-        "segmento": null,
+        "data_type": "money",
+        "required": false,
+        "input_kind": "manual",
+        "formula": null,
+        "binding": null,
+        "alternate_bindings": [],
+        "export_refs": [],
+        "constraints": null,
+        "form_number": null,
+        "continuidad_id": null,
         "semantic_role": "capital_cuentas_ingresos_ejercicios_anteriores_2",
         "semantic_role_cardinality": "intentional_singleton",
         "semantic_role_cardinality_reason": "Modelo 126 declara un bloque de periodificacion ordinario (casillas 03-05) y un bloque adicional (casillas 07-09, orden EHA/3435/2007 anexo IV); el rol del bloque adicional aparece legitimamente en una sola casilla.",
-        "source_refs": [
-          "boe-modelo-126-form-layout"
-        ]
-      },
-      {
         "aliases": [],
-        "alternate_bindings": [],
-        "binding": null,
-        "constraints": null,
-        "continuidad_id": null,
-        "data_type": "money",
-        "export_refs": [],
-        "form_number": null,
-        "formula": "modelo-126-total-liquidacion",
-        "id": "10",
-        "input_kind": "computed",
         "internal_only": false,
-        "label": "Total liquidacion: suma de retenciones e ingresos a cuenta y regularizacion",
         "legal_refs": [
           "ley-35-2006:art-25",
           "ley-35-2006:art-99",
           "rd-439-2007:art-108",
           "orden-eha-3435-2007:anexo-iv"
         ],
-        "localized_help": {},
-        "localized_labels": {},
+        "source_refs": [
+          "boe-modelo-126-form-layout"
+        ]
+      },
+      {
+        "id": "10",
         "number": "10",
-        "required": false,
+        "segmento": null,
+        "label": "Total liquidacion: suma de retenciones e ingresos a cuenta y regularizacion",
+        "localized_labels": {},
+        "localized_help": {},
         "section": [
           "liquidacion",
           "total_liquidacion"
         ],
-        "segmento": null,
+        "data_type": "money",
+        "required": false,
+        "input_kind": "computed",
+        "formula": "modelo-126-total-liquidacion",
+        "binding": null,
+        "alternate_bindings": [],
+        "export_refs": [],
+        "constraints": null,
+        "form_number": null,
+        "continuidad_id": null,
         "semantic_role": "total_liquidacion",
         "semantic_role_cardinality": "shared",
         "semantic_role_cardinality_reason": null,
+        "aliases": [],
+        "internal_only": false,
+        "legal_refs": [
+          "ley-35-2006:art-25",
+          "ley-35-2006:art-99",
+          "rd-439-2007:art-108",
+          "orden-eha-3435-2007:anexo-iv"
+        ],
         "source_refs": [
           "boe-modelo-126-form-text",
           "boe-modelo-126-form-layout"
         ]
       },
       {
-        "aliases": [],
-        "alternate_bindings": [],
-        "binding": null,
-        "constraints": null,
-        "continuidad_id": null,
-        "data_type": "money",
-        "export_refs": [],
-        "form_number": null,
-        "formula": null,
         "id": "11",
-        "input_kind": "manual",
-        "internal_only": false,
+        "number": "11",
+        "segmento": null,
         "label": "Resultados a ingresar de anteriores declaraciones por el mismo concepto, ejercicio y periodo",
+        "localized_labels": {},
+        "localized_help": {},
+        "section": [
+          "liquidacion",
+          "complementaria"
+        ],
+        "data_type": "money",
+        "required": false,
+        "input_kind": "manual",
+        "formula": null,
+        "binding": null,
+        "alternate_bindings": [],
+        "export_refs": [],
+        "constraints": null,
+        "form_number": null,
+        "continuidad_id": null,
+        "semantic_role": "anteriores_declaraciones_resultado_ingresar",
+        "semantic_role_cardinality": "shared",
+        "semantic_role_cardinality_reason": null,
+        "aliases": [],
+        "internal_only": false,
         "legal_refs": [
           "ley-35-2006:art-25",
           "ley-35-2006:art-99",
           "rd-439-2007:art-108",
           "orden-eha-3435-2007:anexo-iv"
         ],
-        "localized_help": {},
-        "localized_labels": {},
-        "number": "11",
-        "required": false,
-        "section": [
-          "liquidacion",
-          "complementaria"
-        ],
-        "segmento": null,
-        "semantic_role": "anteriores_declaraciones_resultado_ingresar",
-        "semantic_role_cardinality": "shared",
-        "semantic_role_cardinality_reason": null,
         "source_refs": [
           "boe-modelo-126-form-layout"
         ]
       },
       {
-        "aliases": [],
-        "alternate_bindings": [],
+        "id": "12",
+        "number": "12",
+        "segmento": null,
+        "label": "Resultado a ingresar",
+        "localized_labels": {},
+        "localized_help": {},
+        "section": [
+          "liquidacion",
+          "resultado"
+        ],
+        "data_type": "money",
+        "required": false,
+        "input_kind": "computed",
+        "formula": "modelo-126-resultado-ingresar",
         "binding": null,
+        "alternate_bindings": [],
+        "export_refs": [],
         "constraints": {
+          "sign": "non_negative",
+          "min_value": null,
+          "max_value": null,
+          "pattern": null,
+          "min_length": null,
+          "max_length": null,
           "enum": null,
           "legal_refs": [
             "ley-35-2006:art-25",
@@ -522,51 +462,441 @@
             "rd-439-2007:art-108",
             "orden-eha-3435-2007:anexo-iv"
           ],
-          "max_length": null,
-          "max_value": null,
-          "min_length": null,
-          "min_value": null,
-          "pattern": null,
-          "sign": "non_negative",
           "source_refs": [
             "boe-modelo-126-form-text",
             "boe-modelo-126-form-layout"
           ]
         },
-        "continuidad_id": null,
-        "data_type": "money",
-        "export_refs": [],
         "form_number": null,
-        "formula": "modelo-126-resultado-ingresar",
-        "id": "12",
-        "input_kind": "computed",
+        "continuidad_id": null,
+        "semantic_role": "cuota_a_ingresar",
+        "semantic_role_cardinality": "shared",
+        "semantic_role_cardinality_reason": null,
+        "aliases": [],
         "internal_only": false,
-        "label": "Resultado a ingresar",
         "legal_refs": [
           "ley-35-2006:art-25",
           "ley-35-2006:art-99",
           "rd-439-2007:art-108",
           "orden-eha-3435-2007:anexo-iv"
         ],
-        "localized_help": {},
-        "localized_labels": {},
-        "number": "12",
-        "required": false,
-        "section": [
-          "liquidacion",
-          "resultado"
-        ],
-        "segmento": null,
-        "semantic_role": "cuota_a_ingresar",
-        "semantic_role_cardinality": "shared",
-        "semantic_role_cardinality_reason": null,
         "source_refs": [
           "boe-modelo-126-form-text",
           "boe-modelo-126-form-layout"
         ]
       }
     ],
+    "formulas": [
+      {
+        "id": "modelo-126-total-liquidacion",
+        "target_casilla_id": "10",
+        "expression": {
+          "op": "add",
+          "args": [
+            {
+              "op": null,
+              "args": [],
+              "casilla_id": "02",
+              "binding": null,
+              "date_binding": null,
+              "parameter": null,
+              "relation": null,
+              "literal": null,
+              "dispatch_table": null
+            },
+            {
+              "op": null,
+              "args": [],
+              "casilla_id": "06",
+              "binding": null,
+              "date_binding": null,
+              "parameter": null,
+              "relation": null,
+              "literal": null,
+              "dispatch_table": null
+            }
+          ],
+          "casilla_id": null,
+          "binding": null,
+          "date_binding": null,
+          "parameter": null,
+          "relation": null,
+          "literal": null,
+          "dispatch_table": null
+        },
+        "rounding": "money-2",
+        "legal_refs": [
+          "ley-35-2006:art-25",
+          "ley-35-2006:art-99",
+          "rd-439-2007:art-108",
+          "orden-eha-3435-2007:anexo-iv"
+        ],
+        "source_refs": [
+          "boe-modelo-126-form-text",
+          "boe-modelo-126-form-layout"
+        ],
+        "source_citations": [
+          {
+            "source_ref": "boe-modelo-126-form-text",
+            "required_text": [
+              "Suma de retenciones e ingresos a cuenta y regularizacion, en su caso ([02] + [06])"
+            ]
+          }
+        ]
+      },
+      {
+        "id": "modelo-126-resultado-ingresar",
+        "target_casilla_id": "12",
+        "expression": {
+          "op": "subtract",
+          "args": [
+            {
+              "op": null,
+              "args": [],
+              "casilla_id": "10",
+              "binding": null,
+              "date_binding": null,
+              "parameter": null,
+              "relation": null,
+              "literal": null,
+              "dispatch_table": null
+            },
+            {
+              "op": null,
+              "args": [],
+              "casilla_id": "11",
+              "binding": null,
+              "date_binding": null,
+              "parameter": null,
+              "relation": null,
+              "literal": null,
+              "dispatch_table": null
+            }
+          ],
+          "casilla_id": null,
+          "binding": null,
+          "date_binding": null,
+          "parameter": null,
+          "relation": null,
+          "literal": null,
+          "dispatch_table": null
+        },
+        "rounding": "money-2",
+        "legal_refs": [
+          "ley-35-2006:art-25",
+          "ley-35-2006:art-99",
+          "rd-439-2007:art-108",
+          "orden-eha-3435-2007:anexo-iv"
+        ],
+        "source_refs": [
+          "boe-modelo-126-form-text",
+          "boe-modelo-126-form-layout"
+        ],
+        "source_citations": [
+          {
+            "source_ref": "boe-modelo-126-form-text",
+            "required_text": [
+              "Resultado a ingresar ([10] - [11])"
+            ]
+          }
+        ]
+      }
+    ],
+    "bindings": [],
+    "algorithm_providers": [],
+    "algorithm_bindings": [],
+    "relations": [],
+    "export_layouts": [],
+    "extraction_profiles": [],
+    "live_cross_references": [],
+    "workbook_parity_refs": [
+      {
+        "id": "modelo-126-record-design",
+        "workbook_source": "boe-modelo-126-form-layout",
+        "fixture_id": "modelo-126-record-design-layout",
+        "formula_coverage": "record_design_layout",
+        "runner_required": false,
+        "output_cells": {},
+        "tolerance": "0.00",
+        "legal_refs": [
+          "orden-eha-3435-2007:anexo-iv"
+        ],
+        "source_refs": [
+          "boe-modelo-126-form-layout"
+        ]
+      }
+    ],
+    "verification_expectations": [
+      {
+        "id": "modelo-126-2019-y-siguientes-reconcile-when-present",
+        "computed_casilla_ids": [],
+        "reconcile_when_present_casilla_ids": [
+          "10",
+          "12"
+        ],
+        "externally_grounded_casilla_ids": [],
+        "reconciliation_total_casilla_ids": {},
+        "tolerance": "0.01",
+        "rounding": "money-2",
+        "min_coverage": "0",
+        "discrepancy_causes": [
+          "extraction_unreliable",
+          "unmodelled_rule",
+          "rounding",
+          "correctness_divergence"
+        ],
+        "legal_refs": [
+          "ley-35-2006:art-25",
+          "ley-35-2006:art-99",
+          "rd-439-2007:art-108",
+          "orden-eha-3435-2007:anexo-iv"
+        ],
+        "source_refs": [
+          "boe-modelo-126-form-text",
+          "boe-modelo-126-form-layout"
+        ]
+      }
+    ],
+    "application_links": [
+      {
+        "id": "modelo-126-calculation",
+        "surface": "calculation",
+        "consumer": "aeat.domain.calculations.registry",
+        "requires_snapshot": true,
+        "legal_refs": [
+          "ley-35-2006:art-25",
+          "ley-35-2006:art-99",
+          "rd-439-2007:art-108",
+          "orden-eha-3435-2007:anexo-iv"
+        ],
+        "source_refs": [
+          "aeat-modelo-126-procedure",
+          "boe-modelo-126-form-text",
+          "boe-modelo-126-form-layout"
+        ]
+      },
+      {
+        "id": "modelo-126-deadline",
+        "surface": "deadline",
+        "consumer": "aeat.domain.deadlines",
+        "requires_snapshot": true,
+        "legal_refs": [
+          "orden-eha-3435-2007:anexo-iv"
+        ],
+        "source_refs": [
+          "aeat-modelo-126-procedure"
+        ]
+      },
+      {
+        "id": "modelo-126-filing",
+        "surface": "filing",
+        "consumer": "aeat.application.filing",
+        "requires_snapshot": true,
+        "legal_refs": [
+          "orden-eha-3435-2007:anexo-iv"
+        ],
+        "source_refs": [
+          "aeat-modelo-126-procedure"
+        ]
+      },
+      {
+        "id": "modelo-126-2019-y-siguientes-verification",
+        "surface": "verification",
+        "consumer": "aeat.application.verification",
+        "requires_snapshot": true,
+        "legal_refs": [
+          "ley-35-2006:art-25",
+          "ley-35-2006:art-99",
+          "rd-439-2007:art-108",
+          "orden-eha-3435-2007:anexo-iv"
+        ],
+        "source_refs": [
+          "boe-modelo-126-form-text",
+          "boe-modelo-126-form-layout"
+        ]
+      },
+      {
+        "id": "modelo-126-review",
+        "surface": "review",
+        "consumer": "aeat.application.filing.review",
+        "requires_snapshot": true,
+        "legal_refs": [
+          "orden-eha-3435-2007:anexo-iv"
+        ],
+        "source_refs": [
+          "aeat-modelo-126-procedure"
+        ]
+      },
+      {
+        "id": "modelo-126-approval",
+        "surface": "approval",
+        "consumer": "aeat.application.workflow.approval",
+        "requires_snapshot": true,
+        "legal_refs": [
+          "orden-eha-3435-2007:anexo-iv"
+        ],
+        "source_refs": [
+          "aeat-modelo-126-procedure"
+        ]
+      },
+      {
+        "id": "modelo-126-reconciliation",
+        "surface": "reconciliation",
+        "consumer": "aeat.application.reconciliation",
+        "requires_snapshot": true,
+        "legal_refs": [
+          "orden-eha-3435-2007:anexo-iv"
+        ],
+        "source_refs": [
+          "aeat-modelo-126-procedure"
+        ]
+      },
+      {
+        "id": "modelo-126-workflow",
+        "surface": "workflow",
+        "consumer": "aeat.application.workflow",
+        "requires_snapshot": true,
+        "legal_refs": [
+          "orden-eha-3435-2007:anexo-iv"
+        ],
+        "source_refs": [
+          "aeat-modelo-126-procedure"
+        ]
+      }
+    ],
+    "deadline_windows": [
+      {
+        "id": "modelo-126-2025-1t",
+        "filing_year": 2025,
+        "period": {
+          "filing_year": 2025,
+          "code": "1T"
+        },
+        "period_kind": "quarterly",
+        "opens_on": "2025-04-01",
+        "closes_on": "2025-04-21",
+        "payment_cutoff_on": null,
+        "applicability_condition_mode": "all",
+        "applicability_conditions": [],
+        "legal_refs": [
+          "orden-eha-3435-2007:anexo-iv"
+        ],
+        "source_refs": [
+          "aeat-modelo-126-procedure"
+        ]
+      },
+      {
+        "id": "modelo-126-2025-2t",
+        "filing_year": 2025,
+        "period": {
+          "filing_year": 2025,
+          "code": "2T"
+        },
+        "period_kind": "quarterly",
+        "opens_on": "2025-07-01",
+        "closes_on": "2025-07-21",
+        "payment_cutoff_on": null,
+        "applicability_condition_mode": "all",
+        "applicability_conditions": [],
+        "legal_refs": [
+          "orden-eha-3435-2007:anexo-iv"
+        ],
+        "source_refs": [
+          "aeat-modelo-126-procedure"
+        ]
+      },
+      {
+        "id": "modelo-126-2025-3t",
+        "filing_year": 2025,
+        "period": {
+          "filing_year": 2025,
+          "code": "3T"
+        },
+        "period_kind": "quarterly",
+        "opens_on": "2025-10-01",
+        "closes_on": "2025-10-21",
+        "payment_cutoff_on": null,
+        "applicability_condition_mode": "all",
+        "applicability_conditions": [],
+        "legal_refs": [
+          "orden-eha-3435-2007:anexo-iv"
+        ],
+        "source_refs": [
+          "aeat-modelo-126-procedure"
+        ]
+      },
+      {
+        "id": "modelo-126-2025-4t",
+        "filing_year": 2025,
+        "period": {
+          "filing_year": 2025,
+          "code": "4T"
+        },
+        "period_kind": "quarterly",
+        "opens_on": "2026-01-01",
+        "closes_on": "2026-01-21",
+        "payment_cutoff_on": null,
+        "applicability_condition_mode": "all",
+        "applicability_conditions": [],
+        "legal_refs": [
+          "orden-eha-3435-2007:anexo-iv"
+        ],
+        "source_refs": [
+          "aeat-modelo-126-procedure"
+        ]
+      }
+    ],
+    "filing_schedules": [],
+    "support_removal_decisions": [],
+    "constructs": [
+      {
+        "id": "modelo-126-calculation-construct",
+        "title": "Modelo 126 calculation construct",
+        "legal_refs": [
+          "ley-35-2006:art-25",
+          "ley-35-2006:art-99",
+          "rd-439-2007:art-108",
+          "orden-eha-3435-2007:anexo-iv"
+        ],
+        "source_refs": [
+          "boe-modelo-126-form-text",
+          "boe-modelo-126-form-layout",
+          "aeat-modelo-126-procedure"
+        ],
+        "casilla_ids": [],
+        "formulas": [
+          "modelo-126-total-liquidacion",
+          "modelo-126-resultado-ingresar"
+        ],
+        "parameters": [],
+        "bindings": [],
+        "algorithm_providers": [],
+        "algorithm_bindings": [],
+        "relations": [],
+        "export_layouts": [],
+        "extraction_profiles": [],
+        "live_cross_references": [],
+        "workbook_parity_refs": [],
+        "verification_expectations": [],
+        "application_links": [
+          "modelo-126-calculation",
+          "modelo-126-deadline",
+          "modelo-126-filing",
+          "modelo-126-2019-y-siguientes-verification",
+          "modelo-126-review",
+          "modelo-126-approval",
+          "modelo-126-reconciliation",
+          "modelo-126-workflow"
+        ],
+        "deadline_windows": [],
+        "filing_schedules": [],
+        "support_removal_decisions": [],
+        "dependency_classifications": []
+      }
+    ],
+    "dependency_classifications": [],
     "completeness_manifest": {
+      "source_ref": "boe-modelo-126-form-layout",
       "casillas": [
         {
           "casilla_id": "02",
@@ -594,351 +924,21 @@
           "segmento": null
         }
       ],
+      "manual_extraction": false,
+      "manual_extraction_reason": null,
       "legal_refs": [
         "ley-35-2006:art-25",
         "ley-35-2006:art-99",
         "rd-439-2007:art-108",
         "orden-eha-3435-2007:anexo-iv"
       ],
-      "manual_extraction": false,
-      "manual_extraction_reason": null,
-      "source_ref": "boe-modelo-126-form-layout",
       "source_refs": [
         "boe-modelo-126-form-text",
         "boe-modelo-126-form-layout"
       ]
     },
-    "constructs": [
-      {
-        "algorithm_bindings": [],
-        "algorithm_providers": [],
-        "application_links": [
-          "modelo-126-calculation",
-          "modelo-126-deadline",
-          "modelo-126-filing",
-          "modelo-126-2019-y-siguientes-verification",
-          "modelo-126-review",
-          "modelo-126-approval",
-          "modelo-126-reconciliation",
-          "modelo-126-workflow"
-        ],
-        "bindings": [],
-        "casilla_ids": [],
-        "deadline_windows": [],
-        "dependency_classifications": [],
-        "export_layouts": [],
-        "extraction_profiles": [],
-        "filing_schedules": [],
-        "formulas": [
-          "modelo-126-total-liquidacion",
-          "modelo-126-resultado-ingresar"
-        ],
-        "id": "modelo-126-calculation-construct",
-        "legal_refs": [
-          "ley-35-2006:art-25",
-          "ley-35-2006:art-99",
-          "rd-439-2007:art-108",
-          "orden-eha-3435-2007:anexo-iv"
-        ],
-        "live_cross_references": [],
-        "parameters": [],
-        "relations": [],
-        "source_refs": [
-          "boe-modelo-126-form-text",
-          "boe-modelo-126-form-layout",
-          "aeat-modelo-126-procedure"
-        ],
-        "support_removal_decisions": [],
-        "title": "Modelo 126 calculation construct",
-        "verification_expectations": [],
-        "workbook_parity_refs": []
-      }
-    ],
-    "continuidad_validation": "advisory",
-    "deadline_windows": [
-      {
-        "applicability_condition_mode": "all",
-        "applicability_conditions": [],
-        "closes_on": "2025-04-21",
-        "filing_year": 2025,
-        "id": "modelo-126-2025-1t",
-        "legal_refs": [
-          "orden-eha-3435-2007:anexo-iv"
-        ],
-        "opens_on": "2025-04-01",
-        "payment_cutoff_on": null,
-        "period": {
-          "code": "1T",
-          "filing_year": 2025
-        },
-        "period_kind": "quarterly",
-        "source_refs": [
-          "aeat-modelo-126-procedure"
-        ]
-      },
-      {
-        "applicability_condition_mode": "all",
-        "applicability_conditions": [],
-        "closes_on": "2025-07-21",
-        "filing_year": 2025,
-        "id": "modelo-126-2025-2t",
-        "legal_refs": [
-          "orden-eha-3435-2007:anexo-iv"
-        ],
-        "opens_on": "2025-07-01",
-        "payment_cutoff_on": null,
-        "period": {
-          "code": "2T",
-          "filing_year": 2025
-        },
-        "period_kind": "quarterly",
-        "source_refs": [
-          "aeat-modelo-126-procedure"
-        ]
-      },
-      {
-        "applicability_condition_mode": "all",
-        "applicability_conditions": [],
-        "closes_on": "2025-10-21",
-        "filing_year": 2025,
-        "id": "modelo-126-2025-3t",
-        "legal_refs": [
-          "orden-eha-3435-2007:anexo-iv"
-        ],
-        "opens_on": "2025-10-01",
-        "payment_cutoff_on": null,
-        "period": {
-          "code": "3T",
-          "filing_year": 2025
-        },
-        "period_kind": "quarterly",
-        "source_refs": [
-          "aeat-modelo-126-procedure"
-        ]
-      },
-      {
-        "applicability_condition_mode": "all",
-        "applicability_conditions": [],
-        "closes_on": "2026-01-21",
-        "filing_year": 2025,
-        "id": "modelo-126-2025-4t",
-        "legal_refs": [
-          "orden-eha-3435-2007:anexo-iv"
-        ],
-        "opens_on": "2026-01-01",
-        "payment_cutoff_on": null,
-        "period": {
-          "code": "4T",
-          "filing_year": 2025
-        },
-        "period_kind": "quarterly",
-        "source_refs": [
-          "aeat-modelo-126-procedure"
-        ]
-      }
-    ],
-    "dependency_classifications": [],
-    "export_layouts": [],
-    "extraction_profiles": [],
-    "filing_schedules": [],
-    "formulas": [
-      {
-        "expression": {
-          "args": [
-            {
-              "args": [],
-              "binding": null,
-              "casilla_id": "02",
-              "date_binding": null,
-              "dispatch_table": null,
-              "literal": null,
-              "op": null,
-              "parameter": null,
-              "relation": null
-            },
-            {
-              "args": [],
-              "binding": null,
-              "casilla_id": "06",
-              "date_binding": null,
-              "dispatch_table": null,
-              "literal": null,
-              "op": null,
-              "parameter": null,
-              "relation": null
-            }
-          ],
-          "binding": null,
-          "casilla_id": null,
-          "date_binding": null,
-          "dispatch_table": null,
-          "literal": null,
-          "op": "add",
-          "parameter": null,
-          "relation": null
-        },
-        "id": "modelo-126-total-liquidacion",
-        "legal_refs": [
-          "ley-35-2006:art-25",
-          "ley-35-2006:art-99",
-          "rd-439-2007:art-108",
-          "orden-eha-3435-2007:anexo-iv"
-        ],
-        "rounding": "money-2",
-        "source_citations": [
-          {
-            "required_text": [
-              "Suma de retenciones e ingresos a cuenta y regularizacion, en su caso ([02] + [06])"
-            ],
-            "source_ref": "boe-modelo-126-form-text"
-          }
-        ],
-        "source_refs": [
-          "boe-modelo-126-form-text",
-          "boe-modelo-126-form-layout"
-        ],
-        "target_casilla_id": "10"
-      },
-      {
-        "expression": {
-          "args": [
-            {
-              "args": [],
-              "binding": null,
-              "casilla_id": "10",
-              "date_binding": null,
-              "dispatch_table": null,
-              "literal": null,
-              "op": null,
-              "parameter": null,
-              "relation": null
-            },
-            {
-              "args": [],
-              "binding": null,
-              "casilla_id": "11",
-              "date_binding": null,
-              "dispatch_table": null,
-              "literal": null,
-              "op": null,
-              "parameter": null,
-              "relation": null
-            }
-          ],
-          "binding": null,
-          "casilla_id": null,
-          "date_binding": null,
-          "dispatch_table": null,
-          "literal": null,
-          "op": "subtract",
-          "parameter": null,
-          "relation": null
-        },
-        "id": "modelo-126-resultado-ingresar",
-        "legal_refs": [
-          "ley-35-2006:art-25",
-          "ley-35-2006:art-99",
-          "rd-439-2007:art-108",
-          "orden-eha-3435-2007:anexo-iv"
-        ],
-        "rounding": "money-2",
-        "source_citations": [
-          {
-            "required_text": [
-              "Resultado a ingresar ([10] - [11])"
-            ],
-            "source_ref": "boe-modelo-126-form-text"
-          }
-        ],
-        "source_refs": [
-          "boe-modelo-126-form-text",
-          "boe-modelo-126-form-layout"
-        ],
-        "target_casilla_id": "12"
-      }
-    ],
-    "id": "2019-y-siguientes",
-    "label": "Orden EHA/3435/2007, ejercicios 2019 y siguientes",
-    "legal_refs": [
-      "ley-35-2006:art-25",
-      "ley-35-2006:art-99",
-      "rd-439-2007:art-108",
-      "orden-eha-3435-2007:anexo-iv"
-    ],
-    "live_cross_references": [],
-    "orden_aplicabilidad": [
-      "orden-eha-3435-2007:anexo-iv"
-    ],
-    "parameters": [],
-    "period_selector": {
-      "periods": [
-        "1T",
-        "2T",
-        "3T",
-        "4T"
-      ],
-      "year_from": 2019,
-      "year_to": null,
-      "years": []
-    },
-    "relations": [],
-    "source_refs": [
-      "aeat-modelo-126-procedure",
-      "boe-modelo-126-form-text",
-      "boe-modelo-126-form-layout"
-    ],
-    "support_removal_decisions": [],
-    "valid_from": "2019-01-01",
-    "valid_to": null,
-    "verification_expectations": [
-      {
-        "computed_casilla_ids": [],
-        "discrepancy_causes": [
-          "extraction_unreliable",
-          "unmodelled_rule",
-          "rounding",
-          "correctness_divergence"
-        ],
-        "externally_grounded_casilla_ids": [],
-        "id": "modelo-126-2019-y-siguientes-reconcile-when-present",
-        "legal_refs": [
-          "ley-35-2006:art-25",
-          "ley-35-2006:art-99",
-          "rd-439-2007:art-108",
-          "orden-eha-3435-2007:anexo-iv"
-        ],
-        "min_coverage": "0",
-        "reconcile_when_present_casilla_ids": [
-          "10",
-          "12"
-        ],
-        "reconciliation_total_casilla_ids": {},
-        "rounding": "money-2",
-        "source_refs": [
-          "boe-modelo-126-form-text",
-          "boe-modelo-126-form-layout"
-        ],
-        "tolerance": "0.01"
-      }
-    ],
     "verification_predicates": [],
-    "workbook_parity_refs": [
-      {
-        "fixture_id": "modelo-126-record-design-layout",
-        "formula_coverage": "record_design_layout",
-        "id": "modelo-126-record-design",
-        "legal_refs": [
-          "orden-eha-3435-2007:anexo-iv"
-        ],
-        "output_cells": {},
-        "runner_required": false,
-        "source_refs": [
-          "boe-modelo-126-form-layout"
-        ],
-        "tolerance": "0.00",
-        "workbook_source": "boe-modelo-126-form-layout"
-      }
-    ]
-  },
-  "revision_id": "2019-y-siguientes"
+    "continuidad_validation": "advisory",
+    "casilla_continuidad_evolutions": []
+  }
 }

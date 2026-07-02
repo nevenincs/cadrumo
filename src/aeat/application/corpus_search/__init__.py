@@ -61,6 +61,13 @@ from ._runtime import (
     load_corpus_embeddings,
     search_corpus,
 )
+from ._terminology import (
+    TerminologyConcept,
+    TerminologyHit,
+    load_terminology_concepts,
+    lookup_terminology,
+    search_terminology,
+)
 
 __all__ = [
     "PER_SIDE_CAP",
@@ -82,6 +89,8 @@ __all__ = [
     "RetrievalMode",
     "RetrievalResponse",
     "SimilarChunk",
+    "TerminologyConcept",
+    "TerminologyHit",
     "build_lexical_index",
     "bundled_citation_lookup",
     "bundled_corpus_html_root",
@@ -93,9 +102,12 @@ __all__ = [
     "iter_corpus_chunks",
     "load_corpus_embeddings",
     "load_embeddings",
+    "load_terminology_concepts",
+    "lookup_terminology",
     "more_like_this",
     "search_corpus",
     "search_extra_available",
     "search_lexical",
     "search_model_cache_dir",
+    "search_terminology",
 ]
