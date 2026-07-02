@@ -19,6 +19,7 @@ from typing import TYPE_CHECKING
 
 from ..core.external_constants import UTF_8_ENCODING as _UTF_8
 from ..core.resources import packaged_data as _packaged_data
+from ._skill_metadata import parse_skill_metadata
 
 _AGENT_SUBTREE = "agent"
 _RULES = "rules"
@@ -96,7 +97,7 @@ def iter_skill_metadata() -> Iterator[SkillMetadata]:
     ``applies_when`` set to ``None`` - strict presence is enforced by the coverage
     gate, not this load path, so the tree stays loadable while the lifts land.
     """
-    from ._skill_metadata import SkillMetadataError, parse_skill_metadata
+    from ._skill_metadata import SkillMetadataError
 
     for name, skill_md in _iter_skill_dirs():
         text = skill_md.read_text(encoding="utf-8")
@@ -120,6 +121,7 @@ __all__ = [
     "iter_skill_metadata",
     "materialise_workspace",
     "operator_rules_text",
+    "parse_skill_metadata",
 ]
 
 
