@@ -9,9 +9,6 @@ related:
   - "[[2026-07-02-agent-harness-refoundation-plan]]"
 ---
 
-
-
-
 # Register the prompts and resources server capabilities on the stdio server
 
 ## Scope

@@ -9,9 +9,6 @@ related:
   - "[[2026-07-02-agent-harness-refoundation-plan]]"
 ---
 
-
-
-
 # Add local session telemetry recording per-call trajectory records with session ids
 
 ## Scope

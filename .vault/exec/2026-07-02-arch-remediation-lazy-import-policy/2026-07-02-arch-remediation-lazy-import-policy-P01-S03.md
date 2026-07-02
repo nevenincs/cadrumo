@@ -9,9 +9,6 @@ related:
   - "[[2026-07-02-arch-remediation-lazy-import-policy-plan]]"
 ---
 
-
-
-
 # Make an unclassified site outside the allowlist fail the gate with the site path and the five sanctioned classes named in the message
 
 ## Scope

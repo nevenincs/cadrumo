@@ -9,9 +9,6 @@ related:
   - "[[2026-07-02-agent-harness-refoundation-plan]]"
 ---
 
-
-
-
 # Author the inicio-actividad skill over the activity-start-date and 036 alta path
 
 ## Scope

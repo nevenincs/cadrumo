@@ -9,9 +9,6 @@ related:
   - "[[2026-07-02-agent-harness-refoundation-plan]]"
 ---
 
-
-
-
 # Assert readOnlyHint and destructiveHint annotation coverage on every descriptor and close any gap
 
 ## Scope

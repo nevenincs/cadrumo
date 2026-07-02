@@ -9,9 +9,6 @@ related:
   - "[[2026-07-02-agent-harness-refoundation-plan]]"
 ---
 
-
-
-
 # Add tests for elicitation enforcement and the degradation matrix
 
 ## Scope

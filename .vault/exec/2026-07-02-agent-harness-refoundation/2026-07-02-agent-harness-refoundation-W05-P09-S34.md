@@ -9,9 +9,6 @@ related:
   - "[[2026-07-02-agent-harness-refoundation-plan]]"
 ---
 
-
-
-
 # Define the structured applies_when frontmatter schema and its parser over TaxpayerProfile facts and lifecycle state
 
 ## Scope

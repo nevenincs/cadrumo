@@ -9,9 +9,6 @@ related:
   - "[[2026-07-02-agent-harness-refoundation-plan]]"
 ---
 
-
-
-
 # Wire faithfulness into the serving path as an advisory notice with a hard block at the export and record-marker boundary
 
 ## Scope

@@ -9,9 +9,6 @@ related:
   - "[[2026-07-02-agent-harness-refoundation-plan]]"
 ---
 
-
-
-
 # Add per-verb handoff deny rules over the family-granular persona scope
 
 ## Scope

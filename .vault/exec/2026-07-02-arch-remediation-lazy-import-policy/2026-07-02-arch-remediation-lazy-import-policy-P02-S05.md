@@ -9,9 +9,6 @@ related:
   - "[[2026-07-02-arch-remediation-lazy-import-policy-plan]]"
 ---
 
-
-
-
 # Add the allowlist-length and per-class count ratchet so an increase requires editing the declaration in the same commit while a decrease is free
 
 ## Scope

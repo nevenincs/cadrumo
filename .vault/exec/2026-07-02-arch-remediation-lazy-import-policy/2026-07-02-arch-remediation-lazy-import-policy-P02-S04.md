@@ -9,9 +9,6 @@ related:
   - "[[2026-07-02-arch-remediation-lazy-import-policy-plan]]"
 ---
 
-
-
-
 # Sweep every current unsanctioned function-local import site and record each in the allowlist with its class, reason, and restructuring disposition, entering the error-registry deferred-bind queue and named cycle-breakers with their existing ADR citations
 
 ## Scope

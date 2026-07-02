@@ -9,9 +9,6 @@ related:
   - "[[2026-07-02-agent-harness-refoundation-plan]]"
 ---
 
-
-
-
 # Consume per-verb input schemas in build_tool_descriptors and retire the _ARGS_INPUT_SCHEMA bag
 
 ## Scope

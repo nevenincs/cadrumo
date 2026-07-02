@@ -9,9 +9,6 @@ related:
   - "[[2026-07-02-agent-harness-refoundation-plan]]"
 ---
 
-
-
-
 # Extend the faithfulness check with the serving-path advisory-plus-handoff-block integration surface
 
 ## Scope

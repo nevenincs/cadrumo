@@ -9,9 +9,6 @@ related:
   - "[[2026-07-02-agent-harness-refoundation-plan]]"
 ---
 
-
-
-
 # Derive a per-verb input schema from the CLI command registry click parameters, replacing the shared args bag
 
 ## Scope

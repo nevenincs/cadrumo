@@ -9,9 +9,6 @@ related:
   - "[[2026-07-02-agent-harness-refoundation-plan]]"
 ---
 
-
-
-
 # Add guided-workflow prompts that embed the matching skill plus its grounding excerpt
 
 ## Scope

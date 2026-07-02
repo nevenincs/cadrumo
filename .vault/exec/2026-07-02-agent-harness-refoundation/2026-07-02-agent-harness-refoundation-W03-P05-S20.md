@@ -9,9 +9,6 @@ related:
   - "[[2026-07-02-agent-harness-refoundation-plan]]"
 ---
 
-
-
-
 # Enforce the CONFIRM tier through elicitation in the call-tool path
 
 ## Scope

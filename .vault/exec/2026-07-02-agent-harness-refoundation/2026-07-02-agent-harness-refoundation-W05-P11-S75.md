@@ -9,9 +9,6 @@ related:
   - "[[2026-07-02-agent-harness-refoundation-plan]]"
 ---
 
-
-
-
 # Author the cese-actividad skill over the activity-end-date and 036 baja path
 
 ## Scope

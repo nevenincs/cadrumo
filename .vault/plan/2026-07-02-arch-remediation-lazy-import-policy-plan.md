@@ -11,7 +11,6 @@ related:
   - '[[2026-07-02-arch-remediation-lazy-import-policy-adr]]'
 ---
 
-
 # `arch-remediation-lazy-import-policy` plan
 
 ### Phase `P01` - allowlist declaration and classifier gate

@@ -9,9 +9,6 @@ related:
   - "[[2026-07-02-agent-harness-refoundation-plan]]"
 ---
 
-
-
-
 # Build the structured citation lookup keyed on citation id over the registry typed legal_refs, corpus_ref, and BOE permalink data
 
 ## Scope

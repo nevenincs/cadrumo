@@ -9,9 +9,6 @@ related:
   - "[[2026-07-02-agent-harness-refoundation-plan]]"
 ---
 
-
-
-
 # Extend the golden-scenario models for live-persona trajectory capture and scoring
 
 ## Scope

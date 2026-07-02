@@ -9,9 +9,6 @@ related:
   - "[[2026-07-02-agent-harness-refoundation-plan]]"
 ---
 
-
-
-
 # Add the search-plus-execute meta-tool pair for verbs outside the curated toolsets
 
 ## Scope

@@ -9,9 +9,6 @@ related:
   - "[[2026-07-02-agent-harness-refoundation-plan]]"
 ---
 
-
-
-
 # Add the harness.load floor tool returning operator rules and the active persona via aeat.agent
 
 ## Scope

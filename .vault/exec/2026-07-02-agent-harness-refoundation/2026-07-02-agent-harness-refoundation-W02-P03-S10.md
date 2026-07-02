@@ -9,9 +9,6 @@ related:
   - "[[2026-07-02-agent-harness-refoundation-plan]]"
 ---
 
-
-
-
 # Add aeat skill, rule, and persona resource templates with a read handler
 
 ## Scope

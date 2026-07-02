@@ -9,9 +9,6 @@ related:
   - "[[2026-07-02-agent-harness-refoundation-plan]]"
 ---
 
-
-
-
 # Update the workspace materialiser tests for the mirror layout
 
 ## Scope

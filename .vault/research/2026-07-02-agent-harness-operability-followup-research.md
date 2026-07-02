@@ -10,8 +10,6 @@ related:
   - '[[2026-07-02-agent-harness-refoundation-plan]]'
 ---
 
-
-
 # `agent-harness-operability-followup` research: `operability and grounding completion (deferred from refoundation close)`
 
 The `agent-harness-refoundation` campaign delivered the harness as a FRAMEWORK
