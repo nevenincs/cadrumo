@@ -68,6 +68,16 @@ _BUCKET_ID = "30300000-0000-4000-8000-000000000032"
 _YEAR = 2026
 _REFUND_PERIOD = "2T"
 _NEXT_PERIOD = "3T"
+#: REDEME-enrolled taxpayers file Modelo 303 MONTHLY, not quarterly (RD
+#: 1624/1992 art. 30 / RD 596/2016; see the ``modelo-303-mensual`` filing
+#: schedule's ``iva.redeme_enrolled == true`` profile condition). The
+#: quarterly ``_REFUND_PERIOD``/``_NEXT_PERIOD`` tokens above have no matching
+#: deadline obligation for a REDEME profile, so the REDEME scenario uses its
+#: own monthly period pair with the same ``_FILE_AT``-relative window shape
+#: (period "06" opens 2026-07-01 / closes 2026-07-30, matching quarterly 2T's
+#: filing-window alignment with ``_FILE_AT``).
+_REDEME_REFUND_PERIOD = "06"
+_REDEME_NEXT_PERIOD = "07"
 _DECIDED_AT = datetime(2026, 5, 19, 12, 0, 0, tzinfo=UTC)
 _VERIFY_AT = datetime(2026, 7, 15, 9, 0, 0, tzinfo=UTC)
 _FILE_AT = datetime(2026, 7, 15, 10, 0, 0, tzinfo=UTC)
@@ -143,15 +153,19 @@ def _workflow_profile(*, redeme_enrolled: bool) -> TaxpayerProfile:
     )
 
 
-def _file_negative_2t_period(*, redeme_enrolled: bool) -> Decimal:
-    """File the M303 2T negative-credit period; return the engine-produced saldo.
+def _file_negative_2t_period(*, redeme_enrolled: bool, period: str = _REFUND_PERIOD) -> Decimal:
+    """File the M303 negative-credit period; return the engine-produced saldo.
 
     Drives the REAL first-period wallet reconciliation, calculate, verify, and
     ``file_modelo_revision`` filing path. The filing disposition (devolución vs
     compensación) is determined INSIDE the filing action from the profile's
-    REDEME axis — this helper NEVER passes ``refunded``. Returns the value the 2T
+    REDEME axis — this helper NEVER passes ``refunded``. Returns the value the
     revision computed for ``iva.compensacion-disponible-fin-periodo`` (read back
     from the revision, never hand-derived from the formula — anti-tautology).
+
+    ``period`` defaults to the quarterly ``_REFUND_PERIOD``; REDEME-enrolled
+    scenarios pass ``_REDEME_REFUND_PERIOD`` (monthly — REDEME taxpayers have
+    no quarterly filing obligation, see the module-level period constants).
     """
     _store_operator_profile()
     work_repo = WorkUnitCatalogueRepository()
@@ -159,7 +173,7 @@ def _file_negative_2t_period(*, redeme_enrolled: bool) -> Decimal:
     filing_repo = ModeloRecordCatalogueRepository()
     event_repo = BucketEventHistoryRepository()
 
-    snapshot = resources().modelos.authority.snapshot("303", filing_year=_YEAR, period=_REFUND_PERIOD)
+    snapshot = resources().modelos.authority.snapshot("303", filing_year=_YEAR, period=period)
     report = reconcile_modelo_303_iva_compensation(
         snapshot,
         taxpayer_nif=_TAX_ID,
@@ -174,7 +188,7 @@ def _file_negative_2t_period(*, redeme_enrolled: bool) -> Decimal:
         bucket_id=_BUCKET_ID,
         modelo="303",
         filing_year=_YEAR,
-        period=Period.from_year_and_code(_YEAR, _REFUND_PERIOD),
+        period=Period.from_year_and_code(_YEAR, period),
         revision_id=snapshot.revision.id,
         repository=work_repo,
         clock=_DECIDED_AT,
@@ -228,9 +242,15 @@ def _file_negative_2t_period(*, redeme_enrolled: bool) -> Decimal:
     return saldo
 
 
-def _next_period_carry_in() -> Decimal | None:
-    """Resolve the 3T casilla-110 carry-in from whatever 2T carry the filing persisted."""
-    snapshot_next = resources().modelos.authority.snapshot("303", filing_year=_YEAR, period=_NEXT_PERIOD)
+def _next_period_carry_in(*, next_period: str = _NEXT_PERIOD) -> Decimal | None:
+    """Resolve the casilla-110 carry-in from whatever prior-period carry the filing persisted.
+
+    ``next_period`` defaults to the quarterly ``_NEXT_PERIOD`` (3T, following
+    the default 2T ``_file_negative_2t_period`` scenario); REDEME-enrolled
+    scenarios pass ``_REDEME_NEXT_PERIOD`` (the monthly period following
+    ``_REDEME_REFUND_PERIOD``).
+    """
+    snapshot_next = resources().modelos.authority.snapshot("303", filing_year=_YEAR, period=next_period)
     relation_values = resolve_relations_from_local_store(
         snapshot_next,
         repository=CalculationObservationRepository(),
@@ -242,17 +262,20 @@ def _next_period_carry_in() -> Decimal | None:
 
 
 def test_redeme_refund_period_auto_carries_zero_without_manual_flag(tmp_path: Path) -> None:
-    """A REDEME company's filed devolución 2T auto-carries ZERO into 3T casilla 110.
+    """A REDEME company's filed devolución month auto-carries ZERO into the next month's casilla 110.
 
-    The filing path determines the devolución disposition from the REDEME profile
+    REDEME-enrolled taxpayers have a MONTHLY M303 filing obligation (RD
+    1624/1992 art. 30 / RD 596/2016), never quarterly, so this scenario uses
+    the monthly ``_REDEME_REFUND_PERIOD``/``_REDEME_NEXT_PERIOD`` pair. The
+    filing path determines the devolución disposition from the REDEME profile
     and zeroes the cross-period carry — no ``refunded=True`` is passed anywhere.
     The next period's casilla-110 carry-in auto-resolves to zero, so the refunded
     credit is not double-claimed.
     """
     with _secure_backend(tmp_path):
-        saldo = _file_negative_2t_period(redeme_enrolled=True)
+        saldo = _file_negative_2t_period(redeme_enrolled=True, period=_REDEME_REFUND_PERIOD)
         assert saldo > Decimal("0")  # the engine did generate a credit to refund
-        carry_in = _next_period_carry_in()
+        carry_in = _next_period_carry_in(next_period=_REDEME_NEXT_PERIOD)
 
     assert carry_in == Decimal("0")
 

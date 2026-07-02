@@ -69,6 +69,15 @@ _BUCKET_ID = "30300000-0000-4000-8000-000000000033"
 _YEAR = 2025
 _LAST_PERIOD = "4T"
 _MID_PERIOD = "2T"
+#: REDEME-enrolled taxpayers file Modelo 303 MONTHLY, not quarterly (RD
+#: 1624/1992 art. 30 / RD 596/2016; the ``modelo-303-mensual`` filing schedule's
+#: ``iva.redeme_enrolled == true`` profile condition) — there is no ``4T``
+#: obligation on a REDEME profile's deadline schedule. December is the
+#: monthly year-end equivalent of ``_LAST_PERIOD`` (same window shape: opens
+#: the following January, closes January 30th), so the date/clock helpers
+#: below treat ``_REDEME_LAST_PERIOD`` as a year-end period alongside
+#: ``_LAST_PERIOD``.
+_REDEME_LAST_PERIOD = "12"
 
 #: The carry chain casilla/relation: the prior period's end-of-period available
 #: compensación flows into the next period's casilla 110.
@@ -130,7 +139,7 @@ def _store_operator_profile(*, created_at: datetime) -> None:
 
 
 def _activity_start_date_for_period(period_token: str) -> date:
-    return date(_YEAR, 10, 1) if period_token == _LAST_PERIOD else date(_YEAR, 4, 1)
+    return date(_YEAR, 10, 1) if period_token in (_LAST_PERIOD, _REDEME_LAST_PERIOD) else date(_YEAR, 4, 1)
 
 
 def _workflow_profile(*, redeme_enrolled: bool, activity_start_date: date) -> TaxpayerProfile:
@@ -147,13 +156,13 @@ def _workflow_profile(*, redeme_enrolled: bool, activity_start_date: date) -> Ta
 
 
 def _period_end(period_code: str) -> date:
-    return date(_YEAR, 12, 31) if period_code == "4T" else date(_YEAR, 6, 30)
+    return date(_YEAR, 12, 31) if period_code in ("4T", _REDEME_LAST_PERIOD) else date(_YEAR, 6, 30)
 
 
 def _decision_clock(period_code: str) -> datetime:
     return (
         datetime(_YEAR, 12, 19, 12, 0, 0, tzinfo=UTC)
-        if period_code == "4T"
+        if period_code in ("4T", _REDEME_LAST_PERIOD)
         else datetime(_YEAR, 6, 19, 12, 0, 0, tzinfo=UTC)
     )
 
@@ -161,7 +170,7 @@ def _decision_clock(period_code: str) -> datetime:
 def _verify_clock(period_code: str) -> datetime:
     return (
         datetime(_YEAR + 1, 1, 20, 9, 0, 0, tzinfo=UTC)
-        if period_code == "4T"
+        if period_code in ("4T", _REDEME_LAST_PERIOD)
         else datetime(_YEAR, 7, 20, 9, 0, 0, tzinfo=UTC)
     )
 
@@ -169,7 +178,7 @@ def _verify_clock(period_code: str) -> datetime:
 def _file_clock(period: Period) -> datetime:
     return (
         datetime(period.filing_year + 1, 1, 20, 10, 0, 0, tzinfo=UTC)
-        if period.code == "4T"
+        if period.code in ("4T", _REDEME_LAST_PERIOD)
         else datetime(period.filing_year, 7, 20, 10, 0, 0, tzinfo=UTC)
     )
 
@@ -385,19 +394,24 @@ def test_redeme_taxpayer_refunds_without_election_regression_guard(tmp_path: Pat
     """REGRESSION: a REDEME taxpayer still refunds its eligible period under the standing election.
 
     REDEME inscription is the always-on refund election; it does not depend on the
-    per-filing flag. A REDEME filer's negative 4T period resolves to devolución (``D``)
-    even with the default ``COMPENSAR`` election, and carries ZERO forward — proving
-    the new per-filing opt-in did not regress the standing REDEME path.
+    per-filing flag. A REDEME filer's negative year-end period resolves to devolución
+    (``D``) even with the default ``COMPENSAR`` election, and carries ZERO forward —
+    proving the new per-filing opt-in did not regress the standing REDEME path.
+
+    REDEME-enrolled taxpayers have a MONTHLY M303 filing obligation (RD 1624/1992
+    art. 30 / RD 596/2016), never quarterly, so this scenario uses the monthly
+    ``_REDEME_LAST_PERIOD`` (December) in place of the quarterly ``_LAST_PERIOD``
+    (4T) the non-REDEME tests in this module use.
     """
     with _secure_backend(tmp_path):
-        revision_id, saldo = _calculate_negative_period(period_token=_LAST_PERIOD, redeme_enrolled=True)
+        revision_id, saldo = _calculate_negative_period(period_token=_REDEME_LAST_PERIOD, redeme_enrolled=True)
         assert saldo > Decimal("0")
         disposition = _file_period(
             calculation_revision_id=revision_id,
             redeme_enrolled=True,
             refund_election=RefundElection.COMPENSAR,
         )
-        carry_in = _next_period_carry_in(next_year=_YEAR + 1, next_period="1T")
+        carry_in = _next_period_carry_in(next_year=_YEAR + 1, next_period="01")
 
     assert disposition is ResultDisposition.DEVOLUCION
     assert carry_in == Decimal("0")
