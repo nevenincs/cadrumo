@@ -6,6 +6,11 @@ description: >-
   verify, export the fichero-BOE, and hand off for the taxpayer to file. Use
   when the taxpayer has a one-off, non-periodic IVA trigger outside their
   normal filing schedule (or has no periodic IVA obligation at all).
+applies_when:
+  profile_facts:
+    - fact: iva_regime
+      match: equals
+      values: [RECARGO_EQUIVALENCIA, EXENTO, REAGP, NO_APLICA]
 ---
 
 # Prepare Modelo 309
