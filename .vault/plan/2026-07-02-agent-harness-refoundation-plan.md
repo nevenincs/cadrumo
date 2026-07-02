@@ -74,7 +74,7 @@ Enforce the CONFIRM tier through MCP elicitation with the decided capability-deg
 
 Wire faithfulness into the serving path with a handoff hard block, add per-verb handoff deny rules, and persist local session telemetry.
 
-- [ ] `W03.P06.S22` - Extend the faithfulness check with the serving-path advisory-plus-handoff-block integration surface; `src/aeat/entrypoints/mcp/_faithfulness.py`.
+- [x] `W03.P06.S22` - Extend the faithfulness check with the serving-path advisory-plus-handoff-block integration surface; `src/aeat/entrypoints/mcp/_faithfulness.py`.
 - [ ] `W03.P06.S23` - Wire faithfulness into the serving path as an advisory notice with a hard block at the export and record-marker boundary; `src/aeat/entrypoints/mcp/_server.py`.
 - [ ] `W03.P06.S24` - Add per-verb handoff deny rules over the family-granular persona scope; `src/aeat/entrypoints/mcp/_persona_scope.py`.
 - [x] `W03.P06.S25` - Add local session telemetry recording per-call trajectory records with session ids; `src/aeat/entrypoints/mcp/_telemetry.py`.
