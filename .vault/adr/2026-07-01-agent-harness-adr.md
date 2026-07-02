@@ -429,3 +429,32 @@ Tier-B slice end-to-end) has an unambiguous target shape to build against
 once Track 1 converges. The reconciliation confirms the accepted parent ADR
 needs no amendment - only this one clarifying addition (D3) - keeping the
 harness's decision trail linear rather than branching.
+
+## Ratification
+
+Ratified `proposed -> accepted` on 2026-07-02 by the driving agent on the basis
+that every decision is implemented and gate-verified green at HEAD, so the ADR
+now documents realised facts rather than proposals:
+
+- **D1** (persona tool-boundary) - `is_tool_in_persona_scope`
+  (`entrypoints/mcp/_persona_scope.py`) wired into `_server.py`
+  `_call_tool`/`_list_tools`; family-granular by design (see D3 note).
+- **D2** (`LIVE_READ` retired) - core-enum cleanup landed; the enum carries only
+  `READ_ONLY` / `LOCAL_STATE_MUTATING`.
+- **D3** (export/record-marker owner = verifier) - **accepted as documented
+  persona-discipline, not gate-enforcement.** The persona-scope filter is
+  family-granular (`modelo-preparer`/`verifier`/`reconciler` all resolve to
+  `families={"modelo"}`), so the export-ownership boundary is a prose contract
+  stated in both persona docs, not a runtime gate. This is the one owner-review
+  judgment call: if per-verb gate-enforcement is later required, supersede this
+  with a per-verb persona-scope ADR rather than amending here.
+- **D4** (rules reorg + black-box negative gate) - 7 operator rules shipped; the
+  negative drift gate refuses any operator doc that names a package internal.
+- **D5** (Tier-A persona-entry closure) - 6 Tier-A itinerary skills shipped.
+- **D6** (per-modelo skill granularity) - 17 Tier-B per-modelo skills shipped.
+- **D7** (verifier/preparer context isolation invariant) - encoded and covered
+  by the golden eval.
+
+Verification at ratification: harness drift gate + golden eval `56 passed`;
+operator-surface + json-schema + rule-surface conformance `115 passed`. The
+parent `2026-06-30-agent-harness-adr` needs no amendment.
