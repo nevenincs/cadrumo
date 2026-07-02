@@ -175,6 +175,10 @@ No findings for the historical M210 acceptance-test reconciliation. The current 
 
 No findings for the M210 full-engine ADR reconciliation. The accepted ADR already authorises the S380 scope, covers Phase 1 base computation, tipo-gravamen resolution, Convenio dispatch, and representante fiscal surfacing, and defers full design-record/treaty-roster wiring to the L3 Phase 2 engine plan. No ADR, code, registry, or test files changed.
 
+### w09-p41-s393 | medium | resolved review findings
+
+The accepted S393 patch keeps work-create applicability ordering intact while catching profile-projection validation only inside the applicability policy, allowing the existing readiness gate to surface missing non-EEA IRNR representative facts. The first approach was rejected because an early readiness call could have let pre-activity refusals beat not-applicable refusals. The final regression proves M210 engine-live legacy GB IRNR profiles missing `representante_fiscal_nif` and `representante_fiscal_nombre` get `REFUSED_MODELO_PROFILE_READINESS`, and a separate M130 overlap regression proves not-applicable still wins over pre-activity. Import-boundary review findings were resolved by using the package facades.
+
 ### w09-p41-s394 | low | no findings
 
 No findings for the Convenio Espana-Marruecos follow-up reconciliation. The current cross-cutting treaty authority carries `MA` / `interest` as a `ceiling` row at `0.10`, grounded in `convenio-es-ma-1978:art-11` and `BOE-A-1985-9280`; the old Art 14 drift is absent from the scoped treaty and Modelo 210 surfaces. No stale `MA/general` row remains under Modelo 210, and the current resolver intentionally emits the missing-row blocking path when a treaty country has no matching income-type override. The focused M210 convenio-rate regression file passed before closure. No production or registry data changed.
