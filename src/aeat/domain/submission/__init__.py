@@ -14,15 +14,15 @@ exported adapter contract, not a dependency consumed by :class:`SubmissionEngine
 :class:`ModeloPresentado` is a strict local-only historical/imported audit
 record stored by :class:`SubmissionRepository` as encrypted AUDIT data under
 ``aeat.domain.submission.records``. It is distinct from
-:class:`aeat.domain.modelos.ModeloRecord`: :func:`aeat.application.modelo.file_modelo_revision`
-creates a local work-unit filing record with ``aeat_accepted=False`` and no
-external evidence, while
-:func:`aeat.application.filing.import_filing_from_justificante` imports
-historical filing evidence into the audit trail.
+:class:`domain.modelos.ModeloRecord`:
+:func:`application.modelo.file_modelo_revision` creates a local work-unit filing
+record with ``aeat_accepted=False`` and no external evidence, while
+:func:`application.filing.import_filing_from_justificante` imports historical
+filing evidence into the audit trail.
 
 Live AEAT writes are blocked by
-:meth:`aeat.core.access_gate.AeatAccessGate.require_live_write`, which raises
-:exc:`aeat.core.access_gate.LiveSubmitForbiddenError`; preflight denials raise
+:meth:`core.access_gate.AeatAccessGate.require_live_write`, which raises
+:exc:`core.access_gate.LiveSubmitForbiddenError`; preflight denials raise
 :exc:`SubmissionPreflightError`.
 
 Major declarations:
@@ -39,26 +39,26 @@ Major declarations:
   exported narrow contracts that keep the domain free of live adapters.
 
 See Also:
-    :func:`aeat.application.modelo.file_modelo_revision`
+    :func:`application.modelo.file_modelo_revision`
         Local work-unit filing action that creates
-        :class:`aeat.domain.modelos.ModeloRecord` entries without AEAT
+        :class:`domain.modelos.ModeloRecord` entries without AEAT
         acceptance.
-    :mod:`aeat.application.live`
+    :mod:`application.live`
         Read-only AEAT evidence capture and justificante verification surface;
         it is not a live-submit path.
-    :func:`aeat.application.filing.import_filing_from_justificante`
+    :func:`application.filing.import_filing_from_justificante`
         Historical filing-evidence import into the submission audit trail.
-    :mod:`aeat.domain.justificante`
+    :mod:`domain.justificante`
         Receipt metadata that can seed imported submission-audit baselines
         without becoming casilla-value authority.
-    :func:`aeat.application.modelo.import_external_filing_evidence`
+    :func:`application.modelo.import_external_filing_evidence`
         Separate work-unit path that stamps
-        :class:`aeat.domain.modelos.ExternalEvidence` on current filing records;
+        :class:`domain.modelos.ExternalEvidence` on current filing records;
         it does not create :class:`ModeloPresentado` audit records.
-    :mod:`aeat.domain.filing`
+    :mod:`domain.filing`
         Draft construction and review records used before preflight or evidence
         import.
-    :class:`aeat.core.access_gate.AeatAccessGate`
+    :class:`core.access_gate.AeatAccessGate`
         Core live-write refusal authority that keeps these audit records local.
 """
 
