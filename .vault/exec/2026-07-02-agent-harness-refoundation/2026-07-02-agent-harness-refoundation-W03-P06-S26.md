@@ -9,9 +9,6 @@ related:
   - "[[2026-07-02-agent-harness-refoundation-plan]]"
 ---
 
-
-
-
 # Add tests for the faithfulness serving path, the handoff deny rules, and telemetry
 
 ## Scope

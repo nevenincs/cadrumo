@@ -9,9 +9,6 @@ related:
   - "[[2026-07-02-agent-harness-refoundation-plan]]"
 ---
 
-
-
-
 # Add a domain-toolset grouping derived from the operator-surface manifest for renta, iva, ledger, censo, and modelo-lifecycle
 
 ## Scope

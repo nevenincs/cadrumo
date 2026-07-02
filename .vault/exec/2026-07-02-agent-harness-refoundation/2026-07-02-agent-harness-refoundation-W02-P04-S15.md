@@ -9,9 +9,6 @@ related:
   - "[[2026-07-02-agent-harness-refoundation-plan]]"
 ---
 
-
-
-
 # Demote the workspace materialiser to an optional Claude-native .claude/skills mirror layout
 
 ## Scope

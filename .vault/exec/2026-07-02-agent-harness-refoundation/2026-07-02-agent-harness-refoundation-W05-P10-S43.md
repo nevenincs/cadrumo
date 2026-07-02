@@ -9,9 +9,6 @@ related:
   - "[[2026-07-02-agent-harness-refoundation-plan]]"
 ---
 
-
-
-
 # Lift the intra-community-operator selection predicate from prose into the applies_when frontmatter field
 
 ## Scope

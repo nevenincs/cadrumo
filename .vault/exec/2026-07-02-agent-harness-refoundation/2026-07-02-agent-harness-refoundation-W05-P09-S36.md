@@ -9,9 +9,6 @@ related:
   - "[[2026-07-02-agent-harness-refoundation-plan]]"
 ---
 
-
-
-
 # Add the applies_when coverage gate asserting every skill declares a structured predicate
 
 ## Scope

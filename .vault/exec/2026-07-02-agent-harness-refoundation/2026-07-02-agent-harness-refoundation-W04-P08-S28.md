@@ -9,9 +9,6 @@ related:
   - "[[2026-07-02-agent-harness-refoundation-plan]]"
 ---
 
-
-
-
 # Build the live subagent-persona harness substrate that starts the real server, drives a real client session, and captures the trajectory
 
 ## Scope

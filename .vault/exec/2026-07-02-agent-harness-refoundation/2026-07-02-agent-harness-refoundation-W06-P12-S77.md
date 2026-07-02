@@ -9,9 +9,6 @@ related:
   - "[[2026-07-02-agent-harness-refoundation-plan]]"
 ---
 
-
-
-
 # Build the FTS5 lexical index with unicode61 remove_diacritics 2 plus a snowballstemmer Spanish stemmed column from the bundled extracted corpus triples
 
 ## Scope

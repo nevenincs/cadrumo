@@ -9,9 +9,6 @@ related:
   - "[[2026-07-02-agent-harness-refoundation-plan]]"
 ---
 
-
-
-
 # Author the resumen-anual skill sequencing the annual-window obligations
 
 ## Scope

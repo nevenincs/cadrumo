@@ -9,9 +9,6 @@ related:
   - "[[2026-07-02-agent-harness-refoundation-plan]]"
 ---
 
-
-
-
 # Add the elicitation module with the capability-degradation matrix over accept, decline, and cancel, a destructiveHint fallback, and a default handoff refusal when elicitation is absent
 
 ## Scope

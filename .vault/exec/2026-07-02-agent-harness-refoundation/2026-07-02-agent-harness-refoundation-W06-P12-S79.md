@@ -9,9 +9,6 @@ related:
   - "[[2026-07-02-agent-harness-refoundation-plan]]"
 ---
 
-
-
-
 # Precompute the corpus embeddings at build time with model2vec potion-multilingual-128M and ship the numpy matrix as bundled data
 
 ## Scope

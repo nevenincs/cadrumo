@@ -7,9 +7,8 @@ modified: '2026-07-02'
 tier: L3
 related:
   - '[[2026-07-02-agent-harness-refoundation-adr]]'
+  - '[[2026-07-02-agent-harness-refoundation-research]]'
 ---
-
-
 # `agent-harness-refoundation` plan
 
 ## Wave `W01` - Console tool architecture
@@ -201,12 +200,6 @@ Pin the search-stack dependencies in the capability-gated extra, record the thir
 This plan executes the `2026-07-02-agent-harness-refoundation-adr` (decisions R1 through R9), grounded in the `2026-07-02-agent-harness-refoundation-research` inventory. The corrected universe definition frames the work: the `aeat` CLI is a black-box, deterministic tool universe, and the harness is the framework of rules, personas, and skills for operating safely within it, served to any language model through one MCP operating console. The refoundation turns the console from a verb-wrapper shell plus a static content bundle into an operable, measured operating surface. The CLI itself needs almost nothing new (R1 / the ADR Implementation note); the load-bearing verbs already exist, so the work concentrates in the console server, the operating-layer delivery channels, the safety gates, the situation-skill layer, the grounding surface, and a live model-in-the-loop verification regime.
 
 The work is sequenced framework-first, then verify and measure, then extend. W01 reshapes the tool surface (per-verb schemas, domain toolsets, meta-tool fallback, capability registration) that every later Wave builds on. W02 ships the operating layer through the protocol. W03 makes the two nominal gates real. W04 verifies the whole console by driving it with live subagent personas, which is the operator's stated goal for this campaign. W05 re-keys the skills to the user situation. W06 adds the grounding surface behind a blocking licence gate and packages the console for distribution. Every Step closes only with an execution record per the `plan-closure-requires-exec-records` discipline, and every rule or skill that names a CLI verb co-commits with the surface it cites per `operator-harness-cites-live-cli-surface`.
-
-
-
-
-
-
 
 ## Parallelization
 

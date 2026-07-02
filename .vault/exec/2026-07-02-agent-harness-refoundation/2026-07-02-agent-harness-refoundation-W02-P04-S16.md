@@ -9,9 +9,6 @@ related:
   - "[[2026-07-02-agent-harness-refoundation-plan]]"
 ---
 
-
-
-
 # Update the app-agent workspace CLI to emit the Claude-native mirror
 
 ## Scope

@@ -9,9 +9,6 @@ related:
   - "[[2026-07-02-arch-remediation-lazy-import-policy-plan]]"
 ---
 
-
-
-
 # Implement the classifier gate that walks production modules, collects function-local first-party imports, and structurally recognises the five sanctioned classes: core resource-repository loaders, PEP 562 CLI cold-start deferrals, TYPE_CHECKING blocks, optional third-party dependency guards, and adapter heavy-import deferrals
 
 ## Scope

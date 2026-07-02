@@ -9,9 +9,6 @@ related:
   - "[[2026-07-02-arch-remediation-lazy-import-policy-plan]]"
 ---
 
-
-
-
 # Declare the typed lazy-import allowlist entry model carrying site, sanctioned class, reason, and restructuring disposition co-located with the gate
 
 ## Scope

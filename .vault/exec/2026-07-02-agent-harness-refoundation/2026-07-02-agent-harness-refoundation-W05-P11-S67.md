@@ -9,9 +9,6 @@ related:
   - "[[2026-07-02-agent-harness-refoundation-plan]]"
 ---
 
-
-
-
 # Author the cierre-trimestre skill sequencing the quarter-boundary agenda obligations
 
 ## Scope

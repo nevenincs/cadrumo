@@ -9,9 +9,6 @@ related:
   - "[[2026-07-02-agent-harness-refoundation-plan]]"
 ---
 
-
-
-
 # Author the regularizar-atrasos skill sequencing the overview backlog past-due and recargo extemporaneo surface
 
 ## Scope

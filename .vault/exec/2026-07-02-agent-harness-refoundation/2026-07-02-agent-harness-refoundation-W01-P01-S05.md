@@ -9,9 +9,6 @@ related:
   - "[[2026-07-02-agent-harness-refoundation-plan]]"
 ---
 
-
-
-
 # Extend the tool-descriptor tests for per-verb schemas, toolsets, and annotation coverage
 
 ## Scope

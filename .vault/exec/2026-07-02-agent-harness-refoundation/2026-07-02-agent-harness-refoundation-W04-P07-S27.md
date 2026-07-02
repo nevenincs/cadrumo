@@ -9,9 +9,6 @@ related:
   - "[[2026-07-02-agent-harness-refoundation-plan]]"
 ---
 
-
-
-
 # Add a real-client handshake conformance test exercising initialize, tools-list, and a call round-trip over stdio
 
 ## Scope

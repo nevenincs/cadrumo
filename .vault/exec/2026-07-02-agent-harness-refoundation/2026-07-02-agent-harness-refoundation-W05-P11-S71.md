@@ -9,9 +9,6 @@ related:
   - "[[2026-07-02-agent-harness-refoundation-plan]]"
 ---
 
-
-
-
 # Author the rectificar-declaracion skill driving work amend and the complementaria and sustitutiva path
 
 ## Scope

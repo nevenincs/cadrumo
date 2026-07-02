@@ -10,8 +10,6 @@ related:
   - '[[2026-07-02-agent-harness-refoundation-research]]'
 ---
 
-
-
 # `agent-harness-refoundation` audit: `campaign close honesty review and code review`
 
 ## Scope
@@ -143,7 +141,6 @@ are). LABEL NOTE: the two reviews independently reused the labels `HIGH-1` and
 honesty review's `H1` (R3 semantic provisioning) and `M2` (argument-vs-narration
 faithfulness) are a distinct deferred item and a distinct prose correction,
 recorded separately under the honesty-review findings.
-
 
 - **HIGH-1 — faithfulness blind to ungrounded amounts ≥1000 without a
   thousands separator. RESOLVED.** `_faithfulness.py` amount regex capped the
@@ -298,4 +295,3 @@ closed with verification, and every remaining item is formally deferred with a
 follow-up reference — so the campaign is structurally complete AS A FRAMEWORK
 LANDING, with the measurement and grounding completion explicitly carried
 forward, not silently claimed done.
-

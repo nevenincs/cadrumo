@@ -9,9 +9,6 @@ related:
   - "[[2026-07-02-agent-harness-refoundation-plan]]"
 ---
 
-
-
-
 # Score observed calls against golden scenarios plus faithfulness and confirmation with the zero-live-submit and zero-handoff-faithfulness invariants
 
 ## Scope
