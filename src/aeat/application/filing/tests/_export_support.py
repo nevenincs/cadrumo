@@ -441,6 +441,50 @@ def _modelo_123_2019_export_headers() -> dict[str, str]:
     }
 
 
+@cache
+def _approved_modelo_200_registry_draft():
+    # A complete Modelo 200 (sociedades) draft: accounting profit 200 drives the
+    # cuota chain, and 450 of Modelo 202 pagos fraccionados produces a negative
+    # cuota diferencial. Every computed casilla in the calculation closure is
+    # populated, so the completeness gate has a full result set to check.
+    provider = _schema_provider(filing_year=2024, period="0A", modelos=("200",))
+    draft = build_draft(
+        modelo="200",
+        period=Period.from_year_and_code(2024, "0A"),
+        profile=ModeloOperatorProfile(
+            tax_id="B12345674",
+            display_name="Emilio Export Test SL",
+        ),
+        inputs={
+            validated_casilla_id("00040", surface="_approved_modelo_200_registry_draft"): "0",
+            validated_casilla_id("00501", surface="_approved_modelo_200_registry_draft"): Decimal("200.00"),
+            validated_casilla_id("DP200014:01033", surface="_approved_modelo_200_registry_draft"): Decimal("0.00"),
+            validated_casilla_id("DP200014:01034", surface="_approved_modelo_200_registry_draft"): Decimal("0.00"),
+            "modelo-200-2024-profile-new-entity-flag": Decimal("0"),
+            "modelo-200-2024-profile-incn-prior-12-months": Decimal("500000"),
+            "modelo-200-2024-profile-tributacion-estado-porcentaje": Decimal("100"),
+            "modelo-200-2024-profile-legal-entity-form": "sl",
+            "modelo-200-2024-bin-pendiente-ejercicios-anteriores": Decimal("0"),
+            "modelo-200-2024-dotaciones-deterioro-creditos-saldo-no-cumplido-anteriores": Decimal("0"),
+            "modelo-200-2024-dotaciones-deterioro-creditos-saldo-cumplido-anteriores": Decimal("0"),
+            "modelo-200-2024-rel-202-pagos-fraccionados": Decimal("450"),
+            "modelo-200-2024-rel-202-pagos-fraccionados-40-2": Decimal("0"),
+        },
+        schema_provider=provider,
+    )
+    return draft.model_copy(update={"status": ModeloDraftStatus.APROBADO})
+
+
+def _modelo_200_export_headers() -> dict[str, str]:
+    return {
+        "declaration_type": "D",
+        "surnames": "EMILIO EXPORT TEST SL",
+        "name": "EMILIO EXPORT TEST SL",
+        "program_version": "A001",
+        "presenter_nif": "B12345674",
+    }
+
+
 def _real_export_payload(
     *,
     draft: ModeloDraft,
