@@ -132,7 +132,18 @@ The honest verdict: the harness FUNCTIONS end-to-end and its two hard safety
 invariants held across every scripted trajectory. It is NOT a claim that a
 live model operates the console correctly — that is the gated follow-up.
 
-### code-review findings (independent reviewer, verdict: revision required → resolved)
+### code-review findings (independent reviewer, verdict: revision required → PASS)
+
+Final status: the reviewer independently re-verified both fixes and lifted the
+verdict from REVISION REQUIRED to **PASS** ("No remaining blockers from my
+review. Clear to merge once the campaign's own close gates are green" — they
+are). LABEL NOTE: the two reviews independently reused the labels `HIGH-1` and
+`MEDIUM-2`/`M2`; they are DIFFERENT findings. The code review's `HIGH-1`
+(faithfulness regex) and `MEDIUM-2` (meta handoff-deny) below are FIXED; the
+honesty review's `H1` (R3 semantic provisioning) and `M2` (argument-vs-narration
+faithfulness) are a distinct deferred item and a distinct prose correction,
+recorded separately under the honesty-review findings.
+
 
 - **HIGH-1 — faithfulness blind to ungrounded amounts ≥1000 without a
   thousands separator. RESOLVED.** `_faithfulness.py` amount regex capped the
