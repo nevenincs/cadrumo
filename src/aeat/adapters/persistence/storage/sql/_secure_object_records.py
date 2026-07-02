@@ -1,7 +1,7 @@
 """Pydantic records for SQL secure object persistence.
 
 Secure object read/write records carry
-:class:`~adapters.persistence.storage.SensitivityClass` so repository
+:class:`~aeat.adapters.persistence.storage.SensitivityClass` so repository
 policy can enforce the expected storage classification.
 """
 
@@ -62,15 +62,15 @@ class SecureObjectDeletion(BaseModel):
     """One secure-object row removal addressed by its raw HMAC digest.
 
     Deletions are addressed by the stored ``object_key`` digest (the
-    :class:`~adapters.persistence.storage.HashedLookup` column value)
+    :class:`~aeat.adapters.persistence.storage.HashedLookup` column value)
     rather than the natural key, because a diff-based writer enumerates the
     *stored* rows by digest and cannot recover their natural keys (those are
     recoverable only by decrypting each payload). The 32-byte digest passes
     straight through the ``HashedLookup`` column comparison without re-hashing,
     the same convention
-    :meth:`~adapters.persistence.storage.SecureObjectRepository.save_with_raw_key`
+    :meth:`~aeat.adapters.persistence.storage.SecureObjectRepository.save_with_raw_key`
     and
-    :meth:`~adapters.persistence.storage.SecureObjectRepository.exists_by_raw_key`
+    :meth:`~aeat.adapters.persistence.storage.SecureObjectRepository.exists_by_raw_key`
     use.
     """
 

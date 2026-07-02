@@ -18,6 +18,8 @@ consume the child modules directly:
 * :mod:`adapters.persistence.profile.submission` for the AUDIT secure-object
   :class:`domain.submission.ModeloPresentado` repository behind the
   :class:`domain.submission.SubmissionRepositoryProtocol` port.
+* :mod:`adapters.persistence.profile.justificante` for the AUDIT secure-object
+  :class:`domain.justificante.Justificante` receipt-metadata repository.
 """
 
 __all__: list[str] = []

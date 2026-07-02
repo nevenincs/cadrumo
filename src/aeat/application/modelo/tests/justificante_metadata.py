@@ -8,8 +8,9 @@ from pathlib import Path
 
 from pydantic import AnyHttpUrl, TypeAdapter
 
+from ....adapters.persistence.profile.justificante import JustificanteRepository
 from ....core import Period
-from ....domain.justificante import Justificante, JustificanteRepository
+from ....domain.justificante import Justificante
 from ....tests.aeat_literal_fixtures import justificante_cotejo_url
 
 

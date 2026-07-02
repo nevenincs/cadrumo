@@ -108,7 +108,8 @@ def _seed_justificante() -> str:
     from decimal import Decimal
 
     from ....core import Period
-    from ....domain.justificante import Justificante, JustificanteRepository
+    from ....adapters.persistence.profile.justificante import JustificanteRepository
+    from ....domain.justificante import Justificante
 
     csv = "ABCD1234EFGH5678"
     justificante = Justificante(
@@ -170,6 +171,6 @@ def test_full_custody_carry_restores_evidence_bytes_and_audit_trail(tmp_path: Pa
             assert restored.events[event_id].payload["display_name"] == "Audited"
 
             # The bound-resolver store survives and re-keys under the recipient DEK.
-            from ....domain.justificante import JustificanteRepository
+            from ....adapters.persistence.profile.justificante import JustificanteRepository
 
             assert JustificanteRepository().load(justificante_csv) is not None

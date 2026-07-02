@@ -6,18 +6,9 @@ The capability manifest annotates each command family ``READ_ONLY`` or
 ask a human before a tool runs. This module is the single mapping from the
 backend mutability contract to those hints, plus the small, explicit set of verb
 families that are destructive or naturally idempotent.
-
-It also owns the annotation-coverage contract: :func:`annotations_are_covered`
-defines when a descriptor's read-only / destructive hints are present and
-mutually consistent, :func:`annotation_coverage_gaps` sweeps a descriptor set for
-violations, and :func:`annotations_for_command` enforces the same guard at
-construction, so the server build and the tests inherit full coverage from one
-place.
 """
 
 from __future__ import annotations
-
-from collections.abc import Iterable
 
 from pydantic import BaseModel, ConfigDict
 
@@ -67,40 +58,9 @@ def annotations_for_command(*, command_key: str, mutability: OperatorMutability,
     read_only = mutability is OperatorMutability.READ_ONLY
     destructive = (not read_only) and leaf in _DESTRUCTIVE_LEAVES
     idempotent = read_only or leaf in _IDEMPOTENT_LEAVES
-    annotations = McpAnnotations(
+    return McpAnnotations(
         title=title,
         read_only_hint=read_only,
         destructive_hint=destructive,
         idempotent_hint=idempotent,
     )
-    # Close the coverage gap at construction: every emitted annotation must carry
-    # consistent read-only / destructive hints, so the server build and the tests
-    # inherit the guarantee from one place rather than re-deriving it.
-    if not annotations_are_covered(annotations):
-        raise ValueError(f"inconsistent MCP annotation hints for command {command_key!r}")
-    return annotations
-
-
-def annotations_are_covered(annotations: McpAnnotations) -> bool:
-    """Return whether one annotation's read-only / destructive hints are coherent.
-
-    Coverage means the two decision hints a client acts on are present (they are
-    non-optional booleans) and mutually consistent: a tool is never both read-only
-    and destructive, a read-only tool is idempotent, and a destructive tool
-    mutates state. A descriptor that fails this is an annotation gap.
-    """
-    if annotations.read_only_hint and annotations.destructive_hint:
-        return False
-    return not (annotations.read_only_hint and not annotations.idempotent_hint)
-
-
-def annotation_coverage_gaps(annotated: Iterable[tuple[str, McpAnnotations]]) -> tuple[str, ...]:
-    """Return the command keys whose annotations fail :func:`annotations_are_covered`.
-
-    The shared coverage function the server build and the tests both run over the
-    full descriptor set; an empty result is full annotation coverage.
-
-    Returns:
-        The command keys with an annotation coverage gap, in input order.
-    """
-    return tuple(command_key for command_key, annotations in annotated if not annotations_are_covered(annotations))

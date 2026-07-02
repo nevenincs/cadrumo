@@ -37,6 +37,7 @@ from ...adapters.outbound.aeat.sede import (
     SedeParseError,
     registry_observation_from_filed_declaration,
 )
+from ...adapters.persistence.profile.justificante import JustificanteRepository
 from ...application.calculations import (
     CalculationObservationRepository,
     IvaCompensationHistoryRepository,
@@ -64,7 +65,7 @@ from ...domain.calculations.registry import (
     validated_casilla_id,
 )
 from ...domain.iva_compensation import derive_303_compensation_available
-from ...domain.justificante import Justificante, JustificanteRepository
+from ...domain.justificante import Justificante
 from ...domain.modelos import (
     ExternalEvidence,
     ExternalEvidenceKind,

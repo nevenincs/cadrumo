@@ -11,10 +11,11 @@ from pathlib import Path
 
 from pydantic import AnyHttpUrl, TypeAdapter
 
+from ....adapters.persistence.profile.justificante import JustificanteRepository
 from ....core import Period
 from ....core.resources import resources
 from ....domain.calculations.registry import CasillaId, Modelo202Modality, RegistrySnapshot
-from ....domain.justificante import Justificante, JustificanteRepository
+from ....domain.justificante import Justificante
 from ....domain.modelos import (
     CalculationRevision,
     CalculationRevisionCatalogue,

@@ -19,6 +19,7 @@ from collections.abc import Iterable, Mapping
 from datetime import date
 from typing import Final, NamedTuple
 
+from ...adapters.persistence.profile.justificante import JustificanteRepository
 from ...core import BindingSourceKind, Modelo, Period
 from ...domain.calculations.registry import (
     CasillaId,
@@ -29,7 +30,7 @@ from ...domain.calculations.registry import (
     previous_filing_observation_requirements,
     relation_source_requirements,
 )
-from ...domain.justificante import Justificante, JustificanteRepository
+from ...domain.justificante import Justificante
 from ...domain.modelos import (
     CalculationRevisionCatalogue,
     CalculationRevisionCatalogueRepositoryProtocol,
