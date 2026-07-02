@@ -44,7 +44,7 @@ from enum import StrEnum
 from pydantic import BaseModel, model_validator
 
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
-from ..time._utc import validate_utc_aware
+from ..time import validate_utc_aware
 
 
 class ArgumentSource(StrEnum):

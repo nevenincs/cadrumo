@@ -72,8 +72,8 @@ def _build_registrations() -> tuple[FStringKeyRegistration, ...]:
     """
     from ..application.wizard import WIZARD_FLOWS
     from ..core.i18n import SUPPORTED_OUTPUT_LANGUAGES
-    from ..domain.contribuyente._ccaa import CCAA
-    from ..domain.deadlines._models import (
+    from ..domain.contribuyente import CCAA
+    from ..domain.deadlines import (
         EntityType,
         FiscalResidency,
         IrpfEstimationRegime,
