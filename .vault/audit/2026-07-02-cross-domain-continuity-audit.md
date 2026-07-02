@@ -12,7 +12,7 @@ related:
 
 ## Scope
 
-Reviewed the W09.P45 operator-surface fixes for S356, S358, S219, S331, S330, S226, S328, S204, S333, and S221.
+Reviewed the W09.P45 operator-surface fixes for S356, S358, S219, S331, S330, S226, S328, S204, S333, S221, and S225.
 
 - S356 adds operator-visible `iva_category` rendering to human `ledger list` output while preserving the existing typed JSON row contract. The audit covered the projection code, the real CLI regression test, the S356 plan row close, and the S356 execution record.
 - S358 adds royalty/SGAE guidance to the existing `ledger classify --irpf-category` help text without adding automatic classification heuristics. The audit covered the locale leaves, the real CLI help regression, the S358 plan row close, and the S358 execution record.
@@ -24,6 +24,7 @@ Reviewed the W09.P45 operator-surface fixes for S356, S358, S219, S331, S330, S2
 - S204 verifies that the project-wide i18n placeholder parity validator no longer reports SURPLUS kwargs for production `tr()` call sites. The audit covered the S32 parity validator, focused SURPLUS test, full placeholder parity module, locale audit, the S204 plan row close, and the S204 execution record.
 - S333 locks `overview calendar --help` custom option help localization with a real Hungarian console regression. The audit covered the help-honesty test, live console output, the S333 plan row close, and the S333 execution record.
 - S221 adds a bucket-local non-secret output-language hint so critical storage errors can render through the active or target profile language when the relevant bucket can be identified but the encrypted profile bucket cannot be opened. The audit covered the storage sidecar, runtime fallback, target-bucket readiness fallback, profile write/select refresh path, focused CLI regressions, import-provenance cleanup, the S221 plan row close, and the S221 execution record.
+- S225 documents and hardens the malformed active-profile pointer language boundary. The audit covered settings/i18n fallback, the active-pointer error suggestion, the real CLI malformed-pointer regression, the S225 plan row close, and the S225 execution record.
 
 ## Findings
 
@@ -81,6 +82,12 @@ No scoped findings remain for the readable-pointer malformed-DEK language fallba
 
 Residual edge noted by review: malformed active-profile pointers cannot identify the bucket and therefore cannot use this hint path. That edge remains S225's pre-profile error-language scope.
 
+### w09-p45-s225 | low | accepted Spanish fallback
+
+No scoped correctness findings for the malformed active-pointer language closure. When settings loading fails because the pointer itself is malformed, i18n now falls back to the default Spanish language so the integrity error renders cleanly instead of recursively failing during error-message rendering.
+
+The implementation deliberately does not guess the Catalan profile language: a malformed pointer carries no trustworthy bucket id, so neither the encrypted profile record nor the bucket-local S221 language hint can be selected safely. The recovery suggestion now documents `language fallback=es` until the active-profile pointer is readable.
+
 ## Recommendations
 
-No follow-up required for S356, S358, S219, S331, the scoped S330 renderer fix, the scoped S226 result-summary localization fix, the scoped S328 overview-calendar shift-label fix, the S204 SURPLUS-kwarg parity closure, the scoped S333 overview-calendar custom help regression, or the scoped S221 readable-pointer malformed-DEK language fallback.
+No follow-up required for S356, S358, S219, S331, the scoped S330 renderer fix, the scoped S226 result-summary localization fix, the scoped S328 overview-calendar shift-label fix, the S204 SURPLUS-kwarg parity closure, the scoped S333 overview-calendar custom help regression, the scoped S221 readable-pointer malformed-DEK language fallback, or the S225 malformed-pointer Spanish-fallback hardening.
