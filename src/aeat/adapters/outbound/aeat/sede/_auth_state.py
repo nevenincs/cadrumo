@@ -9,7 +9,7 @@ from ..auth import _session_store
 from ._errors import SedeNavigationError
 
 if TYPE_CHECKING:
-    from ..auth._authenticator import AeatSession
+    from ..auth import AeatSession
 
 
 def storage_state_for_session(session: AeatSession) -> dict[str, object]:

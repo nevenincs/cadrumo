@@ -38,7 +38,7 @@ from .....core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from .....core.config import Settings
 from .....core.i18n import tr
 from .....core.logging import get_logger
-from .....core.parsing._dates import _parse_date
+from .....core.parsing import parse_date
 from .....core.time import now
 from .._playwright import PlaywrightError
 from ..browser import default_browser_session_factory
@@ -47,7 +47,7 @@ from ._browser_constants import PLAYWRIGHT_WAIT_DOMCONTENTLOADED
 from ._errors import SedeNavigationError, SedeParseError
 
 if TYPE_CHECKING:
-    from ..auth._authenticator import AeatSession
+    from ..auth import AeatSession
 
 
 log = get_logger(__name__)
@@ -313,7 +313,7 @@ def _safe_cell(cells: list[str], idx: int | None) -> str | None:
 
 def _parse_date_local(raw: str | None) -> date | None:
     """Parse a Spanish ``DD-MM-YYYY`` date string, returning ``None`` on any failure."""
-    return _parse_date(raw, fmt="ddmmyyyy", on_error="none")
+    return parse_date(raw, fmt="ddmmyyyy", on_error="none")
 
 
 def _split_nif_name(raw: str) -> tuple[str, str]:

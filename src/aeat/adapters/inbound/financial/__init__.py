@@ -16,7 +16,7 @@ See Also:
 
 from __future__ import annotations
 
-from ....domain._identifiers import canonical_decimal_string as canonical_decimal
+from ....domain import canonical_decimal_string as canonical_decimal
 from .providers import (
     BankStatementParseError,
     CorpusVerificationSource,

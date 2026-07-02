@@ -37,7 +37,7 @@ from pydantic import BaseModel, ValidationError
 from .....core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from .....core.external_constants import UTF_8_ENCODING as _UTF_8_ENCODING
 from ..bucket import RecoveryVerificationError
-from ..crypto._crypto import EncryptedBlob
+from ..crypto import EncryptedBlob
 from ..errors import DecryptionError, StorageValidationError
 from ._bucket_session import BucketSession
 from ._recovery import (

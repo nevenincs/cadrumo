@@ -20,8 +20,11 @@ from pathlib import Path
 
 from ....core.hashing import sha256_hex
 from ....core.logging import get_logger
-from ....domain.justificante._errors import JustificanteParseError
-from ....domain.justificante._schema import Justificante, JustificanteParserBackend
+from ....domain.justificante import (
+    Justificante,
+    JustificanteParseError,
+    JustificanteParserBackend,
+)
 from ._extract import extract_justificante, extract_justificante_from_digest
 from ._parsers import extract_text, extract_text_from_bytes
 

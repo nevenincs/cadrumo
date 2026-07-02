@@ -23,12 +23,8 @@ from functools import lru_cache
 from pathlib import Path
 
 from .....core.logging import get_logger
-from ...pdf._pdfplumber import (
-    extract_pages_text_from_bytes as _extract_pages_text_from_bytes_impl,
-)
-from ...pdf._pdfplumber import (
-    extract_pages_text_with_fast_path as _extract_pages_text_with_fast_path_impl,
-)
+from ...pdf import extract_pages_text_from_bytes as _extract_pages_text_from_bytes_impl
+from ...pdf import extract_pages_text_with_fast_path as _extract_pages_text_with_fast_path_impl
 from .._errors import DeclaracionParseError
 
 _logger = get_logger(__name__)

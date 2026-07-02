@@ -59,13 +59,20 @@ if TYPE_CHECKING:
 from pydantic import BaseModel, Field, TypeAdapter, ValidationError
 
 from ....application.storage.calc_sheets import collect_row_sets, registry_sha
-from ....application.storage.calc_sheets._layout import SheetLayout, plan_layout
-from ....application.storage.calc_sheets._records import OperatorInput, SheetExportMetadata, SheetExportPlan
+from ....application.storage.calc_sheets import (
+    SheetLayout,
+    plan_layout,
+)
+from ....application.storage.calc_sheets import (
+    OperatorInput,
+    SheetExportMetadata,
+    SheetExportPlan,
+)
 from ....core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ....core import Period
 from ....core.decimal import coerce_decimal
 from ....core.i18n import tr
-from ....core.time._utc import coerce_utc_aware
+from ....core.time import coerce_utc_aware
 from ....domain.calculations.registry import (
     BindingId,
     CasillaDefinition,
@@ -82,7 +89,7 @@ from ....domain.calculations.registry import (
     casillas_by_id,
     undeclared_casilla_ids,
 )
-from ...outbound.storage._errors import (
+from ..storage import (
     OutboundStorageConflictError,
     OutboundStorageNetworkError,
     OutboundStorageValidationError,
@@ -995,10 +1002,11 @@ def verify_pull_coverage(
 ) -> tuple[PullCoverageDiscrepancy, ...]:
     """Return every coverage discrepancy between ``plan`` and ``pull``.
 
-    Returns an empty tuple when the two sides agree on the surfaces
-    the pull captures. Non-empty tuples enumerate structural deltas:
-    missing row-set groupings, unexpected groupings, binding count
-    mismatch, relation count mismatch, or registry-metadata drift.
+    Returns an empty tuple of :class:`PullCoverageDiscrepancy` when the two
+    sides agree on the surfaces the pull captures. Non-empty tuples enumerate
+    structural deltas: missing row-set groupings, unexpected groupings,
+    binding count mismatch, relation count mismatch, or registry-metadata
+    drift.
 
     Tariffs, cell constraints, and protected ranges are NOT
     re-validated against the workbook itself (the pull adapter never

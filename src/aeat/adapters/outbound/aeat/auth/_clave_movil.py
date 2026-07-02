@@ -52,7 +52,7 @@ from .....core.external_constants import CLAVE_MOVIL_DIAGNOSTIC_NAMESPACE
 from .....core.i18n import tr
 from .....core.logging import get_logger
 from .....core.time import now
-from .....domain.user_profile._errors import UserProfileError
+from .....domain.user_profile import UserProfileError
 from .._playwright import PlaywrightTimeoutError
 from . import _session_store
 from ._authenticator import (

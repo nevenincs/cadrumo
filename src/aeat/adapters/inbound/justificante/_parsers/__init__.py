@@ -19,9 +19,8 @@ from __future__ import annotations
 from collections import OrderedDict
 from pathlib import Path
 
-from .....domain.justificante._errors import JustificanteParseError
-from .....domain.justificante._schema import JustificanteParserBackend
-from ...pdf._utils import sha256_file
+from .....domain.justificante import JustificanteParseError, JustificanteParserBackend
+from ...pdf import sha256_file
 
 _INPUT_PDF_SOURCE_LABEL = "<input-pdf>"
 _TEXT_CACHE_MAXSIZE = 256

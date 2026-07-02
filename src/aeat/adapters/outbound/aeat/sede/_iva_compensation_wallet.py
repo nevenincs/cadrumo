@@ -64,7 +64,7 @@ from ._schema import IvaCompensationWalletObservation
 
 if TYPE_CHECKING:
     from .._playwright import Page
-    from ..auth._authenticator import AeatSession
+    from ..auth import AeatSession
 
 
 log = get_logger(__name__)

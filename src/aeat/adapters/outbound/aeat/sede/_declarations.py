@@ -105,7 +105,7 @@ from ._schema import (
 
 if TYPE_CHECKING:
     from .....domain.calculations.registry import ModeloRevision
-    from ..auth._authenticator import AeatSession
+    from ..auth import AeatSession
 
 
 log = get_logger(__name__)
