@@ -8,7 +8,7 @@ differential so married couples can pick the lower-tax regime.
 
 This is a pure, ephemeral operation: no work unit is required and no
 revision is persisted. The caller supplies all inputs explicitly via a
-:class:`~aeat.domain.calculations.registry.RegistrySnapshot`; the registry
+:class:`RegistrySnapshot`; the registry
 formula engine evaluates both paths and returns a typed
 :class:`TaxationComparisonResult`.
 
@@ -34,12 +34,12 @@ work unit, deliberately excludes the stored declaration-type value, and delegate
 to :func:`compare_taxation_modes`.
 
 See Also:
-    :mod:`aeat.application.modelo._semantic_role_resolution`:
+    :mod:`~aeat.application.modelo._semantic_role_resolution`:
         Provides the canonical semantic-role-to-casilla resolver and ambiguity
         refusal used for the cuota resultante and cuota diferencial roles.
-    :mod:`aeat.application.modelo._binding_resolution`:
+    :mod:`~aeat.application.modelo._binding_resolution`:
         Supplies the profile-bound values used by the work-unit entry point.
-    :mod:`aeat.application.modelo._work_addressing`:
+    :mod:`~aeat.application.modelo._work_addressing`:
         Resolves natural or exact work addresses before CLI comparison.
 """
 
@@ -204,7 +204,7 @@ def compare_taxation_modes(
 
     The function is pure and does not read, create, or persist work units. It
     requires the caller to provide a loaded
-    :class:`~aeat.domain.calculations.registry.RegistrySnapshot`, casilla inputs,
+    :class:`RegistrySnapshot`, casilla inputs,
     and already-resolved profile bindings. It then injects ``declaration_type``
     separately for the conjunta and individual runs and compares the calculated
     cuota diferencial/result casilla.
