@@ -13,21 +13,21 @@ retired :data:`Modelo.M037` (censo simplificada, suppressed by
 Orden HAC/1526/2024).  These are enumerated in :data:`NON_REGISTRY_MODELOS`.
 They are real codes with implementation support (lifecycle routing, portal
 entries), but
-:meth:`~aeat.domain.calculations.registry.ValidatedRegistryAuthority.validate_modelo`
+:meth:`~domain.calculations.registry.ValidatedRegistryAuthority.validate_modelo`
 raises for them and no registry TOML exists or may be created for them.
 
 Filing-grade authority — deadline windows, period restrictions, and casilla
-definitions — remains the :class:`~aeat.domain.calculations.registry.ValidatedRegistryAuthority`
-and the typed :class:`~aeat.domain.calculations.registry.RegistrySnapshot` it
+definitions — remains the :class:`~domain.calculations.registry.ValidatedRegistryAuthority`
+and the typed :class:`~domain.calculations.registry.RegistrySnapshot` it
 produces. This enum is the closed-set *identifier* type: it tells you which
 modelos exist; the registry tells you what (if anything) they contain.
 Modelo-specific support such as filing, export, extraction, and verification is
 declared on registry data such as
-:attr:`~aeat.domain.calculations.registry.ModeloDefinition.capabilities`, not by
+:attr:`~domain.calculations.registry.ModeloDefinition.capabilities`, not by
 branching on this enum.
 
 A gate test in ``src/aeat/core/tests/test_modelo.py`` binds the registry-backed
-members to :func:`aeat.application.modelo.registry_modelo_codes` (enum minus
+members to :func:`application.modelo.registry_modelo_codes` (enum minus
 :data:`NON_REGISTRY_MODELOS`) so the two cannot drift silently, and pins every
 non-registry member to its deliberately-absent registry definition.
 """
@@ -52,7 +52,7 @@ class Modelo(StrEnum):
         Modelo.M303 == Modelo.M303   # True
 
     The registry-backed members are bound to the registry directory listing by
-    :func:`aeat.application.modelo.registry_modelo_codes`; adding a new modelo
+    :func:`application.modelo.registry_modelo_codes`; adding a new modelo
     to the registry without updating this enum will fail the core parity test.
     Members in :data:`NON_REGISTRY_MODELOS` (the retired :data:`M037` and the
     recognized-but-not-yet-modeled obligations in :data:`UNMODELED_OBLIGATIONS`)
@@ -218,12 +218,12 @@ class Modelo(StrEnum):
 #: mapped to a short description of the obligation. These are real, currently
 #: fileable AEAT forms outside the registry directory listing; the
 #: obligation-coverage reconciliation
-#: (:func:`aeat.application.overview.build_obligation_coverage`) treats them as
+#: (:func:`application.overview.build_obligation_coverage`) treats them as
 #: part of the AEAT obligation universe and surfaces each as an *advised*
 #: (registry-unmodeled → investigate) row rather than leaving it invisible.
 #: Promoting one to a full registry definition (deadline windows + applicability
 #: rule) removes it from this delta and folds it into
-#: :func:`aeat.application.modelo.registry_modelo_codes`. The mapping is the
+#: :func:`application.modelo.registry_modelo_codes`. The mapping is the
 #: extensible edge of AEAT-wide enrollment: it ratchets up as obligations are
 #: recognized and shrinks as they are modeled. The current set covers the common
 #: retención autoliquidaciones and declaraciones informativas an autónomo, a PYME,
@@ -358,7 +358,7 @@ _UNMODELED_OUT_OF_SCOPE_OBLIGATIONS: Mapping[Modelo, str] = {
 #: Registry modelos deliberately **out of scope** of the overview obligation
 #: calendar, each mapped to the recorded reason it is not scheduled or advised.
 #: The obligation-coverage reconciliation
-#: (:func:`aeat.application.overview.build_obligation_coverage`) partitions every
+#: (:func:`application.overview.build_obligation_coverage`) partitions every
 #: obligation in the AEAT universe into exactly one of *surfaced*, *confidently
 #: excluded*, *advised* (investigate), or *out of scope*; this mapping is the sole
 #: home of the last bucket, so "invisible" is always a recorded product-scope
@@ -374,14 +374,14 @@ OUT_OF_SCOPE_OBLIGATIONS: Mapping[Modelo, str] = {
 
 #: Known modelo identifiers that intentionally have **no registry definition**.
 #: These are real, code-referenced modelos for which
-#: :meth:`~aeat.domain.calculations.registry.ValidatedRegistryAuthority.validate_modelo`
+#: :meth:`~domain.calculations.registry.ValidatedRegistryAuthority.validate_modelo`
 #: raises and no registry TOML exists or may be created. Three reasons put a member
 #: here: the retired :data:`Modelo.M037` (censo simplificada, suppressed by
 #: Orden HAC/1526/2024; superseded by :data:`Modelo.M036`), every
 #: recognized-but-not-yet-modeled obligation in :data:`UNMODELED_OBLIGATIONS`, and
 #: every recognized non-registry obligation declared out of scope
 #: (:data:`_UNMODELED_OUT_OF_SCOPE_OBLIGATIONS`). The parity gate compares the
-#: remaining members to :func:`aeat.application.modelo.registry_modelo_codes`, so the
+#: remaining members to :func:`application.modelo.registry_modelo_codes`, so the
 #: enum can carry retired codes, recognized-unmodeled obligations, and out-of-scope
 #: non-registry forms without implying the registry can load them.
 NON_REGISTRY_MODELOS: frozenset[Modelo] = (
