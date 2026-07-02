@@ -176,7 +176,7 @@ def missing_evidence_advisory_observations(
       required for filing-grade verification), or
     - an output-IVA row whose IVA category is legally expected to bear a
       devengada cuota — i.e. not in
-      :data:`aeat.domain.iva.CUOTA_LESS_M303_IVA_CATEGORIES` nor a
+      :data:`domain.iva.CUOTA_LESS_M303_IVA_CATEGORIES` nor a
       non-declarable sentinel (the issued-invoice evidence gap remains visible).
 
     Rows that legitimately bear no evidence requirement — non-business /
