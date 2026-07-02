@@ -689,7 +689,7 @@ class ConfigProfileExportResult(OutputSchema):
     schema_version: int
 
 
-@register_schema("config.profile.subject-access-request")
+@register_schema("config.profile.subject_access_request")
 class ConfigProfileSubjectAccessRequestResult(OutputSchema):
     """JSON envelope for ``aeat config profile subject-access-request``.
 
@@ -745,6 +745,65 @@ class ConfigProfileRenameResult(OutputSchema):
     profile_id: str
     previous_display_name: str
     display_name: str
+
+
+# ---------------------------------------------------------------------------
+# Sealed bucket-archive result schemas (backup / restore / inspect)
+# ---------------------------------------------------------------------------
+
+
+@register_schema("config.profile.archive.export")
+class ConfigProfileArchiveExportResult(OutputSchema):
+    """JSON envelope for ``aeat config profile archive export``.
+
+    Reports the exported profile id, the written archive path, the manifest
+    digest recorded in the archive header, and whether the archive is sealed
+    under a recovery passphrase rather than the active bucket key. Unlike
+    ``config profile export`` this archive is a full, AEAD-encrypted backup:
+    it carries attachment evidence bytes, the audit trail, and the
+    cross-period calculation inputs.
+    """
+
+    profile_id: str
+    display_name: str
+    out: str
+    manifest_digest: str
+    recovery_wrap_present: bool
+
+
+@register_schema("config.profile.archive.import")
+class ConfigProfileArchiveImportResult(OutputSchema):
+    """JSON envelope for ``aeat config profile archive import``.
+
+    Reports the restored profile id, the manifest digest authenticated at
+    decryption, and the archive schema version. The profile identity is
+    preserved verbatim from the archive (same ``bucket_id`` the archive was
+    exported from); a colliding existing profile is refused unless
+    ``--force`` is supplied.
+    """
+
+    profile_id: str
+    manifest_digest: str
+    archive_schema_version: int
+
+
+@register_schema("config.profile.archive.inspect")
+class ConfigProfileArchiveInspectResult(OutputSchema):
+    """JSON envelope for ``aeat config profile archive inspect``.
+
+    A read-only preview of a sealed archive's plaintext header plus the
+    on-disk file size: the profile id it holds, when it was written, its
+    manifest digest, whether it requires a recovery passphrase, and its
+    archive schema version. The encrypted payload is never opened, so no
+    per-store contents are reported here.
+    """
+
+    profile_id: str
+    manifest_digest: str
+    recovery_wrap_present: bool
+    archive_schema_version: int
+    created_at: str
+    size_bytes: int
 
 
 # ---------------------------------------------------------------------------
