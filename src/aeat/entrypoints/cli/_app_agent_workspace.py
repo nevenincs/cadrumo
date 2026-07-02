@@ -1,10 +1,13 @@
 """CLI command for ``aeat app agent materialise``.
 
-Materialises the shipped operator harness (rules, personas, skills) into an
-operator-chosen directory so an end-user agent runtime can load them. This is the
-distinct end-user operator workspace, never the repository's vaultspec developer
-``.claude/`` tree. It writes only reviewed harness markdown - no secrets, no tax
-data - and computes no value.
+Materialises the shipped operator harness into an operator-chosen directory in
+the Claude-native layout (ADR R4): ``.claude/skills/<name>/SKILL.md``,
+``.claude/agents/<persona>.md``, ``.claude/rules/<rule>.md``, and a root
+``CLAUDE.md`` importing every rule. This is the optional Claude-native mirror of
+the operating layer - the MCP console is the primary, client-agnostic channel.
+The written tree is the operator's own end-user workspace, never the repository's
+vaultspec developer ``.claude/`` tree. It writes only reviewed harness markdown -
+no secrets, no tax data - and computes no value.
 
 A child of ``app`` (the CLI root surface stays pinned to ``config`` and ``app``).
 """
