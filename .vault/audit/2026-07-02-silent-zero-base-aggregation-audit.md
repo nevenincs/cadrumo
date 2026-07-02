@@ -36,15 +36,22 @@ traders; the faithful mechanism is a cross-period prorrata model. These steps ar
 formally deferred to that future prorrata mechanism and must not be checked as
 completed registry bindings.
 
-### real-cli-e2e-tests-partial | medium | S06 still needs true CLI evidence; S14 is reconciled
+### real-cli-e2e-tests-reconciled | medium | S06 and S14 now have true CLI evidence
 
 The codebase contains live application-service coverage for M303/M390 and M100 annual
 ledger paths. A later S14 pass found that the existing real CLI M100 test already
 proved `0171` and `0224` through `aeat app modelo work calculate`; the pass added
 the missing `0180` assertion, reran the focused integration test green, and checked
-S14 with a dedicated exec record. S06 remains unchecked: this audit still has no
-real CLI evidence that a fully taxable M303 trader reaches a granted `.boe` with no
-prorrata-divergence error and no manual prorrata input.
+S14 with a dedicated exec record.
+
+The S06 follow-up added a real `aeat app quickfile` integration path for Modelo 303
+2026 1T. The fixture seeds a real active profile, persisted ledger transactions,
+linked purchase-invoice evidence, and a neutral IVA wallet decision, then invokes the
+public quickfile chain without manual prorrata input. Verification passed:
+`uv run --no-sync pytest -q -m integration src/aeat/entrypoints/cli/tests/test_app_quickfile.py::test_quickfile_m303_fully_taxable_ledger_reaches_granted_boe_without_prorrata_input`
+reported 1 passed, and the full quickfile module reported 4 passed. The S06 exec
+record exists, but the plan checkbox remains pending because the plan file carried
+pre-existing non-authored WIP before the step-check edit window.
 
 ### s14-code-review | low | no blocking findings in the real CLI M100 evidence change
 
@@ -56,6 +63,7 @@ stubs, skips, xfail markers, or tautological formula reimplementation were intro
 
 ## Recommendations
 
-Leave S03/S04 open as ADR-deferred prorrata work. Resume S06 only after a real CLI
-M303 `.boe` path can be exercised without carrying peer WIP. Do not declare this
-campaign closed: `vault plan status` still reports open steps.
+Leave S03/S04 open as ADR-deferred prorrata work. Check S06 only after the
+non-authored plan-file WIP clears so `vaultspec-core vault plan step check` can run
+without overwriting a peer edit. Do not declare this campaign closed: `vault plan
+status` still reports open steps.
