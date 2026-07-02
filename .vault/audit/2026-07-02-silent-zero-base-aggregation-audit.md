@@ -66,6 +66,37 @@ the test creates the work unit through the CLI, persists real ledger rows, calcu
 Modelo 100 through the CLI, and now asserts all three plan-named casillas. No mocks,
 stubs, skips, xfail markers, or tautological formula reimplementation were introduced.
 
+## Fresh-Context Honesty Review
+
+Reviewed the campaign as newly inherited, using the current plan status, the ADR's
+prorrata mechanism decision, the exec-record inventory, the focused CLI evidence, and
+the shared-worktree WIP checks as the authority. Findings:
+
+### close-s03-s04 | medium | prorrata volume rows are an honest carry-forward, not incomplete implementation
+
+`W01.P02.S03` and `W01.P02.S04` remain unchecked because the ADR rejects the
+per-period volume binding shape as a regulated-mechanism error. The named follow-up is
+the cross-period prorrata mechanism: provisional-percentage carry plus Q4
+regularisation over full-year volumes. No bounded registry binding should be landed or
+checked for these two rows in this campaign.
+
+### close-s06 | low | S06 implementation is complete, but the checkbox is blocked by peer plan WIP
+
+`W01.P02.S06` now has a dedicated exec record and real CLI verification through
+`aeat app quickfile` for Modelo 303 2026 1T without manual prorrata input. The plan
+row remains unchecked only because `git diff -- .vault/plan/2026-06-19-silent-zero-base-aggregation-plan.md`
+shows pre-existing non-authored WIP in the plan file, so a step-check edit would
+violate the shared-worktree safety rule. The follow-up is mechanical: run
+`vaultspec-core vault plan step check 2026-06-19-silent-zero-base-aggregation-plan S06`
+after that plan-file WIP clears.
+
+## Closure Decision
+
+For Wave 1 D9 purposes, this campaign's remaining tail is honestly drained: every open
+row is either completed with a matching exec record (`S06`) or formally deferred to a
+named mechanism (`S03`/`S04`). The vault plan is not cosmetically closed because a peer
+edit currently blocks the S06 checkbox, but no missing exec alert remains.
+
 ## Recommendations
 
 Leave S03/S04 open as ADR-deferred cross-period prorrata work. Check S06 only after
