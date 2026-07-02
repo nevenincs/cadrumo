@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#silent-zero-base-aggregation'
-date: '2026-06-21'
-modified: '2026-06-21'
+date: '2026-07-02'
+modified: '2026-07-02'
 related:
   - '[[2026-06-19-silent-zero-base-aggregation-W01-P01-S01]]'
   - '[[2026-06-19-silent-zero-base-aggregation-W01-P01-S02]]'
@@ -17,6 +17,7 @@ related:
   - '[[2026-06-19-silent-zero-base-aggregation-W02-P05-S12]]'
   - '[[2026-06-19-silent-zero-base-aggregation-W02-P05-S13]]'
   - '[[2026-06-19-silent-zero-base-aggregation-W03-P06-S15]]'
+  - '[[2026-06-19-silent-zero-base-aggregation-W03-P06-S16]]'
   - '[[2026-06-19-silent-zero-base-aggregation-W03-P07-S17]]'
   - '[[2026-06-19-silent-zero-base-aggregation-W03-P07-S18]]'
   - '[[2026-06-19-silent-zero-base-aggregation-adr]]'
@@ -24,6 +25,7 @@ related:
   - '[[2026-06-19-silent-zero-base-aggregation-plan]]'
   - '[[2026-06-19-silent-zero-base-aggregation-research]]'
   - '[[2026-06-20-silent-zero-base-aggregation-research]]'
+  - '[[2026-07-02-silent-zero-base-aggregation-audit]]'
 ---
 
 # `silent-zero-base-aggregation` feature index
@@ -39,6 +41,7 @@ Auto-generated index of all documents tagged with `#silent-zero-base-aggregation
 ### audit
 
 - `2026-06-19-silent-zero-base-aggregation-audit` - `silent-zero-base-aggregation` audit: `Adversarial aggregation audit: cuota-side drops, recargo, annual coverage, reverse-charge symmetry`
+- `2026-07-02-silent-zero-base-aggregation-audit` - `silent-zero-base-aggregation` audit: `Wave 1 D9 close-blocker audit`
 
 ### exec
 
@@ -55,6 +58,7 @@ Auto-generated index of all documents tagged with `#silent-zero-base-aggregation
 - `2026-06-19-silent-zero-base-aggregation-W03-P07-S17` - open a research note for the M130 agrarian estimación-objetiva classification axis distinguishing agrarian-objetiva from actividad-directa income before binding casilla 08
 - `2026-06-19-silent-zero-base-aggregation-W01-P01-S01` - complete the abandoned-stale peer base-binding work for casillas 01/04/07/28 (bound to ledger_iva_aggregation base_amount_sum) by adding them to the M303 completeness manifest and construct so the calculation closure and manifest agree
 - `2026-06-19-silent-zero-base-aggregation-W01-P01-S02` - rerun the completeness-manifest drift gate and M303 registry build and record green after the base casillas join the manifest/construct
+- `2026-06-19-silent-zero-base-aggregation-W03-P06-S16` - add a reconciliation predicate that flags any divergence between the M390 ledger cuota-deducible-total and the reconciliacion-303 total, covering the import and reverse-charge flows
 
 ### plan
 

@@ -3,7 +3,7 @@ tags:
   - '#plan'
   - '#silent-zero-base-aggregation'
 date: '2026-06-19'
-modified: '2026-06-30'
+modified: '2026-07-02'
 tier: L3
 related:
   - '[[2026-06-19-silent-zero-base-aggregation-adr]]'
@@ -11,6 +11,7 @@ related:
   - '[[2026-06-19-silent-zero-base-aggregation-audit]]'
   - '[[2026-06-10-calculation-aggregation-taxonomy-adr]]'
 ---
+
 
 # `silent-zero-base-aggregation` plan
 
@@ -98,7 +99,7 @@ Backed by the ADR's M390 decision and the M130 grounding completion already ship
 Confirm the reconciliacion-303 relation is the canonical annual carrier.
 
 - [x] `W03.P06.S15` - add an import-deducible casilla to M390 (box, locale, manifest, extraction) and bind it to `ledger_iva_aggregation` import deducible, then add it to the cuota-deducible-total formula so the annual result stops over-stating the importer's amount to pay; `src/aeat/_data/registry/aeat/modelos/390/`.
-- [ ] `W03.P06.S16` - add a reconciliation predicate that flags any divergence between the M390 ledger cuota-deducible-total and the reconciliacion-303 total, covering the import and reverse-charge flows; `src/aeat/_data/registry/aeat/modelos/390/`.
+- [x] `W03.P06.S16` - add a reconciliation predicate that flags any divergence between the M390 ledger cuota-deducible-total and the reconciliacion-303 total, covering the import and reverse-charge flows; `src/aeat/_data/registry/aeat/modelos/390/`.
 
 ### Phase `W03.P07` - deferred axes and grounding
 

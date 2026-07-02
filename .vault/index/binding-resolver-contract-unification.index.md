@@ -3,12 +3,13 @@ generated: true
 tags:
   - '#index'
   - '#binding-resolver-contract-unification'
-date: '2026-07-01'
-modified: '2026-07-01'
+date: '2026-07-02'
+modified: '2026-07-02'
 related:
   - '[[2026-06-26-binding-resolver-contract-unification-P01-S01]]'
   - '[[2026-06-26-binding-resolver-contract-unification-P01-S02]]'
   - '[[2026-06-26-binding-resolver-contract-unification-P01-S03]]'
+  - '[[2026-06-26-binding-resolver-contract-unification-P01-S04]]'
   - '[[2026-06-26-binding-resolver-contract-unification-P02-S05]]'
   - '[[2026-06-26-binding-resolver-contract-unification-P02-S06]]'
   - '[[2026-06-26-binding-resolver-contract-unification-P02-S07]]'
@@ -20,6 +21,7 @@ related:
   - '[[2026-06-26-binding-resolver-contract-unification-adr]]'
   - '[[2026-06-26-binding-resolver-contract-unification-plan]]'
   - '[[2026-06-26-binding-resolver-contract-unification-research]]'
+  - '[[2026-07-02-binding-resolver-contract-unification-audit]]'
 ---
 
 # `binding-resolver-contract-unification` feature index
@@ -31,6 +33,10 @@ Auto-generated index of all documents tagged with `#binding-resolver-contract-un
 ### adr
 
 - `2026-06-26-binding-resolver-contract-unification-adr` - `binding-resolver-contract-unification` adr: `resolver-contract unification: one source-resolver port and one result envelope across the calculate mesh` | (**status:** `proposed`)
+
+### audit
+
+- `2026-07-02-binding-resolver-contract-unification-audit` - `binding-resolver-contract-unification` audit: `Wave 1 D9 close-blocker audit`
 
 ### exec
 
@@ -45,6 +51,7 @@ Auto-generated index of all documents tagged with `#binding-resolver-contract-un
 - `2026-06-26-binding-resolver-contract-unification-P04-S15` - Author one declared disposition mapping keyed by BindingSourceKind member to its resolution state replacing the _pre_mesh_handled and _BUCKET_AGGREGATION_OWNED_SOURCES structures and the service provider enum, re-reading the LIVE mesh sets at execution time so every member carries its HEAD-at-execution disposition including r2's newly-enrolled withholding source as enrolled (not deferred), applying the apply-cached-on-collision drive against the concurrent r2 #28 withholding-enrollment and codex typing WIP
 - `2026-06-26-binding-resolver-contract-unification-P04-S16` - Re-base the merge_source_resolutions enrollment and the DEFERRED_SOURCE_KINDS set onto the one disposition mapping so a member's resolution state is declared once, re-reading HEAD because r2 #28 moves the withholding source from DEFERRED_SOURCE_KINDS to live enrollment on this surface, applying the apply-cached-on-collision drive against the concurrent r2 and codex WIP
 - `2026-06-26-binding-resolver-contract-unification-P04-S17` - Extend the phase-2.1 mesh parity gate to assert the disposition registry covers every BindingSourceKind member and equals the union of enrolled resolver owned_sources, reading the LIVE mesh sets at run time with no hard-coded dispositions so r2's newly-enrolled withholding source is reflected automatically, making no-dormant-source-resolvers enforceable across the union
+- `2026-06-26-binding-resolver-contract-unification-P01-S04` - Drop the deleted envelopes from the aggregation package __all__ and lazy __getattr__ re-export surface in the same commits that delete them
 
 ### plan
 
