@@ -18,13 +18,24 @@ def _output_language(language: str):
     return override_settings(aeat_output_language=language)
 
 
-def test_error_envelope_serializes_deterministically() -> None:
+def test_error_json_serializes_deterministically_with_shared_spine() -> None:
+    from ...json_contract import ENVELOPE_SCHEMA_VERSION, EnvelopeStatus
+
     error = LockAcquisitionError(context={"z_key": "last", "a_key": "first"})
     first = render_error_json(error)
     second = render_error_json(error)
+    payload = json.loads(first)
 
     assert first == second
     assert first.index('"category"') < first.index('"code"') < first.index('"context"')
+    # The error document shares the success-envelope outer spine.
+    assert payload["schema_version"] == ENVELOPE_SCHEMA_VERSION
+    assert payload["status"] == EnvelopeStatus.ERROR.value
+    assert payload["command"] is None
+    assert payload["notices"] == []
+    # The error detail is nested under ``error``; the spine owns the version.
+    assert "schema_version" not in payload["error"]
+    assert payload["error"]["code"]
 
 
 def test_secret_scrubbing_redacts_sensitive_fields_in_json_and_text() -> None:
@@ -61,20 +72,6 @@ def test_secret_scrubbing_redacts_sensitive_fields_in_json_and_text() -> None:
     assert "token:sha256:0a2c77ea" in rendered_json
 
 
-def test_error_document_carries_shared_spine() -> None:
-    from ...json_contract import ENVELOPE_SCHEMA_VERSION, EnvelopeStatus
-
-    payload = json.loads(render_error_json(LockAcquisitionError()))
-    # The error document shares the success-envelope outer spine.
-    assert payload["schema_version"] == ENVELOPE_SCHEMA_VERSION
-    assert payload["status"] == EnvelopeStatus.ERROR.value
-    assert payload["command"] is None
-    assert payload["notices"] == []
-    # The error detail is nested under ``error``; the spine owns the version.
-    assert "schema_version" not in payload["error"]
-    assert payload["error"]["code"]
-
-
 def test_envelope_message_renders_under_every_supported_language() -> None:
     """Every supported locale must produce a non-empty rendered message.
 
@@ -95,9 +92,6 @@ def test_envelope_message_renders_under_every_supported_language() -> None:
     assert set(rendered_per_language) == set(languages), (
         f"expected every locale to render, got {sorted(rendered_per_language)}"
     )
-
-
-# --- Fix 5: internal context keys are stripped from operator-facing output ---
 
 
 def test_scrub_error_context_strips_internal_keys_from_rendered_output() -> None:
