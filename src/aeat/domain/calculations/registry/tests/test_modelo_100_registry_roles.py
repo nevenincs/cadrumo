@@ -189,17 +189,8 @@ def test_modelo_100_2025_zec_reduced_rate_parameter_cites_special_rate_article()
     assert [dated_value.value for dated_value in parameter.values] == [Decimal("4")]
 
 
-@pytest.mark.parametrize(
-    (
-        "filing_year",
-        "casilla_id",
-        "expected_section",
-        "label_fragment",
-        "expected_role",
-        "required_ref",
-        "forbidden_ref",
-    ),
-    [
+def test_modelo_100_reserva_inversiones_roles_follow_official_section() -> None:
+    expected_cases = (
         (
             2022,
             "1692",
@@ -443,26 +434,26 @@ def test_modelo_100_2025_zec_reduced_rate_parameter_cites_special_rate_article()
             _RIB_BALEARES_DA70_REF,
             None,
         ),
-    ],
-)
-def test_modelo_100_reserva_inversiones_roles_follow_official_section(
-    filing_year: int,
-    casilla_id: str,
-    expected_section: tuple[str, ...],
-    label_fragment: str,
-    expected_role: str,
-    required_ref: str,
-    forbidden_ref: str | None,
-) -> None:
-    revision = _modelo_100_snapshot(filing_year).revision
-    casilla = next(casilla for casilla in revision.casillas if casilla.id == _casilla_id(casilla_id))
+    )
 
-    assert tuple(casilla.section) == expected_section
-    assert label_fragment in casilla.label
-    assert casilla.semantic_role == expected_role
-    assert required_ref in casilla.legal_refs
-    if forbidden_ref is not None:
-        assert forbidden_ref not in casilla.legal_refs
+    for (
+        filing_year,
+        casilla_id,
+        expected_section,
+        label_fragment,
+        expected_role,
+        required_ref,
+        forbidden_ref,
+    ) in expected_cases:
+        revision = _modelo_100_snapshot(filing_year).revision
+        casilla = next(casilla for casilla in revision.casillas if casilla.id == _casilla_id(casilla_id))
+
+        assert tuple(casilla.section) == expected_section, (filing_year, casilla_id)
+        assert label_fragment in casilla.label, (filing_year, casilla_id)
+        assert casilla.semantic_role == expected_role, (filing_year, casilla_id)
+        assert required_ref in casilla.legal_refs, (filing_year, casilla_id)
+        if forbidden_ref is not None:
+            assert forbidden_ref not in casilla.legal_refs, (filing_year, casilla_id)
 
 
 def test_modelo_100_reserva_inversiones_split_axes_use_regime_specific_roles() -> None:
