@@ -36,19 +36,26 @@ traders; the faithful mechanism is a cross-period prorrata model. These steps ar
 formally deferred to that future prorrata mechanism and must not be checked as
 completed registry bindings.
 
-### real-cli-e2e-tests-blocked | medium | S06 and S14 still need true CLI evidence
+### real-cli-e2e-tests-partial | medium | S06 still needs true CLI evidence; S14 is reconciled
 
 The codebase contains live application-service coverage for M303/M390 and M100 annual
-ledger paths, but this pass did not find a true real-CLI test satisfying the exact S06
-and S14 wording. The target test surface `src/aeat/application/modelo/tests/` already
-has substantial non-authored WIP, and the dispatch forbids interleaving new tests into
-dirty peer-owned files. S06 and S14 remain unchecked and formally deferred until the
-test surface is peer-clean and the owner can add real CLI evidence for the M303 `.boe`
-prorrata case and the M100 0171 / 0180 / 0224 ledger case.
+ledger paths. A later S14 pass found that the existing real CLI M100 test already
+proved `0171` and `0224` through `aeat app modelo work calculate`; the pass added
+the missing `0180` assertion, reran the focused integration test green, and checked
+S14 with a dedicated exec record. S06 remains unchecked: this audit still has no
+real CLI evidence that a fully taxable M303 trader reaches a granted `.boe` with no
+prorrata-divergence error and no manual prorrata input.
+
+### s14-code-review | low | no blocking findings in the real CLI M100 evidence change
+
+The S14 review re-read the scoped diff after the test passed. The implementation
+extends an existing real CLI source-mesh test rather than adding a parallel harness:
+the test creates the work unit through the CLI, persists real ledger rows, calculates
+Modelo 100 through the CLI, and now asserts all three plan-named casillas. No mocks,
+stubs, skips, xfail markers, or tautological formula reimplementation were introduced.
 
 ## Recommendations
 
-Leave S03/S04 open as ADR-deferred prorrata work. Resume S06/S14 only after the
-application-modelo test surface is clean enough to add real CLI tests without carrying
-peer WIP. Do not declare this campaign closed: `vault plan status` still reports open
-steps.
+Leave S03/S04 open as ADR-deferred prorrata work. Resume S06 only after a real CLI
+M303 `.boe` path can be exercised without carrying peer WIP. Do not declare this
+campaign closed: `vault plan status` still reports open steps.
