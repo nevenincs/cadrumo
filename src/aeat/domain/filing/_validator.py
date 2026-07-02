@@ -1,4 +1,4 @@
-"""Cross-cutting validator for :mod:`aeat.domain.filing` drafts.
+"""Cross-cutting validator for :mod:`domain.filing` drafts.
 
 The validator is intentionally pure: it consumes a draft + the
 casilla collection it was built against and returns a tuple of
