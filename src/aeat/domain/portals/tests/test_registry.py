@@ -138,29 +138,22 @@ def test_portals_for_modelo_without_portal_returns_empty_tuple() -> None:
     assert portals_for_modelo("999") == ()
 
 
-def test_portals_for_modelo_is_sorted_deterministic() -> None:
-    """Result is sorted by :class:`Portal` value."""
-    entries = portals_for_modelo("130")
-    values = [e.portal.value for e in entries]
-    assert values == sorted(values)
-
-
-def test_portals_by_category_auth_is_sorted() -> None:
-    """``portals_by_category`` returns entries sorted by :class:`Portal` value."""
-    entries = portals_by_category(PortalCategory.AUTH)
-    values = [e.portal.value for e in entries]
-    assert values == sorted(values)
-
-
-def test_portals_by_category_counts_match_reference_breakdown() -> None:
-    """Per-category counts match the canonical breakdown."""
-    assert len(portals_by_category(PortalCategory.AUTH)) == 8
-    assert len(portals_by_category(PortalCategory.FILING)) == 19
-    assert len(portals_by_category(PortalCategory.CENSO)) == 2
-    assert len(portals_by_category(PortalCategory.BORRADOR)) == 2
-    assert len(portals_by_category(PortalCategory.CONSULTATION)) == 4
-    assert len(portals_by_category(PortalCategory.PAYMENT)) == 5
-    assert len(portals_by_category(PortalCategory.CALENDAR_REFERENCE)) == 2
+def test_portals_by_category_counts_and_sort_match_reference_breakdown() -> None:
+    """Per-category counts match the canonical sorted breakdown."""
+    expected_counts = {
+        PortalCategory.AUTH: 8,
+        PortalCategory.FILING: 19,
+        PortalCategory.CENSO: 2,
+        PortalCategory.BORRADOR: 2,
+        PortalCategory.CONSULTATION: 4,
+        PortalCategory.PAYMENT: 5,
+        PortalCategory.CALENDAR_REFERENCE: 2,
+    }
+    for category, expected_count in expected_counts.items():
+        entries = portals_by_category(category)
+        values = [entry.portal.value for entry in entries]
+        assert len(entries) == expected_count, category.value
+        assert values == sorted(values), category.value
 
 
 def test_finalise_registry_logs_info_on_success(
