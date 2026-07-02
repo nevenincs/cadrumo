@@ -6,14 +6,14 @@
 and :class:`PersistedAuthSession` reuse.
 
 See Also:
-    :mod:`aeat.application.auth`
+    :mod:`application.auth`
         Public auth facade that re-exports this session lifecycle.
-    :class:`~aeat.application.auth.AuthAcquisitionLockRecord`
+    :class:`application.auth.AuthAcquisitionLockRecord`
         Profile/provider lock record used to serialize live authentication.
-    :mod:`aeat.application.live._session`
+    :mod:`application.live._session`
         Read-only live-entry helper that calls this module only after
-        :class:`~aeat.core.access_gate.AeatAccessGate` allows a live read.
-    :mod:`aeat.adapters.outbound.aeat.auth`
+        :class:`core.access_gate.AeatAccessGate` allows a live read.
+    :mod:`adapters.outbound.aeat.auth`
         Concrete providers and persisted-session store implementations.
 """
 
