@@ -2,7 +2,7 @@
 
 The filing-record commands render stored :class:`ModeloRecord` rows, import
 AEAT-attested external evidence through
-:func:`aeat.application.modelo.import_external_filing_evidence`, and record
+:func:`import_external_filing_evidence`, and record
 operator-supplied local observations for calculation prefill. Verification-report
 commands expose persisted :class:`VerificationReport` rows.
 """
@@ -11,6 +11,7 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from decimal import Decimal
+from pathlib import Path
 from typing import Annotated
 
 import typer
@@ -28,11 +29,12 @@ from ...application.modelo import (
     import_external_filing_evidence,
     list_filing_records,
     list_verification_reports,
+    parse_casilla_value_spreadsheet,
     record_operator_local_observation,
 )
 from ...core import Period, PeriodError
 from ...core.i18n import tr
-from ...domain.calculations.registry import CasillaId
+from ...domain.calculations.registry import CasillaId, validated_casilla_id
 from ...domain.modelos import ModeloCode
 from ...domain.modelos._errors import ModeloValidationError
 from ._common import _emit_envelope, _profile_to_taxpayer
@@ -254,7 +256,7 @@ def filing_record_import(
 
     The CLI validates :class:`ExternalEvidenceKind`, parses each ``--set`` value
     into a :class:`CasillaId` decimal, resolves the active profile tax id, and
-    delegates to :func:`aeat.application.modelo.import_external_filing_evidence`.
+    delegates to :func:`import_external_filing_evidence`.
     The result is emitted as :class:`FilingRecordImportResult`; it is an
     AEAT-attested baseline for the amendment path, not a live submission from
     this application.
@@ -344,24 +346,53 @@ def filing_record_observe_local(
             help="Canonical casilla.id and Decimal value to record, e.g. --set 1391=0.",
         ),
     ] = None,
+    file: Annotated[
+        Path | None,
+        typer.Option(
+            "--file",
+            help=(
+                "Path to a local CSV or XLSX spreadsheet of casilla_code,value rows "
+                "(a cert-free reconstruction of a past filing). Combines with --set; "
+                "a --set value for the same casilla overrides the spreadsheet row."
+            ),
+        ),
+    ] = None,
 ) -> None:
     """Record non-official local observations for later calculation prefill.
 
-    The command parses canonical :class:`CasillaId` decimal values, delegates to
-    :func:`aeat.application.modelo.record_operator_local_observation`, and emits
+    The command parses canonical :class:`CasillaId` decimal values from
+    ``--set`` flags and/or a ``--file`` spreadsheet (CSV or XLSX,
+    ``casilla_code,value`` columns), delegates to
+    :func:`record_operator_local_observation`, and emits
     :class:`FilingRecordLocalObservationResult` plus an advisory
     :class:`Notice`. It deliberately creates no
     :class:`ModeloRecord` and supplies no official AEAT
-    evidence for filing-grade clean-state checks.
+    evidence for filing-grade clean-state checks — the local reconstruction
+    stays non-official regardless of transport (``--set`` or ``--file``).
     """
     modelo_code = _modelo_code(modelo)
     filing_period = _filing_period(year, period)
     casilla_values: dict[CasillaId, Decimal] = {}
+    if file is not None:
+        try:
+            spreadsheet_values = parse_casilla_value_spreadsheet(file)
+        except ModeloLocalObservationError as exc:
+            raise _bad_from_error(exc) from exc
+        for raw_code, value in spreadsheet_values.items():
+            try:
+                casilla_id = validated_casilla_id(raw_code, surface="--file casilla_code column")
+            except ValueError as exc:
+                raise typer.BadParameter(
+                    f"--file row casilla_code {raw_code!r} is not a valid CasillaId",
+                ) from exc
+            casilla_values[casilla_id] = value
     for spec in set_overrides or ():
         key, value = _casilla_value(spec)
         casilla_values[key] = value
     if not casilla_values:
-        raise typer.BadParameter("observe-local requires at least one --set CASILLA=DECIMAL value")
+        raise typer.BadParameter(
+            "observe-local requires at least one --set CASILLA=DECIMAL value or a --file spreadsheet",
+        )
 
     try:
         local_observation = record_operator_local_observation(
@@ -445,7 +476,7 @@ def verification_report_list(
 
     Each row is a persisted :class:`VerificationReport` projected through
     :class:`VerificationReportListResult` and nested
-    :class:`~aeat.entrypoints.cli._modelo_payloads.VerificationReportPayload`,
+    :class:`VerificationReportPayload`,
     preserving the same findings surface as ``aeat app modelo work verify``.
     """
     reports = list_verification_reports(calculation_revision_id=calculation_revision_id)
@@ -487,11 +518,11 @@ def verification_report_show(
     """View one persisted verification report by id.
 
     The command validates the shared
-    :class:`~aeat.entrypoints.cli._modelo_payloads.VerificationReportPayload`
+    :class:`VerificationReportPayload`
     into
-    :class:`~aeat.entrypoints.cli._modelo_payloads.VerificationReportShowResult`,
+    :class:`VerificationReportShowResult`,
     so saved report views retain the legal/source-reference
-    :class:`~aeat.entrypoints.cli._modelo_payloads.FindingPayload` detail emitted
+    :class:`FindingPayload` detail emitted
     by ``aeat app modelo work verify``.
     """
     try:

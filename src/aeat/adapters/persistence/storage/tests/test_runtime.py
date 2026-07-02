@@ -102,9 +102,8 @@ def test_runtime_reports_missing_session_without_touching_route(tmp_path: Path) 
     assert _issue_codes(runtime) == (StorageRuntimeReadinessCode.NO_ACTIVE_SESSION,)
 
 
-@pytest.mark.parametrize(
-    ("session", "expected_code", "expected_session_flag"),
-    (
+def test_runtime_reports_unready_active_session_states(tmp_path: Path) -> None:
+    cases = (
         (
             _session(_BUCKET_A_ID, opened_at=_NOW - timedelta(minutes=20), idle_minutes=5),
             StorageRuntimeReadinessCode.SESSION_EXPIRED,
@@ -125,31 +124,19 @@ def test_runtime_reports_missing_session_without_touching_route(tmp_path: Path) 
             StorageRuntimeReadinessCode.UNSECURED_BACKEND,
             "unsecured_backend",
         ),
-    ),
-    ids=(
-        "expired",
-        "sealed",
-        "bucket-mismatch",
-        "unsecured-backend",
-    ),
-)
-def test_runtime_reports_unready_active_session_states(
-    tmp_path: Path,
-    session: BucketSession,
-    expected_code: StorageRuntimeReadinessCode,
-    expected_session_flag: str | None,
-) -> None:
+    )
     settings = _settings_for_bucket(tmp_path, _BUCKET_A_ID)
 
-    with activate_session(session):
-        runtime = inspect_storage_runtime(settings, now=_NOW)
+    for session, expected_code, expected_session_flag in cases:
+        with activate_session(session):
+            runtime = inspect_storage_runtime(settings, now=_NOW)
 
-    assert runtime.readiness.ready is False
-    assert runtime.readiness.code is expected_code
-    assert runtime.active_session is not None
-    if expected_session_flag is not None:
-        assert getattr(runtime.active_session, expected_session_flag) is True
-    assert _issue_codes(runtime) == (expected_code,)
+        assert runtime.readiness.ready is False, expected_code
+        assert runtime.readiness.code is expected_code
+        assert runtime.active_session is not None
+        if expected_session_flag is not None:
+            assert getattr(runtime.active_session, expected_session_flag) is True
+        assert _issue_codes(runtime) == (expected_code,)
 
 
 def test_runtime_reports_root_fallback_route_as_unready(tmp_path: Path) -> None:
@@ -604,9 +591,8 @@ def test_default_route_repository_refuses_pointer_scoped_active_profile_without_
         secure_object_repository_for_active_bucket_or_default_route()
 
 
-@pytest.mark.parametrize(
-    ("replacement_session", "match"),
-    (
+def test_runtime_repository_factory_rechecks_live_session(tmp_path: Path) -> None:
+    cases = (
         (None, "no active bucket session"),
         (_session(_BUCKET_B_ID), "active bucket session changed"),
         (_sealed_session(_BUCKET_A_ID), "active bucket session is sealed"),
@@ -615,22 +601,16 @@ def test_default_route_repository_refuses_pointer_scoped_active_profile_without_
             "active bucket session has expired",
         ),
         (_session(_BUCKET_A_ID, unsecured_backend=True), "active bucket session uses unsecured backend"),
-    ),
-    ids=("no-session", "bucket-changed", "sealed", "expired", "unsecured"),
-)
-def test_runtime_repository_factory_rechecks_live_session(
-    tmp_path: Path,
-    replacement_session: BucketSession | None,
-    match: str,
-) -> None:
+    )
     settings = _settings_for_bucket(tmp_path, _BUCKET_A_ID)
 
-    with activate_session(_session(_BUCKET_A_ID)):
-        runtime = inspect_storage_runtime(settings, now=_NOW)
+    for replacement_session, match in cases:
+        with activate_session(_session(_BUCKET_A_ID)):
+            runtime = inspect_storage_runtime(settings, now=_NOW)
 
-    replacement_context = nullcontext() if replacement_session is None else activate_session(replacement_session)
-    with (
-        replacement_context,
-        pytest.raises(StorageValidationError, match=match),
-    ):
-        runtime.secure_object_repository()
+        replacement_context = nullcontext() if replacement_session is None else activate_session(replacement_session)
+        with (
+            replacement_context,
+            pytest.raises(StorageValidationError, match=match),
+        ):
+            runtime.secure_object_repository()

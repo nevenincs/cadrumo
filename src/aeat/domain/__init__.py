@@ -2,10 +2,10 @@
 
 The root package is intentionally thin: it re-exports only
 :class:`ModeloIdentifier` and does not aggregate every domain authority.
-Callers import focused package facades such as :mod:`aeat.domain.modelos`,
-:mod:`aeat.domain.filing`, :mod:`aeat.domain.user_profile`,
-:mod:`aeat.domain.transactions`, and
-:mod:`aeat.domain.calculations.registry` for records, repositories, schemas,
+Callers import focused package facades such as :mod:`modelos`,
+:mod:`filing`, :mod:`user_profile`,
+:mod:`transactions`, and
+:mod:`calculations.registry` for records, repositories, schemas,
 and validation rules.
 
 Domain packages own business semantics: modelo work units and filing records,
@@ -17,18 +17,18 @@ adapter concerns; the domain root should stay import-light so importing
 
 The domain root is also not the shared error hierarchy. Package-specific
 ``_errors`` modules own domain failure taxonomies, while the root validation
-base remains in :mod:`aeat.domain._errors` for lightweight identifier parsing.
+base remains in :mod:`_errors` for lightweight identifier parsing.
 
 See Also:
-    - :mod:`aeat.domain.modelos` for modelo work units, calculation revisions,
+    - :mod:`modelos` for modelo work units, calculation revisions,
       filing records, verification reports, and related catalogues.
-    - :mod:`aeat.domain.calculations.registry` for validated calculation
+    - :mod:`calculations.registry` for validated calculation
       registry authority and registry snapshot contracts.
-    - :mod:`aeat.domain.filing` for draft, review, export, amendment, and local
+    - :mod:`filing` for draft, review, export, amendment, and local
       filing-history records.
-    - :mod:`aeat.domain.user_profile` for user-profile schema and persisted
+    - :mod:`user_profile` for user-profile schema and persisted
       profile value records.
-    - :mod:`aeat.domain.transactions` for ledger transaction records and
+    - :mod:`transactions` for ledger transaction records and
       catalogues.
 
 """

@@ -113,10 +113,10 @@ def test_historical_037_contract_is_proven_by_registry_absence_and_suppression_s
     assert record.superseded_by == "036"
 
 
-@pytest.mark.parametrize("modelo", ["36", "37", " 36 ", " 37 ", " 036 ", " 037 "])
-def test_censo_modelo_lookup_rejects_shortened_aliases(modelo: str) -> None:
-    with pytest.raises(RegistryValidationError, match="unknown censo modelo code"):
-        censo_modelo_ownership(modelo)
+def test_censo_modelo_lookup_rejects_shortened_aliases() -> None:
+    for modelo in ("36", "37", " 36 ", " 37 ", " 036 ", " 037 "):
+        with pytest.raises(RegistryValidationError, match="unknown censo modelo code"):
+            censo_modelo_ownership(modelo)
 
 
 def test_censo_modelo_lookup_rejects_integer_codes() -> None:
@@ -156,10 +156,10 @@ def test_censo_foundation_command_rejects_unknown_event_kind() -> None:
         CensoModeloFoundationCommand.model_validate({"modelo": "036", "event_kind": "altaa"})
 
 
-@pytest.mark.parametrize("payload", [{"modelo": "36"}, {"modelo": " 036 "}, {"modelo": 36}])
-def test_censo_foundation_command_rejects_alias_and_integer_codes(payload: dict[str, object]) -> None:
-    with pytest.raises(ValidationError):
-        CensoModeloFoundationCommand.model_validate({**payload, "event_kind": "alta"})
+def test_censo_foundation_command_rejects_alias_and_integer_codes() -> None:
+    for payload in ({"modelo": "36"}, {"modelo": " 036 "}, {"modelo": 36}):
+        with pytest.raises(ValidationError):
+            CensoModeloFoundationCommand.model_validate({**payload, "event_kind": "alta"})
 
 
 def test_censo_foundation_result_accepts_active_036_decision() -> None:
@@ -260,10 +260,10 @@ def test_resolve_censo_modelo_work_unit_foundation_rejects_historical_037() -> N
         resolve_censo_modelo_work_unit_foundation(modelo="037", period="alta")
 
 
-@pytest.mark.parametrize("modelo", ["36", "37", " 36 ", " 37 ", " 036 ", " 037 "])
-def test_resolve_censo_modelo_work_unit_foundation_rejects_censo_code_aliases(modelo: str) -> None:
-    with pytest.raises(RegistryValidationError, match="unknown censo modelo code"):
-        resolve_censo_modelo_work_unit_foundation(modelo=modelo, period="alta")
+def test_resolve_censo_modelo_work_unit_foundation_rejects_censo_code_aliases() -> None:
+    for modelo in ("36", "37", " 36 ", " 37 ", " 036 ", " 037 "):
+        with pytest.raises(RegistryValidationError, match="unknown censo modelo code"):
+            resolve_censo_modelo_work_unit_foundation(modelo=modelo, period="alta")
 
 
 def test_resolve_censo_modelo_work_unit_foundation_ignores_non_censo_modelo() -> None:

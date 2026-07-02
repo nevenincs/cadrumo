@@ -78,6 +78,26 @@ class BucketAlreadyPresentError(BucketError):
         self.bucket_id = bucket_id
 
 
+class BucketPathTooLongError(BucketError):
+    """Raised when provisioning a bucket directory exceeds the Windows ``MAX_PATH`` ceiling.
+
+    Classified via
+    :func:`aeat.core.paths.is_windows_long_path_error` from a caught
+    ``WinError 3`` / ``WinError 206`` on legacy (non long-path-aware)
+    Windows workstations. Distinct from :class:`BucketValidationError` so
+    the CLI names the actual cause (the resolved bucket directory tree is
+    too deep for ``MAX_PATH``) instead of a generic validation failure.
+    """
+
+    def __init__(self, *, bucket_id: str, path: str) -> None:
+        super().__init__(
+            context={"bucket_id": bucket_id, "path": path},
+            translated_message="errors.error.error_storage_bucket_path_too_long",
+        )
+        self.bucket_id = bucket_id
+        self.path = path
+
+
 class BucketLockedError(BucketError):
     """Raised when an operation requires an unlocked :class:`BucketSession`.
 
@@ -126,6 +146,7 @@ __all__ = [
     "BucketBusyError",
     "BucketError",
     "BucketLockedError",
+    "BucketPathTooLongError",
     "BucketValidationError",
     "NoActiveBucketError",
     "RecoveryUnavailableError",

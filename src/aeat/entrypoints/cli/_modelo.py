@@ -305,7 +305,7 @@ def _declared_period_tokens(modelo: str | None) -> tuple[str, ...]:
 
 
 def _resolve_year_period(year: int, period: str, *, modelo: str | None = None) -> Period:
-    """Normalise CLI ``--year/--period`` into a typed :class:`~aeat.core.Period`.
+    """Normalise CLI ``--year/--period`` into a typed :class:`Period`.
 
     Operators pass AEAT registry tokens (``1T``, ``0A``, ``01``); the
     backend expects one typed filing period. Registry-only callers should
@@ -1054,12 +1054,12 @@ def work_amend(
     invocation at a time. The command then parses the requested
     :class:`CalculationRevisionAmendmentKind`, validates each override as a
     ``CasillaId`` decimal, delegates to
-    :func:`aeat.application.modelo.amend_modelo_revision`, and emits a
-    :class:`aeat.entrypoints.cli._modelo_payloads.WorkAmendResult`.
+    :func:`amend_modelo_revision`, and emits a
+    :class:`WorkAmendResult`.
 
     The application service requires the source
-    :class:`aeat.domain.modelos.ModeloRecord` to carry
-    :class:`aeat.domain.modelos.ExternalEvidence`; locally filed records cannot
+    :class:`ModeloRecord` to carry
+    :class:`ExternalEvidence`; locally filed records cannot
     enter this path. The new record is an internal filing envelope and does not
     submit anything to AEAT.
     """

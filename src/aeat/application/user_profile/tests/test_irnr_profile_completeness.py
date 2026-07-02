@@ -78,6 +78,47 @@ def test_lifecycle_validation_reports_conditional_irnr_profile_errors() -> None:
     assert "taxpayer_type.representante_fiscal_nombre" in error_paths
 
 
+def test_profile_key_validation_does_not_require_iva_regime_for_natural_person_without_activity() -> None:
+    result = validate_profile_values(
+        {
+            "identity.tax_id": "12345678Z",
+            "taxpayer_type.entity_type": "natural_person",
+            "taxpayer_type.irpf_income_categories": "capital_inmobiliario",
+        }
+    )
+
+    assert result.valid is True
+    assert "iva.regime" not in result.missing_required
+
+
+def test_lifecycle_validation_allows_natural_person_without_activity_to_omit_iva_regime() -> None:
+    schema = resources().user_profile_schema.singleton
+    facts = (
+        UserProfileFact(path="identity.tax_id", value="12345678Z"),
+        UserProfileFact(path="taxpayer_type.entity_type", value="natural_person"),
+        UserProfileFact(path="taxpayer_type.irpf_income_categories", value="capital_inmobiliario"),
+    )
+
+    report = ProfileValidationService(schema=schema).validate_facts("77777777-7777-4777-8777-777777777777", facts)
+
+    error_paths = {issue.path for issue in report.issues if issue.severity.value == "error"}
+    assert "iva.regime" not in error_paths
+
+
+def test_lifecycle_validation_requires_natural_person_with_activity_to_declare_iva_regime() -> None:
+    schema = resources().user_profile_schema.singleton
+    facts = (
+        UserProfileFact(path="identity.tax_id", value="12345678Z"),
+        UserProfileFact(path="taxpayer_type.entity_type", value="natural_person"),
+        UserProfileFact(path="taxpayer_type.irpf_income_categories", value="actividad_economica"),
+    )
+
+    report = ProfileValidationService(schema=schema).validate_facts("77777777-7777-4777-8777-777777777777", facts)
+
+    error_paths = {issue.path for issue in report.issues if issue.severity.value == "error"}
+    assert "iva.regime" in error_paths
+
+
 def test_profile_preflight_reports_irnr_country_as_missing_before_modelo_work() -> None:
     schema = resources().user_profile_schema.singleton
     record = UserProfileRecord(

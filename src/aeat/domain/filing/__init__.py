@@ -1,6 +1,6 @@
 """Public filing facade for modelo drafts, validation, and amendment records.
 
-The :mod:`aeat.domain.filing` subpackage owns the immutable records and
+The :mod:`domain.filing` subpackage owns the immutable records and
 repository contracts that describe registry-backed local drafts:
 :class:`ModeloDraft`, :class:`ModeloValue`, :class:`ModeloBindingValue`,
 :class:`ModeloCasillaProvenance`, and :class:`ModeloValidationFinding`.
@@ -8,28 +8,28 @@ Those records preserve the registry ``snapshot_ref``, casilla values, binding
 provenance, and casilla provenance that identify and ground a local draft.
 
 The facade also exports :class:`ModeloValidator`, the protocol contracts
-consumed by :mod:`aeat.application.filing`, the LGT Art. 122 amendment records
+consumed by :mod:`application.filing`, the LGT Art. 122 amendment records
 :class:`ModeloComplementaria` and :class:`ModeloSustitutiva`, their
 :class:`CasillaChange` deltas, and the governed repositories. Drafts persist
 through :class:`ModeloDraftRepository` in FINANCIAL encrypted storage;
 amendments persist through :class:`ModeloAmendmentRepository` in AUDIT
 encrypted storage.
 
-The orchestration entry points (:func:`aeat.application.filing.build_draft`,
-:func:`aeat.application.filing.validate_draft`,
-:func:`aeat.application.filing.approve_draft`,
-:func:`aeat.application.filing.build_complementaria`,
-:func:`aeat.application.filing.import_filing_from_justificante`)
-live at :mod:`aeat.application.filing`: domain records are stable
+The orchestration entry points (:func:`application.filing.build_draft`,
+:func:`application.filing.validate_draft`,
+:func:`application.filing.approve_draft`,
+:func:`application.filing.build_complementaria`,
+:func:`application.filing.import_filing_from_justificante`)
+live at :mod:`application.filing`: domain records are stable
 boundary-crossing types; the use cases that compose them belong on
-the application layer. :class:`aeat.domain.justificante.Justificante` data is
+the application layer. :class:`domain.justificante.Justificante` data is
 receipt metadata and import evidence, not a casilla-value authority; when the
 application import path needs an audit baseline, it composes these draft records
-with :class:`aeat.domain.submission.ModeloPresentado` rather than extending the
+with :class:`domain.submission.ModeloPresentado` rather than extending the
 draft schema with submission state.
 
 See Also:
-    :mod:`aeat.application.filing`
+    :mod:`application.filing`
         Application facade that builds, reviews, approves, exports, verifies,
         imports, and amends these draft records.
     :class:`ModeloDraft`
@@ -39,13 +39,13 @@ See Also:
         Domain validator used by application review and approval flows.
     :class:`ModeloAmendmentRepository`
         Governed AUDIT persistence for complementaria and sustitutiva records.
-    :mod:`aeat.domain.submission`
+    :mod:`domain.submission`
         Local-only submission audit records paired with imported or historical
         draft baselines without turning draft records into live submissions.
-    :mod:`aeat.domain.justificante`
+    :mod:`domain.justificante`
         Receipt metadata that filing imports may compose with drafts, without
         treating receipt data as a casilla-value authority.
-    :mod:`aeat.domain.calculations.registry`
+    :mod:`domain.calculations.registry`
         Registry snapshot and export-layout authority used to construct and
         verify draft casilla payloads.
 """

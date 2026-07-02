@@ -26,6 +26,7 @@ beside the capability posture and dependency probes.
 from __future__ import annotations
 
 import os
+import sys
 from collections.abc import Sequence
 from enum import StrEnum
 from pathlib import Path
@@ -36,6 +37,11 @@ from pydantic import BaseModel, Field
 from ..core import STRICT_FROZEN_CONFIG
 from ..core.config import Settings, load_settings
 from ..core.errors import AeatError
+from ..core.paths import (
+    WINDOWS_MAX_PATH,
+    windows_long_paths_enabled,
+    windows_storage_root_long_path_margin,
+)
 
 if TYPE_CHECKING:
     from ..domain.calculations.registry import ModeloDefinition, RegistrySnapshot
@@ -50,7 +56,8 @@ class _RegistryAuthorityLike(Protocol):
     authority in tests without importing the concrete
     :class:`~aeat.domain.calculations.registry.ValidatedRegistryAuthority`
     at module load and without a mock: any object exposing the real
-    ``modelos`` iterable and ``snapshot`` builder satisfies it.
+    ``modelos`` iterable of :class:`ModeloDefinition` records and a
+    ``snapshot`` builder returning a :class:`RegistrySnapshot` satisfies it.
     """
 
     @property
@@ -213,6 +220,7 @@ def probe_storage_corpus_env(*, settings: Settings | None = None) -> tuple[Prefl
         _probe_corpus("corpus:normatives", resolved.aeat_normatives_root, "legal normatives"),
         _probe_corpus("corpus:manuals", resolved.aeat_manuals_root, "Manual práctico"),
         _probe_config_sanity(resolved),
+        _probe_windows_long_path_support(resolved),
     )
 
 
@@ -315,6 +323,86 @@ def _probe_config_sanity(settings: Settings) -> PreflightCheck:
     )
 
 
+# ── WIN-003 — Windows MAX_PATH (long-path) headroom ───────────────────────────
+
+_LONG_PATH_REGISTRY_REMEDIATION = (
+    "run `New-ItemProperty -Path 'HKLM:\\SYSTEM\\CurrentControlSet\\Control\\FileSystem' "
+    "-Name 'LongPathsEnabled' -Value 1 -PropertyType DWORD -Force` as Administrator, then "
+    "restart the terminal; or move AEAT_LOCAL_STORAGE_ROOT to a shorter path"
+)
+
+
+def _probe_windows_long_path_support(settings: Settings) -> PreflightCheck:
+    r"""Report whether the storage root has headroom below the Windows ``MAX_PATH`` ceiling.
+
+    Not applicable outside Windows: every non-Windows platform (and every
+    Windows workstation that already carries the ``LongPathsEnabled``
+    opt-in) returns ``OK``. On a Windows workstation without the opt-in,
+    the row grades on
+    :func:`~aeat.core.paths.windows_storage_root_long_path_margin` — the
+    character headroom left before the deepest object the bucket / blob
+    layout can produce
+    (``<root>\buckets\<uuid>\blobs\<hmac>--<label>.meta.json``) would
+    meet or exceed :data:`~aeat.core.paths.WINDOWS_MAX_PATH`. Zero or
+    negative margin is an ``ERROR`` (a real object write can fail
+    mid-campaign); a thin positive margin is a ``WARN`` advisory so the
+    operator can relocate the root before it runs out. This probe never
+    writes to disk and never raises — a registry read failure degrades to
+    the conservative "not enabled" assumption inside
+    :func:`~aeat.core.paths.windows_long_paths_enabled`.
+    """
+    if sys.platform != "win32":
+        return PreflightCheck(
+            check="storage:windows-long-path",
+            healthy=True,
+            severity=HealthSeverity.OK,
+            detail="not applicable on this platform",
+        )
+
+    if windows_long_paths_enabled():
+        return PreflightCheck(
+            check="storage:windows-long-path",
+            healthy=True,
+            severity=HealthSeverity.OK,
+            detail="LongPathsEnabled is set; the Windows MAX_PATH ceiling does not apply",
+        )
+
+    root = settings.aeat_local_storage_root
+    margin = windows_storage_root_long_path_margin(root)
+    if margin <= 0:
+        return PreflightCheck(
+            check="storage:windows-long-path",
+            healthy=False,
+            severity=HealthSeverity.ERROR,
+            detail=(
+                f"the storage root {root} is {-margin} characters past the Windows "
+                f"MAX_PATH ({WINDOWS_MAX_PATH}) ceiling for the deepest possible object path; "
+                "LongPathsEnabled is not set"
+            ),
+            remediation=_LONG_PATH_REGISTRY_REMEDIATION,
+        )
+    if margin < 40:
+        return PreflightCheck(
+            check="storage:windows-long-path",
+            healthy=True,
+            severity=HealthSeverity.WARN,
+            detail=(
+                f"the storage root {root} has only {margin} characters of headroom "
+                f"below the Windows MAX_PATH ({WINDOWS_MAX_PATH}) ceiling; LongPathsEnabled is not set"
+            ),
+            remediation=_LONG_PATH_REGISTRY_REMEDIATION,
+        )
+    return PreflightCheck(
+        check="storage:windows-long-path",
+        healthy=True,
+        severity=HealthSeverity.OK,
+        detail=(
+            f"the storage root {root} has {margin} characters of headroom below the "
+            f"Windows MAX_PATH ({WINDOWS_MAX_PATH}) ceiling"
+        ),
+    )
+
+
 # ── #98 — registry referential integrity ─────────────────────────────────────
 
 
@@ -335,6 +423,9 @@ def probe_registry_referential_integrity(
     failing revisions — the probe never raises. ``authority`` overrides
     the default bundled authority so the sweep can be exercised against a
     controlled registry.
+
+    Returns:
+        A single :class:`PreflightCheck` row for the registry-integrity dimension.
     """
     from ..domain.calculations.registry import (
         RegistrySnapshotError,
@@ -491,7 +582,7 @@ def probe_portal_registry_health(
 
 
 def run_preflight_checks(*, settings: Settings | None = None) -> tuple[PreflightCheck, ...]:
-    """Run every workstation-preflight probe and return the typed rows.
+    """Run every workstation-preflight probe and return the typed :class:`PreflightCheck` rows.
 
     Concatenates the per-auth-provider certificate / Cl@ve Móvil health
     rows (#286), the secure-storage / bundled-corpus / configuration rows

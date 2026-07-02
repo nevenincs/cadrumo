@@ -135,6 +135,7 @@ DEFERRED_SOURCE_KINDS: frozenset[BindingSourceKind] = frozenset(
         BindingSourceKind.RELATED_PARTY_OPERATION,  # M232 — Sheets-pull-only
         BindingSourceKind.FOREIGN_ASSET,  # M720 — Sheets-pull-only
         BindingSourceKind.REFUND_OPERATION,  # M360 — Sheets-pull-only
+        BindingSourceKind.DONATIVO_DONOR,  # M182 — Sheets-pull-only, no live resolver yet
         # LIVA arts. 107-110 capital-goods regularización — advisory-backed, no
         # registry binding yet; the automatic casilla-43 feed is blocked on the
         # deferred prorrata-definitiva source (ADR 2026-07-01).

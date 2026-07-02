@@ -40,6 +40,8 @@ class IVARegime(StrEnum):
         RECARGO_EQUIVALENCIA: Recargo de equivalencia for retail traders.
         REAGP: Régimen especial de la agricultura, ganadería y pesca.
         EXENTO: IVA-exempt activity.
+        NO_APLICA: Internal projection sentinel for profiles that are
+            not enrolled in IVA.
     """
 
     GENERAL = "GENERAL"
@@ -47,6 +49,7 @@ class IVARegime(StrEnum):
     RECARGO_EQUIVALENCIA = "RECARGO_EQUIVALENCIA"
     REAGP = "REAGP"
     EXENTO = "EXENTO"
+    NO_APLICA = "NO_APLICA"
 
 
 class EntityType(StrEnum):

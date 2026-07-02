@@ -1,23 +1,23 @@
 """Typer registration for modelo workflow-run discovery and resume.
 
 This CLI module is a transport boundary for persisted
-:class:`aeat.application.workflow.WorkflowResult` rows. The ``runs`` command
-renders local run history from :func:`aeat.application.workflow.list_runs`; the
+:class:`WorkflowResult` rows. The ``runs`` command
+renders local run history from :func:`list_runs`; the
 ``resume`` command validates operator selectors, delegates target resolution to
-:func:`aeat.application.workflow.resolve_modelo_workflow_resume_target`, and
+:func:`resolve_modelo_workflow_resume_target`, and
 passes the selected run id to
-:func:`aeat.application.workflow.resume_modelo_workflow`.
+:func:`resume_modelo_workflow`.
 
 Resume output combines the resumable
-:class:`aeat.application.workflow.WorkflowResumeContext` with the selector
+:class:`WorkflowResumeContext` with the selector
 metadata carried by
-:class:`aeat.application.workflow.WorkflowResumeTargetResolution`. No command in
+:class:`WorkflowResumeTargetResolution`. No command in
 this module contacts AEAT or mutates workflow, bucket, or modelo state.
 
 See Also:
-    :mod:`aeat.application.workflow`:
+    :mod:`workflow`:
         Public workflow facade that owns run persistence and resume validation.
-    :mod:`aeat.application.modelo`:
+    :mod:`modelo`:
         Public modelo facade used indirectly by workflow resume resolution for
         visible filing targets, exact work-unit targets, and revision selectors.
 """
@@ -80,7 +80,7 @@ def register_work_run_commands(
         ctx: typer.Context,
         output_language: OutputLanguageOpt = None,
     ) -> None:
-        """List persisted :class:`aeat.application.workflow.WorkflowResult` rows."""
+        """List persisted :class:`WorkflowResult` rows."""
         activate_output_language(ctx, output_language)
         runs = list_runs()
 
@@ -186,8 +186,8 @@ def register_work_run_commands(
 
         The natural-key path, exact work-unit path, calculation-revision path,
         and direct workflow-run path are normalized by
-        :func:`aeat.application.workflow.resolve_modelo_workflow_resume_target`
-        before :func:`aeat.application.workflow.resume_modelo_workflow` validates
+        :func:`resolve_modelo_workflow_resume_target`
+        before :func:`resume_modelo_workflow` validates
         that the selected run is actually resumable.
         """
         activate_output_language(ctx, output_language)
@@ -226,9 +226,9 @@ def _emit_work_resume(
 
     Args:
         ctx: Typer context carrying output-mode configuration.
-        result: :class:`aeat.application.workflow.WorkflowResumeContext`
+        result: :class:`WorkflowResumeContext`
             produced by the workflow application service.
-        resolution: :class:`aeat.application.workflow.WorkflowResumeTargetResolution`
+        resolution: :class:`WorkflowResumeTargetResolution`
             produced by the resume-target resolver.
     """
     resume_result = WorkResumeResult(

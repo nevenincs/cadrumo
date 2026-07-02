@@ -2,7 +2,7 @@
 
 The registry runtime consumes already-resolved ``binding_values`` and
 ``relation_values`` for
-:func:`~aeat.domain.calculations.registry.calculate_registry_snapshot`. This
+:func:`domain.calculations.registry.calculate_registry_snapshot`. This
 package is the public application facade for the stores, source resolvers, and
 typed proof records that produce those inputs from local filing history, IVA
 wallet reconciliation, relation prefill, row-set detail captures, and
@@ -15,29 +15,28 @@ binding declarations, relation closure, and formula execution.
 
 Direct prior-filing bindings and registry relations are deliberately separate
 source owners. :class:`PreviousFilingSourceResolver` resolves
-:attr:`~aeat.core.BindingSourceKind.PREVIOUS_FILING` binding carries;
+:attr:`core.BindingSourceKind.PREVIOUS_FILING` binding carries;
 :class:`RelationPrefillSourceResolver` resolves
-:attr:`~aeat.core.BindingSourceKind.RELATION_PREFILL` relation fold-ins and
+:attr:`core.BindingSourceKind.RELATION_PREFILL` relation fold-ins and
 their materialised target bindings; :class:`IvaWalletDecisionSourceResolver`
 resolves the Modelo 303
-:attr:`~aeat.core.BindingSourceKind.IVA_WALLET_DECISION` compensation authority
+:attr:`core.BindingSourceKind.IVA_WALLET_DECISION` compensation authority
 outside the ordinary previous-filing carry; and
-:class:`~aeat.application.calculations._iva_compensation_annual_partition.IvaCompensationAnnualPartitionSourceResolver`
-resolves Modelo 390
-:attr:`~aeat.core.BindingSourceKind.IVA_COMPENSATION_ANNUAL_PARTITION` boxes 97
+:class:`IvaCompensationAnnualPartitionSourceResolver` resolves Modelo 390
+:attr:`core.BindingSourceKind.IVA_COMPENSATION_ANNUAL_PARTITION` boxes 97
 and 662 from the same FIFO carry projection.
 
 The main public surfaces are:
 
 * :class:`CalculationObservationRepository` and
   :class:`IvaWalletDecisionRepository`, encrypted stores for prior
-  :class:`~aeat.domain.calculations.registry.RegistryModeloObservation` records,
+  :class:`domain.calculations.registry.RegistryModeloObservation` records,
   plus :class:`IvaCompensationHistoryRepository` for secure Modelo 303
   compensation history.
 * :class:`PreviousFilingSourceResolver`,
   :class:`RelationPrefillSourceResolver`, and
   :class:`IvaWalletDecisionSourceResolver`, source-mesh adapters that produce
-  :class:`~aeat.application.aggregation.CalculationSourceResolution` envelopes.
+  :class:`application.aggregation.CalculationSourceResolution` envelopes.
 * :func:`resolve_bindings_from_local_store` and
   :func:`resolve_relations_from_local_store`, prefill readers over the same
   local observation substrate; :class:`BindingPrefillReport` and
@@ -45,22 +44,20 @@ The main public surfaces are:
 * :func:`cross_period_dependency_requirements` and
   :func:`evaluate_cross_period_clean_state`, the filing-grade dependency proof
   whose
-  :class:`~aeat.application.calculations._cross_period_models.CrossPeriodCleanStateVerdict`
-  joins
-  :class:`~aeat.application.calculations._cross_period_models.CrossPeriodDependencyRequirement`
-  rows to filing records, revisions, verification reports, and justificante
-  evidence.
+  :class:`CrossPeriodCleanStateVerdict` joins
+  :class:`CrossPeriodDependencyRequirement` rows to filing records, revisions,
+  verification reports, and justificante evidence.
 * Row-set assemblers such as :func:`assemble_withholding_observations`, which
   turn pull-side Detalle cells into ``AssembledObservations`` payloads for
   persistence.
 
 See Also:
-    :mod:`aeat.application.aggregation`
+    :mod:`application.aggregation`
         Defines the source-mesh contracts consumed by the calculation path.
-    :mod:`aeat.domain.calculations.registry`
+    :mod:`domain.calculations.registry`
         Owns the pure registry snapshots, binding definitions, relation
         requirements, and formula runtime.
-    :mod:`aeat.application.modelo`
+    :mod:`application.modelo`
         Orchestrates these package-level services inside work calculation,
         verification, filing, and export workflows.
 """

@@ -1,10 +1,10 @@
 """Typer registration for modelo work verification and internal filing.
 
 This transport module resolves operator revision targets, calls
-:func:`aeat.application.modelo.verify_modelo_revision` or
-:func:`aeat.application.modelo.file_modelo_revision`, and serializes the
-resulting :class:`aeat.domain.modelos.VerificationReport` or
-:class:`aeat.domain.modelos.ModeloRecord` into :class:`WorkVerifyResult` and
+:func:`verify_modelo_revision` or
+:func:`file_modelo_revision`, and serializes the
+resulting :class:`VerificationReport` or
+:class:`ModeloRecord` into :class:`WorkVerifyResult` and
 :class:`WorkFileResult` envelopes. Cross-period dependency inspection is read
 only and emits :class:`WorkDependenciesResult`.
 """
@@ -172,7 +172,7 @@ def _register_work_verify_command(
             help=tr("cli.config.auth.output_language_help"),
         ),
     ) -> None:
-        """Persist a :class:`aeat.domain.modelos.VerificationReport` for the selected draft revision."""
+        """Persist a :class:`VerificationReport` for the selected draft revision."""
         activate_output_language(ctx, output_language)
         require_active_profile()
         try:
@@ -489,7 +489,7 @@ def _register_work_file_command(
             help=tr("cli.config.auth.output_language_help"),
         ),
     ) -> None:
-        """Create an internal :class:`aeat.domain.modelos.ModeloRecord` for a verified revision."""
+        """Create an internal :class:`ModeloRecord` for a verified revision."""
         activate_output_language(ctx, output_language)
         require_active_profile()
         try:

@@ -161,7 +161,7 @@ def _register_profile_sar_command(
         catalogue_notice = _build_sar_catalogue_notice()
         _emit_envelope(
             ctx,
-            command="config.profile.subject-access-request",
+            command="config.profile.subject_access_request",
             result=result,
             lines=(
                 f"profile_id\t{pointer.bucket_id}",

@@ -186,6 +186,14 @@ _FAMILY_CASES: tuple[
         BindingAggregationOp.ROWS,
     ),
     (
+        "donativo_donor",
+        "donativo_donor",
+        {"fact": "row_field", "row_field": "amount_donated"},
+        BindingAggregationOp.ROWS,
+        {"fact": "row_field"},
+        BindingAggregationOp.ROWS,
+    ),
+    (
         "withholding",
         "withholding",
         {"fact": "retencion_sum", "claves": ("A",)},

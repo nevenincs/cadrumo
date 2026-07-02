@@ -811,20 +811,26 @@ def test_revision_replay_does_not_resubmit_m100_formula_informational_casilla() 
     assert _M100_ACTIVIDAD_ECONOMICA_NET_INCOME_CASILLA not in informational_replay_inputs
 
 
-def test_iva_regime_enum_covers_all_wizard_choice_values() -> None:
-    """All IVARegime members must appear in the wizard's IVA-regime choice list.
+def test_iva_regime_cli_choices_cover_operator_selectable_wizard_values() -> None:
+    """The CLI accepts the wizard's operator-selectable IVA-regime choices.
 
-    This cross-cuts the wizard ``_IVA_REGIME_CHOICE_VALUES`` derivation (contract)
-    against the canonical enum so neither can drift independently.
+    ``IVARegime.NO_APLICA`` is an internal projection sentinel for profiles
+    that are not enrolled in IVA. It must not leak into the operator-facing
+    ``--iva-regime`` choice set.
     """
+    from ...wizard._catalogue import SETUP_FLOW
     from ...wizard._commands import _IVA_REGIME_CHOICE_VALUES
 
-    enum_values = {m.value for m in IVARegime}
+    wizard_values = {
+        choice.value
+        for section in SETUP_FLOW.sections
+        for question in section.questions
+        if question.id == "iva-regime"
+        for choice in question.choices
+    }
     choice_set = set(_IVA_REGIME_CHOICE_VALUES)
-    assert enum_values == choice_set, (
-        f"Wizard choice values {choice_set!r} do not match IVARegime members {enum_values!r}. "
-        "Update _iva_regime_choice_values() or IVARegime."
-    )
+    assert choice_set == wizard_values
+    assert IVARegime.NO_APLICA.value not in choice_set
 
 
 # ---------------------------------------------------------------------------

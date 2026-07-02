@@ -182,6 +182,7 @@ from ._local_observation_actions import (
     ModeloLocalObservationResult,
     record_operator_local_observation,
 )
+from ._local_observation_spreadsheet import parse_casilla_value_spreadsheet
 from ._m036_lifecycle import (
     M036DeclarationCommand,
     M036DeclarationResult,
@@ -580,6 +581,7 @@ __all__ = [
     "modelo_work_profile_baseline_missing_paths",
     "modelo_work_profile_baseline_validation_issues",
     "modelo_work_profile_preflight_report",
+    "parse_casilla_value_spreadsheet",
     "persist_filed_revision_observation",
     "pre_activity_period_refusal",
     "preview_maritime_exemption_for_active_profile",

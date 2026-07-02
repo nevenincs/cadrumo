@@ -183,13 +183,10 @@ class TestClassificationGate:
 
 
 class TestUnsafeSubmissionIds:
-    @pytest.mark.parametrize(
-        "bad",
-        ["", "..", ".", ".hidden", "../escape", "a/b", "a\\b"],
-    )
-    def test_unsafe_id_rejected(self, repo: SubmissionRepository, bad: str) -> None:
-        with pytest.raises(ValueError, match=r"identifier|non-empty|submission_id"):
-            repo.envelope_path_for(bad)
+    def test_unsafe_id_rejected(self, repo: SubmissionRepository) -> None:
+        for bad in ("", "..", ".", ".hidden", "../escape", "a/b", "a\\b"):
+            with pytest.raises(ValueError, match=r"identifier|non-empty|submission_id"):
+                repo.envelope_path_for(bad)
 
 
 class TestPerSubmissionLockIsolation:

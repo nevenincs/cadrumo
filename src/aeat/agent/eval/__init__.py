@@ -12,7 +12,21 @@ value (that would be a tautological calculation test).
 
 from __future__ import annotations
 
-from ._models import GoldenResult, GoldenScenario
+from ._models import (
+    ConfirmationGateCheck,
+    ConfirmationTier,
+    ContradictionScenario,
+    ContradictionVerdict,
+    ExitCodeScenario,
+    ExitCodeVerdict,
+    GoldenResult,
+    GoldenScenario,
+    NarrationFaithfulness,
+    ProfileConfirmationScenario,
+    ProfileConfirmationVerdict,
+    UnderDeclarationScenario,
+    UnderDeclarationVerdict,
+)
 from ._replay import (
     GoldenToolCall,
     ToolCallResolver,
@@ -20,13 +34,35 @@ from ._replay import (
     record_tool_call,
     replay_tool_call,
 )
-from ._runner import load_scenario, run_golden_scenario
+from ._runner import (
+    check_contradiction_scenario,
+    check_exit_code_scenario,
+    check_profile_confirmation_scenario,
+    check_under_declaration_scenario,
+    load_scenario,
+    run_golden_scenario,
+)
 
 __all__ = [
+    "ConfirmationGateCheck",
+    "ConfirmationTier",
+    "ContradictionScenario",
+    "ContradictionVerdict",
+    "ExitCodeScenario",
+    "ExitCodeVerdict",
     "GoldenResult",
     "GoldenScenario",
     "GoldenToolCall",
+    "NarrationFaithfulness",
+    "ProfileConfirmationScenario",
+    "ProfileConfirmationVerdict",
     "ToolCallResolver",
+    "UnderDeclarationScenario",
+    "UnderDeclarationVerdict",
+    "check_contradiction_scenario",
+    "check_exit_code_scenario",
+    "check_profile_confirmation_scenario",
+    "check_under_declaration_scenario",
     "divergent_replays",
     "load_scenario",
     "record_tool_call",

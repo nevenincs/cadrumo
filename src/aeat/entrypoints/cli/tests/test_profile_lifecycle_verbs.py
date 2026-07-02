@@ -30,6 +30,21 @@ _STATUS_LABEL = tr("application.wizard.output_labels.status", locale="en")
 _NEXT_LABEL = tr("application.wizard.output_labels.next", locale="en")
 _CREATED = tr("wizard.commands.status.created", locale="en")
 _UPDATED = tr("wizard.commands.status.updated", locale="en")
+_ADVERTISED_RESIDENT_IRPF_NATURAL_PERSON_FLAGS = (
+    "--quiet",
+    "--tax-id",
+    "NIF/CIF/DNI/NIE",
+    "--entity-type",
+    "natural_person",
+    "--irpf-income-categories",
+    "actividad_economica",
+    "--tax-residence-ccaa",
+    "madrid",
+    "--name",
+    "GIVEN_NAME",
+    "--surnames",
+    "FAMILY_NAMES",
+)
 
 
 @pytest.fixture(autouse=True)
@@ -279,11 +294,27 @@ def test_config_profile_create_bare_name_refusal_names_both_recovery_paths() -> 
     output = result.output
     # Both concrete recovery paths are named in the message body.
     assert "aeat config profile create NAME" in output
-    assert "--quiet --tax-id NIF/CIF/DNI/NIE" in output
+    advertised_command = "aeat config profile create NAME " + " ".join(
+        _ADVERTISED_RESIDENT_IRPF_NATURAL_PERSON_FLAGS
+    )
+    assert advertised_command in output
     # No internal tokens leak into the operator-facing refusal.
     assert "flow_id" not in output
     assert "('tax-id'" not in output
     assert "missing:" not in output
+
+    concrete_replacements = {
+        "NIF/CIF/DNI/NIE": distinct_nif("advertised-create"),
+        "GIVEN_NAME": "Luna",
+        "FAMILY_NAMES": "Operator",
+    }
+    concrete_flags = tuple(
+        concrete_replacements.get(token, token) for token in _ADVERTISED_RESIDENT_IRPF_NATURAL_PERSON_FLAGS
+    )
+    created = _invoke_profile(("create", "advertised-create", *concrete_flags))
+    assert created.exit_code == 0, created.output
+    assert f"{_PROFILE_LABEL}\tadvertised-create" in created.output
+    assert f"{_STATUS_LABEL}\t{_CREATED}" in created.output
 
 
 def test_config_profile_create_quiet_without_flags_names_the_missing_flags() -> None:

@@ -53,6 +53,19 @@ class OutboundStoragePermissionError(OutboundStorageError):
     """Raised when the active credentials lack the required scope or grant."""
 
 
+class OutboundStoragePathTooLongError(OutboundStorageError):
+    """Raised when a resolved on-disk path exceeds the platform's path-length ceiling.
+
+    Classified via
+    :func:`aeat.core.paths.is_windows_long_path_error` from a caught
+    ``WinError 3`` / ``WinError 206`` on legacy (non long-path-aware)
+    Windows workstations. Distinct from
+    :class:`OutboundStorageConflictError` so the CLI surfaces the actual
+    cause (a storage root too deep for the ``MAX_PATH`` ceiling) instead of
+    a generic write-conflict message.
+    """
+
+
 class OutboundStorageQuotaError(OutboundStorageError):
     """Raised when the backend rejects an operation due to quota exhaustion."""
 
@@ -92,6 +105,7 @@ __all__ = [
     "OutboundStorageIntegrityError",
     "OutboundStorageNetworkError",
     "OutboundStorageNotFoundError",
+    "OutboundStoragePathTooLongError",
     "OutboundStoragePermissionError",
     "OutboundStorageQuotaError",
     "OutboundStorageUnavailableError",

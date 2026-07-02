@@ -529,7 +529,7 @@ def _relation_input_guidance_lines(rows) -> tuple[str, ...]:
     relations (``relation_inputs`` is non-empty) is supplied through
     ``--relation RELATION_ID=VALUE`` rather than ``--binding``. The feeding
     relation ids come from the resolved revision (each
-    :class:`~aeat.domain.calculations.registry.RelationDefinition` declares
+    :class:`RelationDefinition` declares
     its ``target_binding``), so this guidance generalises to any modelo
     instead of enumerating a per-form channel table.
     """

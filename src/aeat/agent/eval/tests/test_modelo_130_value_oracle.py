@@ -1,11 +1,11 @@
 """Numeric value-oracle gate for the modelo-130 golden workflow.
 
 Proves the harness's calculate trajectory produces the AEAT-published figure, not
-merely that the right casillas are computed (the verification-contract dimension,
-plan W03.P07.S57). It seeds the AEAT DR 130 Instrucciones worked example through
+merely that the right casillas are computed (the verification-contract dimension).
+It seeds the AEAT DR 130 Instrucciones worked example through
 the real registry calculation engine and asserts the resulting instalment casilla
 equals the published AEAT figure. This is the figure-level value-oracle dimension
-the operator golden eval needs (plan W03.P07.S56).
+the operator golden eval needs.
 
 Oracle authority (NON-tautological under ``no-tautological-calculation-tests``):
 the expected 1.600,00 EUR is the AEAT DR 130 Instrucciones worked example for

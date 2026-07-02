@@ -101,6 +101,7 @@ def test_legal_entity_profile_creates_non_interactively_without_spouse_flags() -
     rows = _profile_rows("webco")
     assert rows["taxpayer_type.entity_type"] == "legal_entity"
     assert rows["taxpayer_type.legal_entity_form"] == "sl"
+    assert rows["iva.regime"] == "GENERAL"
 
 
 def test_legal_entity_profile_create_refuses_missing_legal_form_before_registration() -> None:
@@ -376,6 +377,30 @@ def test_pure_landlord_profile_creates_without_activity() -> None:
     assert rows["taxpayer_type.irpf_income_categories"] == "capital_inmobiliario"
     # No invented economic activity is stored for a pure landlord.
     assert "activities.description" not in rows
+    # No IVA regime is invented either: a landlord/salaried/pensioner
+    # natural-person profile must not silently look like a Modelo 303 filer.
+    assert "iva.regime" not in rows
+
+
+def test_pure_landlord_profile_stores_explicit_iva_regime_when_operator_opts_in() -> None:
+    """The no-default rule must not discard an explicit IVA declaration."""
+
+    result = _create_profile(
+        "landlord-with-iva",
+        "--entity-type",
+        "natural_person",
+        "--irpf-income-categories",
+        "capital_inmobiliario",
+        "--tax-id",
+        "87654321X",
+        "--iva-regime",
+        "EXENTO",
+    )
+
+    assert result.exit_code == 0, result.output
+    rows = _profile_rows("landlord-with-iva")
+    assert rows["taxpayer_type.irpf_income_categories"] == "capital_inmobiliario"
+    assert rows["iva.regime"] == "EXENTO"
 
 
 def test_attribution_entity_profile_creates_without_spouse_flags() -> None:
@@ -395,6 +420,7 @@ def test_attribution_entity_profile_creates_without_spouse_flags() -> None:
     assert result.exit_code == 0, result.output
     rows = _profile_rows("comunidad")
     assert rows["taxpayer_type.entity_type"] == "attribution_entity"
+    assert rows["iva.regime"] == "GENERAL"
 
 
 def test_activity_start_date_flag_stores_the_censo_alta_date() -> None:
@@ -464,6 +490,7 @@ def test_natural_person_with_economic_activity_stores_the_activity() -> None:
     assert result.exit_code == 0, result.output
     rows = _profile_rows("autonomo")
     assert rows["activities.description"] == "fontaneria epigrafe 151"
+    assert rows["iva.regime"] == "GENERAL"
 
 
 @pytest.mark.parametrize(

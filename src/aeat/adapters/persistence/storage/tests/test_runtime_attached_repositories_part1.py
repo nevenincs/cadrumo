@@ -169,39 +169,23 @@ _RUNTIME_DEFAULT_REFUSAL_CASES: tuple[tuple[str, Callable[[], object]], ...] = (
 )
 
 
-@pytest.mark.parametrize(
-    ("case_name", "operation"),
-    _RUNTIME_DEFAULT_REFUSAL_CASES,
-)
-def test_current_runtime_defaults_refuse_missing_session(
-    tmp_path: Path,
-    case_name: str,
-    operation: Callable[[], object],
-) -> None:
-    del case_name
-    with (
-        override_settings(aeat_local_storage_root=tmp_path, aeat_active_profile=_BUCKET_A_ID),
-        pytest.raises(StorageValidationError, match="no active bucket session"),
-    ):
-        operation()
+def test_current_runtime_defaults_refuse_missing_session(tmp_path: Path) -> None:
+    for case_name, operation in _RUNTIME_DEFAULT_REFUSAL_CASES:
+        with (
+            override_settings(aeat_local_storage_root=tmp_path / case_name, aeat_active_profile=_BUCKET_A_ID),
+            pytest.raises(StorageValidationError, match="no active bucket session"),
+        ):
+            operation()
 
 
-@pytest.mark.parametrize(
-    ("case_name", "operation"),
-    _RUNTIME_DEFAULT_REFUSAL_CASES,
-)
-def test_current_runtime_defaults_refuse_route_session_mismatch(
-    tmp_path: Path,
-    case_name: str,
-    operation: Callable[[], object],
-) -> None:
-    del case_name
-    with (
-        override_settings(aeat_local_storage_root=tmp_path, aeat_active_profile=_BUCKET_A_ID),
-        activate_session(_session(_BUCKET_B_ID)),
-        pytest.raises(StorageValidationError, match=r"route does not match|storage runtime is not ready"),
-    ):
-        operation()
+def test_current_runtime_defaults_refuse_route_session_mismatch(tmp_path: Path) -> None:
+    for case_name, operation in _RUNTIME_DEFAULT_REFUSAL_CASES:
+        with (
+            override_settings(aeat_local_storage_root=tmp_path / case_name, aeat_active_profile=_BUCKET_A_ID),
+            activate_session(_session(_BUCKET_B_ID)),
+            pytest.raises(StorageValidationError, match=r"route does not match|storage runtime is not ready"),
+        ):
+            operation()
 
 
 def test_diagnostics_secure_object_total_degrades_on_missing_session(
