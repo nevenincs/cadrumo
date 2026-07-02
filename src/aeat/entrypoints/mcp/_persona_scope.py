@@ -26,10 +26,32 @@ This complements the existing global :func:`~aeat.entrypoints.mcp.confirmation_f
 HITL policy: that gate decides *how* a call is approved (auto/confirm/block)
 irrespective of persona; this gate decides *whether* a tool is in the active
 persona's boundary at all. Both run in the ``PreToolUse`` layer.
+
+:func:`active_persona` resolves the runtime session's persona from the
+``AEAT_MCP_PERSONA`` environment variable; ``_server.py`` calls it once at
+``serve()`` startup and threads the result through ``_list_tools`` (filters
+the advertised tool set) and ``_call_tool`` (refuses an out-of-scope call
+before the global HITL gate runs).
+
+KNOWN LIMITATION - family granularity: the manifest's own boundary is the
+mounted-command-family ``child`` token, not the individual verb. Three
+personas - ``modelo-preparer``, ``verifier``, and ``reconciler`` - all declare
+``families={"modelo"}`` because the manifest exposes no finer split within
+that family. This filter therefore CANNOT structurally stop, for example, the
+``modelo-preparer`` from calling ``modelo.export`` (a verifier/reconciler
+verb) or the ``verifier`` from calling ``modelo.work.create`` (a preparer
+verb): every one of the three modelo-lifecycle personas passes
+:func:`is_tool_in_persona_scope` for every ``modelo.*`` tool. The distinction
+between these three roles' actual verb usage stays prose-level, enforced by
+persona-document discipline, not by this runtime gate - see D3 in
+``2026-07-01-agent-harness-adr``. A future finer-grained manifest split would
+close this gap without changing this module's shape.
 """
 
 from __future__ import annotations
 
+import os
+from collections.abc import Mapping
 from enum import StrEnum
 
 from pydantic import BaseModel, ConfigDict, Field
@@ -38,6 +60,12 @@ from ...application.operator_surface import OperatorMutability, build_operator_s
 from ...core.json_contract import ENVELOPE_SCHEMA_VERSION
 
 _STRICT_FROZEN = ConfigDict(frozen=True, strict=True, validate_assignment=True, extra="forbid")
+
+#: The environment variable that selects the active MCP session persona. Absent
+#: or empty means the session is un-personified and keeps the full, unscoped
+#: tool surface - the pre-D1 behaviour is preserved for any caller that does
+#: not opt into a persona boundary.
+PERSONA_ENV_VAR = "AEAT_MCP_PERSONA"
 
 # Ordered so a family's actual mutability may be compared against a persona's
 # declared ceiling: READ_ONLY is strictly less permissive-requiring than
@@ -213,3 +241,31 @@ def is_tool_in_persona_scope(*, persona: AgentPersona, command_key: str) -> bool
     if family_mutability is None:
         return False
     return _MUTABILITY_RANK[family_mutability] <= _MUTABILITY_RANK[scope.mutability_ceiling]
+
+
+def active_persona(env: Mapping[str, str] | None = None) -> AgentPersona | None:
+    """Resolve the active MCP session persona from :data:`PERSONA_ENV_VAR`.
+
+    Reads ``env`` (an injectable mapping so the resolution is unit-tested
+    against real dict inputs without touching process environment state;
+    defaults to ``os.environ`` for the live server). An absent or blank value
+    returns ``None``, which callers MUST treat as "unscoped" - the full tool
+    surface, matching pre-D1 behaviour, so an un-personified session (a
+    direct developer connection, a session that predates the persona
+    boundary) is never accidentally narrowed.
+
+    Raises:
+        ValueError: the environment value does not name a declared
+            :class:`AgentPersona` member. The message enumerates the accepted
+            set per ``aeat-architecture-boundaries``'s CLI-boundary
+            instructive-refusal discipline.
+    """
+    raw = (env if env is not None else os.environ).get(PERSONA_ENV_VAR, "").strip()
+    if not raw:
+        return None
+    try:
+        return AgentPersona(raw)
+    except ValueError as exc:
+        accepted = ", ".join(sorted(member.value for member in AgentPersona))
+        message = f"{PERSONA_ENV_VAR}={raw!r} is not a recognised persona; accepted values: {accepted}"
+        raise ValueError(message) from exc
