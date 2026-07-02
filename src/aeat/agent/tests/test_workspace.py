@@ -13,7 +13,7 @@ pytestmark = [pytest.mark.integration, pytest.mark.hex_core]
 
 def test_materialise_writes_rules_personas_and_skills(tmp_path: Path) -> None:
     manifest = materialise_workspace(tmp_path)
-    assert manifest.rules_written == 4
+    assert manifest.rules_written == 7
     assert manifest.personas_written >= 3
     assert manifest.skills_written >= 1
 
