@@ -20,14 +20,14 @@ related:
 
 ## Description
 
-- Add `test_skill_applies_when.py`: assert every shipped skill enumerates through the validating `iter_skill_metadata` loader (missing/malformed/invalid predicates fail loudly), one validated metadata per shipped SKILL.md.
-- Assert every predicate declares at least one axis and every profile fact names a real `TaxpayerProfile` field.
-- Add an anti-tautology proof: a bogus fact name and an empty predicate are both rejected, so the gate can fail.
+- Add `test_skill_applies_when.py`: the coverage gate is the strict presence enforcer - it asserts every shipped skill declares a structured `applies_when` (a skill whose predicate is `None` fails), one metadata per shipped SKILL.md, no skill silently skipped.
+- Assert every declared predicate names at least one axis and every profile fact resolves to a real `TaxpayerProfile` field.
+- Add an anti-tautology proof: a bogus fact name and an empty predicate are both rejected at parse, so the gate can fail.
 
 ## Outcome
 
-The coverage gate is green after the P10 lifts: all 28 skills declare a valid structured `applies_when`. Before the lifts the three coverage assertions correctly red while the anti-tautology proof passed, confirming the gate has teeth.
+The gate is authored and correct, and enforces presence at the corpus level (distinct from the load path, which tolerates a missing predicate). It currently PASSES because the 28 P10 lifts were already committed before the scope cut; it would red the moment any skill ships without the field.
 
 ## Notes
 
-Per the plan sequencing, this gate reds between its own landing (S36) and the completion of the P10 lifts (S64); it is closed only now that the lifts are in and the gate passes.
+SCOPE CUT (operator directive, 2026-07-02): P10 predicate-lift authoring under `src/aeat/_data/agent/skills/` is coordinator-owned, not mine. This step is therefore left OPEN for the coordinator to close after they own the lifts, even though the gate currently passes against my already-committed lifts. Honest status: the gate is GREEN now (not red) because the lifts landed before the scope cut; the coordinator may adopt those commits or re-author, and closes S36 when the corpus is theirs and the gate passes.

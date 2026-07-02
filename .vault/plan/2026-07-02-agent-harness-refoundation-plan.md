@@ -120,7 +120,7 @@ Define the structured applies_when frontmatter schema, validate it at skill load
 
 - [x] `W05.P09.S34` - Define the structured applies_when frontmatter schema and its parser over TaxpayerProfile facts and lifecycle state; `src/aeat/agent/_skill_metadata.py`.
 - [x] `W05.P09.S35` - Validate the applies_when field at skill load; `src/aeat/agent/__init__.py`.
-- [x] `W05.P09.S36` - Add the applies_when coverage gate asserting every skill declares a structured predicate; `src/aeat/agent/tests/test_skill_applies_when.py`.
+- [ ] `W05.P09.S36` - Add the applies_when coverage gate asserting every skill declares a structured predicate; `src/aeat/agent/tests/test_skill_applies_when.py`.
 
 ### Phase `W05.P10` - Lift selection predicates into existing skills
 
