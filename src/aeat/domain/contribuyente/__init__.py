@@ -22,7 +22,7 @@ from ...core.parsing._dates import _parse_iso8601_date
 from ._ccaa import CCAA
 from ._constants import ProfileName
 from ._deduccion_maternidad import compute_deduccion_maternidad_0611
-from ._descendant_facts import descendant_list_from_facts
+from ._descendant_facts import descendant_facts_from_list, descendant_list_from_facts
 from ._errors import ForalRegimeError, ProfileNotConfiguredError, ProfileValidationError, TaxResidenceProfileError
 from ._keys import (
     ProfileKey,
@@ -201,6 +201,7 @@ __all__ = [
     "TaxResidenceProfile",
     "TaxResidenceProfileError",
     "compute_deduccion_maternidad_0611",
+    "descendant_facts_from_list",
     "descendant_list_from_facts",
     "get_profile_key",
     "marriage_date_from_facts",

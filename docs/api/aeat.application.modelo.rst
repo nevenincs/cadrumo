@@ -44,6 +44,7 @@ Submodules
    aeat.application.modelo._m303_m349_reconcile
    aeat.application.modelo._m349_ledger_guard
    aeat.application.modelo._maritime_preview
+   aeat.application.modelo._minimo_descendientes_advisory
    aeat.application.modelo._objective_estimation_advisory
    aeat.application.modelo._official_box_advisory
    aeat.application.modelo._participation_index_rebuild
