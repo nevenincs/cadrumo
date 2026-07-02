@@ -3,39 +3,39 @@
 This module owns the adapter objects that let immutable calculation revisions
 participate in the filing workflow engine. The public application facade
 continues to export the operator-facing services from
-:mod:`aeat.application.modelo`.
+:mod:`~aeat.application.modelo`.
 
 The gate adapts one persisted
-:class:`~aeat.domain.modelos.CalculationRevision` and its
-:class:`~aeat.domain.modelos.WorkUnit` into
+:class:`CalculationRevision` and its
+:class:`WorkUnit` into
 :class:`~aeat.application.workflow.WorkflowEngine` inputs. It scopes deadline
-and filing-window checks with :class:`~aeat.domain.deadlines.TaxpayerProfile`,
+and filing-window checks with :class:`TaxpayerProfile`,
 and locally approves filing drafts through the transient
-:class:`~aeat.domain.transactions.TransactionCatalogue` used by the filing
+:class:`TransactionCatalogue` used by the filing
 surface.
 
 The gate is a precondition runner, not the owner of verification reports or
-filing records. :mod:`aeat.application.modelo._verification_actions` invokes it
+filing records. :mod:`~aeat.application.modelo._verification_actions` invokes it
 with :class:`~aeat.application.workflow.WorkflowPurpose.VERIFY` after local
 verification findings have granted, while
-:mod:`aeat.application.modelo._filing_actions` invokes it with
+:mod:`~aeat.application.modelo._filing_actions` invokes it with
 :class:`~aeat.application.workflow.WorkflowPurpose.FILE` before local
 mark-as-filed persistence. Aborted workflow runs are persisted for audit and then
 surfaced as :class:`~aeat.application.modelo.ModeloWorkflowGateError`.
 
 See Also:
-    :mod:`aeat.application.workflow._engine`:
+    :mod:`~aeat.application.workflow._engine`:
         Owns deadline-independence for VERIFY and late-local FILE behavior.
-    :mod:`aeat.application.workflow._deadline_stage`:
+    :mod:`~aeat.application.workflow._deadline_stage`:
         Selects the workflow obligation before submission preflight is reached.
     :class:`~aeat.domain.submission.SubmissionEngine`:
         Runs the read-only preflight gates using the deadline-window checker
         configured here.
     :class:`~aeat.domain.submission.DeadlineWindowChecker`:
         Protocol satisfied by the revision deadline-window adapter below.
-    :mod:`aeat.application.modelo._verification_actions`:
+    :mod:`~aeat.application.modelo._verification_actions`:
         Owns verification finding/report persistence around this gate.
-    :mod:`aeat.application.modelo._filing_actions`:
+    :mod:`~aeat.application.modelo._filing_actions`:
         Owns local filing-record persistence after this gate succeeds.
 """
 
@@ -171,7 +171,7 @@ class _RevisionInputsProvider:
 
 
 class _RevisionDraftBuilder:
-    """Build and locally approve the draft backed by the target :class:`~aeat.domain.modelos._work_unit.WorkUnit`."""
+    """Build and locally approve the draft backed by the target :class:`WorkUnit`."""
 
     def __init__(self, *, work_unit: WorkUnit, actor: str, clock: datetime) -> None:
         self._work_unit = work_unit
@@ -269,7 +269,7 @@ def build_revision_workflow_engine(
     Args:
         revision: The immutable :class:`CalculationRevision` whose persisted
             values are replayed into the workflow draft.
-        work_unit: The :class:`~aeat.domain.modelos._work_unit.WorkUnit` that
+        work_unit: The :class:`WorkUnit` that
             supplies modelo, filing year, period, and bucket identity.
         profile: The :class:`TaxpayerProfile` used for deadline and applicability
             scoping inside the workflow engine.
@@ -330,7 +330,7 @@ def run_revision_workflow_gate(
     Args:
         engine: The :class:`WorkflowEngine` configured for the target revision.
         profile: The :class:`TaxpayerProfile` used by the workflow run.
-        work_unit: The :class:`~aeat.domain.modelos._work_unit.WorkUnit` whose
+        work_unit: The :class:`WorkUnit` whose
             modelo and period select the workflow target.
         today: Reference date for deadline and preflight stages.
         runs_dir: Optional filesystem location for persisted workflow runs.
