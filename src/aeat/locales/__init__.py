@@ -7,20 +7,19 @@ developer CLI (``python -m aeat.locales``) owns edits through ``set``,
 catalogue YAML is CLI-maintained, not hand-edited.
 
 Modelo schema-local translations are handled by the same facade through
-``modelo`` subcommands and the :class:`~aeat.locales.ModeloLocaleManager`
-record set. Those TOML-backed translations stay separate from the runtime YAML
-catalogues while sharing the same drift-reporting discipline.
+``modelo`` subcommands and the :class:`ModeloLocaleManager` record set. Those
+TOML-backed translations stay separate from the runtime YAML catalogues while
+sharing the same drift-reporting discipline.
 
 Major declarations:
 
-* :class:`~aeat.locales.LocaleManager` loads, scaffolds, checks, and audits the
-  runtime locale catalogues.
-* :class:`~aeat.locales.ModeloLocaleManager` manages schema-local modelo
+* :class:`LocaleManager` loads, scaffolds, checks, and audits the runtime locale
+  catalogues.
+* :class:`ModeloLocaleManager` manages schema-local modelo
   translation files and coverage reports.
-* :class:`~aeat.locales.StrictUniqueKeyLoader` rejects duplicate YAML keys at
-  parse time.
-* :class:`~aeat.locales.LocaleError` and
-  :class:`~aeat.locales.ModeloLocaleError` report maintenance failures.
+* :class:`StrictUniqueKeyLoader` rejects duplicate YAML keys at parse time.
+* :class:`LocaleError` and :class:`ModeloLocaleError` report maintenance
+  failures.
 """
 
 from __future__ import annotations

@@ -36,6 +36,7 @@ from decimal import Decimal
 from ...domain.calculations.registry import CasillaId, ModeloRevision
 from ..aggregation import CalculationSourceDiagnostic
 from ..calculations import CalculationObservationRepository
+from ._minimo_descendientes_advisory import collect_minimo_descendientes_advisory_diagnostics
 from ._official_box_advisory import collect_official_box_unpopulated_diagnostics
 from ._prior_payment_advisory import (
     collect_prior_payment_minoracion_not_captured_diagnostics,
@@ -53,15 +54,17 @@ def collect_bucket_aggregation_advisory_diagnostics(
     modelo: str,
     period_token: str,
     filing_year: int,
+    bucket_id: str,
 ) -> tuple[CalculationSourceDiagnostic, ...]:
     """Return advisory diagnostics raised after bucket aggregation calculation.
 
     Runs the calculate-path advisory collectors in tuple order:
     official-box transcription, Modelo 130 prior-payment under-deduction, Modelo
-    130 prior-payment minoracion capture, and settlement-not-computed structure.
-    These diagnostics are informational and non-blocking; the calculation result
-    already exists, and the caller merely appends these rows to the source mesh's
-    existing
+    130 prior-payment minoracion capture, settlement-not-computed structure, and
+    the Modelo 100 mínimo-por-descendientes custodia-compartida / blank-entry
+    advisory. These diagnostics are informational and non-blocking; the
+    calculation result already exists, and the caller merely appends these rows
+    to the source mesh's existing
     :class:`~aeat.application.aggregation.CalculationSourceDiagnostic`
     sequence.
 
@@ -75,6 +78,8 @@ def collect_bucket_aggregation_advisory_diagnostics(
             calculated.
         filing_year: Filing year whose same-ejercicio prior observations may be
             inspected.
+        bucket_id: Bucket identifier used by profile-backed advisory
+            collectors (the Modelo 100 mínimo-por-descendientes check).
 
     Returns:
         Tuple of
@@ -106,4 +111,11 @@ def collect_bucket_aggregation_advisory_diagnostics(
             observation_repository=observation_repository,
         )
         + collect_settlement_not_computed_diagnostics(revision)
+        + collect_minimo_descendientes_advisory_diagnostics(
+            revision,
+            casilla_values,
+            modelo=modelo,
+            filing_year=filing_year,
+            bucket_id=bucket_id,
+        )
     )

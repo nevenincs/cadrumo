@@ -37,6 +37,7 @@ from .._errors import command_error_boundary as _command_error_boundary
 from ._apoderado import apoderado_app, register_apoderado_commands
 from ._auth import auth_app
 from ._auth_diagnostics import auth_diagnostics_app
+from ._bucket_archive import register_bucket_archive_commands
 from ._bucket_history import _parse_bucket_event_types, register_bucket_history_commands
 from ._custody import register_custody_commands
 from ._errors import ConfigBoundaryError as _ConfigBoundaryError
@@ -1191,6 +1192,11 @@ register_repair_profile_command(
 )
 register_repair_maintenance_commands(repair_app)
 register_bucket_history_commands(profile_app)
+register_bucket_archive_commands(
+    profile_app,
+    resolve_profile_by_label=_resolve_profile_by_label,
+    resolve_active_profile_pointer=_resolve_active_profile_pointer,
+)
 register_custody_commands(
     app,
     resolve_active_profile_pointer=_resolve_active_profile_pointer,
@@ -1216,6 +1222,7 @@ __all__ = [
     "auth_diagnostics_app",
     "profile_app",
     "register_apoderado_commands",
+    "register_bucket_archive_commands",
     "register_bucket_history_commands",
     "register_custody_commands",
     "register_profile_bundle_commands",

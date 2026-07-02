@@ -324,25 +324,17 @@ class TestBeckhamWindow:
             special_regime_start_date=date(2023, 1, 15),
         )
 
-    @pytest.mark.parametrize(
-        ("today", "expected"),
-        (
+    def test_impatriado_window_boundaries(self) -> None:
+        cases = (
             (date(2023, 6, 1), True),
             (date(2027, 12, 31), True),
             (date(2028, 12, 31), True),
             (date(2029, 1, 1), False),
             (date(2022, 12, 31), False),
-        ),
-        ids=(
-            "election-year",
-            "year-five",
-            "year-six",
-            "year-seven-expired",
-            "before-election",
-        ),
-    )
-    def test_impatriado_window_boundaries(self, today: date, expected: bool) -> None:
-        assert self._impatriado().beckham_window_active(today) is expected
+        )
+        profile = self._impatriado()
+        for today, expected in cases:
+            assert profile.beckham_window_active(today) is expected, today
 
     def test_general_regime_profile_is_always_outside_window(self) -> None:
         from datetime import date
@@ -545,20 +537,17 @@ class TestConvenioAplicable:
             representante_fiscal_nombre=("Test Rep" if country in {"GB", "US", "MA"} else None),
         )
 
-    @pytest.mark.parametrize(
-        ("country", "expected"),
-        (
+    def test_known_country_maps_to_convenio(self) -> None:
+        cases = (
             ("GB", "BOE-A-2014-5171 España-UK"),
             ("DE", "BOE-A-2012-3669 España-Alemania"),
             ("FR", "BOE-A-1997-21331 España-Francia"),
             ("US", "BOE-A-1990-28246 España-EE.UU."),
             ("NL", "BOE-A-1972-674 España-Países Bajos"),
             ("MA", "BOE-A-1985-9280 España-Marruecos"),
-        ),
-        ids=("gb", "de", "fr", "us", "nl", "ma"),
-    )
-    def test_known_country_maps_to_convenio(self, country: str, expected: str) -> None:
-        assert self._profile(country).convenio_aplicable == expected
+        )
+        for country, expected in cases:
+            assert self._profile(country).convenio_aplicable == expected, country
 
     def test_unknown_country_returns_none(self) -> None:
         # ZZ is not a real ISO code and has no convenio entry.
@@ -585,9 +574,8 @@ class TestMultiplePagadoresObligation:
     Modelo 100 filing.  No threshold values are hand-invented here.
     """
 
-    @pytest.mark.parametrize(
-        ("pagadores_count", "secondary_income", "expected"),
-        (
+    def test_multiple_pagadores_threshold_cases(self) -> None:
+        cases = (
             (1, Decimal("18000"), False),
             (2, Decimal("1600"), True),
             (3, Decimal("1600"), True),
@@ -597,26 +585,12 @@ class TestMultiplePagadoresObligation:
             (None, Decimal("2000"), False),
             (2, None, False),
             (None, None, False),
-        ),
-        ids=(
-            "single-pagador",
-            "two-secondary-above",
-            "three-secondary-above",
-            "secondary-at-threshold",
-            "secondary-cent-above",
-            "secondary-below",
-            "missing-count",
-            "missing-secondary-income",
-            "missing-both",
-        ),
-    )
-    def test_multiple_pagadores_threshold_cases(
-        self,
-        pagadores_count: int | None,
-        secondary_income: Decimal | None,
-        expected: bool,
-    ) -> None:
-        assert evaluate_multiple_pagadores_obligation(pagadores_count, secondary_income) is expected
+        )
+        for pagadores_count, secondary_income, expected in cases:
+            assert evaluate_multiple_pagadores_obligation(pagadores_count, secondary_income) is expected, (
+                pagadores_count,
+                secondary_income,
+            )
 
     def test_taxpayer_profile_roundtrip_pagadores_fields(self) -> None:
         # TaxpayerProfile must carry the pagadores axes through construction unchanged.
@@ -650,9 +624,8 @@ class TestMultiplePagadoresReducedLimitSchedule:
     euros").
     """
 
-    @pytest.mark.parametrize(
-        ("year", "expected"),
-        (
+    def test_reduced_limit_schedule(self) -> None:
+        cases = (
             (2022, Decimal("14000")),
             (2023, Decimal("15000")),
             (2024, Decimal("15876")),
@@ -660,19 +633,9 @@ class TestMultiplePagadoresReducedLimitSchedule:
             (2015, Decimal("14000")),
             (2099, Decimal("15876")),
             (None, Decimal("15876")),
-        ),
-        ids=(
-            "2022-base",
-            "2023-pge",
-            "2024-rd-ley",
-            "2025-latest",
-            "before-schedule-earliest",
-            "after-schedule-latest",
-            "none-latest",
-        ),
-    )
-    def test_reduced_limit_schedule(self, year: int | None, expected: Decimal) -> None:
-        assert resolve_multiple_pagadores_reduced_limit(year) == expected
+        )
+        for year, expected in cases:
+            assert resolve_multiple_pagadores_reduced_limit(year) == expected, year
 
 
 class TestMultiplePagadoresObligationWithTotalIncome:
@@ -686,9 +649,8 @@ class TestMultiplePagadoresObligationWithTotalIncome:
     threshold is hand-invented.
     """
 
-    @pytest.mark.parametrize(
-        ("pagadores_count", "secondary_income", "total_income", "year", "expected"),
-        (
+    def test_total_income_obligation_cases(self) -> None:
+        cases = (
             (2, Decimal("1600"), Decimal("18000"), 2024, True),
             (2, Decimal("1600"), Decimal("10000"), 2024, False),
             (2, Decimal("1600"), Decimal("16000"), 2024, True),
@@ -697,35 +659,22 @@ class TestMultiplePagadoresObligationWithTotalIncome:
             (1, Decimal("0"), Decimal("18000"), 2024, False),
             (2, Decimal("1500"), Decimal("18000"), 2024, False),
             (2, Decimal("1600"), None, 2024, True),
-        ),
-        ids=(
-            "multi-payer-over-reduced-limit",
-            "multi-payer-under-reduced-limit",
-            "between-reduced-and-general",
-            "2023-boundary-over",
-            "2024-boundary-under",
-            "single-payer-under-general",
-            "secondary-at-trigger",
-            "missing-total-income",
-        ),
-    )
-    def test_total_income_obligation_cases(
-        self,
-        pagadores_count: int,
-        secondary_income: Decimal,
-        total_income: Decimal | None,
-        year: int,
-        expected: bool,
-    ) -> None:
-        assert (
-            evaluate_multiple_pagadores_obligation(
+        )
+        for pagadores_count, secondary_income, total_income, year, expected in cases:
+            assert (
+                evaluate_multiple_pagadores_obligation(
+                    pagadores_count,
+                    secondary_income,
+                    total_income,
+                    year,
+                )
+                is expected
+            ), (
                 pagadores_count,
                 secondary_income,
                 total_income,
                 year,
             )
-            is expected
-        )
 
 
 class TestResidencyBoundaryNear:
@@ -745,9 +694,8 @@ class TestResidencyBoundaryNear:
             days_in_spain=days_in_spain,
         )
 
-    @pytest.mark.parametrize(
-        ("days_in_spain", "expected"),
-        (
+    def test_residency_boundary_near_cases(self) -> None:
+        cases = (
             ({}, False),
             ({2024: 149}, False),
             ({2024: 150}, True),
@@ -756,20 +704,9 @@ class TestResidencyBoundaryNear:
             ({2024: 216}, False),
             ({2023: 220, 2024: 100, 2025: 170}, True),
             ({2023: 90, 2024: 120}, False),
-        ),
-        ids=(
-            "empty",
-            "below-lower-bound",
-            "at-lower-bound",
-            "statutory-threshold",
-            "at-upper-bound",
-            "above-upper-bound",
-            "multi-year-one-in-range",
-            "multi-year-all-out",
-        ),
-    )
-    def test_residency_boundary_near_cases(self, days_in_spain: dict[int, int], expected: bool) -> None:
-        assert self._profile_with_days(days_in_spain).residency_boundary_near is expected
+        )
+        for days_in_spain, expected in cases:
+            assert self._profile_with_days(days_in_spain).residency_boundary_near is expected, days_in_spain
 
     def test_days_in_spain_roundtrip(self) -> None:
         # days_in_spain dict must survive a strict pydantic JSON roundtrip.
@@ -791,9 +728,8 @@ class TestParseDaysInSpain:
 
         self._parse = _parse_days_in_spain
 
-    @pytest.mark.parametrize(
-        ("raw_facts", "expected"),
-        (
+    def test_parse_days_in_spain_cases(self) -> None:
+        cases = (
             ({"taxpayer_type.days_in_spain_2024": "165"}, {2024: 165}),
             (
                 {
@@ -813,16 +749,6 @@ class TestParseDaysInSpain:
                 {2024: 183},
             ),
             ({"taxpayer_type.days_in_spain_20244": "100"}, {}),
-        ),
-        ids=(
-            "single-year",
-            "multiple-years",
-            "non-four-digit-year",
-            "non-numeric-value",
-            "empty",
-            "ignores-unrelated-keys",
-            "five-digit-year",
-        ),
-    )
-    def test_parse_days_in_spain_cases(self, raw_facts: dict[str, str], expected: dict[int, int]) -> None:
-        assert self._parse(raw_facts) == expected
+        )
+        for raw_facts, expected in cases:
+            assert self._parse(raw_facts) == expected, raw_facts

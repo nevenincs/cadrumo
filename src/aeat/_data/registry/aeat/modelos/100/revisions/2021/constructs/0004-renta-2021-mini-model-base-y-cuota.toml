@@ -39,7 +39,6 @@ formulas = [
     "renta-2021-deduccion-unidad-familiar-clamp-positiva",
     "renta-2021-resto-a-ingresar-positivo",
     "renta-2021-deduccion-doble-imposicion-internacional-suma",
-    "renta-2021-anualidades-alimentos-hijos-suma",
     "renta-2021-importe-derecho-reduccion-pension-suma",
     "renta-2021-cuota-liquida-autonomica-incrementada-passthrough",
     "renta-2021-deduccion-economia-social-passthrough",

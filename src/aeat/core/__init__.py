@@ -30,27 +30,27 @@ can import the public core facade without recreating the cycles those helpers
 break internally.
 
 Major subpackages remain the specialised homes for broader contracts:
-:mod:`aeat.core.config` owns :class:`~aeat.core.config.Settings` and storage
-route classification, :mod:`aeat.core.errors` owns the error taxonomy and
-registry, :mod:`aeat.core.money` and :mod:`aeat.core.decimal` own Decimal
-primitives, :mod:`aeat.core.time` owns clocks, :mod:`aeat.core.identity` owns
-NIF/NIE/bucket/profile identifiers, :mod:`aeat.core.access_gate` owns live-read
-and write-refusal gating, :mod:`aeat.core.redaction` owns safe output, and
-:mod:`aeat.core.classification` owns sensitivity policy.
+:mod:`core.config` owns :class:`core.config.Settings` and storage route
+classification, :mod:`core.errors` owns the error taxonomy and registry,
+:mod:`core.money` and :mod:`core.decimal` own Decimal primitives,
+:mod:`core.time` owns clocks, :mod:`core.identity` owns NIF/NIE/bucket/profile
+identifiers, :mod:`core.access_gate` owns live-read and write-refusal gating,
+:mod:`core.redaction` owns safe output, and :mod:`core.classification` owns
+sensitivity policy.
 
 See Also:
-    :class:`aeat.core.Period`: Canonical filing year plus registry period-code
-        value used across registry, deadline, and workflow boundaries.
-    :class:`aeat.core.BucketPointer`: Typed value for the plaintext
+    :class:`Period`: Canonical filing year plus registry period-code value used
+        across registry, deadline, and workflow boundaries.
+    :class:`BucketPointer`: Typed value for the plaintext
         ``active-profile`` pointer file.
-    :func:`aeat.core.resolve_active_bucket_id`: Central active-bucket
-        precedence resolver for storage and CLI startup paths.
-    :func:`aeat.core.read_toml`: Shared committed-TOML loader with
-        caller-owned error wrapping.
-    :class:`aeat.core.ResultDisposition`: Codified fichero result-disposition
+    :func:`resolve_active_bucket_id`: Central active-bucket precedence resolver
+        for storage and CLI startup paths.
+    :func:`read_toml`: Shared committed-TOML loader with caller-owned error
+        wrapping.
+    :class:`ResultDisposition`: Codified fichero result-disposition
         code set grounded in bundled AEAT diseños.
-    :class:`aeat.core.BindingSourceKind`: Canonical registry binding-source
-        taxonomy resolved lazily from :mod:`aeat.core.aggregation`.
+    :class:`BindingSourceKind`: Canonical registry binding-source taxonomy
+        resolved lazily from :mod:`core.aggregation`.
 """
 
 from __future__ import annotations

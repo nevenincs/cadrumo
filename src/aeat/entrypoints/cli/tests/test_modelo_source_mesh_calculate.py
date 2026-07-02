@@ -366,7 +366,7 @@ def test_work_calculate_modelo_115_uses_retenciones_aggregation_observation() ->
 
 
 def test_work_calculate_modelo_100_routes_marta_auto_ledger_expenses() -> None:
-    """Marta's public CLI M100 path carries 2024 ledger expenses into 0218/0220/0224."""
+    """Marta's public CLI M100 path carries ledger income through 0171/0180/0224."""
     from ....application.user_profile._orchestration import profile_storage_session
     from ....core import resolve_active_bucket_id
 
@@ -449,6 +449,7 @@ def test_work_calculate_modelo_100_routes_marta_auto_ledger_expenses() -> None:
     casilla_values = _payload(calculated.output)["casilla_values"]
 
     assert Decimal(casilla_values["0171"]) == Decimal("12000.00")
+    assert Decimal(casilla_values["0180"]) == Decimal("12000.00")
     assert Decimal(casilla_values["0218"]) == Decimal("2400.00")
     assert Decimal(casilla_values["0220"]) == Decimal("2400.00")
     assert Decimal(casilla_values["0224"]) == Decimal("9600.00")

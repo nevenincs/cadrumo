@@ -1020,6 +1020,7 @@ def calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
         modelo=work_unit.modelo,
         period_token=work_unit.period.registry_token,
         filing_year=work_unit.filing_year,
+        bucket_id=work_unit.bucket_id,
     )
     source_diagnostics = source_diagnostics + advisory_diagnostics
     return BucketAggregationCalculationResult(

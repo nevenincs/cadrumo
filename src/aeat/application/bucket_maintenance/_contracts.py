@@ -206,3 +206,38 @@ class ImportBucketResult(BaseModel):
     manifest_digest: str = Field(min_length=64, max_length=64, pattern=r"^[0-9a-f]{64}$")
     archive_schema_version: int = Field(ge=1)
     occurred_at: datetime
+
+
+class InspectBucketArchiveCommand(BaseModel):
+    """Operator request to inspect a sealed bucket archive without restoring it.
+
+    Read-only: the source archive is neither decrypted nor written to. This
+    lets an operator confirm which bucket a backup file holds, when it was
+    written, and whether it carries a recovery-wrap member, without needing
+    the sealing key.
+    """
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    source_path: Path
+
+
+class InspectBucketArchiveResult(BaseModel):
+    """Outcome of a successful sealed-archive inspection.
+
+    Every field is read from the archive's plaintext header plus the
+    on-disk file size; the AEAD-encrypted payload itself is never opened,
+    so this result cannot report per-store row counts. ``manifest_digest``
+    is the header's integrity anchor (unverified here — verification only
+    happens during a real ``import``, where it is authenticated as AEAD
+    associated data at decryption).
+    """
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    bucket_id: BucketId
+    manifest_digest: str = Field(min_length=64, max_length=64, pattern=r"^[0-9a-f]{64}$")
+    recovery_wrap_present: bool
+    archive_schema_version: int = Field(ge=1)
+    created_at: datetime
+    size_bytes: int = Field(ge=0)

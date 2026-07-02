@@ -236,7 +236,10 @@ adapters:
             comprobacion de integridad.
           namespace_blank: El espacio de nombres de almacenamiento local no puede
             estar vacio.
-          namespace_create_path_too_long: 'El almacenamiento local no pudo crear el espacio de nombres {namespace}: la ruta supera el límite de longitud de ruta de Windows. Traslade AEAT_LOCAL_STORAGE_ROOT a una ruta más corta o habilite LongPathsEnabled (véase `aeat config check`).'
+          namespace_create_path_too_long: 'El almacenamiento local no pudo crear el
+            espacio de nombres {namespace}: la ruta supera el límite de longitud de
+            ruta de Windows. Traslade AEAT_LOCAL_STORAGE_ROOT a una ruta más corta
+            o habilite LongPathsEnabled (véase `aeat config check`).'
           namespace_create_permission: El almacenamiento local no pudo crear el espacio
             de nombres {namespace}.
           namespace_forbidden_characters: El espacio de nombres local {namespace}
@@ -253,7 +256,10 @@ adapters:
             el payload del objeto.
           payload_read_permission: El almacenamiento local no pudo leer el payload
             del objeto.
-          payload_write_path_too_long: 'El almacenamiento local no pudo escribir la carga del objeto: la ruta supera el límite de longitud de ruta de Windows. Traslade AEAT_LOCAL_STORAGE_ROOT a una ruta más corta o habilite LongPathsEnabled (véase `aeat config check`).'
+          payload_write_path_too_long: 'El almacenamiento local no pudo escribir la
+            carga del objeto: la ruta supera el límite de longitud de ruta de Windows.
+            Traslade AEAT_LOCAL_STORAGE_ROOT a una ruta más corta o habilite LongPathsEnabled
+            (véase `aeat config check`).'
           payload_write_permission: El almacenamiento local no pudo escribir el payload
             del objeto.
           sidecar_malformed: El sidecar local {sidecar_path} no se puede leer o esta
@@ -2537,6 +2543,20 @@ cli:
       help: Bloquear el perfil activo eliminando el puntero de perfil activo.
     profile:
       already_exists: El perfil %{name} ya existe. Elige otro identificador de destino.
+      archive:
+        export_full_backup_info: 'Este archivo es una copia de seguridad COMPLETA: está cifrado AEAD en reposo e incluye los bytes de evidencia de justificantes, el registro de auditoría y las entradas de cálculo entre periodos, además del perfil, el libro contable, los cálculos y el historial de presentaciones. Guárdalo en un lugar seguro; restáuralo con ''aeat config profile archive import''.'
+        export_help: 'Escribe un archivo de copia de seguridad completa, sellado y cifrado, en RUTA.'
+        export_name_help: 'Perfil a respaldar; por defecto el activo.'
+        export_out_help: 'Ruta de destino del archivo.'
+        export_recovery_wrap_help: 'Frase de paso opcional para sellar el archivo, en lugar de la clave activa del bucket; obligatoria si el archivo saldrá de este equipo.'
+        help: 'Copia de seguridad y restauración de un perfil como archivo sellado y cifrado AEAD (el transporte de recuperación de custodia completa).'
+        import_active_switch_info: 'El perfil restaurado es ahora el perfil ACTIVO; los siguientes comandos operan sobre él. Ejecuta ''aeat config switch <nombre>'' para cambiar el perfil activo.'
+        import_force_help: 'Sobrescribe un perfil existente que comparta el identificador de bucket del archivo.'
+        import_help: 'Restaura un perfil desde un archivo sellado y cifrado en RUTA.'
+        import_path_help: 'Ruta del archivo sellado.'
+        import_recovery_wrap_help: 'Frase de paso para desellar el archivo; obligatoria si se exportó con una.'
+        inspect_help: 'Muestra la cabecera de un archivo sellado sin descifrarlo ni restaurarlo.'
+        inspect_path_help: 'Ruta del archivo sellado.'
       capabilities:
         capability_help: Servicio que se quiere activar o desactivar.
         capability_label: capacidad
@@ -4322,7 +4342,8 @@ errors:
       del repositorio.
     error_outbound_storage_not_found: No existe el objeto o el espacio de almacenamiento
       solicitado.
-    error_outbound_storage_path_too_long: 'La ruta de almacenamiento resuelta supera el límite MAX_PATH de Windows.'
+    error_outbound_storage_path_too_long: La ruta de almacenamiento resuelta supera
+      el límite MAX_PATH de Windows.
     error_pdf_import_pdf_modelo_import: Falló la importación de la declaración desde
       el PDF.
     error_pdf_import_scrub: No se pudo producir una versión segura del PDF.
@@ -4376,7 +4397,9 @@ errors:
       con el filtro solicitado.
     error_sede_navigation: Falló un paso de navegación en la Sede de la AEAT.
     error_storage_bucket: Se produjo un error en el ciclo de vida del bucket de almacenamiento.
-    error_storage_bucket_path_too_long: 'La ruta del directorio del bucket supera el límite MAX_PATH de Windows. Traslade AEAT_LOCAL_STORAGE_ROOT a una ruta más corta o habilite LongPathsEnabled (véase `aeat config check`).'
+    error_storage_bucket_path_too_long: La ruta del directorio del bucket supera el
+      límite MAX_PATH de Windows. Traslade AEAT_LOCAL_STORAGE_ROOT a una ruta más
+      corta o habilite LongPathsEnabled (véase `aeat config check`).
     error_submission_validation: Un modelo de envío no superó la validación.
     error_transaction_catalogue: El catálogo de transacciones no es válido o es inconsistente.
     error_transaction_classification_rule: Una regla de clasificación del libro mayor
@@ -5317,8 +5340,8 @@ wizard:
       \ profile create NAME\n\n2. O crea un perfil de persona física residente IRPF\
       \ en un solo paso indicando los datos obligatorios como flags:\n     aeat config\
       \ profile create NAME --quiet --tax-id NIF/CIF/DNI/NIE --entity-type natural_person\
-      \ --irpf-income-categories actividad_economica --tax-residence-ccaa madrid\
-      \ --name NOMBRE --surnames APELLIDOS"
+      \ --irpf-income-categories actividad_economica --tax-residence-ccaa madrid --name\
+      \ NOMBRE --surnames APELLIDOS"
     unsupported_console_edit: "No pude abrir el asistente guiado en esta ejecución.\n\
       Todavía no se ha guardado nada.\n\nEdita este perfil de forma no interactiva\
       \ indicando el campo a cambiar:\n  aeat config profile edit %{profile_name}\

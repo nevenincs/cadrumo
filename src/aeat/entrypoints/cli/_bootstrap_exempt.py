@@ -44,6 +44,16 @@ BOOTSTRAP_EXEMPT_VERB_PATHS: tuple[str, ...] = (
     # imported bucket establishes its own session as part of the
     # import flow.
     "config profile import",
+    # Recovery from a sealed full-custody archive: same shape as
+    # ``config profile import`` — BucketMaintenanceService.import_
+    # provisions and opens its own session as part of the restore.
+    "config profile archive import",
+    # Read-only header inspection of a sealed archive file. Delegates
+    # to the plaintext-header reader only (no decryption, no bucket
+    # session); must stay reachable even when an unrelated profile is
+    # already active and locked, or before any profile has ever been
+    # created.
+    "config profile archive inspect",
     # Custody verbs own their own session / recovery / rewrap flow. The
     # root callback must not pre-open the active bucket session before
     # these handlers can resolve passphrase or recovery material. The
