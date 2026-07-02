@@ -934,6 +934,7 @@ application:
         Vuelva a crear la unidad de trabajo para vincularla a la revision actual.
       workflow_input_mismatch: La solicitud de entrada del flujo de trabajo no coincide
         con la revisión de cálculo.
+      workflow_gate_no_pending_obligation: 'No hay ninguna obligación de presentación pendiente para este modelo/periodo en la fecha actual (la ventana de obligación de presentación de la AEAT no está abierta). La presentación a fichero no requiere este paso: exporta la revisión verificada-completa con ''aeat app modelo export''; ese es el punto final local. ''work file'' es el paso interno opcional para marcar como presentado cuando la ventana de obligación esté abierta.'
     findings:
       art20_reduccion_next_action: Verifique si sus otras rentas distintas de las
         del trabajo excluidas las exentas del ejercicio no superan 6500 EUR; en ese
@@ -4922,8 +4923,6 @@ errors:
     refused_modelo_refund_election_not_eligible: Se solicito una devolucion en un
       periodo donde no esta disponible; solo el ultimo periodo de declaracion del
       ano permite la devolucion a un no inscrito en REDEME.
-    refused_modelo_workflow_gate: El control del flujo de trabajo rechazó la transición
-      de la declaración. La declaración no puede considerarse presentada legalmente.
     refused_no_active_profile: Esta operación necesita un perfil activo. Crea o selecciona
       un perfil y vuelve a intentarlo.
     refused_operator_surface_contract: La superficie solicitada queda fuera del contrato

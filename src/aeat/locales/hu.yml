@@ -870,6 +870,7 @@ application:
         létre újra a munkaegységet.
       workflow_input_mismatch: A munkafolyamat bemeneti kérelme nem egyezik a számítási
         revízióval.
+      workflow_gate_no_pending_obligation: 'Nincs függőben lévő benyújtási kötelezettség ehhez a modellhez/időszakhoz az aktuális dátumon (az AEAT benyújtási kötelezettségi ablaka nincs nyitva). A fichero-exporthoz nem szükséges ez a lépés: exportáld az ellenőrzötten teljes revíziót az ''aeat app modelo export'' paranccsal; ez a helyi befejezési pont. A ''work file'' az opcionális belső megjelölés benyújtottnak, amikor a kötelezettségi ablak nyitva van.'
     findings:
       art20_reduccion_next_action: Ellenorizze, hogy a nem munkabol szarmazo egyeb
         jovedelme a mentes jovedelem nelkul az adoevben nem haladja-e meg a 6500 EUR-t;
@@ -4779,8 +4780,6 @@ errors:
     refused_modelo_refund_election_not_eligible: Visszateritest kertek olyan idoszakra,
       ahol nem elerheto; csak az ev utolso bevallasi idoszaka tesz lehetove nem REDEME
       visszateritest.
-    refused_modelo_workflow_gate: A munkafolyamat-kapu elutasította a benyújtás-átmenetet.
-      A bevallás nem tekinthető jogilag benyújtottnak.
     refused_no_active_profile: Ehhez a művelethez aktív profil szükséges. Hozzon létre
       vagy válasszon ki egy profilt, és próbálja újra.
     refused_operator_surface_contract: A kért felület kívül esik az elfogadott szerződésen.

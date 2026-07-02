@@ -31,10 +31,11 @@ related:
 
 ## Scope
 
-Reviewed the W09.P45 operator-surface fixes for S356 and S358.
+Reviewed the W09.P45 operator-surface fixes for S356, S358, and S219.
 
 - S356 adds operator-visible `iva_category` rendering to human `ledger list` output while preserving the existing typed JSON row contract. The audit covered the projection code, the real CLI regression test, the S356 plan row close, and the S356 execution record.
 - S358 adds royalty/SGAE guidance to the existing `ledger classify --irpf-category` help text without adding automatic classification heuristics. The audit covered the locale leaves, the real CLI help regression, the S358 plan row close, and the S358 execution record.
+- S219 localizes the `NO_PENDING_OBLIGATION` workflow-gate refusal for `modelo work file` through the existing error-rendering boundary. The audit covered the exception mapping, registry key, locale leaves, renderer tests, the S219 plan row close, and the S219 execution record.
 
 ## Findings
 
@@ -46,6 +47,10 @@ No findings for the ledger-list IVA-category display fix. Human `ledger list` ou
 
 No findings for the royalty guidance fix. The `--irpf-category` help text now points operators to the category catalogue and explains the Art. 25.4 versus Art. 27 distinction without advertising `capital_mobiliario` as a public ledger category id and without adding a heuristic classifier.
 
+### w09-p45-s219 | low | no findings
+
+No findings for the no-pending-obligation localization fix. `NO_PENDING_OBLIGATION` now resolves its human refusal text through the active output language while preserving the raw `abort_code`, `stage`, workflow result summary for telemetry, and non-`NO_PENDING_OBLIGATION` workflow summaries.
+
 ## Recommendations
 
-No follow-up required for S356 or S358.
+No follow-up required for S356, S358, or S219.
