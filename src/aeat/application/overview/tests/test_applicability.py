@@ -433,109 +433,46 @@ def _autonomo_simplificada() -> TaxpayerProfile:
     )
 
 
-def test_objetiva_autonomo_owes_modelo_131_not_130() -> None:
-    """An autónomo en estimación objetiva files Modelo 131 (pago
-    fraccionado por módulos), and NOT Modelo 130 — the two are mutually
-    exclusive on the estimation regime (research §2.1)."""
+def test_pago_fraccionado_regime_matrix_routes_modelos_130_and_131() -> None:
+    """M130/M131 stay mutually exclusive by estimation regime and taxpayer route."""
 
-    profile = _autonomo_objetiva()
-
-    m131 = derive_modelo_applicability(profile, "131")
-    assert m131.verdict is ApplicabilityVerdict.APPLICABLE
-    assert m131.applicable is True
-
-    m130 = derive_modelo_applicability(profile, "130")
-    assert m130.verdict is ApplicabilityVerdict.NOT_APPLICABLE
-    assert m130.applicable is False
-
-
-def test_directa_normal_autonomo_owes_modelo_130_not_131() -> None:
-    """An autónomo en estimación directa normal files Modelo 130, and
-    NOT Modelo 131 — the regime axis splits the two."""
-
-    profile = _autonomo()  # DIRECTA_NORMAL
-
-    m130 = derive_modelo_applicability(profile, "130")
-    assert m130.verdict is ApplicabilityVerdict.APPLICABLE
-
-    m131 = derive_modelo_applicability(profile, "131")
-    assert m131.verdict is ApplicabilityVerdict.NOT_APPLICABLE
-
-
-def test_directa_simplificada_autonomo_owes_modelo_130_not_131() -> None:
-    """Estimación directa simplificada is still estimación directa: it
-    files Modelo 130, never Modelo 131."""
-
-    profile = _autonomo_simplificada()
-
-    m130 = derive_modelo_applicability(profile, "130")
-    assert m130.verdict is ApplicabilityVerdict.APPLICABLE
-
-    m131 = derive_modelo_applicability(profile, "131")
-    assert m131.verdict is ApplicabilityVerdict.NOT_APPLICABLE
-
-
-def test_autonomo_without_declared_regime_defaults_to_directa_owes_modelo_130() -> None:
-    """An autónomo with actividad económica but no declared estimation
-    regime owes Modelo 130, not Modelo 131.
-
-    Estimación directa is the LIRPF default method (art. 16; RIRPF art. 32
-    makes módulos opt-in), so an undeclared regime resolves to directa.
-    The engine must not refuse to decide: dropping every M130
-    row for an actividad-económica filer with no regime declared was the
-    silent-omission defect this assertion now guards against. M130 / M131
-    stay mutually exclusive — directa owes only the 130."""
-
-    profile = TaxpayerProfile(
+    default_directa_profile = TaxpayerProfile(
         tax_id="A4567890B",
         entity_type=EntityType.NATURAL_PERSON,
         irpf_income_categories=frozenset({IrpfIncomeCategory.ACTIVIDAD_ECONOMICA}),
         iva_regime=IVARegime.GENERAL,
     )
-    assert profile.irpf_estimation_regime is None
-    assert derive_modelo_applicability(profile, "130").verdict is ApplicabilityVerdict.APPLICABLE
-    assert derive_modelo_applicability(profile, "131").verdict is ApplicabilityVerdict.NOT_APPLICABLE
-
-
-def test_autonomo_modulos_regime_owes_modelo_131() -> None:
-    """An autónomo who declares módulos owes Modelo 131, not Modelo 130."""
-
-    profile = TaxpayerProfile(
+    modulos_general_profile = TaxpayerProfile(
         tax_id="A4567890B",
         entity_type=EntityType.NATURAL_PERSON,
         irpf_income_categories=frozenset({IrpfIncomeCategory.ACTIVIDAD_ECONOMICA}),
         iva_regime=IVARegime.GENERAL,
         irpf_estimation_regime=IrpfEstimationRegime.OBJETIVA,
     )
-    assert profile.irpf_estimation_regime is IrpfEstimationRegime.OBJETIVA
-    assert derive_modelo_applicability(profile, "131").verdict is ApplicabilityVerdict.APPLICABLE
-    assert derive_modelo_applicability(profile, "130").verdict is ApplicabilityVerdict.NOT_APPLICABLE
+    assert default_directa_profile.irpf_estimation_regime is None
+    assert modulos_general_profile.irpf_estimation_regime is IrpfEstimationRegime.OBJETIVA
 
+    cases = (
+        ("objetiva-m130", _autonomo_objetiva(), "130", ApplicabilityVerdict.NOT_APPLICABLE, False),
+        ("objetiva-m131", _autonomo_objetiva(), "131", ApplicabilityVerdict.APPLICABLE, True),
+        ("directa-normal-m130", _autonomo(), "130", ApplicabilityVerdict.APPLICABLE, True),
+        ("directa-normal-m131", _autonomo(), "131", ApplicabilityVerdict.NOT_APPLICABLE, False),
+        ("directa-simplificada-m130", _autonomo_simplificada(), "130", ApplicabilityVerdict.APPLICABLE, True),
+        ("directa-simplificada-m131", _autonomo_simplificada(), "131", ApplicabilityVerdict.NOT_APPLICABLE, False),
+        ("default-directa-m130", default_directa_profile, "130", ApplicabilityVerdict.APPLICABLE, True),
+        ("default-directa-m131", default_directa_profile, "131", ApplicabilityVerdict.NOT_APPLICABLE, False),
+        ("modulos-general-m130", modulos_general_profile, "130", ApplicabilityVerdict.NOT_APPLICABLE, False),
+        ("modulos-general-m131", modulos_general_profile, "131", ApplicabilityVerdict.APPLICABLE, True),
+        ("landlord-m131", _landlord(), "131", ApplicabilityVerdict.NOT_APPLICABLE, False),
+        ("sl-m130", _sociedad_limitada(), "130", ApplicabilityVerdict.NOT_APPLICABLE, False),
+        ("sl-m131", _sociedad_limitada(), "131", ApplicabilityVerdict.NOT_APPLICABLE, False),
+        ("attribution-m131", _attribution_entity(), "131", ApplicabilityVerdict.ATTRIBUTION_PASS_THROUGH, False),
+    )
 
-def test_landlord_does_not_owe_modelo_131() -> None:
-    """A pure landlord has no actividad económica and never files the
-    estimación-objetiva pago fraccionado."""
-
-    result = derive_modelo_applicability(_landlord(), "131")
-    assert result.verdict is ApplicabilityVerdict.NOT_APPLICABLE
-
-
-def test_legal_entity_does_not_owe_irpf_pago_fraccionado() -> None:
-    """A sociedad limitada files neither Modelo 130 nor Modelo 131 — the
-    IRPF pago fraccionado is not a corporate obligation."""
-
-    profile = _sociedad_limitada()
-    for modelo in ("130", "131"):
+    for case_id, profile, modelo, expected_verdict, expected_applicable in cases:
         result = derive_modelo_applicability(profile, modelo)
-        assert result.verdict is ApplicabilityVerdict.NOT_APPLICABLE, modelo
-
-
-def test_attribution_entity_pago_fraccionado_is_pass_through() -> None:
-    """Modelo 131, like Modelo 130, is an IRPF cuota self-assessment:
-    an attribution entity gets the pass-through verdict."""
-
-    result = derive_modelo_applicability(_attribution_entity(), "131")
-    assert result.verdict is ApplicabilityVerdict.ATTRIBUTION_PASS_THROUGH
+        assert result.verdict is expected_verdict, case_id
+        assert result.applicable is expected_applicable, case_id
 
 
 # ---------------------------------------------------------------------
