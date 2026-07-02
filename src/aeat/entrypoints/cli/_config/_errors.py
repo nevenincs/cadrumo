@@ -1,7 +1,7 @@
 """Typed error boundary for the config CLI subpackage.
 
-:exc:`~aeat.entrypoints.cli._config._errors.ConfigBoundaryError` wraps unexpected
-(non-:class:`~aeat.core.errors.AeatError`)
+:exc:`ConfigBoundaryError` wraps unexpected
+(non-:class:`AeatError`)
 exceptions that escape the config command surface so they reach the
 structured error-rendering pipeline as a typed envelope rather than being
 swallowed or reported as bare Python exceptions.
@@ -16,12 +16,12 @@ class ConfigBoundaryError(CoreError):
     """Raised when an unexpected exception escapes a config CLI boundary.
 
     Any exception raised inside a config command that is not already a typed
-    :class:`~aeat.core.errors.AeatError` subclass is wrapped here so downstream
+    :class:`AeatError` subclass is wrapped here so downstream
     renderers always receive a typed envelope with a registered
-    :class:`~aeat.core.errors.ErrorCode`.
+    :class:`ErrorCode`.
 
     The original exception is preserved on
-    :attr:`~aeat.entrypoints.cli._config._errors.ConfigBoundaryError.original_exception`
+    :attr:`ConfigBoundaryError.original_exception`
     so tests and log subscribers can inspect the underlying cause without losing
     provenance.
 
