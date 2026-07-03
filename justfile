@@ -389,6 +389,17 @@ audit-debt-dashboard:
     @echo "=== security ==="
     -@just check-security
 
+# Monthly code-health report: shadowing, duplication, layering, complexity,
+# each classified red/amber/green. Composes the scanners above (plus
+# lint-imports) into one contributor-facing verdict. Exits 1 if any
+# dimension is RED; AMBER dimensions are advisory debt, not a gate.
+audit-health-report:
+    @uv run --no-sync python -m dev.audit.report
+
+# Same report, machine-readable.
+audit-health-report-json:
+    @uv run --no-sync python -m dev.audit.report --json
+
 # ── Documentation ────────────────────────────────────────────────────────────
 
 # Build changed narrative and API reference documents.
