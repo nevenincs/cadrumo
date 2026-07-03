@@ -1035,6 +1035,7 @@ application:
         {year} {part}.
       manual_section_requires_structure: Manual section requires extracted structure
         for {manual_key}.
+      no_revision_for_diff_year: 'No registry revision of {modelo} covers filing year {filing_year}. Declared revisions: {available_revisions}.'
   repair_integrity:
     errors:
       conflicting_list_filters: 'Repair list filters are mutually exclusive: {filters}.
@@ -2979,8 +2980,9 @@ cli:
       reaffirmed: Classification reaffirmed.
       reason_empty: Refused. --reason must record why you are classifying this transaction.
         Pass a non-empty rationale, or omit --reason.
-      reason_help: Free-text reason recorded as the transaction notes for a manual
-        classification, or with a --reject decision.
+      reason_help: Free-text reason recorded as the transaction notes and as the classification
+        decision's provenance reason (visible on ledger view), or with a --reject
+        decision.
       reject_apply_exclusive: '--reject cannot be combined with --apply: reject records
         a declined suggestion, apply records an accepted one.'
       reject_help: Record an explicit rejection of the LLM suggestion as an audit
@@ -3098,6 +3100,10 @@ cli:
       checked: Checked transactions
       child_id: Child transaction id
       children: Children
+      classification_confidence: Classification confidence
+      classification_reason: Classification reason
+      classified_at: Classified at
+      classified_by: Classified by
       counterparty: Counterparty
       counterparty_eu_member_state: EU counterparty
       created_event_id: Created bucket event
@@ -3222,19 +3228,29 @@ cli:
       help: List which subprocess LLM providers have a usable CLI on PATH.
     pull_folder:
       errors:
-        folder_id_unrecognised: 'Google Drive folder reference %{reference} does not contain a recognisable folder id. Pass a Drive folder URL or its bare folder id.'
-        folder_refused: 'Cannot list the Drive folder %{folder_id}%{scope_hint}: the folder must be reachable under the drive.file scope (created by the app or explicitly picked by the operator), or grant the required Google scope and retry.'
-      folder_help: 'Drive folder URL or bare folder id to bulk-fetch invoice PDFs/images from.'
-      help: 'Bulk-fetch every PDF/image invoice in a Drive folder and store each as encrypted evidence (unlinked to any transaction; link with ''aeat app ledger attach'' or ''link'').'
+        folder_id_unrecognised: Google Drive folder reference %{reference} does not
+          contain a recognisable folder id. Pass a Drive folder URL or its bare folder
+          id.
+        folder_refused: 'Cannot list the Drive folder %{folder_id}%{scope_hint}: the
+          folder must be reachable under the drive.file scope (created by the app
+          or explicitly picked by the operator), or grant the required Google scope
+          and retry.'
+      folder_help: Drive folder URL or bare folder id to bulk-fetch invoice PDFs/images
+        from.
+      help: Bulk-fetch every PDF/image invoice in a Drive folder and store each as
+        encrypted evidence (unlinked to any transaction; link with 'aeat app ledger
+        attach' or 'link').
       labels:
-        fetched: 'fetched_count'
-        folder_id: 'folder_id'
-        refused: 'refused_count'
-        skipped: 'skipped_non_document_count'
-        total: 'total_documents'
-      note_help: 'Optional note recorded on every fetched attachment.'
+        fetched: fetched_count
+        folder_id: folder_id
+        refused: refused_count
+        skipped: skipped_non_document_count
+        total: total_documents
+      note_help: Optional note recorded on every fetched attachment.
       notices:
-        files_refused: '%{refused_count} file(s) in this folder could not be fetched under the drive.file scope; download them manually and attach with ''aeat app ledger attach --attachment-id ...''.'
+        files_refused: '%{refused_count} file(s) in this folder could not be fetched
+          under the drive.file scope; download them manually and attach with ''aeat
+          app ledger attach --attachment-id ...''.'
     remove:
       actor_help: Operator name recorded on the bucket event
       dry_run_help: Report removal effects without deleting the ledger transaction
@@ -3613,6 +3629,10 @@ cli:
       tag_help: Filter by tax-domain tag (e.g. 'irpf', 'iva')
       verify_help: Verify the legal-norm corpus integrity
       view_help: Show one legal authority and, optionally, one of its articles
+    diff_revisions_from_year_help: 'Earlier filing year whose covering revision is the diff baseline'
+    diff_revisions_help: 'Diff the registry revisions of one modelo across two filing years'
+    diff_revisions_modelo_help: 'Modelo identifier to diff'
+    diff_revisions_to_year_help: 'Later filing year whose covering revision is compared against the baseline'
     inspect_help: Inspect registry status and references
     inspect_registry_root_help: Path to the registry root directory
     manuals:
@@ -4109,7 +4129,6 @@ errors:
     error_categories: An error occurred in the expense categories.
     error_categories_validation: A category record failed validation.
     error_config_boundary: The config command encountered an unexpected internal error.
-    error_corpus_search: 'The on-host corpus search could not be completed.'
     error_deadlines_deadline: An error occurred in the deadline calculation.
     error_deadlines_missing_windows: Deadline windows are missing.
     error_deadlines_profile: The self-employed profile could not be loaded or validated
@@ -4286,6 +4305,7 @@ errors:
       modelo, year, and period.
     modelo_work_selector: The modelo work selector failed.
     modelo_work_selector_unit_not_found: The selected modelo work unit was not found.
+    error_corpus_search: 'The on-host corpus search could not be completed.'
   fail:
     censo_sync: The Modelo 036 censo sync failed.
     currency_error: Currency normalization failed.
@@ -4496,7 +4516,8 @@ errors:
     profile_import_signature: The profile archive failed its signature or integrity
       check. Do not import archives from an untrusted source.
   internal:
-    internal_cli_unexpected_boundary: 'The command failed due to an unexpected internal error, not a stored-data problem. Inspect the diagnostic logs to see what failed.'
+    internal_cli_unexpected_boundary: The command failed due to an unexpected internal
+      error, not a stored-data problem. Inspect the diagnostic logs to see what failed.
     internal_master_key_reentrant: 'Internal error: master-key provider entered re-entrantly;
       close the active session before re-entering.'
     internal_master_key_type: 'Internal error: master-key operation received a value
@@ -4652,8 +4673,6 @@ errors:
       command's arguments or run `aeat --help`.
     refused_config_reset_unconfirmed: The configuration reset was not confirmed. Re-run
       the command confirming the operation.
-    refused_corpus_search_dependency: 'This corpus-search operation needs the optional semantic-search components; install them and retry.'
-    refused_corpus_search_input: 'The corpus search request could not be satisfied.'
     refused_diagnostic_model_invariant: A DiagnosticCheck construction invariant was
       violated; check that exactly one of next_action or dead_end is set for fail/warn
       rows, and neither is set for ok rows.
@@ -4840,6 +4859,8 @@ errors:
     submission_preflight_error_findings: Draft has {finding_count} ERROR-severity
       finding(s); resolve them before submission.
     unsupported_currency: The currency code provided is not supported.
+    refused_corpus_search_input: 'The corpus search request could not be satisfied.'
+    refused_corpus_search_dependency: 'This corpus-search operation needs the optional semantic-search components; install them and retry.'
   snapshot:
     ambiguous_revision_selection: 'More than one registry revision matches modelo
       %{modelo_id}: %{candidate_ids}.'
@@ -5016,6 +5037,7 @@ sheets:
     headers:
       acquisition_date: Acquisition date
       amount: Amount
+      amount_donated: Amount donated
       asset_class_code: Asset class code
       asset_identifier: Asset identifier
       base_imponible: Tax base
@@ -5025,7 +5047,11 @@ sheets:
       counterparty_tax_id: Counterparty tax id
       country_code: Country code
       currency_code: Currency code
+      deduction_percentage: Deduction percentage
+      donor_legal_name: Donor legal name
+      donor_tax_id: Donor tax id
       ingreso_a_cuenta: In-kind tax credit
+      is_recurrent: Recurrent donation
       member_legal_name: Member legal name
       member_state_code: Member state
       member_tax_id: Member tax id
