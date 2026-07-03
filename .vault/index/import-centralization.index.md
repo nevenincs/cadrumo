@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#import-centralization'
-date: '2026-07-02'
-modified: '2026-07-02'
+date: '2026-07-03'
+modified: '2026-07-03'
 related:
   - '[[2026-07-01-import-centralization-W01-P02-S01]]'
   - '[[2026-07-01-import-centralization-W01-P03-S02]]'
@@ -22,6 +22,9 @@ related:
   - '[[2026-07-01-import-centralization-W02-P43-S199]]'
   - '[[2026-07-01-import-centralization-W02-P45-S217]]'
   - '[[2026-07-01-import-centralization-W02-P49-S240]]'
+  - '[[2026-07-01-import-centralization-W02-P51-S248]]'
+  - '[[2026-07-01-import-centralization-W02-P52-S252]]'
+  - '[[2026-07-01-import-centralization-W02-P52-S254]]'
   - '[[2026-07-01-import-centralization-W02-P54-S258]]'
   - '[[2026-07-01-import-centralization-W02-P61-S275]]'
   - '[[2026-07-01-import-centralization-W03-P87-S364]]'
@@ -106,7 +109,13 @@ related:
   - '[[2026-07-01-import-centralization-W05-P86-S361]]'
   - '[[2026-07-01-import-centralization-W05-P86-S362]]'
   - '[[2026-07-01-import-centralization-W05-P86-S363]]'
+  - '[[2026-07-01-import-centralization-W06-P90-S382]]'
+  - '[[2026-07-01-import-centralization-W06-P90-S383]]'
+  - '[[2026-07-01-import-centralization-W06-P90-S384]]'
   - '[[2026-07-01-import-centralization-W06-P90-S387]]'
+  - '[[2026-07-01-import-centralization-W06-P90-S399]]'
+  - '[[2026-07-01-import-centralization-W06-P90-S400]]'
+  - '[[2026-07-01-import-centralization-W06-P90-S401]]'
   - '[[2026-07-01-import-centralization-W06-P90-S402]]'
   - '[[2026-07-01-import-centralization-adr]]'
   - '[[2026-07-01-import-centralization-plan]]'
@@ -232,8 +241,17 @@ Auto-generated index of all documents tagged with `#import-centralization`.
 - `2026-07-01-import-centralization-W05-P86-S362` - Rewire the 2 test-only cross-package private import site(s) across 1 test file(s) reaching into `aeat.entrypoints.mcp` onto its promoted top-level facade
 - `2026-07-01-import-centralization-W05-P86-S363` - Rewire the 1 test-only cross-package private import site(s) across 1 test file(s) reaching into `aeat.core.decimal` onto its promoted top-level facade
 - `2026-07-01-import-centralization-W06-P90-S387` - Codify the durable lessons: refine service-imports-via-top-level-reexports with the mechanical-vs-disposition promotion split, and author a new rule dynamic-import-targets-the-public-facade capturing the setup_answers lazy-import retargeting lesson
+- `2026-07-01-import-centralization-W06-P90-S399` - Re-run dev/import_hygiene_scan.py and confirm zero production Family-1 cross-package private-import violations, then flip the Wave W04 ratchet gate to hard-zero mode
 - `2026-07-01-import-centralization-W06-P90-S402` - Extend the import-hygiene scanner to detect underscore-named __all__ entries and dispose the 8 pre-existing hits surfaced by honesty-review finding #7
 - `2026-07-02-import-centralization-exec` - restore production baseline, drain test-only import debt, document the remainder
+- `2026-07-01-import-centralization-W02-P51-S248` - Rewire 5 cross-package private import name(s) in this file onto the promoted facade(s) of `aeat.adapters.outbound.aeat.browser`, `aeat.application.auth`, `aeat.application.review`, `aeat.application.user_profile`
+- `2026-07-01-import-centralization-W02-P52-S252` - Rewire 3 cross-package private import name(s) in this file onto the promoted facade(s) of `aeat.application.workflow`
+- `2026-07-01-import-centralization-W02-P52-S254` - Rewire 3 cross-package private import name(s) in this file onto the promoted facade(s) of `aeat.application.workflow`, `aeat.core.time`
+- `2026-07-01-import-centralization-W06-P90-S382` - Run pytest --collect-only -q across src/aeat and confirm clean collection with no import errors
+- `2026-07-01-import-centralization-W06-P90-S383` - Run the full src/aeat test suite and confirm green, sequentially re-running any registry-suite failure before triaging it as a regression
+- `2026-07-01-import-centralization-W06-P90-S384` - Dispatch a vaultspec-code-review structural audit over the full campaign diff, confirming every promoted facade, every rewritten consumer, and the retired umbrella re-exports are behavior-preserving
+- `2026-07-01-import-centralization-W06-P90-S400` - Run a fresh-context honesty review against the campaign closure summary per the campaign-close-honesty-review discipline before declaring the campaign structurally complete, tracking every surfaced item as a new Step or a formally deferred follow-up
+- `2026-07-01-import-centralization-W06-P90-S401` - Persist Step Records for every closed Step and rebuild the feature index, then confirm vaultspec-core vault plan status reports the plan fully closed
 
 ### plan
 
