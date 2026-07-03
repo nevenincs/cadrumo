@@ -1,0 +1,121 @@
+"""Shared support surface for the :class:`ClavePermanenteAuthProvider`.
+
+The helpers here keep the live Cl@ve Permanente form driver small: they
+classify the configured DNI/NIE identity (reusing the shared
+:func:`aeat.adapters.outbound.aeat.auth._clave_movil_support.classify_identity`
+format check, since DNI/NIE shape validation is not Móvil-specific) and attach
+the closed :class:`ClavePermanenteFailureMode` taxonomy to provider errors.
+
+Cl@ve Permanente login failures are raised as the existing registered
+:class:`AuthConfigurationError` / :class:`AuthError` classes (carrying a
+``failure_mode`` key in ``context``) rather than new dedicated subclasses.
+Every :class:`aeat.core.errors.AeatError` subclass requires a declared
+:class:`aeat.core.errors.ErrorCode` registry row with a locale-backed
+``message_key``; reusing the already-registered Cl@ve Móvil-sibling base
+classes here avoids growing that registry (and its locale surface) as part of
+this slice. A future pass may promote dedicated
+``ClavePermanenteConfigurationError`` / ``ClavePermanenteLoginError`` classes
+alongside their registry rows and locale strings.
+"""
+
+from __future__ import annotations
+
+from enum import StrEnum
+from typing import TYPE_CHECKING, Final
+
+from ._clave_movil_support import classify_identity
+from ._errors import AuthConfigurationError, AuthError
+
+if TYPE_CHECKING:
+    from .....core.config import Settings
+
+DIAGNOSTIC_NAMESPACE: Final[str] = "aeat.outbound.aeat.auth.clave_permanente.diagnostics"
+
+
+def clave_permanente_auth_browser_action_policy(settings: Settings):
+    """Build the remote-state guard policy for Cl@ve Permanente browser actions.
+
+    Mirrors the Cl@ve Móvil policy shape but scopes the allowed action
+    patterns to the Permanente login form (username fill, password fill,
+    submit) since there is no QR/push/representation-gate surface to allow.
+    """
+    from urllib.parse import urlsplit
+
+    from .....domain.calculations.registry import RemoteStateGuardPolicy
+
+    external = settings.external_constants()
+    return RemoteStateGuardPolicy(
+        id="aeat-clave-permanente-auth-browser-actions",
+        evidence_tier="official_source_guidance",
+        classification="authenticated_read_surface",
+        allowed_hosts=(
+            urlsplit(external.aeat.domains.sede).netloc,
+            urlsplit(external.aeat.domains.www6).netloc,
+            urlsplit(external.aeat.domains.clave).netloc,
+        ),
+        allowed_browser_action_patterns=(
+            "clave-permanente-fill-username",
+            "clave-permanente-fill-password",
+            "clave-permanente-submit",
+        ),
+        synthetic_data_allowed=False,
+        requires_authentication=True,
+        requires_aeat_authorization=True,
+    )
+
+
+class ClavePermanenteFailureMode(StrEnum):
+    """Closed failure taxonomy for Cl@ve Permanente login errors.
+
+    Stored under the ``failure_mode`` key of the raised
+    :class:`AuthConfigurationError` / :class:`AuthError` ``context`` mapping.
+    """
+
+    INITIAL_NAVIGATION_TIMEOUT = "initial_navigation_timeout"
+    INVALID_CREDENTIALS = "invalid_credentials"
+    ACCOUNT_LOCKED = "account_locked"
+    PASSWORD_EXPIRED = "password_expired"
+    ELEVATION_REQUIRED = "elevation_required"
+    POST_AUTH_LANDING_TIMEOUT = "post_auth_landing_timeout"
+
+
+def clave_permanente_configuration_error(
+    message: str,
+    *,
+    failure_mode: ClavePermanenteFailureMode,
+) -> AuthConfigurationError:
+    """Build a registered :class:`AuthConfigurationError` carrying ``failure_mode``.
+
+    Used for local precondition faults (identity/password unset or
+    malformed) raised before any browser work begins.
+    """
+    return AuthConfigurationError(message, context={"failure_mode": failure_mode.value})
+
+
+def clave_permanente_login_error(
+    message: str,
+    *,
+    failure_mode: ClavePermanenteFailureMode,
+    suggestion: str | None = None,
+    context: dict[str, object] | None = None,
+) -> AuthError:
+    """Build a registered :class:`AuthError` carrying ``failure_mode``.
+
+    Used for live login-flow faults: the Cl@ve IdP rejected credentials,
+    reported a locked account, an expired password, requested an SMS-OTP
+    elevation the read-path flow cannot satisfy headlessly, or a navigation
+    or post-auth landing wait timed out.
+    """
+    enriched_context = dict(context) if context is not None else {}
+    enriched_context["failure_mode"] = failure_mode.value
+    return AuthError(message, context=enriched_context, suggestion=suggestion)
+
+
+__all__ = [
+    "DIAGNOSTIC_NAMESPACE",
+    "ClavePermanenteFailureMode",
+    "classify_identity",
+    "clave_permanente_auth_browser_action_policy",
+    "clave_permanente_configuration_error",
+    "clave_permanente_login_error",
+]

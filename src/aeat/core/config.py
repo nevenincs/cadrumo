@@ -44,6 +44,9 @@ from ._config_support import (
 from ._config_support import coerce_output_language_setting as _coerce_output_language_setting
 from ._config_support import default_aeat_sede_origin as _default_aeat_sede_origin
 from ._config_support import default_aeat_sede_origin_with_slash as _default_aeat_sede_origin_with_slash
+from ._config_support import (
+    default_clave_permanente_sede_access_url_template as _default_clave_permanente_sede_access_url_template,
+)
 from ._config_support import default_clave_sede_access_url_template as _default_clave_sede_access_url_template
 from ._config_support import default_sede_expedientes_path as _default_sede_expedientes_path
 from ._config_support import default_status_detail_url_template as _default_status_detail_url_template
@@ -649,6 +652,49 @@ class Settings(AeatRuntimeSettings):
         ),
     )
 
+    # ── Cl@ve Permanente ────────────────────────────────────────────────────
+    aeat_clave_permanente_dni_nie: SecretStr | None = Field(
+        default=None,
+        description=(
+            "Taxpayer DNI/NIE for `aeat config auth configure "
+            "--provider clave_permanente`. Used as the Cl@ve IdP login "
+            "username and to stamp the persisted session with the "
+            "operator's identity. AEAT-regulated personal identifier "
+            "under Spanish tax law; typed as SecretStr to prevent "
+            "leakage through repr / model_dump / ValidationError."
+        ),
+    )
+    aeat_clave_permanente_password: SecretStr | None = Field(
+        default=None,
+        description=(
+            "Cl@ve Permanente password for the DNI/NIE + password login "
+            "form. Same treatment as the certificate passphrase: env var "
+            "only, never stored in a committed env file, never logged."
+        ),
+    )
+    aeat_clave_permanente_timeout_ms: int = Field(
+        default=60_000,
+        ge=15_000,
+        le=120_000,
+        description=(
+            "Maximum time (milliseconds) the Cl@ve Permanente provider "
+            "waits for the AEAT/Cl@ve IdP login form round-trip to "
+            "complete before aborting. Routine Cl@ve Permanente login is "
+            "headless-automatable (DNI/NIE + password, no SMS), so this "
+            "window is shorter than the human-in-the-loop Cl@ve Móvil "
+            "timeout."
+        ),
+    )
+    aeat_clave_permanente_sede_access_url_template: str = Field(
+        default_factory=_default_clave_permanente_sede_access_url_template,
+        description=(
+            "URL template for AEAT's auth-method selector page used by "
+            "the Cl@ve Permanente login flow. `{target}` is replaced with "
+            "the URL-encoded target path. The default template is "
+            "sourced from the external constants registry."
+        ),
+    )
+
     # ── LLM ─────────────────────────────────────────────────────────────────
     aeat_llm_provider: LLMProviderSetting = Field(
         default=LLMProviderSetting.ANTHROPIC,
@@ -1037,11 +1083,13 @@ class Settings(AeatRuntimeSettings):
         "aeat_clave_movil_dni_nie",
         "aeat_clave_movil_dni_fecha",
         "aeat_clave_movil_nie_soporte",
+        "aeat_clave_permanente_dni_nie",
+        "aeat_clave_permanente_password",
         mode="before",
     )
     @classmethod
     def _empty_optional_clave_fields_are_none(cls, value: object) -> object:
-        """Treat blank env vars for optional Cl@ve Móvil identity fields as unset."""
+        """Treat blank env vars for optional Cl@ve identity/password fields as unset."""
         if isinstance(value, str) and value.strip() == "":
             return None
         return value
@@ -1069,7 +1117,10 @@ class Settings(AeatRuntimeSettings):
             raise CoreValidationError("AEAT_CLAVE_MOVIL_DNI_FECHA must be a valid YYYY-MM-DD date") from exc
         return value
 
-    @field_validator("aeat_clave_sede_access_url_template")
+    @field_validator(
+        "aeat_clave_sede_access_url_template",
+        "aeat_clave_permanente_sede_access_url_template",
+    )
     @classmethod
     def _clave_sede_access_url_template_has_target(cls, value: str) -> str:
         """Reject templates that omit the ``{target}`` placeholder."""
