@@ -24,6 +24,7 @@ formulas = [
     "renta-2025-estimacion-objetiva-agricola-rendimiento-neto-reducido",
     "renta-2025-eo-agraria-reduccion-general",
     "renta-2025-eo-agraria-reduccion-jovenes",
+    "renta-2025-eo-agraria-reduccion-irregularidad",
     "renta-2025-eo-agraria-rendimiento-neto-reducido-por-actividad",
     "renta-2025-eo-agraria-rendimiento-base-mejillon-batea",
     "renta-2025-eo-agraria-rendimiento-base-porcino-carne",
