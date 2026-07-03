@@ -740,8 +740,15 @@ application:
         unsupported_modelo: El binding d'esborrany no esta suportat per al model %{modelo};
           el manifest del registre ha de declarar la capacitat d'esborrany.
     errors:
-      amendment_complementaria_liability_decrease: 'Una complementària per al model {modelo}, exercici {filing_year}, període {period} rebaixaria el resultat declarat de {baseline_result} a {corrected_result}. Abans de la unificació de l''autoliquidació rectificativa, una complementària presentada pel mateix obligat no pot disminuir legalment el deute; utilitzeu el procediment de sol·licitud de rectificació.'
-      amendment_kind_not_permitted: 'El tipus de rectificació sol·licitat {requested_kind} no està legalment disponible per al model {modelo}, exercici {filing_year}, període {period}. Tipus acceptats per a aquest període: {accepted_kinds}.'
+      amendment_complementaria_liability_decrease: Una complementària per al model
+        {modelo}, exercici {filing_year}, període {period} rebaixaria el resultat
+        declarat de {baseline_result} a {corrected_result}. Abans de la unificació
+        de l'autoliquidació rectificativa, una complementària presentada pel mateix
+        obligat no pot disminuir legalment el deute; utilitzeu el procediment de sol·licitud
+        de rectificació.
+      amendment_kind_not_permitted: 'El tipus de rectificació sol·licitat {requested_kind}
+        no està legalment disponible per al model {modelo}, exercici {filing_year},
+        període {period}. Tipus acceptats per a aquest període: {accepted_kinds}.'
       amendment_registry_root_missing: Registry root %{registry_root} is missing;
         amendment overrides cannot be validated.
       amendment_registry_snapshot_unresolved: Registry snapshot for modelo %{modelo},
@@ -2774,6 +2781,24 @@ cli:
       rename_help: Canvia el nom d'un perfil i mou el punter actiu automàticament
       rename_source_help: Nom actual del perfil
       rename_target_help: Nou nom del perfil
+      sandbox:
+        already_exists: 'Ja existeix un sandbox anomenat %{label}. Trieu un altre nom o descarteu primer l''existent.'
+        create_active_info: 'El sandbox és ara el perfil ACTIU; tots els comandaments s''executen sobre ell fins que canviï de perfil o el descarti.'
+        create_from_profile_help: 'Copia les dades d''un perfil existent al sandbox (el perfil d''origen només es llegeix).'
+        create_help: 'Crea un nou sandbox aïllat i l''activa.'
+        create_name_help: 'Nom del sandbox.'
+        discard_active_profile: 'El sandbox %{name} és el perfil actiu; canvieu a un altre perfil abans de descartar-lo.'
+        discard_help: 'Elimina permanentment un sandbox.'
+        discard_name_help: 'Nom del sandbox (sense el prefix).'
+        discard_not_a_sandbox: '%{name} no és un sandbox; la superfície de sandbox es nega a descartar un perfil real.'
+        discard_requires_yes: 'Descartar un sandbox és destructiu. Torneu a executar ''aeat config profile sandbox discard %{name} --yes'' per confirmar.'
+        discard_yes_help: 'Confirma l''eliminació destructiva.'
+        help: 'Executa experiments en un bucket aïllat i descartable que mai afecta l''estat del perfil principal.'
+        list_help: 'Llista tots els sandboxes.'
+        source_not_found: 'No existeix cap perfil actiu anomenat %{name} per copiar al sandbox.'
+        unknown_sandbox: 'Sandbox desconegut: %{name}. Executeu ''aeat config profile sandbox list'' per veure els sandboxes registrats.'
+        use_help: 'Canvia el perfil actiu a un sandbox existent.'
+        use_name_help: 'Nom del sandbox (sense el prefix).'
       sar_catalogue_info: 'Aquest arxiu conté totes les categories de dades personals
         del perfil: identitat i dades del perfil, unitats de treball de models, moviments
         del llibre, revisions de càlcul i registres de presentació. Els bytes de les
@@ -2913,7 +2938,7 @@ cli:
     summary_lifecycle: 'Cicle de vida del model: {steps}'
     summary_roots: 'Arrels: {roots}'
   diagnostics:
-    app_help: 'Diagnòstic local de l''estat de les execucions i de la sessió.'
+    app_help: Diagnòstic local de l'estat de les execucions i de la sessió.
     browser:
       http_status_label: Estat HTTP
       markers_label: Marcadors
@@ -2950,13 +2975,19 @@ cli:
       auth_header: 'Sessió d''autenticació:'
       bad_date: '%{option} ha de ser una data ISO (AAAA-MM-DD); s''ha rebut %{value}.'
       header: 'Estat de les execucions de l''LLM:'
-      help: 'Mostra el temps recent de les execucions de l''LLM i l''estat de la sessió d''AEAT persistida (només local).'
-      no_run_data: 'Encara no hi ha telemetria d''execucions de l''LLM. Executa una classificació assistida per LLM per generar-la.'
-      no_session_message: 'No s''ha trobat cap sessió d''AEAT persistida al disc.'
-      provider_help: 'Restringeix la secció de temps de l''LLM a aquest proveïdor (p. ex. claude, antigravity, codex).'
-      session_stale_message: 'La sessió d''AEAT persistida ha superat el seu termini d''inactivitat; una lectura en viu tornarà a autenticar-se.'
-      since_help: 'Data ISO (AAAA-MM-DD) inferior inclusiva per als registres d''execució de l''LLM.'
-      until_help: 'Data ISO (AAAA-MM-DD) superior inclusiva per als registres d''execució de l''LLM.'
+      help: Mostra el temps recent de les execucions de l'LLM i l'estat de la sessió
+        d'AEAT persistida (només local).
+      no_run_data: Encara no hi ha telemetria d'execucions de l'LLM. Executa una classificació
+        assistida per LLM per generar-la.
+      no_session_message: No s'ha trobat cap sessió d'AEAT persistida al disc.
+      provider_help: Restringeix la secció de temps de l'LLM a aquest proveïdor (p.
+        ex. claude, antigravity, codex).
+      session_stale_message: La sessió d'AEAT persistida ha superat el seu termini
+        d'inactivitat; una lectura en viu tornarà a autenticar-se.
+      since_help: Data ISO (AAAA-MM-DD) inferior inclusiva per als registres d'execució
+        de l'LLM.
+      until_help: Data ISO (AAAA-MM-DD) superior inclusiva per als registres d'execució
+        de l'LLM.
     summary:
       auth_no_session: El proveïdor d'autenticació %{provider} no té cap sessió preparada
       auth_none: L'autenticació no està configurada
@@ -5074,8 +5105,13 @@ errors:
     refused_llm_validation: Un objecte del model de llenguatge no ha superat la validació.
     refused_modelo_100_borrador_binding: Els valors de l'esborrany del Model 100 no
       es poden fer servir per al càlcul.
-    refused_modelo_amendment_complementaria_liability_decrease: 'Una complementària no pot disminuir legalment el deute declarat abans de la unificació de l''autoliquidació rectificativa. Utilitzeu el procediment de sol·licitud de rectificació per a una correcció que redueixi el deute.'
-    refused_modelo_amendment_kind_not_permitted: 'El tipus de rectificació sol·licitat no està legalment disponible per al període de declaració resolt. El conjunt de tipus acceptats figura en el context de l''error.'
+    refused_modelo_amendment_complementaria_liability_decrease: Una complementària
+      no pot disminuir legalment el deute declarat abans de la unificació de l'autoliquidació
+      rectificativa. Utilitzeu el procediment de sol·licitud de rectificació per a
+      una correcció que redueixi el deute.
+    refused_modelo_amendment_kind_not_permitted: El tipus de rectificació sol·licitat
+      no està legalment disponible per al període de declaració resolt. El conjunt
+      de tipus acceptats figura en el context de l'error.
     refused_modelo_amendment_override_casilla: Una sobreescriptura de la declaració
       complementària apunta a una casella que el registre no declara per a aquest
       model, any i període.

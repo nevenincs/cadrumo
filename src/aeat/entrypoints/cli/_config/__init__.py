@@ -51,6 +51,7 @@ from ._profile_readiness import (
 )
 from ._repair_cli import register_repair_maintenance_commands
 from ._repair_profile import register_repair_profile_command
+from ._sandbox import register_sandbox_commands
 
 _log = _get_logger(__name__)
 
@@ -1208,6 +1209,7 @@ register_descendiente_commands(
     profile_app,
     resolve_active_profile_pointer=_resolve_active_profile_pointer,
 )
+register_sandbox_commands(profile_app)
 app.add_typer(repair_app, name="repair")
 app.add_typer(profile_app, name="profile")
 register_apoderado_commands(auth_app, resolve_active_profile_pointer=_resolve_active_profile_pointer)
@@ -1232,6 +1234,7 @@ __all__ = [
     "register_profile_bundle_commands",
     "register_repair_maintenance_commands",
     "register_repair_profile_command",
+    "register_sandbox_commands",
     "repair_app",
     "tr",
 ]
