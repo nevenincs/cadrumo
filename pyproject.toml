@@ -135,6 +135,11 @@ anthropic = [
 # secure-storage ADRs).
 agent = [
   "mcp>=1.12,<2",
+  # The stdio MCP server (`aeat.entrypoints.mcp._server`) imports anyio directly
+  # to run the transport; declare it here rather than relying on it transitively
+  # through `mcp`, so the import has a direct owner in the extra that gates the
+  # server runtime.
+  "anyio>=4.5,<5",
 ]
 # On-host grounding search stack (the corpus-search hybrid retrieval surface).
 # The lexical index (stdlib sqlite3 FTS5) and the structured citation lookup run

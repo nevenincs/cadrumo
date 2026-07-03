@@ -58,10 +58,12 @@ dependencies = [
 
 [package.optional-dependencies]
 agent = [
+    { name = "anyio" },
     { name = "mcp" },
 ]
 all = [
     { name = "anthropic" },
+    { name = "anyio" },
     { name = "google-api-python-client" },
     { name = "google-auth" },
     { name = "google-auth-oauthlib" },
@@ -159,6 +161,7 @@ requires-dist = [
     { name = "aeat", extras = ["google"], marker = "extra == 'all'" },
     { name = "aeat", extras = ["search"], marker = "extra == 'all'" },
     { name = "anthropic", marker = "extra == 'anthropic'", specifier = ">=0.74.1,<1" },
+    { name = "anyio", marker = "extra == 'agent'", specifier = ">=4.5,<5" },
     { name = "argon2-cffi", specifier = ">=23.1.0,<26" },
     { name = "beautifulsoup4", specifier = ">=4.12,<5" },
     { name = "cryptography", specifier = ">=47.0.0,<48" },

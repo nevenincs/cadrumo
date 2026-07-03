@@ -59,8 +59,11 @@ _CORE_ABSENT_NAMES = {
 # "optional-leaked-into-core" export check would false-positive on the shared
 # name. ``numpy`` is pulled into core by ``formulas`` (a base dependency, the
 # workbook-parity oracle) and is independently listed in the ``search`` extra.
+# ``anyio`` is pulled into core by ``httpx`` (a base dependency) and is declared
+# in the ``agent`` extra because the stdio MCP server imports it directly.
 _CORE_PRESENT_TRANSITIVE_NAMES = {
     "numpy",
+    "anyio",
 }
 _EXTRAS_PRESENT_NAMES = {
     "anthropic",
