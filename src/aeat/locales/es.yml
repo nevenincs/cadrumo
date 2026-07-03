@@ -3200,8 +3200,7 @@ cli:
       reason_empty: Rechazado. --reason debe registrar por qué clasificas esta transacción.
         Indica un motivo no vacío, u omite --reason.
       reason_help: Motivo en texto libre que se registra como notas de la transacción
-        y como el motivo de procedencia de la decisión de clasificación (visible en
-        ledger view), o con una decisión --reject.
+        en una clasificación manual, o con una decisión --reject.
       reject_apply_exclusive: '--reject no se puede combinar con --apply: reject registra
         una sugerencia rechazada, apply una aceptada.'
       reject_help: Registra un rechazo explícito de la sugerencia del modelo como
@@ -3327,10 +3326,6 @@ cli:
       checked: Movimientos comprobados
       child_id: Id de transacción hija
       children: hijas
-      classification_confidence: Confianza de la clasificación
-      classification_reason: Motivo de la clasificación
-      classified_at: Clasificado el
-      classified_by: Clasificado por
       counterparty: Contraparte
       counterparty_eu_member_state: Contraparte UE
       created_event_id: Evento bucket de creación
@@ -3458,29 +3453,19 @@ cli:
       help: Lista los proveedores LLM en subproceso con CLI disponible en PATH.
     pull_folder:
       errors:
-        folder_id_unrecognised: La referencia de carpeta de Drive %{reference} no
-          contiene un id de carpeta reconocible. Indica una URL de carpeta de Drive
-          o su id.
-        folder_refused: 'No se puede listar la carpeta de Drive %{folder_id}%{scope_hint}:
-          la carpeta debe ser accesible bajo el permiso drive.file (creada por la
-          app o elegida explicitamente por el operador), o concede el permiso de Google
-          requerido y vuelve a intentarlo.'
-      folder_help: URL de la carpeta de Drive o su id para obtener en bloque las facturas
-        PDF/imagen.
-      help: Obtiene en bloque cada PDF/imagen de factura en una carpeta de Drive y
-        guarda cada una como evidencia cifrada (sin vincular a ningun movimiento;
-        vincula con 'aeat app ledger attach' o 'link').
+        folder_id_unrecognised: 'La referencia de carpeta de Drive %{reference} no contiene un id de carpeta reconocible. Indica una URL de carpeta de Drive o su id.'
+        folder_refused: 'No se puede listar la carpeta de Drive %{folder_id}%{scope_hint}: la carpeta debe ser accesible bajo el permiso drive.file (creada por la app o elegida explicitamente por el operador), o concede el permiso de Google requerido y vuelve a intentarlo.'
+      folder_help: 'URL de la carpeta de Drive o su id para obtener en bloque las facturas PDF/imagen.'
+      help: 'Obtiene en bloque cada PDF/imagen de factura en una carpeta de Drive y guarda cada una como evidencia cifrada (sin vincular a ningun movimiento; vincula con ''aeat app ledger attach'' o ''link'').'
       labels:
-        fetched: obtenidos
-        folder_id: id_carpeta
-        refused: rechazados
-        skipped: omitidos_no_documento
-        total: total_documentos
-      note_help: Nota opcional registrada en cada archivo adjunto obtenido.
+        fetched: 'obtenidos'
+        folder_id: 'id_carpeta'
+        refused: 'rechazados'
+        skipped: 'omitidos_no_documento'
+        total: 'total_documentos'
+      note_help: 'Nota opcional registrada en cada archivo adjunto obtenido.'
       notices:
-        files_refused: '%{refused_count} archivo(s) de esta carpeta no se pudieron
-          obtener bajo el permiso drive.file; descargalos manualmente y adjuntalos
-          con ''aeat app ledger attach --attachment-id ...''.'
+        files_refused: '%{refused_count} archivo(s) de esta carpeta no se pudieron obtener bajo el permiso drive.file; descargalos manualmente y adjuntalos con ''aeat app ledger attach --attachment-id ...''.'
     remove:
       actor_help: Nombre del operador registrado en el evento del bucket
       dry_run_help: Informar los efectos sin eliminar el movimiento del libro
@@ -3798,7 +3783,9 @@ cli:
       modelo_help: Identificador del modelo AEAT (p. ej. 303, 130, 100).
       year_help: Ejercicio fiscal para evaluar la aplicabilidad; por defecto, el año
         actual.
-    local_work_units_unavailable: 'No se pudo cargar el estado local de las unidades de trabajo de Modelo; esta vista se deriva del calendario de plazos y puede sobrenotificar un borrador en curso como aún pendiente u omitir borradores en curso más antiguos.'
+    local_work_units_unavailable: El estado local de las unidades de trabajo de Modelo
+      del resumen no está disponible; no se puede mostrar sin un estado de trabajo
+      persistido.
     period: Periodo
     period_help: 'Periodo de declaración como token AEAT: 1T-4T (trimestres), 0A (anual),
       01-12 (meses). Combínelo con --year para elegir el año.'
@@ -4402,6 +4389,7 @@ errors:
     error_categories: Se produjo un error en las categorías de gasto.
     error_categories_validation: Un registro de categoría no superó la validación.
     error_config_boundary: El comando de configuración encontró un error interno inesperado.
+    error_corpus_search: 'No se pudo completar la búsqueda local en el corpus.'
     error_deadlines_deadline: Se produjo un error en el cálculo de plazos.
     error_deadlines_missing_windows: Faltan las ventanas de plazo de presentacion.
     error_deadlines_profile: El perfil de autónomo no se pudo cargar o validar para
@@ -4602,7 +4590,6 @@ errors:
     modelo_work_selector: El selector de trabajo de modelo fallo.
     modelo_work_selector_unit_not_found: No se encontro la unidad de trabajo de modelo
       seleccionada.
-    error_corpus_search: 'No se pudo completar la búsqueda local en el corpus.'
   fail:
     censo_sync: La sincronización del censo del Modelo 036 falló.
     currency_error: Falló la normalización de la moneda.
@@ -4829,9 +4816,7 @@ errors:
     profile_import_signature: El archivo de perfil no superó la comprobación de firma
       o integridad. No importes archivos de origen no fiable.
   internal:
-    internal_cli_unexpected_boundary: El comando falló por un error interno inesperado,
-      no por un problema de datos almacenados. Consulte los registros de diagnóstico
-      para ver qué falló.
+    internal_cli_unexpected_boundary: 'El comando falló por un error interno inesperado, no por un problema de datos almacenados. Consulte los registros de diagnóstico para ver qué falló.'
     internal_master_key_reentrant: 'Internal error: master-key provider entered re-entrantly;
       close the active session before re-entering.'
     internal_master_key_type: 'Internal error: master-key operation received a value
@@ -4997,6 +4982,8 @@ errors:
       Compruebe los argumentos o ejecute `aeat --help`.
     refused_config_reset_unconfirmed: El restablecimiento de la configuración no se
       confirmó. Vuelve a ejecutar el comando confirmando la operación.
+    refused_corpus_search_dependency: 'Esta operación de búsqueda en el corpus necesita los componentes opcionales de búsqueda semántica; instálelos y reinténtelo.'
+    refused_corpus_search_input: 'No se pudo satisfacer la solicitud de búsqueda en el corpus.'
     refused_diagnostic_model_invariant: 'Rechazado: invariante del modelo de diagnostico
       incumplida.'
     refused_evidence_bundle_not_found: No existe ningún paquete de evidencias con
@@ -5200,8 +5187,6 @@ errors:
     submission_preflight_error_findings: El borrador tiene {finding_count} incidencia(s)
       de severidad ERROR; resuélvelas antes de presentar.
     unsupported_currency: El código de moneda indicado no es compatible.
-    refused_corpus_search_input: 'No se pudo satisfacer la solicitud de búsqueda en el corpus.'
-    refused_corpus_search_dependency: 'Esta operación de búsqueda en el corpus necesita los componentes opcionales de búsqueda semántica; instálelos y reinténtelo.'
   snapshot:
     ambiguous_revision_selection: 'Más de una revisión del registro coincide con el
       modelo %{modelo_id}: %{candidate_ids}.'
@@ -5385,7 +5370,6 @@ sheets:
     headers:
       acquisition_date: Fecha de adquisición
       amount: Importe
-      amount_donated: Importe donado
       asset_class_code: Clave del bien
       asset_identifier: Identificación del bien
       base_imponible: Base imponible
@@ -5395,11 +5379,7 @@ sheets:
       counterparty_tax_id: NIF de la contraparte
       country_code: Código de país
       currency_code: Código de divisa
-      deduction_percentage: Porcentaje de deducción
-      donor_legal_name: Nombre o razón social del donante
-      donor_tax_id: NIF del donante
       ingreso_a_cuenta: Ingreso a cuenta
-      is_recurrent: Donativo recurrente
       member_legal_name: Razón social del miembro
       member_state_code: Estado miembro
       member_tax_id: NIF del miembro
