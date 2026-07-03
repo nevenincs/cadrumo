@@ -52,3 +52,37 @@ class RunHealthResult(OutputSchema):
     persisted_session_state: str
     probe_summary: str
     session_stale: bool
+
+
+class RunRecordPayload(OutputSchema):
+    """One individual local LLM run-timing record.
+
+    Mirrors :class:`~aeat.application.diagnostics_run_health.RunRecordView`.
+    """
+
+    run_id: str
+    caller: str
+    provider: str
+    model: str
+    duration_ms: int
+    succeeded: bool
+    error_kind: str
+    started_at: str
+
+
+@register_schema("diagnostics.runs")
+class RunsListResult(OutputSchema):
+    """JSON envelope for ``aeat app diagnostics runs``.
+
+    Lists individual local LLM run-timing records, most-recent-first, sourced
+    from :func:`~aeat.application.diagnostics_run_health.list_recent_runs`. It
+    reports only accounting/timing metadata, never prompt or response content.
+    """
+
+    since: str | None = None
+    until: str | None = None
+    provider: str | None = None
+    limit: int | None = None
+    runs: list[RunRecordPayload]
+    total_runs: int
+    has_run_data: bool

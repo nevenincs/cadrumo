@@ -16,11 +16,18 @@ Nothing here performs a network call or a live AEAT read: the LLM run records
 are read from encrypted local secure-object storage and the auth probe reads
 only the locally persisted session token's metadata. This backs the
 ``aeat app diagnostics run-health`` operator surface (GitHub issue #407).
+
+:func:`list_recent_runs` projects the same recorded :class:`LLMRunRecord` rows
+individually (most-recent-first, optionally limited) rather than aggregated
+per-provider, backing the sibling ``aeat app diagnostics runs`` listing verb
+(also GitHub issue #407). It reuses
+:meth:`~aeat.adapters.outbound.llm.LLMRunTelemetryRecorder.load_records`
+directly -- there is no parallel capture or storage path here.
 """
 
 from __future__ import annotations
 
-from datetime import date
+from datetime import date, datetime
 from decimal import Decimal
 
 from pydantic import BaseModel, ConfigDict, Field
@@ -31,7 +38,9 @@ from .auth import AuthTestResult, test_operator_auth
 __all__ = [
     "LlmRunProviderMetrics",
     "RunHealthReport",
+    "RunRecordView",
     "build_run_health_report",
+    "list_recent_runs",
 ]
 
 _STRICT_FROZEN = ConfigDict(strict=True, frozen=True)
@@ -144,6 +153,77 @@ def build_run_health_report(
         persisted_session_expired=probe.persisted_session_expired,
         persisted_session_state=probe.persisted_session_state,
         probe_summary=probe.probe_summary,
+    )
+
+
+class RunRecordView(BaseModel):
+    """One individual local LLM run-timing record, as reported to an operator.
+
+    Mirrors :class:`~aeat.adapters.outbound.llm.LLMRunRecord` field-for-field;
+    carries only accounting/timing metadata, never prompt or response text.
+    """
+
+    model_config = _STRICT_FROZEN
+
+    run_id: str = Field(min_length=1)
+    caller: str = Field(min_length=1)
+    provider: str = Field(min_length=1)
+    model: str = ""
+    duration_ms: int = Field(ge=0)
+    succeeded: bool
+    error_kind: str = ""
+    started_at: datetime
+
+
+def list_recent_runs(
+    *,
+    since: date | None = None,
+    until: date | None = None,
+    provider: str | None = None,
+    limit: int | None = None,
+    run_telemetry_recorder: LLMRunTelemetryRecorder | None = None,
+) -> tuple[RunRecordView, ...]:
+    """Return recent local LLM run-timing records, most-recent-first.
+
+    Reuses :meth:`~aeat.adapters.outbound.llm.LLMRunTelemetryRecorder.load_records`
+    directly -- the same recorder :func:`build_run_health_report` reads -- so
+    there is no parallel capture or storage path for this listing.
+
+    Args:
+        since: Inclusive lower date bound on run records, or ``None``.
+        until: Inclusive upper date bound on run records, or ``None``.
+        provider: Optional provider label filter; ``None`` returns every
+            provider.
+        limit: Optional cap on the number of most-recent rows returned;
+            ``None`` returns every matching record.
+        run_telemetry_recorder: Injected recorder (dependency injection for
+            tests); defaults to the active-bucket
+            :class:`~aeat.adapters.outbound.llm.LLMRunTelemetryRecorder`.
+
+    Returns:
+        Matching :class:`RunRecordView` rows ordered most-recent-first (ties
+        broken by ``run_id`` descending, mirroring the recorder's own stable
+        ascending order reversed).
+    """
+    recorder = run_telemetry_recorder or LLMRunTelemetryRecorder()
+    records = recorder.load_records(since=since, until=until)
+    if provider is not None:
+        records = tuple(item for item in records if item.provider == provider)
+    ordered = tuple(reversed(records))
+    if limit is not None:
+        ordered = ordered[:limit]
+    return tuple(
+        RunRecordView(
+            run_id=item.run_id,
+            caller=item.caller,
+            provider=item.provider,
+            model=item.model,
+            duration_ms=item.duration_ms,
+            succeeded=item.succeeded,
+            error_kind=item.error_kind,
+            started_at=item.started_at,
+        )
+        for item in ordered
     )
 
 

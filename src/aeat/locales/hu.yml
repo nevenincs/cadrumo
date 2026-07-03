@@ -858,6 +858,9 @@ application:
         visszariteres (devolver) lett kivalasztva, de visszateritites csak az ev utolso
         bevallasi idoszakaban kerheto. Vigye at a jovairast (compensar), vagy valassza
         a visszateritest az utolso idoszakban.
+      review_package_generic: 'Hiba történt az áttekintő csomag összeállítása közben.'
+      review_package_integrity: 'A(z) %{package_path} áttekintő csomag nem felelt meg az integritás-ellenőrzésnek: %{detail}.'
+      review_package_revision_state: 'A(z) %{calculation_revision_id} számítási revízió állapota %{state}, ezért nem csomagolható áttekintésre; elfogadott állapotok: %{eligible_states}.'
       revision_pick_explicit_id_required: Az explicit revízió kiválasztásához calculation_revision_id
         szükséges.
       revision_pick_id_requires_explicit_selector: A calculation_revision_id csak
@@ -1911,6 +1914,19 @@ cli:
         section_optional: opcionalis_kezi_mezok
         section_profile: profilbol_szarmazo
         section_required: kotelezo_kezi_mezok
+      review_package:
+        actor_help: 'A csomag leírójába és a mögöttes exportálási eseménybe rögzített operátorcímke.'
+        build_help: 'Megosztható, checksummal ellenőrizhető áttekintő csomag (fichero-BOE tervezet, a revízió eredete és a csatolt könyvelési bizonyíték) összeállítása a könyvelőnek való átadáshoz. Csak helyi; soha nem kapcsolódik az AEAT-hoz.'
+        errors:
+          output_required: 'Adja meg a --output ÚTVONAL kapcsolót az áttekintő csomag ZIP fájljához.'
+          package_not_found: 'Nem található áttekintő csomag itt: {package_path}.'
+        group_help: 'Megosztható áttekintő csomag összeállítása és integritásának ellenőrzése.'
+        notes_help: 'A csomag leírójába ágyazott szabad szöveges megjegyzés (pl. a megosztás oka).'
+        output_help: 'Az elérési út, ahová az áttekintő csomag ZIP fájlját írni kell.'
+        package_path_help: 'Az ellenőrizendő áttekintő csomag ZIP fájljának elérési útja.'
+        revision_help: 'A csomagolandó számítási revízió azonosítója; alapértelmezés szerint a munkaegység legutóbbi ellenőrzött-teljes vagy benyújtott revíziója.'
+        verify_help: 'Egy áttekintő csomag checksum-manifestjének ellenőrzése (csak integritás; nem igazolja, ki állította össze). Csak helyi; soha nem kapcsolódik az AEAT-hoz.'
+        work_unit_id_help: 'Munkaegység azonosító (SHA-256 vagy egyértelmű előtag).'
       verification_report:
         app_help: Rögzített ellenőrzési jelentések vizsgálata.
         list_help: Ellenőrzési jelentések listázása, opcionálisan egy számítási revízióra
@@ -2978,6 +2994,14 @@ cli:
         egy élő olvasás újra hitelesíteni fog.
       since_help: Az LLM-futásnaplók alsó (befogadó) ISO dátumhatára (ÉÉÉÉ-HH-NN).
       until_help: Az LLM-futásnaplók felső (befogadó) ISO dátumhatára (ÉÉÉÉ-HH-NN).
+    runs:
+      header: 'Legutóbbi LLM-futások:'
+      help: 'A helyileg rögzített legutóbbi LLM-futásokat listázza, a legújabbtól a legrégebbiig.'
+      limit_help: 'A listát erre a legutóbbi futásszámra korlátozza.'
+      no_run_data: 'Még nincs rögzített LLM-futásadat. Futtass egy LLM-alapú besorolást az adatok létrehozásához.'
+      provider_help: 'A listát erre a szolgáltatóra szűkíti (pl. claude, antigravity, codex).'
+      since_help: 'Az LLM-futásnaplók alsó (befogadó) ISO dátumhatára (ÉÉÉÉ-HH-NN).'
+      until_help: 'Az LLM-futásnaplók felső (befogadó) ISO dátumhatára (ÉÉÉÉ-HH-NN).'
     summary:
       auth_no_session: A(z) %{provider} hitelesítési szolgáltatónak nincs kész munkamenete.
       auth_none: A hitelesítés nincs konfigurálva.
@@ -4789,8 +4813,10 @@ errors:
       teljesítette az érvényesítést.
     integrity_storage_classification: Egy rekord deklarált érzékenységi osztálya nem
       kompatibilis az adattárával.
-    integrity_storage_corpus_bundle: 'A corpuscsomagot nem sikerült feldolgozni vagy ellenőrizni.'
-    integrity_storage_corpus_bundle_verification: 'A corpuscsomag nem teljesítette az ellenőrzőösszeg-ellenőrzést a beágyazott jegyzékkel szemben.'
+    integrity_storage_corpus_bundle: A corpuscsomagot nem sikerült feldolgozni vagy
+      ellenőrizni.
+    integrity_storage_corpus_bundle_verification: A corpuscsomag nem teljesítette
+      az ellenőrzőösszeg-ellenőrzést a beágyazott jegyzékkel szemben.
     integrity_storage_corpus_manifest: A corpus manifesztet nem sikerült elemezni
       vagy érvényesíteni.
     integrity_storage_corpus_manifest_drift: 'A lemezen lévő corpus eltér a manifeszttől:

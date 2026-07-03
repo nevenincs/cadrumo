@@ -21,7 +21,7 @@ import pytest
 from ...adapters.outbound.llm import LLMRunRecord, LLMRunTelemetryRecorder
 from ...application.auth import AuthTestResult
 from ...tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
-from ..diagnostics_run_health import build_run_health_report
+from ..diagnostics_run_health import build_run_health_report, list_recent_runs
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -172,3 +172,58 @@ def test_build_run_health_report_empty_store_reports_no_run_data(profile: TestRu
     assert report.has_run_data is False
     assert report.llm_providers == ()
     assert report.total_runs == 0
+
+
+def test_list_recent_runs_orders_most_recent_first(profile: TestRuntimeProfile) -> None:
+    """Individual run records project most-recent-first, reusing the shared recorder."""
+    recorder = LLMRunTelemetryRecorder(root_dir=profile.settings.aeat_llm_run_telemetry_dir)
+    _seed(recorder)
+
+    rows = list_recent_runs(run_telemetry_recorder=recorder)
+
+    assert [row.run_id for row in rows] == ["c", "b", "a"]
+    assert rows[0].provider == "llm:codex:test-model"
+    assert rows[0].succeeded is True
+    assert rows[1].provider == "llm:claude:test-model"
+    assert rows[1].succeeded is False
+    assert rows[1].error_kind == "LLMClassifierError"
+
+
+def test_list_recent_runs_limit_caps_the_most_recent_rows(profile: TestRuntimeProfile) -> None:
+    """``limit`` caps the listing to the N most-recent rows, not an arbitrary slice."""
+    recorder = LLMRunTelemetryRecorder(root_dir=profile.settings.aeat_llm_run_telemetry_dir)
+    _seed(recorder)
+
+    rows = list_recent_runs(run_telemetry_recorder=recorder, limit=2)
+
+    assert [row.run_id for row in rows] == ["c", "b"]
+
+
+def test_list_recent_runs_provider_filter_scopes_the_listing(profile: TestRuntimeProfile) -> None:
+    """``provider`` restricts the listing to one provider label."""
+    recorder = LLMRunTelemetryRecorder(root_dir=profile.settings.aeat_llm_run_telemetry_dir)
+    _seed(recorder)
+
+    rows = list_recent_runs(run_telemetry_recorder=recorder, provider="llm:claude:test-model")
+
+    assert {row.run_id for row in rows} == {"a", "b"}
+    assert all(row.provider == "llm:claude:test-model" for row in rows)
+
+
+def test_list_recent_runs_date_range_scopes_the_listing(profile: TestRuntimeProfile) -> None:
+    """``since``/``until`` narrow the listing by date, mirroring the recorder's own bound."""
+    recorder = LLMRunTelemetryRecorder(root_dir=profile.settings.aeat_llm_run_telemetry_dir)
+    _seed(recorder)
+
+    rows = list_recent_runs(run_telemetry_recorder=recorder, since=date(2026, 4, 1), until=date(2026, 4, 1))
+
+    assert [row.run_id for row in rows] == ["a"]
+
+
+def test_list_recent_runs_empty_store_returns_empty_tuple(profile: TestRuntimeProfile) -> None:
+    """An empty run-telemetry store returns an empty listing, not an error."""
+    recorder = LLMRunTelemetryRecorder(root_dir=profile.settings.aeat_llm_run_telemetry_dir)
+
+    rows = list_recent_runs(run_telemetry_recorder=recorder)
+
+    assert rows == ()
