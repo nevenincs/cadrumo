@@ -576,6 +576,8 @@ application:
           auth test` antes de leer datos AEAT.
   bucket_maintenance:
     errors:
+      archive_active_bucket: 'El bucket activo no puede archivarse; cambia primero a otro perfil.'
+      archive_not_confirmed: 'Archivar es una transición de estado reversible, pero requiere confirmación explícita.'
       delete_active_bucket: application.bucket_maintenance.errors.delete_active_bucket
       delete_not_confirmed: application.bucket_maintenance.errors.delete_not_confirmed
       import_bucket_collision: application.bucket_maintenance.errors.import_bucket_collision
@@ -586,6 +588,7 @@ application:
       import_recovery_passphrase_required: application.bucket_maintenance.errors.import_recovery_passphrase_required
       import_recovery_wrap_invalid: application.bucket_maintenance.errors.import_recovery_wrap_invalid
       import_recovery_wrap_missing: application.bucket_maintenance.errors.import_recovery_wrap_missing
+      restore_not_archived: 'El bucket no está archivado (dado de baja); no hay nada que recuperar.'
       unsupported_archive_schema_version: application.bucket_maintenance.errors.unsupported_archive_schema_version
   calculations:
     iva_compensation:
@@ -1244,6 +1247,7 @@ application:
       duplicate_tax_id: El NIF '%{tax_id}' ya lo usa el perfil '%{profile}'; un contribuyente
         debe tener un solo perfil.
       lifecycle_profile_already_exists: Ya existe un perfil en el bucket activo.
+      lifecycle_profile_not_tombstoned: 'El perfil no está dado de baja; la reactivación rechaza un perfil activo.'
       lifecycle_profile_tombstoned_duplicate: No se puede duplicar un perfil eliminado.
       lifecycle_profile_tombstoned_rename: No se puede renombrar un perfil eliminado.
       lifecycle_schema_validation_failed: Los datos del perfil no coinciden con el
@@ -2868,6 +2872,13 @@ cli:
       sandbox:
         already_exists: Ya existe un sandbox llamado %{label}. Elija otro nombre o
           descarte primero el existente.
+        archive_active_profile: 'El sandbox %{name} es el perfil activo; cambia a otro perfil antes de archivarlo.'
+        archive_dry_run_help: 'Previsualiza el archivado sin sacar el sandbox de la superficie activa.'
+        archive_help: 'Convierte un sandbox en un estado latente reversible sin eliminarlo.'
+        archive_name_help: 'Nombre del sandbox (sin el prefijo).'
+        archive_requires_yes: 'Archivar un sandbox es una transición de estado. Vuelve a ejecutar ''aeat config profile sandbox archive %{name} --yes'' para confirmar.'
+        archive_restorable_info: 'El sandbox ahora está latente; ejecuta ''aeat config profile sandbox restore %{name}'' para recuperarlo.'
+        archive_yes_help: 'Confirma el archivado.'
         create_active_info: El sandbox es ahora el perfil ACTIVO; todos los comandos
           se ejecutan sobre él hasta que cambie de perfil o lo descarte.
         create_from_profile_help: Copia los datos de un perfil existente al sandbox
@@ -2897,6 +2908,9 @@ cli:
           otro perfil y vuelve a ejecutar 'aeat config profile sandbox prune --yes'
           para descartarlo.
         prune_yes_help: Confirma el descarte de todos los sandboxes.
+        restore_help: 'Recupera un sandbox archivado y lo devuelve a estado activo.'
+        restore_name_help: 'Nombre del sandbox (sin el prefijo).'
+        restore_not_archived: '%{name} no está archivado; no hay nada que recuperar.'
         source_not_found: No existe ningún perfil activo llamado %{name} para copiar
           al sandbox.
         unknown_sandbox: 'Sandbox desconocido: %{name}. Ejecute ''aeat config profile
@@ -3084,11 +3098,16 @@ cli:
         LLM.
     llm_usage:
       header: 'Uso de ejecuciones LLM:'
-      help: 'Informa de los totales de uso de ejecuciones LLM (recuentos, duraciones, tasa de éxito) por proveedor y modelo.'
-      no_run_data: 'Todavía no se ha registrado telemetría de ejecuciones LLM. Ejecuta una clasificación asistida por LLM para generarla.'
-      provider_help: 'Restringe el resumen a esta etiqueta de proveedor (p. ej. claude, antigravity, codex).'
-      since_help: 'Límite inferior inclusivo en fecha ISO (AAAA-MM-DD) sobre los registros de ejecución LLM.'
-      until_help: 'Límite superior inclusivo en fecha ISO (AAAA-MM-DD) sobre los registros de ejecución LLM.'
+      help: Informa de los totales de uso de ejecuciones LLM (recuentos, duraciones,
+        tasa de éxito) por proveedor y modelo.
+      no_run_data: Todavía no se ha registrado telemetría de ejecuciones LLM. Ejecuta
+        una clasificación asistida por LLM para generarla.
+      provider_help: Restringe el resumen a esta etiqueta de proveedor (p. ej. claude,
+        antigravity, codex).
+      since_help: Límite inferior inclusivo en fecha ISO (AAAA-MM-DD) sobre los registros
+        de ejecución LLM.
+      until_help: Límite superior inclusivo en fecha ISO (AAAA-MM-DD) sobre los registros
+        de ejecución LLM.
     next_action:
       inspect_registry_toml: Inspeccione las fuentes TOML del registro para identificar
         el problema.

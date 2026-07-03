@@ -1187,3 +1187,29 @@ class ConfigProfileSandboxPruneResult(OutputSchema):
     total: int
     sandboxes: list[str] = []
     discarded: list[str] = []
+
+
+@register_schema("config.profile.sandbox.archive")
+class ConfigProfileSandboxArchiveResult(OutputSchema):
+    """JSON envelope for ``aeat config profile sandbox archive``.
+
+    Reports the archived sandbox's bucket identity and label. Unlike
+    ``discard``, the sandbox bucket, manifest, and encrypted record all
+    survive intact — the sandbox merely drops off the live
+    ``sandbox list`` surface until ``sandbox restore`` reactivates it.
+    """
+
+    bucket_id: str
+    label: str
+
+
+@register_schema("config.profile.sandbox.restore")
+class ConfigProfileSandboxRestoreResult(OutputSchema):
+    """JSON envelope for ``aeat config profile sandbox restore``.
+
+    Reports the restored sandbox's bucket identity and label. The
+    symmetric inverse of ``sandbox archive``.
+    """
+
+    bucket_id: str
+    label: str

@@ -88,6 +88,7 @@ class BucketEventType(StrEnum):
     PROFILE_VALUES_UPDATED = "profile.values.updated"
     PROFILE_VALUES_CLEARED = "profile.values.cleared"
     PROFILE_TOMBSTONED = "profile.tombstoned"
+    PROFILE_REACTIVATED = "profile.reactivated"
     PROFILE_DUPLICATED = "profile.duplicated"
     PROFILE_RENAMED = "profile.renamed"
     PROFILE_EXPORTED = "profile.exported"
@@ -117,6 +118,8 @@ class BucketEventType(StrEnum):
     BUCKET_IMPORTED = "bucket.imported"
     BUCKET_RENAMED = "bucket.renamed"
     BUCKET_DELETED = "bucket.deleted"
+    BUCKET_ARCHIVED = "bucket.archived"
+    BUCKET_RESTORED = "bucket.restored"
 
     # ledger usage-ratio mutations
     LEDGER_RATIOS_SET = "ledger.ratios.set"

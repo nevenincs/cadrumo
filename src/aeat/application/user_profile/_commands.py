@@ -94,6 +94,18 @@ class RemoveProfileCommand(BaseModel):
     profile_id: ProfileId
 
 
+class ReactivateProfileCommand(BaseModel):
+    """Restore a tombstoned profile root to active status.
+
+    The symmetric inverse of :class:`RemoveProfileCommand`: reverses a
+    soft tombstone that never progressed to hard directory removal.
+    """
+
+    model_config = _STRICT_FROZEN
+
+    profile_id: ProfileId
+
+
 class DuplicateProfileCommand(BaseModel):
     """Copy an existing profile under a new id and display name."""
 
