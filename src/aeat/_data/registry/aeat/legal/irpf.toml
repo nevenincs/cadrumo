@@ -806,6 +806,27 @@ required_text = [
     "al exceso sobre dichas cuantías se le aplicará el índice 1,30",
 ]
 
+[legal."orden-hac-1347-2024:anexo-i-instruccion-2-1"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "orden"
+corpus_ref = "corpus/normatives/html/orden-hac-1347-2024.html#anexo-i-instruccion-2-1"
+document_id = "BOE-A-2024-24949"
+section = "Anexo I (actividades agrícolas, ganaderas y forestales), instrucción 2.1 Fase 1: Rendimiento neto previo"
+permalink = "https://www.boe.es/buscar/doc.php?id=BOE-A-2024-24949"
+published_at = 2024-11-30
+effective_from = 2025-01-01
+effective_to = 2025-12-31
+review_status = "reviewed"
+reviewed_at = 2026-07-03
+reviewed_by = "claude-opus (agent-authored from bundled orden-hac-1347-2024.html; operator to re-stamp)"
+notes = "Fase 1a agraria: rendimiento neto previo. Para cada actividad agricola, ganadera o forestal independiente, el rendimiento neto previo se obtiene multiplicando el volumen total de ingresos (incluidas subvenciones e indemnizaciones) del cultivo o explotacion por el indice de rendimiento neto que corresponda a ese producto o servicio, por el cuadro codigo-producto de indices aprobado en este mismo Anexo I. Cross-checked byte-identical against the AEAT Manual practico de Renta 2025, Parte 1, Capitulo 9, worked example \"Determinacion del rendimiento neto previo de la actividad\" (Dona M.J.I., manzanas / frutos no citricos, codigo 12: ingresos 18.030,00 euros x indice 0,37 = rendimiento neto previo 6.671,10 euros)."
+required_text = [
+    "2.1 Fase 1: Rendimiento neto previo.",
+    "se obtendrá multiplicando el volumen total de ingresos",
+    "por el «índice de rendimiento neto» que corresponda a cada uno de ellos",
+]
+
 [legal."real-decreto-ley-13-2025:art-2"]
 evidence_tier = "legal_authority"
 authority = "boe"
