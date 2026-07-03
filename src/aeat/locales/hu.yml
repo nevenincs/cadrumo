@@ -2980,6 +2980,20 @@ cli:
         javítható manuálisan.'
       registry_integrity_internal: Belső alkalmazáshiba; nem az Ön profiljával kapcsolatos,
         és Ön nem tudja maga javítani.
+    errors:
+      header: 'LLM futtatási hibák:'
+      help: 'A közelmúltbeli sikertelen helyi LLM-futtatásokat szolgáltató és hibatípus szerint bontja le.'
+      no_failures: 'Ebben az időszakban nincs rögzített sikertelen LLM-futtatás.'
+      provider_help: 'Szűkítse a bontást erre a szolgáltatói címkére (pl. claude, antigravity, codex).'
+      since_help: 'Az LLM futtatási rekordok alsó (befoglaló) ISO dátumhatára (ÉÉÉÉ-HH-NN).'
+      until_help: 'Az LLM futtatási rekordok felső (befoglaló) ISO dátumhatára (ÉÉÉÉ-HH-NN).'
+    latency:
+      header: 'LLM futtatási késleltetés:'
+      help: 'A közelmúltbeli helyi LLM-futtatások időtartamának P50/P95/P99 percentiliseit jelenti.'
+      no_run_data: 'Még nincs rögzített LLM futtatási telemetria. Futtass egy LLM-alapú besorolást a létrehozásához.'
+      provider_help: 'Szűkítse a jelentést erre a szolgáltatói címkére (pl. claude, antigravity, codex).'
+      since_help: 'Az LLM futtatási rekordok alsó (befoglaló) ISO dátumhatára (ÉÉÉÉ-HH-NN).'
+      until_help: 'Az LLM futtatási rekordok felső (befoglaló) ISO dátumhatára (ÉÉÉÉ-HH-NN).'
     next_action:
       inspect_registry_toml: Vizsgálja meg a nyilvántartás TOML-forrásait a hiba azonosításához.
     repair:

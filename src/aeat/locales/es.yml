@@ -3054,6 +3054,20 @@ cli:
         y no puede repararse manualmente.'
       registry_integrity_internal: Problema interno de la aplicación; no es un fallo
         de tu perfil ni algo que puedas corregir tú.
+    errors:
+      header: 'Errores de ejecuciones LLM:'
+      help: 'Desglosa las ejecuciones LLM locales fallidas recientes por proveedor y tipo de error.'
+      no_failures: 'No se han registrado ejecuciones LLM fallidas en este rango.'
+      provider_help: 'Restringe el desglose a esta etiqueta de proveedor (por ejemplo, claude, antigravity, codex).'
+      since_help: 'Límite inferior inclusivo (AAAA-MM-DD) en los registros de ejecuciones LLM.'
+      until_help: 'Límite superior inclusivo (AAAA-MM-DD) en los registros de ejecuciones LLM.'
+    latency:
+      header: 'Latencia de ejecuciones LLM:'
+      help: 'Muestra los percentiles P50/P95/P99 de duración de las ejecuciones LLM locales recientes.'
+      no_run_data: 'Todavía no se ha registrado telemetría de ejecuciones LLM. Ejecuta una clasificación asistida por LLM para generarla.'
+      provider_help: 'Restringe el informe a esta etiqueta de proveedor (por ejemplo, claude, antigravity, codex).'
+      since_help: 'Límite inferior inclusivo (AAAA-MM-DD) en los registros de ejecuciones LLM.'
+      until_help: 'Límite superior inclusivo (AAAA-MM-DD) en los registros de ejecuciones LLM.'
     next_action:
       inspect_registry_toml: Inspeccione las fuentes TOML del registro para identificar
         el problema.

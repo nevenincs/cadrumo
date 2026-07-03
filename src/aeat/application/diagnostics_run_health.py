@@ -23,6 +23,15 @@ per-provider, backing the sibling ``aeat app diagnostics runs`` listing verb
 (also GitHub issue #407). It reuses
 :meth:`~aeat.adapters.outbound.llm.LLMRunTelemetryRecorder.load_records`
 directly -- there is no parallel capture or storage path here.
+
+:func:`build_latency_report` and :func:`build_error_breakdown` project the
+*same* recorded rows into a percentile-latency view and a failed-run
+error-kind breakdown, backing the ``aeat app diagnostics latency`` and
+``aeat app diagnostics errors`` verbs (also GitHub issue #407). Neither
+introduces a new capture or storage path -- both read
+:meth:`~aeat.adapters.outbound.llm.LLMRunTelemetryRecorder.load_records`
+exactly as ``run-health`` and ``runs`` do, honouring
+``composition-service-no-parallel-write-path``.
 """
 
 from __future__ import annotations
@@ -36,9 +45,15 @@ from ..adapters.outbound.llm import LLMRunRecord, LLMRunTelemetryRecorder
 from .auth import AuthTestResult, test_operator_auth
 
 __all__ = [
+    "ErrorKindCount",
+    "ErrorsBreakdownReport",
+    "LatencyPercentiles",
+    "LatencyReport",
     "LlmRunProviderMetrics",
     "RunHealthReport",
     "RunRecordView",
+    "build_error_breakdown",
+    "build_latency_report",
     "build_run_health_report",
     "list_recent_runs",
 ]
@@ -224,6 +239,213 @@ def list_recent_runs(
             started_at=item.started_at,
         )
         for item in ordered
+    )
+
+
+class LatencyPercentiles(BaseModel):
+    """Percentile and summary latency statistics over a set of run durations.
+
+    Percentiles are computed with the nearest-rank method (ceil(p * n / 100),
+    1-indexed into the ascending-sorted duration list) -- a deterministic,
+    interpolation-free method whose outputs always equal a recorded duration
+    value. Populated only when at least one duration is present; ``entries``
+    is ``0`` (all other fields absent) for an empty input.
+    """
+
+    model_config = _STRICT_FROZEN
+
+    entries: int = Field(default=0, ge=0)
+    min_duration_ms: int | None = None
+    max_duration_ms: int | None = None
+    mean_duration_ms: Decimal | None = None
+    p50_duration_ms: int | None = None
+    p95_duration_ms: int | None = None
+    p99_duration_ms: int | None = None
+
+
+class LatencyReport(BaseModel):
+    """Typed local-only latency report: overall plus optional per-provider percentiles.
+
+    Produced by :func:`build_latency_report`. :attr:`by_provider` is populated
+    only when the caller did not scope the query to a single ``provider``
+    filter (a single-provider query makes :attr:`overall` and the sole
+    provider row redundant).
+    """
+
+    model_config = _STRICT_FROZEN
+
+    since: date | None = None
+    until: date | None = None
+    provider: str | None = None
+    overall: LatencyPercentiles = Field(default_factory=LatencyPercentiles)
+    by_provider: tuple[tuple[str, LatencyPercentiles], ...] = ()
+
+    @property
+    def has_run_data(self) -> bool:
+        """Return ``True`` when at least one run duration was aggregated."""
+        return self.overall.entries > 0
+
+
+class ErrorKindCount(BaseModel):
+    """One ``error_kind`` value's failure count, optionally scoped to a provider."""
+
+    model_config = _STRICT_FROZEN
+
+    error_kind: str = Field(min_length=1)
+    provider: str = Field(min_length=1)
+    count: int = Field(ge=1)
+
+
+class ErrorsBreakdownReport(BaseModel):
+    """Typed local-only breakdown of failed LLM runs by provider and error kind.
+
+    Produced by :func:`build_error_breakdown`. Rows are sorted by descending
+    ``count``, then by ``provider``, then by ``error_kind`` for a stable
+    presentation order.
+    """
+
+    model_config = _STRICT_FROZEN
+
+    since: date | None = None
+    until: date | None = None
+    provider: str | None = None
+    total_runs: int = Field(default=0, ge=0)
+    total_failed: int = Field(default=0, ge=0)
+    by_error_kind: tuple[ErrorKindCount, ...] = ()
+
+    @property
+    def has_failures(self) -> bool:
+        """Return ``True`` when at least one failed run was recorded."""
+        return self.total_failed > 0
+
+
+def _percentile(sorted_durations: list[int], percentile: int) -> int:
+    """Return the nearest-rank ``percentile`` value from ascending ``sorted_durations``.
+
+    Uses the nearest-rank method: ``rank = ceil(percentile * n / 100)``,
+    clamped to ``[1, n]`` and converted to a 0-based index. Deterministic and
+    always returns one of the recorded duration values (no interpolation).
+    """
+    n = len(sorted_durations)
+    rank = -(-percentile * n // 100)  # ceil division
+    rank = max(1, min(rank, n))
+    return sorted_durations[rank - 1]
+
+
+def _latency_percentiles(records: list[LLMRunRecord]) -> LatencyPercentiles:
+    """Compute :class:`LatencyPercentiles` over ``records``' durations."""
+    if not records:
+        return LatencyPercentiles()
+    durations = sorted(item.duration_ms for item in records)
+    decimals = [Decimal(value) for value in durations]
+    mean = (sum(decimals, start=Decimal("0")) / Decimal(len(decimals))).quantize(Decimal("0.01"))
+    return LatencyPercentiles(
+        entries=len(durations),
+        min_duration_ms=durations[0],
+        max_duration_ms=durations[-1],
+        mean_duration_ms=mean,
+        p50_duration_ms=_percentile(durations, 50),
+        p95_duration_ms=_percentile(durations, 95),
+        p99_duration_ms=_percentile(durations, 99),
+    )
+
+
+def build_latency_report(
+    *,
+    since: date | None = None,
+    until: date | None = None,
+    provider: str | None = None,
+    run_telemetry_recorder: LLMRunTelemetryRecorder | None = None,
+) -> LatencyReport:
+    """Aggregate recorded run durations into overall and per-provider percentiles.
+
+    Reuses :meth:`~aeat.adapters.outbound.llm.LLMRunTelemetryRecorder.load_records`
+    directly -- the same recorder :func:`build_run_health_report` and
+    :func:`list_recent_runs` read -- so there is no parallel capture or
+    storage path for this report.
+
+    Args:
+        since: Inclusive lower date bound on run records, or ``None``.
+        until: Inclusive upper date bound on run records, or ``None``.
+        provider: Optional provider label filter; when supplied, ``overall``
+            reflects only that provider's runs and ``by_provider`` is left
+            empty (a single-provider breakdown would duplicate ``overall``).
+        run_telemetry_recorder: Injected recorder (dependency injection for
+            tests); defaults to the active-bucket
+            :class:`~aeat.adapters.outbound.llm.LLMRunTelemetryRecorder`.
+
+    Returns:
+        The populated :class:`LatencyReport`.
+    """
+    recorder = run_telemetry_recorder or LLMRunTelemetryRecorder()
+    records = recorder.load_records(since=since, until=until)
+    if provider is not None:
+        records = tuple(item for item in records if item.provider == provider)
+
+    overall = _latency_percentiles(list(records))
+
+    by_provider: tuple[tuple[str, LatencyPercentiles], ...] = ()
+    if provider is None:
+        grouped: dict[str, list[LLMRunRecord]] = {}
+        for record in records:
+            grouped.setdefault(record.provider, []).append(record)
+        by_provider = tuple(
+            (provider_name, _latency_percentiles(grouped[provider_name])) for provider_name in sorted(grouped)
+        )
+
+    return LatencyReport(since=since, until=until, provider=provider, overall=overall, by_provider=by_provider)
+
+
+def build_error_breakdown(
+    *,
+    since: date | None = None,
+    until: date | None = None,
+    provider: str | None = None,
+    run_telemetry_recorder: LLMRunTelemetryRecorder | None = None,
+) -> ErrorsBreakdownReport:
+    """Group failed recorded runs by provider and ``error_kind``.
+
+    Reuses :meth:`~aeat.adapters.outbound.llm.LLMRunTelemetryRecorder.load_records`
+    directly -- the same recorder every sibling diagnostics report reads --
+    so there is no parallel capture or storage path for this report.
+
+    Args:
+        since: Inclusive lower date bound on run records, or ``None``.
+        until: Inclusive upper date bound on run records, or ``None``.
+        provider: Optional provider label filter; ``None`` breaks down every
+            provider's failures.
+        run_telemetry_recorder: Injected recorder (dependency injection for
+            tests); defaults to the active-bucket
+            :class:`~aeat.adapters.outbound.llm.LLMRunTelemetryRecorder`.
+
+    Returns:
+        The populated :class:`ErrorsBreakdownReport`.
+    """
+    recorder = run_telemetry_recorder or LLMRunTelemetryRecorder()
+    records = recorder.load_records(since=since, until=until)
+    if provider is not None:
+        records = tuple(item for item in records if item.provider == provider)
+
+    failed = [item for item in records if not item.succeeded]
+    counts: dict[tuple[str, str], int] = {}
+    for item in failed:
+        error_kind = item.error_kind or "unknown"
+        key = (item.provider, error_kind)
+        counts[key] = counts.get(key, 0) + 1
+
+    rows = [
+        ErrorKindCount(error_kind=error_kind, provider=provider_name, count=count)
+        for (provider_name, error_kind), count in counts.items()
+    ]
+    rows.sort(key=lambda row: (-row.count, row.provider, row.error_kind))
+
+    return ErrorsBreakdownReport(
+        since=since,
+        until=until,
+        provider=provider,
+        total_runs=len(records),
+        total_failed=len(failed),
+        by_error_kind=tuple(rows),
     )
 
 
