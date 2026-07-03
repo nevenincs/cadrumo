@@ -968,6 +968,8 @@ application:
         per rendiments del treball) es zero. Si les vostres altres rendes diferents
         de les del treball excloses les exemptes no superen 6500, podeu aplicar la
         reduccio per rendiments del treball de l''article 20 LIRPF.'
+      art52_reduccion_individual_sublimit_next_action: 'Confirmeu si l''aportacio esta recolzada per una aportacio del treballador a un pla d''ocupacio (casella 0426) o per una contribucio empresarial (casella 0427); si no ho esta, la reduccio de l''article 52 LIRPF es limita a 1500 EUR, no al limit conjunt de 10000 EUR (ley-35-2006:art-52).'
+      art52_reduccion_individual_sublimit_possible: 'ART52_REDUCCION_INDIVIDUAL_SUBLIMIT_POSSIBLE: la casella %{reduccion_id} (reduccio per previsio social) = %{reduccion_value} supera el limit individual de l''article 52 de %{sublimit} EUR, pero no s''ha declarat cap aportacio del treballador a un pla d''ocupacio ni contribucio empresarial. Confirmeu que la reduccio esta recolzada per una contribucio vinculada a l''ocupador que doni dret a l''increment de 8500 EUR; en cas contrari, el limit aplicable es %{sublimit}.'
       cross_casilla_invariant_next_action: Ensure all casillas required by predicate
         %{predicate_id} are non-zero before verifying.
       cross_casilla_invariant_violated: 'cross-casilla invariant %{predicate_id} violated:
@@ -998,6 +1000,8 @@ application:
           import WORK_UNIT_ID --evidence-kind aeat_justificante_pdf --evidence-id
           CSV --set CASILLA=VALUE` / `aeat app modelo reconcile file WORK_UNIT_ID
           --file PATH` per a evidencia que ja tingueu.
+      dt12a_reduccion_antiquity_next_action: 'Confirmeu que han transcorregut mes de dos anys des de la primera aportacio al pla de pensions, llevat que la prestacio sigui per invalidesa (ley-35-2006:dt-12).'
+      dt12a_reduccion_antiquity_possible: 'DT_12A_REDUCCION_ANTIQUITY_POSSIBLE: la casella %{reduccion_id} (reduccio treball) = %{reduccion_value} reflecteix una reduccio aplicada. Si inclou un rescat en capital d''un pla de pensions DT 12a LIRPF, confirmeu que han transcorregut mes de dos anys des de la primera aportacio; el requisit d''antiguitat de dos anys nomes es dispensa en les prestacions per invalidesa.'
       dt12a_reduccion_next_action: Proporcioneu --rescate-plan-pensiones-capital IMPORT
         --rescate-plan-pensiones-aportaciones-pre-2007 IMPORT --rescate-plan-pensiones-aportaciones-totales
         IMPORT per injectar automàticament la reducció DT 12a a la casella corresponent
@@ -1990,33 +1994,48 @@ cli:
         build_help: Assembla un paquet de revisió compartible i verificable per checksum
           (esborrany fichero-BOE, procedència de la revisió i evidència comptable
           inclosa) per lliurar a l'assessor. Només local; mai contacta amb l'AEAT.
-        counter_sign_help: 'Contrasigna un paquet de revisió ja signat per l''operador en nom de l''assessor fiscal que el rep i escriu el sobre del rebut a --output. Només local; mai contacta amb l''AEAT.'
-        counter_sign_note_help: 'Nota o veredicte lliure del contrasignant (per exemple, ''revisat, sense canvis'').'
-        counter_sign_output_help: 'Camí on escriure el rebut contrasignat en format JSON.'
-        counter_signer_public_key_help: 'Clau pública de l''assessor fiscal (contrasignant), en 64 caràcters hexadecimals en minúscula.'
+        counter_sign_help: Contrasigna un paquet de revisió ja signat per l'operador
+          en nom de l'assessor fiscal que el rep i escriu el sobre del rebut a --output.
+          Només local; mai contacta amb l'AEAT.
+        counter_sign_note_help: Nota o veredicte lliure del contrasignant (per exemple,
+          'revisat, sense canvis').
+        counter_sign_output_help: Camí on escriure el rebut contrasignat en format
+          JSON.
+        counter_signer_public_key_help: Clau pública de l'assessor fiscal (contrasignant),
+          en 64 caràcters hexadecimals en minúscula.
         errors:
           output_required: Indiqueu --output CAMÍ per al ZIP del paquet de revisió.
           package_not_found: No s'ha trobat el paquet de revisió a {package_path}.
-          receipt_not_found: 'No s''ha trobat el rebut a {receipt_path}.'
-          signature_not_found: 'No s''ha trobat el sobre de signatura a {signature_path}.'
+          receipt_not_found: No s'ha trobat el rebut a {receipt_path}.
+          signature_not_found: No s'ha trobat el sobre de signatura a {signature_path}.
         group_help: Construeix un paquet de revisió compartible i verifica'n la integritat.
         notes_help: Nota de text lliure inclosa al descriptor del paquet (p. ex. el
           motiu de l'enviament).
-        operator_public_key_help: 'Clau pública de l''operador (signant original), en 64 caràcters hexadecimals en minúscula.'
+        operator_public_key_help: Clau pública de l'operador (signant original), en
+          64 caràcters hexadecimals en minúscula.
         output_help: Camí on escriure el ZIP del paquet de revisió.
         package_path_help: Camí del ZIP del paquet de revisió a verificar.
-        public_key_help: 'Clau pública del signant, en 64 caràcters hexadecimals en minúscula.'
-        receipt_path_help: 'Camí del rebut contrasignat en format JSON generat per `counter-sign`.'
+        public_key_help: Clau pública del signant, en 64 caràcters hexadecimals en
+          minúscula.
+        receipt_path_help: Camí del rebut contrasignat en format JSON generat per
+          `counter-sign`.
         revision_help: Id de la revisió de càlcul a empaquetar; per defecte la revisió
           verificada-completa o presentada més recent de la unitat de treball.
-        sign_help: 'Signa el manifest de comprovació d''un paquet de revisió amb el parell de claus Ed25519 del bucket (generat en el primer ús) i escriu el sobre de signatura a --output. Només local; mai contacta amb l''AEAT.'
-        sign_output_help: 'Camí on escriure el sobre de signatura en format JSON.'
-        signature_path_help: 'Camí del sobre de signatura JSON generat per `sign`.'
+        sign_help: Signa el manifest de comprovació d'un paquet de revisió amb el
+          parell de claus Ed25519 del bucket (generat en el primer ús) i escriu el
+          sobre de signatura a --output. Només local; mai contacta amb l'AEAT.
+        sign_output_help: Camí on escriure el sobre de signatura en format JSON.
+        signature_path_help: Camí del sobre de signatura JSON generat per `sign`.
         verify_help: Verifica el manifest de checksum d'un paquet de revisió (només
           integritat; no certifica qui l'ha construït). Només local; mai contacta
           amb l'AEAT.
-        verify_receipt_help: 'Verifica les dues capes de signatura d''un rebut contrasignat d''un paquet de revisió: la signatura original de l''operador i la contrasignatura de l''assessor fiscal. Només local; mai contacta amb l''AEAT.'
-        verify_signature_help: 'Verifica la signatura Ed25519 d''un paquet de revisió contra la clau pública del signant (comprovació d''autenticitat; primer repeteix la comprovació d''integritat del manifest). Només local; mai contacta amb l''AEAT.'
+        verify_receipt_help: 'Verifica les dues capes de signatura d''un rebut contrasignat
+          d''un paquet de revisió: la signatura original de l''operador i la contrasignatura
+          de l''assessor fiscal. Només local; mai contacta amb l''AEAT.'
+        verify_signature_help: Verifica la signatura Ed25519 d'un paquet de revisió
+          contra la clau pública del signant (comprovació d'autenticitat; primer repeteix
+          la comprovació d'integritat del manifest). Només local; mai contacta amb
+          l'AEAT.
         work_unit_id_help: Id de la unitat de treball (SHA-256 o prefix inequívoc).
       verification_report:
         app_help: Inspeccionar els informes de verificació registrats

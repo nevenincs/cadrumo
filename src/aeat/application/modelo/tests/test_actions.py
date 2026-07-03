@@ -57,7 +57,9 @@ from .._iva_wallet_gate import (
 from .._revision_replay_inputs import _informational_casilla_replay_inputs
 from .._verification_actions import (
     _art20_reduccion_advisory_finding,
+    _art52_reduccion_advisory_finding,
     _collect_revision_verification_findings,
+    _dt12_antiquity_advisory_finding,
     _dt12_reduccion_advisory_finding,
     _evaluate_verification_predicates,
     _iva_wallet_blocking_verification_finding,
@@ -97,6 +99,10 @@ _DT12_INGRESO_CASILLA: CasillaId = _casilla_id("0003")
 _DT12_REDUCCION_CASILLA: CasillaId = _casilla_id("0011")
 _ART20_RNT_CASILLA: CasillaId = _casilla_id("0022")
 _ART20_REDUCCION_CASILLA: CasillaId = _casilla_id("0023")
+_ART52_REDUCCION_CASILLA: CasillaId = _casilla_id("0468")
+_ART52_TRABAJADOR_CON_CONTRIBUCION_CASILLA: CasillaId = _casilla_id("0426")
+_ART52_EMPRESARIAL_CASILLA: CasillaId = _casilla_id("0427")
+_DT12_ANTIQUITY_REDUCCION_CASILLA: CasillaId = _casilla_id("0011")
 _M130_INGRESOS_CASILLA: CasillaId = _casilla_id("01")
 _M130_GASTOS_CASILLA: CasillaId = _casilla_id("02")
 _SOURCE_BOUND_BINDING: BindingId = "ledger_iva_base"
@@ -165,6 +171,36 @@ def _art20_revision() -> ModeloRevision:
             _test_casilla_definition(
                 _ART20_REDUCCION_CASILLA,
                 semantic_role="irpf_rendimiento_trabajo_reduccion_gastos_generales",
+            ),
+        ),
+    )
+
+
+def _art52_revision() -> ModeloRevision:
+    return _test_revision(
+        casillas=(
+            _test_casilla_definition(
+                _ART52_REDUCCION_CASILLA,
+                semantic_role="irpf_reduccion_prevision_social_total",
+            ),
+            _test_casilla_definition(
+                _ART52_TRABAJADOR_CON_CONTRIBUCION_CASILLA,
+                semantic_role="irpf_red_prevision_social_aportaciones_trabajador_con_contribucion_empresarial",
+            ),
+            _test_casilla_definition(
+                _ART52_EMPRESARIAL_CASILLA,
+                semantic_role="irpf_red_prevision_social_contribuciones_empresariales_excepto_scd",
+            ),
+        ),
+    )
+
+
+def _dt12_antiquity_revision() -> ModeloRevision:
+    return _test_revision(
+        casillas=(
+            _test_casilla_definition(
+                _DT12_ANTIQUITY_REDUCCION_CASILLA,
+                semantic_role="irpf_rendimiento_trabajo_reduccion",
             ),
         ),
     )
@@ -497,6 +533,127 @@ def test_art20_reduccion_advisory_silent_for_declared_or_ineligible_values(
 
 def test_art20_reduccion_advisory_silent_when_roles_absent() -> None:
     assert _art20_reduccion_advisory_finding(_test_revision(), {}) is None
+
+
+# ---------------------------------------------------------------------------
+# contract/contract — art. 52 LIRPF previsión-social individual sub-limit advisory
+# ---------------------------------------------------------------------------
+
+
+def test_art52_reduccion_advisory_fires_for_purely_individual_over_sublimit() -> None:
+    """_art52_reduccion_advisory_finding warns on a purely-individual over-reduction.
+
+    A purely-individual filer (no plan-de-empleo worker contribution, no
+    contribución empresarial) whose granted reducción (0468) exceeds the EUR 1.500
+    art. 52 individual sub-limit — e.g. a EUR 3.000 aportación fully reducible under
+    the combined EUR 10.000/30% cap the engine already enforces — should be flagged:
+    the combined ceiling requires employer-linked backing this filer does not have.
+    """
+    revision = _art52_revision()
+    casilla_values = {
+        _ART52_REDUCCION_CASILLA: Decimal("3000"),
+        _ART52_TRABAJADOR_CON_CONTRIBUCION_CASILLA: Decimal("0"),
+        _ART52_EMPRESARIAL_CASILLA: Decimal("0"),
+    }
+
+    finding = _art52_reduccion_advisory_finding(revision, casilla_values)
+
+    assert finding is not None
+    assert finding.kind == "advisory"
+    assert finding.severity == "warning"
+    assert finding.casilla_id == _ART52_REDUCCION_CASILLA
+    assert finding.legal_refs == ("ley-35-2006:art-52",)
+    assert str(_ART52_REDUCCION_CASILLA) in finding.message
+    assert "3000" in finding.message
+    assert "1500" in finding.message
+    assert finding.next_action
+    # The advisory message must be the rendered locale value, not the raw key.
+    assert finding.message != "application.modelo.findings.art52_reduccion_individual_sublimit_possible"
+
+
+def test_art52_reduccion_advisory_silent_when_employer_backed() -> None:
+    """No false positive when a contribución empresarial (0427) backs the reducción.
+
+    The same over-1.500 reducción as the firing case, but with a positive
+    contribución empresarial declared: the combined EUR 10.000 ceiling legitimately
+    applies, so the advisory must stay silent.
+    """
+    revision = _art52_revision()
+    casilla_values = {
+        _ART52_REDUCCION_CASILLA: Decimal("3000"),
+        _ART52_TRABAJADOR_CON_CONTRIBUCION_CASILLA: Decimal("0"),
+        _ART52_EMPRESARIAL_CASILLA: Decimal("2500"),
+    }
+
+    assert _art52_reduccion_advisory_finding(revision, casilla_values) is None
+
+
+def test_art52_reduccion_advisory_silent_when_plan_de_empleo_backed() -> None:
+    """No false positive when a plan-de-empleo worker contribution (0426) backs it."""
+    revision = _art52_revision()
+    casilla_values = {
+        _ART52_REDUCCION_CASILLA: Decimal("3000"),
+        _ART52_TRABAJADOR_CON_CONTRIBUCION_CASILLA: Decimal("2500"),
+        _ART52_EMPRESARIAL_CASILLA: Decimal("0"),
+    }
+
+    assert _art52_reduccion_advisory_finding(revision, casilla_values) is None
+
+
+def test_art52_reduccion_advisory_silent_when_under_sublimit() -> None:
+    """No false positive when the purely-individual reducción is at or below EUR 1.500."""
+    revision = _art52_revision()
+    casilla_values = {
+        _ART52_REDUCCION_CASILLA: Decimal("1500"),
+        _ART52_TRABAJADOR_CON_CONTRIBUCION_CASILLA: Decimal("0"),
+        _ART52_EMPRESARIAL_CASILLA: Decimal("0"),
+    }
+
+    assert _art52_reduccion_advisory_finding(revision, casilla_values) is None
+
+
+def test_art52_reduccion_advisory_silent_when_roles_absent() -> None:
+    assert _art52_reduccion_advisory_finding(_test_revision(), {}) is None
+
+
+# ---------------------------------------------------------------------------
+# contract/contract — DT 12ª LIRPF antiquity-condition advisory
+# ---------------------------------------------------------------------------
+
+
+def test_dt12_antiquity_advisory_fires_when_reduccion_applied() -> None:
+    """_dt12_antiquity_advisory_finding warns to confirm antiquity when 40% applies.
+
+    A strictly positive trabajo reducción prompts the operator to confirm the
+    pre-2007 TRLIRPF art. 17.2.a) two-year antiquity condition (waived for
+    invalidez) DT 12ª LIRPF imports for the transitional régimen.
+    """
+    revision = _dt12_antiquity_revision()
+    casilla_values = {_DT12_ANTIQUITY_REDUCCION_CASILLA: Decimal("4000")}
+
+    finding = _dt12_antiquity_advisory_finding(revision, casilla_values)
+
+    assert finding is not None
+    assert finding.kind == "advisory"
+    assert finding.severity == "warning"
+    assert finding.casilla_id == _DT12_ANTIQUITY_REDUCCION_CASILLA
+    assert finding.legal_refs == ("ley-35-2006:dt-12",)
+    assert str(_DT12_ANTIQUITY_REDUCCION_CASILLA) in finding.message
+    assert "4000" in finding.message
+    assert finding.next_action
+    assert finding.message != "application.modelo.findings.dt12a_reduccion_antiquity_possible"
+
+
+def test_dt12_antiquity_advisory_silent_when_reduccion_zero() -> None:
+    """No false positive when no reducción has been applied at all."""
+    revision = _dt12_antiquity_revision()
+    casilla_values = {_DT12_ANTIQUITY_REDUCCION_CASILLA: Decimal("0")}
+
+    assert _dt12_antiquity_advisory_finding(revision, casilla_values) is None
+
+
+def test_dt12_antiquity_advisory_silent_when_roles_absent() -> None:
+    assert _dt12_antiquity_advisory_finding(_test_revision(), {}) is None
 
 
 # ---------------------------------------------------------------------------

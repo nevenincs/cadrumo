@@ -893,6 +893,16 @@ application:
         19747,50) but casilla %{reduccion_id} (general work-income reduction) is zero.
         If your other non-work income excluding exempt income does not exceed 6500,
         the article 20 LIRPF work-income reduction may apply.'
+      art52_reduccion_individual_sublimit_next_action: Confirm whether the aportacion
+        is backed by a plan-de-empleo worker contribution (casilla 0426) or a contribucion
+        empresarial (casilla 0427); if not, the article 52 LIRPF reduccion is limited
+        to EUR 1500, not the combined EUR 10000 ceiling (ley-35-2006:art-52).
+      art52_reduccion_individual_sublimit_possible: 'ART52_REDUCCION_INDIVIDUAL_SUBLIMIT_POSSIBLE:
+        casilla %{reduccion_id} (prevision-social reduccion) = %{reduccion_value}
+        exceeds the article 52 individual sub-limit of %{sublimit} EUR, but no plan-de-empleo
+        worker contribution or contribucion empresarial is declared. Confirm this
+        reduccion is backed by an employer-linked contribution eligible for the EUR
+        8500 increment; otherwise it is capped at %{sublimit}.'
       cross_casilla_invariant_next_action: Ensure all casillas required by predicate
         %{predicate_id} are non-zero before verifying.
       cross_casilla_invariant_violated: 'cross-casilla invariant %{predicate_id} violated:
@@ -921,6 +931,14 @@ application:
           WORK_UNIT_ID --evidence-kind aeat_justificante_pdf --evidence-id CSV --set
           CASILLA=VALUE` / `aeat app modelo reconcile file WORK_UNIT_ID --file PATH`
           for evidence you already hold.
+      dt12a_reduccion_antiquity_next_action: Confirm more than two years have passed
+        since the first aportacion to the plan de pensiones, unless the prestacion
+        is by invalidez (ley-35-2006:dt-12).
+      dt12a_reduccion_antiquity_possible: 'DT_12A_REDUCCION_ANTIQUITY_POSSIBLE: casilla
+        %{reduccion_id} (reduccion trabajo) = %{reduccion_value} reflects an applied
+        reduccion. If this includes a DT 12a LIRPF plan-de-pensiones capital rescate,
+        confirm more than two years have passed since the first aportacion; the two-year
+        antiquity requirement is waived only for prestaciones por invalidez.'
       dt12a_reduccion_next_action: Supply --rescate-plan-pensiones-capital IMPORTE
         --rescate-plan-pensiones-aportaciones-pre-2007 IMPORTE --rescate-plan-pensiones-aportaciones-totales
         IMPORTE to aeat app modelo work calculate to auto-inject the DT 12a reduccion
@@ -1876,32 +1894,43 @@ cli:
         build_help: Assemble a shareable, checksum-verifiable review package (fichero-BOE
           draft, revision provenance, and bundled ledger evidence) for accountant
           handoff. Local-only; never contacts AEAT.
-        counter_sign_help: 'Counter-sign an operator-signed review package on behalf of the receiving accountant and write the receipt envelope to --output. Local-only; never contacts AEAT.'
-        counter_sign_note_help: 'Free-text counter-signer note or verdict (e.g. ''reviewed, no changes'').'
-        counter_sign_output_help: 'Path to write the counter-signed receipt JSON to.'
-        counter_signer_public_key_help: 'The accountant''s (counter-signer''s) public key, as 64 lowercase hex characters.'
+        counter_sign_help: Counter-sign an operator-signed review package on behalf
+          of the receiving accountant and write the receipt envelope to --output.
+          Local-only; never contacts AEAT.
+        counter_sign_note_help: Free-text counter-signer note or verdict (e.g. 'reviewed,
+          no changes').
+        counter_sign_output_help: Path to write the counter-signed receipt JSON to.
+        counter_signer_public_key_help: The accountant's (counter-signer's) public
+          key, as 64 lowercase hex characters.
         errors:
           output_required: Supply --output PATH for the review package ZIP.
           package_not_found: Review package not found at {package_path}.
-          receipt_not_found: 'Receipt envelope not found at {receipt_path}.'
-          signature_not_found: 'Signature envelope not found at {signature_path}.'
+          receipt_not_found: Receipt envelope not found at {receipt_path}.
+          signature_not_found: Signature envelope not found at {signature_path}.
         group_help: Build a shareable review package and verify its integrity.
         notes_help: Free-text note embedded in the package descriptor (e.g. why it
           was shared).
-        operator_public_key_help: 'The operator''s (original signer''s) public key, as 64 lowercase hex characters.'
+        operator_public_key_help: The operator's (original signer's) public key, as
+          64 lowercase hex characters.
         output_help: Path to write the review package ZIP to.
         package_path_help: Path to the review package ZIP to verify.
-        public_key_help: 'Signer''s public key, as 64 lowercase hex characters.'
-        receipt_path_help: 'Path to the counter-signed receipt JSON produced by `counter-sign`.'
+        public_key_help: Signer's public key, as 64 lowercase hex characters.
+        receipt_path_help: Path to the counter-signed receipt JSON produced by `counter-sign`.
         revision_help: Calculation revision id to package; defaults to the work unit's
           most recent verified-complete or filed revision.
-        sign_help: 'Sign a review package''s checksum manifest with the bucket''s Ed25519 signing keypair (minted on first use) and write the signature envelope to --output. Local-only; never contacts AEAT.'
-        sign_output_help: 'Path to write the signature envelope JSON to.'
-        signature_path_help: 'Path to the signature envelope JSON produced by `sign`.'
+        sign_help: Sign a review package's checksum manifest with the bucket's Ed25519
+          signing keypair (minted on first use) and write the signature envelope to
+          --output. Local-only; never contacts AEAT.
+        sign_output_help: Path to write the signature envelope JSON to.
+        signature_path_help: Path to the signature envelope JSON produced by `sign`.
         verify_help: Verify a review package's checksum manifest (integrity only;
           does not assert who built it). Local-only; never contacts AEAT.
-        verify_receipt_help: 'Verify both signature layers of a counter-signed review-package receipt: the operator''s original signature and the accountant''s counter-signature. Local-only; never contacts AEAT.'
-        verify_signature_help: 'Verify a review package''s Ed25519 signature envelope against a signer''s public key (authenticity check; re-runs the checksum-manifest integrity check first). Local-only; never contacts AEAT.'
+        verify_receipt_help: 'Verify both signature layers of a counter-signed review-package
+          receipt: the operator''s original signature and the accountant''s counter-signature.
+          Local-only; never contacts AEAT.'
+        verify_signature_help: Verify a review package's Ed25519 signature envelope
+          against a signer's public key (authenticity check; re-runs the checksum-manifest
+          integrity check first). Local-only; never contacts AEAT.
         work_unit_id_help: Work unit id (SHA-256 or unambiguous prefix).
       verification_report:
         app_help: Inspect recorded verification reports

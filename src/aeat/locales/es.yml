@@ -981,6 +981,8 @@ application:
         por rendimientos del trabajo) es cero. Si sus otras rentas distintas de las
         del trabajo excluidas las exentas no superan 6500, puede aplicar la reduccion
         por rendimientos del trabajo del articulo 20 LIRPF.'
+      art52_reduccion_individual_sublimit_next_action: 'Confirme si la aportacion esta respaldada por una aportacion del trabajador a un plan de empleo (casilla 0426) o por una contribucion empresarial (casilla 0427); si no es asi, la reduccion del articulo 52 LIRPF se limita a 1500 EUR, no al limite conjunto de 10000 EUR (ley-35-2006:art-52).'
+      art52_reduccion_individual_sublimit_possible: 'ART52_REDUCCION_INDIVIDUAL_SUBLIMIT_POSSIBLE: la casilla %{reduccion_id} (reduccion por prevision social) = %{reduccion_value} supera el limite individual del articulo 52 de %{sublimit} EUR, pero no se ha declarado ninguna aportacion del trabajador a un plan de empleo ni contribucion empresarial. Confirme que la reduccion esta respaldada por una contribucion vinculada al empleador que dé derecho al incremento de 8500 EUR; en caso contrario, el limite aplicable es %{sublimit}.'
       cross_casilla_invariant_next_action: Ensure all casillas required by predicate
         %{predicate_id} are non-zero before verifying.
       cross_casilla_invariant_violated: 'cross-casilla invariant %{predicate_id} violated:
@@ -1012,6 +1014,8 @@ application:
           import WORK_UNIT_ID --evidence-kind aeat_justificante_pdf --evidence-id
           CSV --set CASILLA=VALUE` / `aeat app modelo reconcile file WORK_UNIT_ID
           --file PATH` para evidencia que ya tenga.
+      dt12a_reduccion_antiquity_next_action: 'Confirme que han transcurrido mas de dos anos desde la primera aportacion al plan de pensiones, salvo que la prestacion sea por invalidez (ley-35-2006:dt-12).'
+      dt12a_reduccion_antiquity_possible: 'DT_12A_REDUCCION_ANTIQUITY_POSSIBLE: la casilla %{reduccion_id} (reduccion trabajo) = %{reduccion_value} refleja una reduccion aplicada. Si incluye un rescate en capital de un plan de pensiones DT 12a LIRPF, confirme que han transcurrido mas de dos anos desde la primera aportacion; el requisito de antiguedad de dos anos solo se dispensa en las prestaciones por invalidez.'
       dt12a_reduccion_next_action: Proporcione --rescate-plan-pensiones-capital IMPORTE
         --rescate-plan-pensiones-aportaciones-pre-2007 IMPORTE --rescate-plan-pensiones-aportaciones-totales
         IMPORTE al calcular para inyectar automáticamente la reducción DT 12ª en la
@@ -1086,8 +1090,8 @@ application:
       modelo_210_2025_ue_residente_requiere_residencia_ue_eee: El tipo de renta declarado
         es ue_residente (tipo reducido UE/EEE) pero el país de residencia fiscal del
         contribuyente no es un Estado miembro de la Unión Europea o del Espacio Económico
-        Europeo; confirme la elegibilidad para el tipo reducido del 19 por ciento antes
-        de presentar, o seleccione el tipo general del 24 por ciento.
+        Europeo; confirme la elegibilidad para el tipo reducido del 19 por ciento
+        antes de presentar, o seleccione el tipo general del 24 por ciento.
       modelo_303_official_deducible_boxes_unpopulated_cuando_cuota_deducible_positiva: El
         IVA deducible total (cuota-deducible-total) es positivo, pero todas las casillas
         oficiales del Diseño de Registros (29 interiores corrientes, 33 importaciones,
@@ -2018,33 +2022,48 @@ cli:
         build_help: Ensambla un paquete de revisión compartible y verificable por
           checksum (borrador fichero-BOE, procedencia de la revisión y evidencia contable
           incluida) para entregar al asesor. Solo local; nunca contacta con la AEAT.
-        counter_sign_help: 'Contrafirma un paquete de revisión ya firmado por el operador en nombre del asesor fiscal que lo recibe y escribe el sobre del recibo en --output. Solo local; nunca contacta con la AEAT.'
-        counter_sign_note_help: 'Nota o veredicto libre del contrafirmante (por ejemplo, ''revisado, sin cambios'').'
-        counter_sign_output_help: 'Ruta donde escribir el recibo contrafirmado en formato JSON.'
-        counter_signer_public_key_help: 'Clave pública del asesor fiscal (contrafirmante), en 64 caracteres hexadecimales en minúscula.'
+        counter_sign_help: Contrafirma un paquete de revisión ya firmado por el operador
+          en nombre del asesor fiscal que lo recibe y escribe el sobre del recibo
+          en --output. Solo local; nunca contacta con la AEAT.
+        counter_sign_note_help: Nota o veredicto libre del contrafirmante (por ejemplo,
+          'revisado, sin cambios').
+        counter_sign_output_help: Ruta donde escribir el recibo contrafirmado en formato
+          JSON.
+        counter_signer_public_key_help: Clave pública del asesor fiscal (contrafirmante),
+          en 64 caracteres hexadecimales en minúscula.
         errors:
           output_required: Indique --output RUTA para el ZIP del paquete de revisión.
           package_not_found: No se encontró el paquete de revisión en {package_path}.
-          receipt_not_found: 'No se encontró el recibo en {receipt_path}.'
-          signature_not_found: 'No se encontró el sobre de firma en {signature_path}.'
+          receipt_not_found: No se encontró el recibo en {receipt_path}.
+          signature_not_found: No se encontró el sobre de firma en {signature_path}.
         group_help: Construye un paquete de revisión compartible y verifica su integridad.
         notes_help: Nota de texto libre incluida en el descriptor del paquete (p.
           ej. el motivo del envío).
-        operator_public_key_help: 'Clave pública del operador (firmante original), en 64 caracteres hexadecimales en minúscula.'
+        operator_public_key_help: Clave pública del operador (firmante original),
+          en 64 caracteres hexadecimales en minúscula.
         output_help: Ruta donde escribir el ZIP del paquete de revisión.
         package_path_help: Ruta del ZIP del paquete de revisión a verificar.
-        public_key_help: 'Clave pública del firmante, en 64 caracteres hexadecimales en minúscula.'
-        receipt_path_help: 'Ruta del recibo contrafirmado en formato JSON generado por `counter-sign`.'
+        public_key_help: Clave pública del firmante, en 64 caracteres hexadecimales
+          en minúscula.
+        receipt_path_help: Ruta del recibo contrafirmado en formato JSON generado
+          por `counter-sign`.
         revision_help: Id de la revisión de cálculo a empaquetar; por defecto la revisión
           verificada-completa o presentada más reciente de la unidad de trabajo.
-        sign_help: 'Firma el manifiesto de comprobación de un paquete de revisión con el par de claves Ed25519 del bucket (generado en el primer uso) y escribe el sobre de firma en --output. Solo local; nunca contacta con la AEAT.'
-        sign_output_help: 'Ruta donde escribir el sobre de firma en formato JSON.'
-        signature_path_help: 'Ruta del sobre de firma JSON generado por `sign`.'
+        sign_help: Firma el manifiesto de comprobación de un paquete de revisión con
+          el par de claves Ed25519 del bucket (generado en el primer uso) y escribe
+          el sobre de firma en --output. Solo local; nunca contacta con la AEAT.
+        sign_output_help: Ruta donde escribir el sobre de firma en formato JSON.
+        signature_path_help: Ruta del sobre de firma JSON generado por `sign`.
         verify_help: Verifica el manifiesto de checksum de un paquete de revisión
           (solo integridad; no certifica quién lo construyó). Solo local; nunca contacta
           con la AEAT.
-        verify_receipt_help: 'Verifica ambas capas de firma de un recibo contrafirmado de un paquete de revisión: la firma original del operador y la contrafirma del asesor fiscal. Solo local; nunca contacta con la AEAT.'
-        verify_signature_help: 'Verifica la firma Ed25519 de un paquete de revisión frente a la clave pública del firmante (comprobación de autenticidad; primero repite la comprobación de integridad del manifiesto). Solo local; nunca contacta con la AEAT.'
+        verify_receipt_help: 'Verifica ambas capas de firma de un recibo contrafirmado
+          de un paquete de revisión: la firma original del operador y la contrafirma
+          del asesor fiscal. Solo local; nunca contacta con la AEAT.'
+        verify_signature_help: Verifica la firma Ed25519 de un paquete de revisión
+          frente a la clave pública del firmante (comprobación de autenticidad; primero
+          repite la comprobación de integridad del manifiesto). Solo local; nunca
+          contacta con la AEAT.
         work_unit_id_help: Id de la unidad de trabajo (SHA-256 o prefijo inequívoco).
       verification_report:
         app_help: Inspeccionar los informes de verificación registrados
