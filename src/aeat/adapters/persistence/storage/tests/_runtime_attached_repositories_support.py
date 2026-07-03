@@ -14,6 +14,7 @@ import pytest
 from pydantic import AnyHttpUrl, TypeAdapter
 
 from .....adapters.persistence.profile.buckets import BucketEventHistoryRepository
+from .....adapters.persistence.profile.filing_amendments import ModeloAmendmentRepository
 from .....adapters.persistence.profile.filing_drafts import ModeloDraftRepository
 from .....adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from .....adapters.persistence.profile.justificante import JustificanteRepository
@@ -78,7 +79,6 @@ from .....domain.contribuyente.inventory import InventoryLedger, ValuationMethod
 from .....domain.filing import (
     AmendmentKind,
     CasillaChange,
-    ModeloAmendmentRepository,
     ModeloComplementaria,
     ModeloDraft,
     ModeloValue,

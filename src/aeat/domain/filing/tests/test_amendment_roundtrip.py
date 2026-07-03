@@ -20,6 +20,7 @@ from pathlib import Path
 import pytest
 from pydantic import ValidationError
 
+from ....adapters.persistence.profile.filing_amendments import ModeloAmendmentRepository
 from ....core import Period
 from ....tests.secure_sql import isolated_runtime_profile
 from ...calculations.registry import CasillaId, RegistrySnapshotRef, validated_casilla_id
@@ -29,7 +30,6 @@ from .._amendment import (
     ModeloComplementaria,
     make_amendment_id,
 )
-from .._complementaria_repository import ModeloAmendmentRepository
 from .._schema import (
     ModeloDraft,
     ModeloDraftStatus,
@@ -193,6 +193,7 @@ def test_filing_amendment_emptied_delta_surfaces_at_load(
 
     from sqlalchemy import select
 
+    from ....adapters.persistence.storage import FILING_AMENDMENTS_NAMESPACE
     from ....adapters.persistence.storage.crypto import (
         decrypt_secure_object_payload,
         encrypt_secure_object_payload,
@@ -200,7 +201,6 @@ def test_filing_amendment_emptied_delta_surfaces_at_load(
     )
     from ....adapters.persistence.storage.sql import SecureObjectRow
     from ....adapters.persistence.storage.sql.session import session_scope
-    from .._complementaria_repository import _AMENDMENT_NAMESPACE
 
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
         try:
@@ -210,7 +210,7 @@ def test_filing_amendment_emptied_delta_surfaces_at_load(
 
             with session_scope(profile.repository._engine) as session:
                 all_rows = session.execute(select(SecureObjectRow)).scalars().all()
-                amendment_rows = [r for r in all_rows if r.namespace == _AMENDMENT_NAMESPACE]
+                amendment_rows = [r for r in all_rows if r.namespace == FILING_AMENDMENTS_NAMESPACE.namespace]
                 assert len(amendment_rows) == 1, (
                     f"expected one amendment row, found {len(amendment_rows)} "
                     f"(namespaces: {sorted({r.namespace for r in all_rows})})"

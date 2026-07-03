@@ -2,23 +2,29 @@
 
 Filing amendments carry corrected casilla deltas and original
 submission references. They are stored as encrypted byte objects via
-:class:`~adapters.persistence.storage.SecureObjectRepository` at
-``AUDIT`` :class:`~adapters.persistence.storage.SensitivityClass`
+:class:`~aeat.adapters.persistence.storage.SecureObjectRepository` at
+``AUDIT`` :class:`~aeat.adapters.persistence.storage.SensitivityClass`
 sensitivity; no plaintext amendment JSON or envelope file lands on disk. Each
 record is wrapped in an
-:class:`~adapters.persistence.storage.Envelope` before serialisation.
+:class:`~aeat.adapters.persistence.storage.Envelope` before serialisation.
+
+This concrete repository is the persistence adapter behind the
+:class:`~aeat.domain.filing.ModeloAmendmentRepositoryProtocol` port. It lives
+in the persistence adapter (not in :mod:`aeat.domain.filing`) because its
+secure-object coupling is SQL/crypto-bound; the domain package owns only the
+typed :class:`~aeat.domain.filing.BaseAmendment` payload shapes.
 
 See Also:
-    :class:`BaseAmendment`
+    :class:`~aeat.domain.filing.BaseAmendment`
         Shared typed payload shape saved by this repository.
-    :class:`ModeloComplementaria`
+    :class:`~aeat.domain.filing.ModeloComplementaria`
         LGT Art. 122.2 amendment variant for additional self-assessment.
-    :class:`ModeloSustitutiva`
+    :class:`~aeat.domain.filing.ModeloSustitutiva`
         LGT Art. 122.1 amendment variant for full replacement.
-    :data:`adapters.persistence.storage.FILING_AMENDMENTS_NAMESPACE`
+    :data:`aeat.adapters.persistence.storage.FILING_AMENDMENTS_NAMESPACE`
         Namespace, sensitivity, schema-version, object-key, and custody
         contract for amendment secure objects.
-    :func:`application.filing.build_complementaria`
+    :func:`aeat.application.filing.build_complementaria`
         Application orchestration entry point that can produce and persist an
         amendment.
 """
@@ -29,38 +35,42 @@ from collections.abc import Iterator
 from pathlib import Path
 from typing import TYPE_CHECKING
 
-from ...core.logging import get_logger
-from ...core.time import now
-from ._amendment import (
+from ....core.logging import get_logger
+from ....core.time import now
+from ....domain.filing import (
     BaseAmendment,
     ModeloComplementaria,
     ModeloSustitutiva,
 )
-from ._runtime_repository import resolve_filing_repository_bucket_id, secure_objects_for_filing_bucket
+from ....domain.filing._runtime_repository import (
+    resolve_filing_repository_bucket_id,
+    secure_objects_for_filing_bucket,
+)
 
 if TYPE_CHECKING:  # pragma: no cover — import-cycle guard
-    from ...adapters.persistence.storage import SecureObjectRepository
+    from ..storage import SecureObjectRepository
 
 type ModeloAmendment = ModeloComplementaria | ModeloSustitutiva
 
 _log = get_logger(__name__)
 
 _AMENDMENT_ENVELOPE_VERSION = 1
+# namespace string preserved across rename to avoid orphaning persisted envelopes
 _AMENDMENT_NAMESPACE = "aeat.domain.filing.amendments"
 
 
 class ModeloAmendmentRepository:
-    """Encrypted AUDIT repository for :class:`BaseAmendment` records.
+    """Encrypted AUDIT repository for :class:`~aeat.domain.filing.BaseAmendment` records.
 
-    Persists :class:`ModeloComplementaria` and :class:`ModeloSustitutiva`
-    payloads under
-    :data:`adapters.persistence.storage.FILING_AMENDMENTS_NAMESPACE`. The
+    Persists :class:`~aeat.domain.filing.ModeloComplementaria` and
+    :class:`~aeat.domain.filing.ModeloSustitutiva` payloads under
+    :data:`aeat.adapters.persistence.storage.FILING_AMENDMENTS_NAMESPACE`. The
     repository wraps the amendment union in an
-    :class:`~adapters.persistence.storage.Envelope` before writing through
-    :class:`~adapters.persistence.storage.SecureObjectRepository`; the
+    :class:`~aeat.adapters.persistence.storage.Envelope` before writing through
+    :class:`~aeat.adapters.persistence.storage.SecureObjectRepository`; the
     amendment id is the natural key used for load, delete, and ordered
     iteration. The namespace definition supplies the ``AUDIT``
-    :class:`~adapters.persistence.storage.SensitivityClass`, schema
+    :class:`~aeat.adapters.persistence.storage.SensitivityClass`, schema
     version, object-key grammar, and custody contract.
     """
 
@@ -84,21 +94,21 @@ class ModeloAmendmentRepository:
 
     def envelope_path_for(self, amendment_id: str) -> Path:
         """Return a logical object marker for ``amendment_id``."""
-        from ...adapters.persistence.storage import safe_repository_id
+        from ..storage import safe_repository_id
 
         safe_repository_id(amendment_id, context="amendment_id")
         return self.store_dir / amendment_id
 
     def lock_target_for(self, amendment_id: str) -> Path:
         """Return a logical lock marker; SQL transactions govern writes."""
-        from ...adapters.persistence.storage import safe_repository_id
+        from ..storage import safe_repository_id
 
         safe_repository_id(amendment_id, context="amendment_id")
         return self.store_dir / f"{amendment_id}.lock"
 
     def load(self, amendment_id: str) -> ModeloAmendment | None:
         """Return the persisted amendment or ``None`` if absent."""
-        from ...adapters.persistence.storage import (
+        from ..storage import (
             ClassificationError,
             Envelope,
             EnvelopeVersionError,
@@ -132,9 +142,9 @@ class ModeloAmendmentRepository:
         """Persist ``amendment`` in the encrypted database object store.
 
         The row is stored under
-        :data:`adapters.persistence.storage.FILING_AMENDMENTS_NAMESPACE`.
+        :data:`aeat.adapters.persistence.storage.FILING_AMENDMENTS_NAMESPACE`.
         """
-        from ...adapters.persistence.storage import Envelope, SensitivityClass, safe_repository_id
+        from ..storage import Envelope, SensitivityClass, safe_repository_id
 
         safe_repository_id(amendment.amendment_id, context="amendment_id")
         envelope = Envelope[BaseAmendment](
@@ -156,7 +166,7 @@ class ModeloAmendmentRepository:
 
     def delete(self, amendment_id: str) -> bool:
         """Remove the persisted amendment for ``amendment_id``."""
-        from ...adapters.persistence.storage import safe_repository_id
+        from ..storage import safe_repository_id
 
         safe_repository_id(amendment_id, context="amendment_id")
         deleted = self._objects.delete(_AMENDMENT_NAMESPACE, amendment_id)
@@ -166,7 +176,7 @@ class ModeloAmendmentRepository:
 
     def list_amendment_ids(self) -> tuple[str, ...]:
         """Return every amendment id persisted in this repository."""
-        from ...adapters.persistence.storage import Envelope, SensitivityClass
+        from ..storage import Envelope, SensitivityClass
 
         ids: list[str] = []
         for record in self._objects.list_records(
