@@ -6,6 +6,7 @@ date: '2026-07-02'
 modified: '2026-07-02'
 related:
   - "[[2026-07-02-agent-harness-refoundation-research]]"
+  - "[[2026-07-03-claude-ecosystem-packaging-adr]]"
 ---
 
 # `agent-harness-refoundation` adr: `black-box tool universe, situation-keyed skills, and the MCP operating console` | (**status:** `accepted`)
@@ -83,6 +84,14 @@ This ADR re-founds the concept against that definition. It records precisely wha
 **Chosen — a self-hosted live subagent-persona harness** (operator directive, 2026-07-02). Capabilities are measured by **live subagent personas**: spawned language-model subagents playing the harness personas, operating the console end-to-end against golden scenarios. The substrate (a) starts the real `aeat-mcp` server, (b) connects a real MCP client session driven by a subagent persona, (c) captures the full trajectory (tools selected, arguments, elicitation responses, narration), and (d) scores it against the existing golden-scenario models plus the faithfulness and confirmation checks **now applied to observed calls**, not caller-injected verdicts. Hard invariants: **zero live-submit attempts and zero faithfulness violations at the handoff boundary**. Session telemetry — per-call trajectory records with session ids — is persisted locally. A data flywheel promotes live failures into new golden scenarios. A real-client handshake conformance test (`initialize` / tools-list / call round-trip) is the floor beneath the live harness.
 
 ### R8 — Distribution
+
+**Status: AMENDED by the accepted `2026-07-03-claude-ecosystem-packaging-adr` (D3a).** The
+Claude plugin (marketplace-served, generated from the single authored harness source,
+launching the published `aeat` package via `uvx`) replaces the signed `.mcpb` as the
+consumer path; the `.mcpb` artifact is demoted to a secondary kept only if measurement
+shows classic-Desktop demand. R8's INTENT — one-click install for a non-technical
+taxpayer, the identical server reachable by any MCP client — carries over unchanged;
+only the vehicle is superseded. The original ruling follows for the decision trail.
 
 **Chosen — a signed `.mcpb` Desktop Extension as the consumer path, the same server for any MCP client.** The console ships as a signed Desktop Extension (a local server beside the encrypted store) so a non-technical taxpayer installs it with one click and no JSON editing; the identical server is reachable by any MCP client for power users. It rides the `aeat[agent]` extra. Transport is `stdio` now; HTTP is deferred and added only if a remote-client need materialises. No alternative was preferred: a developer-only manual-config path is strictly weaker for the target user, and an embedded runtime contradicts the "any client, one console" definition.
 

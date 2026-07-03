@@ -6,9 +6,8 @@ date: '2026-07-03'
 modified: '2026-07-03'
 related:
   - "[[2026-07-03-claude-ecosystem-packaging-research]]"
+  - "[[2026-07-02-agent-harness-refoundation-adr]]"
 ---
-
-
 
 # `claude-ecosystem-packaging` adr: `Claude ecosystem plugin as the first product distribution` | (**status:** `accepted`)
 
@@ -283,4 +282,3 @@ not violate) `2026-04-12-release-please-adr` and activates Option B of
 `2026-07-02-arch-remediation-data-budget-adr` at the wheel boundary (source
 tree unchanged). The proposed `2026-06-28-product-packaging-adr` gains a
 split-install smoke lane but its core rulings stand.
-
