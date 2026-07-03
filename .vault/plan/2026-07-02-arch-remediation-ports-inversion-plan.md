@@ -3,13 +3,23 @@ tags:
   - '#plan'
   - '#arch-remediation-ports-inversion'
 date: '2026-07-02'
-modified: '2026-07-02'
+modified: '2026-07-03'
 tier: L3
 related:
   - '[[2026-07-02-aeat-architecture-review-audit]]'
   - '[[2026-07-02-arch-remediation-program-adr]]'
   - '[[2026-07-02-arch-remediation-ports-inversion-adr]]'
 ---
+
+<!-- LINK RULES:
+     - [[wiki-links]] are ONLY for .vault/ documents in the
+       related: field above.
+     - The related: field carries the AUTHORISING documents
+       (ADR, research, reference, prior plan) for every Step in
+       this plan. Steps inherit this chain; per-row reference
+       footers do not exist.
+     - NEVER use [[wiki-links]] or markdown links in the
+       document body. -->
 
 # `arch-remediation-ports-inversion` plan
 
@@ -86,7 +96,7 @@ Migrate the six modelos repositories and the participation index last, coordinat
 Relocate the six modelos repositories and the participation index behind domain ports, coordinated with the modelo-surface campaign.
 
 - [ ] `W04.P09.S13` - Relocate the modelos repository behind its domain port in one atomic commit, deleting its pinned domain-to-adapters entries; `src/aeat/domain/modelos/_repository.py`.
-- [ ] `W04.P09.S14` - Relocate the modelos filing repository behind its domain port in one atomic commit, deleting its pinned domain-to-adapters entries; `src/aeat/domain/modelos/_filing_repository.py`.
+- [x] `W04.P09.S14` - Relocate the modelos filing repository behind its domain port in one atomic commit, deleting its pinned domain-to-adapters entries; `src/aeat/domain/modelos/_filing_repository.py`.
 - [ ] `W04.P09.S15` - Relocate the modelos calculation repository behind its domain port in one atomic commit, deleting its pinned domain-to-adapters entries; `src/aeat/domain/modelos/_calculation_repository.py`.
 - [ ] `W04.P09.S16` - Relocate the modelos verification repository behind its domain port in one atomic commit, deleting its pinned domain-to-adapters entries; `src/aeat/domain/modelos/_verification_repository.py`.
 - [ ] `W04.P09.S17` - Relocate the modelos runtime repository behind its domain port in one atomic commit, deleting its pinned domain-to-adapters runtime_repository entry; `src/aeat/domain/modelos/_runtime_repository.py`.
