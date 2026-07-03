@@ -59,6 +59,7 @@ from pathlib import Path
 import pytest
 
 from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
+from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ....adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
 from ....core import (
@@ -68,12 +69,7 @@ from ....core import (
 )
 from ....core.resources import resources
 from ....domain.deadlines import FiscalResidency, IVARegime, TaxpayerProfile
-from ....domain.modelos import (
-    CalculationRevision,
-    CalculationRevisionCatalogueRepository,
-    ModeloVerificationFindingKind,
-    VerificationReport,
-)
+from ....domain.modelos import CalculationRevision, ModeloVerificationFindingKind, VerificationReport
 from ....domain.transactions import TransactionCatalogueRepository
 from ....domain.user_profile import UserProfileFact, UserProfileRecord
 from ....tests.secure_sql import isolated_runtime_profile

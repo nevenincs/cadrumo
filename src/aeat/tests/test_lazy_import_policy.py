@@ -193,7 +193,6 @@ _ALLOWLIST: dict[UnsanctionedClass, frozenset[ImportEdge]] = {
         {
             ImportEdge("domain.filing._complementaria_repository", "adapters.persistence.storage"),
             ImportEdge("domain.filing._runtime_repository", "adapters.persistence.storage"),
-            ImportEdge("domain.modelos._calculation_repository", "adapters.persistence.storage"),
             ImportEdge("domain.modelos._runtime_repository", "adapters.persistence.storage"),
             ImportEdge("domain.transactions._repository", "adapters.persistence.storage"),
             ImportEdge("domain.transactions._repository", "adapters.persistence.storage.crypto"),
@@ -251,6 +250,11 @@ _ALLOWLIST: dict[UnsanctionedClass, frozenset[ImportEdge]] = {
             # the concrete BucketEventHistoryRepository defers the storage-substrate
             # import from the persistence adapter (was domain._event_repository).
             ImportEdge("adapters.persistence.profile.buckets", "adapters.persistence.storage"),
+            # modelos_calculation catalogue repository ports-inversion (W04.P09.S15):
+            # the concrete CalculationRevisionCatalogueRepository defers the
+            # storage-substrate import from the persistence adapter
+            # (was domain.modelos._calculation_repository).
+            ImportEdge("adapters.persistence.profile.modelos_calculation", "adapters.persistence.storage"),
             ImportEdge("adapters.inbound.justificante._parser", "core.config"),
             ImportEdge(
                 "adapters.inbound.justificante._parsers", "adapters.inbound.justificante._parsers._pdfplumber_backend"
@@ -429,6 +433,12 @@ _ALLOWLIST: dict[UnsanctionedClass, frozenset[ImportEdge]] = {
             ImportEdge("application.modelo._iva_wallet_seed", "adapters.persistence.profile.buckets"),
             ImportEdge("application.modelo._reconcile", "adapters.persistence.profile.buckets"),
             ImportEdge("application.user_profile._orchestration", "adapters.persistence.profile.buckets"),
+            # modelos_calculation catalogue repository ports-inversion (W04.P09.S15):
+            # deferred consumers now reach the concrete repository at its
+            # persistence-adapter home (was a domain.modelos deferral).
+            ImportEdge("application.modelo._iva_wallet_seed", "adapters.persistence.profile.modelos_calculation"),
+            ImportEdge("application.modelo._reconcile", "adapters.persistence.profile.modelos_calculation"),
+            ImportEdge("application.user_profile._bundle", "adapters.persistence.profile.modelos_calculation"),
             ImportEdge("agent", "agent._skill_metadata"),
             ImportEdge("application.aggregation._source_profile", "application.modelo"),
             ImportEdge("application.aggregation._source_profile", "core.resources"),
@@ -777,9 +787,9 @@ _SITE_CEILINGS: dict[UnsanctionedClass, int] = {
     UnsanctionedClass.NAMED_CYCLE_BREAK: 1,
     UnsanctionedClass.PORTS_INVERSION_PENDING: 36,
     UnsanctionedClass.DOMAIN_CYCLE_BREAK: 51,
-    UnsanctionedClass.ADAPTER_INTERNAL_DEFERRAL: 159,
+    UnsanctionedClass.ADAPTER_INTERNAL_DEFERRAL: 162,  # +3: modelos_calculation storage deferral sites (W04.P09.S15)
     UnsanctionedClass.CORE_INTERNAL_DEFERRAL: 35,
-    UnsanctionedClass.APPLICATION_DEFERRAL: 496,
+    UnsanctionedClass.APPLICATION_DEFERRAL: 500,  # +4: modelos_calculation deferral sites (W04.P09.S15)
 }
 
 # Ceiling on the total number of allowlisted edges. Editing the allowlist to add
@@ -789,7 +799,7 @@ _SITE_CEILINGS: dict[UnsanctionedClass, int] = {
 # baseline (the modelos_work_units/participation_index catalogue-repository
 # consolidation, the corpus_search/mcp/user_profile deferrals introduced by
 # intervening commits) were swept into their classified buckets in one pass.
-_ALLOWLIST_EDGE_CEILING: int = 485
+_ALLOWLIST_EDGE_CEILING: int = 488
 
 
 def _aeat_relative(dotted: str) -> str:

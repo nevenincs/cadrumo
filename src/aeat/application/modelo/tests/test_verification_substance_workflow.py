@@ -10,6 +10,7 @@ from typing import Any
 import pytest
 
 from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
+from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from ....adapters.persistence.profile.modelos_verification_reports import VerificationReportCatalogueRepository
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ....core import Period
@@ -17,7 +18,6 @@ from ....core.resources import resources
 from ....domain.calculations.registry import KNOWN_VERIFICATION_PREDICATE_OPERATORS, CasillaId
 from ....domain.modelos import (
     CalculationRevision,
-    CalculationRevisionCatalogueRepository,
     ModeloValidationError,
     ModeloVerificationFindingKind,
     derive_calculation_revision_id,

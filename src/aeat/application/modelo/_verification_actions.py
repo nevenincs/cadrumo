@@ -42,6 +42,7 @@ from types import MappingProxyType
 from typing import TYPE_CHECKING
 
 from ...adapters.persistence.profile.buckets import BucketEventHistoryRepository
+from ...adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from ...adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
 from ...adapters.persistence.profile.modelos_verification_reports import VerificationReportCatalogueRepository
 from ...adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
@@ -68,7 +69,6 @@ from ...domain.deadlines import FiscalResidency, TaxpayerProfile
 from ...domain.modelos import (
     CalculationRevision,
     CalculationRevisionCatalogue,
-    CalculationRevisionCatalogueRepository,
     CalculationRevisionCatalogueRepositoryProtocol,
     CalculationRevisionState,
     LedgerFilingEvidence,

@@ -49,6 +49,7 @@ import pytest
 
 from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from ....adapters.persistence.profile.invoices import InvoiceCatalogueRepository
+from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from ....adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
 from ....adapters.persistence.profile.modelos_verification_reports import VerificationReportCatalogueRepository
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
@@ -61,12 +62,7 @@ from ....domain.deadlines import EntityType, IVARegime, LegalEntityForm, Taxpaye
 from ....domain.invoices import InvoiceCatalogue
 from ....domain.iva import EUMemberState, InvoiceKind, IvaCategory
 from ....domain.iva_compensation import IvaCompensationReconciliationDecision
-from ....domain.modelos import (
-    CalculationRevision,
-    CalculationRevisionCatalogueRepository,
-    VerificationCompletenessStatus,
-    WorkUnit,
-)
+from ....domain.modelos import CalculationRevision, VerificationCompletenessStatus, WorkUnit
 from ....domain.transactions import (
     BusinessClassification,
     RawProvenance,

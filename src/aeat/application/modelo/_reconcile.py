@@ -1030,7 +1030,7 @@ def _filed_revision_for_work_unit(work_unit: WorkUnit) -> CalculationRevision | 
     persisted revision so a total reconcile and a casilla reconcile can never
     silently disagree about which revision represents "what was filed."
     """
-    from ...domain.modelos import CalculationRevisionCatalogueRepository
+    from ...adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 
     catalogue = CalculationRevisionCatalogueRepository().load()
     return _select_filed_revision(catalogue.for_work_unit(str(work_unit.work_unit_id)))

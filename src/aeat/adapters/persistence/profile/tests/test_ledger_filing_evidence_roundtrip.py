@@ -10,21 +10,21 @@ from pathlib import Path
 import pytest
 from pydantic import ValidationError
 
-from ....adapters.persistence.storage.sql import SecureObjectRepository
-from ....core import Period
-from ....tests.secure_sql import isolated_runtime_profile
-from ...calculations.registry import CasillaId, CasillaObservation, validated_casilla_id
-from .._calculation_repository import CalculationRevisionCatalogueRepository
-from .._calculation_revision import (
+from .....core import Period
+from .....domain.calculations.registry import CasillaId, CasillaObservation, validated_casilla_id
+from .....domain.modelos._calculation_revision import (
     CalculationRevision,
     CalculationRevisionCatalogue,
     CalculationRevisionState,
     derive_calculation_revision_id,
 )
-from .._ledger_filing_snapshot import LedgerEvidenceRow, LedgerFilingEvidence, ManualFactBasisEntry
-from .._work_unit import derive_work_unit_id
+from .....domain.modelos._ledger_filing_snapshot import LedgerEvidenceRow, LedgerFilingEvidence, ManualFactBasisEntry
+from .....domain.modelos._work_unit import derive_work_unit_id
+from .....tests.secure_sql import isolated_runtime_profile
+from ...storage.sql import SecureObjectRepository
+from ..modelos_calculation import CalculationRevisionCatalogueRepository
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 
 _NOW = datetime(2026, 6, 3, 14, 0, tzinfo=UTC)
 _BUCKET_ID = "30330300-0000-4000-8000-000000000501"
@@ -167,8 +167,8 @@ def test_ledger_evidence_negative_amount_payload_rejected_at_load(objects: Secur
 
     import json as _json
 
-    from ....adapters.persistence.storage import SensitivityClass
-    from .._calculation_repository import (
+    from ...storage import SensitivityClass
+    from ..modelos_calculation import (
         _CALCULATION_CATALOGUE_VERSION,
         _CALCULATION_NAMESPACE,
         _CALCULATION_OBJECT_KEY,

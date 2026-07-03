@@ -44,6 +44,7 @@ from decimal import Decimal
 
 from ...adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from ...adapters.persistence.profile.justificante import JustificanteRepository
+from ...adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from ...adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
 from ...adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ...core import Period
@@ -53,7 +54,6 @@ from ...domain.calculations.registry import BindingId, CasillaId, RelationId
 from ...domain.justificante import Justificante
 from ...domain.modelos import (
     CalculationRevision,
-    CalculationRevisionCatalogueRepository,
     CalculationRevisionCatalogueRepositoryProtocol,
     CalculationRevisionState,
     ExternalEvidence,

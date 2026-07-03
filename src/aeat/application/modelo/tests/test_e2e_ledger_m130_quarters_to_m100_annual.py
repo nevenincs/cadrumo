@@ -54,6 +54,7 @@ import pytest
 
 from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from ....adapters.persistence.profile.invoices import InvoiceCatalogueRepository
+from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from ....adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ....adapters.persistence.profile.usage_ratios import save_usage_ratios
@@ -69,11 +70,7 @@ from ....domain.calculations.registry import (
 from ....domain.categories import SpendingCategory
 from ....domain.deadlines import EntityType, IrpfEstimationRegime, IrpfIncomeCategory, IVARegime, TaxpayerProfile
 from ....domain.invoices import InvoiceCatalogue
-from ....domain.modelos import (
-    CalculationRevision,
-    CalculationRevisionCatalogueRepository,
-    ExternalEvidenceKind,
-)
+from ....domain.modelos import CalculationRevision, ExternalEvidenceKind
 from ....domain.transactions import (
     BusinessClassification,
     RawProvenance,

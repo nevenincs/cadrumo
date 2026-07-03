@@ -31,6 +31,7 @@ from pydantic import AnyHttpUrl, TypeAdapter
 
 from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from ....adapters.persistence.profile.justificante import JustificanteRepository
+from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from ....adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
 from ....adapters.persistence.profile.modelos_verification_reports import VerificationReportCatalogueRepository
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
@@ -45,7 +46,6 @@ from ....domain.calculations.registry import (
 from ....domain.deadlines import IVARegime, TaxpayerProfile
 from ....domain.justificante import Justificante
 from ....domain.modelos import (
-    CalculationRevisionCatalogueRepository,
     ExternalEvidenceKind,
     ModeloVerificationFindingKind,
     VerificationCompletenessStatus,

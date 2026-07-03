@@ -44,6 +44,7 @@ from datetime import date
 from decimal import Decimal
 from typing import Final, Protocol
 
+from ...adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from ...adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ...core import Modelo
 from ...core import Period as _Period
@@ -60,7 +61,6 @@ from ...domain.calculations.registry import (
 from ...domain.iva_compensation import IvaCompensationReconciliationDecision
 from ...domain.modelos import (
     CalculationRevision,
-    CalculationRevisionCatalogueRepository,
     CalculationRevisionCatalogueRepositoryProtocol,
     CalculationRevisionState,
     ModeloError,

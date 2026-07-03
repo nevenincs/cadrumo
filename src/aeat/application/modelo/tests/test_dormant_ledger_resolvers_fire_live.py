@@ -10,11 +10,11 @@ from pathlib import Path
 import pytest
 
 from ....adapters.persistence.profile.invoices import InvoiceCatalogueRepository
+from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ....adapters.persistence.storage.sql import SecureObjectRepository
 from ....core import Period
 from ....domain.calculations.registry import CasillaId, RegistryModeloObservation
-from ....domain.modelos import CalculationRevisionCatalogueRepository
 from ....domain.transactions import (
     BusinessClassification,
     RawProvenance,

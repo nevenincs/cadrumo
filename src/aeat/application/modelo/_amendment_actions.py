@@ -41,6 +41,7 @@ from datetime import datetime
 from decimal import Decimal
 
 from ...adapters.persistence.profile.buckets import BucketEventHistoryRepository
+from ...adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from ...adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
 from ...adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ...core.time import now as _utc_now
@@ -50,7 +51,6 @@ from ...domain.modelos import (
     CalculationRevision,
     CalculationRevisionAmendmentKind,
     CalculationRevisionCatalogue,
-    CalculationRevisionCatalogueRepository,
     CalculationRevisionCatalogueRepositoryProtocol,
     CalculationRevisionState,
     ModeloRecord,
