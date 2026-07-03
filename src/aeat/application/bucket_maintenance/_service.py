@@ -26,14 +26,17 @@ from typing import TYPE_CHECKING, NamedTuple
 
 from ...adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from ...adapters.persistence.storage import StorageCustodyProfile
+from ...adapters.persistence.storage.bucket import BucketLifecycleStatus
 from ...core.external_constants import UTF_8_ENCODING
 from ...core.time import now
 from ...domain.buckets import (
+    BucketArchiveRefusedError,
     BucketDeleteRefusedError,
     BucketEvent,
     BucketEventObjectType,
     BucketEventType,
     BucketImportError,
+    BucketRestoreRefusedError,
     append_bucket_event,
     derive_bucket_event_id,
 )
@@ -52,6 +55,8 @@ from ..user_profile import (
 )
 from ..workflow import read_profile_bucket_by_id
 from ._contracts import (
+    ArchiveBucketCommand,
+    ArchiveBucketResult,
     BrowseBucketCommand,
     BrowseBucketResult,
     BucketNamespaceInventoryRow,
@@ -65,6 +70,8 @@ from ._contracts import (
     InspectBucketArchiveResult,
     RenameBucketCommand,
     RenameBucketResult,
+    RestoreBucketCommand,
+    RestoreBucketResult,
 )
 from ._manifest_digest import compute_manifest_digest
 
@@ -78,6 +85,8 @@ if TYPE_CHECKING:  # pragma: no cover - import-cycle guard
 
 _RENAME_PAYLOAD_VERSION = 1
 _DELETE_PAYLOAD_VERSION = 1
+_ARCHIVE_PAYLOAD_VERSION = 1
+_RESTORE_PAYLOAD_VERSION = 1
 _EXPORT_PAYLOAD_VERSION = 1
 _IMPORT_PAYLOAD_VERSION = 1
 _ARCHIVE_SCHEMA_VERSION = 2
@@ -270,6 +279,145 @@ class BucketMaintenanceService:
             retention_override_used=override_used,
             latest_safe_erase_date=latest_safe_erase_date,
         )
+
+    def archive(self, command: ArchiveBucketCommand) -> ArchiveBucketResult:
+        """Move the bucket identified by ``command.bucket_id`` into reversible dormancy.
+
+        Composes :func:`~aeat.application.user_profile.reactivate_profile_with_lifecycle_span`'s
+        counterpart, :func:`~aeat.application.user_profile.delete_profile_with_lifecycle_span`
+        — the SAME soft-tombstone primitive :meth:`delete` composes — but
+        deliberately stops there: the hard directory removal
+        (:func:`~aeat.application.user_profile.remove_profile_bucket_directory`)
+        that :meth:`delete` performs afterward never runs, so the bucket
+        directory, manifest, and encrypted record all survive intact and
+        :meth:`restore` can bring the same bucket back.
+
+        Refuses unless ``command.confirmed`` is ``True``; refuses if the
+        target bucket is the active profile (the operator must switch
+        profiles first, mirroring :meth:`delete`'s own contract). The
+        ``BUCKET_ARCHIVED`` event lands in the archived bucket's OWN event
+        history (mirroring :meth:`rename`'s binding) since the bucket
+        still exists after this call — unlike :meth:`delete`'s event,
+        which must outlive the erased bucket.
+
+        Returns:
+            :class:`ArchiveBucketResult`: The result of the archive operation.
+        """
+        from ...core import resolve_active_bucket_id
+
+        if not command.confirmed:
+            raise BucketArchiveRefusedError(
+                translated_message="application.bucket_maintenance.errors.archive_not_confirmed",
+                context={"bucket_id": command.bucket_id},
+            )
+        if resolve_active_bucket_id() == command.bucket_id:
+            raise BucketArchiveRefusedError(
+                translated_message="application.bucket_maintenance.errors.archive_active_bucket",
+                context={"bucket_id": command.bucket_id},
+            )
+        pointer = read_profile_bucket_by_id(command.bucket_id)
+        if pointer is None:
+            from ...domain.user_profile import ProfileNotFoundError
+
+            raise ProfileNotFoundError(
+                translated_message="application.user_profile.errors.no_active_profile_selected",
+                context={"bucket_id": command.bucket_id},
+            )
+        label = pointer.label
+        delete_profile_with_lifecycle_span(command.bucket_id)
+        occurred_at = now()
+        payload = {"label": label}
+        event = BucketEvent(
+            event_id=derive_bucket_event_id(
+                bucket_id=command.bucket_id,
+                event_type=BucketEventType.BUCKET_ARCHIVED,
+                occurred_at=occurred_at,
+                actor="bucket-maintenance",
+                object_type=BucketEventObjectType.BUCKET,
+                object_id=command.bucket_id,
+                payload=payload,
+            ),
+            bucket_id=command.bucket_id,
+            event_type=BucketEventType.BUCKET_ARCHIVED,
+            occurred_at=occurred_at,
+            actor="bucket-maintenance",
+            object_type=BucketEventObjectType.BUCKET,
+            object_id=command.bucket_id,
+            payload_version=_ARCHIVE_PAYLOAD_VERSION,
+            payload=payload,
+        )
+        # The soft tombstone's own storage span already closed, so the
+        # active-bucket session reverted to whatever it was beforehand
+        # (typically a different, still-live profile). Binding the event
+        # write to its OWN target-bucket session — the same span
+        # ``delete_profile_with_lifecycle_span`` just used — keeps the
+        # storage-runtime route consistent with the bucket the event
+        # repository is about to open.
+        with profile_storage_session(command.bucket_id):
+            repository = self._event_repository or self._event_repository_for_bucket(command.bucket_id)
+            repository.save(append_bucket_event(repository.load(), event))
+        return ArchiveBucketResult(bucket_id=command.bucket_id, label=label, occurred_at=occurred_at)
+
+    def restore(self, command: RestoreBucketCommand) -> RestoreBucketResult:
+        """Bring the archived bucket identified by ``command.bucket_id`` back to active.
+
+        Composes :func:`~aeat.application.user_profile.reactivate_profile_with_lifecycle_span`
+        — the symmetric inverse of the soft tombstone :meth:`archive` composes.
+        Refuses when the target is not currently tombstoned (i.e. was never
+        archived, or is already active), surfaced by
+        :class:`~aeat.domain.user_profile.ProfileNotFoundError` from the
+        underlying lifecycle service.
+
+        The ``BUCKET_RESTORED`` event lands in the restored bucket's OWN
+        event history, mirroring :meth:`archive`'s binding.
+
+        Returns:
+            :class:`RestoreBucketResult`: The result of the restore operation.
+        """
+        from ...application.user_profile import reactivate_profile_with_lifecycle_span
+        from ...domain.user_profile import ProfileNotFoundError
+
+        pointer = read_profile_bucket_by_id(command.bucket_id)
+        if pointer is None:
+            raise ProfileNotFoundError(
+                translated_message="application.user_profile.errors.no_active_profile_selected",
+                context={"bucket_id": command.bucket_id},
+            )
+        if pointer.status is not BucketLifecycleStatus.TOMBSTONED:
+            raise BucketRestoreRefusedError(
+                translated_message="application.bucket_maintenance.errors.restore_not_archived",
+                context={"bucket_id": command.bucket_id},
+            )
+        label = pointer.label
+        reactivate_profile_with_lifecycle_span(command.bucket_id)
+        occurred_at = now()
+        payload = {"label": label}
+        event = BucketEvent(
+            event_id=derive_bucket_event_id(
+                bucket_id=command.bucket_id,
+                event_type=BucketEventType.BUCKET_RESTORED,
+                occurred_at=occurred_at,
+                actor="bucket-maintenance",
+                object_type=BucketEventObjectType.BUCKET,
+                object_id=command.bucket_id,
+                payload=payload,
+            ),
+            bucket_id=command.bucket_id,
+            event_type=BucketEventType.BUCKET_RESTORED,
+            occurred_at=occurred_at,
+            actor="bucket-maintenance",
+            object_type=BucketEventObjectType.BUCKET,
+            object_id=command.bucket_id,
+            payload_version=_RESTORE_PAYLOAD_VERSION,
+            payload=payload,
+        )
+        # Mirrors ``archive``'s own-session binding: the reactivation span
+        # already closed, so re-open one scoped to the target bucket
+        # before the event-history repository resolves its storage route.
+        with profile_storage_session(command.bucket_id):
+            repository = self._event_repository or self._event_repository_for_bucket(command.bucket_id)
+            repository.save(append_bucket_event(repository.load(), event))
+        return RestoreBucketResult(bucket_id=command.bucket_id, label=label, occurred_at=occurred_at)
 
     @staticmethod
     def _assess_retention_floor(bucket_id: str) -> RetentionFloorAssessment:

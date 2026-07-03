@@ -40,3 +40,11 @@ class BucketRenameError(BucketMaintenanceError):
 
 class BucketDeleteRefusedError(BucketMaintenanceError):
     """Raised when a bucket delete is refused by a destructive-action gate."""
+
+
+class BucketArchiveRefusedError(BucketMaintenanceError):
+    """Raised when a bucket archive (soft, reversible dormancy) is refused."""
+
+
+class BucketRestoreRefusedError(BucketMaintenanceError):
+    """Raised when restoring an archived bucket is refused (e.g. not archived)."""

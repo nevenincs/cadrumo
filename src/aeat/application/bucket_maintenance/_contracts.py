@@ -97,6 +97,61 @@ class DeleteBucketResult(BaseModel):
     latest_safe_erase_date: datetime | None = None
 
 
+class ArchiveBucketCommand(BaseModel):
+    """Operator request to move a bucket into reversible dormancy.
+
+    Unlike :class:`DeleteBucketCommand`, ``archive`` is a soft-only
+    tombstone: it never removes the bucket directory, so
+    :class:`RestoreBucketCommand` can bring the same bucket back.
+    ``confirmed=True`` mirrors ``delete``'s boundary contract so a
+    programmatic caller observes the same guarantee the CLI ``--yes``
+    flag provides. The active bucket cannot be archived; the operator
+    must switch profiles first.
+    """
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    bucket_id: BucketId
+    confirmed: bool = False
+
+
+class ArchiveBucketResult(BaseModel):
+    """Outcome of a successful bucket archive.
+
+    Carries the archived bucket's label so the operator-facing emitter
+    can render a confirming line without re-reading the manifest.
+    """
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    bucket_id: BucketId
+    label: str = Field(min_length=1, max_length=160)
+    occurred_at: datetime
+
+
+class RestoreBucketCommand(BaseModel):
+    """Operator request to bring an archived bucket back to active status.
+
+    Symmetric inverse of :class:`ArchiveBucketCommand`. Refuses when the
+    target bucket is not currently archived (tombstoned), so a restore
+    never silently no-ops against an already-live bucket.
+    """
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    bucket_id: BucketId
+
+
+class RestoreBucketResult(BaseModel):
+    """Outcome of a successful bucket restore."""
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    bucket_id: BucketId
+    label: str = Field(min_length=1, max_length=160)
+    occurred_at: datetime
+
+
 class BrowseBucketCommand(BaseModel):
     """Operator request to enumerate a bucket's namespace inventory.
 
