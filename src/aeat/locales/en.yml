@@ -4109,6 +4109,7 @@ errors:
     error_categories: An error occurred in the expense categories.
     error_categories_validation: A category record failed validation.
     error_config_boundary: The config command encountered an unexpected internal error.
+    error_corpus_search: 'The on-host corpus search could not be completed.'
     error_deadlines_deadline: An error occurred in the deadline calculation.
     error_deadlines_missing_windows: Deadline windows are missing.
     error_deadlines_profile: The self-employed profile could not be loaded or validated
@@ -4651,6 +4652,8 @@ errors:
       command's arguments or run `aeat --help`.
     refused_config_reset_unconfirmed: The configuration reset was not confirmed. Re-run
       the command confirming the operation.
+    refused_corpus_search_dependency: 'This corpus-search operation needs the optional semantic-search components; install them and retry.'
+    refused_corpus_search_input: 'The corpus search request could not be satisfied.'
     refused_diagnostic_model_invariant: A DiagnosticCheck construction invariant was
       violated; check that exactly one of next_action or dead_end is set for fail/warn
       rows, and neither is set for ok rows.

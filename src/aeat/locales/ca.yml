@@ -4338,6 +4338,7 @@ errors:
     error_categories: S'ha produït un error en les categories de despesa.
     error_categories_validation: Un registre de categoria no ha superat la validació.
     error_config_boundary: L'ordre de configuració ha trobat un error intern inesperat.
+    error_corpus_search: 'No s''ha pogut completar la cerca local al corpus.'
     error_deadlines_deadline: S'ha produït un error en el càlcul de terminis.
     error_deadlines_missing_windows: Falten les finestres de termini de presentacio.
     error_deadlines_profile: El perfil d'autònom no s'ha pogut carregar o validar
@@ -4932,6 +4933,8 @@ errors:
       Comproveu els arguments o executeu `aeat --help`.
     refused_config_reset_unconfirmed: El restabliment de la configuració no s'ha confirmat.
       Torna a executar l'ordre confirmant l'operació.
+    refused_corpus_search_dependency: 'Aquesta operació de cerca al corpus necessita els components opcionals de cerca semàntica; instal·leu-los i torneu-ho a provar.'
+    refused_corpus_search_input: 'No s''ha pogut satisfer la sol·licitud de cerca al corpus.'
     refused_diagnostic_model_invariant: 'Refusat: invariant del model de diagnostic
       incomplit.'
     refused_evidence_bundle_not_found: No existeix cap paquet d'evidències amb l'identificador

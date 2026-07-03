@@ -4304,6 +4304,7 @@ errors:
     error_categories: Hiba történt a kiadáskategóriákban.
     error_categories_validation: Egy kategória-rekord nem ment át az érvényesítésen.
     error_config_boundary: A konfigurációs parancs váratlan belső hibát észlelt.
+    error_corpus_search: 'A helyi korpuszkeresés nem fejeződött be.'
     error_deadlines_deadline: Hiba történt a határidő-számítás során.
     error_deadlines_missing_windows: Hianyoznak a hatarido-ablakok.
     error_deadlines_profile: Az önálló vállalkozói profilt nem sikerült betölteni
@@ -4839,6 +4840,8 @@ errors:
       Ellenőrizze az argumentumokat, vagy futtassa az `aeat --help` parancsot.
     refused_config_reset_unconfirmed: A konfigurációs visszaállítást nem erősítette
       meg. Futtassa újra a parancsot, megerősítve a műveletet.
+    refused_corpus_search_dependency: 'Ez a korpuszkeresési művelet az opcionális szemantikus keresési összetevőket igényli; telepítse őket, és próbálja újra.'
+    refused_corpus_search_input: 'A korpuszkeresési kérés nem teljesíthető.'
     refused_diagnostic_model_invariant: A DiagnosticCheck konstrukciós invariánsa
       sérült; ellenőrizze, hogy az elmaradás/figyelmeztetés sorokban pontosan az egyik
       next_action vagy dead_end van-e beállítva, az ok sorokban pedig egyik sem.
