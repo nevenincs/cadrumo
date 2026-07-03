@@ -1,8 +1,11 @@
-# Releasing `aeat`
+# Releasing `aeat-cli`
 
-Every release is LOCAL-ONLY and HUMAN-GATED: no CI publishes, no automation
-pushes, no tokens live in the repository. GitHub Actions is not used for any
-release step. The release lane joins three surfaces that already exist —
+Every release is HUMAN-GATED: no automation pushes, no tokens live in the
+repository. Two publish lanes exist, both human-triggered: the local
+`just publish` recipes (token via `UV_PUBLISH_TOKEN`), and the
+operator-approved Trusted Publishing workflow (`.github/workflows/publish.yml`,
+manual `workflow_dispatch` only, PyPI environment `pypi`, registered by the
+operator as the project's pending publisher on 2026-07-03). The release lane joins three surfaces that already exist —
 release-please versioning (`just release` / `just release-apply`), the
 packaging smoke lanes (`just packaging-smoke*`), and the publish recipes
 (`just publish` / `just publish-data`) — plus the Claude plugin/marketplace
@@ -10,12 +13,12 @@ push.
 
 The project ships as two PyPI distributions built from the one source tree:
 
-- **`aeat`** — the product: code, extracted legal text, normative html,
+- **`aeat-cli`** — the product (import package and CLI stay `aeat`): code, extracted legal text, normative html,
   registry, terminology, and the agent harness. Slim (~40 MB), under PyPI's
   100 MB default file cap; no size grant needed.
 - **`aeat-data`** — the corpus source binaries (official AEAT PDF/XLS/XLSX,
   ~139 MB), built from `packaging/aeat_data/`, consumed via the
-  `aeat[corpus-sources]` extra. Exceeds the default cap; needs a one-time
+  `aeat-cli[corpus-sources]` extra. Exceeds the default cap; needs a one-time
   per-file size grant (below). Without it installed, the registry integrity
   gate surfaces a loud advisory and the `aeat app registry` verification
   verbs refuse with the install hint; every other surface is unaffected.
@@ -29,11 +32,11 @@ publish session only — never in a file, never in the repo.
 
 ## Name claim sequencing (first release)
 
-The `aeat` name is claimed by its first upload; PyPI grants file-size
+The `aeat-cli` name is claimed by its first upload (the operator registered it as the Trusted Publishing pending project); PyPI grants file-size
 increases only to projects that already have at least one release. The order
 is therefore fixed:
 
-1. Publish the slim `aeat` wheel first (`just publish yes-publish-to-pypi`).
+1. Publish the slim `aeat-cli` wheel first (`just publish yes-publish-to-pypi`).
    It is under every default limit; this claims the name and creates the
    project.
 2. Publish a small placeholder or dev release of `aeat-data` if its wheel is
@@ -43,7 +46,7 @@ is therefore fixed:
    companion (`just publish-data yes-publish-to-pypi`) when granted.
 
 The plugin delivery is NOT blocked on the grant: the plugin's server runs
-from the slim `aeat` wheel; the companion only feeds the registry
+from the slim `aeat-cli` wheel; the companion only feeds the registry
 verification verbs and byte-provenance surfaces.
 
 ## `aeat-data` file-size grant
@@ -76,12 +79,12 @@ Run from a clean `main` checkout, in order. Stop at the first failure.
    `uv run --no-sync python dev/packaging/smoke_plugin_validate.py`.
 3. **Push the release commit + tag** — human decision only:
    `git push origin main --tags`.
-4. **Publish `aeat`** — `UV_PUBLISH_TOKEN=... just publish
+4. **Publish `aeat-cli`** — `UV_PUBLISH_TOKEN=... just publish
    yes-publish-to-pypi`. Verify the version page renders on pypi.org and
-   `uvx aeat@X.Y.Z --version` resolves on a machine without the checkout.
+   `uvx --from aeat-cli==X.Y.Z aeat --version` resolves on a machine without the checkout.
 5. **Publish `aeat-data`** (when the grant is in place) —
    `just publish-data yes-publish-to-pypi`. Verify
-   `pip install "aeat[corpus-sources]"` pulls it and
+   `pip install "aeat-cli[corpus-sources]"` pulls it and
    `aeat app registry verify` runs grant-path clean.
 6. **Regenerate + push the plugin/marketplace** — materialise the plugin
    tree pinned to the just-published version
@@ -94,8 +97,7 @@ Run from a clean `main` checkout, in order. Stop at the first failure.
 
 ## What is deliberately out of scope
 
-- **Trusted Publishing (OIDC)** requires CI; adopting it is an
-  operator-level policy decision (GitHub Actions is banned on this repo),
-  not a release-lane step.
+- **Automatic release triggers** — publish.yml runs on manual dispatch
+  only; tag-push or scheduled publishing stays out.
 - **Live AEAT anything** — releases never touch AEAT services; the
   application never files live.

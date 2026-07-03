@@ -57,7 +57,7 @@ jobs:
           wheel = wheels[0]
           size_mb = wheel.stat().st_size / 1e6
           print(f"{wheel.name}: {size_mb:.1f} MB")
-          if wheel.name.startswith("aeat-"):
+          if wheel.name.startswith("aeat_cli-"):
               if size_mb > 100:
                   sys.exit("aeat wheel exceeds the 100 MB PyPI cap - was this dispatched "
                            "from a branch without the wheel-split build config?")

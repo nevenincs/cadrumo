@@ -615,7 +615,7 @@ publish confirm="":
     uv build --out-dir var/release/dist
     echo "▶ uv publish (aeat v$VERSION)"
     uv publish var/release/dist/*
-    echo "✔ published aeat v$VERSION — verify at https://pypi.org/project/aeat/$VERSION/"
+    echo "✔ published aeat v$VERSION — verify at https://pypi.org/project/aeat-cli/$VERSION/"
 
 [windows]
 publish confirm="":
@@ -650,7 +650,7 @@ publish confirm="":
     Write-Host "▶ uv publish (aeat v$version)"
     & uv publish (Get-ChildItem var/release/dist/*)
     if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-    Write-Host "✔ published aeat v$version - verify at https://pypi.org/project/aeat/$version/"
+    Write-Host "✔ published aeat v$version - verify at https://pypi.org/project/aeat-cli/$version/"
 
 # Publish the aeat-data corpus companion to PyPI (same gates as publish).
 # Requires the per-file size grant on the aeat-data project (RELEASING.md).

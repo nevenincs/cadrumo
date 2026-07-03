@@ -21,7 +21,7 @@ sibling install-proof documents.
 The measured server-launch used the local-preview variant
 (`uvx --from "aeat[agent] @ file:///…/aeat-0.1.0-py3-none-any.whl"
 aeat-mcp`) because the `aeat` package is not yet on PyPI. The published
-variant (`uvx --from aeat==<version> aeat-mcp`) is command-shape identical
+variant (`uvx --from "aeat-cli[agent]==<version>" aeat-mcp`) is command-shape identical
 and becomes verifiable the moment the first publish lands (RELEASING.md
 name-claim sequencing). Re-confirm this matrix's server rows against the
 PyPI variant after the first release.

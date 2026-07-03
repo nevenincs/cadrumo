@@ -13,7 +13,7 @@ then from this companion, so a full source checkout and a split install read the
 corpus identically. The binaries feed the always-on registry integrity hash
 chain and the opt-in `aeat app registry` verification verbs; without this
 companion those surfaces degrade with a loud advisory naming the
-`aeat[corpus-sources]` install hint, never silently.
+`aeat-cli[corpus-sources]` install hint, never silently.
 
 ## Install
 
