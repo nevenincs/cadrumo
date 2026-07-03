@@ -3551,8 +3551,7 @@ cli:
       modelo_help: AEAT modelo identifier (e.g. 303, 130, 100).
       year_help: Fiscal year for the applicability evaluation; defaults to the current
         year.
-    local_work_units_unavailable: Overview local Modelo work-unit state is unavailable;
-      refusing to render without persisted work state.
+    local_work_units_unavailable: 'Local Modelo work-unit state could not be loaded; this overview is derived from the deadline schedule and may over-report an in-progress draft as still due or omit older in-progress drafts.'
     period: Period
     period_help: 'Filing period as an AEAT token: 1T-4T (quarters), 0A (annual), 01-12
       (months). Combine with --year to choose the year.'
