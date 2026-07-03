@@ -68,6 +68,19 @@ _PLUGIN_LICENSE = "Apache-2.0"
 _PLUGIN_KEYWORDS = ("tax", "aeat", "spain", "irpf", "iva", "modelo")
 _PLUGIN_SCHEMA = "https://anthropic.com/claude-code/plugin.schema.json"
 
+# The plugin's stdio MCP server. ``uvx`` boots ``aeat-mcp`` from the published
+# wheel pinned to the plugin's own version (D2a), so a machine with ``uv`` but no
+# project checkout runs the exact server the plugin release was cut against. The
+# active persona is wired from the ``userConfig`` persona option through the
+# documented ``${user_config.persona}`` interpolation; the server validates and
+# refuses an unknown persona (server-side validation is the refusal surface).
+_MCP_CONFIG = ".mcp.json"
+_MCP_SERVER_NAME = "aeat"
+_MCP_LAUNCHER = "uvx"
+_MCP_CONSOLE_SCRIPT = "aeat-mcp"
+_MCP_PERSONA_ENV = "AEAT_MCP_PERSONA"
+_MCP_PERSONA_INTERPOLATION = "${user_config.persona}"
+
 
 def _plugin_version() -> str:
     """Resolve the plugin version from installed package metadata.
@@ -108,13 +121,41 @@ def _write_json(dest_dir: Path, name: str, document: object) -> None:
     (dest_dir / name).write_text(json.dumps(document, indent=2) + "\n", encoding=_UTF_8)
 
 
-def _plugin_manifest_document(version: str) -> dict[str, object]:
+_PERSONA_CONFIG_KEY = "persona"
+_PERSONA_CONFIG_TITLE = "Persona"
+_PERSONA_CONFIG_DESCRIPTION = (
+    "The harness persona scoping the tool surface; leave blank for the full "
+    "surface. The aeat-mcp server validates the value and refuses an unknown "
+    "persona."
+)
+
+
+def _plugin_user_config(persona_default: str) -> dict[str, object]:
+    """Build the ``userConfig`` block declaring the persona string option.
+
+    The plugin format offers no enum/dropdown ``userConfig`` type, so the
+    persona is a string option with a default; the aeat-mcp server stays the
+    refusal surface for an unknown persona.
+    """
+    return {
+        _PERSONA_CONFIG_KEY: {
+            "type": "string",
+            "title": _PERSONA_CONFIG_TITLE,
+            "description": _PERSONA_CONFIG_DESCRIPTION,
+            "default": persona_default,
+            "required": False,
+        },
+    }
+
+
+def _plugin_manifest_document(version: str, persona_default: str) -> dict[str, object]:
     """Build the ``.claude-plugin/plugin.json`` manifest document.
 
     ``name`` is the sole validator-required field; the remaining fields are the
     publication metadata a first-class external-service plugin declares.
     ``defaultEnabled`` is ``false`` per the external-service recommendation so
-    the plugin never auto-activates its MCP server on install.
+    the plugin never auto-activates its MCP server on install. ``userConfig``
+    declares the persona option prompted on enable.
     """
     return {
         "$schema": _PLUGIN_SCHEMA,
@@ -126,6 +167,7 @@ def _plugin_manifest_document(version: str) -> dict[str, object]:
         "license": _PLUGIN_LICENSE,
         "keywords": list(_PLUGIN_KEYWORDS),
         "defaultEnabled": False,
+        "userConfig": _plugin_user_config(persona_default),
     }
 
 
@@ -147,28 +189,146 @@ def _emit_plugin_skills(output_dir: Path) -> int:
     return skills
 
 
-def materialise_plugin(output_dir: Path, *, version: str | None = None) -> PluginManifest:
+_MARKDOWN_SUFFIX = ".md"
+_TOOL_SCOPE_HEADING = "## Tool scope"
+# Claude built-in tools that mutate the local workspace filesystem. A persona
+# whose declared tool scope is read-only (orchestration only) does not carry
+# them; every other persona inherits the full tool set and relies on the
+# aeat-mcp server's own persona-scope gate as the refusal surface (per the ADR:
+# server-side validation stays the refusal surface).
+_WORKSPACE_MUTATION_TOOLS = ("Edit", "Write", "NotebookEdit")
+
+
+def _persona_slug(file_name: str) -> str:
+    """Return the persona slug (the ``agents/<slug>.md`` name) for a source file."""
+    if file_name.endswith(_MARKDOWN_SUFFIX):
+        return file_name[: -len(_MARKDOWN_SUFFIX)]
+    return file_name
+
+
+def _persona_description(text: str) -> str:
+    """Return the persona's first body paragraph as a one-line description.
+
+    Claude reads an agent's ``description`` frontmatter as the delegation signal,
+    so the first prose paragraph (the persona's role summary, following its H1
+    title) is collapsed to a single line.
+    """
+    para: list[str] = []
+    seen_title = False
+    for line in text.splitlines():
+        stripped = line.strip()
+        if not seen_title:
+            if stripped.startswith("#"):
+                seen_title = True
+            continue
+        if not stripped:
+            if para:
+                break
+            continue
+        para.append(stripped)
+    return " ".join(para)
+
+
+def _persona_is_read_only(text: str) -> bool:
+    """Return whether the persona's declared ``Tool scope`` is read-only.
+
+    The single clean signal a persona's prose exposes is its ``Tool scope``
+    section opening with ``Read-only`` (the coordinator's orchestration-only
+    role). Those personas map cleanly onto a Claude ``disallowedTools`` denylist
+    of the workspace-mutation built-ins; a persona whose scope declares local
+    state mutation does not, and inherits the full tool set.
+    """
+    body: list[str] = []
+    collecting = False
+    for line in text.splitlines():
+        if line.strip() == _TOOL_SCOPE_HEADING:
+            collecting = True
+            continue
+        if collecting:
+            if line.startswith("## "):
+                break
+            body.append(line)
+    return "\n".join(body).strip().lower().startswith("read-only")
+
+
+def _persona_agent_document(slug: str, text: str) -> str:
+    """Render a persona as a Claude-native ``agents/<slug>.md`` document.
+
+    The Claude agent frontmatter carries ``name`` and ``description`` and, for a
+    read-only persona, a ``disallowedTools`` denylist. It NEVER carries the
+    vaultspec-style ``mode:`` field, which is not a Claude field. The persona's
+    original prose follows the frontmatter unchanged as the agent's system prompt.
+    """
+    front = ["---", f"name: {slug}", f"description: {json.dumps(_persona_description(text))}"]
+    if _persona_is_read_only(text):
+        front.append("disallowedTools:")
+        front.extend(f"  - {tool}" for tool in _WORKSPACE_MUTATION_TOOLS)
+    front.append("---")
+    return "\n".join(front) + "\n\n" + text
+
+
+def _emit_plugin_agents(output_dir: Path) -> int:
+    """Write each persona as a Claude-native ``agents/<slug>.md`` document."""
+    agents_dir = output_dir / _AGENTS_SUBDIR
+    count = 0
+    for persona in iter_personas():
+        slug = _persona_slug(persona.name)
+        document = _persona_agent_document(slug, persona.read_text(encoding=_UTF_8))
+        _write(agents_dir, persona.name, document)
+        count += 1
+    return count
+
+
+def _mcp_config_document(version: str) -> dict[str, object]:
+    """Build the plugin's ``.mcp.json`` declaring the stdio ``aeat-mcp`` server."""
+    return {
+        "mcpServers": {
+            _MCP_SERVER_NAME: {
+                "command": _MCP_LAUNCHER,
+                "args": ["--from", f"{_PLUGIN_NAME}=={version}", _MCP_CONSOLE_SCRIPT],
+                "env": {_MCP_PERSONA_ENV: _MCP_PERSONA_INTERPOLATION},
+            },
+        },
+    }
+
+
+def materialise_plugin(
+    output_dir: Path,
+    *,
+    version: str | None = None,
+    persona_default: str = "",
+) -> PluginManifest:
     """Write the shipped harness under ``output_dir`` as a Claude plugin.
 
-    Emits ``.claude-plugin/plugin.json`` carrying the plugin manifest, and the
-    top-level ``skills/<name>/SKILL.md`` tree (plus each skill's ``reference/``
-    material) from the single authored harness source. The ``version`` is
-    resolved from installed package metadata when not supplied.
+    Emits ``.claude-plugin/plugin.json`` carrying the plugin manifest (including
+    the ``userConfig`` persona option), the top-level ``skills/<name>/SKILL.md``
+    tree (plus each skill's ``reference/`` material), the ``agents/<persona>.md``
+    tree with Claude-native frontmatter, and the ``.mcp.json`` stdio server
+    declaration, all from the single authored harness source. The ``version`` is
+    resolved from installed package metadata when not supplied;
+    ``persona_default`` seeds the ``userConfig`` persona default.
 
     Returns:
         :class:`PluginManifest` describing the plugin written.
     """
     resolved_version = version or _plugin_version()
 
-    _write_json(output_dir / _PLUGIN_DIR, _PLUGIN_MANIFEST, _plugin_manifest_document(resolved_version))
+    _write_json(
+        output_dir / _PLUGIN_DIR,
+        _PLUGIN_MANIFEST,
+        _plugin_manifest_document(resolved_version, persona_default),
+    )
     skills = _emit_plugin_skills(output_dir)
+    agents = _emit_plugin_agents(output_dir)
+    _write_json(output_dir, _MCP_CONFIG, _mcp_config_document(resolved_version))
 
     return PluginManifest(
         output_path=str(output_dir),
         plugin_name=_PLUGIN_NAME,
         version=resolved_version,
         skills_written=skills,
-        agents_written=0,
+        agents_written=agents,
+        persona_default=persona_default,
     )
 
 
