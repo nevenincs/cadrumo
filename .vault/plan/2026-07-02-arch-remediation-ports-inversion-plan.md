@@ -11,15 +11,6 @@ related:
   - '[[2026-07-02-arch-remediation-ports-inversion-adr]]'
 ---
 
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the
-       related: field above.
-     - The related: field carries the AUTHORISING documents
-       (ADR, research, reference, prior plan) for every Step in
-       this plan. Steps inherit this chain; per-row reference
-       footers do not exist.
-     - NEVER use [[wiki-links]] or markdown links in the
-       document body. -->
 
 # `arch-remediation-ports-inversion` plan
 
@@ -45,7 +36,7 @@ Relocate the submission repository and engine persistence behind ports and move 
 
 Relocate the buckets event repository behind a domain port with the concrete class under adapters.persistence.
 
-- [ ] `W01.P03.S05` - Relocate the buckets event repository behind its domain port in one atomic commit, deleting its pinned domain-to-adapters entries; `src/aeat/domain/buckets/_event_repository.py`.
+- [x] `W01.P03.S05` - Relocate the buckets event repository behind its domain port in one atomic commit, deleting its pinned domain-to-adapters entries; `src/aeat/domain/buckets/_event_repository.py`.
 
 ## Wave `W02` - independent domains
 
