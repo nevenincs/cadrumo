@@ -630,10 +630,8 @@ def test_rename_work_unit_emits_renamed_bucket_event_with_actor_and_names(
     new display names so the audit trail captures the full transition.
     """
 
-    from ...buckets import (
-        BucketEventHistoryRepository,
-        BucketEventType,
-    )
+    from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
+    from ...buckets import BucketEventType
 
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_WORK_UNIT_EVENT_BUCKET_ID) as profile:
         _seed_ready_profile(profile.bucket_id, objects=profile.repository)

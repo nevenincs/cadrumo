@@ -13,6 +13,7 @@ from pathlib import Path
 import pytest
 from pydantic import AnyHttpUrl, TypeAdapter
 
+from .....adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from .....adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from .....adapters.persistence.profile.justificante import JustificanteRepository
 from .....adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
@@ -57,7 +58,6 @@ from .....domain.attachments import AttachmentNotFoundError
 from .....domain.buckets import (
     BucketEvent,
     BucketEventHistoryCatalogue,
-    BucketEventHistoryRepository,
     BucketEventObjectType,
     BucketEventType,
     derive_bucket_event_id,

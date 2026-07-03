@@ -339,10 +339,10 @@ def _emit_iva_wallet_corrected_event(
     reason: str,
 ) -> None:
     """Append the ``MODELO_IVA_WALLET_CORRECTED`` audit event for a correction."""
+    from ...adapters.persistence.profile.buckets import BucketEventHistoryRepository
     from ...core.time import now
     from ...domain.buckets import (
         BucketEvent,
-        BucketEventHistoryRepository,
         BucketEventObjectType,
         BucketEventType,
         append_bucket_event,
@@ -533,10 +533,10 @@ def _emit_iva_wallet_override_event(
     evidence_locator: str,
 ) -> None:
     """Append the ``MODELO_IVA_WALLET_OVERRIDE_RECORDED`` audit event for an override."""
+    from ...adapters.persistence.profile.buckets import BucketEventHistoryRepository
     from ...core.time import now
     from ...domain.buckets import (
         BucketEvent,
-        BucketEventHistoryRepository,
         BucketEventObjectType,
         BucketEventType,
         append_bucket_event,

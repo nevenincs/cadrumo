@@ -671,6 +671,10 @@ class Settings(AeatRuntimeSettings):
         default=PROJECT_ROOT / "var" / "llm-usage",
         description="Directory for append-only LLM usage JSONL logs",
     )
+    aeat_llm_run_telemetry_dir: Path = Field(
+        default=PROJECT_ROOT / "var" / "llm-run-telemetry",
+        description="Directory for append-only local LLM run-timing telemetry logs",
+    )
     aeat_llm_default_timeout_s: int = Field(
         default=60,
         description="Default timeout for LLM provider calls in seconds",
@@ -1099,6 +1103,7 @@ class Settings(AeatRuntimeSettings):
         "aeat_certificate_path",
         "aeat_llm_cache_dir",
         "aeat_llm_usage_dir",
+        "aeat_llm_run_telemetry_dir",
         "aeat_submissions_dir",
         "aeat_submission_browser_trace_dir",
         "aeat_inbox_dir",

@@ -9,9 +9,10 @@ from pathlib import Path
 
 import pytest
 
+from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from ....adapters.persistence.storage import PROFILE_INVENTORY_LEDGER_NAMESPACE
 from ....adapters.persistence.storage.errors import StorageValidationError
-from ....domain.buckets import BucketEventHistoryRepository, BucketEventType
+from ....domain.buckets import BucketEventType
 from ....domain.contribuyente.inventory import InventoryLedgerError, MovementKind, ValuationMethod
 from ....tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
 from .. import (

@@ -47,14 +47,9 @@ def _emit_ratios_event(
     new: object,
 ) -> None:
     """Append a ratios mutation event to the bucket-event-history catalogue."""
+    from ...adapters.persistence.profile.buckets import BucketEventHistoryRepository
     from ...adapters.persistence.storage import secure_object_repository_for_bucket
-    from ...domain.buckets import (
-        BucketEvent,
-        BucketEventHistoryRepository,
-        BucketEventObjectType,
-        append_bucket_event,
-        derive_bucket_event_id,
-    )
+    from ...domain.buckets import BucketEvent, BucketEventObjectType, append_bucket_event, derive_bucket_event_id
 
     occurred_at = now()
     payload = {
@@ -98,14 +93,9 @@ def _emit_ratios_censo_override_warning(
     warning,
 ) -> None:
     """Append LEDGER_RATIOS_CENSO_OVERRIDE_WARNING to the bucket catalogue."""
+    from ...adapters.persistence.profile.buckets import BucketEventHistoryRepository
     from ...adapters.persistence.storage import secure_object_repository_for_bucket
-    from ...domain.buckets import (
-        BucketEvent,
-        BucketEventHistoryRepository,
-        BucketEventObjectType,
-        append_bucket_event,
-        derive_bucket_event_id,
-    )
+    from ...domain.buckets import BucketEvent, BucketEventObjectType, append_bucket_event, derive_bucket_event_id
 
     occurred_at = now()
     payload = {

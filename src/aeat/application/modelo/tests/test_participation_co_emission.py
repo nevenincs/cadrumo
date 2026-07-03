@@ -197,6 +197,6 @@ def test_verify_then_file_co_emits_participation_for_every_source_transaction(tm
 
 
 def _bucket_event_repository():
-    from ....domain.buckets import BucketEventHistoryRepository
+    from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
 
     return BucketEventHistoryRepository()

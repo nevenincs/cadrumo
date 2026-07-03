@@ -12,6 +12,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import override
 
+from ...adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from ...application.ledger import (
     LedgerReviewQuery,
     ManualLedgerTransactionResult,
@@ -24,12 +25,7 @@ from ...application.ledger import (
 from ...application.review import FilterParseError, LedgerReviewFilterSpec
 from ...core import LedgerSortField, LedgerSortOrder
 from ...core.i18n import tr
-from ...domain.buckets import (
-    BucketEventHistoryCatalogue,
-    BucketEventHistoryRepository,
-    BucketEventObjectType,
-    BucketEventType,
-)
+from ...domain.buckets import BucketEventHistoryCatalogue, BucketEventObjectType, BucketEventType
 from ...domain.transactions import Transaction, TransactionCatalogueRepositoryProtocol
 from ._ledger_payloads import LedgerListRowPayload
 

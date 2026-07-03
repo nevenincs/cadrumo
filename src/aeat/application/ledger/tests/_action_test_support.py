@@ -14,6 +14,7 @@ from pathlib import Path
 import pytest
 
 from ....adapters.inbound.financial.providers import ParsedLedgerRow
+from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from ....adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ....adapters.persistence.storage import AttachmentStore
@@ -40,12 +41,7 @@ from ....application.ledger import (
 from ....core import Period
 from ....core.aggregation import BindingSourceKind
 from ....domain.attachments import Attachment, AttachmentKind, AttachmentSource
-from ....domain.buckets import (
-    BucketEvent,
-    BucketEventHistoryRepository,
-    BucketEventObjectType,
-    BucketEventType,
-)
+from ....domain.buckets import BucketEvent, BucketEventObjectType, BucketEventType
 from ....domain.calculations.registry import CasillaId, validated_casilla_id
 from ....domain.categories import SpendingCategory
 from ....domain.invoices import Invoice, InvoiceCatalogue, InvoiceLine, IvaRate, PaymentStatus

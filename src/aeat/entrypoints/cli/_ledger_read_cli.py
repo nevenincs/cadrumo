@@ -20,6 +20,7 @@ from typing import Any
 
 import typer
 
+from ...adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from ...application.export import ExportSerializationFormat
 from ...application.ledger import (
     LedgerExportCommand,
@@ -38,12 +39,7 @@ from ...core.decimal import coerce_decimal_strict
 from ...core.i18n import tr
 from ...core.json_contract import Notice, NoticeSeverity
 from ...core.parsing import parse_iso8601_date
-from ...domain.buckets import (
-    BucketEvent,
-    BucketEventHistoryRepository,
-    BucketEventObjectType,
-    BucketEventType,
-)
+from ...domain.buckets import BucketEvent, BucketEventObjectType, BucketEventType
 from ...domain.categories import (
     CATEGORY_FAMILY_MEMBERS,
     SpendingCategory,
