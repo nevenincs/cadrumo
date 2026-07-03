@@ -67,4 +67,4 @@ related:
 
 - Both helpers were co-located in the adapter rather than splitting them: no domain production code consumes either, and the pure bucket-id resolver is itself repository plumbing, so a single sibling import source for the five adapters is the cleaner layer story.
 - `test_lazy_import_policy`, `test_import_hygiene_gate`, and the `AEAT layered architecture` import-linter contract remain red at HEAD from unrelated concurrent campaigns (LLM run-telemetry, amendment-kind, bienes-inversión advisory); none of the failing edges reference the relocated module, and this change removes edges from all three surfaces rather than adding any. Left red and attributed to their owning campaigns.
-- Closes register item D2 of the ports-inversion campaign.
+- Closes plan step W04.P09.S17 only — one leaf of register item D2. D2 also requires the filing-repositories wave (`domain/filing/_repository.py`, `_complementaria_repository.py`, `_runtime_repository.py`; `.importlinter` pins 686/687/704) and the attachments verify (W02.P06.S08); the graph-wide zero-domain-to-adapters check remains the definitive D2 gate.

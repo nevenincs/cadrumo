@@ -63,4 +63,4 @@ related:
 
 ## Notes
 
-- This is the paired verify-only half of register item D2 alongside the modelos runtime-repository relocation (S17); together they close the ports-inversion deferral register.
+- This verify-only step and the modelos runtime-repository relocation (S17) are two leaves of register item D2; they do not close it. The filing-repositories wave (`domain/filing/_repository.py`, `_complementaria_repository.py`, `_runtime_repository.py`; `.importlinter` pins 686/687/704) remains open, and the graph-wide zero-domain-to-adapters check is the definitive D2 gate.
