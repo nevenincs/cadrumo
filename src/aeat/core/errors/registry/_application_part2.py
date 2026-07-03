@@ -722,4 +722,37 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
             runbook_id=None,
         ),
     ),
+    (
+        "aeat.application.modelo._review_package.ReviewPackageError",
+        ErrorCode(
+            code="ERROR_MODELO_REVIEW_PACKAGE",
+            category=ErrorCategory.ERROR,
+            message_key="application.modelo.errors.review_package_generic",
+            default_suggestion="aeat app modelo review-package build --help",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "aeat.application.modelo._review_package.ReviewPackageRevisionStateError",
+        ErrorCode(
+            code="REFUSED_MODELO_REVIEW_PACKAGE_REVISION_STATE",
+            category=ErrorCategory.REFUSED,
+            message_key="application.modelo.errors.review_package_revision_state",
+            default_suggestion="aeat app modelo work verify <work-unit-id>",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "aeat.application.modelo._review_package.ReviewPackageIntegrityError",
+        ErrorCode(
+            code="REFUSED_MODELO_REVIEW_PACKAGE_INTEGRITY",
+            category=ErrorCategory.REFUSED,
+            message_key="application.modelo.errors.review_package_integrity",
+            default_suggestion="aeat app modelo review-package build --output PATH",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
 )

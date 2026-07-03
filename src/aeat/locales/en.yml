@@ -842,9 +842,11 @@ application:
         %{filing_year} %{period}, but a refund is only available in the year's last
         filing period. Carry the credit forward (compensar), or make the election
         in the last period.
-      review_package_generic: 'An error occurred while building the review package.'
-      review_package_integrity: 'Review package %{package_path} failed checksum verification: %{detail}.'
-      review_package_revision_state: 'Calculation revision %{calculation_revision_id} is in state %{state} and cannot be packaged for review; eligible states: %{eligible_states}.'
+      review_package_generic: An error occurred while building the review package.
+      review_package_integrity: 'Review package %{package_path} failed checksum verification:
+        %{detail}.'
+      review_package_revision_state: 'Calculation revision %{calculation_revision_id}
+        is in state %{state} and cannot be packaged for review; eligible states: %{eligible_states}.'
       revision_pick_explicit_id_required: Explicit revision picks require calculation_revision_id.
       revision_pick_id_requires_explicit_selector: calculation_revision_id is only
         valid with the explicit revision selector.
@@ -1855,18 +1857,24 @@ cli:
         section_profile: profile_derivable
         section_required: required_manual
       review_package:
-        actor_help: 'Operator label recorded into the package descriptor and the underlying export event.'
-        build_help: 'Assemble a shareable, checksum-verifiable review package (fichero-BOE draft, revision provenance, and bundled ledger evidence) for accountant handoff. Local-only; never contacts AEAT.'
+        actor_help: Operator label recorded into the package descriptor and the underlying
+          export event.
+        build_help: Assemble a shareable, checksum-verifiable review package (fichero-BOE
+          draft, revision provenance, and bundled ledger evidence) for accountant
+          handoff. Local-only; never contacts AEAT.
         errors:
-          output_required: 'Supply --output PATH for the review package ZIP.'
-          package_not_found: 'Review package not found at {package_path}.'
-        group_help: 'Build a shareable review package and verify its integrity.'
-        notes_help: 'Free-text note embedded in the package descriptor (e.g. why it was shared).'
-        output_help: 'Path to write the review package ZIP to.'
-        package_path_help: 'Path to the review package ZIP to verify.'
-        revision_help: 'Calculation revision id to package; defaults to the work unit''s most recent verified-complete or filed revision.'
-        verify_help: 'Verify a review package''s checksum manifest (integrity only; does not assert who built it). Local-only; never contacts AEAT.'
-        work_unit_id_help: 'Work unit id (SHA-256 or unambiguous prefix).'
+          output_required: Supply --output PATH for the review package ZIP.
+          package_not_found: Review package not found at {package_path}.
+        group_help: Build a shareable review package and verify its integrity.
+        notes_help: Free-text note embedded in the package descriptor (e.g. why it
+          was shared).
+        output_help: Path to write the review package ZIP to.
+        package_path_help: Path to the review package ZIP to verify.
+        revision_help: Calculation revision id to package; defaults to the work unit's
+          most recent verified-complete or filed revision.
+        verify_help: Verify a review package's checksum manifest (integrity only;
+          does not assert who built it). Local-only; never contacts AEAT.
+        work_unit_id_help: Work unit id (SHA-256 or unambiguous prefix).
       verification_report:
         app_help: Inspect recorded verification reports
         list_help: List verification reports, optionally filtered to one calculation
@@ -2665,6 +2673,7 @@ cli:
         create_name_help: Sandbox name.
         discard_active_profile: Sandbox %{name} is the active profile; switch to another
           profile before discarding it.
+        discard_dry_run_help: 'Preview what the discard would remove without removing anything.'
         discard_help: Permanently erase a sandbox bucket.
         discard_name_help: Sandbox name (without the prefix).
         discard_not_a_sandbox: '%{name} is not a sandbox; the sandbox surface refuses
@@ -2675,6 +2684,11 @@ cli:
         help: Run experiments in an isolated, discardable bucket that never touches
           main profile state.
         list_help: List every sandbox bucket.
+        prune_dry_run_help: 'Preview which sandboxes would be discarded without discarding them.'
+        prune_help: 'Discard every sandbox bucket at once.'
+        prune_requires_yes: 'Pruning every sandbox is destructive. Re-run ''aeat config profile sandbox prune --yes'' to confirm.'
+        prune_skipped_active_info: 'Skipped the active sandbox %{names}; switch to another profile and re-run ''aeat config profile sandbox prune --yes'' to discard it.'
+        prune_yes_help: 'Confirm discarding every sandbox.'
         source_not_found: No live profile named %{name} to seed the sandbox from.
         unknown_sandbox: 'Unknown sandbox: %{name}. Run ''aeat config profile sandbox
           list'' to see registered sandboxes.'
