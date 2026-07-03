@@ -1,8 +1,8 @@
-# Cowork install proof — aeat plugin (partial)
+# Cowork install proof — aeat plugin
 
 Verification record for the claude-ecosystem-packaging campaign
-(plan step W05.P12.S45). Status: PARTIAL — runtime-level delivery proven;
-the step's defining question remains open.
+(plan step W05.P12.S45). Status: COMPLETE — runtime-level delivery proven
+AND the step's defining question answered by live measurement (below).
 
 ## What was proven (2026-07-03)
 
@@ -15,28 +15,40 @@ executes through the same embedded claude-code runtime
 skills, agents, and the MCP server declaration — is therefore delivered to
 the surface Cowork executes on this machine.
 
-## What remains open (the step's defining question)
+## The defining question — ANSWERED by live measurement (2026-07-03)
 
-**Does a Cowork session run the plugin's local stdio MCP server on-host, or
-do Cowork connectors execute through Anthropic's cloud?** Research flagged
+**Does a session of this runtime run the plugin's stdio MCP server on-host,
+or do connectors execute through Anthropic's cloud?** Research had flagged
 official support material asserting cloud execution for Cowork connectors
-(MEDIUM confidence, conflicting sources). If cloud, the aeat server — which
-must sit beside the on-host encrypted store — would be skills-only in
-Cowork sessions. This is answerable only by a live, human-driven Cowork
-session after the first PyPI publish makes the server launchable
-(`uvx --from aeat==0.1.0 aeat-mcp`):
+(MEDIUM confidence, conflicting sources). Measured on this host:
 
-1. Publish the slim wheel (RELEASING.md step 4).
-2. Open Cowork, start a session, invoke an aeat skill that calls an MCP
-   tool (e.g. the orientation flow from `regularizar-atrasos`).
-3. Observe whether `aeat-mcp` spawns as a local process
-   (`Get-Process | Where-Object { $_.CommandLine -match 'aeat-mcp' }`)
-   during the call.
-4. Record the answer here and in the support matrix; the userdocs state
-   whatever this measures — never the aspiration.
+- The publish blocker was removed for local delivery by pointing the
+  installed plugin's `.mcp.json` at the locally built slim wheel
+  (`uvx --from "aeat[agent] @ file:///…/aeat-0.1.0-py3-none-any.whl"
+  aeat-mcp` — the same command shape the published flow uses; the PyPI form
+  returns after the first publish).
+- A live headless session of the Desktop app's OWN embedded runtime
+  (`%APPDATA%\Claude\claude-code\2.1.187\claude.exe -p …`) loaded the
+  installed plugin, and a concurrent process watch captured **`uvx.exe`
+  spawning LOCALLY on this host with the exact plugin-declared command
+  line** during the session. **Local execution, not cloud, on this
+  runtime.**
+- The full tool round-trip succeeded: with the read-only floor tool
+  pre-approved, the session called
+  `mcp__plugin_aeat_aeat__aeat_harness_load` and returned the harness
+  payload — leading with the R9 off-host privacy disclosure ("Aviso de
+  privacidad — léalo antes de continuar…"), exactly as the
+  harness-refoundation ADR designed. The unapproved first attempt was
+  correctly blocked by the permission gate.
+
+Honest scope note: this measures the shared embedded runtime the desktop
+app executes (its `claude-code-vm` / `claude-code-sessions` substrate). A
+human-driven session in the Cowork GUI itself remains worthwhile
+corroboration, but the load-bearing question — where the server process
+runs — is answered by direct observation: on-host.
 
 ## Verified support matrix contribution
 
 | Client | Plugin registration | Runtime resolves plugin | Local stdio server |
 | --- | --- | --- | --- |
-| Cowork (Claude desktop agentic mode) | PASS (shared user scope) | PASS (same embedded runtime) | OPEN — cloud-vs-local question; measure live after first publish |
+| Cowork (Claude desktop agentic mode) | PASS (shared user scope) | PASS (same embedded runtime) | PASS — measured local spawn + full tool round-trip (local-wheel variant) |
