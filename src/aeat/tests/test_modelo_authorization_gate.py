@@ -98,10 +98,10 @@ def _authority():
     return resources().modelos.authority
 
 
-def test_canonical_fleet_is_forty_five_distinct_modelos() -> None:
-    """The canonical fleet — the gate's denominator — is exactly 45 distinct ids.
+def test_canonical_fleet_is_forty_six_distinct_modelos() -> None:
+    """The canonical fleet — the gate's denominator — is exactly 46 distinct ids.
 
-    45 is the count of registry-loadable modelo directories under
+    46 is the count of registry-loadable modelo directories under
     ``src/aeat/_data/registry/aeat/modelos/`` today (verified against the live
     registry by :func:`test_canonical_fleet_covers_every_loadable_modelo` below,
     which asserts zero drift in either direction). A prior worktree-consolidation
@@ -113,12 +113,14 @@ def test_canonical_fleet_is_forty_five_distinct_modelos() -> None:
     ``66`` that was never actually achieved. The registry TOML for those six
     modelos has been restored (byte-identical to the pre-consolidation commit)
     and they were removed from :data:`aeat.core.UNMODELED_OBLIGATIONS`
-    accordingly. 45 is not a further reduction from 66; it is the honest,
-    registry-verified count once the accidental data loss is corrected.
+    accordingly. 45 was the honest, registry-verified count once the accidental
+    data loss was corrected; it became 46 when Modelo 182 (donativos, donaciones
+    y aportaciones recibidas, Orden EHA/3021/2007) was promoted from
+    :data:`aeat.core.UNMODELED_OBLIGATIONS` to a real registry definition.
     """
     assert len(CANONICAL_MODELO_FLEET) == FLEET_SIZE
     assert len(set(CANONICAL_MODELO_FLEET)) == FLEET_SIZE
-    assert FLEET_SIZE == 45
+    assert FLEET_SIZE == 46
 
 
 def test_canonical_fleet_covers_every_loadable_modelo() -> None:
