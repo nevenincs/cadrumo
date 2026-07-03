@@ -46,6 +46,7 @@ from dataclasses import dataclass
 from datetime import date, datetime
 from decimal import Decimal
 from enum import StrEnum
+from uuid import uuid4
 
 from pydantic import BaseModel, Field
 
@@ -332,6 +333,51 @@ def _run_vision_or_refuse[T](run: Callable[[], T], *, settings: Settings) -> T:
         raise LLMClassifierError(f"on-host vision reading failed: {detail}. Fix: {fix}") from exc
 
 
+def _record_subprocess_run[T](run: Callable[[], T], *, provider: str) -> T:
+    """Run a subprocess CLI classify/split call, recording local run-timing telemetry.
+
+    Wraps :class:`aeat.domain.transactions.SubprocessLLMClassifier` calls (which
+    stay pure and time-unaware, per hexagonal layering -- the domain layer must
+    not import the storage-touching recorder). Records duration and outcome via
+    :class:`~aeat.adapters.outbound.llm.LLMRunTelemetryRecorder`, mirroring the
+    recording :class:`~aeat.adapters.outbound.llm.LLMClient.complete` performs
+    for the on-host vision transport. A run-telemetry write failure never masks
+    the real classification result or a real classifier error.
+    """
+    import time
+
+    from ...adapters.outbound.llm import LLMCacheError, LLMRunRecord, LLMRunTelemetryRecorder
+    from ...core.time import now
+
+    started_at = now()
+    clock_start = time.monotonic()
+    recorder = LLMRunTelemetryRecorder()
+
+    def _write(*, succeeded: bool, error_kind: str) -> None:
+        try:
+            recorder.record(
+                LLMRunRecord(
+                    run_id=uuid4().hex,
+                    caller="aeat.application.ledger.llm_classification",
+                    provider=provider,
+                    duration_ms=max(0, round((time.monotonic() - clock_start) * 1000)),
+                    succeeded=succeeded,
+                    error_kind=error_kind,
+                    started_at=started_at,
+                ),
+            )
+        except LLMCacheError:
+            _logger.debug("llm run-telemetry write failed; continuing without it", exc_info=True)
+
+    try:
+        result = run()
+    except Exception as exc:
+        _write(succeeded=False, error_kind=type(exc).__name__)
+        raise
+    _write(succeeded=True, error_kind="")
+    return result
+
+
 def _classify_with_evidence(
     transaction: Transaction,
     evidence: _ResolvedEvidence | None,
@@ -357,6 +403,8 @@ def _classify_with_evidence(
             the configured model is not pulled.
     """
     if evidence is not None and evidence.is_images:
+        # The vision path shells out through LLMClient.complete, which records
+        # its own run-timing telemetry -- do not double-record here.
         vision = vision_classifier or LocalVisionLLMClassifier(spec=spec, settings=settings, model=vision_model)
         images = evidence.images
         response = _run_vision_or_refuse(
@@ -370,7 +418,10 @@ def _classify_with_evidence(
             context={"transaction_id": transaction.transaction_id},
         )
     text = evidence.text if evidence is not None else None
-    return text_classifier.classify(transaction, evidence_text=text), text_classifier.decided_by
+    return _record_subprocess_run(
+        lambda: text_classifier.classify(transaction, evidence_text=text),
+        provider=text_classifier.decided_by,
+    ), text_classifier.decided_by
 
 
 def _split_with_evidence(
@@ -392,6 +443,8 @@ def _split_with_evidence(
             was resolved (no ``--llm`` provider supplied).
     """
     if evidence is not None and evidence.is_images:
+        # The vision path shells out through LLMClient.complete, which records
+        # its own run-timing telemetry -- do not double-record here.
         vision = vision_classifier or LocalVisionLLMClassifier(spec=spec, settings=settings, model=vision_model)
         images = evidence.images
         response = _run_vision_or_refuse(
@@ -405,7 +458,10 @@ def _split_with_evidence(
             context={"transaction_id": transaction.transaction_id},
         )
     text = evidence.text if evidence is not None else None
-    return proposer.propose_split(transaction, evidence_text=text), proposer.decided_by
+    return _record_subprocess_run(
+        lambda: proposer.propose_split(transaction, evidence_text=text),
+        provider=proposer.decided_by,
+    ), proposer.decided_by
 
 
 def suggest_llm_classification(
