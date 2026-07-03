@@ -570,8 +570,10 @@ application:
           auth test` abans de llegir dades AEAT.
   bucket_maintenance:
     errors:
-      archive_active_bucket: 'El bucket actiu no es pot arxivar; canvia primer a un altre perfil.'
-      archive_not_confirmed: 'Arxivar és una transició d''estat reversible, però requereix confirmació explícita.'
+      archive_active_bucket: El bucket actiu no es pot arxivar; canvia primer a un
+        altre perfil.
+      archive_not_confirmed: Arxivar és una transició d'estat reversible, però requereix
+        confirmació explícita.
       delete_active_bucket: application.bucket_maintenance.errors.delete_active_bucket
       delete_not_confirmed: application.bucket_maintenance.errors.delete_not_confirmed
       import_bucket_collision: application.bucket_maintenance.errors.import_bucket_collision
@@ -582,7 +584,8 @@ application:
       import_recovery_passphrase_required: application.bucket_maintenance.errors.import_recovery_passphrase_required
       import_recovery_wrap_invalid: application.bucket_maintenance.errors.import_recovery_wrap_invalid
       import_recovery_wrap_missing: application.bucket_maintenance.errors.import_recovery_wrap_missing
-      restore_not_archived: 'El bucket no està arxivat (donat de baixa); no hi ha res a recuperar.'
+      restore_not_archived: El bucket no està arxivat (donat de baixa); no hi ha res
+        a recuperar.
       unsupported_archive_schema_version: application.bucket_maintenance.errors.unsupported_archive_schema_version
   calculations:
     iva_compensation:
@@ -1232,7 +1235,8 @@ application:
       duplicate_tax_id: El NIF '%{tax_id}' ja l'utilitza el perfil '%{profile}'; un
         contribuent ha de tenir un sol perfil.
       lifecycle_profile_already_exists: Ja existeix un perfil al bucket actiu.
-      lifecycle_profile_not_tombstoned: 'El perfil no està donat de baixa; la reactivació rebutja un perfil actiu.'
+      lifecycle_profile_not_tombstoned: El perfil no està donat de baixa; la reactivació
+        rebutja un perfil actiu.
       lifecycle_profile_tombstoned_duplicate: No es pot duplicar un perfil eliminat.
       lifecycle_profile_tombstoned_rename: No es pot canviar el nom d'un perfil eliminat.
       lifecycle_schema_validation_failed: Les dades del perfil no coincideixen amb
@@ -1376,7 +1380,7 @@ auth:
     clave_movil_description: Autenticació amb aprovació push al mòbil del titular
       registrat a Cl@ve. Requereix DNI/NIE, registre a Cl@ve i el dispositiu vinculat.
     clave_movil_label: Cl@ve Móvil
-    clave_permanente_description: Slot reservat i tancat per a Cl@ve Permanente.
+    clave_permanente_description: 'Autenticació amb DNI/NIE i contrasenya mitjançant el proveïdor d''identitat Cl@ve Permanente. Automatitzable sense intervenció per als fluxos de lectura de l''AEAT; requereix DNI/NIE i contrasenya.'
     clave_permanente_label: Cl@ve Permanente
     clave_pin_description: Slot reservat i tancat per a Cl@ve PIN.
     clave_pin_label: Cl@ve PIN
@@ -2456,6 +2460,16 @@ cli:
         remove:
           name_help: Origen de certificat registrat que s'eliminarà
         remove_help: Eliminar un origen de certificat registrat
+        secret:
+          help: 'Gestiona la contrasenya vinculada a una font de certificat amb nom'
+          remove:
+            name_help: 'Font de certificat registrada la contrasenya de la qual s''ha d''eliminar'
+          remove_help: 'Elimina la contrasenya vinculada a una font de certificat registrada'
+          set:
+            backend_help: 'Backend del secret: secure_storage (per defecte, xifrat en repos) o keyring (clauer del sistema operatiu)'
+            name_help: 'Font de certificat registrada a la qual es vincula la contrasenya'
+            secret_help: 'La contrasenya del PKCS#12 (es demana, oculta, mai es mostra)'
+          set_help: 'Estableix (o rota) la contrasenya d''una font de certificat registrada'
         select:
           name_help: Origen de certificat registrat que s'activarà
         select_help: Seleccionar l'origen de certificat actiu
@@ -2839,13 +2853,17 @@ cli:
       sandbox:
         already_exists: Ja existeix un sandbox anomenat %{label}. Trieu un altre nom
           o descarteu primer l'existent.
-        archive_active_profile: 'El sandbox %{name} és el perfil actiu; canvia a un altre perfil abans d''arxivar-lo.'
-        archive_dry_run_help: 'Previsualitza l''arxivat sense treure el sandbox de la superfície activa.'
-        archive_help: 'Converteix un sandbox en un estat latent reversible sense eliminar-lo.'
-        archive_name_help: 'Nom del sandbox (sense el prefix).'
-        archive_requires_yes: 'Arxivar un sandbox és una transició d''estat. Torna a executar ''aeat config profile sandbox archive %{name} --yes'' per confirmar.'
-        archive_restorable_info: 'El sandbox ara està latent; executa ''aeat config profile sandbox restore %{name}'' per recuperar-lo.'
-        archive_yes_help: 'Confirma l''arxivat.'
+        archive_active_profile: El sandbox %{name} és el perfil actiu; canvia a un
+          altre perfil abans d'arxivar-lo.
+        archive_dry_run_help: Previsualitza l'arxivat sense treure el sandbox de la
+          superfície activa.
+        archive_help: Converteix un sandbox en un estat latent reversible sense eliminar-lo.
+        archive_name_help: Nom del sandbox (sense el prefix).
+        archive_requires_yes: Arxivar un sandbox és una transició d'estat. Torna a
+          executar 'aeat config profile sandbox archive %{name} --yes' per confirmar.
+        archive_restorable_info: El sandbox ara està latent; executa 'aeat config
+          profile sandbox restore %{name}' per recuperar-lo.
+        archive_yes_help: Confirma l'arxivat.
         create_active_info: El sandbox és ara el perfil ACTIU; tots els comandaments
           s'executen sobre ell fins que canviï de perfil o el descarti.
         create_from_profile_help: Copia les dades d'un perfil existent al sandbox
@@ -2875,8 +2893,8 @@ cli:
           altre perfil i torna a executar 'aeat config profile sandbox prune --yes'
           per descartar-lo.
         prune_yes_help: Confirma el descart de tots els sandboxes.
-        restore_help: 'Recupera un sandbox arxivat i el torna a l''estat actiu.'
-        restore_name_help: 'Nom del sandbox (sense el prefix).'
+        restore_help: Recupera un sandbox arxivat i el torna a l'estat actiu.
+        restore_name_help: Nom del sandbox (sense el prefix).
         restore_not_archived: '%{name} no està arxivat; no hi ha res a recuperar.'
         source_not_found: No existeix cap perfil actiu anomenat %{name} per copiar
           al sandbox.

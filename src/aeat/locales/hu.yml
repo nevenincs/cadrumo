@@ -531,8 +531,9 @@ application:
           `aeat config auth test` parancsot az AEAT adatok olvasása előtt.
   bucket_maintenance:
     errors:
-      archive_active_bucket: 'Az aktív bucket nem archiválható; válts előbb másik profilra.'
-      archive_not_confirmed: 'Az archiválás visszafordítható állapotátmenet, de kifejezett megerősítést igényel.'
+      archive_active_bucket: Az aktív bucket nem archiválható; válts előbb másik profilra.
+      archive_not_confirmed: Az archiválás visszafordítható állapotátmenet, de kifejezett
+        megerősítést igényel.
       delete_active_bucket: application.bucket_maintenance.errors.delete_active_bucket
       delete_not_confirmed: application.bucket_maintenance.errors.delete_not_confirmed
       import_bucket_collision: application.bucket_maintenance.errors.import_bucket_collision
@@ -543,7 +544,7 @@ application:
       import_recovery_passphrase_required: application.bucket_maintenance.errors.import_recovery_passphrase_required
       import_recovery_wrap_invalid: application.bucket_maintenance.errors.import_recovery_wrap_invalid
       import_recovery_wrap_missing: application.bucket_maintenance.errors.import_recovery_wrap_missing
-      restore_not_archived: 'A bucket nincs archiválva (nincs törölve); nincs mit visszaállítani.'
+      restore_not_archived: A bucket nincs archiválva (nincs törölve); nincs mit visszaállítani.
       unsupported_archive_schema_version: application.bucket_maintenance.errors.unsupported_archive_schema_version
   calculations:
     iva_compensation:
@@ -1176,7 +1177,8 @@ application:
       duplicate_tax_id: A(z) "%{tax_id}" adóazonosítót már a(z) "%{profile}" profil
         használja; egy adózónak egy profilja lehet.
       lifecycle_profile_already_exists: Már létezik profil az aktív bucketben.
-      lifecycle_profile_not_tombstoned: 'A profil nincs törölve; az újraaktiválás elutasítja az élő profilt.'
+      lifecycle_profile_not_tombstoned: A profil nincs törölve; az újraaktiválás elutasítja
+        az élő profilt.
       lifecycle_profile_tombstoned_duplicate: Törölt profil nem duplikálható.
       lifecycle_profile_tombstoned_rename: Törölt profil nem nevezhető át.
       lifecycle_schema_validation_failed: A profiladatok nem felelnek meg a felhasználóiprofil-sémának.
@@ -1316,8 +1318,7 @@ auth:
     clave_movil_description: 'Push-jóváhagyásos hitelesítés a Cl@ve-nél regisztrált
       telefon segítségével. Szükséges: DNI/NIE, Cl@ve-regisztráció és párosított eszköz.'
     clave_movil_label: Cl@ve Móvil
-    clave_permanente_description: Fenntartott zárt szolgáltatói hely a Cl@ve Permanente
-      számára.
+    clave_permanente_description: 'DNI/NIE- és jelszóalapú hitelesítés a Cl@ve Permanente személyazonosság-szolgáltatón keresztül. Az AEAT olvasási folyamataihoz automatizálható felügyelet nélkül; DNI/NIE és jelszó szükséges.'
     clave_permanente_label: Cl@ve Permanente
     clave_pin_description: Fenntartott zárt szolgáltatói hely a Cl@ve PIN számára.
     clave_pin_label: Cl@ve PIN
@@ -2405,6 +2406,16 @@ cli:
         remove:
           name_help: Az eltávolítandó regisztrált tanúsítványforrás
         remove_help: Egy regisztrált tanúsítványforrás eltávolítása
+        secret:
+          help: 'A nevesitett tanusitvanyforrashoz kotott jelszo kezelese'
+          remove:
+            name_help: 'A regisztralt tanusitvanyforras, amelynek jelszavat el kell tavolitani'
+          remove_help: 'Eltavolitja egy regisztralt tanusitvanyforrashoz kotott jelszot'
+          set:
+            backend_help: 'Titok-hattertar: secure_storage (alapertelmezett, titkositva tarolva) vagy keyring (operacios rendszer kulcstartoja)'
+            name_help: 'A regisztralt tanusitvanyforras, amelyhez a jelszo kapcsolodik'
+            secret_help: 'A PKCS#12 jelszo (bekerdezve, elrejtve, soha nem jelenik meg)'
+          set_help: 'Beallitja (vagy megujitja) egy regisztralt tanusitvanyforras jelszavat'
         select:
           name_help: Az aktiválandó regisztrált tanúsítványforrás
         select_help: Az aktív tanúsítványforrás kiválasztása
@@ -2797,13 +2808,18 @@ cli:
       sandbox:
         already_exists: Már létezik %{label} nevű sandbox. Válasszon másik nevet,
           vagy előbb dobja el a meglévőt.
-        archive_active_profile: 'A(z) %{name} sandbox az aktív profil; válts másik profilra, mielőtt archiválnád.'
-        archive_dry_run_help: 'Előnézetet ad az archiválásról anélkül, hogy a sandboxot eltávolítaná az aktív felületről.'
-        archive_help: 'A sandboxot visszafordítható nyugalmi állapotba helyezi anélkül, hogy törölné.'
-        archive_name_help: 'A sandbox neve (előtag nélkül).'
-        archive_requires_yes: 'A sandbox archiválása állapotátmenet. Futtasd újra: ''aeat config profile sandbox archive %{name} --yes'' a megerősítéshez.'
-        archive_restorable_info: 'A sandbox most nyugalmi állapotban van; futtasd az ''aeat config profile sandbox restore %{name}'' parancsot a visszaállításához.'
-        archive_yes_help: 'Megerősíti az archiválást.'
+        archive_active_profile: A(z) %{name} sandbox az aktív profil; válts másik
+          profilra, mielőtt archiválnád.
+        archive_dry_run_help: Előnézetet ad az archiválásról anélkül, hogy a sandboxot
+          eltávolítaná az aktív felületről.
+        archive_help: A sandboxot visszafordítható nyugalmi állapotba helyezi anélkül,
+          hogy törölné.
+        archive_name_help: A sandbox neve (előtag nélkül).
+        archive_requires_yes: 'A sandbox archiválása állapotátmenet. Futtasd újra:
+          ''aeat config profile sandbox archive %{name} --yes'' a megerősítéshez.'
+        archive_restorable_info: A sandbox most nyugalmi állapotban van; futtasd az
+          'aeat config profile sandbox restore %{name}' parancsot a visszaállításához.
+        archive_yes_help: Megerősíti az archiválást.
         create_active_info: A sandbox most már az AKTÍV profil; minden parancs erre
           fut, amíg át nem vált vagy el nem dobja.
         create_from_profile_help: A sandbox feltöltése egy meglévő profil adataival
@@ -2833,9 +2849,9 @@ cli:
           profilra, majd futtasd ujra: ''aeat config profile sandbox prune --yes''
           a torleshez.'
         prune_yes_help: Az osszes sandbox torlesenek megerositese.
-        restore_help: 'Visszaállít egy archivált sandboxot aktív állapotba.'
-        restore_name_help: 'A sandbox neve (előtag nélkül).'
-        restore_not_archived: 'A(z) %{name} nincs archiválva; nincs mit visszaállítani.'
+        restore_help: Visszaállít egy archivált sandboxot aktív állapotba.
+        restore_name_help: A sandbox neve (előtag nélkül).
+        restore_not_archived: A(z) %{name} nincs archiválva; nincs mit visszaállítani.
         source_not_found: Nincs %{name} nevű élő profil, amelyből a sandbox feltölthető
           lenne.
         unknown_sandbox: 'Ismeretlen sandbox: %{name}. Futtassa az ''aeat config profile

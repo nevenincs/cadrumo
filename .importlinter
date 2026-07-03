@@ -310,6 +310,7 @@ ignore_imports =
     aeat.application.aggregation.tests.test_source_mesh_profile_live -> aeat.adapters.outbound.aeat.sede
     aeat.application.aggregation.tests.test_source_mesh_profile_live -> aeat.tests.secure_sql
     aeat.application.auth.tests.test_apoderado -> aeat.tests.secure_sql
+    aeat.application.auth.tests.test_certificate_secret_backend -> aeat.adapters.persistence.storage
     aeat.application.auth.tests.test_diagnostics -> aeat.adapters.persistence.storage
     aeat.application.auth.tests.test_diagnostics -> aeat.tests.secure_sql
     aeat.application.auth.tests.test_ensure_session -> aeat.adapters.outbound.aeat.auth
@@ -645,6 +646,8 @@ ignore_imports =
     aeat.application.aggregation._withholding_source -> aeat.adapters.**
     aeat.application.auth -> aeat.adapters.**
     aeat.application.auth._apoderado -> aeat.adapters.**
+    aeat.application.auth._certificate_secret_backend -> aeat.adapters.**
+    aeat.application.auth._certificate_sources_operator -> aeat.adapters.**
     aeat.application.auth._diagnostics -> aeat.adapters.**
     aeat.application.auth._operator -> aeat.adapters.**
     aeat.application.auth._operator_probes -> aeat.adapters.**

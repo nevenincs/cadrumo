@@ -576,8 +576,10 @@ application:
           auth test` antes de leer datos AEAT.
   bucket_maintenance:
     errors:
-      archive_active_bucket: 'El bucket activo no puede archivarse; cambia primero a otro perfil.'
-      archive_not_confirmed: 'Archivar es una transición de estado reversible, pero requiere confirmación explícita.'
+      archive_active_bucket: El bucket activo no puede archivarse; cambia primero
+        a otro perfil.
+      archive_not_confirmed: Archivar es una transición de estado reversible, pero
+        requiere confirmación explícita.
       delete_active_bucket: application.bucket_maintenance.errors.delete_active_bucket
       delete_not_confirmed: application.bucket_maintenance.errors.delete_not_confirmed
       import_bucket_collision: application.bucket_maintenance.errors.import_bucket_collision
@@ -588,7 +590,8 @@ application:
       import_recovery_passphrase_required: application.bucket_maintenance.errors.import_recovery_passphrase_required
       import_recovery_wrap_invalid: application.bucket_maintenance.errors.import_recovery_wrap_invalid
       import_recovery_wrap_missing: application.bucket_maintenance.errors.import_recovery_wrap_missing
-      restore_not_archived: 'El bucket no está archivado (dado de baja); no hay nada que recuperar.'
+      restore_not_archived: El bucket no está archivado (dado de baja); no hay nada
+        que recuperar.
       unsupported_archive_schema_version: application.bucket_maintenance.errors.unsupported_archive_schema_version
   calculations:
     iva_compensation:
@@ -1247,7 +1250,8 @@ application:
       duplicate_tax_id: El NIF '%{tax_id}' ya lo usa el perfil '%{profile}'; un contribuyente
         debe tener un solo perfil.
       lifecycle_profile_already_exists: Ya existe un perfil en el bucket activo.
-      lifecycle_profile_not_tombstoned: 'El perfil no está dado de baja; la reactivación rechaza un perfil activo.'
+      lifecycle_profile_not_tombstoned: El perfil no está dado de baja; la reactivación
+        rechaza un perfil activo.
       lifecycle_profile_tombstoned_duplicate: No se puede duplicar un perfil eliminado.
       lifecycle_profile_tombstoned_rename: No se puede renombrar un perfil eliminado.
       lifecycle_schema_validation_failed: Los datos del perfil no coinciden con el
@@ -1391,7 +1395,7 @@ auth:
     clave_movil_description: Autenticación con aprobación push en el móvil del titular
       registrado en Cl@ve. Requiere DNI/NIE, registro en Cl@ve, y el dispositivo emparejado.
     clave_movil_label: Cl@ve Móvil
-    clave_permanente_description: Hueco reservado y cerrado para Cl@ve Permanente.
+    clave_permanente_description: 'Autenticación con DNI/NIE y contraseña a través del proveedor de identidad Cl@ve Permanente. Automatizable sin intervención para los flujos de lectura de la AEAT; requiere DNI/NIE y contraseña.'
     clave_permanente_label: Cl@ve Permanente
     clave_pin_description: Hueco reservado y cerrado para Cl@ve PIN.
     clave_pin_label: Cl@ve PIN
@@ -2484,6 +2488,16 @@ cli:
         remove:
           name_help: Origen de certificado registrado que se eliminará
         remove_help: Eliminar un origen de certificado registrado
+        secret:
+          help: 'Gestiona la contrasena vinculada a una fuente de certificado con nombre'
+          remove:
+            name_help: 'Fuente de certificado registrada cuya contrasena debe eliminarse'
+          remove_help: 'Elimina la contrasena vinculada a una fuente de certificado registrada'
+          set:
+            backend_help: 'Backend del secreto: secure_storage (por defecto, cifrado en reposo) o keyring (llavero del sistema operativo)'
+            name_help: 'Fuente de certificado registrada a la que se vincula la contrasena'
+            secret_help: 'La contrasena del PKCS#12 (se solicita, oculta, nunca se muestra)'
+          set_help: 'Establece (o rota) la contrasena de una fuente de certificado registrada'
         select:
           name_help: Origen de certificado registrado que se activará
         select_help: Seleccionar el origen de certificado activo
@@ -2872,13 +2886,17 @@ cli:
       sandbox:
         already_exists: Ya existe un sandbox llamado %{label}. Elija otro nombre o
           descarte primero el existente.
-        archive_active_profile: 'El sandbox %{name} es el perfil activo; cambia a otro perfil antes de archivarlo.'
-        archive_dry_run_help: 'Previsualiza el archivado sin sacar el sandbox de la superficie activa.'
-        archive_help: 'Convierte un sandbox en un estado latente reversible sin eliminarlo.'
-        archive_name_help: 'Nombre del sandbox (sin el prefijo).'
-        archive_requires_yes: 'Archivar un sandbox es una transición de estado. Vuelve a ejecutar ''aeat config profile sandbox archive %{name} --yes'' para confirmar.'
-        archive_restorable_info: 'El sandbox ahora está latente; ejecuta ''aeat config profile sandbox restore %{name}'' para recuperarlo.'
-        archive_yes_help: 'Confirma el archivado.'
+        archive_active_profile: El sandbox %{name} es el perfil activo; cambia a otro
+          perfil antes de archivarlo.
+        archive_dry_run_help: Previsualiza el archivado sin sacar el sandbox de la
+          superficie activa.
+        archive_help: Convierte un sandbox en un estado latente reversible sin eliminarlo.
+        archive_name_help: Nombre del sandbox (sin el prefijo).
+        archive_requires_yes: Archivar un sandbox es una transición de estado. Vuelve
+          a ejecutar 'aeat config profile sandbox archive %{name} --yes' para confirmar.
+        archive_restorable_info: El sandbox ahora está latente; ejecuta 'aeat config
+          profile sandbox restore %{name}' para recuperarlo.
+        archive_yes_help: Confirma el archivado.
         create_active_info: El sandbox es ahora el perfil ACTIVO; todos los comandos
           se ejecutan sobre él hasta que cambie de perfil o lo descarte.
         create_from_profile_help: Copia los datos de un perfil existente al sandbox
@@ -2908,8 +2926,8 @@ cli:
           otro perfil y vuelve a ejecutar 'aeat config profile sandbox prune --yes'
           para descartarlo.
         prune_yes_help: Confirma el descarte de todos los sandboxes.
-        restore_help: 'Recupera un sandbox archivado y lo devuelve a estado activo.'
-        restore_name_help: 'Nombre del sandbox (sin el prefijo).'
+        restore_help: Recupera un sandbox archivado y lo devuelve a estado activo.
+        restore_name_help: Nombre del sandbox (sin el prefijo).
         restore_not_archived: '%{name} no está archivado; no hay nada que recuperar.'
         source_not_found: No existe ningún perfil activo llamado %{name} para copiar
           al sandbox.

@@ -17,7 +17,14 @@ from cryptography.hazmat.primitives.asymmetric import rsa
 from cryptography.hazmat.primitives.serialization import pkcs12
 from cryptography.x509.oid import NameOID
 
-from .....adapters.persistence.storage import activate_master_key_provider, get_master_key_provider
+from .....adapters.persistence.storage import (
+    EncryptedBlobStore,
+    EphemeralMasterKeyProvider,
+    SecretStore,
+    activate_master_key_provider,
+    get_master_key_provider,
+    override_secret_store,
+)
 from .....core.config import override_settings
 from .....tests.cli_runner import invoke_typer_app
 from .....tests.secure_sql import isolated_profile_storage_root
@@ -308,3 +315,127 @@ def test_certificate_check_with_no_registered_sources_reports_none(tmp_path: Pat
 
         assert result.exit_code == 0, f"check failed: {result.output}"
         assert "sources\t<none>" in result.output
+
+
+# ── certificate secret set/remove (per-source secret backend, #591 slice) ───
+
+
+@pytest.fixture
+def _isolated_secret_store(tmp_path: Path):
+    """Inject a deterministic :class:`SecretStore` for the secret-verb CLI tests.
+
+    ``get_secret_store()`` is a process-wide singleton; overriding it for
+    the duration of each test keeps the CLI verbs' secret writes isolated
+    from any other test in the same pytest process.
+    """
+    provider = EphemeralMasterKeyProvider()
+    blob_store = EncryptedBlobStore(root_dir=tmp_path / "cli-secret-blobs", master_key_provider=provider)
+    store = SecretStore(store_dir=tmp_path / "cli-secrets", blob_store=blob_store, master_key_provider=provider)
+    override_secret_store(store)
+    try:
+        yield store
+    finally:
+        override_secret_store(None)
+
+
+def test_certificate_secret_set_requires_a_registered_source(tmp_path: Path, _isolated_secret_store) -> None:
+    with isolated_profile_storage_root(tmp_path=tmp_path):
+        _create_profile()
+
+        with activate_master_key_provider(get_master_key_provider()):
+            result = invoke_typer_app(
+                config_app,
+                ["auth", "certificate", "secret", "set", "--name", "ghost", "--secret", _CERT_SECRET],
+            )
+
+        assert result.exit_code != 0
+        assert isinstance(result.exception, CliRefusedBoundaryError), (
+            f"expected CliRefusedBoundaryError, got {type(result.exception).__name__}: {result.exception}"
+        )
+
+
+def test_certificate_secret_set_then_remove_roundtrip(tmp_path: Path, _isolated_secret_store) -> None:
+    """Setting a secret, rotating it, then removing it never leaks the secret value in output."""
+    with isolated_profile_storage_root(tmp_path=tmp_path):
+        _create_profile()
+        cert_path = tmp_path / "personal.p12"
+        cert_path.write_bytes(b"placeholder cert")
+
+        with activate_master_key_provider(get_master_key_provider()):
+            invoke_typer_app(
+                root_app,
+                ["config", "auth", "certificate", "register", "--name", "personal", "--file", str(cert_path)],
+            )
+            first_set = invoke_typer_app(
+                root_app,
+                ["config", "auth", "certificate", "secret", "set", "--name", "personal", "--secret", _CERT_SECRET],
+            )
+            second_set = invoke_typer_app(
+                root_app,
+                [
+                    "config",
+                    "auth",
+                    "certificate",
+                    "secret",
+                    "set",
+                    "--name",
+                    "personal",
+                    "--secret",
+                    "a-rotated-passphrase",
+                ],
+            )
+            removed = invoke_typer_app(
+                root_app,
+                ["config", "auth", "certificate", "secret", "remove", "--name", "personal"],
+            )
+            removed_again = invoke_typer_app(
+                root_app,
+                ["config", "auth", "certificate", "secret", "remove", "--name", "personal"],
+            )
+
+        assert first_set.exit_code == 0, f"secret set failed: {first_set.output}"
+        assert "rotated\tFalse" in first_set.output
+        assert _CERT_SECRET not in first_set.output
+
+        assert second_set.exit_code == 0, f"secret rotate failed: {second_set.output}"
+        assert "rotated\tTrue" in second_set.output
+        assert "a-rotated-passphrase" not in second_set.output
+
+        assert removed.exit_code == 0, f"secret remove failed: {removed.output}"
+        assert "removed\tTrue" in removed.output
+
+        assert removed_again.exit_code == 0, f"repeat secret remove must not error: {removed_again.output}"
+        assert "removed\tFalse" in removed_again.output
+
+
+def test_certificate_secret_set_unknown_backend_refuses(tmp_path: Path, _isolated_secret_store) -> None:
+    with isolated_profile_storage_root(tmp_path=tmp_path):
+        _create_profile()
+        cert_path = tmp_path / "personal.p12"
+        cert_path.write_bytes(b"placeholder cert")
+
+        with activate_master_key_provider(get_master_key_provider()):
+            invoke_typer_app(
+                root_app,
+                ["config", "auth", "certificate", "register", "--name", "personal", "--file", str(cert_path)],
+            )
+            result = invoke_typer_app(
+                config_app,
+                [
+                    "auth",
+                    "certificate",
+                    "secret",
+                    "set",
+                    "--name",
+                    "personal",
+                    "--secret",
+                    _CERT_SECRET,
+                    "--backend",
+                    "not-a-real-backend",
+                ],
+            )
+
+        assert result.exit_code != 0
+        assert isinstance(result.exception, CliRefusedBoundaryError), (
+            f"expected CliRefusedBoundaryError, got {type(result.exception).__name__}: {result.exception}"
+        )

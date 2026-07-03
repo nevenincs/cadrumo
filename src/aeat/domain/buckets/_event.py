@@ -134,6 +134,9 @@ class BucketEventType(StrEnum):
     AUTH_CERTIFICATE_SOURCE_REGISTERED = "auth.certificate_source.registered"
     AUTH_CERTIFICATE_SOURCE_SELECTED = "auth.certificate_source.selected"
     AUTH_CERTIFICATE_SOURCE_REMOVED = "auth.certificate_source.removed"
+    AUTH_CERTIFICATE_SOURCE_SECRET_SET = "auth.certificate_source.secret_set"  # noqa: S105 - event-type label, not a secret
+    AUTH_CERTIFICATE_SOURCE_SECRET_ROTATED = "auth.certificate_source.secret_rotated"  # noqa: S105 - event-type label
+    AUTH_CERTIFICATE_SOURCE_SECRET_REMOVED = "auth.certificate_source.secret_removed"  # noqa: S105 - event-type label
 
     # ledger transaction lifecycle
     LEDGER_TRANSACTION_CREATED = "ledger.transaction.created"
