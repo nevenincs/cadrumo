@@ -108,6 +108,7 @@ from ._result_disposition import (
 )
 from ._tax_domain import TaxDomain
 from ._toml import freeze_toml, freeze_toml_value, parse_toml_text, read_toml, to_str_keyed_dict
+from .secure_object_write import DEFAULT_WRITE_PROVENANCE, SecureObjectWrite
 
 if TYPE_CHECKING:
     # Static bindings for the lazily-exposed surface below. At runtime these
@@ -128,6 +129,7 @@ __all__: list[str] = [
     "ACTIONABLE_POST_FILING_EVENT_KINDS",
     "ANTHROPIC_EXTRA",
     "BROWSER_EXTRA",
+    "DEFAULT_WRITE_PROVENANCE",
     "GOOGLE_EXTRA",
     "IBAN_SHAPE_RE",
     "NON_REGISTRY_MODELOS",
@@ -155,6 +157,7 @@ __all__: list[str] = [
     "RegistryPeriodCode",
     "RescateType",
     "ResultDisposition",
+    "SecureObjectWrite",
     "ServiceCapability",
     "StandardPeriodCode",
     "TaxDomain",

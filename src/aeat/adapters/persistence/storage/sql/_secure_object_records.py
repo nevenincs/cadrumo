@@ -14,8 +14,6 @@ from pydantic import BaseModel, Field
 from .....core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from .....core.classification import SensitivityClass
 
-DEFAULT_WRITE_PROVENANCE = "secure-object-repository"
-
 
 class SecureObjectRecord(BaseModel):
     """One decrypted sensitive object loaded from the SQL backend."""
@@ -40,22 +38,6 @@ class SecureObjectMetadata(BaseModel):
     schema_version: int = Field(ge=1)
     written_at: datetime
     byte_length: int = Field(ge=0)
-
-
-class SecureObjectWrite(BaseModel):
-    """One encrypted secure-object upsert prepared for a unit of work."""
-
-    model_config = _STRICT_FROZEN
-
-    namespace: str = Field(min_length=1)
-    object_key: str = Field(min_length=1)
-    classification: SensitivityClass
-    schema_version: int = Field(ge=1)
-    written_at: datetime
-    payload: bytes = Field(min_length=1)
-    write_provenance: str = Field(default=DEFAULT_WRITE_PROVENANCE, min_length=1, max_length=255)
-    source_event_id: str | None = Field(default=None, min_length=1, max_length=128)
-    expected_revision_id: str | None = Field(default=None, min_length=64, max_length=64)
 
 
 class SecureObjectDeletion(BaseModel):
