@@ -406,10 +406,17 @@ def _tariff_tables(
                 ),
             )
         else:
-            scalar = _resolve_scalar(definition, today)
             raw_dt = definition.data_type
             if raw_dt not in ("decimal", "money", "integer", "ratio"):
+                # Non-scalar parameter types that reach the tariff-anchor loop
+                # without being a ``bracket_table`` (e.g. ``keyed_bracket_table`` --
+                # the Modelo 303 módulos-IVA coefficients keyed by epígrafe:módulo)
+                # cannot be materialised as a single scalar tariff value. Skip them
+                # BEFORE scalar resolution: ``_resolve_scalar`` looks for dated
+                # scalar ``values`` a keyed_bracket_table does not carry, and would
+                # otherwise crash the whole workbook export.
                 continue
+            scalar = _resolve_scalar(definition, today)
             scalar_data_type: Literal["decimal", "money", "integer", "ratio"] = raw_dt
             tables.append(
                 SheetTariffTable(
