@@ -1009,6 +1009,26 @@ class CertificateSourceCheckPayload(OutputSchema):
     has_warnings: bool = False
 
 
+@register_schema("config.auth.certificate.secret.set")
+class CertificateSourceSecretMutationPayload(OutputSchema):
+    """JSON envelope for ``certificate secret set`` / ``certificate secret remove``.
+
+    Mirrors :class:`application.auth.CertificateSourceSecretMutationResult`.
+    Never carries the secret value itself — only whether one is now
+    registered, which backend holds it, and whether the call rotated an
+    existing secret.
+    """
+
+    name: str
+    backend: str = ""
+    has_secret: bool = False
+    rotated: bool = False
+    removed: bool = False
+
+
+register_schema("config.auth.certificate.secret.remove")(CertificateSourceSecretMutationPayload)
+
+
 # ---------------------------------------------------------------------------
 # Auth diagnostics verb result schemas
 # ---------------------------------------------------------------------------

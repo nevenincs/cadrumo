@@ -5,7 +5,13 @@ Register, enumerate, select, remove, and check the expiry/rotation
 health of named PKCS#12 certificate sources — the multi-cert slice of
 GitHub issue #591 (a gestor managing several taxpayers registers one
 certificate per entity and selects the active one, rather than
-re-running ``auth configure --file`` on every switch).
+re-running ``auth configure --file`` on every switch). ``secret`` is the
+per-source passphrase slice: instead of one global, env-only
+``AEAT_CERTIFICATE_PASSWORD_SECRET`` shared by whichever source happens
+to be active, ``certificate secret set`` binds a passphrase to one
+named source through a typed
+:class:`~application.auth.CertificateSecretBackend` (encrypted
+secure-storage by default; an OS keyring backend is also available).
 """
 
 from __future__ import annotations
@@ -339,6 +345,200 @@ def certificate_check(
         result=payload,
         lines=lines,
         notices=notices,
+    )
+
+
+secret_app = typer.Typer(
+    name="secret",
+    help=tr(
+        "cli.config.auth.certificate.secret.help",
+        default="Manage the passphrase bound to a named certificate source",
+    ),
+    no_args_is_help=True,
+)
+certificate_app.add_typer(secret_app)
+
+
+@secret_app.command(
+    "set",
+    help=tr(
+        "cli.config.auth.certificate.secret.set_help",
+        default="Set (or rotate) the passphrase for a registered certificate source",
+    ),
+)
+def certificate_secret_set(
+    ctx: typer.Context,
+    name: str = typer.Option(
+        ...,
+        "--name",
+        help=tr(
+            "cli.config.auth.certificate.secret.set.name_help",
+            default="Registered certificate source the passphrase is bound to",
+        ),
+    ),
+    secret: str = typer.Option(
+        ...,
+        "--secret",
+        prompt=True,
+        hide_input=True,
+        confirmation_prompt=False,
+        help=tr(
+            "cli.config.auth.certificate.secret.set.secret_help",
+            default="The PKCS#12 passphrase (prompted, hidden, never echoed)",
+        ),
+    ),
+    backend: str = typer.Option(
+        "secure_storage",
+        "--backend",
+        help=tr(
+            "cli.config.auth.certificate.secret.set.backend_help",
+            default="Secret backend: secure_storage (default, encrypted at rest) or keyring (OS keychain)",
+        ),
+    ),
+    output_language: OutputLanguage | None = typer.Option(
+        None,
+        "--output-language",
+        "--language",
+        help=tr("cli.config.auth.output_language_help"),
+    ),
+) -> None:
+    """Bind (or rotate) the passphrase for the named certificate source."""
+    _activate_subcommand_output_language(ctx, output_language)
+    from pydantic import SecretStr
+
+    from ....application.auth import (
+        AuthConfigureDanglingActiveProfileError,
+        AuthConfigureNoActiveBucketError,
+        CertificateSecretBackendKind,
+        CertificateSecretBackendUnavailableError,
+        CertificateSourceNotFoundError,
+        set_operator_certificate_source_secret,
+    )
+    from ....core.errors import resolve_error_message
+
+    try:
+        backend_kind = CertificateSecretBackendKind(backend)
+    except ValueError as exc:
+        raise _CliRefusedBoundaryError(
+            f"unknown certificate secret backend {backend!r}; "
+            f"accepted values: {', '.join(kind.value for kind in CertificateSecretBackendKind)}",
+        ) from exc
+
+    try:
+        result = set_operator_certificate_source_secret(
+            name=name,
+            secret=SecretStr(secret),
+            backend_kind=backend_kind,
+        )
+    except AuthConfigureNoActiveBucketError as exc:
+        raise _CliRefusedBoundaryError(
+            translated_message="cli.config.auth.no_active_bucket",
+        ) from exc
+    except AuthConfigureDanglingActiveProfileError as exc:
+        raise _CliRefusedBoundaryError(str(exc)) from exc
+    except CertificateSourceNotFoundError as exc:
+        raise _CliRefusedBoundaryError(resolve_error_message(exc)) from exc
+    except CertificateSecretBackendUnavailableError as exc:
+        raise _CliRefusedBoundaryError(str(exc)) from exc
+
+    from .._config_payloads import CertificateSourceSecretMutationPayload
+
+    payload = CertificateSourceSecretMutationPayload(
+        name=result.name,
+        backend=result.backend,
+        has_secret=result.has_secret,
+        rotated=result.rotated,
+    )
+    _emit_envelope(
+        ctx,
+        command="config.auth.certificate.secret.set",
+        result=payload,
+        lines=(
+            f"name\t{result.name}",
+            f"backend\t{result.backend}",
+            f"rotated\t{result.rotated}",
+        ),
+    )
+
+
+@secret_app.command(
+    "remove",
+    help=tr(
+        "cli.config.auth.certificate.secret.remove_help",
+        default="Remove the passphrase bound to a registered certificate source",
+    ),
+)
+def certificate_secret_remove(
+    ctx: typer.Context,
+    name: str = typer.Option(
+        ...,
+        "--name",
+        help=tr(
+            "cli.config.auth.certificate.secret.remove.name_help",
+            default="Registered certificate source whose passphrase should be removed",
+        ),
+    ),
+    backend: str = typer.Option(
+        "secure_storage",
+        "--backend",
+        help=tr(
+            "cli.config.auth.certificate.secret.set.backend_help",
+            default="Secret backend: secure_storage (default, encrypted at rest) or keyring (OS keychain)",
+        ),
+    ),
+    output_language: OutputLanguage | None = typer.Option(
+        None,
+        "--output-language",
+        "--language",
+        help=tr("cli.config.auth.output_language_help"),
+    ),
+) -> None:
+    """Remove the passphrase bound to the named certificate source. A no-op when unset."""
+    _activate_subcommand_output_language(ctx, output_language)
+    from ....application.auth import (
+        AuthConfigureDanglingActiveProfileError,
+        AuthConfigureNoActiveBucketError,
+        CertificateSecretBackendKind,
+        CertificateSecretBackendUnavailableError,
+        remove_operator_certificate_source_secret,
+    )
+
+    try:
+        backend_kind = CertificateSecretBackendKind(backend)
+    except ValueError as exc:
+        raise _CliRefusedBoundaryError(
+            f"unknown certificate secret backend {backend!r}; "
+            f"accepted values: {', '.join(kind.value for kind in CertificateSecretBackendKind)}",
+        ) from exc
+
+    try:
+        result = remove_operator_certificate_source_secret(name=name, backend_kind=backend_kind)
+    except AuthConfigureNoActiveBucketError as exc:
+        raise _CliRefusedBoundaryError(
+            translated_message="cli.config.auth.no_active_bucket",
+        ) from exc
+    except AuthConfigureDanglingActiveProfileError as exc:
+        raise _CliRefusedBoundaryError(str(exc)) from exc
+    except CertificateSecretBackendUnavailableError as exc:
+        raise _CliRefusedBoundaryError(str(exc)) from exc
+
+    from .._config_payloads import CertificateSourceSecretMutationPayload
+
+    payload = CertificateSourceSecretMutationPayload(
+        name=result.name,
+        backend=result.backend,
+        has_secret=result.has_secret,
+        removed=result.removed,
+    )
+    _emit_envelope(
+        ctx,
+        command="config.auth.certificate.secret.remove",
+        result=payload,
+        lines=(
+            f"name\t{result.name}",
+            f"backend\t{result.backend}",
+            f"removed\t{result.removed}",
+        ),
     )
 
 
