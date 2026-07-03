@@ -21,6 +21,7 @@ from typing import Annotated
 import typer
 from pydantic import ValidationError
 
+from ...adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ...application.ledger import (
     LedgerTransactionResultPayload,
     LLMProvider,
@@ -45,7 +46,6 @@ from ...domain.iva import (
 from ...domain.transactions import (
     BusinessClassification,
     Transaction,
-    TransactionCatalogueRepository,
     TransactionDirection,
     TransactionIdPrefixError,
     TransactionValidationError,

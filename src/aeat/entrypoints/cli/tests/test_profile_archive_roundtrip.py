@@ -146,12 +146,12 @@ def test_archive_export_import_recovery_wrap_roundtrip(tmp_path: Path) -> None:
     assert archive_path.is_file()
 
     # Load originals while still in source storage context.
+    from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
     from ....adapters.persistence.storage.master_key import (
         activate_master_key_provider,
         get_master_key_provider,
     )
     from ....core.config import override_settings
-    from ....domain.transactions import TransactionCatalogueRepository
 
     with (
         override_settings(aeat_active_profile=source_bucket_id),

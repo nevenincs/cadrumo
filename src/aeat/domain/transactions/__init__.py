@@ -20,14 +20,17 @@ through typed records such as :class:`ClassificationHistoryEntry`,
 :func:`link_invoice` return fresh catalogues instead of mutating callers'
 instances.
 
-Persistence is exposed lazily as :class:`TransactionCatalogueRepository` so
-importing the facade does not eagerly load the SQL storage stack. The
-repository stores each transaction under the bucket-scoped transaction
-namespace as ``FINANCIAL``
-:class:`core.classification.SensitivityClass` rows wrapped in
+Persistence is served by the read-side
+:class:`TransactionCatalogueRepositoryProtocol` port; the concrete encrypted
+implementation lives in the persistence adapter
+:class:`adapters.persistence.profile.transactions.TransactionCatalogueRepository`.
+It stores each transaction under the bucket-scoped transaction namespace as
+``FINANCIAL`` :class:`core.classification.SensitivityClass` rows wrapped in
 :class:`adapters.persistence.storage.Envelope` through
 :class:`adapters.persistence.storage.SecureObjectRepository`; callers should
-not write plaintext catalogues or reach into private modules.
+not write plaintext catalogues or reach into private modules. The pure port
+surface (:class:`ImportSummary`, the key-derivation helpers, and the namespace
+constant) remains exposed lazily here.
 
 LLM-facing :class:`LLMClassifier`, :class:`LLMSplitProposer`,
 :class:`PromptSpec`, :class:`LedgerClassificationRule`, and
@@ -159,7 +162,6 @@ if TYPE_CHECKING:
     from ._repository import (
         TX_BUCKET_NAMESPACE,
         ImportSummary,
-        TransactionCatalogueRepository,
         transaction_index_object_key,
         transaction_object_key,
     )
@@ -169,7 +171,6 @@ _LAZY_REPOSITORY_NAMES = frozenset(
     {
         "ImportSummary",
         "TX_BUCKET_NAMESPACE",
-        "TransactionCatalogueRepository",
         "transaction_index_object_key",
         "transaction_object_key",
     },
@@ -177,10 +178,13 @@ _LAZY_REPOSITORY_NAMES = frozenset(
 
 
 def __getattr__(name: str):
-    """Lazy-import the persistence repository to avoid eagerly loading SQLAlchemy and Alembic.
+    """Lazy-import the pure persistence surface to defer the ``_repository`` module load.
 
-    The plugin setup of those packages logs to stderr, which breaks JSON-pipe-safety
-    contracts in CLI test scope.
+    The concrete :class:`TransactionCatalogueRepository` now lives in the
+    persistence adapter
+    :class:`~aeat.adapters.persistence.profile.transactions.TransactionCatalogueRepository`;
+    only the pure port surface (``ImportSummary``, the key-derivation helpers,
+    and the namespace constant) is resolved here.
     """
     if name in _LAZY_REPOSITORY_NAMES:
         from . import _repository
@@ -231,7 +235,6 @@ __all__ = [
     "Transaction",
     "TransactionCatalogue",
     "TransactionCatalogueError",
-    "TransactionCatalogueRepository",
     "TransactionCatalogueRepositoryProtocol",
     "TransactionDirection",
     "TransactionEditLineageEntry",

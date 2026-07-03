@@ -22,6 +22,7 @@ if TYPE_CHECKING:
     pass
 
 from ...adapters.persistence.profile.buckets import BucketEventHistoryRepository
+from ...adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ...domain.buckets import BucketEvent, BucketEventHistoryRepositoryProtocol, BucketEventType
 from ...domain.modelos import (
     CalculationRevisionCatalogueRepositoryProtocol,
@@ -36,7 +37,6 @@ from ...domain.transactions import (
     SplitRole,
     Transaction,
     TransactionCatalogue,
-    TransactionCatalogueRepository,
     TransactionCatalogueRepositoryProtocol,
     TransactionLifecycleLineageEntry,
     TransactionLifecycleState,

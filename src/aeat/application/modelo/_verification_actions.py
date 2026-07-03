@@ -47,6 +47,7 @@ from ...adapters.persistence.profile.modelos_filing import ModeloRecordCatalogue
 from ...adapters.persistence.profile.modelos_verification_reports import VerificationReportCatalogueRepository
 from ...adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ...adapters.persistence.profile.participation_index import TransactionParticipationIndexRepository
+from ...adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ...core import Modelo
 from ...core.config import Settings
 from ...core.i18n import tr
@@ -92,7 +93,6 @@ from ...domain.modelos import (
     upsert_verification_report,
     upsert_work_unit,
 )
-from ...domain.transactions import TransactionCatalogueRepository
 from ..aggregation import (
     MISSING_DEDUCTIBLE_VAT_EVIDENCE_SOURCE_KIND,
     CalculationSourceDiagnostic,

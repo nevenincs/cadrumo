@@ -15,16 +15,13 @@ import typer
 from pydantic import ValidationError
 from pydantic_core import ErrorDetails
 
+from ...adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ...application.ledger import list_manual_transactions, resolve_transaction_id
 from ...core.i18n import tr
 from ...domain.categories import SpendingCategory
 from ...domain.contribuyente import FiscalResidency
 from ...domain.deadlines import IrpfSpecialRegime
-from ...domain.transactions import (
-    TransactionCatalogueRepository,
-    TransactionIdPrefixError,
-    TransactionValidationError,
-)
+from ...domain.transactions import TransactionIdPrefixError, TransactionValidationError
 from ._common import _bad, parse_decimal_amount, parse_optional_decimal_amount
 
 

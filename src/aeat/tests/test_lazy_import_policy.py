@@ -194,8 +194,6 @@ _ALLOWLIST: dict[UnsanctionedClass, frozenset[ImportEdge]] = {
             ImportEdge("domain.filing._complementaria_repository", "adapters.persistence.storage"),
             ImportEdge("domain.filing._runtime_repository", "adapters.persistence.storage"),
             ImportEdge("domain.modelos._runtime_repository", "adapters.persistence.storage"),
-            ImportEdge("domain.transactions._repository", "adapters.persistence.storage"),
-            ImportEdge("domain.transactions._repository", "adapters.persistence.storage.crypto"),
         }
     ),
     UnsanctionedClass.DOMAIN_CYCLE_BREAK: frozenset(
@@ -237,8 +235,6 @@ _ALLOWLIST: dict[UnsanctionedClass, frozenset[ImportEdge]] = {
             ImportEdge("domain.iva._invoice_classification", "domain.calculations.registry"),
             ImportEdge("domain.iva._invoice_classification", "domain.invoices"),
             ImportEdge("domain.iva._recargo_equivalencia", "domain.calculations.registry"),
-            ImportEdge("domain.transactions._repository", "core.config"),
-            ImportEdge("domain.transactions._repository", "core.hashing"),
             ImportEdge("domain.usage_ratios._service", "core.config"),
             ImportEdge("domain.usage_ratios._service", "core.locks"),
             ImportEdge("domain.user_profile._registry_contract", "domain.calculations.registry"),
@@ -255,6 +251,11 @@ _ALLOWLIST: dict[UnsanctionedClass, frozenset[ImportEdge]] = {
             # storage-substrate import from the persistence adapter
             # (was domain.modelos._calculation_repository).
             ImportEdge("adapters.persistence.profile.modelos_calculation", "adapters.persistence.storage"),
+            # transactions catalogue repository ports-inversion (W02.P07.S09):
+            # the concrete TransactionCatalogueRepository defers the storage-substrate
+            # imports from the persistence adapter (was domain.transactions._repository).
+            ImportEdge("adapters.persistence.profile.transactions", "adapters.persistence.storage"),
+            ImportEdge("adapters.persistence.profile.transactions", "adapters.persistence.storage.crypto"),
             ImportEdge("adapters.inbound.justificante._parser", "core.config"),
             ImportEdge(
                 "adapters.inbound.justificante._parsers", "adapters.inbound.justificante._parsers._pdfplumber_backend"
@@ -439,6 +440,13 @@ _ALLOWLIST: dict[UnsanctionedClass, frozenset[ImportEdge]] = {
             ImportEdge("application.modelo._iva_wallet_seed", "adapters.persistence.profile.modelos_calculation"),
             ImportEdge("application.modelo._reconcile", "adapters.persistence.profile.modelos_calculation"),
             ImportEdge("application.user_profile._bundle", "adapters.persistence.profile.modelos_calculation"),
+            # transactions catalogue repository ports-inversion (W02.P07.S09): the
+            # concrete TransactionCatalogueRepository moved to the persistence adapter,
+            # so these deferred consumers now defer-import it from the adapter home.
+            ImportEdge("application.filing._review", "adapters.persistence.profile.transactions"),
+            ImportEdge("application.review._adapters", "adapters.persistence.profile.transactions"),
+            ImportEdge("application.user_profile._bundle", "adapters.persistence.profile.transactions"),
+            ImportEdge("application.workflow._models", "adapters.persistence.profile.transactions"),
             ImportEdge("agent", "agent._skill_metadata"),
             ImportEdge("application.aggregation._source_profile", "application.modelo"),
             ImportEdge("application.aggregation._source_profile", "core.resources"),
@@ -525,7 +533,6 @@ _ALLOWLIST: dict[UnsanctionedClass, frozenset[ImportEdge]] = {
             ImportEdge("application.filing._complementaria", "domain.filing"),
             ImportEdge("application.filing._import", "application.filing"),
             ImportEdge("application.filing._import", "domain.submission"),
-            ImportEdge("application.filing._review", "domain.transactions"),
             ImportEdge("application.filing._runtime_repository", "adapters.persistence.storage"),
             ImportEdge("application.filing.runtime", "application.wizard"),
             ImportEdge("application.filing.runtime", "application.workflow"),
@@ -655,7 +662,6 @@ _ALLOWLIST: dict[UnsanctionedClass, frozenset[ImportEdge]] = {
             ImportEdge("application.repair_integrity", "adapters.persistence.storage"),
             ImportEdge("application.review._adapters", "adapters.persistence.profile.invoices"),
             ImportEdge("application.review._adapters", "domain.filing"),
-            ImportEdge("application.review._adapters", "domain.transactions"),
             ImportEdge("application.review._operator", "core"),
             ImportEdge("application.review._operator", "core.config"),
             ImportEdge("application.state_projection", "application"),
@@ -787,9 +793,9 @@ _SITE_CEILINGS: dict[UnsanctionedClass, int] = {
     UnsanctionedClass.NAMED_CYCLE_BREAK: 1,
     UnsanctionedClass.PORTS_INVERSION_PENDING: 36,
     UnsanctionedClass.DOMAIN_CYCLE_BREAK: 51,
-    UnsanctionedClass.ADAPTER_INTERNAL_DEFERRAL: 162,  # +3: modelos_calculation storage deferral sites (W04.P09.S15)
+    UnsanctionedClass.ADAPTER_INTERNAL_DEFERRAL: 170,  # +8: transactions storage deferral sites (W02.P07.S09)
     UnsanctionedClass.CORE_INTERNAL_DEFERRAL: 35,
-    UnsanctionedClass.APPLICATION_DEFERRAL: 500,  # +4: modelos_calculation deferral sites (W04.P09.S15)
+    UnsanctionedClass.APPLICATION_DEFERRAL: 502,  # +2: transactions adapter deferral sites (W02.P07.S09)
 }
 
 # Ceiling on the total number of allowlisted edges. Editing the allowlist to add

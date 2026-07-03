@@ -7,15 +7,11 @@ from decimal import Decimal
 import pytest
 
 from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
+from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ....adapters.persistence.storage.sql import SecureObjectRepository
 from ....domain.categories import SpendingCategory
 from ....domain.iva import IvaCategory
-from ....domain.transactions import (
-    BusinessClassification,
-    TransactionCatalogueRepository,
-    TransactionLifecycleState,
-    TransactionValidationError,
-)
+from ....domain.transactions import BusinessClassification, TransactionLifecycleState, TransactionValidationError
 from .. import (
     LLMProvider,
     apply_evidence_classification,

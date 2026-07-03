@@ -9,6 +9,7 @@ from pathlib import Path
 import pytest
 
 from ...adapters.persistence.profile.invoices import InvoiceCatalogueRepository
+from ...adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ...tests.secure_sql import isolated_runtime_profile
 from ..invoices import (
     Invoice,
@@ -24,7 +25,6 @@ from ..transactions import (
     SourceFormat,
     Transaction,
     TransactionCatalogue,
-    TransactionCatalogueRepository,
     TransactionDirection,
 )
 

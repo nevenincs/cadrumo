@@ -66,7 +66,7 @@ from aeat.core.resources import resources
 from aeat.adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from aeat.adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from aeat.adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
-from aeat.domain.transactions import TransactionCatalogueRepository
+from aeat.adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from aeat.domain.user_profile import UserProfileFact, UserProfileRecord
 from aeat.tests.secure_sql import isolated_runtime_profile
 from aeat.application.user_profile import UserProfileLifecycleRepository

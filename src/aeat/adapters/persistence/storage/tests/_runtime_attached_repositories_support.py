@@ -20,6 +20,7 @@ from .....adapters.persistence.profile.modelos_calculation import CalculationRev
 from .....adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
 from .....adapters.persistence.profile.modelos_verification_reports import VerificationReportCatalogueRepository
 from .....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
+from .....adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from .....application.auth import ApoderadoService, list_auth_diagnostics
 from .....application.calculations import (
     CalculationObservationRepository,
@@ -121,7 +122,6 @@ from .....domain.transactions import (
     SourceFormat,
     Transaction,
     TransactionCatalogue,
-    TransactionCatalogueRepository,
     TransactionDirection,
 )
 from .....domain.usage_ratios import UsageRatioProfile

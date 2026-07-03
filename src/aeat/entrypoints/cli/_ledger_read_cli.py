@@ -21,6 +21,7 @@ from typing import Any
 import typer
 
 from ...adapters.persistence.profile.buckets import BucketEventHistoryRepository
+from ...adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ...application.export import ExportSerializationFormat
 from ...application.ledger import (
     LedgerExportCommand,
@@ -45,7 +46,7 @@ from ...domain.categories import (
     SpendingCategory,
     SpendingCategoryFamily,
 )
-from ...domain.transactions import Transaction, TransactionCatalogueRepository, ledger_irpf_category_catalogue
+from ...domain.transactions import Transaction, ledger_irpf_category_catalogue
 from ._common import _bad, _canonical_period, _emit_envelope, _optional_canonical_period, _state, _tx_repo
 from ._ledger_list import (
     LLM_DECISION_EVENT_TYPES,

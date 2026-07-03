@@ -78,7 +78,7 @@ def serialize_profile_bundle(
     from ...adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
     from ...adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
     from ...adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
-    from ...domain.transactions import TransactionCatalogueRepository
+    from ...adapters.persistence.profile.transactions import TransactionCatalogueRepository
     from ...domain.user_profile import UserProfilePortableExport
     from ._orchestration import build_lifecycle_service
 
@@ -291,11 +291,8 @@ def _import_work_units(bundle: UserProfilePortableExport, *, target_bucket_id: s
 
 
 def _import_ledger_transactions(bundle: UserProfilePortableExport, *, target_bucket_id: str) -> None:
-    from ...domain.transactions import (
-        Transaction,
-        TransactionCatalogue,
-        TransactionCatalogueRepository,
-    )
+    from ...adapters.persistence.profile.transactions import TransactionCatalogueRepository
+    from ...domain.transactions import Transaction, TransactionCatalogue
 
     if not bundle.ledger_transactions:
         return

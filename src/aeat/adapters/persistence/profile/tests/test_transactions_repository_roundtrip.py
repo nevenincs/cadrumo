@@ -20,10 +20,7 @@ from pathlib import Path
 import pytest
 from pydantic import ValidationError
 
-from ....adapters.persistence.storage import SensitivityClass
-from ....adapters.persistence.storage.errors import ClassificationError, EnvelopeVersionError
-from ....tests.secure_sql import isolated_runtime_profile
-from .. import (
+from .....domain.transactions import (
     BusinessClassification,
     RawProvenance,
     RawTransaction,
@@ -33,9 +30,12 @@ from .. import (
     TransactionCatalogue,
     TransactionDirection,
 )
-from .._repository import TransactionCatalogueRepository
+from .....tests.secure_sql import isolated_runtime_profile
+from ...storage import SensitivityClass
+from ...storage.errors import ClassificationError, EnvelopeVersionError
+from ..transactions import TransactionCatalogueRepository
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 
 _BUCKET_ID = "33333333-3333-4333-8333-333333333333"
 
@@ -147,7 +147,7 @@ def test_transaction_catalogue_dropped_business_pct_surfaces_at_load(
 
     import json as _json
 
-    from .._repository import _TX_CATALOGUE_VERSION, TX_BUCKET_NAMESPACE, transaction_object_key
+    from ..transactions import _TX_CATALOGUE_VERSION, TX_BUCKET_NAMESPACE, transaction_object_key
 
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
         repo = TransactionCatalogueRepository(bucket_id=profile.bucket_id)
@@ -204,7 +204,7 @@ def test_transaction_catalogue_inner_classification_mismatch_is_structured(
 
     import json as _json
 
-    from .._repository import _TX_CATALOGUE_VERSION, TX_BUCKET_NAMESPACE, transaction_object_key
+    from ..transactions import _TX_CATALOGUE_VERSION, TX_BUCKET_NAMESPACE, transaction_object_key
 
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
         repo = TransactionCatalogueRepository(bucket_id=profile.bucket_id)
@@ -256,7 +256,7 @@ def test_transaction_catalogue_inner_schema_version_mismatch_is_structured(
 
     import json as _json
 
-    from .._repository import _TX_CATALOGUE_VERSION, TX_BUCKET_NAMESPACE, transaction_object_key
+    from ..transactions import _TX_CATALOGUE_VERSION, TX_BUCKET_NAMESPACE, transaction_object_key
 
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
         repo = TransactionCatalogueRepository(bucket_id=profile.bucket_id)
@@ -346,7 +346,7 @@ def test_transaction_catalogue_rejects_missing_source_jurisdiction_key(
 
     import json as _json
 
-    from .._repository import _TX_CATALOGUE_VERSION, TX_BUCKET_NAMESPACE, transaction_object_key
+    from ..transactions import _TX_CATALOGUE_VERSION, TX_BUCKET_NAMESPACE, transaction_object_key
 
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
         repo = TransactionCatalogueRepository(bucket_id=profile.bucket_id)
@@ -437,7 +437,7 @@ def test_transaction_catalogue_rejects_missing_group_label_key(
 
     import json as _json
 
-    from .._repository import _TX_CATALOGUE_VERSION, TX_BUCKET_NAMESPACE, transaction_object_key
+    from ..transactions import _TX_CATALOGUE_VERSION, TX_BUCKET_NAMESPACE, transaction_object_key
 
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
         repo = TransactionCatalogueRepository(bucket_id=profile.bucket_id)
@@ -581,7 +581,7 @@ def test_transaction_catalogue_rejects_missing_created_at_key(
 
     import json as _json
 
-    from .._repository import _TX_CATALOGUE_VERSION, TX_BUCKET_NAMESPACE, transaction_object_key
+    from ..transactions import _TX_CATALOGUE_VERSION, TX_BUCKET_NAMESPACE, transaction_object_key
 
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
         repo = TransactionCatalogueRepository(bucket_id=profile.bucket_id)
@@ -646,7 +646,7 @@ def test_transaction_catalogue_negative_amount_payload_rejected_at_load(
 
     import json as _json
 
-    from .._repository import _TX_CATALOGUE_VERSION, TX_BUCKET_NAMESPACE, transaction_object_key
+    from ..transactions import _TX_CATALOGUE_VERSION, TX_BUCKET_NAMESPACE, transaction_object_key
 
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
         repo = TransactionCatalogueRepository(bucket_id=profile.bucket_id)

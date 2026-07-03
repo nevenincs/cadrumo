@@ -80,8 +80,8 @@ from ..auth import AuthState
 from ._utils import utc_now
 
 if TYPE_CHECKING:
+    from ...adapters.persistence.profile.transactions import TransactionCatalogueRepository
     from ...adapters.persistence.storage import SecureObjectRepository
-    from ...domain.transactions import TransactionCatalogueRepository
     from ...domain.user_profile import UserProfileRecord
 
 _log = get_logger(__name__)
@@ -281,8 +281,9 @@ def active_transaction_catalogue_repository(
             :class:`~aeat.adapters.persistence.storage.SecureObjectRepository`
             override passed through to the returned repository.
     """
+    from ...adapters.persistence.profile.transactions import TransactionCatalogueRepository
     from ...core.errors import NoActiveProfileError
-    from ...domain.transactions import LedgerNoActiveBucketError, TransactionCatalogueRepository
+    from ...domain.transactions import LedgerNoActiveBucketError
 
     try:
         bucket_id = _require_active_bucket_id()

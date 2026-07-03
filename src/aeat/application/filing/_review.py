@@ -480,7 +480,7 @@ def _require_registry_review_alignment(
 
 def _load_transaction_catalogue(bucket_id: str) -> TransactionCatalogue:
     """Load the transaction catalogue from the secure backend."""
-    from ...domain.transactions import TransactionCatalogueRepository
+    from ...adapters.persistence.profile.transactions import TransactionCatalogueRepository
 
     return TransactionCatalogueRepository(bucket_id=bucket_id).load()
 

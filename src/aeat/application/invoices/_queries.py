@@ -14,6 +14,7 @@ from decimal import Decimal
 from pydantic import BaseModel, ConfigDict
 
 from ...adapters.persistence.profile.invoices import InvoiceCatalogueRepository
+from ...adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ...domain.invoices import (
     Invoice,
     InvoiceCatalogue,
@@ -23,7 +24,6 @@ from ...domain.invoices import (
     verify_link_consistency,
 )
 from ...domain.iva import InvoiceKind
-from ...domain.transactions import TransactionCatalogueRepository
 
 
 class InvoiceListRow(BaseModel):

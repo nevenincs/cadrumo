@@ -18,6 +18,7 @@ from pathlib import Path
 import pytest
 
 from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
+from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ....core.config import Settings
 from ....domain.transactions import (
     BusinessClassification,
@@ -27,7 +28,6 @@ from ....domain.transactions import (
     SubprocessLLMClassifier,
     Transaction,
     TransactionCatalogue,
-    TransactionCatalogueRepository,
     TransactionDirection,
 )
 from ....tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
