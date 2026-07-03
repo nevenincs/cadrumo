@@ -10,6 +10,16 @@ related:
   - '[[2026-07-03-claude-ecosystem-packaging-research]]'
 ---
 
+<!-- LINK RULES:
+     - [[wiki-links]] are ONLY for .vault/ documents in the
+       related: field above.
+     - The related: field carries the AUTHORISING documents
+       (ADR, research, reference, prior plan) for every Step in
+       this plan. Steps inherit this chain; per-row reference
+       footers do not exist.
+     - NEVER use [[wiki-links]] or markdown links in the
+       document body. -->
+
 # `claude-ecosystem-packaging` plan
 
 Ship the aeat CLI plus the aeat-mcp harness as the first real product install: a slim published wheel, a corpus-binaries companion, and a one-click Claude plugin verified end to end on a real client.
@@ -22,10 +32,10 @@ Make an installed run safe and lean before any distribution work: move the stora
 
 Resolve the installed-run storage state root to a platform user-data directory while preserving the checkout default for the dev loop, so the derived tokens, logs, secret, blob and audit roots follow and no encrypted store lands inside a virtualenv or uv cache.
 
-- [ ] `W01.P01.S01` - Add an installed-vs-checkout detector and a platform user-data root resolver (LOCALAPPDATA on Windows, XDG_DATA_HOME on Linux, Application Support on macOS); `src/aeat/core/_config_state_root.py`.
-- [ ] `W01.P01.S02` - Root aeat_local_storage_root at the platform user-data directory for installed runs while preserving the PROJECT_ROOT var/storage default for a source checkout; `src/aeat/core/config.py`.
-- [ ] `W01.P01.S03` - Assert the derived tokens, logs, secret, blob and audit roots follow the installed platform base through the existing state-root validators; `src/aeat/core/tests/test_config_state_root.py`.
-- [ ] `W01.P01.S04` - Prove installed-mode storage resolves off the platform directory and never off PROJECT_ROOT with a fresh-install roundtrip test; `src/aeat/core/tests/test_config_state_root.py`.
+- [x] `W01.P01.S01` - Add an installed-vs-checkout detector and a platform user-data root resolver (LOCALAPPDATA on Windows, XDG_DATA_HOME on Linux, Application Support on macOS); `src/aeat/core/_config_state_root.py`.
+- [x] `W01.P01.S02` - Root aeat_local_storage_root at the platform user-data directory for installed runs while preserving the PROJECT_ROOT var/storage default for a source checkout; `src/aeat/core/config.py`.
+- [x] `W01.P01.S03` - Assert the derived tokens, logs, secret, blob and audit roots follow the installed platform base through the existing state-root validators; `src/aeat/core/tests/test_config_state_root.py`.
+- [x] `W01.P01.S04` - Prove installed-mode storage resolves off the platform directory and never off PROJECT_ROOT with a fresh-install roundtrip test; `src/aeat/core/tests/test_config_state_root.py`.
 
 ### Phase `W01.P02` - Dependency and manifest hygiene
 

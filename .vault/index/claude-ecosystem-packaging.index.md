@@ -6,6 +6,10 @@ tags:
 date: '2026-07-03'
 modified: '2026-07-03'
 related:
+  - '[[2026-07-03-claude-ecosystem-packaging-W01-P01-S01]]'
+  - '[[2026-07-03-claude-ecosystem-packaging-W01-P01-S02]]'
+  - '[[2026-07-03-claude-ecosystem-packaging-W01-P01-S03]]'
+  - '[[2026-07-03-claude-ecosystem-packaging-W01-P01-S04]]'
   - '[[2026-07-03-claude-ecosystem-packaging-adr]]'
   - '[[2026-07-03-claude-ecosystem-packaging-plan]]'
   - '[[2026-07-03-claude-ecosystem-packaging-research]]'
@@ -20,6 +24,13 @@ Auto-generated index of all documents tagged with `#claude-ecosystem-packaging`.
 ### adr
 
 - `2026-07-03-claude-ecosystem-packaging-adr` - `claude-ecosystem-packaging` adr: `Claude ecosystem plugin as the first product distribution` | (**status:** `accepted`)
+
+### exec
+
+- `2026-07-03-claude-ecosystem-packaging-W01-P01-S01` - Add an installed-vs-checkout detector and a platform user-data root resolver (LOCALAPPDATA on Windows, XDG_DATA_HOME on Linux, Application Support on macOS)
+- `2026-07-03-claude-ecosystem-packaging-W01-P01-S02` - Root aeat_local_storage_root at the platform user-data directory for installed runs while preserving the PROJECT_ROOT var/storage default for a source checkout
+- `2026-07-03-claude-ecosystem-packaging-W01-P01-S03` - Assert the derived tokens, logs, secret, blob and audit roots follow the installed platform base through the existing state-root validators
+- `2026-07-03-claude-ecosystem-packaging-W01-P01-S04` - Prove installed-mode storage resolves off the platform directory and never off PROJECT_ROOT with a fresh-install roundtrip test
 
 ### plan
 
