@@ -91,6 +91,16 @@ _M131_HISTORICAL_12_CASILLA: CasillaId = _casilla_id("12")
 _M131_HISTORICAL_13_CASILLA: CasillaId = _casilla_id("13")
 _M131_HISTORICAL_14_CASILLA: CasillaId = _casilla_id("14")
 _M131_HISTORICAL_15_CASILLA: CasillaId = _casilla_id("15")
+_M390_REPERCUTIDO_GENERAL_CASILLA = _casilla_id("iva.anual.repercutido.general")
+_M390_REPERCUTIDO_REDUCIDO_CASILLA = _casilla_id("iva.anual.repercutido.reducido")
+_M390_REPERCUTIDO_SUPER_REDUCIDO_CASILLA = _casilla_id("iva.anual.repercutido.super-reducido")
+_M390_SOPORTADO_INTERIORES_CASILLA = _casilla_id("iva.anual.soportado.interiores")
+_M390_SOPORTADO_IMPORTACIONES_CASILLA = _casilla_id("iva.anual.soportado.importaciones")
+_M390_AUTOREPERCUTIDO_INTRACOMUNITARIA_CASILLA = _casilla_id("iva.anual.autorepercutido.intracomunitaria")
+_M390_RECARGO_GENERAL_CASILLA = _casilla_id("iva.anual.repercutido.recargo.general")
+_M390_RECARGO_REDUCIDO_CASILLA = _casilla_id("iva.anual.repercutido.recargo.reducido")
+_M390_COMPENSACION_ULTIMO_PERIODO_CASILLA = _casilla_id("iva.anual.compensacion-ultimo-periodo-97")
+_M390_COMPENSACION_GENERADA_EJERCICIO_CASILLA = _casilla_id("iva.anual.compensacion-generada-ejercicio-no-97")
 
 
 def _narrative() -> str:
@@ -482,6 +492,49 @@ def _modelo_200_export_headers() -> dict[str, str]:
         "name": "EMILIO EXPORT TEST SL",
         "program_version": "A001",
         "presenter_nif": "B12345674",
+    }
+
+
+@cache
+def _approved_modelo_390_registry_draft():
+    # Modelo 390 (IVA resumen anual): the ledger_iva_aggregation and
+    # relation_prefill/previous_filing bindings behind these bound casillas
+    # resolve to None with no ledger data or prior filings on this bare
+    # schema provider, so build_draft falls through to the direct casilla
+    # overrides below (mirrors the M130/M200 previous_filing/relation-bound
+    # override precedent in this module).
+    provider = _schema_provider(filing_year=2025, period="0A", modelos=("390",))
+    draft = build_draft(
+        modelo="390",
+        period=Period.from_year_and_code(2025, "0A"),
+        profile=ModeloOperatorProfile(
+            tax_id="12345678Z",
+            display_name="Export registry test",
+        ),
+        inputs={
+            _M390_REPERCUTIDO_GENERAL_CASILLA: Decimal("18000.00"),
+            _M390_REPERCUTIDO_REDUCIDO_CASILLA: Decimal("2100.50"),
+            _M390_REPERCUTIDO_SUPER_REDUCIDO_CASILLA: Decimal("420.00"),
+            _M390_SOPORTADO_INTERIORES_CASILLA: Decimal("9800.25"),
+            _M390_SOPORTADO_IMPORTACIONES_CASILLA: Decimal("650.00"),
+            _M390_AUTOREPERCUTIDO_INTRACOMUNITARIA_CASILLA: Decimal("300.00"),
+            _M390_RECARGO_GENERAL_CASILLA: Decimal("1248.00"),
+            _M390_RECARGO_REDUCIDO_CASILLA: Decimal("624.00"),
+            _M390_COMPENSACION_ULTIMO_PERIODO_CASILLA: Decimal("0.00"),
+            _M390_COMPENSACION_GENERADA_EJERCICIO_CASILLA: Decimal("0.00"),
+        },
+        schema_provider=provider,
+    )
+    return draft.model_copy(update={"status": ModeloDraftStatus.APROBADO})
+
+
+def _modelo_390_export_headers() -> dict[str, str]:
+    return {
+        "declaration_type": "I",
+        "surnames": "EXPORT TEST",
+        "name": "ANA",
+        "program_version": "A001",
+        "presenter_nif": "12345678Z",
     }
 
 
