@@ -62,7 +62,12 @@ from ._harness_tools import (
     build_harness_floor_tool,
     render_harness_floor_text,
 )
-from ._hitl import confirmation_for_tool, is_handoff_command
+from ._hitl import (
+    REQUIRES_USER_INTERACTION_META_KEY,
+    confirmation_for_tool,
+    is_handoff_command,
+    requires_user_interaction,
+)
 from ._input_schema import cli_argv_for
 from ._meta_tools import meta_execute, search_commands
 from ._persona_scope import (
@@ -179,6 +184,13 @@ def build_sdk_tools(descriptors: tuple[McpToolDescriptor, ...]) -> list[object]:
     tools: list[object] = []
     for descriptor in descriptors:
         annotations = descriptor.annotations
+        # Advertise the CONFIRM tier to the client as the Anthropic-namespaced
+        # ``_meta`` interaction flag, derived from the same confirmation gate the
+        # server's PreToolUse path enforces, so a tool that would be confirmed
+        # server-side also forces the client's permission prompt. Non-CONFIRM tools
+        # carry no ``_meta`` (``None`` omits it from the wire descriptor).
+        policy = confirmation_for_tool(command_key=descriptor.command_key, annotations=annotations)
+        meta = {REQUIRES_USER_INTERACTION_META_KEY: True} if requires_user_interaction(policy) else None
         tools.append(
             Tool(
                 name=descriptor.name,
@@ -191,6 +203,7 @@ def build_sdk_tools(descriptors: tuple[McpToolDescriptor, ...]) -> list[object]:
                     destructiveHint=annotations.destructive_hint,
                     idempotentHint=annotations.idempotent_hint,
                 ),
+                _meta=meta,
             ),
         )
     return tools
