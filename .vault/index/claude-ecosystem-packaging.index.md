@@ -50,6 +50,8 @@ related:
   - '[[2026-07-03-claude-ecosystem-packaging-W04-P11-S42]]'
   - '[[2026-07-03-claude-ecosystem-packaging-W05-P12-S43]]'
   - '[[2026-07-03-claude-ecosystem-packaging-W05-P12-S44]]'
+  - '[[2026-07-03-claude-ecosystem-packaging-W05-P12-S45]]'
+  - '[[2026-07-03-claude-ecosystem-packaging-W05-P13-S47]]'
   - '[[2026-07-03-claude-ecosystem-packaging-adr]]'
   - '[[2026-07-03-claude-ecosystem-packaging-close-honesty-review-audit]]'
   - '[[2026-07-03-claude-ecosystem-packaging-code-review-audit]]'
@@ -118,6 +120,8 @@ Auto-generated index of all documents tagged with `#claude-ecosystem-packaging`.
 - `2026-07-03-claude-ecosystem-packaging-W04-P11-S42` - Document the full release checklist joining versioning, wheel build, name claim, grant and plugin/marketplace push in RELEASING.md
 - `2026-07-03-claude-ecosystem-packaging-W05-P12-S43` - Install the plugin from the marketplace into the Claude Code CLI and confirm the local stdio aeat-mcp server runs (the confirmed floor)
 - `2026-07-03-claude-ecosystem-packaging-W05-P12-S44` - Operator-gated: install the plugin into Claude Desktop and confirm the local server executes (needs a real Claude Desktop install)
+- `2026-07-03-claude-ecosystem-packaging-W05-P12-S45` - Operator-gated: install the plugin into Cowork and resolve whether the local stdio server runs on-host or connectors execute in Anthropic's cloud (needs a real Cowork install)
+- `2026-07-03-claude-ecosystem-packaging-W05-P13-S47` - Record the verified support matrix (which clients run the local server vs skills-only) that the userdocs will state
 
 ### plan
 

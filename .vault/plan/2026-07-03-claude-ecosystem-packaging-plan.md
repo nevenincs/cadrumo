@@ -147,14 +147,14 @@ Install the plugin from the marketplace into Claude Code CLI, Claude Desktop, an
 
 - [x] `W05.P12.S43` - Install the plugin from the marketplace into the Claude Code CLI and confirm the local stdio aeat-mcp server runs (the confirmed floor); `docs/verification/claude-code-install-proof.md`.
 - [x] `W05.P12.S44` - Operator-gated: install the plugin into Claude Desktop and confirm the local server executes (needs a real Claude Desktop install); `docs/verification/claude-desktop-install-proof.md`.
-- [ ] `W05.P12.S45` - Operator-gated: install the plugin into Cowork and resolve whether the local stdio server runs on-host or connectors execute in Anthropic's cloud (needs a real Cowork install); `docs/verification/cowork-install-proof.md`.
+- [x] `W05.P12.S45` - Operator-gated: install the plugin into Cowork and resolve whether the local stdio server runs on-host or connectors execute in Anthropic's cloud (needs a real Cowork install); `docs/verification/cowork-install-proof.md`.
 
 ### Phase `W05.P13` - Golden itinerary and support matrix
 
 Run the golden regularizar-atrasos itinerary end-to-end through the installed plugin per the R7 harness and record the verified support matrix the userdocs will state.
 
 - [ ] `W05.P13.S46` - Operator-gated: run the golden regularizar-atrasos itinerary end-to-end through the installed plugin per the R7 live-measurement harness; `docs/verification/regularizar-atrasos-itinerary-proof.md`.
-- [ ] `W05.P13.S47` - Record the verified support matrix (which clients run the local server vs skills-only) that the userdocs will state; `docs/verification/support-matrix.md`.
+- [x] `W05.P13.S47` - Record the verified support matrix (which clients run the local server vs skills-only) that the userdocs will state; `docs/verification/support-matrix.md`.
 
 ## Description
 
