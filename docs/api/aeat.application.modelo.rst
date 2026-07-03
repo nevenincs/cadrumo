@@ -15,8 +15,10 @@ Submodules
 
    aeat.application.modelo._action_errors
    aeat.application.modelo._amendment_actions
+   aeat.application.modelo._amendment_kind_resolution
    aeat.application.modelo._art109_activity_income
    aeat.application.modelo._art20_advisory
+   aeat.application.modelo._bienes_inversion_advisory
    aeat.application.modelo._binding_readiness
    aeat.application.modelo._binding_resolution
    aeat.application.modelo._borrador_binding
@@ -63,6 +65,7 @@ Submodules
    aeat.application.modelo._required_binding_gate
    aeat.application.modelo._result_disposition_resolution
    aeat.application.modelo._result_summary
+   aeat.application.modelo._review_package
    aeat.application.modelo._revision_persistence
    aeat.application.modelo._revision_replay_inputs
    aeat.application.modelo._selectors
