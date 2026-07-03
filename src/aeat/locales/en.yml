@@ -4495,8 +4495,7 @@ errors:
     profile_import_signature: The profile archive failed its signature or integrity
       check. Do not import archives from an untrusted source.
   internal:
-    internal_cli_unexpected_boundary: The command failed due to an unexpected internal
-      error.
+    internal_cli_unexpected_boundary: 'The command failed due to an unexpected internal error, not a stored-data problem. Inspect the diagnostic logs to see what failed.'
     internal_master_key_reentrant: 'Internal error: master-key provider entered re-entrantly;
       close the active session before re-entering.'
     internal_master_key_type: 'Internal error: master-key operation received a value

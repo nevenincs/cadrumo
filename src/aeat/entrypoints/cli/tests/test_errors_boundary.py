@@ -177,7 +177,12 @@ def test_drifted_stored_profile_boundary_is_distinct_from_unexpected_error(
 
     assert result.exit_code != 0, result.output
     combined = result.output or ""
-    assert "config repair integrity" not in combined, (
+    # Discriminate on the boundary MESSAGE, not the suggestion: both the
+    # stored-data boundary and the (corrected) unexpected boundary now cite a
+    # `config repair ...` command, so the message is the reliable signal. The
+    # unexpected boundary's message names an "unexpected internal error"; the
+    # stored-data boundary names a drifted stored record.
+    assert "unexpected internal error" not in combined, (
         f"stored-data drift triggered unexpected-error boundary;\ngot: {combined!r}"
     )
 
