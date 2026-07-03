@@ -4384,6 +4384,7 @@ errors:
     error_categories: Se produjo un error en las categorías de gasto.
     error_categories_validation: Un registro de categoría no superó la validación.
     error_config_boundary: El comando de configuración encontró un error interno inesperado.
+    error_corpus_search: 'No se pudo completar la búsqueda local en el corpus.'
     error_deadlines_deadline: Se produjo un error en el cálculo de plazos.
     error_deadlines_missing_windows: Faltan las ventanas de plazo de presentacion.
     error_deadlines_profile: El perfil de autónomo no se pudo cargar o validar para
@@ -4976,6 +4977,8 @@ errors:
       Compruebe los argumentos o ejecute `aeat --help`.
     refused_config_reset_unconfirmed: El restablecimiento de la configuración no se
       confirmó. Vuelve a ejecutar el comando confirmando la operación.
+    refused_corpus_search_dependency: 'Esta operación de búsqueda en el corpus necesita los componentes opcionales de búsqueda semántica; instálelos y reinténtelo.'
+    refused_corpus_search_input: 'No se pudo satisfacer la solicitud de búsqueda en el corpus.'
     refused_diagnostic_model_invariant: 'Rechazado: invariante del modelo de diagnostico
       incumplida.'
     refused_evidence_bundle_not_found: No existe ningún paquete de evidencias con

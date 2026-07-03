@@ -1,23 +1,25 @@
 """Typed errors for the on-host corpus-search grounding surface.
 
-These are plain application-layer exceptions rather than registered
-:class:`aeat.core.errors.AeatError` subclasses: registering an
-``AeatError`` requires a locale ``message_key`` in all four catalogues,
-and the operator-facing translation/envelope mapping is owned by the
-W06.P13 MCP tool layer that consumes this surface. The errors carry the
-same ``context`` / ``suggestion`` ergonomics as ``AeatError`` so that
-consuming layer can project the install hint and structured context onto
-the CLI envelope without loss. Promotion to registered ``AeatError``
-codes is a follow-up once the P13 tool boundary and the locale
-catalogues are settled.
+These are registered :class:`aeat.core.errors.AeatError` subclasses, so a
+corpus-search failure that reaches the CLI boundary renders as its proper
+category envelope (a ``REFUSED`` input/dependency refusal, an ``ERROR`` base)
+rather than collapsing into the generic ``INTERNAL`` unexpected-boundary path.
+Each class binds one registered ``ErrorCode`` (declared in
+``core.errors.registry._application_part1``) whose ``message_key`` supplies the
+localized envelope message; the free-form constructor ``message`` stays as the
+developer-facing ``str(exc)`` detail and the specifics ride on ``context`` — the
+same ``context`` / ``suggestion`` ergonomics the MCP tool layer already projects
+onto the envelope (the install hint, the offending query/limit/ref).
 """
 
 from __future__ import annotations
 
 from collections.abc import Mapping
 
+from ...core.errors import AeatError
 
-class CorpusSearchError(Exception):
+
+class CorpusSearchError(AeatError):
     """Base error for the corpus-search grounding surface."""
 
     def __init__(
@@ -28,6 +30,9 @@ class CorpusSearchError(Exception):
         suggestion: str | None = None,
     ) -> None:
         super().__init__(message)
+        # Preserve the surface's always-a-dict ``context`` contract (AeatError's
+        # own base leaves it None when unset); consumers read ``.context`` as a
+        # mapping.
         self.context: dict[str, object] = dict(context or {})
         self.suggestion = suggestion
 
