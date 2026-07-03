@@ -127,6 +127,11 @@ class BucketEventType(StrEnum):
     AUTH_PROVIDER_CONFIGURED = "auth.provider.configured"
     CONFIG_ENV_UPDATED = "config.env.updated"
 
+    # named multi-certificate source registry (personal + apoderado certs)
+    AUTH_CERTIFICATE_SOURCE_REGISTERED = "auth.certificate_source.registered"
+    AUTH_CERTIFICATE_SOURCE_SELECTED = "auth.certificate_source.selected"
+    AUTH_CERTIFICATE_SOURCE_REMOVED = "auth.certificate_source.removed"
+
     # ledger transaction lifecycle
     LEDGER_TRANSACTION_CREATED = "ledger.transaction.created"
     LEDGER_TRANSACTION_IMPORTED = "ledger.transaction.imported"

@@ -16,10 +16,9 @@ proof: one exported casilla is mutated on disk and the round-trip is asserted to
 surface the divergence (``DRIFT`` plus the mutated casilla in
 ``mismatched_casilla_ids``), so a green ``MATCH`` cannot be a vacuous pass.
 
-Modelos covered: 130 (pago fraccionado IRPF estimación directa) and 303 (IVA
+Modelos covered: 130 (pago fraccionado IRPF estimación directa), 303 (IVA
 autoliquidación, refund variant so the full DR303 envelope including the
-cuenta-devolución page round-trips). Modelo 390 is intentionally out of scope
-here: its registry is under concurrent revision; add it once that work lands.
+cuenta-devolución page round-trips), and 390 (IVA resumen anual).
 """
 
 from __future__ import annotations
@@ -133,9 +132,39 @@ def _modelo_303_case() -> _RoundtripCase:
     )
 
 
+def _modelo_390_case() -> _RoundtripCase:
+    return _RoundtripCase(
+        modelo="390",
+        period=Period.from_year_and_code(2025, "0A"),
+        provider_factory=lambda: _schema_provider(filing_year=2025, period="0A", modelos=("390",)),
+        inputs={
+            _cid("iva.anual.repercutido.general"): Decimal("18000.00"),
+            _cid("iva.anual.repercutido.reducido"): Decimal("2100.50"),
+            _cid("iva.anual.repercutido.super-reducido"): Decimal("420.00"),
+            _cid("iva.anual.soportado.interiores"): Decimal("9800.25"),
+            _cid("iva.anual.soportado.importaciones"): Decimal("650.00"),
+            _cid("iva.anual.autorepercutido.intracomunitaria"): Decimal("300.00"),
+            _cid("iva.anual.repercutido.recargo.general"): Decimal("1248.00"),
+            _cid("iva.anual.repercutido.recargo.reducido"): Decimal("624.00"),
+            _cid("iva.anual.compensacion-ultimo-periodo-97"): Decimal("0.00"),
+            _cid("iva.anual.compensacion-generada-ejercicio-no-97"): Decimal("0.00"),
+        },
+        headers={
+            "declaration_type": "I",
+            "surnames": "GARCIA LOPEZ",
+            "name": "JUAN",
+            "program_version": "A001",
+            "presenter_nif": "12345678Z",
+        },
+        output_name="modelo-390-roundtrip.txt",
+        key_casillas=(_cid("iva.anual.repercutido.general"), _cid("iva.anual.cuota-devengada-total")),
+    )
+
+
 _ROUNDTRIP_CASES = (
     pytest.param(_modelo_130_case, id="modelo-130"),
     pytest.param(_modelo_303_case, id="modelo-303"),
+    pytest.param(_modelo_390_case, id="modelo-390"),
 )
 
 

@@ -29,6 +29,7 @@ import pytest
 from pydantic import ValidationError
 from sqlalchemy import select
 
+from ....adapters.persistence.profile.filing_drafts import ModeloDraftRepository
 from ....adapters.persistence.storage.crypto import (
     decrypt_secure_object_payload,
     encrypt_secure_object_payload,
@@ -40,7 +41,6 @@ from ....core import BindingSourceKind, Period
 from ....domain.calculations.registry import CasillaId, validated_casilla_id
 from ....tests.secure_sql import isolated_runtime_profile
 from ...calculations.registry import RegistrySnapshotRef
-from .._repository import ModeloDraftRepository
 from .._schema import (
     ModeloBindingValue,
     ModeloDraft,

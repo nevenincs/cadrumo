@@ -125,6 +125,7 @@ from ._participation_index import (
 from ._protocols import (
     CalculationRevisionCatalogueRepositoryProtocol,
     ModeloRecordCatalogueRepositoryProtocol,
+    TransactionParticipationIndexRepositoryProtocol,
     VerificationReportCatalogueRepositoryProtocol,
     WorkUnitCatalogueRepositoryProtocol,
 )
@@ -145,7 +146,6 @@ from ._row_models import (
     validate_m349_country_prefix_context,
     validate_m349_nif_format,
 )
-from ._runtime_repository import resolve_modelo_repository_bucket_id, secure_objects_for_modelo_bucket
 from ._sal_reserva_especial import compute_sal_reserva_especial_dotacion
 from ._verification_report import (
     ModeloVerificationFinding,
@@ -201,6 +201,7 @@ __all__ = (
     "ModeloVerificationFindingKind",
     "ModeloVerificationFindingSeverity",
     "TransactionParticipationIndexPersistenceError",
+    "TransactionParticipationIndexRepositoryProtocol",
     "TransactionRevisionParticipation",
     "TransactionRevisionParticipationIndex",
     "VerificationCompletenessStatus",
@@ -228,8 +229,6 @@ __all__ = (
     "m349_nif_number_for_export",
     "materialize_m232_related_party_rows",
     "raise_catalogue_integrity_error",
-    "resolve_modelo_repository_bucket_id",
-    "secure_objects_for_modelo_bucket",
     "snapshot_fingerprint",
     "upsert_calculation_revision",
     "upsert_filing_record",

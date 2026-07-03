@@ -10,6 +10,8 @@ from collections.abc import Iterable, Mapping
 from functools import lru_cache
 from pathlib import Path
 
+from ....core.resources import resolve_companion_binary
+from ._corpus_catalogue import is_companion_corpus_binary
 from ._schema import LegalReference, SourceCitation, SourceReference
 from ._text import normalise_corpus_text
 
@@ -158,6 +160,16 @@ class EvidenceValidator:
                 continue
             try:
                 source_text = self._source_text(source)
+            except FileNotFoundError as exc:
+                if is_companion_corpus_binary(source):
+                    # Absent companion binary in a split install: the corpus
+                    # catalogue gate already surfaced the ONE loud advisory for
+                    # this file, and its required_text check is unevaluable
+                    # rather than failed. A PRESENT-but-unreadable file still
+                    # fails through the OSError branch below.
+                    continue
+                failures.append(f"{scope}: {owner} source citation {citation.source_ref!r} cannot be read: {exc}")
+                continue
             except OSError as exc:
                 failures.append(f"{scope}: {owner} source citation {citation.source_ref!r} cannot be read: {exc}")
                 continue
@@ -178,6 +190,14 @@ class EvidenceValidator:
         source_path = (source_root / source.corpus_path).expanduser().resolve()
         if source_root not in source_path.parents and source_path != source_root:
             raise OSError(f"source {source.id!r} escapes source root")
+        if not source_path.is_file():
+            # A split install sheds the corpus source binaries from the runtime
+            # tree; the aeat_data companion supplies the same bytes at the
+            # mirrored relative path, keeping required_text verification
+            # byte-identical to a full checkout.
+            companion_path = resolve_companion_binary(*source.corpus_path.split("/"))
+            if companion_path is not None:
+                source_path = companion_path
         stat = source_path.stat()
         source_key = (source.kind, str(source_path), stat.st_size, stat.st_mtime_ns)
         global_cached = _NORMALISED_SOURCE_TEXT_CACHE.get(source_key)

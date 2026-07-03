@@ -1,4 +1,4 @@
-"""Tests for modelo domain runtime repository helpers."""
+"""Tests for the modelo persistence-adapter runtime repository helpers."""
 
 from __future__ import annotations
 
@@ -6,13 +6,12 @@ from pathlib import Path
 
 import pytest
 
-from ....adapters.persistence.storage.errors import StorageValidationError
-from ....adapters.persistence.storage.sql.engine import dispose_engine
-from ....core.config import override_settings
-from .._repository import WorkUnitPersistenceError
-from .._runtime_repository import resolve_modelo_repository_bucket_id, secure_objects_for_modelo_bucket
+from .....core.config import override_settings
+from .....domain.modelos import WorkUnitPersistenceError
+from ...storage import StorageValidationError, dispose_engine
+from .._modelo_runtime import resolve_modelo_repository_bucket_id, secure_objects_for_modelo_bucket
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 
 _EXPLICIT_BUCKET_ID = "5bfb9265-6886-4067-8d27-138978e71d95"
 _ACTIVE_BUCKET_ID = "9cc2d040-7e90-4f88-8f83-8d6bf63c4e65"

@@ -29,12 +29,14 @@ from ._export_support import (
     _approved_modelo_123_registry_draft,
     _approved_modelo_131_registry_draft,
     _approved_modelo_200_registry_draft,
+    _approved_modelo_390_registry_draft,
     _approved_registry_draft,
     _modelo_111_export_headers,
     _modelo_115_export_headers,
     _modelo_123_export_headers,
     _modelo_130_export_headers,
     _modelo_200_export_headers,
+    _modelo_390_export_headers,
     _schema_provider,
 )
 
@@ -52,7 +54,10 @@ def _m131_headers() -> dict[str, str]:
 # (binding-derived) is covered: with the truth-grounded gate (required = calculation
 # results + schema-required, not optional inputs), its computed result casillas are
 # populated and reach disk, while its optional inputs (02/08/09/12/14) are excluded.
-# Modelo 200 (sociedades) is covered with its 2024/0A provider.
+# Modelo 200 (sociedades) is covered with its 2024/0A provider. Modelo 390 (IVA
+# resumen anual) is covered with its 2025/0A provider: the required-applicable
+# set is the three computed annual totals (cuota devengada/deducible/resultado),
+# each of which carries a real DR390 box (34/64/65) via export_refs.
 _COVERED = [
     ("130", _approved_registry_draft, _modelo_130_export_headers, None, None),
     ("111", _approved_modelo_111_registry_draft, _modelo_111_export_headers, None, None),
@@ -60,6 +65,7 @@ _COVERED = [
     ("123", _approved_modelo_123_registry_draft, _modelo_123_export_headers, None, None),
     ("131", _approved_modelo_131_registry_draft, _m131_headers, None, None),
     ("200", _approved_modelo_200_registry_draft, _modelo_200_export_headers, 2024, "0A"),
+    ("390", _approved_modelo_390_registry_draft, _modelo_390_export_headers, 2025, "0A"),
 ]
 
 # Broader fixed-width, manifest-bearing set for the structural dormancy lock
@@ -72,6 +78,7 @@ _DORMANCY_MODELOS = [
     ("131", 2025, "1T"),
     ("303", 2025, "1T"),
     ("200", 2025, "0A"),
+    ("390", 2025, "0A"),
 ]
 
 

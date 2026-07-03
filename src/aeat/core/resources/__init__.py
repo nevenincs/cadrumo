@@ -21,7 +21,13 @@ tree shape may use :func:`bundled_path` / :func:`packaged_data` directly.
 
 from __future__ import annotations
 
-from ._boundary import as_path, bundled_path, packaged_data
+from ._boundary import (
+    as_path,
+    bundled_path,
+    packaged_data,
+    resolve_companion_binary,
+    resolve_corpus_binary,
+)
 from ._errors import (
     ResourceBackendError,
     ResourceLoadError,
@@ -44,5 +50,7 @@ __all__ = [
     "as_path",
     "bundled_path",
     "packaged_data",
+    "resolve_companion_binary",
+    "resolve_corpus_binary",
     "resources",
 ]

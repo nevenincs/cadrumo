@@ -375,7 +375,7 @@ def _load_drafts(settings: Settings, *, bucket_id: str) -> tuple[tuple[Path, Mod
     can identify the draft without consulting a plaintext draft
     directory.
     """
-    from ...domain.filing import ModeloDraftRepository
+    from ...adapters.persistence.profile.filing_drafts import ModeloDraftRepository
 
     del settings
     repository = ModeloDraftRepository(bucket_id=bucket_id)

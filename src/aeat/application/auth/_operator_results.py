@@ -228,6 +228,48 @@ class AuthClearResult(BaseModel):
     cleared_locks: int
 
 
+class CertificateSourceNotFoundError(AeatError, KeyError):
+    """Raised when an operator names a certificate source that is not registered."""
+
+
+class CertificateSourcePayload(BaseModel):
+    """One registered certificate source, operator-facing.
+
+    Projects :class:`application.auth.CertificateSourceRecord` for the
+    ``certificate register`` / ``certificate list`` verbs. Never carries
+    certificate passwords or key material — only the filesystem
+    reference already stored in workflow state.
+    """
+
+    model_config = _STRICT_FROZEN
+
+    name: str
+    certificate_path: str
+    friendly_name: str = ""
+    active: bool = False
+    registered_at: str = ""
+
+
+class CertificateSourceListResult(BaseModel):
+    """Result of ``aeat config auth certificate list``."""
+
+    model_config = _STRICT_FROZEN
+
+    sources: tuple[CertificateSourcePayload, ...] = ()
+    active_source: str = ""
+
+
+class CertificateSourceMutationResult(BaseModel):
+    """Result of registering, selecting, or removing a certificate source."""
+
+    model_config = _STRICT_FROZEN
+
+    name: str
+    certificate_path: str = ""
+    active: bool = False
+    removed: bool = False
+
+
 __all__ = [
     "AuthClearResult",
     "AuthConfigureDanglingActiveProfileError",
@@ -240,5 +282,9 @@ __all__ = [
     "AuthProvidersReport",
     "AuthStatusResult",
     "AuthTestResult",
+    "CertificateSourceListResult",
+    "CertificateSourceMutationResult",
+    "CertificateSourceNotFoundError",
+    "CertificateSourcePayload",
     "LiveAuthPreflightReport",
 ]

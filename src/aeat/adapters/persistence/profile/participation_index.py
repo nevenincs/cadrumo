@@ -30,9 +30,8 @@ from ....domain.modelos import (
     TransactionParticipationIndexPersistenceError,
     TransactionRevisionParticipationIndex,
     derive_participation_index_id,
-    resolve_modelo_repository_bucket_id,
-    secure_objects_for_modelo_bucket,
 )
+from ._modelo_runtime import resolve_modelo_repository_bucket_id, secure_objects_for_modelo_bucket
 
 if TYPE_CHECKING:  # pragma: no cover — import-cycle guard
     from ..storage import SecureObjectRepository, SecureObjectWrite

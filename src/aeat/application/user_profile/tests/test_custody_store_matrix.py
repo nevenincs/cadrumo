@@ -192,9 +192,10 @@ def _verify_filing_history(bucket_id: str) -> None:
 
 
 def _seed_draft(bucket_id: str) -> None:
+    from ....adapters.persistence.profile.filing_drafts import ModeloDraftRepository
     from ....core import Period
     from ....domain.calculations.registry import RegistrySnapshotRef
-    from ....domain.filing import ModeloDraft, ModeloDraftRepository
+    from ....domain.filing import ModeloDraft
     from ....domain.submission import ModeloDraftStatus
 
     draft = ModeloDraft(
@@ -214,7 +215,7 @@ def _seed_draft(bucket_id: str) -> None:
 
 
 def _verify_draft(bucket_id: str) -> None:
-    from ....domain.filing import ModeloDraftRepository
+    from ....adapters.persistence.profile.filing_drafts import ModeloDraftRepository
 
     assert tuple(ModeloDraftRepository().iter_drafts()), "draft lost"
 
@@ -490,11 +491,11 @@ def _build_modelo_draft() -> object:
 
 
 def _seed_amendment(bucket_id: str) -> None:
+    from ....adapters.persistence.profile.filing_amendments import ModeloAmendmentRepository
     from ....core import Period
     from ....domain.filing import (
         AmendmentKind,
         CasillaChange,
-        ModeloAmendmentRepository,
         ModeloComplementaria,
         make_amendment_id,
     )
@@ -515,7 +516,7 @@ def _seed_amendment(bucket_id: str) -> None:
 
 
 def _verify_amendment(bucket_id: str) -> None:
-    from ....domain.filing import ModeloAmendmentRepository
+    from ....adapters.persistence.profile.filing_amendments import ModeloAmendmentRepository
 
     assert ModeloAmendmentRepository(bucket_id=bucket_id).list_amendment_ids(), "amendment lost"
 

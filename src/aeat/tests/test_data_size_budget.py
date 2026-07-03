@@ -1,4 +1,4 @@
-"""Bundled-data size budget gate.
+"""Bundled-data size budget gate — total tree plus per-distribution slices.
 
 The architecture review (finding ``bundled-data-weight-unbudgeted``) measured
 ``src/aeat/_data`` growing from ~311 MB to 516 MB in six weeks with no ceiling
@@ -13,6 +13,20 @@ the corpus-registry-packaging decision); growth is legitimate demand. The budget
 not forbid growth — it forces a decision when growth crosses the ceiling. The
 budget may only be raised by a reviewed decision; a breach forces either that
 or the corpus-split escape hatch declared below.
+
+The corpus-split escape hatch has since been PARTIALLY realised at the wheel
+boundary: the wheel-split decision ships the corpus source binaries
+(``corpus/**/*.{pdf,xls,xlsx}``) in the separate ``aeat-data`` companion and the
+derived runtime surfaces in the slim ``aeat`` wheel — from the ONE source tree,
+which is unchanged, so the 550 MiB total-tree gate still stands and still guards
+every byte. But a single total ceiling could now be silently EVADED by the
+split: runtime (slim-wheel) payload could balloon while the total stays under
+budget because the corpus-binary slice happened to shrink, and neither
+distribution's own growth would be visible. So the budget is measured per
+distribution as well: the tree is partitioned exhaustively into the runtime
+(slim ``aeat`` wheel) slice and the corpus-binary (``aeat-data`` companion)
+slice, each carries its own ceiling, and the partition is asserted exhaustive so
+no byte can hide between the two.
 
 The gate reads the tree size directly (summed file bytes, deterministic across
 filesystems, unlike block-rounded ``du``) so the arithmetic lives in one place.
@@ -29,12 +43,29 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
 _DATA_ROOT = SRC_AEAT / "_data"
 
+# Corpus source binaries — the slice the wheel-split ships in the ``aeat-data``
+# companion; everything else in the tree is the runtime (slim ``aeat`` wheel)
+# slice. A file is a corpus source binary when it lives under ``corpus/`` and
+# carries one of these suffixes (the same pattern the aeat wheel excludes).
+_CORPUS_BINARY_SUFFIXES = (".pdf", ".xls", ".xlsx")
+
 # Declared budget: 550 MiB — the 516 MiB measured at the most recent review plus
 # bounded headroom. Raising this constant requires a reviewed decision (see the
 # failure message). Kept in mebibytes so the number matches the ``du -sh``
 # reading operators see.
 _DATA_SIZE_BUDGET_MIB = 550
 _DATA_SIZE_BUDGET_BYTES = _DATA_SIZE_BUDGET_MIB * 1024 * 1024
+
+# Per-distribution ceilings, each the current measured slice plus bounded
+# headroom (runtime ~173 MiB, corpus binaries ~312 MiB at the split). They are
+# per-distribution caps, not a second aggregate: the total-tree budget above is
+# the aggregate ceiling. Raising either requires the same reviewed-decision
+# discipline. The runtime ceiling is the load-bearing new guard — it makes
+# slim-wheel growth visible even when the corpus slice shrinks under the total.
+_RUNTIME_DATA_BUDGET_MIB = 230
+_RUNTIME_DATA_BUDGET_BYTES = _RUNTIME_DATA_BUDGET_MIB * 1024 * 1024
+_CORPUS_BINARY_BUDGET_MIB = 380
+_CORPUS_BINARY_BUDGET_BYTES = _CORPUS_BINARY_BUDGET_MIB * 1024 * 1024
 
 # Deferral-as-data: the corpus-split escape hatch. When a budget breach is
 # driven by legitimate corpus growth rather than accidental payload, the second
@@ -49,10 +80,36 @@ _CORPUS_SPLIT_ESCAPE_HATCH = (
 )
 
 
+def _is_corpus_source_binary(relative_posix: str, suffix: str) -> bool:
+    """Return True when a ``_data``-relative path is a corpus source binary."""
+
+    return relative_posix.startswith("corpus/") and suffix.lower() in _CORPUS_BINARY_SUFFIXES
+
+
 def _data_tree_bytes() -> int:
     """Return the summed size in bytes of every file under ``src/aeat/_data``."""
 
     return sum(path.stat().st_size for path in _DATA_ROOT.rglob("*") if path.is_file())
+
+
+def _data_slice_bytes() -> tuple[int, int, int]:
+    """Return ``(total, corpus_binary, runtime)`` byte sizes, partitioning the tree.
+
+    ``corpus_binary`` is the ``aeat-data`` companion slice and ``runtime`` is the
+    slim ``aeat`` wheel slice; the two are disjoint and exhaustive, so
+    ``corpus_binary + runtime == total`` by construction.
+    """
+
+    total = 0
+    corpus_binary = 0
+    for path in _DATA_ROOT.rglob("*"):
+        if not path.is_file():
+            continue
+        size = path.stat().st_size
+        total += size
+        if _is_corpus_source_binary(path.relative_to(_DATA_ROOT).as_posix(), path.suffix):
+            corpus_binary += size
+    return total, corpus_binary, total - corpus_binary
 
 
 def test_data_root_exists() -> None:
@@ -71,4 +128,45 @@ def test_data_tree_within_declared_budget() -> None:
         f"A breach permits exactly two options: (1) raise the budget with a reviewed decision that "
         f"records why the growth is warranted, or (2) take the corpus-split escape hatch — "
         f"{_CORPUS_SPLIT_ESCAPE_HATCH}"
+    )
+
+
+def test_runtime_slice_within_slim_wheel_budget() -> None:
+    """The runtime (slim ``aeat`` wheel) slice stays under its per-distribution ceiling.
+
+    This is the guard the split makes necessary: derived-surface growth in the
+    runtime wheel is now visible even when the corpus-binary slice shrinks and
+    the total-tree budget stays satisfied.
+    """
+
+    _total, _corpus_binary, runtime = _data_slice_bytes()
+    runtime_mib = runtime / 1024 / 1024
+    assert runtime <= _RUNTIME_DATA_BUDGET_BYTES, (
+        f"the runtime (slim aeat wheel) _data slice is {runtime_mib:.1f} MiB, over the "
+        f"{_RUNTIME_DATA_BUDGET_MIB} MiB per-distribution ceiling. This slice is the tree minus the corpus source "
+        f"binaries (extracted text, normative html, registry, terminology, agent data). Raise the ceiling with a "
+        f"reviewed decision that records why the runtime payload grew, or move payload to the aeat-data companion."
+    )
+
+
+def test_corpus_binary_slice_within_companion_budget() -> None:
+    """The corpus-binary (``aeat-data`` companion) slice stays under its ceiling."""
+
+    _total, corpus_binary, _runtime = _data_slice_bytes()
+    corpus_mib = corpus_binary / 1024 / 1024
+    assert corpus_binary <= _CORPUS_BINARY_BUDGET_BYTES, (
+        f"the corpus-binary (aeat-data companion) _data slice is {corpus_mib:.1f} MiB, over the "
+        f"{_CORPUS_BINARY_BUDGET_MIB} MiB per-distribution ceiling. Raise the ceiling with a reviewed decision that "
+        f"records why the corpus source binaries grew."
+    )
+
+
+def test_slices_partition_the_tree_exhaustively() -> None:
+    """The runtime and corpus-binary slices sum to the whole tree, so the split hides no byte."""
+
+    total, corpus_binary, runtime = _data_slice_bytes()
+    assert corpus_binary + runtime == total, (
+        f"the per-distribution slices do not partition the tree exhaustively: "
+        f"corpus_binary ({corpus_binary}) + runtime ({runtime}) != total ({total}); "
+        "a byte would be unaccounted for and could evade the per-distribution ceilings"
     )

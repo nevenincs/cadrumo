@@ -162,6 +162,17 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
+        "aeat.application.auth._operator_results.CertificateSourceNotFoundError",
+        ErrorCode(
+            code="REFUSED_AUTH_CERTIFICATE_SOURCE_NOT_FOUND",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.refused_auth_certificate_source_not_found",
+            default_suggestion="aeat config auth certificate list",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
         "aeat.application.auth._acquisition_lock.AuthAcquisitionLockedError",
         ErrorCode(
             code="LOCKED_AUTH_ACQUISITION",

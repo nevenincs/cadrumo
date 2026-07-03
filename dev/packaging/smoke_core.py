@@ -32,6 +32,13 @@ _TRACKED_DATA_ROOTS = (
 )
 _SOURCE_DATA_PREFIX = "src/aeat/_data/"
 _WHEEL_DATA_PREFIX = "aeat/_data"
+# Corpus source binaries excluded from the slim ``aeat`` wheel by the wheel-split
+# build config; they ship in the ``aeat-data`` companion distribution. A tracked
+# source path is one of these when it lives under ``_data/corpus`` and carries a
+# binary suffix, so the wheel-bundling parity check must not expect it in the
+# ``aeat`` archive.
+_CORPUS_SOURCE_PREFIX = "src/aeat/_data/corpus/"
+_CORPUS_BINARY_SUFFIXES = (".pdf", ".xls", ".xlsx")
 _RENTA_PDF_ALLOW_LIST = {
     f"src/aeat/_data/corpus/manuals/renta/{year}/part1/source.pdf"
     for year in ("2020", "2021", "2022", "2023", "2024", "2025")
@@ -45,6 +52,18 @@ _CORE_ABSENT_NAMES = {
     "semgrep",
     "sphinx",
     "torch",
+}
+# Packages that legitimately appear in the core resolution as transitive
+# dependencies of a base dependency, even though they are ALSO declared under an
+# optional extra (a name collision). Without this carve-out the
+# "optional-leaked-into-core" export check would false-positive on the shared
+# name. ``numpy`` is pulled into core by ``formulas`` (a base dependency, the
+# workbook-parity oracle) and is independently listed in the ``search`` extra.
+# ``anyio`` is pulled into core by ``httpx`` (a base dependency) and is declared
+# in the ``agent`` extra because the stdio MCP server imports it directly.
+_CORE_PRESENT_TRANSITIVE_NAMES = {
+    "numpy",
+    "anyio",
 }
 _EXTRAS_PRESENT_NAMES = {
     "anthropic",
@@ -362,10 +381,29 @@ def _tracked_source_data_paths(repo_root: Path) -> set[str]:
     return tracked
 
 
+def _is_corpus_source_binary(source_relative: str) -> bool:
+    """Return True for a tracked ``_data/corpus`` path that is an excluded source binary."""
+    return source_relative.startswith(_CORPUS_SOURCE_PREFIX) and source_relative.lower().endswith(
+        _CORPUS_BINARY_SUFFIXES
+    )
+
+
 def _expected_wheel_data_paths(repo_root: Path) -> set[str]:
-    """Return expected bundled-data paths inside the wheel archive."""
+    """Return expected bundled-data paths inside the slim ``aeat`` wheel archive.
+
+    Corpus source binaries (``_data/corpus/**/*.{pdf,xls,xlsx}``) are excluded:
+    the wheel-split build config sheds them from this wheel and ships them in the
+    ``aeat-data`` companion, so they are legitimately absent from the archive.
+    Test modules under a ``_data`` ``tests/`` folder are excluded by the
+    data-budget wheel boundary (tests serve no installed consumer) and are
+    likewise legitimately absent.
+    """
     expected: set[str] = set()
     for path in _tracked_source_data_paths(repo_root):
+        if _is_corpus_source_binary(path):
+            continue
+        if "/tests/" in path:
+            continue
         expected.add(f"{_WHEEL_DATA_PREFIX}/{path.removeprefix(_SOURCE_DATA_PREFIX)}")
     return expected
 
@@ -405,13 +443,26 @@ def _assert_wheel_metadata_matches_pyproject(repo_root: Path, wheel: Path) -> No
         raise SystemExit(f"dev-only dependencies leaked into wheel metadata: {leaked_dev!r}")
 
 
-def _export_names(output: str) -> set[str]:
-    """Return normalized package names from a requirements export."""
+def _export_names(output: str, *, repo_root: Path | None = None) -> set[str]:
+    """Return normalized package names from a requirements export.
+
+    A dependency resolved through a ``[tool.uv.sources]`` path source (the
+    not-yet-published ``aeat-data`` companion) exports as a bare local path
+    row (``./packaging/aeat_data``) rather than a requirement string; resolve
+    such a row to the referenced project's own ``[project].name`` so the
+    surface checks see the real package name.
+    """
     names: set[str] = set()
     for line in output.splitlines():
         stripped = line.strip()
         if not stripped or stripped.startswith("#"):
             continue
+        if stripped.startswith(("./", "../")) and repo_root is not None:
+            local_pyproject = (repo_root / stripped / "pyproject.toml").resolve()
+            if local_pyproject.is_file():
+                local = tomllib.loads(local_pyproject.read_text(encoding=_UTF_8))
+                names.add(_normalize_name(local["project"]["name"]))
+                continue
         names.add(_requirement_name(stripped))
     return names
 
@@ -444,14 +495,15 @@ def _validate_frozen_exports(repo_root: Path, uv: str) -> None:
         [uv, "export", "--frozen", "--all-extras", "--all-groups", "--no-emit-project", "--no-hashes"],
         cwd=repo_root,
     )
-    core_names = _export_names(core.stdout)
-    extras_names = _export_names(extras.stdout)
-    dev_names = _export_names(dev.stdout)
+    core_names = _export_names(core.stdout, repo_root=repo_root)
+    extras_names = _export_names(extras.stdout, repo_root=repo_root)
+    dev_names = _export_names(dev.stdout, repo_root=repo_root)
     _assert_export_surface(
         "core",
         core_names,
         present=surfaces.project_active_names,
-        absent=surfaces.external_optional_active_names | surfaces.dev_only_active_names | _CORE_ABSENT_NAMES,
+        absent=(surfaces.external_optional_active_names | surfaces.dev_only_active_names | _CORE_ABSENT_NAMES)
+        - _CORE_PRESENT_TRANSITIVE_NAMES,
     )
     _assert_export_surface(
         "extras",

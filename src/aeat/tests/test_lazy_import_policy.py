@@ -189,13 +189,7 @@ _ALLOWLIST: dict[UnsanctionedClass, frozenset[ImportEdge]] = {
             ImportEdge("application.overview._coverage", "application.modelo"),
         }
     ),
-    UnsanctionedClass.PORTS_INVERSION_PENDING: frozenset(
-        {
-            ImportEdge("domain.filing._complementaria_repository", "adapters.persistence.storage"),
-            ImportEdge("domain.filing._runtime_repository", "adapters.persistence.storage"),
-            ImportEdge("domain.modelos._runtime_repository", "adapters.persistence.storage"),
-        }
-    ),
+    UnsanctionedClass.PORTS_INVERSION_PENDING: frozenset(),
     UnsanctionedClass.DOMAIN_CYCLE_BREAK: frozenset(
         {
             ImportEdge("domain.calculations._export_field_kind", "domain.calculations.registry"),
@@ -246,6 +240,10 @@ _ALLOWLIST: dict[UnsanctionedClass, frozenset[ImportEdge]] = {
             # the concrete BucketEventHistoryRepository defers the storage-substrate
             # import from the persistence adapter (was domain._event_repository).
             ImportEdge("adapters.persistence.profile.buckets", "adapters.persistence.storage"),
+            # filing amendment repository ports-inversion (W03.P08.S11): the concrete
+            # ModeloAmendmentRepository defers the storage-substrate import from the
+            # persistence adapter (was domain.filing._complementaria_repository).
+            ImportEdge("adapters.persistence.profile.filing_amendments", "adapters.persistence.storage"),
             # modelos_calculation catalogue repository ports-inversion (W04.P09.S15):
             # the concrete CalculationRevisionCatalogueRepository defers the
             # storage-substrate import from the persistence adapter
@@ -454,6 +452,13 @@ _ALLOWLIST: dict[UnsanctionedClass, frozenset[ImportEdge]] = {
             ImportEdge("application.auth", "core.i18n"),
             ImportEdge("application.auth._acquisition_lock", "core"),
             ImportEdge("application.auth._apoderado", "core.config"),
+            # certificate-source registry operator verbs (#591 slice): mirrors
+            # the sibling `_operator` deferrals below for the same targets.
+            ImportEdge("application.auth._certificate_sources_operator", "adapters.persistence.profile.buckets"),
+            ImportEdge("application.auth._certificate_sources_operator", "adapters.persistence.storage"),
+            ImportEdge("application.auth._certificate_sources_operator", "application.workflow"),
+            ImportEdge("application.auth._certificate_sources_operator", "core"),
+            ImportEdge("application.auth._certificate_sources_operator", "domain.buckets"),
             ImportEdge("application.auth._operator", "adapters.persistence.storage"),
             ImportEdge("application.auth._operator", "application.state_projection"),
             ImportEdge("application.auth._operator", "application.user_profile"),
@@ -660,6 +665,7 @@ _ALLOWLIST: dict[UnsanctionedClass, frozenset[ImportEdge]] = {
             ImportEdge("application.preflight", "domain.portals"),
             ImportEdge("application.provisioning", "application.ledger"),
             ImportEdge("application.repair_integrity", "adapters.persistence.storage"),
+            ImportEdge("application.review._adapters", "adapters.persistence.profile.filing_drafts"),
             ImportEdge("application.review._adapters", "adapters.persistence.profile.invoices"),
             ImportEdge("application.review._adapters", "domain.filing"),
             ImportEdge("application.review._operator", "core"),
@@ -697,6 +703,7 @@ _ALLOWLIST: dict[UnsanctionedClass, frozenset[ImportEdge]] = {
             ImportEdge("application.user_profile._custody", "adapters.persistence.storage.bucket"),
             ImportEdge("application.user_profile._custody", "core"),
             ImportEdge("application.user_profile._custody_carry", "adapters.outbound.aeat.sede"),
+            ImportEdge("application.user_profile._custody_carry", "adapters.persistence.profile.filing_drafts"),
             ImportEdge("application.user_profile._custody_carry", "adapters.persistence.profile.justificante"),
             ImportEdge("application.user_profile._custody_carry", "adapters.persistence.profile.submission"),
             ImportEdge("application.user_profile._custody_carry", "adapters.persistence.storage"),
@@ -793,9 +800,9 @@ _SITE_CEILINGS: dict[UnsanctionedClass, int] = {
     UnsanctionedClass.NAMED_CYCLE_BREAK: 1,
     UnsanctionedClass.PORTS_INVERSION_PENDING: 36,
     UnsanctionedClass.DOMAIN_CYCLE_BREAK: 51,
-    UnsanctionedClass.ADAPTER_INTERNAL_DEFERRAL: 170,  # +8: transactions storage deferral sites (W02.P07.S09)
+    UnsanctionedClass.ADAPTER_INTERNAL_DEFERRAL: 176,  # +6: filing-amendment repository deferral sites (W03.P08.S11)
     UnsanctionedClass.CORE_INTERNAL_DEFERRAL: 35,
-    UnsanctionedClass.APPLICATION_DEFERRAL: 502,  # +2: transactions adapter deferral sites (W02.P07.S09)
+    UnsanctionedClass.APPLICATION_DEFERRAL: 516,  # +13: certificate-source registry operator verbs (#591 slice)
 }
 
 # Ceiling on the total number of allowlisted edges. Editing the allowlist to add
@@ -805,7 +812,7 @@ _SITE_CEILINGS: dict[UnsanctionedClass, int] = {
 # baseline (the modelos_work_units/participation_index catalogue-repository
 # consolidation, the corpus_search/mcp/user_profile deferrals introduced by
 # intervening commits) were swept into their classified buckets in one pass.
-_ALLOWLIST_EDGE_CEILING: int = 488
+_ALLOWLIST_EDGE_CEILING: int = 488  # -1: filing runtime-helper edge retired (W03.P08.S12)
 
 
 def _aeat_relative(dotted: str) -> str:

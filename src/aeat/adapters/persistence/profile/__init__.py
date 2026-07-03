@@ -20,6 +20,12 @@ consume the child modules directly:
   :class:`domain.submission.SubmissionRepositoryProtocol` port.
 * :mod:`adapters.persistence.profile.justificante` for the AUDIT secure-object
   :class:`domain.justificante.Justificante` receipt-metadata repository.
+* :mod:`adapters.persistence.profile.filing_drafts` for the FINANCIAL
+  secure-object :class:`domain.filing.ModeloDraft` repository behind the
+  :class:`domain.filing.ModeloDraftRepositoryProtocol` port.
+* :mod:`adapters.persistence.profile.filing_amendments` for the AUDIT
+  secure-object complementaria/sustitutiva amendment repository behind the
+  :class:`domain.filing.ModeloAmendmentRepositoryProtocol` port.
 """
 
 __all__: list[str] = []

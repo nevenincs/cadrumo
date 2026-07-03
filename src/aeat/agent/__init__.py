@@ -116,12 +116,16 @@ def iter_skill_metadata() -> Iterator[SkillMetadata]:
 
 
 __all__ = [
+    "MarketplaceManifest",
+    "PluginManifest",
     "WorkspaceManifest",
     "harness_root",
     "iter_operator_rules",
     "iter_personas",
     "iter_skill_documents",
     "iter_skill_metadata",
+    "materialise_marketplace",
+    "materialise_plugin",
     "materialise_workspace",
     "operator_rules_text",
     "parse_skill_metadata",
@@ -129,9 +133,16 @@ __all__ = [
 
 
 def __getattr__(name: str) -> object:
-    # Lazy re-export of the workspace materialiser to avoid an import cycle:
-    # _workspace imports the iterators from this package.
-    if name in {"WorkspaceManifest", "materialise_workspace"}:
+    # Lazy re-export of the workspace/plugin/marketplace materialisers to avoid
+    # an import cycle: _workspace imports the iterators from this package.
+    if name in {
+        "MarketplaceManifest",
+        "PluginManifest",
+        "WorkspaceManifest",
+        "materialise_marketplace",
+        "materialise_plugin",
+        "materialise_workspace",
+    }:
         from . import _workspace
 
         return getattr(_workspace, name)

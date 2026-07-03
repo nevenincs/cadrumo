@@ -1,9 +1,9 @@
-"""Tests for the governed-persistence :class:`ModeloAmendmentRepository`.
+"""Tests for the governed-persistence :class:`~aeat.adapters.persistence.profile.filing_amendments.ModeloAmendmentRepository`.
 
 Exercises the round-trip save/load API, list/iter/delete behaviour,
 the AUDIT classification gate, the unsafe-id rejection, the
 per-amendment lock isolation of
-:class:`aeat.domain.filing.ModeloAmendmentRepository`.
+:class:`~aeat.adapters.persistence.profile.filing_amendments.ModeloAmendmentRepository`.
 """
 
 from __future__ import annotations
@@ -14,6 +14,7 @@ from pathlib import Path
 
 import pytest
 
+from ....adapters.persistence.profile.filing_amendments import ModeloAmendmentRepository
 from ....adapters.persistence.storage import Envelope, SensitivityClass
 from ....adapters.persistence.storage.errors import ClassificationError
 from ....adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
@@ -21,7 +22,6 @@ from ....core import Period
 from ....domain.calculations.registry import CasillaId, RegistrySnapshotRef, validated_casilla_id
 from ....domain.filing import (
     CasillaChange,
-    ModeloAmendmentRepository,
     ModeloComplementaria,
     ModeloDraft,
     ModeloDraftStatus,

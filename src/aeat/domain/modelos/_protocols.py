@@ -19,6 +19,7 @@ from typing import TYPE_CHECKING, Protocol, runtime_checkable
 from ...core import Period
 from ._calculation_revision import CalculationRevisionCatalogue
 from ._filing_record import ModeloRecord, ModeloRecordCatalogue
+from ._participation_index import TransactionRevisionParticipationIndex
 from ._verification_report import VerificationReportCatalogue
 from ._work_unit import WorkUnitCatalogue
 
@@ -200,10 +201,45 @@ class VerificationReportCatalogueRepositoryProtocol(Protocol):
         ...
 
 
+@runtime_checkable
+class TransactionParticipationIndexRepositoryProtocol(Protocol):
+    """Narrow domain-facing repository contract for the participation index.
+
+    The participation index is a per-transaction, derived-and-rebuildable
+    read-side cache mapping a ledger transaction to the calculation revisions
+    it participates in. Unlike the singleton catalogue repositories, its objects
+    are keyed by ``transaction_id``. Any object that provides ``exists``,
+    ``load``, and ``save`` over a
+    :class:`TransactionRevisionParticipationIndex` satisfies this protocol; the
+    concrete secure-object-backed implementation is
+    :class:`TransactionParticipationIndexRepository`. Lifecycle correctness never
+    depends on this cache's freshness — it is rebuilt from the revision
+    catalogue — so the port is a navigation/read seam, not a source of truth.
+    """
+
+    @property
+    def bucket_id(self) -> str | None:
+        """Return the profile bucket id when this repository resolved one."""
+        ...
+
+    def exists(self, transaction_id: str) -> bool:
+        """Return whether a participation-index object exists for ``transaction_id``."""
+        ...
+
+    def load(self, transaction_id: str) -> TransactionRevisionParticipationIndex:
+        """Return the persisted index for ``transaction_id`` or an empty index if absent."""
+        ...
+
+    def save(self, index: TransactionRevisionParticipationIndex) -> None:
+        """Persist ``index`` as the encrypted per-transaction object."""
+        ...
+
+
 __all__ = [
     "CalculationRevisionCatalogueRepositoryProtocol",
     "ModeloRecordCatalogueQueryProtocol",
     "ModeloRecordCatalogueRepositoryProtocol",
+    "TransactionParticipationIndexRepositoryProtocol",
     "VerificationReportCatalogueRepositoryProtocol",
     "WorkUnitCatalogueRepositoryProtocol",
 ]

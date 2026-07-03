@@ -95,7 +95,7 @@ def test_verify_source_catalogue_checks_every_entry(tmp_path: Path) -> None:
     catalogue = {"aeat-source": _source_reference("corpus/source.xlsx", payload)}
     assert len(catalogue) == 1
     result = verify_source_catalogue(tmp_path, catalogue)
-    assert result is None
+    assert result == ()
 
 
 def test_verify_legal_catalogue_rejects_known_bad_citation_role() -> None:
@@ -365,6 +365,46 @@ def test_source_citation_text_rejects_path_escape(tmp_path: Path) -> None:
     assert failures == [
         f"scope: escape source citation {source.id!r} cannot be read: source {source.id!r} escapes source root",
     ]
+
+
+def test_source_citation_skips_absent_companion_binary_but_fails_absent_html(tmp_path: Path) -> None:
+    """A split install's absent companion binary is unevaluable, never a citation failure.
+
+    The corpus catalogue gate surfaces the ONE loud companion advisory for the
+    absent binary; the citation check must not duplicate-fail it. An absent
+    NON-companion file (extracted text, normative html — always in the runtime
+    wheel) stays a hard citation failure exactly as before.
+    """
+    binary = _source_reference("corpus/manuals/example/source.pdf", b"pdf payload").model_copy(
+        update={"id": "source-companion-pdf", "evidence_tier": "official_source_guidance", "kind": "instructions"},
+    )
+    html = _source_reference("corpus/normatives/html/example.html", b"<p>html payload</p>").model_copy(
+        update={"id": "source-runtime-html", "evidence_tier": "official_source_guidance", "kind": "instructions"},
+    )
+    validator = EvidenceValidator(
+        legal_refs={},
+        source_refs={binary.id: binary, html.id: html},
+        source_root=tmp_path,
+    )
+
+    binary_failures = validator.validate_source_citations(
+        "scope",
+        "companion",
+        (binary.id,),
+        (SourceCitation(source_ref=binary.id, required_text=("unevaluable phrase",)),),
+        "official_source_guidance",
+    )
+    html_failures = validator.validate_source_citations(
+        "scope",
+        "runtime",
+        (html.id,),
+        (SourceCitation(source_ref=html.id, required_text=("required phrase",)),),
+        "official_source_guidance",
+    )
+
+    assert binary_failures == []
+    assert len(html_failures) == 1
+    assert "cannot be read" in html_failures[0]
 
 
 def test_verify_legal_catalogue_rejects_missing_required_text_on_single_path(tmp_path: Path) -> None:

@@ -26,8 +26,6 @@ _SENSITIVE_SURFACES = (
     SRC_AEAT / "application" / "auth",
     SRC_AEAT / "application" / "setup",
     SRC_AEAT / "application" / "filing" / "_history_repository.py",
-    SRC_AEAT / "domain" / "filing" / "_repository.py",
-    SRC_AEAT / "domain" / "filing" / "_complementaria_repository.py",
     SRC_AEAT / "domain" / "attachments" / "_repository.py",
     SRC_AEAT / "domain" / "invoices",
     SRC_AEAT / "domain" / "justificante" / "_repository.py",

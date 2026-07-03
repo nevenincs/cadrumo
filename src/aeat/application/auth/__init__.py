@@ -245,6 +245,18 @@ from ._apoderado import (
     ApoderadoService,
     ApoderadoStatus,
 )
+from ._certificate_sources import (
+    CertificateSourceNoActiveBucketError,
+)
+from ._certificate_sources import (
+    CertificateSourceNotFoundError as StateCertificateSourceNotFoundError,
+)
+from ._certificate_sources_operator import (
+    list_operator_certificate_sources,
+    register_operator_certificate_source,
+    remove_operator_certificate_source,
+    select_operator_certificate_source,
+)
 from ._diagnostics import (
     AUTH_DIAGNOSTIC_PHONE_STATES,
     AuthDiagnosticDetail,
@@ -256,7 +268,7 @@ from ._diagnostics import (
     record_auth_diagnostic_phone_state,
 )
 from ._errors import AuthDiagnosticPayloadError
-from ._models import AuthState
+from ._models import AuthState, CertificateSourceRecord
 from ._operator import (
     build_live_auth_preflight_report,
     clear_operator_auth,
@@ -283,6 +295,10 @@ from ._operator_results import (
     AuthProvidersReport,
     AuthStatusResult,
     AuthTestResult,
+    CertificateSourceListResult,
+    CertificateSourceMutationResult,
+    CertificateSourceNotFoundError,
+    CertificateSourcePayload,
     LiveAuthPreflightReport,
 )
 from ._sessions import (
@@ -337,12 +353,19 @@ __all__ = [
     "AuthStatusResult",
     "AuthTestResult",
     "AuthenticatedAeatSessionResult",
+    "CertificateSourceListResult",
+    "CertificateSourceMutationResult",
+    "CertificateSourceNoActiveBucketError",
+    "CertificateSourceNotFoundError",
+    "CertificateSourcePayload",
+    "CertificateSourceRecord",
     "CorruptAuthSessionError",
     "LiveAuthPreflightReport",
     "PersistedAuthSession",
     "ProviderConfigurationProbe",
     "ProviderProbeResult",
     "SessionDeserializationError",
+    "StateCertificateSourceNotFoundError",
     "StorageStatePaths",
     "acquire_auth_acquisition_lock",
     "auth_acquisition_lock_path",
@@ -363,12 +386,16 @@ __all__ = [
     "list_auth_diagnostics",
     "list_auth_providers",
     "list_operator_auth_providers",
+    "list_operator_certificate_sources",
     "load_auth_diagnostic",
     "load_persisted_session",
     "login_operator_auth",
     "probe_provider_configuration",
     "record_auth_diagnostic_phone_state",
+    "register_operator_certificate_source",
+    "remove_operator_certificate_source",
     "require_verified_aeat_session",
+    "select_operator_certificate_source",
     "select_provider",
     "storage_state_paths",
     "test_operator_auth",

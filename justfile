@@ -212,6 +212,12 @@ packaging-smoke-extras: packaging-smoke-source
 packaging-smoke-dev: packaging-smoke-source
     @uv run --no-sync python -m dev.packaging.smoke_dev
 
+# Build the slim aeat wheel plus the aeat-data companion, install the slim
+# wheel alone (loud advisory path; verification verbs refuse instructively),
+# then add the companion and prove byte-identical source verification.
+packaging-smoke-split: packaging-smoke-source
+    @uv run --no-sync python -m dev.packaging.smoke_split_install
+
 # Build the wheel, install it with the browser extra, provision Chromium in an
 # isolated Playwright cache, and run the no-secret browser health check.
 packaging-smoke-browser: packaging-smoke-source
@@ -238,7 +244,7 @@ packaging-smoke-docker-browser: packaging-smoke-source
 packaging-smoke-docker: packaging-smoke-dependencies packaging-smoke-preflight-tests packaging-smoke-docker-core packaging-smoke-docker-browser
 
 # Local release-artifact smoke gates that do not need host package-manager access.
-packaging-smoke: packaging-smoke-dependencies packaging-smoke-preflight-tests packaging-smoke-core packaging-smoke-pip-core packaging-smoke-sdist-core packaging-smoke-extras packaging-smoke-browser
+packaging-smoke: packaging-smoke-dependencies packaging-smoke-preflight-tests packaging-smoke-core packaging-smoke-pip-core packaging-smoke-sdist-core packaging-smoke-extras packaging-smoke-split packaging-smoke-browser
 
 # ── Devcontainer ─────────────────────────────────────────────────────────────
 
@@ -564,3 +570,130 @@ release-apply:
     Write-Host '       git tag -a vX.Y.Z -m "aeat vX.Y.Z"'
     Write-Host "When ready (human decision only), push with:"
     Write-Host "  git push origin main --tags"
+
+# Publish the slim aeat wheel+sdist to PyPI. LOCAL-ONLY and HUMAN-GATED:
+# refuses in CI, needs a scoped token in UV_PUBLISH_TOKEN, and only runs
+# with the literal confirmation argument. See RELEASING.md for the full
+# release sequence (name claim, aeat-data size grant, marketplace push).
+[unix]
+publish confirm="":
+    #!/usr/bin/env bash
+    set -euo pipefail
+    if [ -n "${CI:-}" ] || [ -n "${GITHUB_ACTIONS:-}" ]; then
+        echo "publish is LOCAL-ONLY — refusing to run in CI." >&2
+        exit 1
+    fi
+    if [ "{{confirm}}" != "yes-publish-to-pypi" ]; then
+        echo "publish is HUMAN-GATED — run: just publish yes-publish-to-pypi" >&2
+        exit 1
+    fi
+    if [ -z "${UV_PUBLISH_TOKEN:-}" ]; then
+        echo "UV_PUBLISH_TOKEN is not set — create a scoped PyPI API token first (see RELEASING.md)." >&2
+        exit 1
+    fi
+    if [ -n "$(git status --porcelain)" ]; then
+        echo "working tree is not clean — publish only from a tagged, committed state." >&2
+        exit 1
+    fi
+    VERSION=$(uv run --no-sync python -c "import tomllib,pathlib;print(tomllib.loads(pathlib.Path('pyproject.toml').read_text())['project']['version'])")
+    if ! git tag --points-at HEAD | grep -qx "v$VERSION"; then
+        echo "HEAD is not tagged v$VERSION — run the release flow first (just release / just release-apply)." >&2
+        exit 1
+    fi
+    rm -rf var/release/dist
+    uv build --out-dir var/release/dist
+    echo "▶ uv publish (aeat v$VERSION)"
+    uv publish var/release/dist/*
+    echo "✔ published aeat v$VERSION — verify at https://pypi.org/project/aeat/$VERSION/"
+
+[windows]
+publish confirm="":
+    #!pwsh
+    $ErrorActionPreference = 'Stop'
+    if ($env:CI -or $env:GITHUB_ACTIONS) {
+        Write-Error "publish is LOCAL-ONLY - refusing to run in CI."
+        exit 1
+    }
+    if ('{{confirm}}' -ne 'yes-publish-to-pypi') {
+        Write-Error "publish is HUMAN-GATED - run: just publish yes-publish-to-pypi"
+        exit 1
+    }
+    if (-not $env:UV_PUBLISH_TOKEN) {
+        Write-Error "UV_PUBLISH_TOKEN is not set - create a scoped PyPI API token first (see RELEASING.md)."
+        exit 1
+    }
+    $dirty = & git status --porcelain
+    if ($dirty) {
+        Write-Error "working tree is not clean - publish only from a tagged, committed state."
+        exit 1
+    }
+    $version = (& uv run --no-sync python -c "import tomllib,pathlib;print(tomllib.loads(pathlib.Path('pyproject.toml').read_text())['project']['version'])").Trim()
+    $tags = & git tag --points-at HEAD
+    if ($tags -notcontains "v$version") {
+        Write-Error "HEAD is not tagged v$version - run the release flow first (just release / just release-apply)."
+        exit 1
+    }
+    if (Test-Path var/release/dist) { Remove-Item -Recurse -Force var/release/dist }
+    & uv build --out-dir var/release/dist
+    if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+    Write-Host "▶ uv publish (aeat v$version)"
+    & uv publish (Get-ChildItem var/release/dist/*)
+    if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+    Write-Host "✔ published aeat v$version - verify at https://pypi.org/project/aeat/$version/"
+
+# Publish the aeat-data corpus companion to PyPI (same gates as publish).
+# Requires the per-file size grant on the aeat-data project (RELEASING.md).
+[unix]
+publish-data confirm="":
+    #!/usr/bin/env bash
+    set -euo pipefail
+    if [ -n "${CI:-}" ] || [ -n "${GITHUB_ACTIONS:-}" ]; then
+        echo "publish-data is LOCAL-ONLY — refusing to run in CI." >&2
+        exit 1
+    fi
+    if [ "{{confirm}}" != "yes-publish-to-pypi" ]; then
+        echo "publish-data is HUMAN-GATED — run: just publish-data yes-publish-to-pypi" >&2
+        exit 1
+    fi
+    if [ -z "${UV_PUBLISH_TOKEN:-}" ]; then
+        echo "UV_PUBLISH_TOKEN is not set — create a scoped PyPI API token first (see RELEASING.md)." >&2
+        exit 1
+    fi
+    if [ -n "$(git status --porcelain)" ]; then
+        echo "working tree is not clean — publish only from a tagged, committed state." >&2
+        exit 1
+    fi
+    rm -rf var/release/dist-data
+    uv build --project packaging/aeat_data --out-dir var/release/dist-data
+    echo "▶ uv publish (aeat-data)"
+    uv publish var/release/dist-data/*
+    echo "✔ published aeat-data — verify at https://pypi.org/project/aeat-data/"
+
+[windows]
+publish-data confirm="":
+    #!pwsh
+    $ErrorActionPreference = 'Stop'
+    if ($env:CI -or $env:GITHUB_ACTIONS) {
+        Write-Error "publish-data is LOCAL-ONLY - refusing to run in CI."
+        exit 1
+    }
+    if ('{{confirm}}' -ne 'yes-publish-to-pypi') {
+        Write-Error "publish-data is HUMAN-GATED - run: just publish-data yes-publish-to-pypi"
+        exit 1
+    }
+    if (-not $env:UV_PUBLISH_TOKEN) {
+        Write-Error "UV_PUBLISH_TOKEN is not set - create a scoped PyPI API token first (see RELEASING.md)."
+        exit 1
+    }
+    $dirty = & git status --porcelain
+    if ($dirty) {
+        Write-Error "working tree is not clean - publish only from a tagged, committed state."
+        exit 1
+    }
+    if (Test-Path var/release/dist-data) { Remove-Item -Recurse -Force var/release/dist-data }
+    & uv build --project packaging/aeat_data --out-dir var/release/dist-data
+    if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+    Write-Host "▶ uv publish (aeat-data)"
+    & uv publish (Get-ChildItem var/release/dist-data/*)
+    if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+    Write-Host "✔ published aeat-data - verify at https://pypi.org/project/aeat-data/"

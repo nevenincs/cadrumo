@@ -1,17 +1,23 @@
-"""Packaging content-boundary gate: the wheel sheds tests and keeps payload.
+"""Packaging content-boundary gate: the wheel sheds tests and corpus binaries, keeps payload.
 
 The build config excludes
 every ``tests/`` tree from the installed wheel — those modules and fixtures
-serve no installed consumer, since the suites run from the repository tree.
-This gate proves the boundary end-to-end by building the real wheel and
-asserting it both ways:
+serve no installed consumer, since the suites run from the repository tree —
+and the corpus SOURCE binaries (``_data/corpus/**/*.{pdf,xls,xlsx}``), which the
+wheel-split decision moves to the ``aeat-data`` companion. This gate proves the
+boundary end-to-end by building the real wheel and asserting it every way:
 
 1. No ``tests/`` member ships (the exclude took effect), so the ~11 MB fixture
    payload no longer reaches consumers.
-2. The required functional payload still ships — the ``_data`` roots (corpus,
+2. No corpus source binary (``*.pdf``/``*.xls``/``*.xlsx`` under ``_data/corpus``)
+   ships — the 94%-of-weight payload the split sheds to ``aeat-data``.
+3. The required functional payload still ships — the ``_data`` roots (corpus,
    registry, terminology, agent harness), the ``py.typed`` marker, the BIP-39
    recovery wordlist, and ``external_constants.toml`` — so the exclude cannot
    silently strip something the installed package needs.
+4. The corpus DERIVED surfaces the runtime reads (extracted text
+   ``*.extracted.md``/``.json`` and normative html) survive: the corpus-binary
+   exclude must shed only the source binaries, never the derived payload.
 
 The exclude alone is build config that can silently rot; this post-build
 assertion is what makes the boundary an executable contract. No mocks, fakes,
@@ -24,6 +30,7 @@ from __future__ import annotations
 import shutil
 import subprocess
 import zipfile
+from collections.abc import Callable
 from pathlib import Path
 
 import pytest
@@ -34,6 +41,11 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
 _WHEEL_PREFIX = "aeat"
 _WHEEL_DATA_PREFIX = "aeat/_data"
+_WHEEL_CORPUS_PREFIX = f"{_WHEEL_DATA_PREFIX}/corpus/"
+
+# Corpus source binaries the wheel-split excludes; they ship in the ``aeat-data``
+# companion, so zero of them may appear in this slim wheel.
+_CORPUS_BINARY_SUFFIXES = (".pdf", ".xls", ".xlsx")
 
 # Required functional payload that MUST survive the tests exclude. Each entry is
 # a wheel-archive path (or, for the data roots, a directory prefix probed below).
@@ -115,3 +127,53 @@ def test_wheel_keeps_required_functional_members(wheel_members: frozenset[str]) 
     assert not missing, (
         f"the wheel is missing required functional member(s) {missing!r}; the tests exclude stripped functional payload"
     )
+
+
+def test_wheel_ships_no_corpus_source_binaries(wheel_members: frozenset[str]) -> None:
+    """No ``_data/corpus`` pdf/xls/xlsx member survives the wheel-split exclude."""
+
+    offenders = sorted(
+        member
+        for member in wheel_members
+        if member.startswith(_WHEEL_CORPUS_PREFIX) and member.lower().endswith(_CORPUS_BINARY_SUFFIXES)
+    )
+    assert not offenders, (
+        f"the slim wheel ships {len(offenders)} corpus source binary member(s) the wheel-split exclude should have "
+        f"shed to the aeat-data companion; first ten: {offenders[:10]!r}"
+    )
+
+
+def test_wheel_keeps_corpus_derived_surfaces(wheel_members: frozenset[str]) -> None:
+    """The corpus DERIVED surfaces the runtime reads survive the binary exclude.
+
+    The exclude sheds only the source binaries; the extracted text and normative
+    html the grounding search and legal gates read at runtime MUST stay, or the
+    slim wheel would be functionally broken. Each probe asserts at least one
+    member of the surface ships.
+    """
+
+    surfaces: dict[str, Callable[[str], bool]] = {
+        "corpus extracted text (*.extracted.md)": lambda m: m.startswith(_WHEEL_CORPUS_PREFIX)
+        and m.endswith(".extracted.md"),
+        "corpus extracted data (*.extracted.json)": lambda m: m.startswith(_WHEEL_CORPUS_PREFIX)
+        and m.endswith(".extracted.json"),
+        "corpus normative html": lambda m: m.startswith(f"{_WHEEL_CORPUS_PREFIX}normatives/html/")
+        and m.endswith(".html"),
+    }
+    missing = sorted(name for name, pred in surfaces.items() if not any(pred(member) for member in wheel_members))
+    assert not missing, (
+        f"the wheel is missing corpus derived surface(s) {missing!r}; the corpus-binary exclude over-stripped payload "
+        "the runtime reads"
+    )
+
+
+def test_wheel_keeps_registry_and_agent_payload(wheel_members: frozenset[str]) -> None:
+    """Representative registry and agent-harness members still ship."""
+
+    def _count(prefix: str) -> int:
+        return sum(1 for member in wheel_members if member.startswith(prefix))
+
+    registry_count = _count(f"{_WHEEL_DATA_PREFIX}/registry/")
+    agent_count = _count(f"{_WHEEL_DATA_PREFIX}/agent/")
+    assert registry_count > 0, "the wheel ships no registry members; the split over-stripped the registry payload"
+    assert agent_count > 0, "the wheel ships no agent-harness members; the split over-stripped the agent payload"

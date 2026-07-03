@@ -1,4 +1,4 @@
-"""Tests for filing domain runtime repository helpers."""
+"""Tests for the filing persistence-adapter runtime repository helpers."""
 
 from __future__ import annotations
 
@@ -6,13 +6,12 @@ from pathlib import Path
 
 import pytest
 
-from ....adapters.persistence.storage.errors import StorageValidationError
-from ....adapters.persistence.storage.sql.engine import dispose_engine
-from ....core.config import override_settings
-from .._errors import ModeloDraftError
-from .._runtime_repository import resolve_filing_repository_bucket_id, secure_objects_for_filing_bucket
+from .....core.config import override_settings
+from .....domain.filing import ModeloDraftError
+from ...storage import StorageValidationError, dispose_engine
+from .._filing_runtime import resolve_filing_repository_bucket_id, secure_objects_for_filing_bucket
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 
 _EXPLICIT_BUCKET_ID = "2f85f149-2df7-41b7-b569-aae0b3d0998d"
 _ACTIVE_BUCKET_ID = "34245238-a76d-4ebf-a515-8e5af83cfc0c"
