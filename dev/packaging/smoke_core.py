@@ -53,6 +53,15 @@ _CORE_ABSENT_NAMES = {
     "sphinx",
     "torch",
 }
+# Packages that legitimately appear in the core resolution as transitive
+# dependencies of a base dependency, even though they are ALSO declared under an
+# optional extra (a name collision). Without this carve-out the
+# "optional-leaked-into-core" export check would false-positive on the shared
+# name. ``numpy`` is pulled into core by ``formulas`` (a base dependency, the
+# workbook-parity oracle) and is independently listed in the ``search`` extra.
+_CORE_PRESENT_TRANSITIVE_NAMES = {
+    "numpy",
+}
 _EXTRAS_PRESENT_NAMES = {
     "anthropic",
     "google-api-python-client",
@@ -472,7 +481,8 @@ def _validate_frozen_exports(repo_root: Path, uv: str) -> None:
         "core",
         core_names,
         present=surfaces.project_active_names,
-        absent=surfaces.external_optional_active_names | surfaces.dev_only_active_names | _CORE_ABSENT_NAMES,
+        absent=(surfaces.external_optional_active_names | surfaces.dev_only_active_names | _CORE_ABSENT_NAMES)
+        - _CORE_PRESENT_TRANSITIVE_NAMES,
     )
     _assert_export_surface(
         "extras",
