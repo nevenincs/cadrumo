@@ -13,6 +13,14 @@ default. The
 
 This module uses :class:`WorkflowResult`, :class:`WorkflowEngine`,
 and :class:`UserProfileRecord` for workflow persistence and state management.
+:class:`WorkflowEvent` and the review-annotation field types embedded on
+:class:`WorkflowState` (``InvoiceReviewRecord``, ``LedgerReviewRecord``) are
+defined in the shared leaf module
+:mod:`aeat.application._workflow_review_models` rather than here or in
+:mod:`aeat.application.review`, because :mod:`aeat.application.review` embeds
+:class:`WorkflowEvent` as a field type in turn — a genuine mutual runtime
+dependency that a shared leaf module resolves without either package
+importing the other.
 
 See Also:
     :class:`~aeat.application.workflow.WorkflowEngine`
@@ -63,6 +71,11 @@ from ...core import (
 )
 from ...core.identity import BucketId
 from ...core.logging import get_logger
+from .._workflow_review_models import (
+    InvoiceReviewRecord,
+    LedgerReviewRecord,
+    WorkflowEvent,
+)
 from ..auth import AuthState
 from ._utils import utc_now
 
@@ -70,44 +83,8 @@ if TYPE_CHECKING:
     from ...adapters.persistence.storage import SecureObjectRepository
     from ...domain.transactions import TransactionCatalogueRepository
     from ...domain.user_profile import UserProfileRecord
-    from ..review import (
-        InvoiceReviewRecord,
-        LedgerReviewRecord,
-    )
 
 _log = get_logger(__name__)
-
-
-class WorkflowEvent(BaseModel):
-    """One operator-visible event emitted by a mutating workflow verb.
-
-    Events are appended to :attr:`WorkflowState.bucket_events` so the
-    operator can audit which actions ran, when, and against which object.
-    ``action`` names the verb (e.g. ``"profile.created"``); ``reason``
-    carries a free-form human-readable annotation; ``bucket_id`` and
-    ``object_id`` are optional pointers to the affected resource.
-    """
-
-    model_config = _STRICT_FROZEN
-
-    action: str = Field(min_length=1)
-    reason: str = ""
-    bucket_id: BucketId | None = None
-    object_id: str | None = None
-    at: datetime = Field(default_factory=utc_now)
-
-    @field_validator("action", "reason")
-    @classmethod
-    def _trim_text(cls, value: str) -> str:
-        return value.strip()
-
-    @field_validator("bucket_id", "object_id")
-    @classmethod
-    def _trim_optional_text(cls, value: str | None) -> str | None:
-        if value is None:
-            return None
-        trimmed = value.strip()
-        return trimmed or None
 
 
 class WorkflowStage(StrEnum):
@@ -379,19 +356,6 @@ def update_declaration_pointer(
 
 from ...adapters.outbound.aeat.browser import SiteHealthStatus
 from ...domain.deadlines import ModeloDeadline
-
-# CYCLE-BREAK-RATIONALE-WORKFLOW-REVIEW: importing the ``application.review``
-# facade here re-enters this same partially-initialised ``workflow`` package
-# whenever ``application.review`` is the import chain's entry point (its
-# ``_actions``/``_models`` submodules import ``application.workflow`` at
-# their own module level). Import the submodule directly to avoid triggering
-# ``application.review.__init__`` during that chain.
-from ..review._models import (
-    InvoiceReviewRecord,
-    LedgerReviewRecord,
-)
-
-WorkflowState.model_rebuild()
 
 
 class SiteHealthAlert(BaseModel):
