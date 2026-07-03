@@ -24,9 +24,8 @@ from ....domain.modelos import (
     VerificationReportCatalogue,
     VerificationReportPersistenceError,
     raise_catalogue_integrity_error,
-    resolve_modelo_repository_bucket_id,
-    secure_objects_for_modelo_bucket,
 )
+from ._modelo_runtime import resolve_modelo_repository_bucket_id, secure_objects_for_modelo_bucket
 
 if TYPE_CHECKING:  # pragma: no cover — import-cycle guard
     from ..storage import SecureObjectRepository

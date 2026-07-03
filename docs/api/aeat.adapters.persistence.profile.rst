@@ -13,6 +13,7 @@ Submodules
 .. toctree::
    :maxdepth: 4
 
+   aeat.adapters.persistence.profile._modelo_runtime
    aeat.adapters.persistence.profile.assets
    aeat.adapters.persistence.profile.bienes_inversion
    aeat.adapters.persistence.profile.buckets
