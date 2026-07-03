@@ -28,6 +28,7 @@ related:
   - '[[2026-07-02-arch-remediation-ports-inversion-W04-P10-S20]]'
   - '[[2026-07-02-arch-remediation-ports-inversion-adr]]'
   - '[[2026-07-02-arch-remediation-ports-inversion-plan]]'
+  - '[[2026-07-03-arch-remediation-ports-inversion-audit]]'
 ---
 
 # `arch-remediation-ports-inversion` feature index
@@ -39,6 +40,10 @@ Auto-generated index of all documents tagged with `#arch-remediation-ports-inver
 ### adr
 
 - `2026-07-02-arch-remediation-ports-inversion-adr` - `arch-remediation-ports-inversion` adr: `domain persistence ports inversion: fincas template as standard` | (**status:** `accepted`)
+
+### audit
+
+- `2026-07-03-arch-remediation-ports-inversion-audit` - `arch-remediation-ports-inversion` audit: `ports-inversion campaign close honesty review`
 
 ### exec
 
