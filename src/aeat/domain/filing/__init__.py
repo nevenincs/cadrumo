@@ -11,7 +11,8 @@ The facade also exports :class:`ModeloValidator`, the protocol contracts
 consumed by :mod:`application.filing`, the LGT Art. 122 amendment records
 :class:`ModeloComplementaria` and :class:`ModeloSustitutiva`, their
 :class:`CasillaChange` deltas, and the governed repositories. Drafts persist
-through :class:`ModeloDraftRepository` in FINANCIAL encrypted storage;
+through :class:`~aeat.adapters.persistence.profile.filing_drafts.ModeloDraftRepository`
+(behind :class:`ModeloDraftRepositoryProtocol`) in FINANCIAL encrypted storage;
 amendments persist through :class:`ModeloAmendmentRepository` in AUDIT
 encrypted storage.
 
@@ -83,13 +84,11 @@ from ._protocols import (
     CasillaSchemaProvider,
     DeadlineChecker,
     DeadlineStatus,
+    ModeloDraftRepositoryProtocol,
     ModeloInputs,
     ModeloInputScalar,
     ModeloInputValue,
     ModeloProfile,
-)
-from ._repository import (
-    ModeloDraftRepository,
 )
 from ._schema import (
     APPROVAL_BASIS_VERSION,
@@ -137,7 +136,7 @@ __all__ = [
     "ModeloComputationError",
     "ModeloDraft",
     "ModeloDraftError",
-    "ModeloDraftRepository",
+    "ModeloDraftRepositoryProtocol",
     "ModeloDraftStatus",
     "ModeloImportError",
     "ModeloInputScalar",
