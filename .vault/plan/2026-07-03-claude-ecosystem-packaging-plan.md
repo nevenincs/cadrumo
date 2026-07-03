@@ -53,11 +53,11 @@ Split the single 171.8 MB wheel into a slim aeat runtime wheel (corpus source bi
 
 Exclude the corpus source binaries from the aeat wheel and package exactly those binaries in a new aeat-data distribution with mirrored relative paths, keeping the single source tree and the data-budget gate intact.
 
-- [ ] `W02.P03.S08` - Exclude _data/corpus source binaries (*.pdf, *.xls, *.xlsx) from the aeat wheel via hatchling wheel excludes; `pyproject.toml`.
-- [ ] `W02.P03.S09` - Scaffold the aeat-data distribution build with its own pyproject reading the same source tree, force-including the corpus binaries under an aeat_data package with mirrored relative paths; `packaging/aeat_data/pyproject.toml`.
-- [ ] `W02.P03.S10` - Add a wheel-content test asserting the aeat wheel ships zero corpus pdf/xls/xlsx members while keeping the extracted-text, normative-html, registry and agent payload; `src/aeat/tests/test_wheel_content_boundary.py`.
-- [ ] `W02.P03.S11` - Add a test that the aeat-data wheel packages exactly the corpus binaries under aeat_data with mirrored relative paths and nothing else; `dev/packaging/tests/test_aeat_data_distribution.py`.
-- [ ] `W02.P03.S12` - Keep the _data size-budget gate meaningful per distribution after the split so the budget is not evaded by moving bytes to the companion; `src/aeat/tests/test_data_size_budget.py`.
+- [x] `W02.P03.S08` - Exclude _data/corpus source binaries (*.pdf, *.xls, *.xlsx) from the aeat wheel via hatchling wheel excludes; `pyproject.toml`.
+- [x] `W02.P03.S09` - Scaffold the aeat-data distribution build with its own pyproject reading the same source tree, force-including the corpus binaries under an aeat_data package with mirrored relative paths; `packaging/aeat_data/pyproject.toml`.
+- [x] `W02.P03.S10` - Add a wheel-content test asserting the aeat wheel ships zero corpus pdf/xls/xlsx members while keeping the extracted-text, normative-html, registry and agent payload; `src/aeat/tests/test_wheel_content_boundary.py`.
+- [x] `W02.P03.S11` - Add a test that the aeat-data wheel packages exactly the corpus binaries under aeat_data with mirrored relative paths and nothing else; `dev/packaging/tests/test_aeat_data_distribution.py`.
+- [x] `W02.P03.S12` - Keep the _data size-budget gate meaningful per distribution after the split so the budget is not evaded by moving bytes to the companion; `src/aeat/tests/test_data_size_budget.py`.
 
 ### Phase `W02.P04` - Corpus locator resolution seam
 
