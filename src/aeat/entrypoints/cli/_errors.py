@@ -133,12 +133,20 @@ class CliUnexpectedBoundaryError(AeatError):
             error: The unexpected exception raised inside the Typer
                 callback.
         """
+        # An unexpected exception here is almost always a code/environment
+        # fault (an import error, a logic bug), NOT corrupted stored state.
+        # Suggesting `config repair integrity` was misleading: it implies
+        # storage corruption and points at a mutating repair that cannot fix a
+        # code fault. Point instead at the read-only diagnostic log inspection,
+        # where the actual traceback is echoed back — the honest recovery for an
+        # internal error. (Mirrors the reasoning `CliValidationBoundaryError`
+        # already applies to input-time failures.)
         super().__init__(
             translated_message="errors.internal.internal_cli_unexpected_boundary",
             context={
-                "recovery": "aeat config repair integrity --help",
+                "recovery": "aeat config repair logs",
             },
-            suggestion="aeat config repair integrity --help",
+            suggestion="aeat config repair logs",
         )
         self.original_exception: Exception = error
 

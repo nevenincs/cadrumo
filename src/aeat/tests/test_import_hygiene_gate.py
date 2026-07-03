@@ -70,7 +70,7 @@ straight failure with no allowlist escape hatch.
 from __future__ import annotations
 
 import json
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Final
 
@@ -99,7 +99,11 @@ class _BaselineSite:
     """One named, documented production Family-1 exception."""
 
     importer_path: str
-    lineno: int
+    # Excluded from equality/hash: the line number is volatile (any peer edit that
+    # shifts a documented import's line would otherwise break the gate). A site's
+    # identity is (importer_path, target_mod, imported_names); lineno is kept only
+    # for human-readable diagnostics.
+    lineno: int = field(compare=False)
     target_mod: str
     imported_names: tuple[str, ...]
 

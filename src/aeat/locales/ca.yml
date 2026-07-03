@@ -4767,7 +4767,7 @@ errors:
     profile_import_signature: L'arxiu de perfil no ha superat la comprovació de signatura
       o integritat. No importis arxius d'origen no fiable.
   internal:
-    internal_cli_unexpected_boundary: L'ordre ha fallat per un error intern inesperat.
+    internal_cli_unexpected_boundary: 'L''ordre ha fallat per un error intern inesperat, no per un problema de dades emmagatzemades. Consulteu els registres de diagnòstic per veure què ha fallat.'
     internal_master_key_reentrant: 'Internal error: master-key provider entered re-entrantly;
       close the active session before re-entering.'
     internal_master_key_type: 'Internal error: master-key operation received a value
