@@ -7,6 +7,7 @@ date: '2026-07-03'
 modified: '2026-07-03'
 related:
   - '[[2026-07-03-claude-ecosystem-packaging-adr]]'
+  - '[[2026-07-03-claude-ecosystem-packaging-plan]]'
   - '[[2026-07-03-claude-ecosystem-packaging-research]]'
 ---
 
@@ -18,7 +19,11 @@ Auto-generated index of all documents tagged with `#claude-ecosystem-packaging`.
 
 ### adr
 
-- `2026-07-03-claude-ecosystem-packaging-adr` - `claude-ecosystem-packaging` adr: `Claude ecosystem plugin as the first product distribution` | (**status:** `proposed`)
+- `2026-07-03-claude-ecosystem-packaging-adr` - `claude-ecosystem-packaging` adr: `Claude ecosystem plugin as the first product distribution` | (**status:** `accepted`)
+
+### plan
+
+- `2026-07-03-claude-ecosystem-packaging-plan` - `claude-ecosystem-packaging` plan
 
 ### research
 
