@@ -682,6 +682,16 @@ class Settings(AeatRuntimeSettings):
         default=PROJECT_ROOT / "var" / "llm-run-telemetry",
         description="Directory for append-only local LLM run-timing telemetry logs",
     )
+    aeat_llm_run_telemetry_retention_days: int = Field(
+        default=30,
+        ge=1,
+        description="Retention window in days for local LLM run-telemetry records; older records are pruned",
+    )
+    aeat_llm_run_telemetry_max_records: int = Field(
+        default=5000,
+        ge=1,
+        description="Maximum number of local LLM run-telemetry records retained; oldest excess records are pruned",
+    )
     aeat_llm_default_timeout_s: int = Field(
         default=60,
         description="Default timeout for LLM provider calls in seconds",
