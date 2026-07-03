@@ -86,3 +86,74 @@ class RunsListResult(OutputSchema):
     runs: list[RunRecordPayload]
     total_runs: int
     has_run_data: bool
+
+
+class LatencyPercentilesPayload(OutputSchema):
+    """Percentile and summary latency statistics for one scope (overall or one provider).
+
+    Mirrors :class:`~aeat.application.diagnostics_run_health.LatencyPercentiles`.
+    """
+
+    entries: int
+    min_duration_ms: int | None = None
+    max_duration_ms: int | None = None
+    mean_duration_ms: str | None = None
+    p50_duration_ms: int | None = None
+    p95_duration_ms: int | None = None
+    p99_duration_ms: int | None = None
+
+
+class LatencyProviderRowPayload(OutputSchema):
+    """One provider's :class:`LatencyPercentilesPayload` row."""
+
+    provider: str
+    percentiles: LatencyPercentilesPayload
+
+
+@register_schema("diagnostics.latency")
+class LatencyResult(OutputSchema):
+    """JSON envelope for ``aeat app diagnostics latency``.
+
+    Presents P50/P95/P99 (plus min/max/mean) run-duration percentiles overall
+    and, unless ``--provider`` scopes the query, broken down per provider.
+    Sourced from
+    :func:`~aeat.application.diagnostics_run_health.build_latency_report`. It
+    reports only accounting/timing metadata, never prompt or response content.
+    """
+
+    since: str | None = None
+    until: str | None = None
+    provider: str | None = None
+    overall: LatencyPercentilesPayload
+    by_provider: list[LatencyProviderRowPayload]
+    has_run_data: bool
+
+
+class ErrorKindCountPayload(OutputSchema):
+    """One provider/``error_kind`` failure count.
+
+    Mirrors :class:`~aeat.application.diagnostics_run_health.ErrorKindCount`.
+    """
+
+    error_kind: str
+    provider: str
+    count: int
+
+
+@register_schema("diagnostics.errors")
+class ErrorsBreakdownResult(OutputSchema):
+    """JSON envelope for ``aeat app diagnostics errors``.
+
+    Presents a breakdown of failed LLM runs by provider and ``error_kind``,
+    sorted by descending failure count. Sourced from
+    :func:`~aeat.application.diagnostics_run_health.build_error_breakdown`. It
+    reports only accounting/timing metadata, never prompt or response content.
+    """
+
+    since: str | None = None
+    until: str | None = None
+    provider: str | None = None
+    total_runs: int
+    total_failed: int
+    by_error_kind: list[ErrorKindCountPayload]
+    has_failures: bool

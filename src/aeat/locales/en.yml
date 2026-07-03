@@ -2839,6 +2839,20 @@ cli:
         and cannot be repaired manually.'
       registry_integrity_internal: Internal application problem; not a fault in your
         profile and not something you can fix yourself.
+    errors:
+      header: 'LLM run errors:'
+      help: 'Break down recent failed local LLM runs by provider and error kind.'
+      no_failures: 'No failed LLM runs recorded in this range.'
+      provider_help: 'Restrict the breakdown to this provider label (e.g. claude, antigravity, codex).'
+      since_help: 'Inclusive lower ISO date (YYYY-MM-DD) bound on LLM run records.'
+      until_help: 'Inclusive upper ISO date (YYYY-MM-DD) bound on LLM run records.'
+    latency:
+      header: 'LLM run latency:'
+      help: 'Report P50/P95/P99 duration percentiles over recent local LLM runs.'
+      no_run_data: 'No LLM run telemetry recorded yet. Run an LLM-assisted classification to populate it.'
+      provider_help: 'Restrict the report to this provider label (e.g. claude, antigravity, codex).'
+      since_help: 'Inclusive lower ISO date (YYYY-MM-DD) bound on LLM run records.'
+      until_help: 'Inclusive upper ISO date (YYYY-MM-DD) bound on LLM run records.'
     next_action:
       inspect_registry_toml: Inspect the registry TOML sources to identify the problem.
     repair:

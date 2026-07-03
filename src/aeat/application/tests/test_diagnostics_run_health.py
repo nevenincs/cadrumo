@@ -14,6 +14,7 @@ from __future__ import annotations
 
 from collections.abc import Iterator
 from datetime import UTC, date, datetime
+from decimal import Decimal
 from pathlib import Path
 
 import pytest
@@ -21,7 +22,12 @@ import pytest
 from ...adapters.outbound.llm import LLMRunRecord, LLMRunTelemetryRecorder
 from ...application.auth import AuthTestResult
 from ...tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
-from ..diagnostics_run_health import build_run_health_report, list_recent_runs
+from ..diagnostics_run_health import (
+    build_error_breakdown,
+    build_latency_report,
+    build_run_health_report,
+    list_recent_runs,
+)
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -227,3 +233,180 @@ def test_list_recent_runs_empty_store_returns_empty_tuple(profile: TestRuntimePr
     rows = list_recent_runs(run_telemetry_recorder=recorder)
 
     assert rows == ()
+
+
+def _seed_percentiles(recorder: LLMRunTelemetryRecorder) -> None:
+    """Write ten real claude runs with known ascending durations 100..1000ms.
+
+    Nearest-rank percentiles over this exact ten-value ascending set are
+    hand-verifiable against the documented method
+    (``rank = ceil(percentile * n / 100)``, 1-indexed):
+    P50 -> rank 5 -> 500ms; P95 -> rank 10 -> 1000ms; P99 -> rank 10 -> 1000ms.
+    """
+    for index, duration_ms in enumerate((100, 200, 300, 400, 500, 600, 700, 800, 900, 1000), start=1):
+        recorder.record(
+            LLMRunRecord(
+                run_id=f"lat-{index}",
+                caller="test",
+                provider="llm:claude:test-model",
+                duration_ms=duration_ms,
+                succeeded=True,
+                started_at=datetime(2026, 5, index, tzinfo=UTC),
+            ),
+        )
+
+
+def test_build_latency_report_computes_nearest_rank_percentiles(profile: TestRuntimeProfile) -> None:
+    """P50/P95/P99 match the documented nearest-rank method over ten known durations."""
+    recorder = LLMRunTelemetryRecorder(root_dir=profile.settings.aeat_llm_run_telemetry_dir)
+    _seed_percentiles(recorder)
+
+    report = build_latency_report(run_telemetry_recorder=recorder)
+
+    assert report.has_run_data is True
+    assert report.overall.entries == 10
+    assert report.overall.min_duration_ms == 100
+    assert report.overall.max_duration_ms == 1000
+    assert report.overall.mean_duration_ms == Decimal("550.00")
+    assert report.overall.p50_duration_ms == 500
+    assert report.overall.p95_duration_ms == 1000
+    assert report.overall.p99_duration_ms == 1000
+
+
+def test_build_latency_report_breaks_down_by_provider(profile: TestRuntimeProfile) -> None:
+    """``by_provider`` carries a percentile row per distinct provider when unscoped."""
+    recorder = LLMRunTelemetryRecorder(root_dir=profile.settings.aeat_llm_run_telemetry_dir)
+    _seed(recorder)
+
+    report = build_latency_report(run_telemetry_recorder=recorder)
+
+    by_provider = dict(report.by_provider)
+    assert set(by_provider) == {"llm:claude:test-model", "llm:codex:test-model"}
+    assert by_provider["llm:claude:test-model"].entries == 2
+    assert by_provider["llm:codex:test-model"].entries == 1
+    assert by_provider["llm:codex:test-model"].p50_duration_ms == 500
+
+
+def test_build_latency_report_provider_filter_omits_by_provider_breakdown(profile: TestRuntimeProfile) -> None:
+    """Scoping to one ``provider`` leaves ``by_provider`` empty (it would duplicate ``overall``)."""
+    recorder = LLMRunTelemetryRecorder(root_dir=profile.settings.aeat_llm_run_telemetry_dir)
+    _seed(recorder)
+
+    report = build_latency_report(provider="llm:codex:test-model", run_telemetry_recorder=recorder)
+
+    assert report.overall.entries == 1
+    assert report.overall.p50_duration_ms == 500
+    assert report.by_provider == ()
+
+
+def test_build_latency_report_empty_store_reports_no_run_data(profile: TestRuntimeProfile) -> None:
+    """An empty run-telemetry store reports ``has_run_data = False``, not an error."""
+    recorder = LLMRunTelemetryRecorder(root_dir=profile.settings.aeat_llm_run_telemetry_dir)
+
+    report = build_latency_report(run_telemetry_recorder=recorder)
+
+    assert report.has_run_data is False
+    assert report.overall.entries == 0
+    assert report.overall.p50_duration_ms is None
+    assert report.by_provider == ()
+
+
+def test_build_latency_report_date_range_scopes_the_percentiles(profile: TestRuntimeProfile) -> None:
+    """``since``/``until`` narrow the percentile computation by date."""
+    recorder = LLMRunTelemetryRecorder(root_dir=profile.settings.aeat_llm_run_telemetry_dir)
+    _seed(recorder)
+
+    report = build_latency_report(since=date(2026, 4, 1), until=date(2026, 4, 1), run_telemetry_recorder=recorder)
+
+    assert report.overall.entries == 1
+    assert report.overall.p50_duration_ms == 1000
+
+
+def test_build_error_breakdown_groups_by_provider_and_error_kind(profile: TestRuntimeProfile) -> None:
+    """Failed runs are grouped by ``(provider, error_kind)`` with a count each."""
+    recorder = LLMRunTelemetryRecorder(root_dir=profile.settings.aeat_llm_run_telemetry_dir)
+    _seed(recorder)
+
+    report = build_error_breakdown(run_telemetry_recorder=recorder)
+
+    assert report.has_failures is True
+    assert report.total_runs == 3
+    assert report.total_failed == 1
+    assert len(report.by_error_kind) == 1
+    row = report.by_error_kind[0]
+    assert row.provider == "llm:claude:test-model"
+    assert row.error_kind == "LLMClassifierError"
+    assert row.count == 1
+
+
+def test_build_error_breakdown_sorts_by_descending_count(profile: TestRuntimeProfile) -> None:
+    """Rows sort by descending failure count, then provider, then error kind."""
+    recorder = LLMRunTelemetryRecorder(root_dir=profile.settings.aeat_llm_run_telemetry_dir)
+    # Two claude failures of kind A, one claude failure of kind B, one codex failure of kind A.
+    for index, (provider, error_kind) in enumerate(
+        (
+            ("llm:claude:test-model", "KindA"),
+            ("llm:claude:test-model", "KindA"),
+            ("llm:claude:test-model", "KindB"),
+            ("llm:codex:test-model", "KindA"),
+        ),
+        start=1,
+    ):
+        recorder.record(
+            LLMRunRecord(
+                run_id=f"err-{index}",
+                caller="test",
+                provider=provider,
+                duration_ms=100,
+                succeeded=False,
+                error_kind=error_kind,
+                started_at=datetime(2026, 5, index, tzinfo=UTC),
+            ),
+        )
+
+    report = build_error_breakdown(run_telemetry_recorder=recorder)
+
+    assert report.total_failed == 4
+    assert [(row.provider, row.error_kind, row.count) for row in report.by_error_kind] == [
+        ("llm:claude:test-model", "KindA", 2),
+        ("llm:claude:test-model", "KindB", 1),
+        ("llm:codex:test-model", "KindA", 1),
+    ]
+
+
+def test_build_error_breakdown_provider_filter_scopes_the_breakdown(profile: TestRuntimeProfile) -> None:
+    """``provider`` restricts the breakdown to one provider's failures."""
+    recorder = LLMRunTelemetryRecorder(root_dir=profile.settings.aeat_llm_run_telemetry_dir)
+    _seed(recorder)
+
+    report = build_error_breakdown(provider="llm:codex:test-model", run_telemetry_recorder=recorder)
+
+    assert report.total_runs == 1
+    assert report.total_failed == 0
+    assert report.has_failures is False
+    assert report.by_error_kind == ()
+
+
+def test_build_error_breakdown_empty_store_reports_no_failures(profile: TestRuntimeProfile) -> None:
+    """An empty run-telemetry store reports no failures, not an error."""
+    recorder = LLMRunTelemetryRecorder(root_dir=profile.settings.aeat_llm_run_telemetry_dir)
+
+    report = build_error_breakdown(run_telemetry_recorder=recorder)
+
+    assert report.has_failures is False
+    assert report.total_runs == 0
+    assert report.total_failed == 0
+    assert report.by_error_kind == ()
+
+
+def test_build_error_breakdown_succeeded_only_reports_no_failures(profile: TestRuntimeProfile) -> None:
+    """A store with only succeeded runs reports zero failures with real recorded runs."""
+    recorder = LLMRunTelemetryRecorder(root_dir=profile.settings.aeat_llm_run_telemetry_dir)
+    _seed_percentiles(recorder)
+
+    report = build_error_breakdown(run_telemetry_recorder=recorder)
+
+    assert report.total_runs == 10
+    assert report.total_failed == 0
+    assert report.has_failures is False
+    assert report.by_error_kind == ()

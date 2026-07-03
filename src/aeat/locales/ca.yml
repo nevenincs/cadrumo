@@ -3019,6 +3019,20 @@ cli:
         reparar manualment.'
       registry_integrity_internal: Problema intern de l'aplicació; no és un error
         del teu perfil ni una cosa que puguis corregir tu.
+    errors:
+      header: 'Errors d''execucions LLM:'
+      help: 'Desglossa les execucions LLM locals fallides recents per proveïdor i tipus d''error.'
+      no_failures: 'No s''ha registrat cap execució LLM fallida en aquest interval.'
+      provider_help: 'Restringeix el desglossament a aquesta etiqueta de proveïdor (per exemple, claude, antigravity, codex).'
+      since_help: 'Límit inferior inclusiu (AAAA-MM-DD) en els registres d''execucions LLM.'
+      until_help: 'Límit superior inclusiu (AAAA-MM-DD) en els registres d''execucions LLM.'
+    latency:
+      header: 'Latència d''execucions LLM:'
+      help: 'Mostra els percentils P50/P95/P99 de durada de les execucions LLM locals recents.'
+      no_run_data: 'Encara no s''ha registrat telemetria d''execucions LLM. Executa una classificació assistida per LLM per generar-la.'
+      provider_help: 'Restringeix l''informe a aquesta etiqueta de proveïdor (per exemple, claude, antigravity, codex).'
+      since_help: 'Límit inferior inclusiu (AAAA-MM-DD) en els registres d''execucions LLM.'
+      until_help: 'Límit superior inclusiu (AAAA-MM-DD) en els registres d''execucions LLM.'
     next_action:
       inspect_registry_toml: Inspecciona les fonts TOML del registre per identificar
         el problema.
