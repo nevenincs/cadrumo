@@ -158,7 +158,21 @@ search = [
   "snowballstemmer>=2.2,<4",
   "numpy>=1.26,<3",
 ]
-# Convenience aggregate: every optional integration at once.
+# Corpus source binaries (official AEAT PDF/XLS/XLSX) as the `aeat-data`
+# companion distribution, exact-version-locked to this package. The slim core
+# wheel excludes these binaries (the wheel excludes below); without the
+# companion the registry integrity gate surfaces a loud advisory and the
+# `aeat app registry` verification verbs refuse with this extra's install
+# hint. With it installed, source verification is byte-identical to a full
+# checkout. Reviewed data ships as an artifact — never fetched at install or
+# run time (product-packaging ADR).
+corpus-sources = [
+  "aeat-data==0.1.0",
+]
+# Convenience aggregate: every optional integration at once. `corpus-sources`
+# is deliberately excluded until the aeat-data distribution is published on
+# PyPI (its file-size grant rides the first release; see RELEASING.md) —
+# including it now would make `aeat[all]` unresolvable.
 all = [
   "aeat[google]",
   "aeat[browser]",
@@ -226,6 +240,11 @@ explicit = true
 torch = [
     {index = "pytorch-cu130", marker = "sys_platform == 'linux' or sys_platform == 'win32'"},
 ]
+# aeat-data is not on PyPI until its file-size grant lands (RELEASING.md), so
+# the dev resolver builds the companion from its in-repo project. uv sources
+# never reach the published wheel metadata: an installed `aeat[corpus-sources]`
+# still resolves the bare `aeat-data==0.1.0` pin from the index.
+aeat-data = { path = "packaging/aeat_data" }
 
 [tool.vaultspec-rag]
 managed-torch-direct-dependency = true
@@ -862,6 +881,9 @@ ignore_decorators = [
 [tool.deptry.per_rule_ignores]
 # `aeat`: the `all` convenience extra self-references the capability extras
 # (`aeat[google]` etc.); deptry reads the self-reference as an unused dependency.
-DEP002 = ["aeat", "formulas", "python-dotenv", "rich", "tzdata"]
+# `aeat-data`: a data-only companion distribution with no importable code the
+# scanner can see; the corpus locator reaches its `aeat_data` package
+# dynamically through `importlib.resources` (the corpus-binary resolution seam).
+DEP002 = ["aeat", "aeat-data", "formulas", "python-dotenv", "rich", "tzdata"]
 DEP003 = ["click", "pydantic_core"]
 DEP004 = ["pytest", "reportlab"]
