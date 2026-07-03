@@ -1,0 +1,13 @@
+{
+  "name": "aeat-marketplace",
+  "description": "Distribution marketplace for the aeat Spanish-tax Claude plugin.",
+  "owner": {
+    "name": "AEAT tax assistant project"
+  },
+  "plugins": [
+    {
+      "name": "aeat",
+      "source": "./plugins/aeat"
+    }
+  ]
+}
