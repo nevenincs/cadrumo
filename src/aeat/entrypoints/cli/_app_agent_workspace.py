@@ -18,10 +18,10 @@ from pathlib import Path
 
 import typer
 
-from ...agent import materialise_workspace
+from ...agent import materialise_plugin, materialise_workspace
 from ...core.i18n import tr
 from ...core.logging import get_logger
-from ._app_agent_workspace_payloads import AgentWorkspaceResult
+from ._app_agent_workspace_payloads import AgentLayout, AgentWorkspaceResult
 from ._common import _emit_envelope
 
 logger = get_logger(__name__)
@@ -43,16 +43,33 @@ def materialise(
         "-o",
         help=tr("cli.agent.materialise.output_help"),
     ),
+    layout: AgentLayout = typer.Option(
+        AgentLayout.WORKSPACE,
+        "--layout",
+        help=tr("cli.agent.materialise.layout_help"),
+    ),
 ) -> None:
     """Write the shipped operator harness into ``--output`` for an agent runtime.
 
-    A group-callback (like ``aeat app contract``) so it never enters the bucket
-    session: the materialiser is profile-independent - it reads shipped harness
-    data and writes it to an operator directory, needing no active profile or
-    secret store.
+    ``--layout workspace`` (default) writes the Claude-native project mirror
+    (``.claude/{rules,agents,skills}`` + ``CLAUDE.md``); ``--layout plugin``
+    writes a one-click Claude plugin (``.claude-plugin/plugin.json`` + ``skills/``
+    + ``agents/`` + ``.mcp.json``). A group-callback (like ``aeat app contract``)
+    so it never enters the bucket session: the materialiser is profile-independent
+    - it reads shipped harness data and writes it to an operator directory,
+    needing no active profile or secret store.
     """
     if ctx.invoked_subcommand is not None:
         return
+    if layout is AgentLayout.PLUGIN:
+        result, lines = _materialise_plugin_layout(output)
+    else:
+        result, lines = _materialise_workspace_layout(output)
+    _emit_envelope(ctx, command="agent", result=result, lines=lines)
+    raise typer.Exit()
+
+
+def _materialise_workspace_layout(output: Path) -> tuple[AgentWorkspaceResult, list[str]]:
     manifest = materialise_workspace(output)
     result = AgentWorkspaceResult.model_validate(manifest.model_dump(mode="json"))
     lines = [
@@ -65,5 +82,29 @@ def materialise(
             skills=str(manifest.skills_written),
         ),
     ]
-    _emit_envelope(ctx, command="agent", result=result, lines=lines)
-    raise typer.Exit()
+    return result, lines
+
+
+def _materialise_plugin_layout(output: Path) -> tuple[AgentWorkspaceResult, list[str]]:
+    manifest = materialise_plugin(output)
+    result = AgentWorkspaceResult(
+        layout=AgentLayout.PLUGIN,
+        output_path=manifest.output_path,
+        skills_written=manifest.skills_written,
+        plugin_name=manifest.plugin_name,
+        version=manifest.version,
+        agents_written=manifest.agents_written,
+        persona_default=manifest.persona_default,
+    )
+    lines = [
+        tr(
+            "cli.agent.materialise.plugin_summary",
+            default="Wrote Claude plugin to {path}: {skills} skills, {agents} agents ({name} v{version}).",
+            path=manifest.output_path,
+            skills=str(manifest.skills_written),
+            agents=str(manifest.agents_written),
+            name=manifest.plugin_name,
+            version=manifest.version,
+        ),
+    ]
+    return result, lines
