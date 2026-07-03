@@ -108,6 +108,62 @@ aeat config auth test
 
 The report now shows the renewed certificate's later expiry date.
 
+## Manage several certificates
+
+If you act for several entities (for example a gestor managing several
+taxpayers), register one certificate per entity instead of reconfiguring
+`auth configure --file` every time you switch.
+
+Register each certificate under a name:
+
+```bash
+aeat config auth certificate register --name personal --file ./personal.p12
+aeat config auth certificate register --name apoderado-acme --file ./acme.p12 --friendly-name "ACME SL"
+```
+
+List every registered source:
+
+```bash
+aeat config auth certificate list
+```
+
+Select the one you want active:
+
+```bash
+aeat config auth certificate select --name apoderado-acme
+```
+
+Remove a source you no longer need:
+
+```bash
+aeat config auth certificate remove --name personal
+```
+
+### Check every certificate's expiry
+
+Each registered certificate has its own expiry date. Check all of them in one
+pass, not only the active one:
+
+```bash
+aeat config auth certificate check
+```
+
+The report lists each source with its status:
+
+- `ok` — valid, with the days remaining.
+- `expiring` — within the renewal window (60 days or fewer by default, or 14
+  days or fewer for the critical window). A warning names the source.
+- `expired` — already expired. A warning names the source.
+
+Renew an expiring or expired certificate with the body that issued it, then
+re-register it under its existing name:
+
+```bash
+aeat config auth certificate register --name apoderado-acme --file ./renewed-acme.p12
+```
+
+Re-run `aeat config auth certificate check` to confirm the new expiry date.
+
 ## Acquire or verify a live session
 
 When you are ready to use a live-read command:

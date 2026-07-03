@@ -2388,6 +2388,7 @@ cli:
           list_help: Elfogadott apoderado hatókörök listázása.
         status_help: Aktív apoderado-konfiguráció megjelenítése.
       certificate:
+        check_help: cli.config.auth.certificate.check_help
         help: Névvel ellátott tanúsítványforrások kezelése a tanúsítványalapú hitelesítési
           szolgáltatóhoz
         list_help: Az összes regisztrált tanúsítványforrás felsorolása
@@ -2800,6 +2801,7 @@ cli:
         create_name_help: A sandbox neve.
         discard_active_profile: A(z) %{name} sandbox az aktív profil; váltson másik
           profilra, mielőtt eldobná.
+        discard_dry_run_help: 'Elonezet arrol, hogy mit tavolitana el a torles, anelkul, hogy barmit is eltavolitana.'
         discard_help: Egy sandbox véglegesen törlése.
         discard_name_help: A sandbox neve (előtag nélkül).
         discard_not_a_sandbox: '%{name} nem sandbox; a sandbox felület megtagadja
@@ -2810,6 +2812,11 @@ cli:
         help: Futtass kísérleteket egy elkülönített, eldobható workspace-ben, amely
           soha nem érinti a fő profil állapotát.
         list_help: Minden sandbox listázása.
+        prune_dry_run_help: 'Elonezet arrol, mely sandboxokat torolne, anelkul, hogy torolne oket.'
+        prune_help: 'Az osszes sandbox egyszerre torlese.'
+        prune_requires_yes: 'Az osszes sandbox torlese visszavonhatatlan. Futtasd ujra: ''aeat config profile sandbox prune --yes'' a megerositeshez.'
+        prune_skipped_active_info: 'Kihagyva az aktiv sandbox %{names}; valts masik profilra, majd futtasd ujra: ''aeat config profile sandbox prune --yes'' a torleshez.'
+        prune_yes_help: 'Az osszes sandbox torlesenek megerositese.'
         source_not_found: Nincs %{name} nevű élő profil, amelyből a sandbox feltölthető
           lenne.
         unknown_sandbox: 'Ismeretlen sandbox: %{name}. Futtassa az ''aeat config profile
