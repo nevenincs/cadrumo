@@ -41,6 +41,26 @@ class ConfirmationPolicy(StrEnum):
     BLOCK = "block"
 
 
+# Vendor-namespaced MCP ``_meta`` extension key. Recent Claude clients force a
+# permission prompt on every call for a tool whose ``_meta`` carries this key true,
+# regardless of the client's session-level tool-approval state. The slash-namespaced
+# form is the MCP ``_meta`` prefixed-key convention (the installed SDK carries it on
+# ``mcp.types.Tool._meta``, a free-form ``dict[str, Any]`` with ``extra="allow"``);
+# it is not a declared ``ToolAnnotations`` hint field, so ``_meta`` is its carrier.
+REQUIRES_USER_INTERACTION_META_KEY = "anthropic/requiresUserInteraction"
+
+
+def requires_user_interaction(policy: ConfirmationPolicy) -> bool:
+    """Whether a tool at ``policy`` must advertise ``requiresUserInteraction``.
+
+    True exactly for the CONFIRM tier: the interaction flag is the client-facing
+    projection of the server's own confirmation gate, derived from the same
+    :func:`confirmation_for_tool` classification, so the client-side prompt and the
+    server-side PreToolUse gate cannot drift.
+    """
+    return policy is ConfirmationPolicy.CONFIRM
+
+
 def confirmation_for_tool(*, command_key: str, annotations: McpAnnotations) -> ConfirmationPolicy:
     """Return the confirmation tier for one tool.
 
