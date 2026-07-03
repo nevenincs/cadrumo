@@ -991,6 +991,10 @@ application:
       modelo_210_2025_rendimientos_integros_implica_base_imponible: Gross income (rendimientos
         íntegros) is positive but the base imponible is zero; review the base imponible
         determination.
+      modelo_210_2025_ue_residente_requiere_residencia_ue_eee: Tipo de renta is declared
+        as ue_residente (the EU/EEA reduced rate) but the taxpayer's country of fiscal
+        residence is not an EU/EEA member state; confirm eligibility for the reduced
+        19 percent rate before filing, or select the general 24 percent rate.
       modelo_303_official_deducible_boxes_unpopulated_cuando_cuota_deducible_positiva: Total
         IVA deducible (cuota-deducible-total) is positive, but every official numbered
         box on the Diseño de Registros (29 interiores corrientes, 33 importaciones,
