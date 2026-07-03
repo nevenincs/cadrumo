@@ -110,8 +110,10 @@ from ._action_errors import (
     WorkUnitNotFoundError,
 )
 from ._art20_advisory import _art20_reduccion_advisory_finding
+from ._art52_advisory import _art52_reduccion_advisory_finding
 from ._art109_activity_income import derive_art109_activity_income_coverage_for_work_unit as _derive_art109_coverage
 from ._dt12_advisory import _dt12_reduccion_advisory_finding
+from ._dt12_antiquity_advisory import _dt12_antiquity_advisory_finding
 from ._iva_wallet_gate import (
     ModeloIvaWalletReconciliationBlocked,
 )
@@ -273,6 +275,23 @@ _PREDICATE_ROLL_FORWARD_BALANCES = _re.compile(r"^roll_forward_balances\(\[(?P<i
 # numeric antecedent.
 _PREDICATE_CASILLA_EQUALS_IMPLIES_NONZERO = _re.compile(
     r"^casilla_equals_implies_nonzero\(\[(?P<ids>[^\]]*)\]\)$",
+)
+# casilla_equals_implies_profile_flag(["antecedent_casilla_id", "literal",
+# "profile_field"]) — categorical-antecedent / profile-state-consequent
+# conditional advisory: fires when the named antecedent TEXT casilla's
+# operator-entered raw value equals the literal AND the named boolean
+# TaxpayerProfile field/property is False. ADVISORY-only (no BLOCKING_RULE
+# branch); sibling of casilla_equals_implies_nonzero (whose consequent test
+# reads a Decimal casilla) and profile_flag_enabled (whose antecedent is
+# unconditional). Authored for the M210 IRNR tipo_renta="ue_residente"
+# category (TRLIRNR Art 25.1.a reduced rate): the operator-entered
+# categorical rate election is not cross-checked against the declared
+# country_of_fiscal_residence, so a non-EU/EEA filer could self-declare the
+# reduced 19% rate reserved for EU/EEE residents rather than the correct 24%
+# general rate. See the casilla_equals_implies_profile_flag branch in
+# _evaluate_advisory_predicate_fires.
+_PREDICATE_CASILLA_EQUALS_IMPLIES_PROFILE_FLAG = _re.compile(
+    r"^casilla_equals_implies_profile_flag\(\[(?P<ids>[^\]]*)\]\)$",
 )
 # casilla_equals_implies_diverges(["antecedent_casilla_id", "literal",
 # "casilla_a_id", "casilla_b_id"]) — categorical-conditional divergence
@@ -672,6 +691,17 @@ def _evaluate_advisory_predicate_fires(
       corrector de exceso (b.3), incompatible per Orden HAC/1347/2024 Anexo
       II instrucción 2.3 with the índices correctores especiales for the
       activities that carry both.
+    - ``casilla_equals_implies_profile_flag(["antecedent_casilla_id", "literal",
+      "profile_field"])`` — categorical-antecedent / profile-state-consequent
+      conditional advisory: fires when the named antecedent TEXT casilla's
+      operator-entered raw value (read from ``text_values``) equals the
+      literal AND the named boolean ``TaxpayerProfile`` field/property is
+      False. A missing or differing antecedent value, an unsupported profile
+      field, or a missing profile does not fire. Authored for the M210 IRNR
+      ``tipo_renta="ue_residente"`` reduced-rate election: the categorical
+      rate choice is cross-checked against the profile's derived
+      ``ue_eee_status``, so a non-EU/EEA filer self-declaring the reduced
+      rate is prompted to confirm eligibility rather than silently filing it.
     """
     expr = expression.strip()
     m = _PREDICATE_ADVISORY_WHEN_RATIO_GE.match(expr)
@@ -764,6 +794,26 @@ def _evaluate_advisory_predicate_fires(
             return False
         consequent = casilla_values.get(consequent_id, Decimal(0))
         return consequent == Decimal(0)
+    m = _PREDICATE_CASILLA_EQUALS_IMPLIES_PROFILE_FLAG.match(expr)
+    if m:
+        # casilla_equals_implies_profile_flag(["antecedent_id", "literal",
+        # "profile_field"]) — fires (advisory shown) when the antecedent TEXT
+        # casilla's operator-entered raw value equals the literal AND the
+        # named boolean TaxpayerProfile field/property is False. A malformed
+        # arity, an antecedent absent from text_values / not equal to the
+        # literal, an unsupported profile field, or a missing profile does
+        # not fire (defensive, same convention as the other operators).
+        tokens = _parse_predicate_raw_tokens(m.group("ids"))
+        if len(tokens) != 3:
+            return False
+        antecedent_id = _validated_predicate_casilla_id(tokens[0])
+        literal = tokens[1]
+        field = tokens[2]
+        if text_values.get(antecedent_id) != literal:
+            return False
+        if profile is None or field not in KNOWN_PROFILE_FLAG_ADVISORY_FIELDS:
+            return False
+        return not bool(getattr(profile, field, False))
     m = _PREDICATE_CASILLA_EQUALS_IMPLIES_DIVERGES.match(expr)
     if m:
         # casilla_equals_implies_diverges(["antecedent_id", "literal",
@@ -1641,6 +1691,31 @@ def _collect_revision_verification_findings(
     art20_finding = _art20_reduccion_advisory_finding(snapshot.revision, target.casilla_values)
     if art20_finding is not None:
         findings.append(art20_finding)
+
+    # Advisory: art. 52 LIRPF — warn when the previsión-social reducción (0468) is
+    # granted above the EUR 1.500 individual sub-limit while both the plan-de-empleo
+    # worker-contribution casilla (0426) and the contribución empresarial casilla
+    # (0427) are zero. The combined EUR 10.000 ceiling only applies when the EUR
+    # 8.500 increment is backed by one of those two boxes; a purely-individual
+    # aportación is bound by the lower EUR 1.500 limit. Stays ADVISORY because the
+    # engine does not yet split individual from employer-linked aportaciones within
+    # casilla 0463 (Phase 2b), so a legitimately employer-backed reducción above
+    # EUR 1.500 must remain permissible (no-silent-under-declaration).
+    art52_finding = _art52_reduccion_advisory_finding(snapshot.revision, target.casilla_values)
+    if art52_finding is not None:
+        findings.append(art52_finding)
+
+    # Advisory: DT 12ª LIRPF antiquity condition — warn to confirm the pre-2007
+    # TRLIRPF art. 17.2.a) "más de dos años desde la primera aportación" antiquity
+    # condition (waived for invalidez) whenever a trabajo reducción (0011) has been
+    # applied. Distinct from the possible-omission advisory above: this fires on a
+    # POSITIVE reducción, not a zero one. Stays ADVISORY because the engine models
+    # neither "years since first aportación" nor an invalidez flag, so a genuinely
+    # invalidez-exempt or antiquity-satisfying rescate must remain permissible
+    # (no-silent-under-declaration).
+    dt12_antiquity_finding = _dt12_antiquity_advisory_finding(snapshot.revision, target.casilla_values)
+    if dt12_antiquity_finding is not None:
+        findings.append(dt12_antiquity_finding)
 
     findings.extend(_objective_estimation_exclusion_advisory_findings(work_unit=work_unit, profile=profile))
 

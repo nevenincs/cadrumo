@@ -1067,6 +1067,11 @@ application:
       modelo_210_2025_rendimientos_integros_implica_base_imponible: Els rendiments
         íntegres són positius però la base imposable és zero; reviseu la determinació
         de la base imposable.
+      modelo_210_2025_ue_residente_requiere_residencia_ue_eee: El tipus de renda declarat
+        és ue_residente (tipus reduït UE/EEE) però el país de residència fiscal del
+        contribuent no és un Estat membre de la Unió Europea ni de l'Espai Econòmic
+        Europeu; confirmeu l'elegibilitat per al tipus reduït del 19 per cent abans
+        de presentar, o seleccioneu el tipus general del 24 per cent.
       modelo_303_official_deducible_boxes_unpopulated_cuando_cuota_deducible_positiva: L'IVA
         deduible total (cuota-deducible-total) es positiu, pero totes les caselles
         oficials del Disseny de Registres (29 interiors corrents, 33 importacions,

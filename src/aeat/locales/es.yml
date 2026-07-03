@@ -1083,6 +1083,11 @@ application:
       modelo_210_2025_rendimientos_integros_implica_base_imponible: Los rendimientos
         íntegros son positivos pero la base imponible es cero; revise la determinación
         de la base imponible.
+      modelo_210_2025_ue_residente_requiere_residencia_ue_eee: El tipo de renta declarado
+        es ue_residente (tipo reducido UE/EEE) pero el país de residencia fiscal del
+        contribuyente no es un Estado miembro de la Unión Europea o del Espacio Económico
+        Europeo; confirme la elegibilidad para el tipo reducido del 19 por ciento antes
+        de presentar, o seleccione el tipo general del 24 por ciento.
       modelo_303_official_deducible_boxes_unpopulated_cuando_cuota_deducible_positiva: El
         IVA deducible total (cuota-deducible-total) es positivo, pero todas las casillas
         oficiales del Diseño de Registros (29 interiores corrientes, 33 importaciones,

@@ -1014,6 +1014,11 @@ application:
       modelo_210_2025_rendimientos_integros_implica_base_imponible: A bruttó jövedelem
         (rendimientos íntegros) pozitív, de az adóalap (base imponible) nulla; ellenőrizze
         az adóalap meghatározását.
+      modelo_210_2025_ue_residente_requiere_residencia_ue_eee: A megadott jövedelemtípus
+        ue_residente (EU/EGT kedvezményes kulcs), de az adózó adóügyi illetősége szerinti
+        ország nem EU vagy EGT tagállam; a benyújtás előtt ellenőrizze a 19 százalékos
+        kedvezményes kulcsra való jogosultságot, vagy válassza az általános 24 százalékos
+        kulcsot.
       modelo_303_official_deducible_boxes_unpopulated_cuando_cuota_deducible_positiva: A
         teljes levonhato AFA (cuota-deducible-total) pozitiv, de a Diseño de Registros
         minden hivatalos szamozott rovata (29 belfoldi folyo, 33 import, 37 kozossegen
