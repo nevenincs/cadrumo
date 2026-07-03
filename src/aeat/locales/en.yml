@@ -3520,8 +3520,7 @@ cli:
       show_suppressed_help: Include filtered (non-applicable) obligations in the output
         with their applicability verdict and reason.
       to_help: Inclusive end date for the calendar window (ISO YYYY-MM-DD).
-    calendar_local_filing_evidence_unavailable: Overview calendar local filing evidence
-      is unavailable; refusing to render without persisted AEAT filing state.
+    calendar_local_filing_evidence_unavailable: 'Overview calendar local filing evidence could not be loaded; the calendar is derived from the deadline schedule and may over-report an obligation as still due.'
     calendar_local_live_events_unavailable: Local live-event evidence is unavailable
       for this calendar row.
     calendar_local_modelo_events_unavailable: Local modelo event evidence is unavailable

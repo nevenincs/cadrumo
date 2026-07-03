@@ -3728,9 +3728,7 @@ cli:
       show_suppressed_help: Mostra també les entrades suprimides (no aplicables) al
         calendari.
       to_help: Data de fi inclusiva del calendari (ISO YYYY-MM-DD).
-    calendar_local_filing_evidence_unavailable: L'evidencia local de presentacio del
-      calendari no esta disponible; es rebutja el renderitzat sense estat de presentacio
-      AEAT persistit.
+    calendar_local_filing_evidence_unavailable: 'No s''ha pogut carregar l''evidència de presentació local del calendari; el calendari es deriva del calendari de terminis i pot sobrenotificar una obligació com a encara pendent.'
     calendar_local_live_events_unavailable: L'evidencia local d'esdeveniments en viu
       no esta disponible per a aquesta fila del calendari.
     calendar_local_modelo_events_unavailable: L'evidencia local d'esdeveniments de

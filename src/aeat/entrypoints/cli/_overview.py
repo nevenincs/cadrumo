@@ -82,17 +82,31 @@ def _refuse_calendar_warnings(cal: OverviewCalendar) -> None:
     )
 
 
+def _calendar_evidence_notice(code: str, message_key: str) -> Notice:
+    """A WARNING notice for an optional calendar-evidence enrichment that failed to load.
+
+    The persisted event / filing evidence rows only ANNOTATE the calendar's
+    schedule-derived obligations (as observed AEAT events, or as filed). When a
+    loader cannot read them the calendar must DEGRADE to a schedule-only view —
+    over-reporting an obligation as still due, the safe direction — rather than
+    refusing the whole calendar. Refusing left a never-filed taxpayer (who has no
+    persisted evidence at all) unable to see the calendar of what they owe.
+    """
+    return Notice(severity=NoticeSeverity.WARNING, code=code, message=tr(message_key), context={})
+
+
 def _local_live_calendar_events(
     bucket_id: str,
     rng: OverviewCalendarRange,
     *,
     expected_tax_id: str | None = None,
-):
-    """Return persisted-live :class:`OverviewCalendarEvent` rows.
+) -> tuple[tuple[OverviewCalendarEvent, ...], Notice | None]:
+    """Return ``(persisted-live event rows, degradation-notice-or-None)``.
 
     The CLI owns the bucket-scoped repository reads; the pure
     :func:`build_overview_calendar_events` builder performs the projection
-    without contacting AEAT.
+    without contacting AEAT. A load failure degrades to no live-event rows plus a
+    WARNING notice rather than refusing the whole calendar.
     """
     from ...adapters.persistence.profile.justificante import JustificanteRepository
     from ...application.live import ExpedientesService, JustificanteCaptureSnapshotService, NotificationsService
@@ -102,22 +116,17 @@ def _local_live_calendar_events(
         notifications = NotificationsService().list_snapshots(bucket_id=bucket_id)
         justificante_captures = JustificanteCaptureSnapshotService(bucket_id=bucket_id).list_snapshots()
         justificantes = tuple(JustificanteRepository().iter_justificantes())
-    except Exception as exc:
+    except Exception:
         logger.warning(
-            "overview calendar: failed to load local live snapshots for bucket %s",
+            "overview calendar: live-event evidence unavailable for bucket %s; deriving from schedule only",
             bucket_id,
             exc_info=True,
         )
-        raise _bad(
-            tr(
-                "cli.overview.calendar_local_live_events_unavailable",
-                default=(
-                    "Overview calendar local live-event evidence is unavailable; "
-                    "refusing to render without persisted AEAT event state."
-                ),
-            ),
-        ) from exc
-    return build_overview_calendar_events(
+        return (), _calendar_evidence_notice(
+            "overview.calendar_live_events_degraded",
+            message_key="cli.overview.calendar_local_live_events_unavailable",
+        )
+    events = build_overview_calendar_events(
         calendar_range=rng,
         expedientes_snapshots=tuple(expedientes),
         notification_snapshots=tuple(notifications),
@@ -125,6 +134,7 @@ def _local_live_calendar_events(
         justificantes=justificantes,
         expected_tax_id=expected_tax_id,
     )
+    return events, None
 
 
 def _local_modelo_record_calendar_events(
@@ -132,40 +142,38 @@ def _local_modelo_record_calendar_events(
     rng: OverviewCalendarRange,
     *,
     expected_tax_id: str | None = None,
-):
-    """Return local-record :class:`OverviewCalendarEvent` rows.
+) -> tuple[tuple[OverviewCalendarEvent, ...], Notice | None]:
+    """Return ``(local-record event rows, degradation-notice-or-None)``.
 
     Delegates the DTO conversion to
     :func:`calendar_events_from_modelo_records` after loading bucket-local
-    filing records and justificante metadata.
+    filing records and justificante metadata. A load failure degrades to no
+    filing-event rows plus a WARNING notice rather than refusing the whole
+    calendar.
     """
     try:
         from ...adapters.persistence.profile.justificante import JustificanteRepository
-        from ...domain.modelos import ModeloRecordCatalogueRepository
+        from ...adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
 
         filing_records = tuple(ModeloRecordCatalogueRepository(bucket_id=bucket_id).load().values())
         justificantes = tuple(JustificanteRepository().iter_justificantes())
-    except Exception as exc:
+    except Exception:
         logger.warning(
-            "overview calendar: failed to load local modelo filing events for bucket %s",
+            "overview calendar: modelo filing-event evidence unavailable for bucket %s; deriving from schedule only",
             bucket_id,
             exc_info=True,
         )
-        raise _bad(
-            tr(
-                "cli.overview.calendar_local_modelo_events_unavailable",
-                default=(
-                    "Overview calendar local Modelo filing events are unavailable; "
-                    "refusing to render without persisted filing state."
-                ),
-            ),
-        ) from exc
-    return calendar_events_from_modelo_records(
+        return (), _calendar_evidence_notice(
+            "overview.calendar_modelo_events_degraded",
+            message_key="cli.overview.calendar_local_modelo_events_unavailable",
+        )
+    events = calendar_events_from_modelo_records(
         filing_records,
         rng,
         justificantes=justificantes,
         expected_tax_id=expected_tax_id,
     )
+    return events, None
 
 
 def _local_modelo_work_units(bucket_id: str) -> tuple[tuple[object, ...], Notice | None]:
@@ -255,19 +263,20 @@ def _local_calendar_filing_evidence(
     events: tuple[OverviewCalendarEvent, ...],
     *,
     expected_tax_id: str | None = None,
-):
-    """Return local/AEAT filing evidence rows from persisted local stores.
+) -> tuple[tuple[object, ...], Notice | None]:
+    """Return ``(local/AEAT filing evidence rows, degradation-notice-or-None)``.
 
     The resulting :class:`OverviewCalendarFilingEvidence` rows feed
     :class:`OverviewCalendar` without treating a local filing record as proof of
-    AEAT submission.
+    AEAT submission. A load failure degrades to no filing-evidence rows plus a
+    WARNING notice rather than refusing the whole calendar.
     """
     try:
         from ...adapters.outbound.aeat.sede import FiledDeclaracionObservationStore
         from ...adapters.persistence.profile.justificante import JustificanteRepository
         from ...application.calculations import CalculationObservationRepository
         from ...application.live import JustificanteCaptureSnapshotService
-        from ...domain.modelos import ModeloRecordCatalogueRepository
+        from ...adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
 
         filing_records = tuple(ModeloRecordCatalogueRepository(bucket_id=bucket_id).load().values())
         justificantes = tuple(JustificanteRepository().iter_justificantes())
@@ -280,22 +289,17 @@ def _local_calendar_filing_evidence(
             )
         )
         calculation_observations = tuple(CalculationObservationRepository().iter_records())
-    except Exception as exc:
+    except Exception:
         logger.warning(
-            "overview calendar: failed to load local filing evidence for bucket %s",
+            "overview calendar: filing evidence unavailable for bucket %s; deriving from schedule only",
             bucket_id,
             exc_info=True,
         )
-        raise _bad(
-            tr(
-                "cli.overview.calendar_local_filing_evidence_unavailable",
-                default=(
-                    "Overview calendar local filing evidence is unavailable; "
-                    "refusing to render without persisted AEAT filing state."
-                ),
-            ),
-        ) from exc
-    return calendar_filing_evidence_from_sources(
+        return (), _calendar_evidence_notice(
+            "overview.calendar_filing_evidence_degraded",
+            message_key="cli.overview.calendar_local_filing_evidence_unavailable",
+        )
+    evidence = calendar_filing_evidence_from_sources(
         filing_records=filing_records,
         observed_events=events,
         filed_declaration_observations=tuple(filed_declaration_observations),
@@ -306,6 +310,7 @@ def _local_calendar_filing_evidence(
         justificantes=justificantes,
         expected_tax_id=expected_tax_id,
     )
+    return evidence, None
 
 
 def _calendar_filing_evidence_text_fields(filing_evidence) -> str:
@@ -676,19 +681,25 @@ def overview_calendar(
     if bucket_id is None:
         raise _bad(tr("cli.config.errors.no_active_profile"))
     workflow_profile = _profile_to_taxpayer(current)
-    live_events = _local_live_calendar_events(bucket_id, rng, expected_tax_id=workflow_profile.tax_id)
-    modelo_record_events = _local_modelo_record_calendar_events(
+    evidence_notices: list[Notice] = []
+    live_events, live_notice = _local_live_calendar_events(bucket_id, rng, expected_tax_id=workflow_profile.tax_id)
+    modelo_record_events, modelo_events_notice = _local_modelo_record_calendar_events(
         bucket_id,
         rng,
         expected_tax_id=workflow_profile.tax_id,
     )
     events = (*live_events, *modelo_record_events)
-    filing_evidence = _local_calendar_filing_evidence(
+    filing_evidence, filing_evidence_notice = _local_calendar_filing_evidence(
         bucket_id,
         events,
         expected_tax_id=workflow_profile.tax_id,
     )
     work_units, work_units_notice = _local_modelo_work_units(bucket_id)
+    evidence_notices = [
+        notice
+        for notice in (live_notice, modelo_events_notice, filing_evidence_notice, work_units_notice)
+        if notice is not None
+    ]
     cal: OverviewCalendar = build_overview_calendar(
         workflow_profile,
         rng,
@@ -751,9 +762,9 @@ def overview_calendar(
     for notice in post_filing_notices:
         lines.append(f"post_filing_pending\t{len(notice.context)}\t{notice.message}")
     calendar_notices = [*coverage_notices, *post_filing_notices]
-    if work_units_notice is not None:
-        lines.append(f"work_units_degraded\t{work_units_notice.message}")
-        calendar_notices.append(work_units_notice)
+    for notice in evidence_notices:
+        lines.append(f"{notice.code}\t{notice.message}")
+        calendar_notices.append(notice)
     _emit_envelope(
         ctx,
         command="overview.calendar",
@@ -808,21 +819,22 @@ def _overview_calendar_all_profiles(
                 raw_values = record_to_values(record.record)
                 taxpayer = projection_for_taxpayer(record.record, tax_id_default="00000000T")
                 live_censo_verified_profile_keys = _live_censo_verified_profile_keys(record.record)
-                live_events = _local_live_calendar_events(bucket_id, rng, expected_tax_id=taxpayer.tax_id)
-                modelo_record_events = _local_modelo_record_calendar_events(
+                # The multi-profile view already degrades per profile (it skips an
+                # unreadable one below) and renders many calendars in one payload,
+                # so the per-loader degradation notices are dropped here; each
+                # loader still returns schedule-only evidence rather than raising.
+                live_events, _ = _local_live_calendar_events(bucket_id, rng, expected_tax_id=taxpayer.tax_id)
+                modelo_record_events, _ = _local_modelo_record_calendar_events(
                     bucket_id,
                     rng,
                     expected_tax_id=taxpayer.tax_id,
                 )
                 events = (*live_events, *modelo_record_events)
-                filing_evidence = _local_calendar_filing_evidence(
+                filing_evidence, _ = _local_calendar_filing_evidence(
                     bucket_id,
                     events,
                     expected_tax_id=taxpayer.tax_id,
                 )
-                # The multi-profile view already degrades per profile (it skips an
-                # unreadable one below); a work-unit enrichment failure just means
-                # this profile's calendar is schedule-only, so drop the notice here.
                 work_units, _ = _local_modelo_work_units(bucket_id)
         except typer.BadParameter:
             raise
